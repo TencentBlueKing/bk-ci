@@ -3047,3 +3047,1426 @@
     "updated_date" : 1640161648168,
     "updated_by" : "admin"
 }
+
+
+{
+    "_id" : {"$oid":"6232a43473a3da29802ad87c"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "E021",
+    "checker_name" : "E021",
+    "checker_desc" : "An invalid inline option..",
+    "severity" : 1,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_DEFECT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}
+{
+    "_id" : {"$oid":"6232a43473a3da29802ad883"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W122",
+    "checker_name" : "W122",
+    "checker_desc" : "Setting a read-only field of a global variable. By default, most standard globals and fields are marked as read-only, so that setting them produces a warning.  [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#global-variables-1xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad882"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W121",
+    "checker_name" : "W121",
+    "checker_desc" : "Setting a read-only global variable. By default, most standard globals and fields are marked as read-only, so that setting them produces a warning.  [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#global-variables-1xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad891"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W313",
+    "checker_name" : "W313",
+    "checker_desc" : "Value of a loop variable is unused. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}
+{
+    "_id" : {"$oid":"6232a43473a3da29802ad886"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W143",
+    "checker_name" : "W143",
+    "checker_desc" : "Accessing an undefined field of a global variable. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#global-variables-1xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad87d"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "E022",
+    "checker_name" : "E022",
+    "checker_desc" : "An unpaired inline push directive。",
+    "severity" : 1,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_DEFECT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad890"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W312",
+    "checker_name" : "W312",
+    "checker_desc" : "Value of an argument is unused. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad893"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W321",
+    "checker_name" : "W321",
+    "checker_desc" : "Accessing uninitialized local variable.  [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "err_example" : "local bar \n print(bar)",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad888"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W212",
+    "checker_name" : "W212",
+    "checker_desc" : "Unused argument. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad87b"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "E011",
+    "checker_name" : "E011",
+    "checker_desc" : "A syntax error.",
+    "severity" : 1,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_DEFECT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004743,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad885"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W142",
+    "checker_name" : "W142",
+    "checker_desc" : "Setting an undefined field of a global variable. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#global-variables-1xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad881"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W113",
+    "checker_name" : "W113",
+    "checker_desc" : "Accessing an undefined global variable.Try to use local to define variables so that they are not misused as global variables and pollute the namespace[规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#global-variables-1xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad88d"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W233",
+    "checker_name" : "W233",
+    "checker_desc" : "Loop variable is set but never accessed. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad87e"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "E023",
+    "checker_name" : "E023",
+    "checker_desc" : "An unpaired inline pop directive。",
+    "severity" : 1,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_DEFECT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad895"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W341",
+    "checker_name" : "W341",
+    "checker_desc" : "Mutating uninitialized local variable. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad880"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W112",
+    "checker_name" : "W112",
+    "checker_desc" : "Mutating an undefined global variable。Try to use local to define variables so that they are not misused as global variables and pollute the namespace[规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#global-variables-1xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8ab"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W613",
+    "checker_name" : "W613",
+    "checker_desc" : "Trailing whitespace in a string. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#formatting-issues-6xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad88b"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W231",
+    "checker_name" : "W231",
+    "checker_desc" : "Local variable is set but never accessed. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8a6"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W551",
+    "checker_name" : "W551",
+    "checker_desc" : "An empty statement. In Lua 5.2+ semicolons are considered statements and can appear even when not following normal statements. Such semicolons produce Luacheck warnings as they are completely useless. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#control-flow-and-data-flow-issues-5xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8a8"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W571",
+    "checker_name" : "W571",
+    "checker_desc" : "A numeric for loop goes from #(expr) down to 1 or less without negative step, [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#control-flow-and-data-flow-issues-5xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "err_example" : "for i = #t, 1 do\n\t   print(t[i])\n end  \n correct for example: \n for i = #t, 1, -1 do\n   \tprint(t[i])\n end ",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad87f"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W111",
+    "checker_name" : "W111",
+    "checker_desc" : "Setting an undefined global variable。[规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#global-variables-1xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "err_example" : "a = {b=1,[1] = 2, {}, 4, 5, \"abc\", function() end} \n foo {123, b = 456, {789}, function() a = {1} end}",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad88a"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W221",
+    "checker_name" : "W221",
+    "checker_desc" : "Local variable is accessed but never set. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8a0"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W512",
+    "checker_name" : "W512",
+    "checker_desc" : "Loop can be executed at most once.  [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#control-flow-and-data-flow-issues-5xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "err_example" : "for i = 1, 100 do",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad89b"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W423",
+    "checker_name" : "W423",
+    "checker_desc" : "Shadowing a loop variable. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#shadowing-declarations-4xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8aa"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W612",
+    "checker_name" : "W612",
+    "checker_desc" : "A line contains trailing whitespace. Remove unnecessary Spaces at the end of the line.  Any tabs or spaces after either ) would be considered trailing.\nAny tabs or spaces after the . in the comment would be considered trailing\nAny tabs or spaces on the empty line between the two print statements would also be considered a form of trailing whitespace.[规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#formatting-issues-6xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "err_example" : "print(\"luaCheck\"}             whitespace",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad89d"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W432",
+    "checker_name" : "W432",
+    "checker_desc" : "Shadowing an upvalue argument. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#shadowing-declarations-4xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad884"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W131",
+    "checker_name" : "W131",
+    "checker_desc" : "Unused implicitly defined global variable. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#global-variables-1xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad887"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W211",
+    "checker_name" : "W211",
+    "checker_desc" : "Unused local variable [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad889"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W213",
+    "checker_name" : "W213",
+    "checker_desc" : "The loop variable is not in use. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad88c"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W232",
+    "checker_name" : "W232",
+    "checker_desc" : "An argument is set but never accessed. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad89a"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W422",
+    "checker_name" : "W422",
+    "checker_desc" : "Shadowing an argument. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#shadowing-declarations-4xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad89c"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W431",
+    "checker_name" : "W431",
+    "checker_desc" : "Shadowing an upvalue. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#shadowing-declarations-4xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8ac"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W614",
+    "checker_name" : "W614",
+    "checker_desc" : "Trailing whitespace in a comment. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#formatting-issues-6xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad894"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W331",
+    "checker_name" : "W331",
+    "checker_desc" : "Value assigned to a local variable is mutated but never accessed. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8a2"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W531",
+    "checker_name" : "W531",
+    "checker_desc" : "Left-hand side of an assignment is too short. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#control-flow-and-data-flow-issues-5xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad88f"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W311",
+    "checker_name" : "W311",
+    "checker_desc" : "Value assigned to a local variable is unused. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad897"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W412",
+    "checker_name" : "W412",
+    "checker_desc" : "Redefining an argument. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#shadowing-declarations-4xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "err_example" : "local function f(x)\n   \t local x = x or \"default\" -- bad\n end",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8ad"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W621",
+    "checker_name" : "W621",
+    "checker_desc" : "Inconsistent indentation (SPACE followed by TAB). [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#formatting-issues-6xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8ae"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W631",
+    "checker_name" : "W631",
+    "checker_desc" : "Line is too long. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#formatting-issues-6xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "props" : "[{\"propName\":\"lineMax\",\"propValue\":\"120\",\"displayValue\":\"120\"},{\"propName\":\"codeMax\",\"propValue\":\"120\",\"displayValue\":\"120\"},{\"propName\":\"stringMax\",\"propValue\":\"120\",\"displayValue\":\"120\"},{\"propName\":\"commendMax\",\"propValue\":\"120\",\"displayValue\":\"120\"}]",
+    "standard" : 0,
+    "editable" : true,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad899"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W421",
+    "checker_name" : "W421",
+    "checker_desc" : "Shadowing a local variable. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#shadowing-declarations-4xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8a1"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W521",
+    "checker_name" : "W521",
+    "checker_desc" : "Unused label, Labels that are not used by any goto statements are reported as unused. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#control-flow-and-data-flow-issues-5xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad89e"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W433",
+    "checker_name" : "W433",
+    "checker_desc" : "Shadowing an upvalue loop variable.[规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#shadowing-declarations-4xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad88e"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W241",
+    "checker_name" : "W241",
+    "checker_desc" : "Local variables change, but are never accessed. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8a3"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W532",
+    "checker_name" : "W532",
+    "checker_desc" : "Left-hand side of an assignment is too long. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#control-flow-and-data-flow-issues-5xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad892"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W314",
+    "checker_name" : "W314",
+    "checker_desc" : "Value of a field in a table literal is unused.  [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#unused-variables-2xx-and-values-3xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "err_example" : "a = {b=1,[1] = 2, {}, 4, 5, \"abc\", function() end} ",
+    "checker_version" : 0,
+    "create_date" : 1647486004744,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad896"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W411",
+    "checker_name" : "W411",
+    "checker_desc" : "Redefining a local variable.   [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#shadowing-declarations-4xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "err_example" : "local function f(x) \n end \n local function f(x)\n end ",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8a4"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W541",
+    "checker_name" : "W541",
+    "checker_desc" : "An empty do end block. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#control-flow-and-data-flow-issues-5xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad898"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W413",
+    "checker_name" : "W413",
+    "checker_desc" : "Redefining a loop variable. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#shadowing-declarations-4xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad8a5"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W542",
+    "checker_name" : "W542",
+    "checker_desc" : "An empty if branch. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#control-flow-and-data-flow-issues-5xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id" : {"$oid":"6232a43473a3da29802ad89f"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W511",
+    "checker_name" : "W511",
+    "checker_desc" : "Unreachable code. foe example:  [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#control-flow-and-data-flow-issues-5xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "err_example" : "for i = 1, 100 do\n   \t-- Break statement is outside the `if` block,\n\t   -- so that the loop always stops after the first iteration.\n\t   if cond(i) then f() end break\n end",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}{
+    "_id": {
+        "$oid": "6232a43473a3da29802ad8a7"
+    },
+    "tool_name": "LUACHECK",
+    "checker_key": "W561",
+    "checker_name": "W561",
+    "checker_desc": "Cyclomatic complexity of a function is too high. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#control-flow-and-data-flow-issues-5xx)",
+    "severity": 2,
+    "language": 256,
+    "status": 0,
+    "props": "[{\"propName\":\"max\",\"propValue\":\"20\",\"displayValue\":\"20\"}]",
+    "standard": 0,
+    "editable": true,
+    "cov_property": 0,
+    "native_checker": true,
+    "checker_language": [
+        "LUA"
+    ],
+    "checker_category": "COMPLEXITY",
+    "checker_tag": [
+        "系统推荐"
+    ],
+    "checker_recommend": "SYSTEM_DEFAULT",
+    "checker_version": 0,
+    "create_date": 1647486004745,
+    "created_by": "admin",
+    "updated_date": 1656643423744,
+    "updated_by": "admin",
+    "_class": "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}
+{
+    "_id" : {"$oid":"6232a43473a3da29802ad8a9"},
+    "tool_name" : "LUACHECK",
+    "checker_key" : "W611",
+    "checker_name" : "W611",
+    "checker_desc" : "A line consists of nothing but whitespace. [规则详情](https://luacheck.readthedocs.io/en/stable/warnings.html#formatting-issues-6xx)",
+    "severity" : 2,
+    "language" : 256,
+    "status" : 0,
+    "standard" : 0,
+    "editable" : false,
+    "cov_property" : 0,
+    "native_checker" : true,
+    "checker_language" : [
+        "LUA"
+    ],
+    "checker_category" : "CODE_FORMAT",
+    "checker_tag" : [
+        "系统推荐"
+    ],
+    "checker_recommend" : "SYSTEM_DEFAULT",
+    "checker_version" : 0,
+    "create_date" : 1647486004745,
+    "created_by" : "admin",
+    "updated_date" : 1656643423744,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.defect.model.CheckerDetailEntity"
+}
