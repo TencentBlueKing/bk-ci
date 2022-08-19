@@ -94,7 +94,6 @@ class CategoryServiceImpl @Autowired constructor(
      */
     override fun getCategory(id: String): Result<Category?> {
         val categoryRecord = categoryDao.getCategory(dslContext, id)
-        logger.info("the pipelineContainerRecord is :{}", categoryRecord)
         return Result(
             if (categoryRecord == null) {
                 null
@@ -108,7 +107,7 @@ class CategoryServiceImpl @Autowired constructor(
      * 保存范畴信息
      */
     override fun saveCategory(categoryRequest: CategoryRequest, type: Byte): Result<Boolean> {
-        logger.info("the save categoryRequest is:$categoryRequest,type is:$type")
+        logger.info("saveCategory params[$categoryRequest|$type]")
         val categoryCode = categoryRequest.categoryCode
         // 判断范畴代码是否存在
         val codeCount = categoryDao.countByCode(dslContext, categoryCode, type)
@@ -140,7 +139,7 @@ class CategoryServiceImpl @Autowired constructor(
      * 更新范畴信息
      */
     override fun updateCategory(id: String, categoryRequest: CategoryRequest, type: Byte): Result<Boolean> {
-        logger.info("the update id is :$id,the update CategoryRequest is:$categoryRequest,type is:$type")
+        logger.info("updateCategory params[$id|$categoryRequest|$type]")
         val categoryCode = categoryRequest.categoryCode
         // 判断范畴是否存在
         val codeCount = categoryDao.countByCode(dslContext, categoryCode, type)
@@ -179,7 +178,6 @@ class CategoryServiceImpl @Autowired constructor(
      * 根据id删除范畴信息
      */
     override fun deleteCategory(id: String): Result<Boolean> {
-        logger.info("the delete id is :$id")
         dslContext.transaction { t ->
             val context = DSL.using(t)
             categoryDao.delete(context, id)

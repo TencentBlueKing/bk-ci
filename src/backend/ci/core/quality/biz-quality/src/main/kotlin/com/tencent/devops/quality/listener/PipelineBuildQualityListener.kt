@@ -75,7 +75,7 @@ class PipelineBuildQualityListener @Autowired constructor(
     )
     fun listenPipelineCancelQualityListener(pipelineCancelEvent: PipelineBuildCancelBroadCastEvent) {
         try {
-            logger.info("QUALITY|pipelineCancelListener cancelEvent: $pipelineCancelEvent")
+            logger.info("QUALITY|pipelineCancelListener cancelEvent: ${pipelineCancelEvent.buildId}")
             val ruleIdList = qualityRuleBuildHisDao.listBuildHisRules(
                 dslContext = dslContext,
                 projectId = pipelineCancelEvent.projectId,
@@ -104,7 +104,7 @@ class PipelineBuildQualityListener @Autowired constructor(
     )
     fun listenPipelineRetryBroadCastEvent(pipelineRetryStartEvent: PipelineBuildQueueBroadCastEvent) {
         try {
-            logger.info("QUALITY|pipelineRetryListener retryEvent: $pipelineRetryStartEvent")
+            logger.info("QUALITY|pipelineRetryListener retryEvent: ${pipelineRetryStartEvent.buildId}")
             if (pipelineRetryStartEvent.actionType.isRetry()) {
                 val ruleIdList = qualityRuleBuildHisDao.listBuildHisRules(
                     dslContext = dslContext,
@@ -136,7 +136,7 @@ class PipelineBuildQualityListener @Autowired constructor(
     )
     fun listenPipelineTimeoutBroadCastEvent(pipelineTimeoutEvent: PipelineBuildReviewBroadCastEvent) {
         try {
-            logger.info("QUALITY|pipelineTimeoutListener timeoutEvent: $pipelineTimeoutEvent")
+            logger.info("QUALITY|pipelineTimeoutListener timeoutEvent: ${pipelineTimeoutEvent.buildId}")
             val projectId = pipelineTimeoutEvent.projectId
             val pipelineId = pipelineTimeoutEvent.pipelineId
             val buildId = pipelineTimeoutEvent.buildId
@@ -184,7 +184,7 @@ class PipelineBuildQualityListener @Autowired constructor(
     )
     fun listenPipelineQualityReviewBroadCastEvent(event: PipelineBuildQualityReviewBroadCastEvent) {
         try {
-            logger.info("QUALITY|qualityReviewListener reviewEvent: $event")
+            logger.info("QUALITY|qualityReviewListener reviewEvent: ${event.buildId}")
             val action = if (event.reviewType == BuildReviewType.QUALITY_TASK_REVIEW_PASS)
                 RuleInterceptResult.INTERCEPT_PASS else RuleInterceptResult.INTERCEPT
             val projectId = event.projectId
@@ -224,7 +224,7 @@ class PipelineBuildQualityListener @Autowired constructor(
             }
             logger.info("QUALITY|[${event.buildId}]save reviewer info done.")
         } catch (e: Exception) {
-            logger.error("quality review error: ${e.message}")
+            logger.warn("QUALITY|listenPipelineQualityReviewBroadCastEvent|${event.buildId}|warn=${e.message}")
         }
     }
 

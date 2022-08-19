@@ -55,21 +55,12 @@ class QualityHisMetadataService @Autowired constructor(
 
     fun saveHisMetadata(projectId: String, pipelineId: String, buildId: String, callback: MetadataCallback): String {
         logger.info("save history metadata for build: $buildId")
-        logger.info("save history metadata data:\n$callback")
+        logger.info("save history metadata data:\n${callback.elementType}|${callback.taskId}|${callback.taskName}")
 
         val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(
             buildIds = setOf(buildId),
             projectId = projectId
         ).data?.get(buildId) ?: "0"
-        // todo performance can be removed
-        hisMetadataDao.saveHisOriginMetadata(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            buildNo = buildNo,
-            callbackStr = objectMapper.writeValueAsString(callback)
-        )
         hisMetadataDao.batchSaveHisDetailMetadata(dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -83,8 +74,8 @@ class QualityHisMetadataService @Autowired constructor(
                     detail = it.detail,
                     type = it.type,
                     elementType = callback.elementType,
-                    taskId = callback.taskId,
-                    taskName = callback.taskName,
+                    taskId = callback.taskId ?: "",
+                    taskName = callback.taskName ?: "",
                     msg = it.msg,
                     value = it.value,
                     extra = it.extra

@@ -33,7 +33,6 @@ import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.service.common.CategoryService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -47,13 +46,10 @@ class TemplateCategoryServiceImpl @Autowired constructor() : TemplateCategorySer
     @Autowired
     private lateinit var categoryService: CategoryService
 
-    private val logger = LoggerFactory.getLogger(TemplateCategoryServiceImpl::class.java)
-
     /**
      * 查找模板范畴
      */
     override fun getCategorysByTemplateId(templateId: String): Result<List<Category>?> {
-        logger.info("the templateId is :$templateId")
         val templateCategoryList = mutableListOf<Category>()
         val templateCategoryRecords =
             templateCategoryRelDao.getCategorysByTemplateId(dslContext, templateId) // 查询模板范畴信息

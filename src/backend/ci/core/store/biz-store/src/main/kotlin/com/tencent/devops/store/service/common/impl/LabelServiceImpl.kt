@@ -81,7 +81,6 @@ class LabelServiceImpl @Autowired constructor(
      */
     override fun getLabel(id: String): Result<Label?> {
         val labelRecord = labelDao.getLabel(dslContext, id)
-        logger.info("the pipelineContainerRecord is :{}", labelRecord)
         return Result(
             if (labelRecord == null) {
                 null
@@ -95,7 +94,7 @@ class LabelServiceImpl @Autowired constructor(
      * 保存标签信息
      */
     override fun saveLabel(labelRequest: LabelRequest, type: Byte): Result<Boolean> {
-        logger.info("the save LabelRequest is:$labelRequest,type is:$type")
+        logger.info("saveLabel params:[$labelRequest|$type]")
         val labelCode = labelRequest.labelCode
         // 判断标签代码是否存在
         val codeCount = labelDao.countByCode(dslContext, labelCode, type)
@@ -127,7 +126,7 @@ class LabelServiceImpl @Autowired constructor(
      * 更新标签信息
      */
     override fun updateLabel(id: String, labelRequest: LabelRequest, type: Byte): Result<Boolean> {
-        logger.info("the update id is :$id,the update labelRequest is:$labelRequest,type is:$type")
+        logger.info("updateLabel params:[$id|$labelRequest|$type]")
         val labelCode = labelRequest.labelCode
         // 判断标签是否存在
         val codeCount = labelDao.countByCode(dslContext, labelCode, type)
@@ -166,7 +165,6 @@ class LabelServiceImpl @Autowired constructor(
      * 根据id删除标签信息
      */
     override fun deleteLabel(id: String): Result<Boolean> {
-        logger.info("the delete id is :$id")
         dslContext.transaction { t ->
             val context = DSL.using(t)
             labelDao.delete(context, id)

@@ -99,11 +99,11 @@ class CodeService @Autowired constructor(
         }
     }
 
-    fun getGitRefs(projectId: String, repoHashId: String?): List<String> {
+    fun getGitRefs(projectId: String, repoHashId: String?, search: String? = null): List<String> {
         val repositoryConfig = getRepositoryConfig(repoHashId, null)
         val result = mutableListOf<String>()
-        val branches = scmProxyService.listBranches(projectId, repositoryConfig).data ?: listOf()
-        val tags = scmProxyService.listTags(projectId, repositoryConfig).data ?: listOf()
+        val branches = scmProxyService.listBranches(projectId, repositoryConfig, search).data ?: listOf()
+        val tags = scmProxyService.listTags(projectId, repositoryConfig, search).data ?: listOf()
         // 取前100
         result.addAll(branches)
         result.addAll(tags)
@@ -203,11 +203,13 @@ class CodeService @Autowired constructor(
 
     private fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
         val decoder = Base64.getDecoder()
-        return String(DHUtil.decrypt(
-            data = decoder.decode(encode),
-            partBPublicKey = decoder.decode(publicKey),
-            partAPrivateKey = privateKey
-        ))
+        return String(
+            DHUtil.decrypt(
+                data = decoder.decode(encode),
+                partBPublicKey = decoder.decode(publicKey),
+                partAPrivateKey = privateKey
+            )
+        )
     }
 
     private fun getRepositoryConfig(repoHashId: String?, repoName: String?): RepositoryConfig {

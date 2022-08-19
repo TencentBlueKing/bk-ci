@@ -533,7 +533,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 repositoryHashId = repositoryHashId,
                 branch = branch
             )
-            logger.info("the quality json str is :$qualityJsonStr")
             return if (!qualityJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(qualityJsonStr)) {
                 val qualityDataMap = JsonUtil.toMap(qualityJsonStr)
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
@@ -585,8 +584,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
                     client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
                     client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
-                } catch (e: Exception) {
-                    logger.error("clear atom:$atomCode test quality data error", e)
+                } catch (ignored: Throwable) {
+                    logger.warn("clear atom:$atomCode test quality data fail", ignored)
                 }
 
                 GetAtomQualityConfigResult(
@@ -594,8 +593,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     arrayOf(branch ?: MASTER, QUALITY_JSON_NAME)
                 )
             }
-        } catch (e: Exception) {
-            logger.error("getFileContent error is :$e", e)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|getQualityJsonContent|$atomCode|error=${ignored.message}", ignored)
             return GetAtomQualityConfigResult(
                 StoreMessageCode.USER_ATOM_QUALITY_CONF_INVALID,
                 arrayOf(QUALITY_JSON_NAME)
@@ -699,9 +698,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         }
         return client.get(ServiceQualityMetadataMarketResource::class).setTestMetadata(
-            userId,
-            atomCode,
-            metadataList
+            userId = userId,
+            atomCode = atomCode,
+            metadataList = metadataList
         ).data ?: mapOf()
     }
 
@@ -725,8 +724,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 repositoryHashId = repositoryHashId,
                 branch = branch
             )
-        } catch (e: Exception) {
-            logger.error("getFileContent error is :$e", e)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|getTaskJsonContent|$atomCode|error=${ignored.message}", ignored)
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
                 params = arrayOf(TASK_JSON_NAME)
@@ -802,7 +801,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     override fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo> {
         logger.info("getProcessInfo userId is $userId,atomId is $atomId")
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId)
-        logger.info("getProcessInfo record is $record")
         return if (null == record) {
             MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
         } else {
@@ -837,7 +835,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 creator = record.creator,
                 processInfo = processInfo
             )
-            logger.info("getProcessInfo storeProcessInfo is $storeProcessInfo")
             Result(storeProcessInfo)
         }
     }

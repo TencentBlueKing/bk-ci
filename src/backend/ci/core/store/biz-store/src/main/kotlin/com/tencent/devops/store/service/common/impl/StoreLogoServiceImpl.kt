@@ -89,11 +89,12 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
     override fun uploadStoreLogo(
         userId: String,
         contentLength: Long,
+        sizeLimitiFlag: Boolean?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<StoreLogoInfo?> {
-        logger.info("uploadStoreLogo upload file info is:$disposition,contentLength is:$contentLength")
         val fileName = disposition.fileName
+        logger.info("uploadStoreLogo upload file fileName is:$fileName,contentLength is:$contentLength")
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1).toLowerCase()
         // 校验文件类型是否满足上传文件类型的要求
@@ -120,11 +121,13 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             // 判断上传的logo是否为512x512规格
             val width = img.width
             val height = img.height
-            if (width != height || width < allowUploadLogoWidth.toInt()) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
-                    arrayOf(allowUploadLogoWidth, allowUploadLogoHeight)
-                )
+            if (sizeLimitiFlag != false) {
+                if (width != height || width < allowUploadLogoWidth.toInt()) {
+                    return MessageCodeUtil.generateResponseDataObject(
+                        StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
+                        arrayOf(allowUploadLogoWidth, allowUploadLogoHeight)
+                    )
+                }
             }
             ImageIO.write(img, fileType, output)
         } else {
@@ -140,8 +143,8 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
                     }
                 }
                 output.flush()
-            } catch (e: Exception) {
-                logger.error("the output write error is:$e", e)
+            } catch (ignored: Throwable) {
+                logger.error("BKSystemErrorMonitor|uploadStoreLogo|error=${ignored.message}", ignored)
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             } finally {
                 output.close()

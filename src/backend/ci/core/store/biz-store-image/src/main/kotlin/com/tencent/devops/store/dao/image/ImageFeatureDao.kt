@@ -51,7 +51,7 @@ import java.time.LocalDateTime
 class ImageFeatureDao {
     fun getImageFeature(dslContext: DSLContext, imageCode: String): TImageFeatureRecord {
         with(TImageFeature.T_IMAGE_FEATURE) {
-            val record = dslContext.selectFrom(this)
+            return dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .fetchOne()
                 ?: throw ErrorCodeException(
@@ -60,7 +60,6 @@ class ImageFeatureDao {
                     defaultMessage = "no imageFeature for imageCode=$imageCode",
                     params = arrayOf(imageCode)
                 )
-            return record
         }
     }
 
