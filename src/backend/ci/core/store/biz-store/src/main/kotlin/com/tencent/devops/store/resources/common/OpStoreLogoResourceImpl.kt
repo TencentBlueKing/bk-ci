@@ -53,7 +53,6 @@ class OpStoreLogoResourceImpl @Autowired constructor(
         return storeLogoService.uploadStoreLogo(
             userId = userId,
             contentLength = contentLength,
-            compressFlag = true,
             inputStream = inputStream,
             disposition = disposition
         )
