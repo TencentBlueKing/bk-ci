@@ -96,7 +96,7 @@ class ManagerUserDao {
     fun listExpiringRecords(dslContext: DSLContext): Result<TAuthManagerUserRecord>? {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
             return dslContext.selectFrom(this).where(
-                END_TIME.sub(7).ge(currentLocalDateTime())
+                END_TIME.sub(7).le(currentLocalDateTime())
             ).fetch()
         }
     }

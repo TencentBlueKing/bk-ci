@@ -43,4 +43,5 @@ dependencies {
     api("commons-codec:commons-codec")
     api("net.coobird:thumbnailator")
     api("com.github.ben-manes.caffeine:caffeine")
+    api(project(":core:auth:api-auth"))
 }

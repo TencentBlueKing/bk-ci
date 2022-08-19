@@ -80,6 +80,7 @@ class AuthManagerApprovalService @Autowired constructor(
             ApprovalType.AGREE -> {
                 authManagerApprovalDao.updateApprovalStatus(dslContext, approvalId, 2)
                 val weworkRobotNotifyMessage = WeworkRobotNotifyMessage(
+                    //审批人 要修改
                     receivers = "greysonfang",
                     receiverType = WeworkReceiverType.single,
                     textType = WeworkTextType.markdown,
@@ -130,7 +131,8 @@ class AuthManagerApprovalService @Autowired constructor(
         }
         when (approvalType) {
             ApprovalType.AGREE -> {
-                authManagerApprovalDao.updateApprovalStatus(dslContext, approvalId, 2)
+                authManagerApprovalDao.updateApprovalStatus(dslContext, approvalId, 4)
+                managerUserDao.updateRecordsExpireTime(dslContext, managerId, userId)
                 val weworkRobotNotifyMessage = WeworkRobotNotifyMessage(
                     receivers = userId,
                     receiverType = WeworkReceiverType.single,
@@ -138,7 +140,6 @@ class AuthManagerApprovalService @Autowired constructor(
                     message = "审批人同意了您的权限续期"
                 )
                 client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
-                managerUserDao.updateRecordsExpireTime(dslContext, managerId, userId)
             }
             ApprovalType.REFUSE -> {
                 authManagerApprovalDao.updateApprovalStatus(dslContext, approvalId, 3)
