@@ -8,7 +8,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.WeworkMarkdownAction
 import com.tencent.devops.notify.pojo.WeworkMarkdownAttachment
@@ -161,45 +160,18 @@ class AuthManagerApprovalService @Autowired constructor(
         expiringRecords.map {
             val approvalRecord = authManagerApprovalDao.get(dslContext, it.managerId, it.userId)
             logger.info("approvalRecord : $approvalRecord")
-            val agreeButton = WeworkMarkdownAction(
-                name = "agree",
-                text = "同意续期",
-                type = "button",
-                value = approvalRecord?.id.toString(),
-                replaceText = "你已选择同意续期",
-                borderColor = "2EAB49",
-                textColor = "2EAB49"
-            )
-            val refuseButton = WeworkMarkdownAction(
-                name = "refuse",
-                text = "拒绝续期",
-                type = "button",
-                value = approvalRecord?.id.toString(),
-                replaceText = "你已选择拒绝续期",
-                borderColor = "2EAB49",
-                textColor = "2EAB49"
-            )
-            val actions: MutableList<WeworkMarkdownAction> = ArrayList()
-            actions.add(agreeButton)
-            actions.add(refuseButton)
-            val weworkRobotNotifyMessage = WeworkRobotNotifyMessage(
-                receivers = it.userId,
-                receiverType = WeworkReceiverType.single,
-                textType = WeworkTextType.markdown,
-                message = "**蓝盾超级管理员权限续期**\\n管理员ID：${it.managerId}\\n 用户ID：${it.userId}" +
-                    "logo+白色T\\n\\n请选择是否需要续期权限\\n",
-                attachments = WeworkMarkdownAttachment(
-                    callbackId = "renewal",
-                    actions = actions
-                )
-            )
             if (approvalRecord == null) {
-                authManagerApprovalDao.createApproval(
+                val approvalId = authManagerApprovalDao.createApproval(
                     dslContext = dslContext,
                     userId = it.userId,
                     managerId = it.managerId,
                     expireTime = it.endTime,
                     status = 0
+                )
+                val weworkRobotNotifyMessage = buildWeworkRobotNotifyMessage(
+                    userId = it.userId,
+                    managerId = it.managerId,
+                    approvalId = approvalId
                 )
                 client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
             } else {
@@ -212,18 +184,62 @@ class AuthManagerApprovalService @Autowired constructor(
                     if (approvalRecord.expiredTime == it.endTime && approvalRecord.status == 3)
                         return@map
                     else {
-                        authManagerApprovalDao.createApproval(
+                        val approvalId = authManagerApprovalDao.createApproval(
                             dslContext = dslContext,
                             userId = it.userId,
                             managerId = it.managerId,
                             expireTime = it.endTime,
                             status = 0
                         )
+                        val weworkRobotNotifyMessage = buildWeworkRobotNotifyMessage(
+                            userId = it.userId,
+                            managerId = it.managerId,
+                            approvalId = approvalId
+                        )
                         client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
                     }
                 }
             }
         }
+    }
+
+    private fun buildWeworkRobotNotifyMessage(
+        userId: String,
+        managerId: Int,
+        approvalId: Int
+    ): WeworkRobotNotifyMessage {
+        val agreeButton = WeworkMarkdownAction(
+            name = "agree",
+            text = "同意续期",
+            type = "button",
+            value = approvalId.toString(),
+            replaceText = "你已选择同意续期",
+            borderColor = "2EAB49",
+            textColor = "2EAB49"
+        )
+        val refuseButton = WeworkMarkdownAction(
+            name = "refuse",
+            text = "拒绝续期",
+            type = "button",
+            value = approvalId.toString(),
+            replaceText = "你已选择拒绝续期",
+            borderColor = "2EAB49",
+            textColor = "2EAB49"
+        )
+        val actions: MutableList<WeworkMarkdownAction> = ArrayList()
+        actions.add(agreeButton)
+        actions.add(refuseButton)
+        return WeworkRobotNotifyMessage(
+            receivers = userId,
+            receiverType = WeworkReceiverType.single,
+            textType = WeworkTextType.markdown,
+            message = "**蓝盾超级管理员权限续期**\\n管理员ID：$managerId\\n 用户ID：$userId" +
+                "\\n\\n请选择是否需要续期权限\\n",
+            attachments = WeworkMarkdownAttachment(
+                callbackId = "renewal",
+                actions = actions
+            )
+        )
     }
 
     companion object {

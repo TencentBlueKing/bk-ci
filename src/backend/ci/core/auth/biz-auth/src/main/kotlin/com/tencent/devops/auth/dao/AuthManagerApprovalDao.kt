@@ -73,7 +73,8 @@ class AuthManagerApprovalDao {
                 status,
                 now,
                 now
-            ).execute()
+            ).returning(ID)
+                .fetchOne()!!.id
         }
     }
 
