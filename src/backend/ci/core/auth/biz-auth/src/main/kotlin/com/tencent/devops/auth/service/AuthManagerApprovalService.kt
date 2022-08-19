@@ -17,6 +17,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class AuthManagerApprovalService @Autowired constructor(
@@ -59,7 +60,7 @@ class AuthManagerApprovalService @Autowired constructor(
             name = "aggre",
             text = "同意续期",
             type = "button",
-            value = "aggre",
+            value = approvalId.toString(),
             replaceText = "你已选择同意用户续期",
             borderColor = "2EAB49",
             textColor = "2EAB49"
@@ -68,7 +69,7 @@ class AuthManagerApprovalService @Autowired constructor(
             name = "refuse",
             text = "拒绝续期",
             type = "button",
-            value = "refuse",
+            value = approvalId.toString(),
             replaceText = "你已选择拒绝用户续期",
             borderColor = "2EAB49",
             textColor = "2EAB49"
@@ -85,7 +86,7 @@ class AuthManagerApprovalService @Autowired constructor(
                     message = "**蓝盾超级管理员权限续期申请审批**\\n管理员ID：$managerId\\n 用户ID：$userId" +
                         "logo+白色T\\n\\n请选择是否同意用户续期权限\\n",
                     attachments = WeworkMarkdownAttachment(
-                        callbackId = "test",
+                        callbackId = "approval",
                         actions = actions
                     )
                 )
@@ -151,6 +152,77 @@ class AuthManagerApprovalService @Autowired constructor(
             }
         }
         return true
+    }
+
+    fun checkExpiringManager() {
+        val expiringRecords = managerUserDao.listExpiringRecords(dslContext) ?: return
+        logger.info("sentNotifyToExpiringUser : expiringRecords = ${expiringRecords}")
+        expiringRecords.map {
+            val approvalRecord = authManagerApprovalDao.get(dslContext, it.managerId, it.userId)
+            logger.info("approvalRecord : $approvalRecord")
+            val aggreButton = WeworkMarkdownAction(
+                name = "aggre",
+                text = "同意续期",
+                type = "button",
+                value = approvalRecord?.id.toString(),
+                replaceText = "你已选择同意续期",
+                borderColor = "2EAB49",
+                textColor = "2EAB49"
+            )
+            val refuseButton = WeworkMarkdownAction(
+                name = "refuse",
+                text = "拒绝续期",
+                type = "button",
+                value = approvalRecord?.id.toString(),
+                replaceText = "你已选择拒绝续期",
+                borderColor = "2EAB49",
+                textColor = "2EAB49"
+            )
+            val actions: MutableList<WeworkMarkdownAction> = ArrayList()
+            actions.add(aggreButton)
+            actions.add(refuseButton)
+            val weworkRobotNotifyMessage = WeworkRobotNotifyMessage(
+                receivers = it.userId,
+                receiverType = WeworkReceiverType.single,
+                textType = WeworkTextType.markdown,
+                message = "**蓝盾超级管理员权限续期**\\n管理员ID：${it.managerId}\\n 用户ID：${it.userId}" +
+                    "logo+白色T\\n\\n请选择是否需要续期权限\\n",
+                attachments = WeworkMarkdownAttachment(
+                    callbackId = "renewal",
+                    actions = actions
+                )
+            )
+            if (approvalRecord == null) {
+                authManagerApprovalDao.createApproval(
+                    dslContext = dslContext,
+                    userId = it.userId,
+                    managerId = it.managerId,
+                    expireTime = it.endTime,
+                    status = 0
+                )
+                client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
+            } else {
+                val now = LocalDateTime.now()
+                // 审核单还未失效，不用发起审批
+                if (now < approvalRecord.endTime) {
+                    return@map
+                } else {
+                    // 表示本次审批，而且上次被审批人拒绝了，不再发送
+                    if (approvalRecord.expiredTime == it.endTime && approvalRecord.status == 3)
+                        return@map
+                    else {
+                        authManagerApprovalDao.createApproval(
+                            dslContext = dslContext,
+                            userId = it.userId,
+                            managerId = it.managerId,
+                            expireTime = it.endTime,
+                            status = 0
+                        )
+                        client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
+                    }
+                }
+            }
+        }
     }
 
     companion object {
