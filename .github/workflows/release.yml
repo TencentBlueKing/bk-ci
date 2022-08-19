@@ -170,7 +170,6 @@ jobs:
           -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root
 
       - name: Create artifact - CLOUD NATIVE
-        id: create-artifact
         run: |
           version="$(basename $GITHUB_REF)"
           echo "::set-output name=version::$version"
@@ -180,7 +179,6 @@ jobs:
         uses: docker-practice/actions-setup-docker@master
         
       - name: Create Docker Image -- CLOUD NATIVE
-        id: make-docker-image
         working-directory: docker-images/core/ci
         run: |
           version="$(basename $GITHUB_REF)"
