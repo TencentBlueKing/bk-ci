@@ -42,6 +42,8 @@ enum class StreamObjectKind(val value: String) {
     NOTE("note");
 }
 
+fun StreamObjectKind.needInput() = this == StreamObjectKind.MANUAL || this == StreamObjectKind.OPENAPI
+
 enum class StreamPushActionType(val value: String) {
     NEW_BRANCH("new-branch"),
     PUSH_FILE("push-file");

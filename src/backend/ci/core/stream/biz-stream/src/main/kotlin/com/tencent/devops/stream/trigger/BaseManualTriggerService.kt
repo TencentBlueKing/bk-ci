@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.process.yaml.v2.enums.needInput
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -225,7 +225,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
         triggerBuildReq: TriggerBuildReq
     ): BuildId? {
         val yamlReplaceResult = streamYamlTrigger.prepareCIBuildYaml(action)!!
-        val parsedYaml = if (action.metaData.streamObjectKind == StreamObjectKind.MANUAL) {
+        val parsedYaml = if (action.metaData.streamObjectKind.needInput()) {
             YamlCommonUtils.toYamlNotNull(
                 ManualPreScriptBuildYaml(yamlReplaceResult.preYaml, getInputParams(action, triggerBuildReq))
             )
