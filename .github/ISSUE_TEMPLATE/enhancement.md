@@ -1,13 +1,8 @@
----
 name: Enhancement Request
-about: Suggest an enhancement to the bk-ci project
-title: ''
+description: Suggest an enhancement to the bk-ci project
 labels: kind/enhancement
-assignees: ''
-
----
-
-- type: textarea
+body:
+  - type: textarea
     id: feature
     attributes:
       label: What would you like to be added?

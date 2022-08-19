@@ -1,12 +1,3 @@
----
-name: Support Request
-about: Support request or question relating to bk-ci
-title: ''
-labels: help wanted
-assignees: ''
-
----
-
 contact_links:
   - name: Support Request
     url: https://support.qq.com/product/425695

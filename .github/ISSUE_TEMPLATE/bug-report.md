@@ -1,13 +1,8 @@
----
 name: Bug Report
-about: Report a bug encountered while operating bk-ci
-title: ''
+description: Report a bug encountered while operating bk-ci
 labels: kind/bug
-assignees: ''
-
----
-
-- type: textarea
+body:
+  - type: textarea
     id: problem
     attributes:
       label: What happened?
