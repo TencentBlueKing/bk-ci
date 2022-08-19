@@ -158,12 +158,3 @@ gateway_config_file.write('CHART_NAME: {{ include "bkci.names.fullname" . }}\n')
 gateway_config_file.write('{{- end -}}')
 gateway_config_file.flush()
 gateway_config_file.close()
-
-# 上传chart
-if len(sys.argv) < 5:
-    exit(0)
-charts_version = sys.argv[4]
-app_version = sys.argv[5]
-os.system("helm package . --version " + charts_version + " --app-version "+app_version)
-os.system('curl -F "chart=@bk-ci-' + charts_version +
-          '.tgz" -u ${bkrepo_helm_bkce}:${bkrepo_helm_pass} ${bkrepo_helm_url}')
