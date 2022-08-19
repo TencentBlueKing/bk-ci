@@ -464,7 +464,7 @@ func handle(c *commandCli.Context, cmd []string) ([]string, error) {
 			//dir := filepath.Join(dcUtil.GetRuntimeDir(), "tmp")
 			des := "C:\\Users\\michealhe\\.bk_dist\\tmp" + s[:index+1]
 			if c.IsSet(FlagPack) {
-				copyFile(src, des)
+				copyDir(src, des)
 			}
 			dir := "C:\\Users\\michealhe\\.bk_dist\\" + "tmp\\"
 			ss := strings.ReplaceAll(s, s[index-1:index+1], dir)
@@ -528,4 +528,36 @@ func copyFile(src, des string) (written int64, err error) {
 	defer desFile.Close()
 
 	return io.Copy(desFile, srcFile)
+}
+func copyDir(src string, dest string) {
+	src = FormatPath(src)
+	dest = FormatPath(dest)
+
+	var cmd *exec.Cmd
+
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("xcopy", src, dest, "/I", "/E")
+	case "darwin", "linux":
+		cmd = exec.Command("cp", "-R", src, dest)
+	}
+
+	outPut, e := cmd.Output()
+	if e != nil {
+		fmt.Println(e.Error())
+		return
+	}
+	fmt.Println(string(outPut))
+}
+
+func FormatPath(s string) string {
+	switch runtime.GOOS {
+	case "windows":
+		return strings.Replace(s, "/", "\\", -1)
+	case "darwin", "linux":
+		return strings.Replace(s, "\\", "/", -1)
+	default:
+		fmt.Println("only support linux,windows,darwin, but os is " + runtime.GOOS)
+		return s
+	}
 }
