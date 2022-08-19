@@ -299,7 +299,6 @@ class ImageProjectService @Autowired constructor(
             pageSize = pageSize,
             offsetNum = offsetNum
         )
-        logger.info("jobImageRecords is : $jobImageRecords")
         jobImageRecords?.forEach {
             val jobImageItem = generateJobImageItem(isContainAgentType, it)
             jobImageItemList.add(jobImageItem)

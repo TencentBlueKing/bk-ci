@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("手动触发请求")
 data class ManualTriggerReq(
-    @ApiModelProperty("蓝盾项目ID")
+    @ApiModelProperty("蓝盾项目ID(带前缀 如git_xxx)")
     val projectId: String,
     @ApiModelProperty("分支")
     val branch: String,

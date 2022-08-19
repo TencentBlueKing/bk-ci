@@ -6,6 +6,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
 import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.pojo.OpenapiTriggerReq
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
@@ -13,6 +14,7 @@ import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
 import com.tencent.devops.stream.service.StreamGitTokenService
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.service.StreamYamlService
+import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.trigger.OpenApiTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,6 +54,39 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
             )
         }
         return Result(openApiTriggerService.triggerBuild(userId, pipelineId, new))
+    }
+
+    override fun openapiTrigger(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        triggerBuildReq: OpenapiTriggerReq
+    ): Result<TriggerBuildResult> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
+        return with(triggerBuildReq) {
+            Result(
+                openApiTriggerService.triggerBuild(
+                    userId, pipelineId,
+                    TriggerBuildReq(
+                        projectId = projectId,
+                        branch = branch,
+                        customCommitMsg = customCommitMsg,
+                        yaml = getYamlContentWithPath(
+                            gitProjectId = gitProjectId,
+                            branch = branch,
+                            path = path
+                        ),
+                        description = null,
+                        commitId = commitId,
+                        payload = null,
+                        eventType = null,
+                        inputs = ManualTriggerService.parseInputs(inputs)
+                    )
+                )
+            )
+        }
     }
 
     override fun checkYaml(userId: String, yamlCheck: StreamYamlCheck): Result<String> {

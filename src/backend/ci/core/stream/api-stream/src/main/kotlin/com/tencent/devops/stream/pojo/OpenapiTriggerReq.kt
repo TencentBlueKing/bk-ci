@@ -24,38 +24,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.service.image
 
-import com.tencent.devops.store.dao.image.ImageDao
-import com.tencent.devops.store.service.common.AbstractClassifyService
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+package com.tencent.devops.stream.pojo
 
-@Service("IMAGE_CLASSIFY_SERVICE")
-class MarketImageClassifyService : AbstractClassifyService() {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    private val logger = LoggerFactory.getLogger(MarketImageClassifyService::class.java)
-
-    @Autowired
-    private lateinit var dslContext: DSLContext
-
-    @Autowired
-    private lateinit var imageDao: ImageDao
-
-    override fun getDeleteClassifyFlag(classifyId: String): Boolean {
-        // 允许删除分类是条件：1、该分类下的镜像都不处于上架状态 2、该分类下的镜像如果处于已下架状态但已经没人在用
-        var flag = false
-        val releaseImageNum = imageDao.countReleaseImageNumByClassifyId(dslContext, classifyId)
-        logger.info("$classifyId releaseImageNum is :$releaseImageNum")
-        if (releaseImageNum == 0) {
-            val undercarriageImageNum = imageDao.countUndercarriageImageNumByClassifyId(dslContext, classifyId)
-            logger.info("$classifyId undercarriageImageNum is :$undercarriageImageNum")
-            if (undercarriageImageNum == 0) {
-                flag = true
-            }
-        }
-        return flag
-    }
-}
+@ApiModel("openapi触发请求")
+data class OpenapiTriggerReq(
+    @ApiModelProperty("蓝盾项目ID(带前缀 如git_xxx)")
+    val projectId: String,
+    @ApiModelProperty("分支")
+    val branch: String,
+    @ApiModelProperty("yaml路径")
+    val path: String,
+    @ApiModelProperty("Custom commit message")
+    val customCommitMsg: String,
+    @ApiModelProperty("用户选择的触发CommitId")
+    val commitId: String? = null,
+    @ApiModelProperty("输入参数(json对象)")
+    val inputs: Map<String, Any?>?
+)

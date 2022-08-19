@@ -182,7 +182,7 @@ class TemplateFacadeService @Autowired constructor(
     private val instanceListUrl: String = ""
 
     fun createTemplate(projectId: String, userId: String, template: Model): String {
-        logger.info("Start to create the template $template by user $userId")
+        logger.info("Start to create the template ${template.name} by user $userId")
         checkPermission(projectId, userId)
         checkTemplate(template, projectId)
         val templateId = UUIDUtil.generate()
@@ -813,8 +813,8 @@ class TemplateFacadeService @Autowired constructor(
                     return result.data!!.url
                 }
             }
-        } catch (t: Throwable) {
-            logger.warn("Fail to get the code [$projectId|$repositoryConfig]", t)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to get the code [$projectId|$repositoryConfig]", ignored)
         }
 
         return null
@@ -828,7 +828,7 @@ class TemplateFacadeService @Autowired constructor(
         page: Int? = null,
         pageSize: Int? = null
     ): OptionalTemplateList {
-        logger.info("[$projectId|$templateType|$page|$pageSize] List template")
+        logger.info("[$projectId|$templateType|$templateIds|$page|$pageSize] List template")
         val result = mutableMapOf<String, OptionalTemplate>()
         val templateCount = templateDao.countTemplate(
             dslContext = dslContext,
@@ -1067,7 +1067,6 @@ class TemplateFacadeService @Autowired constructor(
         val v2Model = getTemplateModel(srcTemplate.template)
         val v1Containers = getContainers(v1Model)
         val v2Containers = getContainers(v2Model)
-        logger.info("Get the containers - [$v1Containers] - [$v2Containers]")
 
         compareContainer(v1Containers, v2Containers)
         val versions = listTemplateVersions(srcTemplate.projectId, srcTemplate.id)
@@ -1223,8 +1222,8 @@ class TemplateFacadeService @Autowired constructor(
                     param = instanceParams
                 )
             }.toMap()
-        } catch (t: Throwable) {
-            logger.warn("Fail to list pipeline params - [$projectId|$userId|$templateId|$version]", t)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to list pipeline params - [$projectId|$userId|$templateId|$version]", ignored)
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.FAIL_TO_LIST_TEMPLATE_PARAMS,
                 defaultMessage = "列举流水线参数失败"
@@ -1301,14 +1300,14 @@ class TemplateFacadeService @Autowired constructor(
                     successPipelines.add(instance.pipelineName)
                     successPipelinesId.add(pipelineId)
                 }
-            } catch (t: DuplicateKeyException) {
-                logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", t)
+            } catch (ignored: DuplicateKeyException) {
+                logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", ignored)
                 failurePipelines.add(instance.pipelineName)
                 messages[instance.pipelineName] = "流水线已经存在"
-            } catch (t: Throwable) {
-                logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", t)
+            } catch (ignored: Throwable) {
+                logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", ignored)
                 failurePipelines.add(instance.pipelineName)
-                messages[instance.pipelineName] = t.message ?: "创建流水线失败"
+                messages[instance.pipelineName] = ignored.message ?: "创建流水线失败"
             }
         }
 
@@ -1370,14 +1369,14 @@ class TemplateFacadeService @Autowired constructor(
                             templateInstanceUpdate = it
                         )
                         successPipelines.add(it.pipelineName)
-                    } catch (t: DuplicateKeyException) {
-                        logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
+                    } catch (ignored: DuplicateKeyException) {
+                        logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", ignored)
                         failurePipelines.add(it.pipelineName)
                         messages[it.pipelineName] = "流水线已经存在"
-                    } catch (t: Throwable) {
-                        logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
+                    } catch (ignored: Throwable) {
+                        logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", ignored)
                         failurePipelines.add(it.pipelineName)
-                        messages[it.pipelineName] = t.message ?: "更新流水线失败"
+                        messages[it.pipelineName] = ignored.message ?: "更新流水线失败"
                     }
             }
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")

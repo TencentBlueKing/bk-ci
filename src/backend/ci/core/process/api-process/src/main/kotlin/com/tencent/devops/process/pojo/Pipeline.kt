@@ -87,6 +87,10 @@ data class Pipeline(
     var instanceFromTemplate: Boolean? = null,
     @ApiModelProperty("模板ID", required = false)
     var templateId: String? = null,
+    @ApiModelProperty("版本名称", required = false)
+    var versionName: String? = null,
+    @ApiModelProperty("版本", required = false)
+    var version: Long? = null,
     @ApiModelProperty("流水线更新人", required = false)
     val updater: String,
     @ApiModelProperty("流水线创建人", required = false)
