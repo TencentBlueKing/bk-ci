@@ -56,8 +56,8 @@ class AuthManagerApprovalService @Autowired constructor(
             return true
         }
         val actions: MutableList<WeworkMarkdownAction> = ArrayList()
-        val aggreButton = WeworkMarkdownAction(
-            name = "aggre",
+        val agreeButton = WeworkMarkdownAction(
+            name = "agree",
             text = "同意续期",
             type = "button",
             value = approvalId.toString(),
@@ -74,7 +74,7 @@ class AuthManagerApprovalService @Autowired constructor(
             borderColor = "2EAB49",
             textColor = "2EAB49"
         )
-        actions.add(aggreButton)
+        actions.add(agreeButton)
         actions.add(refuseButton)
         when (approvalType) {
             ApprovalType.AGREE -> {
@@ -161,8 +161,8 @@ class AuthManagerApprovalService @Autowired constructor(
         expiringRecords.map {
             val approvalRecord = authManagerApprovalDao.get(dslContext, it.managerId, it.userId)
             logger.info("approvalRecord : $approvalRecord")
-            val aggreButton = WeworkMarkdownAction(
-                name = "aggre",
+            val agreeButton = WeworkMarkdownAction(
+                name = "agree",
                 text = "同意续期",
                 type = "button",
                 value = approvalRecord?.id.toString(),
@@ -180,7 +180,7 @@ class AuthManagerApprovalService @Autowired constructor(
                 textColor = "2EAB49"
             )
             val actions: MutableList<WeworkMarkdownAction> = ArrayList()
-            actions.add(aggreButton)
+            actions.add(agreeButton)
             actions.add(refuseButton)
             val weworkRobotNotifyMessage = WeworkRobotNotifyMessage(
                 receivers = it.userId,
