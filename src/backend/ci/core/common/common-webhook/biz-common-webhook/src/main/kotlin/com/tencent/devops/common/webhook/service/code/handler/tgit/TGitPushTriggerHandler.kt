@@ -56,6 +56,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
+import com.tencent.devops.common.webhook.service.code.filter.PushKindFilter
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
@@ -176,7 +177,14 @@ class TGitPushTriggerHandler(
                     excludedPaths = convert(excludePaths)
                 )
             )
-            return listOf(skipCiFilter, pathFilter, commitMessageFilter)
+            val pushKindFilter = PushKindFilter(
+                pipelineId = pipelineId,
+                operationKind = event.operation_kind!!,
+                actionKind = event.action_kind!!,
+                isMonitorCreate = webHookParams.enableMonitorCreate ?: true,
+                isMonitorUpdate = webHookParams.enableMonitorUpdate ?: true
+            )
+            return listOf(skipCiFilter, pathFilter, commitMessageFilter, pushKindFilter)
         }
     }
 

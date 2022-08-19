@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import io.swagger.annotations.ApiModelProperty
 
 data class WebHookParams(
     val repositoryConfig: RepositoryConfig,
@@ -66,5 +67,7 @@ data class WebHookParams(
     var includeMrAction: String? = null,
     // note事件action
     var includeNoteComment: String? = null,
-    var includeNoteTypes: String? = null
+    var includeNoteTypes: String? = null,
+    val enableMonitorCreate: Boolean? = true,
+    val enableMonitorUpdate: Boolean? = true
 )
