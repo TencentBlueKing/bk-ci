@@ -30,6 +30,7 @@ echo %VERSION%
 
 set "LDFLAG=-X github.com/Tencent/bk-ci/src/booster/common/static.EncryptionKey=%encryption_key% -X github.com/Tencent/bk-ci/src/booster/common/static.ServerCertPwd=%server_cert_pwd% -X github.com/Tencent/bk-ci/src/booster/common/static.ClientCertPwd=%client_cert_pwd% -X github.com/Tencent/bk-ci/src/booster/common/version.Version=%VERSION% -X github.com/Tencent/bk-ci/src/booster/common/version.BuildTime=%BUILDTIME% -X github.com/Tencent/bk-ci/src/booster/common/version.GitHash=%GITHASH% -X github.com/Tencent/bk-ci/src/booster/common/version.Tag=%GITTAG%"
 set "BuildBooster_LDFLAG=-X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.ProdBuildBoosterServerDomain=%distcc_server_prod_domain% -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.ProdBuildBoosterServerPort=%distcc_server_prod_port% -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.TestBuildBoosterServerDomain=%distcc_server_test_domain% -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.TestBuildBoosterServerPort=%distcc_server_test_port%"
+set "Gateway_LDFLAG=-X github.com/Tencent/bk-ci/src/booster/bk_dist/booster-helper/command.ProdBuildBoosterGatewayDomain=%distcc_gateway_prod_domain% -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster-helper/command.ProdBuildBoosterGatewayPort=%distcc_gateway_prod_port% -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster-helper/command.TestdBuildBoosterGatewayDomain=%distcc_gateway_test_domain% -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster-helper/command.TestBuildBoosterGatewayPort=%distcc_gateway_test_port%"
 
 cd %curpath%
 set bindir=%curpath%\bin
@@ -44,6 +45,8 @@ go build -ldflags "%LDFLAG%" -o %bindir%\bk-FBuild.exe %curpath%\fastbuild\bk-fb
 go build -ldflags "%LDFLAG%" -o %bindir%\bk-bb-agent.exe %curpath%\server\pkg\resource\direct\agent\main.go
 
 go build -ldflags "%LDFLAG% %BuildBooster_LDFLAG%" -o %bindir%\bk-booster.exe %curpath%\bk_dist\booster\main.go
+
+go build -ldflags "%LDFLAG% %BuildBooster_LDFLAG% %Gateway_LDFLAG%" -o %bindir%\bk-booster-helper %curpath%\bk_dist\booster-helper\main.go
 
 go build -ldflags "%LDFLAG% %BuildBooster_LDFLAG%" -o %bindir%\bk-idle-loop.exe %curpath%\bk_dist\idleloop\main.go
 
