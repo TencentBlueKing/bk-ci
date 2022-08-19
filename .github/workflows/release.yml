@@ -198,6 +198,7 @@ jobs:
         working-directory: helm-charts/core/ci
         run: |
           version="$(basename $GITHUB_REF)"
+          pip install humps
           ./build_chart.py ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version $version
 
       - name: Install Helm -- CLOUD NATIVE
