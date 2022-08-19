@@ -382,7 +382,8 @@ func compileTest(c *commandCli.Context) error {
 	}
 
 	dir := filepath.Join(dcUtil.GetRuntimeDir(), "tmp")
-	_ = os.MkdirAll(dir, os.ModePerm)
+	_ = os.MkdirAll(FormatPath(dir), os.ModePerm)
+	fmt.Println(FormatPath(dir))
 
 	count, _ := strconv.Atoi(c.String(FlagCnt))
 
