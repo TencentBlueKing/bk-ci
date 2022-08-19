@@ -37,9 +37,10 @@ import org.slf4j.MDC
 
 @Event(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_STREAM_TRIGGER_PIPELINE_EVENT)
 data class StreamTriggerEvent(
+    val traceId: String? = MDC.get(TraceTag.BIZID),
     val eventStr: String,
     val actionCommonData: EventCommonData,
     val actionContext: StreamTriggerContext,
     val actionSetting: StreamTriggerSetting,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
+    val trigger: String?
 )

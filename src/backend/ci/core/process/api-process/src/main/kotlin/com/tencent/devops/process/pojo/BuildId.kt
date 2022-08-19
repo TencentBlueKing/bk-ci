@@ -33,5 +33,9 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("构建模型-ID")
 data class BuildId(
     @ApiModelProperty("构建ID", required = true)
-    val id: String
+    val id: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String? = null,
+    @ApiModelProperty("流水线ID")
+    val pipelineId: String? = null
 )

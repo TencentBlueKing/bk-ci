@@ -36,6 +36,8 @@ import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
@@ -431,4 +433,30 @@ interface ApigwBuildResourceV4 {
         @ApiParam("审核信息", required = true)
         params: ReviewParam
     ): Result<Boolean>
+
+    @ApiOperation("获取流水线手动启动分页的参数", tags = ["v4_app_build_startOptions", "v4_user_build_startOptions"])
+    @POST
+    @Path("/build_manual_startup_options")
+    fun manualStartupOptions(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigwType", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("搜索参数", required = false)
+        @QueryParam("search")
+        search: String? = null,
+        @ApiParam("请求参数", required = true)
+        property: BuildFormProperty
+    ): Result<List<BuildFormValue>>
 }

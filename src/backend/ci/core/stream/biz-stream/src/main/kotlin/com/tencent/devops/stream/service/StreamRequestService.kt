@@ -68,7 +68,7 @@ class StreamRequestService @Autowired constructor(
     fun getRequestList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Page<StreamGitRequestHistory> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
-        logger.info("get request list, gitProjectId: $gitProjectId")
+        logger.info("StreamRequestService|getRequestList|gitProjectId|$gitProjectId")
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
         val count = gitRequestEventDao.getRequestCount(dslContext, gitProjectId)
         val requestList = gitRequestEventDao.getRequestList(
@@ -78,7 +78,7 @@ class StreamRequestService @Autowired constructor(
             pageSize = pageSizeNotNull
         )
         if (requestList.isEmpty() || count == 0L) {
-            logger.info("Get request build list return empty, gitProjectId: $gitProjectId")
+            logger.info("StreamRequestService|getRequestList|empty|gitProjectId|$gitProjectId")
             return Page(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
@@ -118,12 +118,11 @@ class StreamRequestService @Autowired constructor(
 
             // 已触发的所有记录
             val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
-            logger.info("Get build list requestBuildsList: $buildsList, gitProjectId: $gitProjectId")
+            logger.info("StreamRequestService|getRequestList|requestBuildsList|$buildsList|gitProjectId|$gitProjectId")
             val builds = buildsList.map { it.buildId }.toSet()
             val buildList = client.get(ServiceBuildResource::class)
                 .getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
             if (buildList?.isEmpty() == false) {
-                logger.info("Get build history list buildHistoryList: $buildList, gitProjectId: $gitProjectId")
                 val records = mutableListOf<StreamBuildHistory>()
                 buildsList.forEach nextBuild@{
                     try {
@@ -141,9 +140,9 @@ class StreamRequestService @Autowired constructor(
                             )
                         )
                     } catch (e: Exception) {
-                        logger.error(
-                            "Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId:" +
-                                " ${it.pipelineId} failed with error: ",
+                        logger.warn(
+                            "StreamRequestService|getRequestList|${it.gitProjectId}|${it.eventId}|" +
+                                "${it.pipelineId}|error",
                             e
                         )
                         return@nextBuild
@@ -151,13 +150,13 @@ class StreamRequestService @Autowired constructor(
                 }
                 requestHistory.buildRecords.addAll(records)
             } else {
-                logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
+                logger.info("StreamRequestService|getRequestList|empty|gitProjectId|$gitProjectId")
             }
             // -------
 
             // 未触发的所有记录
             val noBuildList = gitRequestEventNotBuildDao.getRequestNoBuildsByEventId(dslContext, event.id!!)
-            logger.info("Get no build list requestBuildsList: $noBuildList, gitProjectId: $gitProjectId")
+            logger.info("StreamRequestService|getRequestList|no build List|$noBuildList|gitProjectId|$gitProjectId")
             val records = mutableListOf<StreamBuildHistory>()
 
             // 取所有记录的非空流水线ID，查出对应流水线

@@ -778,8 +778,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             if (!imageCode.isNullOrBlank() && !validImageCodes.contains(imageCode)) {
                 val storeCommonDao = try {
                     SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
-                } catch (e: Exception) {
-                    logger.warn("StoreCommonDao is not exist")
+                } catch (ignored: Throwable) {
+                    logger.warn("StoreCommonDao is not exist", ignored)
                     null
                 }
                 if (storeCommonDao != null) {

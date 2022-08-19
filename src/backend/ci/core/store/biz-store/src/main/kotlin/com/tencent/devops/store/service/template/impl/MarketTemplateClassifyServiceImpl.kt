@@ -50,10 +50,10 @@ class MarketTemplateClassifyServiceImpl : MarketTemplateClassifyService, Abstrac
         // 允许删除分类是条件：1、该分类下的模板都不处于上架状态 2、该分类下的模板如果处于已下架状态但已经没人在用
         var flag = false
         val releaseTemplateNum = templateDao.countReleaseTemplateNumByClassifyId(dslContext, classifyId)
-        logger.info("the releaseTemplateNum is :$releaseTemplateNum")
+        logger.info("$classifyId releaseTemplateNum is :$releaseTemplateNum")
         if (releaseTemplateNum == 0) {
             val undercarriageTemplateNum = templateDao.countUndercarriageTemplateNumByClassifyId(dslContext, classifyId)
-            logger.info("the undercarriageTemplateNum is :$undercarriageTemplateNum")
+            logger.info("$classifyId undercarriageTemplateNum is :$undercarriageTemplateNum")
             if (undercarriageTemplateNum == 0) {
                 flag = true
             }

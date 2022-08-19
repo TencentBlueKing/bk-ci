@@ -42,6 +42,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.quality.api.v2.ServiceQualityControlPointMarketResource
@@ -187,6 +188,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         return Result(true)
     }
 
+    @BkTimed(extraTags = ["publish", "addMarketAtom"], value = "store_publish_pipeline_atom")
     override fun addMarketAtom(
         userId: String,
         marketAtomCreateRequest: MarketAtomCreateRequest
@@ -282,6 +284,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     abstract fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum
 
     @Suppress("UNCHECKED_CAST")
+    @BkTimed(extraTags = ["publish", "updateMarketAtom"], value = "store_publish_pipeline_atom")
     override fun updateMarketAtom(
         userId: String,
         projectCode: String,
@@ -447,7 +450,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
             }
             // 更新标签信息
-            val labelIdList = marketAtomUpdateRequest.labelIdList
+            val labelIdList = marketAtomUpdateRequest.labelIdList?.filter { !it.isNullOrBlank() }
             if (null != labelIdList) {
                 atomLabelRelDao.deleteByAtomId(context, atomId)
                 if (labelIdList.isNotEmpty()) {
@@ -538,7 +541,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 repositoryHashId = repositoryHashId,
                 branch = branch
             )
-            logger.info("the quality json str is :$qualityJsonStr")
             return if (!qualityJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(qualityJsonStr)) {
                 val qualityDataMap = JsonUtil.toMap(qualityJsonStr)
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
@@ -590,8 +592,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
                     client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
                     client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
-                } catch (e: Exception) {
-                    logger.error("clear atom:$atomCode test quality data error", e)
+                } catch (ignored: Throwable) {
+                    logger.warn("clear atom:$atomCode test quality data fail", ignored)
                 }
 
                 GetAtomQualityConfigResult(
@@ -599,8 +601,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     arrayOf(branch ?: MASTER, QUALITY_JSON_NAME)
                 )
             }
-        } catch (e: Exception) {
-            logger.error("getFileContent error is :$e", e)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|getQualityJsonContent|$atomCode|error=${ignored.message}", ignored)
             return GetAtomQualityConfigResult(
                 StoreMessageCode.USER_ATOM_QUALITY_CONF_INVALID,
                 arrayOf(QUALITY_JSON_NAME)
@@ -704,9 +706,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         }
         return client.get(ServiceQualityMetadataMarketResource::class).setTestMetadata(
-            userId,
-            atomCode,
-            metadataList
+            userId = userId,
+            atomCode = atomCode,
+            metadataList = metadataList
         ).data ?: mapOf()
     }
 
@@ -731,8 +733,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 repositoryHashId = repositoryHashId,
                 branch = branch
             )
-        } catch (e: Exception) {
-            logger.error("getFileContent error is :$e", e)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|getTaskJsonContent|$atomCode|error=${ignored.message}", ignored)
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
                 params = arrayOf(TASK_JSON_NAME)
@@ -844,7 +846,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     override fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo> {
         logger.info("getProcessInfo userId is $userId,atomId is $atomId")
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId)
-        logger.info("getProcessInfo record is $record")
         return if (null == record) {
             MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
         } else {
@@ -876,7 +877,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 creator = record.creator,
                 processInfo = processInfo
             )
-            logger.info("getProcessInfo storeProcessInfo is $storeProcessInfo")
             Result(storeProcessInfo)
         }
     }
@@ -930,6 +930,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     /**
      * 通过测试
      */
+    @BkTimed(extraTags = ["publish", "passTest"], value = "store_publish_pipeline_atom")
     override fun passTest(userId: String, atomId: String): Result<Boolean> {
         logger.info("passTest, userId=$userId, atomId=$atomId")
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
@@ -970,6 +971,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
     }
 
+    @BkTimed(extraTags = ["publish", "handleAtomRelease"], value = "store_publish_pipeline_atom")
     override fun handleAtomRelease(
         userId: String,
         releaseFlag: Boolean,

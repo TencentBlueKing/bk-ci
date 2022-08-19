@@ -83,6 +83,7 @@ class StartContainerStageCmd(
                     sendStageStartCallback(commandContext)
                     stageStatus = BuildStatus.RUNNING // 要启动Stage
                 }
+
                 newActionType.isEnd() -> stageStatus = BuildStatus.CANCELED // 若为终止命令，直接设置为取消
                 newActionType == ActionType.SKIP -> stageStatus = BuildStatus.SKIP // 要跳过Stage
             }
@@ -142,7 +143,7 @@ class StartContainerStageCmd(
                 cancel = BuildStatusSwitcher.stageStatusMaker.cancel(container.status)
             } else if (ControlUtils.checkContainerFailure(container)) {
                 commandContext.failureContainerNum++
-                fail = BuildStatusSwitcher.stageStatusMaker.forceFinish(container.status)
+                fail = BuildStatusSwitcher.stageStatusMaker.forceFinish(container.status, commandContext.fastKill)
             } else if (container.status == BuildStatus.SKIP) {
                 commandContext.skipContainerNum++
             } else if (container.status.isRunning() && !actionType.isEnd()) {
