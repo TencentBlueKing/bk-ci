@@ -30,6 +30,7 @@ package com.tencent.devops.auth.cron
 import com.tencent.devops.auth.entity.ManagerChangeType
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
+import com.tencent.devops.auth.service.AuthManagerApprovalService
 import com.tencent.devops.auth.service.ManagerOrganizationService
 import com.tencent.devops.auth.service.ManagerUserService
 import com.tencent.devops.common.client.ClientTokenService
@@ -44,7 +45,8 @@ class AuthCronManager @Autowired constructor(
     val managerUserService: ManagerUserService,
     val managerOrganizationService: ManagerOrganizationService,
     val refreshDispatch: AuthRefreshDispatch,
-    val clientTokenService: ClientTokenService
+    val clientTokenService: ClientTokenService,
+    val authManagerApprovalService: AuthManagerApprovalService
 ) {
 
     @PostConstruct
@@ -85,6 +87,14 @@ class AuthCronManager @Autowired constructor(
     @Scheduled(cron = "0 0 1 * * ?")
     fun refreshToken() {
         clientTokenService.setSystemToken(null)
+    }
+
+    /**
+     * 每天凌晨1点检查即将失效的管理员权限
+     */
+    @Scheduled(cron = "0 0 1 * * ?")
+    fun checkExpiringManager() {
+        authManagerApprovalService.checkExpiringManager()
     }
 
     companion object {

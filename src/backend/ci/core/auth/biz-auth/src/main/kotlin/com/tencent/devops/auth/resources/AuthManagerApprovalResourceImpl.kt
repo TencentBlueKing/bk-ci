@@ -37,14 +37,14 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class AuthManagerApprovalResourceImpl @Autowired constructor(
-    val authManagerApprovalService: AuthManagerApprovalService
+    val authManagerApprovalService: AuthManagerApprovalService,
 ) : AuthManagerApprovalResource {
     override fun userRenewalAuth(
         approvalId: Int,
         approvalType: ApprovalType
     ): Result<Boolean> {
         logger.info("userRenewalAuth : approvalId = $approvalId | approvalType = $approvalType")
-        return Result(authManagerApprovalService.userRenewalAuth(approvalId,approvalType))
+        return Result(authManagerApprovalService.userRenewalAuth(approvalId, approvalType))
     }
 
     override fun managerApproval(
@@ -52,7 +52,11 @@ class AuthManagerApprovalResourceImpl @Autowired constructor(
         approvalType: ApprovalType
     ): Result<Boolean> {
         logger.info("managerApproval : approvalId = $approvalId | approvalType = $approvalType")
-        return Result(authManagerApprovalService.managerApproval(approvalId,approvalType))
+        return Result(authManagerApprovalService.managerApproval(approvalId, approvalType))
+    }
+
+    override fun checkExpiringManager() {
+        authManagerApprovalService.checkExpiringManager()
     }
 
     companion object {
