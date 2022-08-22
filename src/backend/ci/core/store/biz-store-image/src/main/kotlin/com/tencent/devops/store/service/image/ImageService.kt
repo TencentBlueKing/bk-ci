@@ -68,6 +68,7 @@ import com.tencent.devops.store.dao.image.ImageAgentTypeDao
 import com.tencent.devops.store.dao.image.ImageCategoryRelDao
 import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.dao.image.ImageFeatureDao
+import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.dao.image.ImageVersionLogDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
@@ -141,6 +142,8 @@ abstract class ImageService @Autowired constructor() {
     lateinit var imageAgentTypeDao: ImageAgentTypeDao
     @Autowired
     lateinit var imageVersionLogDao: ImageVersionLogDao
+    @Autowired
+    lateinit var imageLabelRelDao: ImageLabelRelDao
     @Autowired
     lateinit var marketImageDao: MarketImageDao
     @Autowired
@@ -986,7 +989,7 @@ abstract class ImageService @Autowired constructor() {
         if (installedCnt > 0) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_IMAGE_USED, arrayOf(imageCode))
         }
-        deleteImageLogically(userId, imageCode)
+        deleteImage(userId, imageCode)
         return Result(true)
     }
 
@@ -1010,6 +1013,30 @@ abstract class ImageService @Autowired constructor() {
                 userId = userId,
                 imageFeatureUpdateRequest = ImageFeatureUpdateRequest(imageCode = imageCode, deleteFlag = true)
             )
+        }
+    }
+
+    fun deleteImage(
+        userId: String,
+        imageCode: String
+    ) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            val imageInfos = marketImageDao.getImagesByImageCode(context, imageCode)
+            storeCommonService.deleteStoreInfo(context, imageCode, StoreTypeEnum.IMAGE.type.toByte())
+            // 删除镜像代理类型数据
+            imageAgentTypeDao.deleteAgentTypeByImageCode(context, imageCode)
+            // 删除镜像特性信息
+            marketImageFeatureDao.daleteImageFeature(context, imageCode)
+            imageInfos?.forEach {
+
+                // 删除镜像与范畴关联关系
+                imageCategoryRelDao.deleteByImageId(context, it.id)
+                // 删除镜像与标签关联关系
+                imageLabelRelDao.deleteByImageId(context, it.id)
+                // 删除镜像版本日志
+                imageVersionLogDao.deleteByImageId(context, it.id)
+            }
         }
     }
 
