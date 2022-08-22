@@ -25,23 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStorePkgEnvInfoResource
+import com.tencent.devops.store.pojo.common.StorePkgRunEnvRequest
+import com.tencent.devops.store.service.common.StorePkgRunEnvInfoService
+import org.springframework.beans.factory.annotation.Autowired
 
-interface AtomTargetHandleService {
+@RestResource
+class OpStorePkgEnvInfoResourceImpl @Autowired constructor(
+    private val storePkgRunEnvInfoService: StorePkgRunEnvInfoService
+) : OpStorePkgEnvInfoResource {
 
-    /**
-     * 处理target入口命令逻辑
-     */
-    fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String
+    override fun create(userId: String, storePkgRunEnvRequest: StorePkgRunEnvRequest): Result<Boolean> {
+        return Result(storePkgRunEnvInfoService.create(userId, storePkgRunEnvRequest))
+    }
+
+    override fun update(userId: String, id: String, storePkgRunEnvRequest: StorePkgRunEnvRequest): Result<Boolean> {
+        return Result(storePkgRunEnvInfoService.update(userId, id, storePkgRunEnvRequest))
+    }
+
+    override fun delete(userId: String, id: String, storePkgRunEnvRequest: StorePkgRunEnvRequest): Result<Boolean> {
+        return Result(storePkgRunEnvInfoService.delete(userId, id))
+    }
 }

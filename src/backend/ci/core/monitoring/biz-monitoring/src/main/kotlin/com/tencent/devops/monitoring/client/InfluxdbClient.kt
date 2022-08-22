@@ -135,7 +135,7 @@ class InfluxdbClient {
         insert(any::class.java.simpleName, tags, fields)
     }
 
-    fun insert(measurement: String, tags: Map<String, String>, fields: Map<String, Any>) {
+    fun insert(measurement: String, tags: Map<String, String>, fields: Map<String, Any?>) {
         val builder: Point.Builder = measurement(measurement)
         builder.tag(tags)
         builder.fields(fields)
@@ -147,8 +147,8 @@ class InfluxdbClient {
         return influxDB.query(Query(sql, dbName))
     }
 
-    private fun getFieldTagMap(any: Any): Pair<Map<String, Any>/*field*/, Map<String, String>/*tag*/> {
-        val field: MutableMap<String, Any> = mutableMapOf()
+    private fun getFieldTagMap(any: Any): Pair<Map<String, Any?>/*field*/, Map<String, String>/*tag*/> {
+        val field: MutableMap<String, Any?> = mutableMapOf()
         val tag: MutableMap<String, String> = mutableMapOf()
 
         FieldUtils.getAllFields(any.javaClass).forEach {
@@ -166,10 +166,10 @@ class InfluxdbClient {
     private fun generateField(
         it: Field,
         any: Any,
-        field: MutableMap<String, Any>
+        field: MutableMap<String, Any?>
     ) {
         val value = it.get(any)
-        field[it.name] = if (value == null) "" else {
+        field[it.name] = if (value == null) null else {
             if (value is Number) value else value.toString()
         }
     }

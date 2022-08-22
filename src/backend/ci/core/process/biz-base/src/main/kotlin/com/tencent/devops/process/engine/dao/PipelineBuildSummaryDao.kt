@@ -144,19 +144,6 @@ class PipelineBuildSummaryDao {
         }
     }
 
-    fun updateBuildNumAlias(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildNumAlias: String
-    ) {
-        with(T_PIPELINE_BUILD_SUMMARY) {
-            dslContext.update(this)
-                .set(BUILD_NUM_ALIAS, buildNumAlias)
-                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId))).execute()
-        }
-    }
-
     fun listPipelineInfoBuildSummaryCount(
         dslContext: DSLContext,
         projectId: String,
@@ -196,7 +183,7 @@ class PipelineBuildSummaryDao {
         permissionFlag: Boolean? = null,
         page: Int? = null,
         pageSize: Int? = null,
-        offsetNum: Int? = 0
+        pageOffsetNum: Int? = 0
     ): Result<TPipelineInfoRecord> {
         val conditions = generatePipelineFilterCondition(
             projectId = projectId,
@@ -214,9 +201,8 @@ class PipelineBuildSummaryDao {
             sortType = sortType,
             favorPipelines = favorPipelines,
             authPipelines = authPipelines,
-            page = page,
-            pageSize = pageSize,
-            offsetNum = offsetNum
+            offset = page?.let { (it - 1) * (pageSize ?: 10) + (pageOffsetNum ?: 0) },
+            limit = if (pageSize == -1) null else pageSize
         )
     }
 
@@ -372,54 +358,6 @@ class PipelineBuildSummaryDao {
     }
 
     /**
-     * 分页查询多个projectId对应的PipelineInfoBuildSummary
-     */
-    fun listPipelineInfoBuildSummary(
-        dslContext: DSLContext,
-        projectIds: Set<String>?,
-        channelCodes: Set<ChannelCode>?,
-        limit: Int?,
-        offset: Int?
-    ): Result<TPipelineInfoRecord> {
-        val conditions = mutableListOf<Condition>()
-        conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
-        if (projectIds != null && projectIds.isNotEmpty()) {
-            conditions.add(T_PIPELINE_INFO.PROJECT_ID.`in`(projectIds))
-        }
-        if (channelCodes != null && channelCodes.isNotEmpty()) {
-            conditions.add(T_PIPELINE_INFO.CHANNEL.`in`(channelCodes.map { it.name }))
-        }
-        val where = dslContext.selectFrom(T_PIPELINE_INFO).where(conditions)
-        if (limit != null && limit >= 0) {
-            where.limit(limit)
-        }
-        if (offset != null && offset >= 0) {
-            where.offset(offset)
-        }
-        return where.fetch()
-    }
-
-    /**
-     * 无Project信息，直接根据pipelineIds查询
-     */
-    fun listPipelineInfoBuildSummary(
-        dslContext: DSLContext,
-        channelCodes: Set<ChannelCode>?,
-        pipelineIds: Collection<String>
-    ): Result<TPipelineInfoRecord> {
-        val conditions = mutableListOf<Condition>()
-        conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(pipelineIds))
-        conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
-        if (channelCodes != null && channelCodes.isNotEmpty()) {
-            conditions.add(T_PIPELINE_INFO.CHANNEL.`in`(channelCodes.map { it.name }))
-        }
-        return listPipelineInfoBuildSummaryByConditions(
-            dslContext = dslContext,
-            conditions = conditions
-        )
-    }
-
-    /**
      * 查询条件作为变量进行查询
      */
     fun listPipelineInfoBuildSummaryByConditions(
@@ -428,9 +366,8 @@ class PipelineBuildSummaryDao {
         sortType: PipelineSortType? = null,
         favorPipelines: List<String> = emptyList(),
         authPipelines: List<String> = emptyList(),
-        page: Int? = null,
-        pageSize: Int? = null,
-        offsetNum: Int? = 0
+        offset: Int? = null,
+        limit: Int? = null
     ): Result<TPipelineInfoRecord> {
         val baseStep = dslContext.selectFrom(T_PIPELINE_INFO).where(conditions)
         if (sortType != null) {
@@ -450,8 +387,8 @@ class PipelineBuildSummaryDao {
             }
             baseStep.orderBy(sortTypeField)
         }
-        return if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
-            baseStep.limit((page - 1) * pageSize + (offsetNum ?: 0), pageSize).fetch()
+        return if (null != offset && null != limit && offset > 0 && limit > 0) {
+            baseStep.limit(limit).offset(offset).fetch()
         } else {
             baseStep.fetch()
         }

@@ -118,8 +118,8 @@ class TxOpMigrateAtomServiceImpl @Autowired constructor(
                             destPath = pkgPath,
                             file = file
                         )
-                    } catch (t: Throwable) {
-                        logger.warn("migrateAtomPkg file:$pkgPath failed", t)
+                    } catch (ignored: Throwable) {
+                        logger.warn("migrateAtomPkg file:$pkgPath failed", ignored)
                     } finally {
                         // 删除临时文件
                         file.delete()
@@ -151,7 +151,7 @@ class TxOpMigrateAtomServiceImpl @Autowired constructor(
         )[0].username
         OkhttpUtils.uploadFile(uploadFileUrl, file, mapOf(AUTH_HEADER_USER_ID to userId)).use { response ->
             val responseContent = response.body()!!.string()
-            logger.error("uploadFile $destPath responseContent is: $responseContent")
+            logger.error("BKSystemErrorMonitor|uploadFile|$destPath|error=$responseContent")
         }
     }
 
@@ -193,8 +193,8 @@ class TxOpMigrateAtomServiceImpl @Autowired constructor(
                         destPath = destPath,
                         file = file
                     )
-                } catch (t: Throwable) {
-                    logger.warn("migrateAtomStaticFile file:$fileUrl failed", t)
+                } catch (ignored: Throwable) {
+                    logger.error("BKSystemErrorMonitor|uploadStaticFile|$atomCode|error=${ignored.message}", ignored)
                 } finally {
                     // 删除临时文件
                     file.delete()

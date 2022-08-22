@@ -25,44 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.atom
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.model.store.tables.TAppVersion
-import com.tencent.devops.model.store.tables.TApps
-import com.tencent.devops.model.store.tables.TAtomEnvInfo
-import com.tencent.devops.model.store.tables.TStoreBuildAppRel
-import com.tencent.devops.model.store.tables.TStoreBuildInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Repository
-class MarketAtomBuildAppRelDao {
-
-    /**
-     * 查询插件构建信息
-     */
-    fun getMarketAtomBuildAppInfo(dslContext: DSLContext, atomId: String): Result<out Record>? {
-        val a = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("a")
-        val b = TStoreBuildAppRel.T_STORE_BUILD_APP_REL.`as`("b")
-        val c = TAppVersion.T_APP_VERSION.`as`("c")
-        val d = TApps.T_APPS.`as`("d")
-        val e = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("e")
-        return dslContext.select(
-            d.NAME.`as`("appName"),
-            c.VERSION.`as`("appVersion")
-        ).from(a)
-            .join(b)
-            .on(a.ID.eq(b.BUILD_INFO_ID))
-            .join(c)
-            .on(b.APP_VERSION_ID.eq(c.ID))
-            .join(d)
-            .on(c.APP_ID.eq(d.ID))
-            .join(e)
-            .on(a.LANGUAGE.eq(e.LANGUAGE))
-            .where(e.ATOM_ID.eq(atomId).and(a.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte())))
-            .fetch()
-    }
-}
+@ApiModel("store组件安装包运行时环境信息")
+data class StorePkgRunEnvInfo(
+    @ApiModelProperty("环境变量ID", required = true)
+    val id: String,
+    @ApiModelProperty("store组件类型", required = true)
+    val storeType: String,
+    @ApiModelProperty("开发语言", required = true)
+    val language: String,
+    @ApiModelProperty("支持的操作系统名称", required = true)
+    val osName: String,
+    @ApiModelProperty("支持的操作系统架构", required = true)
+    val osArch: String,
+    @ApiModelProperty("运行时版本", required = true)
+    val runtimeVersion: String,
+    @ApiModelProperty("安装包名称", required = true)
+    val pkgName: String,
+    @ApiModelProperty("安装包下载路径", required = true)
+    val pkgDownloadPath: String,
+    @ApiModelProperty("是否为默认安装包", required = true)
+    val defaultFlag: Boolean,
+    @ApiModelProperty("添加用户", required = true)
+    val creator: String,
+    @ApiModelProperty("修改用户", required = true)
+    val modifier: String,
+    @ApiModelProperty("添加时间", required = true)
+    val createTime: String,
+    @ApiModelProperty("修改时间", required = true)
+    val updateTime: String
+)

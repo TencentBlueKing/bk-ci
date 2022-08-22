@@ -55,13 +55,14 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
         checkPermissionFlag: Boolean,
         testProjectCode: String?
     ): Result<Boolean> {
-        logger.info("addExtensionMember userId is:$userId,storeMemberReq is:$storeMemberReq,storeType is:$storeType")
+        logger.info("addExtensionMember params:[$userId|$storeMemberReq|$storeType|$collaborationFlag|" +
+            "$sendNotify|$checkPermissionFlag|$testProjectCode")
         val serviceCode = storeMemberReq.storeCode
         val serviceRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
-        logger.info("addExtensionMember serviceRecord is:$serviceRecord")
-        if (null == serviceRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceCode))
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceCode)
+            )
         if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,
                 userId = userId,
@@ -88,7 +89,11 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
         )
     }
 
-    abstract fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean>
+    abstract fun addRepoMember(
+        storeMemberReq: StoreMemberReq,
+        userId: String,
+        repositoryHashId: String
+    ): Result<Boolean>
 
     override fun delete(
         userId: String,
@@ -97,12 +102,12 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
         storeType: StoreTypeEnum,
         checkPermissionFlag: Boolean
     ): Result<Boolean> {
-        logger.info("deleteExtServiceMember userId is:$userId,id is:$id,storeCode is:$storeCode,storeType is:$storeType")
+        logger.info("deleteExtServiceMember params:[$userId|$id|$storeCode|$storeType|$checkPermissionFlag]")
         val serviceRecord = extServiceFeatureDao.getServiceByCode(dslContext, storeCode)
-        logger.info("deleteExtServiceMember serviceRecord is:$serviceRecord")
-        if (null == serviceRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(storeCode))
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(storeCode)
+            )
         val memberRecord = storeMemberDao.getById(dslContext, id)
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(id))
         // 如果删除的是管理员，只剩一个管理员则不允许删除
@@ -117,7 +122,11 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
         val deleteRepoMemberResult = deleteRepoMember(userId, username, repositoryHashId)
         logger.info("deleteExtServiceMember is:$deleteRepoMemberResult")
         if (deleteRepoMemberResult.isNotOk()) {
-            return Result(status = deleteRepoMemberResult.status, message = deleteRepoMemberResult.message, data = false)
+            return Result(
+                status = deleteRepoMemberResult.status,
+                message = deleteRepoMemberResult.message,
+                data = false
+            )
         }
         return super.delete(
             userId = userId,

@@ -25,13 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.artifactory.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface TxStoreGitResitoryService {
-    fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean>
-
-    fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>
-}
+@ApiModel("插件市场-重新归档插件包请求报文体")
+data class PackageFileInfo(
+    @ApiModelProperty("包文件名", required = true)
+    val packageFileName: String,
+    @ApiModelProperty("包文件路径", required = true)
+    val packageFilePath: String,
+    @ApiModelProperty("包文件大小", required = true)
+    val packageFileSize: Long,
+    @ApiModelProperty("sha摘要值", required = true)
+    val shaContent: String
+)
