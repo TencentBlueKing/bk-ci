@@ -118,7 +118,7 @@ class UserStreamGitResourceImpl @Autowired constructor(
         permissionService.checkStreamPermission(userId, projectId)
         return Result(
             streamGitTransferService.getCommits(
-                userId = getOauthUser(userId = userId, isEnableUser = true, gitProjectId = gitProjectId),
+                userId = getOauthUser(userId = userId, isEnableUser = false, gitProjectId = gitProjectId),
                 gitProjectId = gitProjectId,
                 filePath = filePath,
                 branch = branch,
