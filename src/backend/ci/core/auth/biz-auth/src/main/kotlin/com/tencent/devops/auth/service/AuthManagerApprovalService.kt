@@ -183,9 +183,10 @@ class AuthManagerApprovalService @Autowired constructor(
                 if (approvalRecordNotExpired) {
                     return@map
                 } else {
-                    // 若是本轮审批，并且上一次用户发起续期被审批人拒绝了，不再发送
-                    if (approvalRecord.expiredTime == it.endTime &&
-                        approvalRecord.status == MANAGER_REFUSE_TO_APPROVAL
+                    val isRefuseLastTime = approvalRecord.status == MANAGER_REFUSE_TO_APPROVAL
+                        || approvalRecord.status == USER_REFUSE_TO_RENEWAL
+                    // 若是本轮审批，并且上一次用户拒绝续期或者审批拒绝续期，则不再重发
+                    if (approvalRecord.expiredTime == it.endTime && isRefuseLastTime
                     ) {
                         return@map
                     } else {

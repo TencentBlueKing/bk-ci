@@ -1,10 +1,8 @@
 package com.tencent.devops.auth.dao
 
-import com.tencent.devops.auth.service.AuthManagerApprovalService
 import com.tencent.devops.model.auth.tables.TAuthManagerApproval
 import com.tencent.devops.model.auth.tables.records.TAuthManagerApprovalRecord
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -16,7 +14,7 @@ class AuthManagerApprovalDao {
     ): TAuthManagerApprovalRecord? {
         with(TAuthManagerApproval.T_AUTH_MANAGER_APPROVAL) {
             return dslContext.selectFrom(this)
-                .where(ID.eq(approvalId)).orderBy(CREATE_TIME.desc()).fetchOne()
+                .where(ID.eq(approvalId)).fetchOne()
         }
     }
 
@@ -27,7 +25,8 @@ class AuthManagerApprovalDao {
     ): TAuthManagerApprovalRecord? {
         with(TAuthManagerApproval.T_AUTH_MANAGER_APPROVAL) {
             return dslContext.selectFrom(this)
-                .where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).orderBy(CREATE_TIME.desc()).fetchOne()
+                .where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).orderBy(CREATE_TIME.desc())
+                .limit(1).fetchOne()
         }
     }
 
@@ -52,7 +51,6 @@ class AuthManagerApprovalDao {
         status: Int
     ): Int {
         val now = LocalDateTime.now()
-        logger.info("createApproval : ${now.plusDays(2)}")
         with(TAuthManagerApproval.T_AUTH_MANAGER_APPROVAL) {
             return dslContext.insertInto(
                 this,
@@ -78,7 +76,4 @@ class AuthManagerApprovalDao {
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(AuthManagerApprovalService::class.java)
-    }
 }
