@@ -63,6 +63,7 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
+import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.expand.StreamYamlBuildExpand
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.pojo.StreamBuildLock
@@ -101,6 +102,7 @@ class StreamYamlBaseBuild @Autowired constructor(
     private val buildRunningDesc = "Running."
 
     fun savePipeline(
+        action: BaseAction,
         pipeline: StreamTriggerPipeline,
         userId: String,
         gitProjectId: Long,
@@ -109,6 +111,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         updateLastModifyUser: Boolean
     ) {
         val processClient = client.get(ServicePipelineResource::class)
+       try {
         if (pipeline.pipelineId.isBlank()) {
             // 直接新建
             logger.info("StreamYamlBaseBuild|savePipeline|create newpipeline|$pipeline")
@@ -163,6 +166,10 @@ class StreamYamlBaseBuild @Autowired constructor(
             updateLastModifyUser = updateLastModifyUser,
             channelCode = channelCode
         )
+       }catch (e: Throwable) {
+           logger.warn("StreamYamlBaseBuild|savePipeline|failed|msg|${e.message}")
+           throw StreamTriggerException(action, TriggerReason.SAVE_PIPELINE_FAILED)
+       }
     }
 
     fun createNewPipeLine(pipeline: StreamTriggerPipeline, projectCode: String, action: BaseAction) {
@@ -182,6 +189,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             if (realPipeline.pipelineId.isBlank()) {
                 // 在蓝盾那边创建流水线
                 savePipeline(
+                    action = action,
                     pipeline = realPipeline,
                     userId = pipeline.creator ?: "",
                     gitProjectId = gitProjectId.toLong(),
@@ -299,6 +307,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     "pipelineId|${pipeline.pipelineId}|gitBuildId|$gitBuildId"
             )
             savePipeline(
+                action = action,
                 pipeline = pipeline,
                 userId = action.data.getUserId(),
                 gitProjectId = action.data.getGitProjectId().toLong(),
