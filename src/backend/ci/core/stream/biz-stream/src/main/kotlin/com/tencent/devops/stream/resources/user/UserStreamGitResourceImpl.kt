@@ -95,7 +95,7 @@ class UserStreamGitResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
             streamGitTransferService.getProjectMember(
-                userId = getOauthUser(userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
+                userId = getOauthUser(userId, isEnableUser = false, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 page = page,
                 pageSize = pageSize,
