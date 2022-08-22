@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.service.thirdPartyAgent
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentAction
@@ -1410,54 +1411,32 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
     }
 
-    fun saveAgentProps(userId: String, projectId: String, nodeHashId: String, props: Map<String, Any>) {
-        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        checkEditPermmission(userId, projectId, nodeId)
-
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
-            ?: throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                params = arrayOf(nodeHashId)
-            )
-
-        val agentProps = try {
-            JsonUtil.to(agentRecord.agentProps, AgentProps::class.java)
-        } catch (ignore: Exception) {
-            logger.warn("projectId: $projectId|agentId: $agentRecord.id|json to props error", ignore)
-            null
-        }?.copy(userProps = props) ?: AgentProps("", listOf(), props)
-
-        thirdPartyAgentDao.saveAgentProps(
-            dslContext = dslContext,
-            agentId = agentRecord.id,
-            propsJsonStr = JsonUtil.toJson(agentProps, formatted = false)
-        )
-    }
-
-    fun getAgentProps(projectId: String, nodeHashId: String): Map<String, Any> {
-        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
-            ?: throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                params = arrayOf(nodeHashId)
-            )
-
-        return getUserProps(projectId, agentRecord.id, agentRecord)
-    }
-
     private fun getUserProps(
         projectId: String,
         agentId: Long,
         record: TEnvironmentThirdpartyAgentRecord
     ): Map<String, Any> {
-        return record.agentProps?.let { self ->
-            try {
-                JsonUtil.to(self, AgentProps::class.java).userProps
-            } catch (ignore: Exception) {
-                logger.warn("projectId: $projectId|agentId: $agentId|json to props error", ignore)
-                mapOf()
-            }
-        } ?: mapOf()
+        if (record.agentProps == null) {
+            return mapOf()
+        }
+        // 兼容曾经在数据库中的数据
+        val oldVersion = try {
+            JsonUtil.to(record.agentProps, object : TypeReference<Map<String, Any>>() {})
+        } catch (ignore: Exception) {
+            logger.warn("projectId: $projectId|agentId: $agentId|json to map props error", ignore)
+            return mapOf()
+        }
+
+        if (!oldVersion.containsKey("arch") && !oldVersion.containsKey("jdkVersion")) {
+            return oldVersion
+        }
+
+        return try {
+            JsonUtil.to(record.agentProps, AgentProps::class.java).userProps ?: mapOf()
+        } catch (ignore: Exception) {
+            logger.warn("projectId: $projectId|agentId: $agentId|json to props error", ignore)
+            mapOf()
+        }
     }
 
     companion object {
