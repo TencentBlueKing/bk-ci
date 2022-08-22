@@ -465,11 +465,11 @@ func handle(c *commandCli.Context, cmd []string) ([]string, error) {
 		if index := strings.Index(s, ":\\"); index > 0 {
 			src := s[index-1:]
 			//dir := filepath.Join(dcUtil.GetRuntimeDir(), "tmp")
-			des := "C:\\Users\\michealhe\\.bk_dist\\tmp" + s[:index+1]
+			des := "C:\\Users\\michealhe\\.bk_dist\\tmp" + s[index+1:]
+			dir := "C:\\Users\\michealhe\\.bk_dist\\" + "tmp\\"
 			if c.IsSet(FlagPack) {
 				copyFile(src, des)
 			}
-			dir := "C:\\Users\\michealhe\\.bk_dist\\" + "tmp\\"
 			ss := strings.ReplaceAll(s, s[index-1:index+1], dir)
 			res = append(res, ss)
 		}
