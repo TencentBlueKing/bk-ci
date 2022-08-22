@@ -524,9 +524,9 @@ func copyFile(src string, dest string) {
 
 	switch runtime.GOOS {
 	case "windows":
-		cmd = exec.Command("copy", src, dest)
+		cmd = exec.Command("echo", "f", "|", "xcopy", src, dest)
 	case "darwin", "linux":
-		cmd = exec.Command("cp", "-R", src, dest)
+		cmd = exec.Command("cp", src, dest)
 	}
 
 	outPut, e := cmd.Output()
