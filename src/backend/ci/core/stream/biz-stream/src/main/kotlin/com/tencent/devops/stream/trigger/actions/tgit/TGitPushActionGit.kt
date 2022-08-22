@@ -366,7 +366,20 @@ class TGitPushActionGit(
             logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
         }
     }
-
+    override fun updatePipelineDisplayName(
+        pipelineId: String,
+        displayName: String
+    ) {
+        try {
+            gitPipelineResourceDao.updatePipelineDisplayName(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                displayName = displayName
+            )
+        } catch (e: Exception) {
+            logger.warn("updateLastBranch fail,pipelineId:$pipelineId,displayName:$displayName,")
+        }
+    }
     // 判断是否注册定时任务来看是修改还是删除
     private fun isSchedulesMatch(
         triggerOn: TriggerOn,

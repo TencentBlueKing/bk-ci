@@ -112,11 +112,20 @@ class StreamYamlTrigger @Autowired constructor(
             )
             // 新建流水线放
             action.data.context.pipeline = pipeline
-        } else if (needUpdateLastBuildBranch(action)) {
-            action.updateLastBranch(
-                pipelineId = pipeline.pipelineId,
-                branch = action.data.eventCommon.branch
-            )
+        } else {
+            if (needUpdateLastBuildBranch(action)) {
+                action.updateLastBranch(
+                    pipelineId = pipeline.pipelineId,
+                    branch = action.data.eventCommon.branch
+                )
+            }
+            // 判断是否需要更新displayName
+            if (needChangePipelineDisplayName(action)) {
+                action.updatePipelineDisplayName(
+                    pipelineId = pipeline.pipelineId,
+                    displayName = getDisplayName(action)
+                )
+            }
         }
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         val gitProjectInfo = action.api.getGitProjectInfo(
@@ -353,6 +362,6 @@ class StreamYamlTrigger @Autowired constructor(
     private fun needChangePipelineDisplayName(
         action: BaseAction
     ): Boolean {
-        return action.data.context.pipeline!!.pipelineId.isBlank() || action is GitBaseAction
+        return action is GitBaseAction && action.data.context.pipeline!!.displayName != getDisplayName(action)
     }
 }

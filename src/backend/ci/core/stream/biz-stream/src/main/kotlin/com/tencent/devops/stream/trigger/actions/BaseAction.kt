@@ -148,4 +148,8 @@ interface BaseAction {
         pipelineId: String,
         branch: String
     )
+    fun updatePipelineDisplayName(
+        pipelineId: String,
+        displayName: String
+    )
 }

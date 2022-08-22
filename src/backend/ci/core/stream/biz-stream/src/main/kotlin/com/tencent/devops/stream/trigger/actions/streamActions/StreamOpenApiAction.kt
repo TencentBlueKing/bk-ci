@@ -118,4 +118,6 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     override fun updateLastBranch(pipelineId: String, branch: String) {
         action.updateLastBranch(pipelineId, branch)
     }
+
+    override fun updatePipelineDisplayName(pipelineId: String, displayName: String) {}
 }

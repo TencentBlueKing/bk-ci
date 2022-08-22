@@ -268,6 +268,19 @@ class GitPipelineResourceDao {
         }
     }
 
+    fun updatePipelineDisplayName(
+        dslContext: DSLContext,
+        pipelineId: String,
+        displayName: String
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.update(this)
+                .set(DISPLAY_NAME, displayName)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
     fun getPipelines(
         dslContext: DSLContext,
         gitProjectId: Long
