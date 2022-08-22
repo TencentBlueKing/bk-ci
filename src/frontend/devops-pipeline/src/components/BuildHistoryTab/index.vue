@@ -26,7 +26,7 @@
     import { mapGetters, mapActions, mapState } from 'vuex'
     import { coverStrTimer } from '@/utils/util'
     import { bus } from '@/utils/bus'
-    import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import InfiniteScroll from '@/components/InfiniteScroll'
 
@@ -226,35 +226,9 @@
             changeProject () {
                 this.$toggleProjectMenu(true)
             },
+
             async toApplyPermission () {
-                try {
-                    const { projectId } = this.$route.params
-                    const redirectUrl = await this.$ajax.post(`${AUTH_URL_PREFIX}/user/auth/permissionUrl`, [{
-                        actionId: this.$permissionActionMap.view,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: projectId,
-                            type: this.$permissionResourceTypeMap.PROJECT
-                        }, {
-                            id: this.pipelineId,
-                            name: this.pipelineId,
-                            type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
-                        }]
-                    }])
-                    console.log('redirectUrl', redirectUrl)
-                    window.open(redirectUrl, '_blank')
-                    this.$bkInfo({
-                        title: this.$t('permissionRefreshtitle'),
-                        subTitle: this.$t('permissionRefreshSubtitle'),
-                        okText: this.$t('permissionRefreshOkText'),
-                        cancelText: this.$t('close'),
-                        confirmFn: () => {
-                            location.reload()
-                        }
-                    })
-                } catch (e) {
-                    console.error(e)
-                }
+                this.tencentPermission(this.getPermUrlByRole(this.$route.params.projectId, this.$route.params.pipelineId, this.roleMap.manager))
             },
 
             resetQueryCondition () {
@@ -279,13 +253,12 @@
                 const newSearchKey = []
                 const queryArr = Object.keys(pathQuery)
                 const searchKeyArr = queryArr.filter(item => !this.queryStrMap.includes(item))
-
                 if (queryArr.includes('trigger')) await this.handleRemoteMethod()
                 if (queryArr.length) {
                     const newQuery = {}
                     queryArr.forEach(item => {
                         if (['status', 'materialAlias'].includes(item)) {
-                            newQuery[item] = pathQuery[item].split(',')
+                            newQuery[item] = typeof pathQuery[item] === 'string' ? pathQuery[item].split(',') : pathQuery[item]
                         } else if (pathQuery.startTimeStartTime && pathQuery.endTimeEndTime) {
                             newQuery.startTimeStartTime = pathQuery.startTimeStartTime
                             newQuery.endTimeEndTime = pathQuery.endTimeEndTime

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+	<meta name="format-detection" content="telephone=no">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<title>跳转页面</title>
+	<style type="text/css">
+	html,body,div,p,a,img {
+		margin: 0;
+		padding: 0;
+	}
+	body {
+		line-height: 18px;
+		font: 13px Helvetica,"Microsoft YaHei", sans-serif;
+		color: #333;
+		text-align: center;
+	}
+	.logo {
+		display: block;
+		width: 70px;
+		height: 70px;
+		margin: 36px auto;
+		border: none;
+	}
+	.tips {line-height: 22px;}
+	.container .downloadbtn {
+		display: block;
+		width: 260px;
+		height: 28px;
+		line-height: 28px;
+		margin: 20px auto 24px;
+		font-size: 14px;
+		color: #333;
+		text-align: center;
+		text-decoration: none;
+		background: #fff;
+		border: 1px solid #797979;
+		border-radius: 3px;
+	}
+	.tipstxt {margin-bottom:8px;color: #999;}
+	.warning {color: #f00;}
+	</style>
+</head>
+<body>
+<div id="text">
+	加载中...
+</div>
+<div class="wrapper" style="display:none;" id="showContent">
+	<div class="container">
+		<img class="logo" src="https://__BKCI_EXTERNAL_HOST__/app/download/devops_app.png" alt="蓝盾DevOps平台logo">
+		<p class="tips">请通过蓝盾DevOps移动版访问内部体验<br>假如页面没有自动跳转，请先安装蓝盾DevOps移动版</p>
+		<a id="btn_install" class="downloadbtn" href="javascript:download();">立即安装蓝盾DevOps移动版</a>
+		<p class="tipstxt">假如页面能自动跳转，请忽略此页面</p>
+		<p class="warning">公司内部信息，请勿转发！</p>
+	</div>
+</div>
+
+<script type="text/javascript">
+	download = function() {
+		var terminal = getTerminal();
+		if (terminal == 1) {
+			window.location.href="https://__BKCI_EXTERNAL_HOST__/app/download/devops_app.apk";
+		}
+		if (terminal == 2 || terminal == 3) {
+			window.location.href="https://__BKCI_EXTERNAL_HOST__/app/download/devops_app_download.html";
+		}
+
+	}
+
+	function hideLabelA() {
+		var as = document.getElementsByTagName("a");
+
+		for(var i=0;i<as.length;i++) {
+			as[i].style.display="none";
+		}
+	}
+
+	var timeout, t = 1000, hasApp = false,flag = true;
+	setTimeout(function () {
+		if (hasApp) {
+			var te = document.getElementById('te');
+			te.click();
+
+		} else if(!hasApp&&flag) {
+			var btn = document.getElementById('text');
+			btn.style.display="none";
+			var divCon = document.getElementById("showContent");
+			divCon.style.display = "block";
+
+			var installButton = document.getElementById("btn_install");
+			installButton.style.display = "block";
+			//var txt = document.getElementById('text');
+			//txt.innerHTML='未安装RD，请先安装RD，然后在扫描下载，点击下面的按钮下载安装。';
+		}
+	}, 2000);
+
+	function openApp() {
+		var terminal = getTerminal();
+
+		var t1 = Date.now();
+		var ifr = document.createElement("iframe");
+		var validateParam = true;
+		ifr.id="ifr";
+		var flag = getQueryVariable("flag"); 	//体验版本=1;流水线=2；
+		
+		var experienceId = getQueryVariable("experienceId"); 	
+		
+		var projectId = getQueryVariable("projectId"); 	
+		var pipelineId = getQueryVariable("pipelineId"); 	
+		var buildId = getQueryVariable("buildId"); 	
+
+
+		// //显示下载页面
+		// timeout = setTimeout(function () {
+		// 	// 检查到webview有QQ/或者微信 关键字时, 再拉起一次应用
+		// 	var math = navigator.userAgent.toLowerCase().match(/qq\//);
+		// 	var mathWeixin = navigator.userAgent.toLowerCase().match(/micromessenger/);
+
+		// 	if ((math || mathWeixin)&&(navigator.userAgent.indexOf('iPhone') > -1)) {
+		// 		var div = document.createElement('div');
+		// 		div.style.visibility = 'hidden';
+		// 		div.innerHTML = "<iframe id=\"schema\" src=\"" + ifr.src + "\" scrolling=\"no\" width=\"1\" height=\"1\"></iframe>";
+		// 		document.body.appendChild(div);
+		// 	}
+		// 	try_to_open_app(t1);
+		// }, t);
+
+
+		//验证参数的有效性
+		if(flag != "experienceDetail" && flag != "buildArchive" && flag != "buildReport") {
+			validateParam = false;
+		}
+
+		if(flag == "experienceDetail" && (experienceId == false || experienceId == "")) {
+			validateParam = false;
+		}
+
+		if((flag == "buildArchive" || flag == "buildReport") && (projectId == false || projectId == "" || pipelineId == false || pipelineId == "" || buildId == false || buildId == "")) {
+			validateParam = false;
+		}
+
+		if(!validateParam) {
+			alert("非法参数！");
+			return;
+		}
+
+		
+
+		var prefix = "bkdevopsapp://";
+		 if(terminal == 1) {
+		 	prefix = "bkdevopsapp://bkdevopsapp/"
+		 } else if(terminal == 2 || terminal == 3){
+		 	prefix = "bkdevopsapp://"
+		 }
+		//组装版本体验和流水线构建的scheme url
+		 if(flag == "experienceDetail") {
+			ifr.src = prefix + "app/experience/expDetail/" + experienceId;
+		}else if(flag == "buildArchive") {
+			ifr.src = prefix + "app/project/buildDetail/"+projectId+"/"+pipelineId+"/"+buildId+"/archiveTab";
+		}else if(flag == "buildReport") {
+			ifr.src = prefix + "app/project/buildDetail/"+projectId+"/"+pipelineId+"/"+buildId+"/reportTab";
+
+		}
+		
+		if(terminal == 1 || terminal == 2 || terminal == 3){
+			//在 IOS 9 中，使用 ifr 的方式还是拉不起来程序，需要使用 window.location 的方式
+//			window.location.href = ifr.src;
+
+            //微信从6.5.6新版本后，拉起其它应该有了新限制
+            if (isNewWeixin()) {  //大于等于6.5.6
+                if (window.WeixinJSBridge) {
+                    doLaunch(ifr.src);
+                }else {
+                    document.addEventListener('WeixinJSBridgeReady', function () {
+                        doLaunch(ifr.src); //此时立即调用权限可能还未准备好，所以doLaunch里需要延迟调用
+                    });
+                }
+            } else {
+                location.href = ifr.src;
+            }
+		} else {
+            window.location.href = "http://devops.oa.com";
+		}
+		
+
+		//显示下载页面
+		timeout = setTimeout(function () {
+			// 检查到webview有QQ/或者微信 关键字时, 再拉起一次应用
+			var math = navigator.userAgent.toLowerCase().match(/qq\//);
+			var mathWeixin = navigator.userAgent.toLowerCase().match(/micromessenger/);
+
+			if ((math || mathWeixin)&&(navigator.userAgent.indexOf('iPhone') > -1)) {
+				var div = document.createElement('div');
+				div.style.visibility = 'hidden';
+				div.innerHTML = "<iframe id=\"schema\" src=\"" + ifr.src + "\" scrolling=\"no\" width=\"1\" height=\"1\"></iframe>";
+				document.body.appendChild(div);
+			}
+			try_to_open_app(t1);
+		}, t);
+
+		
+	}
+
+    var isNewWeixin = function() {
+        var wechatInfo = navigator.userAgent.match(/MicroMessenger\/([\d\.]+)/i);
+		var isWxwork = navigator.userAgent.match(/wxwork\/([\d\.]+)/i);
+		console.log(isWxwork)
+		if (isWxwork) return false
+		
+        if(!wechatInfo || !wechatInfo[1]) {
+            return false;
+        }
+
+        if(wechatInfo[1] == "6.5.6") {
+            return true;
+        }
+
+        var wxVersionParts = wechatInfo[1].split('.');
+        //版本大于等于 6.5.6 返回 true
+        if(wxVersionParts[0] > 6) {
+            return true;
+        } else if(wxVersionParts[0] < 6) {
+            return false;
+        }
+
+        if(wxVersionParts[1] > 5) {
+            return true;
+        } else if(wxVersionParts[1] < 5) {
+            return false;
+        }
+
+        if(wxVersionParts[2] > 6) {
+            return true;
+        } else if(wxVersionParts[2] < 6){
+            return false;
+        }
+
+        return true;
+    };
+
+    var doLaunch = function (schemeUrl) {
+        setTimeout(function() {
+            window.WeixinJSBridge.invoke('launchApplication', {
+                "schemeUrl" : schemeUrl,
+            }, function (res) {
+            }), 500}
+        )
+    }
+
+
+	function try_to_open_app(t1) {
+		var t2 = Date.now();
+
+		if (!t1 || t2 - t1 < t + 200) {
+			hasApp = false;
+		}
+	}
+
+	function getTerminal() {
+        var terminal = 0;
+        var u = navigator.userAgent;
+        if(u.indexOf('Android') > -1 || u.indexOf('Linux') > -1 ) {//Android
+            terminal = 1;
+        }
+        else if(u.indexOf('iPhone') > -1) {//iPhone
+            terminal = 2;
+        }
+        else if(u.indexOf('iPad') > -1  || u.indexOf('Mac') > -1) {
+            terminal = 3;
+        }
+
+        return terminal;
+	}
+
+	//获取url中的参数
+	function getQueryVariable(variable)
+	{	
+       var query = window.location.search.substring(1);
+       var vars = query.split("&");
+       for (var i=0;i<vars.length;i++) {
+               var pair = vars[i].split("=");
+               if(pair[0] == variable){return pair[1];}
+       }
+       return(false);
+	}
+
+
+	// alert(123);
+	hideLabelA();
+	openApp();
+
+
+    </script>
+
+</body>
+</html>

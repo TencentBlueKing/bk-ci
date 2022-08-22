@@ -84,6 +84,7 @@
     import Logo from '../Logo/index.vue'
     import NavBox from '../NavBox/index.vue'
     import eventBus from '../../utils/eventBus'
+    import { getProjectId } from '../../router'
 
     @Component({
         name: 'nav-menu',
@@ -162,7 +163,7 @@
             return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
         }
 
-        gotoPage ({ link_new: linkNew }) {
+        gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl }) {
             const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
             const nAlias = getServiceAliasByPath(linkNew)
             const destUrl = this.addConsole(linkNew)
@@ -171,8 +172,12 @@
                 eventBus.$emit('goHome')
                 return
             }
-            this.$router.push(destUrl)
-        }
+            if (nAlias === 'bcs' && newWindowUrl.indexOf('ieg.') > -1) {
+             window.open(`${newWindowUrl}/bcs/${getProjectId(this.$route.params)}`, '_blank')
+             return
+           }
+            newWindow ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
+       }
 
         created () {
             if (this.curNewServices.length && this.curNewServices.some(service => {
@@ -214,7 +219,7 @@
     align-items: center;
 
     .nav-entry {
-        color: $fontLigtherColor;
+        color: $fontLighterColor;
         padding: 0 20px;
         cursor: pointer;
         line-height: $headerHeight;

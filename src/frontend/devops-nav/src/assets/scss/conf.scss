@@ -33,7 +33,7 @@ $borderLightColor: #e9edee;
 $fontColor: #7b7d8a;
 $fontWeightColor: #737987;
 $fontBoldColor: #333948;
-$fontLigtherColor: #c3cdd7;
+$fontLighterColor: #c3cdd7;
 
 // 主体 icon 颜色
 $iconPrimaryColor: #3c96ff;
@@ -71,13 +71,13 @@ $aHoverColor: #57a3f1;
 $headerHeight: 50px;
 
 .spin-icon {
-    animation: loading .8s linear infinite;
+  animation: loading 0.8s linear infinite;
 }
 @keyframes loading {
-    from {
-        transform: rotate(0);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

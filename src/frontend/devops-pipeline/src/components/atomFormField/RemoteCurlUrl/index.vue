@@ -2,7 +2,7 @@
     <div v-bkloading="{ isLoading }" class="remote-trigger">
         <p>{{ $t('editPage.remoteCurlTips') }}</p>
         <p>{{ $t('editPage.example') }}：</p>
-        <p class="curl-url">curl -X POST {{baseUrl}}/external/pipelines/{{value}}/build -H "Content-Type: application/json" -H "X-DEVOPS-UID: " -d "{{stringifyParmas}}" </p>
+        <p class="curl-url">curl -X POST {{baseUrl}}/external/pipelines/{{value}}/build -H "Content-Type: application/json" -H "X-DEVOPS-PROJECT-ID: {{projectId}}" -H "X-DEVOPS-UID: " -d "{{stringifyParmas}}" </p>
     </div>
 </template>
 
@@ -19,7 +19,7 @@
         },
         computed: {
             baseUrl () {
-                return `${location.host}${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}`
+                return `${location.origin}${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}`
             },
             stringifyParmas () {
                 const { params } = this.container

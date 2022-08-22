@@ -106,13 +106,12 @@ interface UserAtomResource {
         @ApiParam("查询支持有编译环境下的无编译环境插件标识", required = false)
         @QueryParam("queryFitAgentBuildLessAtomFlag")
         queryFitAgentBuildLessAtomFlag: Boolean? = true,
-        @ApiParam("页码", required = true)
+        @ApiParam("页码", required = false)
         @QueryParam("page")
-        page: Int = 1,
-        @ApiParam("每页数量", required = true)
+        page: Int? = 1,
+        @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
-        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
-        pageSize: Int = 10
+        pageSize: Int? = 10
     ): Result<AtomResp<AtomRespItem>?>
 
     @ApiOperation("根据插件代码和版本号获取流水线插件详细信息")

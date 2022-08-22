@@ -52,7 +52,7 @@ public class DailyDataReportReqModel
     private String nameCN;
 
     /**
-     * 平台页面url的根节点
+     * 平台页面url的根节点，如http://test2.codecc.oa.com
      */
     private String urlRoot;
 

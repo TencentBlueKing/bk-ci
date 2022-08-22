@@ -11,7 +11,7 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { mapGetters, mapActions } from 'vuex'
     import VerticalTab from '../PipelineEditTabs/VerticalTab'
 
     export default {
@@ -24,6 +24,7 @@
         data () {
             return {
                 optionList: [],
+                hasWetestTab: false,
                 hasThirdPartyReport: false,
                 pipelineReportList: [],
                 thirdPartyReportList: [],
@@ -35,11 +36,39 @@
             }
         },
         computed: {
+            ...mapGetters({
+                checkHasCodecc: 'common/getHasAtomCheck'
+            }),
+            hasCodecc () {
+                return this.checkHasCodecc(this.curPipeline.stages, 'linuxPaasCodeCCScript')
+            },
             buildNo () {
                 return this.$route.params.buildNo
             },
             tabs () {
                 return [
+                    ...(this.hasCodecc
+                        ? [{
+                            id: 'codeCheck',
+                            name: this.$t('details.codeCheck'),
+                            component: 'codeCheck',
+                            componentProps: {
+
+                            }
+                        }]
+                        : []
+                    ),
+                    ...(this.hasWetestTab
+                        ? [{
+                            id: 'wetestReport',
+                            name: this.$t('details.wetestReportName'),
+                            component: 'wetestReport',
+                            componentProps: {
+                                pipelineReportList: this.pipelineReportList
+                            }
+                        }]
+                        : []
+                    ),
                     ...(this.hasThirdPartyReport
                         ? [{
                             id: 'thirdReport',
@@ -49,7 +78,8 @@
                                 reportList: this.thirdPartyReportList
                             }
                         }]
-                        : []),
+                        : []
+                    ),
                     ...this.customizeList.map(item => ({
                         ...item,
                         name: item.name,
@@ -76,6 +106,7 @@
         },
         methods: {
             ...mapActions('common', [
+                'requestWetestReport',
                 'requestReportList'
             ]),
             async init () {
@@ -89,6 +120,18 @@
                     const [reportRes] = await Promise.all([
                         this.requestReportList(params)
                     ])
+                    // 先把wetest报告相关注释
+                    // const [wetestRes, reportRes] = await Promise.all([
+                    //     this.requestWetestReport(params),
+                    //     this.requestReportList(params)
+                    // ])
+
+                    // if (wetestRes.records && wetestRes.records.length) {
+                    //     this.hasWetestTab = true
+                    //     this.pipelineReportList = [
+                    //         ...wetestRes.records
+                    //     ]
+                    // }
 
                     if (reportRes.length) {
                         this.thirdPartyReportList = []

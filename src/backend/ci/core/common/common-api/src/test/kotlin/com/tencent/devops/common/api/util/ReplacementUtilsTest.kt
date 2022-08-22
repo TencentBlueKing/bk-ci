@@ -34,7 +34,19 @@ class ReplacementUtilsTest {
     class Replacement(
         private val data: Map<String, String>
     ) : ReplacementUtils.KeyReplacement {
-        override fun getReplacement(key: String): String? = data[key]
+        override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? = if (doubleCurlyBraces) {
+            data[key] ?: "\${{$key}}"
+        } else {
+            data[key] ?: "\${$key}"
+        }
+    }
+
+    @Test
+    fun parseEnvNested() {
+        val data = HashMap<String, String>()
+        data["Nested"] = "first"
+        data["first"] = "hello"
+        parseAndEquals(data = data, template = "\${\${Nested}}.html", expect = "hello.html")
     }
 
     @Test
@@ -54,7 +66,7 @@ class ReplacementUtilsTest {
         val data = HashMap<String, String>()
         data["ab3c"] = "123"
         data["ab.cd"] = "5678"
-        data["t.cd"] = "\${ab.cd}"
+        data["t.cd"] = "\${{ab.cd}}" // 二次替换 只能 对应处理 一直是双括号或者一直是单括号 ，不支持混合双排
 
         val template2 = "abcd_\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
         val buff = EnvUtils.parseEnv(template2, data)

@@ -210,23 +210,23 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
-            pipelineStageService.deletePipelineBuildStages(
-                transactionContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-            pipelineContainerService.deletePipelineBuildContainers(
-                transactionContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-            pipelineTaskService.deletePipelineBuildTasks(
-                transactionContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
+//            pipelineStageService.deletePipelineBuildStages(
+//                transactionContext = transactionContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId
+//            )
+//            pipelineContainerService.deletePipelineBuildContainers(
+//                transactionContext = transactionContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId
+//            )
+//            pipelineTaskService.deletePipelineBuildTasks(
+//                transactionContext = transactionContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId
+//            )
         }
-        buildVariableService.deletePipelineBuildVar(projectId = projectId, pipelineId = pipelineId)
+//        buildVariableService.deletePipelineBuildVar(projectId = projectId, pipelineId = pipelineId)
     }
 
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {

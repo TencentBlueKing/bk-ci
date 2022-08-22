@@ -100,8 +100,8 @@ class ManagerUserDao {
 
     fun updateRecordsExpireTime(dslContext: DSLContext, managerId: Int, userId: String): Int {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.update(this)
-                .set(END_TIME, END_TIME.add(HALF_A_YEAR)).where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).execute()
+            return dslContext.update(this).set(END_TIME, END_TIME.add(HALF_A_YEAR))
+                .where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).execute()
         }
     }
 
@@ -136,6 +136,5 @@ class ManagerUserDao {
     companion object {
         const val HALF_A_YEAR = 182
         const val EXPIRE_TIME = 7
-
     }
 }

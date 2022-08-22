@@ -176,7 +176,7 @@
                                     id: child[paramId],
                                     name: child[paramName],
                                     active: child.id === this.value,
-                                    selected: this.selectedPointer === childIndex && this.selectedGroupPointer === index && !this.isMultiple
+                                    selected: this.selectedPointer === childIndex && this.selectedGroupPointer === index
                                 }
                             })
                             result.push({

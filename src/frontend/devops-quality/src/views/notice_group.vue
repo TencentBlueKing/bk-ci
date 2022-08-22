@@ -126,7 +126,10 @@
             },
             ...mapGetters('quality', [
                 'getUserGroup'
-            ])
+            ]),
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            }
         },
         watch: {
             projectId () {
@@ -300,28 +303,26 @@
                         this.dialogLoading.isLoading = false
                     }
                 } else {
-                    const params = {
-                        noPermissionList: [
-                            { resource: '通知组', option: '编辑' }
-                        ],
-                        applyPermissionUrl: PERM_URL_PREFIX
-                    }
-
-                    this.$showAskPermissionDialog(params)
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.edit,
+                            resourceId: this.$permissionResourceMap.notifyGroup,
+                            instanceId: [{
+                                id: row.groupHashId,
+                                name: row.name
+                            }],
+                            projectId: this.projectId
+                        }],
+                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}`
+                    })
                 }
             },
             toDeleteGruop (row) {
                 if (row.permissions.canDelete) {
-                    const h = this.$createElement
-                    const content = h('p', {
-                        style: {
-                            textAlign: 'center'
-                        }
-                    }, `确定删除通知组(${row.name})？`)
-
                     this.$bkInfo({
-                        title: '删除',
-                        subHeader: content,
+                        type: 'warning',
+                        theme: 'warning',
+                        subTitle: `确定删除通知组(${row.name})？`,
                         confirmFn: async () => {
                             let message, theme
 
@@ -347,14 +348,18 @@
                         }
                     })
                 } else {
-                    const params = {
-                        noPermissionList: [
-                            { resource: '通知组', option: '删除' }
-                        ],
-                        applyPermissionUrl: PERM_URL_PREFIX
-                    }
-
-                    this.$showAskPermissionDialog(params)
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.delete,
+                            resourceId: this.$permissionResourceMap.notifyGroup,
+                            instanceId: [{
+                                id: row.groupHashId,
+                                name: row.name
+                            }],
+                            projectId: this.projectId
+                        }],
+                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}`
+                    })
                 }
             }
         }

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>蓝盾DevOps平台</title>
+</head>
+<body>
+    <script>
+        var url = `${location.pathname.indexOf('experience') > -1 ? '/experience/api/gw/experiences' : '/artifactory/api/gw/artifactories'}/downloadUrl` + location.search
+        
+        function detectDevice () {
+            var u = navigator.userAgent
+            switch (true) {
+                case u.indexOf('Android') > -1 || u.indexOf('Linux') > -1: 
+                    return 'android'
+                case u.indexOf('iPhone') > -1 || u.indexOf('iPad') > -1 || u.indexOf('Mac') > -1: 
+                    return 'ios'
+                default:
+                    alert("非支持设备，请使用Android或iOS手机访问。请用企业微信联系 蓝盾助手");
+                    console.log("other type device");
+                    return ''
+            }
+        }
+
+        function parseQuery (query) {
+            if (typeof query !== 'string') {
+                return 
+            }
+            var queryMap = {}
+            var queryArray = query.slice(1).split('&')
+
+            for( var i = 0; i< queryArray.length; i++ ) {
+                var queryObj = queryArray[i].split('=')
+                var key = queryObj[0]
+                var value = queryObj[1]
+                queryMap[key] = value
+            }
+
+            return queryMap
+        }
+
+        function asyncGet (url) {
+            return new Promise(function (resolve, reject) {
+                var xhr = new XMLHttpRequest()
+                xhr.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        resolve(JSON.parse(xhr.responseText).data)
+                    } else if (this.readyState == 4 && this.status > 400) {
+                        console.log(xhr, xhr.responseText)
+                        reject(JSON.parse(xhr.responseText))
+                    }
+                }
+                xhr.withCredentials = true
+                xhr.open('GET', url)
+                xhr.send()
+            })
+        }
+        
+        var query = parseQuery(location.search)
+        asyncGet(url).then(res => {
+            var platform = detectDevice()
+            if (platform === '') return
+            if (platform !== res.platform.toLowerCase()) {
+                var msg = res.platform.toLowerCase() === 'android' ? '请在Android平台上打开该链接' : '请在iOS平台上打开该链接'
+                alert(msg)
+                return
+            }
+            location.href = (platform === 'ios' ? 'itms-services://?action=download-manifest&url=' + res.url.replace('token=', 'token%3d') : res.url)
+        }).catch(function (e) {
+            alert(e.message)
+            console.error(e)
+        })
+    </script>
+</body>
+</html>
