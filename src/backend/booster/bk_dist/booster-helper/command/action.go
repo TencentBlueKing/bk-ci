@@ -10,7 +10,6 @@ package command
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -468,7 +467,7 @@ func handle(c *commandCli.Context, cmd []string) ([]string, error) {
 			//dir := filepath.Join(dcUtil.GetRuntimeDir(), "tmp")
 			des := "C:\\Users\\michealhe\\.bk_dist\\tmp" + s[:index+1]
 			if c.IsSet(FlagPack) {
-				copyDir(src, des)
+				copyFile(src, des)
 			}
 			dir := "C:\\Users\\michealhe\\.bk_dist\\" + "tmp\\"
 			ss := strings.ReplaceAll(s, s[index-1:index+1], dir)
@@ -516,25 +515,8 @@ func runCmd(ch chan time.Duration, s []string) {
 	fmt.Printf("combined out:\n%s\n", string(out))
 	ch <- time.Since(start)
 }
-func copyFile(src, des string) (written int64, err error) {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return 0, err
-	}
-	defer srcFile.Close()
 
-	fi, _ := srcFile.Stat()
-	perm := fi.Mode()
-
-	desFile, err := os.OpenFile(des, os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm) //复制源文件的所有权限
-	if err != nil {
-		return 0, err
-	}
-	defer desFile.Close()
-
-	return io.Copy(desFile, srcFile)
-}
-func copyDir(src string, dest string) {
+func copyFile(src string, dest string) {
 	src = FormatPath(src)
 	dest = FormatPath(dest)
 
@@ -542,7 +524,7 @@ func copyDir(src string, dest string) {
 
 	switch runtime.GOOS {
 	case "windows":
-		cmd = exec.Command("xcopy", src, dest, "/I", "/E")
+		cmd = exec.Command("copy", src, dest)
 	case "darwin", "linux":
 		cmd = exec.Command("cp", "-R", src, dest)
 	}
