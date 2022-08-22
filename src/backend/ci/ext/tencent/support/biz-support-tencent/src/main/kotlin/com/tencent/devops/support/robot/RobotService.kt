@@ -98,37 +98,38 @@ class RobotService @Autowired constructor(
         val callbackId = robotCallBack.callbackId
         val actionName = robotCallBack.actionName
         val actionValue = robotCallBack.actionValue
-        if (callbackId == null || callbackId.isEmpty() || actionValue == null || actionValue.isEmpty()) {
+        // 若callbackId为空，则表示没有回调事件，则不需要再进行下一步回调事件处理
+        if (checkParams(callbackId, actionValue)) {
             return true
         }
         when (callbackId) {
-            "approval" -> {
+            MANAGER_APPROVAL -> {
                 when (actionName) {
-                    "agree" -> {
+                    MANAGER_AGREE_TO_APPROVAL -> {
                         client.get(AuthManagerApprovalResource::class).managerApproval(
-                            approvalId = actionValue.toInt(),
+                            approvalId = actionValue!!.toInt(),
                             approvalType = ApprovalType.AGREE
                         )
                     }
-                    "refuse" -> {
+                    MANAGER_REFUSE_TO_APPROVAL -> {
                         client.get(AuthManagerApprovalResource::class).managerApproval(
-                            approvalId = actionValue.toInt(),
+                            approvalId = actionValue!!.toInt(),
                             approvalType = ApprovalType.REFUSE
                         )
                     }
                 }
             }
-            "renewal" -> {
+            USER_RENEWAL -> {
                 when (actionName) {
-                    "agree" -> {
+                    USER_AGREE_TO_RENEWAL -> {
                         client.get(AuthManagerApprovalResource::class).userRenewalAuth(
-                            approvalId = actionValue.toInt(),
+                            approvalId = actionValue!!.toInt(),
                             approvalType = ApprovalType.AGREE
                         )
                     }
-                    "refuse" -> {
+                    USER_REFUSE_TO_RENEWAL -> {
                         client.get(AuthManagerApprovalResource::class).userRenewalAuth(
-                            approvalId = actionValue.toInt(),
+                            approvalId = actionValue!!.toInt(),
                             approvalType = ApprovalType.REFUSE
                         )
                     }
@@ -136,6 +137,16 @@ class RobotService @Autowired constructor(
             }
         }
         return true
+    }
+
+    private fun checkParams(
+        callbackId: String?,
+        actionValue: String?
+    ): Boolean {
+        if (callbackId == null || callbackId.isEmpty() || actionValue == null || actionValue.isEmpty()) {
+            return true
+        }
+        return false
     }
 
     /*
@@ -163,7 +174,7 @@ class RobotService @Autowired constructor(
             getChatInfoUrl = getChatInfoUrl.item(0).textContent,
             msgType = msgType.item(0).textContent,
             msgId = msgId.item(0).textContent,
-            content = content?.item(0)?.textContent ?: "",
+            content = content.item(0)?.textContent ?: "",
             name = userName.item(0).textContent,
             userId = userId.item(0).textContent,
             eventType = eventType?.item(0)?.firstChild?.textContent,
@@ -202,5 +213,11 @@ class RobotService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(RobotService::class.java)
+        const val MANAGER_APPROVAL = "approval"
+        const val USER_RENEWAL = "renewal"
+        const val MANAGER_AGREE_TO_APPROVAL = "agree"
+        const val MANAGER_REFUSE_TO_APPROVAL = "refuse"
+        const val USER_AGREE_TO_RENEWAL = "agree"
+        const val USER_REFUSE_TO_RENEWAL = "refuse"
     }
 }
