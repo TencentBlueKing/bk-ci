@@ -404,8 +404,8 @@ func compileTest(c *commandCli.Context) error {
 	timeStats, fails := runCmds(cmds, c)
 
 	for i := 0; i < count && i < len(preCmds) && i < len(cmds); i++ {
-		for j := 0; j < len(preCmds) && j < len(cmds); j++ {
-			fmt.Printf("[i][j]: %s       %s\n", preCmds[i][j], cmds[i][j])
+		for j := 0; j < len(preCmds[i]) && j < len(cmds[i]); j++ {
+			fmt.Printf("[%d][%d]: %s       %s\n", i, j, preCmds[i][j], cmds[i][j])
 		}
 	}
 	fmt.Println(timeStats, fails)
@@ -493,7 +493,7 @@ func runCmds(Cmds [][]string, c *commandCli.Context) ([]float64, int) {
 	var ccy, fails int = 0, 0
 	var timeStats []float64
 	for {
-		if done >= len(Cmds)-1 {
+		if done >= len(Cmds) {
 			break
 		}
 		if ccy < maxccy && index < len(Cmds) {
