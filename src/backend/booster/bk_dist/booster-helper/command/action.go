@@ -396,11 +396,12 @@ func compileTest(c *commandCli.Context) error {
 	}
 	fmt.Printf("preCmds(%d),compileCmds(%d)", len(preCmds), len(compileCmds))
 
-	for i := 0; i < 5 && i < len(preCmds); i++ {
+	var cmds [][]string
+	for i := 0; i < count && i < len(preCmds); i++ {
 		res, _ := handle(c, preCmds[i])
-		preCmds[i] = res
+		cmds = append(cmds, res)
 	}
-	timeStats := runCmds(preCmds, c)
+	timeStats := runCmds(cmds, c)
 	fmt.Println(timeStats)
 	return nil
 }
@@ -479,7 +480,6 @@ func handle(c *commandCli.Context, cmd []string) ([]string, error) {
 }
 
 func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
-	count, _ := strconv.Atoi(c.String(FlagCnt))
 	maxccy, _ := strconv.Atoi(c.String(FlagCcy))
 	ch := make(chan time.Duration, 10)
 
@@ -487,10 +487,10 @@ func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
 	var ccy int = 0
 	var timeStats []float64
 	for {
-		if done >= count || done >= len(Cmds)-1 {
+		if done >= len(Cmds)-1 {
 			break
 		}
-		if ccy < maxccy && !(index < count && index < len(Cmds)) {
+		if ccy < maxccy && index < len(Cmds) {
 			ccy++
 			index++
 			go runCmd(ch, Cmds[index-1])
@@ -499,6 +499,7 @@ func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
 		case t := <-ch:
 			ccy--
 			done++
+			fmt.Printf("done:(%d) index(%d)", done, index)
 			timeStats = append(timeStats, t.Seconds())
 		default:
 			continue
