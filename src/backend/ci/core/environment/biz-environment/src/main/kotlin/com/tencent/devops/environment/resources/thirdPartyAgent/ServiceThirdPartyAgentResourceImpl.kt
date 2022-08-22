@@ -84,8 +84,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         agentId: String,
         secretKey: String,
         info: ThirdPartyAgentUpgradeByVersionInfo
-    )= upgradeService.checkUpgradeNew(projectId, agentId, secretKey, info)
-
+    ) = upgradeService.checkUpgradeNew(projectId, agentId, secretKey, info)
 
     override fun scheduleAgentPipeline(
         userId: String,

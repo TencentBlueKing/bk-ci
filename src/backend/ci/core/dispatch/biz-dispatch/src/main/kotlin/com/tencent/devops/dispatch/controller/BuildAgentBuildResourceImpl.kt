@@ -37,7 +37,6 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
-import io.swagger.annotations.ApiParam
 
 @RestResource
 @Suppress("ALL")

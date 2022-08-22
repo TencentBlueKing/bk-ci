@@ -378,17 +378,10 @@ func GetJava() string {
 // GetJavaDir 获取本地java文件夹
 func GetJavaDir() string {
 	workDir := systemutil.GetWorkDir()
-	if systemutil.IsMacos() {
-		if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
-			return workDir + "/jre"
-		}
-		return workDir + "/jdk"
-	} else {
-		if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
-			return workDir + "/jre"
-		}
-		return workDir + "/jdk"
+	if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
+		return workDir + "/jre"
 	}
+	return workDir + "/jdk"
 }
 
 // initCert 初始化证书

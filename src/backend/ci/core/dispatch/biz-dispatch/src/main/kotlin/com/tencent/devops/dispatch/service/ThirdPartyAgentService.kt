@@ -53,7 +53,6 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgrad
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import io.swagger.annotations.ApiParam
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
