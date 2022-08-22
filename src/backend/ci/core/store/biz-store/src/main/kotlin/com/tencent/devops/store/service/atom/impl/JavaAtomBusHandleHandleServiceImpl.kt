@@ -25,16 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.store.service.atom.impl
 
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.store.service.atom.AtomBusHandleService
 
-@ApiModel("插件市场-归档插件包响应报文体")
-data class ArchiveAtomResponse(
-    @ApiModelProperty("插件环境信息", required = true)
-    val atomEnvRequests: List<AtomEnvRequest>,
-    @ApiModelProperty("task.json参数", required = true)
-    val taskDataMap: Map<String, Any>
-)
+class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
+
+    override fun handleOsName(osName: String): String {
+        return if (osName.toUpperCase() == OSType.MAC_OS.name) {
+            "darwin"
+        } else {
+            osName.toLowerCase()
+        }
+    }
+
+    override fun handleOsArch(osName: String, osArch: String): String {
+        // worker就是通过java取的osArch，故无需转换
+        return osArch
+    }
+}

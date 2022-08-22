@@ -27,70 +27,63 @@
 
 package com.tencent.devops.store.service.common
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.StorePkgRunEnvRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-/**
- * store商城logo逻辑类
- *
- * since: 2019-02-15
- */
-interface StoreLogoService {
+interface StorePkgRunEnvInfoService {
 
     /**
-     * 上传logo
+     * 添加安装包运行时环境信息
+     * @param userId userId
+     * @param storePkgRunEnvRequest 安装包运行时环境信息请求报文
+     * @return 布尔值
      */
-    fun uploadStoreLogo(
+    fun create(
         userId: String,
-        contentLength: Long,
-        sizeLimitiFlag: Boolean? = true,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<StoreLogoInfo?>
+        storePkgRunEnvRequest: StorePkgRunEnvRequest
+    ): Boolean
 
     /**
-     * 获取logo列表
-     */
-    fun list(
-        userId: String,
-        type: String
-    ): Result<List<Logo>?>
-
-    /**
-     * 获取logo
-     */
-    fun get(
-        userId: String,
-        id: String
-    ): Result<Logo?>
-
-    /**
-     * 新增logo
-     */
-    fun add(
-        userId: String,
-        type: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 更新logo
+     * 更新安装包运行时环境信息
+     * @param userId userId
+     * @param id 主键ID
+     * @param storePkgRunEnvRequest 安装包运行时环境信息请求报文
+     * @return 布尔值
      */
     fun update(
         userId: String,
         id: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
+        storePkgRunEnvRequest: StorePkgRunEnvRequest
+    ): Boolean
 
     /**
-     * 删除logo
+     * 更新安装包运行时环境信息
+     * @param userId userId
+     * @param id 主键ID
+     * @return 布尔值
      */
     fun delete(
         userId: String,
         id: String
-    ): Result<Boolean>
+    ): Boolean
+
+    /**
+     * 获取安装包运行时环境信息
+     * @param userId userId
+     * @param storeType 组件类型
+     * @param language 开发语言
+     * @param osName 支持的操作系统名称
+     * @param osArch 支持的操作系统架构
+     * @param runtimeVersion 运行时版本
+     * @return 安装包运行时环境信息
+     */
+    fun getStorePkgRunEnvInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        language: String,
+        osName: String,
+        osArch: String,
+        runtimeVersion: String
+    ): StorePkgRunEnvInfo?
 }

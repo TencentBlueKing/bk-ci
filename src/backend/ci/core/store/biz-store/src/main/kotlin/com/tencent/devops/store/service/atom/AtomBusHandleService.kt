@@ -25,16 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+interface AtomBusHandleService {
 
-@ApiModel("插件市场-归档插件包响应报文体")
-data class ArchiveAtomResponse(
-    @ApiModelProperty("插件环境信息", required = true)
-    val atomEnvRequests: List<AtomEnvRequest>,
-    @ApiModelProperty("task.json参数", required = true)
-    val taskDataMap: Map<String, Any>
-)
+    /**
+     * 处理操作系统名称转换逻辑
+     * @param osName 操作系统名称
+     * @return 处理后的操作系统名称
+     */
+    fun handleOsName(osName: String): String
+
+    /**
+     * 处理操作系统cpu架构转换逻辑
+     * @param osName 操作系统名称
+     * @param osArch 操作系统cpu架构
+     * @return 处理后的操作系统cpu架构
+     */
+    fun handleOsArch(osName: String, osArch: String): String
+}

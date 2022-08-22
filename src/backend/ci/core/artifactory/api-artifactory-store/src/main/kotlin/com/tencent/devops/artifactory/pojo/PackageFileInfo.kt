@@ -25,31 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service.impl
+package com.tencent.devops.artifactory.pojo
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-import com.tencent.devops.worker.common.service.AtomTargetHandleService
-import org.slf4j.LoggerFactory
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class PythonAtomTargetHandleServiceImpl : AtomTargetHandleService {
-
-    private val logger = LoggerFactory.getLogger(PythonAtomTargetHandleServiceImpl::class.java)
-
-    override fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String {
-        var convertTarget = target
-        if (!postEntryParam.isNullOrBlank()) {
-            convertTarget = "$target --post_action=$postEntryParam"
-        }
-        logger.info("handleAtomTarget convertTarget:$convertTarget")
-        return convertTarget
-    }
-}
+@ApiModel("插件市场-重新归档插件包请求报文体")
+data class PackageFileInfo(
+    @ApiModelProperty("包文件名", required = true)
+    val packageFileName: String,
+    @ApiModelProperty("包文件路径", required = true)
+    val packageFilePath: String,
+    @ApiModelProperty("包文件大小", required = true)
+    val packageFileSize: Long,
+    @ApiModelProperty("sha摘要值", required = true)
+    val shaContent: String
+)

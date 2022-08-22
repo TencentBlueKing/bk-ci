@@ -25,16 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.store.service.atom.impl
 
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.store.service.atom.AtomBusHandleService
 
-@ApiModel("插件市场-归档插件包响应报文体")
-data class ArchiveAtomResponse(
-    @ApiModelProperty("插件环境信息", required = true)
-    val atomEnvRequests: List<AtomEnvRequest>,
-    @ApiModelProperty("task.json参数", required = true)
-    val taskDataMap: Map<String, Any>
-)
+class GolangAtomBusHandleHandleServiceImpl : AtomBusHandleService {
+
+    override fun handleOsName(osName: String): String {
+        return if (osName.toUpperCase() == OSType.MAC_OS.name) {
+            "darwin"
+        } else {
+            osName.toLowerCase()
+        }
+    }
+
+    override fun handleOsArch(osName: String, osArch: String): String {
+        return when (val osType = OSType.valueOf(osName.toUpperCase())) {
+            OSType.LINUX, OSType.MAC_OS -> {
+                if (osArch.contains("amd") || osArch.contains("x86")) {
+                    "amd64"
+                } else if (osArch.contains("arm") || osArch.contains("aarch")) {
+                    "arm64"
+                } else if (osArch.contains("mips") && osType == OSType.LINUX) {
+                    "mips64"
+                } else {
+                    // 默认使用amd64，非m1芯片
+                    "amd64"
+                }
+            }
+            OSType.WINDOWS -> {
+                // 保持和agent编译一致，使用386指令集
+                "386"
+            }
+            else -> {
+                "amd64"
+            }
+        }
+    }
+}
