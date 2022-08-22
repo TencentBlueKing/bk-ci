@@ -224,7 +224,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))
     }
 
-    override fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum {
+    override fun getAtomPackageSourceType(): AtomPackageSourceTypeEnum {
         // 内部版暂时只支持代码库打包的方式，后续支持用户传可执行包的方式
         return AtomPackageSourceTypeEnum.REPO
     }
