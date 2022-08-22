@@ -396,7 +396,7 @@ func compileTest(c *commandCli.Context) error {
 	}
 	fmt.Printf("preCmds(%d),compileCmds(%d)", len(preCmds), len(compileCmds))
 
-	for i := 0; i < 1 && i < len(preCmds); i++ {
+	for i := 0; i < 5 && i < len(preCmds); i++ {
 		res, _ := handle(c, preCmds[i])
 		preCmds[i] = res
 	}
@@ -465,7 +465,7 @@ func handle(c *commandCli.Context, cmd []string) ([]string, error) {
 	for _, s := range cmd {
 		if index := strings.Index(s, ":\\"); index > 0 {
 			i := strings.LastIndex(s, "\\")
-			des := "C:\\Users\\michealhe\\.bk_dist\\tmp" + s[index+1:i]
+			des := "C:\\Users\\michealhe\\.bk_dist\\tmp" + s[index+1:i+1]
 			src := s[index-1:]
 			dir := "C:\\Users\\michealhe\\.bk_dist\\" + "tmp\\"
 			if c.IsSet(FlagPack) {
@@ -483,11 +483,11 @@ func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
 	maxccy, _ := strconv.Atoi(c.String(FlagCcy))
 	ch := make(chan time.Duration, 10)
 
-	var index int = 0
+	var index, done int = 0, 0
 	var ccy int = 0
 	var timeStats []float64
 	for {
-		if !(index < count && index < len(Cmds)) {
+		if done >= count || done >= len(Cmds)-1 {
 			break
 		}
 		if ccy < maxccy && !(index < count && index < len(Cmds)) {
@@ -498,6 +498,7 @@ func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
 		select {
 		case t := <-ch:
 			ccy--
+			done++
 			timeStats = append(timeStats, t.Seconds())
 		default:
 			continue
