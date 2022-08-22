@@ -201,8 +201,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             } else {
                 return Result(createGitRepositoryResult.status, createGitRepositoryResult.message, null)
             }
-        } catch (e: Exception) {
-            logger.warn("createGitCodeRepository error  is :$e", e)
+        } catch (ignored: Throwable) {
+            logger.warn("atom[$atomCode] createGitCodeRepository fail!", ignored)
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
         }
         if (null == repositoryInfo) {
@@ -239,7 +239,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     ): String? {
         logger.info("getFileStr $projectCode|$atomCode|$atomVersion|$fileName|$repositoryHashId|$branch")
         val atomPackageSourceType = getAtomPackageSourceType(atomCode)
-        val fileStr = if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
+        return if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
             // 从工蜂拉取文件
             try {
                 client.get(ServiceGitRepositoryResource::class).getFileContent(
@@ -249,20 +249,18 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     branch = branch,
                     repositoryType = null
                 ).data
-            } catch (ignore: RemoteServiceException) {
-                logger.warn("getFileContent fileName:$fileName,branch:$branch error", ignore)
-                if (ignore.httpStatus == HTTP_404 || ignore.errorCode == HTTP_404) {
+            } catch (ignored: RemoteServiceException) {
+                logger.warn("getFileContent fileName:$fileName,branch:$branch error", ignored)
+                if (ignored.httpStatus == HTTP_404 || ignored.errorCode == HTTP_404) {
                     ""
                 } else {
-                    throw ignore
+                    throw ignored
                 }
             }
         } else {
             // 直接从仓库拉取文件
             marketAtomArchiveService.getFileStr(projectCode, atomCode, atomVersion, fileName)
         }
-        logger.info("getFileStr fileStr is:$fileStr")
-        return fileStr
     }
 
     override fun asyncHandleUpdateAtom(context: DSLContext, atomId: String, userId: String, branch: String?) {
@@ -578,7 +576,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             handleCodeccTask(atomCode, atomId, commitId)
         }
         val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
-        logger.info("the buildInfo is:$buildInfo")
+        logger.info("atom[$atomCode] buildInfo is:$buildInfo")
         val script = buildInfo.value1()
         val language = buildInfo.value3()
         // 获取打包所需的操作系统名称和操作系统cpu架构
@@ -621,10 +619,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 businessValue = "PIPELINE_MODEL"
             )
             var pipelineModel = pipelineModelConfig!!.configValue
-            var pipelineName = "am-$initProjectCode-$atomCode-${System.currentTimeMillis()}"
-            if (pipelineName.toCharArray().size > 128) {
-                pipelineName = "am-$atomCode-${UUIDUtil.generate()}"
-            }
+            var pipelineName = "am-$atomCode-${UUIDUtil.generate()}"
             val paramMap = mapOf(
                 KEY_PIPELINE_NAME to pipelineName,
                 KEY_STORE_CODE to atomCode,
@@ -792,7 +787,6 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         ) {
             return Pair(false, CommonMessageCode.PERMISSION_DENIED)
         }
-        logger.info("record status=$recordStatus, status=$status")
         val allowReleaseStatus =
             if (isNormalUpgrade != null && isNormalUpgrade) AtomStatusEnum.TESTING else AtomStatusEnum.AUDITING
         val codeccFlag = txStoreCodeccService.getCodeccFlag(StoreTypeEnum.ATOM.name)

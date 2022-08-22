@@ -53,9 +53,13 @@ class TxAtomCooperationServiceImpl @Autowired constructor() : AtomCooperationSer
 
     private val logger = LoggerFactory.getLogger(TxAtomCooperationServiceImpl::class.java)
 
-    override fun sendMoaMessage(atomCode: String, atomCollaboratorCreateReq: AtomCollaboratorCreateReq, approveId: String, userId: String) {
-        logger.info("sendMoaMessage atomCode is :$atomCode,atomCollaboratorCreateReq is :$atomCollaboratorCreateReq")
-        logger.info("sendMoaMessage approveId is :$approveId,userId is :$userId")
+    override fun sendMoaMessage(
+        atomCode: String,
+        atomCollaboratorCreateReq: AtomCollaboratorCreateReq,
+        approveId: String,
+        userId: String
+    ) {
+        logger.info("sendMoaMessage params:[$atomCode|$atomCollaboratorCreateReq|$approveId|$userId")
         executorService.submit<Unit> {
             val adminRecords = storeMemberDao.getAdmins(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
             val verifierSb = StringBuilder()
@@ -66,11 +70,15 @@ class TxAtomCooperationServiceImpl @Autowired constructor() : AtomCooperationSer
             val applyReason = atomCollaboratorCreateReq.applyReason
             val createMoaApproveRequest = CreateMoaApproveRequest(
                 verifier = verifierSb.toString(),
-                title = MessageCodeUtil.getCodeMessage(ATOM_COLLABORATOR_APPLY_MOA_TEMPLATE, arrayOf(userId, atomRecord!!.name, applyReason)) ?: applyReason,
+                title = MessageCodeUtil.getCodeMessage(
+                    messageCode = ATOM_COLLABORATOR_APPLY_MOA_TEMPLATE,
+                    params = arrayOf(userId, atomRecord!!.name, applyReason)
+                ) ?: applyReason,
                 taskId = approveId,
                 backUrl = moaApproveCallBackUrl
             )
-            val createMoaMessageApprovalResult = client.get(ServiceMessageApproveResource::class).createMoaMessageApproval(userId, createMoaApproveRequest)
+            val createMoaMessageApprovalResult = client.get(ServiceMessageApproveResource::class)
+                .createMoaMessageApproval(userId = userId, createMoaApproveRequest = createMoaApproveRequest)
             logger.info("createMoaMessageApprovalResult is :$createMoaMessageApprovalResult")
         }
     }

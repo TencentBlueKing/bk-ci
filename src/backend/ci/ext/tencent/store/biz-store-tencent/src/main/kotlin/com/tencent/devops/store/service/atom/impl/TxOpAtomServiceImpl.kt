@@ -66,10 +66,11 @@ class TxOpAtomServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("moveGitProjectToGroup userId is:$userId, groupCode is:$groupCode, atomCode is:$atomCode")
         val atomRecord = atomDao.getRecentAtomByCode(dslContext, atomCode)
-        logger.info("the atomRecord is:$atomRecord")
-        if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode), false)
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode),
+                data = false
+            )
         val moveProjectToGroupResult: Result<GitProjectInfo?>
         return try {
             moveProjectToGroupResult = client.get(ServiceGitRepositoryResource::class)
@@ -77,13 +78,19 @@ class TxOpAtomServiceImpl @Autowired constructor(
             logger.info("moveProjectToGroupResult is :$moveProjectToGroupResult")
             if (moveProjectToGroupResult.isOk()) {
                 val gitProjectInfo = moveProjectToGroupResult.data!!
-                atomDao.updateAtomByCode(dslContext, userId, atomCode, AtomFeatureUpdateRequest(gitProjectInfo.repositoryUrl)) // 批量更新插件数据库的代码地址信息
+                // 批量更新插件数据库的代码地址信息
+                atomDao.updateAtomByCode(
+                    dslContext = dslContext,
+                    userId = userId,
+                    atomCode = atomCode,
+                    atomFeatureUpdateRequest = AtomFeatureUpdateRequest(gitProjectInfo.repositoryUrl)
+                )
                 Result(true)
             } else {
                 Result(moveProjectToGroupResult.status, moveProjectToGroupResult.message ?: "")
             }
-        } catch (e: Exception) {
-            logger.error("moveProjectToGroupResult error is :$e", e)
+        } catch (ignored: Throwable) {
+            logger.warn("atom[$atomCode] moveProjectToGroupResult fail!", ignored)
             MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         }
     }

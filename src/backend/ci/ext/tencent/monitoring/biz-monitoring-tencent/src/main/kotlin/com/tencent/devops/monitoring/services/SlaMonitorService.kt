@@ -61,7 +61,7 @@ class SlaMonitorService @Autowired constructor(
                 }
             }
         } else {
-            logger.error("get baseQueryResult error , ${baseQueryResult?.error} , ${baseQueryResult?.results?.size}")
+            logger.warn("get baseQueryResult error , ${baseQueryResult?.error} , ${baseQueryResult?.results?.size}")
             return SlaCodeccResponseData.EMPTY
         }
 
@@ -83,7 +83,7 @@ class SlaMonitorService @Autowired constructor(
                 }
             }
         } else {
-            logger.error("get errorQueryResult error , ${errorQueryResult?.error} , ${errorQueryResult?.results?.size}")
+            logger.warn("get errorQueryResult error , ${errorQueryResult?.error} , ${errorQueryResult?.results?.size}")
             return SlaCodeccResponseData.EMPTY
         }
 

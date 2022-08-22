@@ -96,7 +96,7 @@ class ExtServiceProjectService @Autowired constructor(
         if (validateInstallResult.isNotOk()) {
             return validateInstallResult
         }
-        logger.info("installService:Inner:service.id=${serviceRecord.id},serviceFeature.publicFlag=${serviceFeature?.publicFlag}")
+        logger.info("installService serviceId=${serviceRecord.id},publicFlag=${serviceFeature?.publicFlag}")
         return storeProjectService.installStoreComponent(
             userId = userId,
             projectCodeList = projectCodeList,
@@ -114,13 +114,13 @@ class ExtServiceProjectService @Autowired constructor(
         storeCode: String,
         storeType: StoreTypeEnum
     ): Result<List<InstalledProjRespItem>> {
-        logger.info("getInstalledProjects accessToken is :$accessToken, userId is :$userId, storeCode is :$storeCode, storeType is :$storeType")
+        logger.info("getInstalledProjects params:[$accessToken|$userId|$storeCode|$storeType]")
         val watch = StopWatch()
         // 获取用户有权限的项目列表
         watch.start("get accessible projects")
         val projectList = client.get(ServiceProjectResource::class).list(userId).data
         watch.stop()
-        logger.info("$userId accessible projectList is :size=${projectList?.size},$projectList")
+        logger.info("$userId accessible projectList is :size=${projectList?.size}")
         if (projectList?.count() == 0) {
             return Result(mutableListOf())
         }

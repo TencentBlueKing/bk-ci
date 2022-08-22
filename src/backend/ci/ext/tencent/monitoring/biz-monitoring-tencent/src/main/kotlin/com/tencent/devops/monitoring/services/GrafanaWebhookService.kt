@@ -49,13 +49,13 @@ class GrafanaWebhookService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(GrafanaWebhookService::class.java)
 
     @Value("\${alert.users}")
-    private val alertUsersStr: String? = "rdeng,irwinsun"
+    private val alertUsersStr: String = "irwinsun"
 
     private lateinit var alertUsers: Set<String>
 
     @PostConstruct
     fun init() {
-        alertUsers = alertUsersStr!!.split(",").toSet()
+        alertUsers = alertUsersStr.split(",").toSet()
         logger.info("alert User= $alertUsers")
     }
 
@@ -63,7 +63,7 @@ class GrafanaWebhookService @Autowired constructor(
      * grafana回调接口
      */
     fun webhookCallBack(grafanaNotification: GrafanaNotification): Result<Boolean> {
-        logger.info("the grafanaNotification is:$grafanaNotification")
+        logger.info("webhookCallBack grafanaNotification is:$grafanaNotification")
         // 只有处于alerting告警状态的信息才发送监控消息
         if ("Alerting".equals(grafanaNotification.state, true)) {
             val message = grafanaNotification.message
