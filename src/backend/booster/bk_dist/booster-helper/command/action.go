@@ -401,8 +401,14 @@ func compileTest(c *commandCli.Context) error {
 		res, _ := handle(c, preCmds[i])
 		cmds = append(cmds, res)
 	}
-	timeStats := runCmds(cmds, c)
-	fmt.Println(timeStats)
+	timeStats, fails := runCmds(cmds, c)
+
+	for i := 0; i < count && i < len(preCmds); i++ {
+		for j, ss := range preCmds[i] {
+			fmt.Printf("%s       %s", ss, cmds[i][j])
+		}
+	}
+	fmt.Println(timeStats, fails)
 	return nil
 }
 
@@ -479,12 +485,12 @@ func handle(c *commandCli.Context, cmd []string) ([]string, error) {
 	return res, nil
 }
 
-func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
+func runCmds(Cmds [][]string, c *commandCli.Context) ([]float64, int) {
 	maxccy, _ := strconv.Atoi(c.String(FlagCcy))
 	ch := make(chan time.Duration, 10)
 
 	var index, done int = 0, 0
-	var ccy int = 0
+	var ccy, fails int = 0, 0
 	var timeStats []float64
 	for {
 		if done >= len(Cmds)-1 {
@@ -499,24 +505,30 @@ func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
 		case t := <-ch:
 			ccy--
 			done++
-			fmt.Printf("done:(%d) index(%d)", done, index)
+			fmt.Printf("done:(%d) index(%d)\n", done, index)
+			if t == 0 {
+				fails++
+				continue
+			}
 			timeStats = append(timeStats, t.Seconds())
 		default:
 			continue
 		}
 	}
-	return timeStats
+	return timeStats, fails
 }
+
 func runCmd(ch chan time.Duration, s []string) {
-	fmt.Printf("string to run cmd : (%s)", s)
+	fmt.Printf("string to run cmd : (%s)\n", s)
 	start := time.Now()
 	cmd := exec.Command(s[0], s[1:]...)
 	out, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("combined out with err:\n%s\n", string(out))
-	}
 	fmt.Printf("combined out:\n%s\n", string(out))
-	ch <- time.Since(start)
+	if err != nil {
+		ch <- 0
+	} else {
+		ch <- time.Since(start)
+	}
 }
 
 func copyFile(src string, dest string) {
@@ -532,13 +544,13 @@ func copyFile(src string, dest string) {
 		cmd = exec.Command("cp", src, dest)
 	}
 
-	outPut, e := cmd.Output()
-	fmt.Printf("copying from src (%s) to des(%s)", src, dest)
+	_, e := cmd.Output()
+
 	if e != nil {
 		fmt.Println(e.Error())
 		return
 	}
-	fmt.Println(string(outPut))
+	//fmt.Println(string(outPut))
 }
 
 func FormatPath(s string) string {
