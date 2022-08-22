@@ -396,7 +396,7 @@ func compileTest(c *commandCli.Context) error {
 	}
 	fmt.Printf("preCmds(%d),compileCmds(%d)", len(preCmds), len(compileCmds))
 
-	for i := 0; i < 5 && i < len(preCmds); i++ {
+	for i := 0; i < 1 && i < len(preCmds); i++ {
 		res, _ := handle(c, preCmds[i])
 		preCmds[i] = res
 	}
@@ -483,11 +483,11 @@ func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
 	maxccy, _ := strconv.Atoi(c.String(FlagCcy))
 	ch := make(chan time.Duration, 10)
 
-	var index, done int = 0, 0
+	var index int = 0
 	var ccy int = 0
 	var timeStats []float64
 	for {
-		if done >= count || done >= len(Cmds)-1 {
+		if !(index < count && index < len(Cmds)) {
 			break
 		}
 		if ccy < maxccy && !(index < count && index < len(Cmds)) {
@@ -499,7 +499,6 @@ func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
 		case t := <-ch:
 			ccy--
 			timeStats = append(timeStats, t.Seconds())
-			done++
 		default:
 			continue
 		}
