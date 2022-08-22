@@ -54,7 +54,7 @@ class DispatchQueueControl @Autowired constructor(
 
     internal fun flushDispatchQueue(buildId: String, stageId: String) {
         // 构建启动和结束时，分别清空一次队列
-        LOG.info("ENGINE|$buildId|FLUSH_CONTAINER_QUEUE")
+        LOG.info("ENGINE|$buildId|s($stageId)|FLUSH_CONTAINER_QUEUE")
         redisOperation.delete(getDispatchQueueKey(buildId, stageId))
     }
 
@@ -62,9 +62,11 @@ class DispatchQueueControl @Autowired constructor(
         val queueKey = getDispatchQueueKey(container.buildId, container.stageId)
         val result = redisOperation.zremove(queueKey, container.containerId)
         redisOperation.expire(queueKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
-        LOG.info("ENGINE|${container.buildId}|CONTAINER_DEQUEUE" +
-            "|${container.stageId}|${container.containerId}|containerHashId=" +
-            "${container.containerHashId}|result=$result")
+        LOG.info(
+            "ENGINE|${container.buildId}|CONTAINER_DEQUEUE" +
+                "|${container.stageId}|${container.containerId}|containerHashId=" +
+                "${container.containerHashId}|result=$result"
+        )
     }
 
     /**

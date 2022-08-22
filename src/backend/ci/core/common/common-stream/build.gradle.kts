@@ -31,6 +31,7 @@ dependencies {
         // 暂时无需消息加解密能力，为避免版本冲突排除
         exclude("org.bouncycastle")
     }
+    api("org.reflections:reflections")
     api("org.springframework.boot:spring-boot-actuator")
     api("org.springframework.boot:spring-boot-actuator-autoconfigure")
     api("org.springframework.cloud:spring-cloud-stream")

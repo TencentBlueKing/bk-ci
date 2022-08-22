@@ -27,16 +27,17 @@
 
 package com.tencent.devops.common.stream.annotation
 
+import org.springframework.context.annotation.Bean
+
 /**
- * Stream事件注解
- * @param outBinding 发送目标绑定，用于指定RabbitMQ的Exchange，Kafka和Pulsar的Topic
- * @param fanout 是否为广播事件
- * @param delayMills 延迟时间，如果为延迟事件则必填
+ * Stream消费者注解
+ * @param destination 发送目标绑定，用于指定RabbitMQ的Exchange，Kafka和Pulsar的Topic
+ * @param group 指定订阅组，如果是广播事件则需要指定，否则为非广播默认订阅组
  */
-@Target(AnnotationTarget.FILE)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class StreamEvent(
-    val outBinding: String,
-    val fanout: Boolean = false,
-    val delayMills: Int = 0
+@Bean
+annotation class StreamConsumer(
+    val destination: String,
+    val group: String = ""
 )
