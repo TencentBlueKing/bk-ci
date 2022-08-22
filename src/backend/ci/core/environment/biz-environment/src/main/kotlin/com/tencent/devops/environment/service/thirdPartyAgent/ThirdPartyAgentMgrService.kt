@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.service.thirdPartyAgent
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentAction
@@ -739,6 +740,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     )
                 }
             }
+
             sharedEnvId != null -> {
                 envShareProjectDao.list(
                     dslContext = dslContext,
@@ -747,6 +749,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     envId = sharedEnvId
                 )
             }
+
             else -> emptyList()
         }
         // 兼容如果更改了环境名称
@@ -766,7 +769,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                    "mainProjectId: $sharedProjectId"
+                        "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
@@ -813,7 +816,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             }
         }
         if (sharedThirdPartyAgents.isEmpty()) {
-            throw CustomException(Response.Status.FORBIDDEN, "无权限使用第三方构建机环境($sharedProjectId:$sharedEnvName)")
+            throw CustomException(
+                Response.Status.FORBIDDEN,
+                "无权限使用第三方构建机环境($sharedProjectId:$sharedEnvName)"
+            )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
         return sharedThirdPartyAgents
@@ -984,8 +990,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             status = AgentStatus.IMPORT_OK
         }
         if (!(AgentStatus.isImportException(status) ||
-                AgentStatus.isUnImport(status) ||
-                agentRecord.startRemoteIp.isNullOrBlank())
+                    AgentStatus.isUnImport(status) ||
+                    agentRecord.startRemoteIp.isNullOrBlank())
         ) {
             if (startInfo.hostIp != agentRecord.startRemoteIp) {
                 return AgentStatus.DELETE
@@ -1017,7 +1023,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (agentRecord.nodeId != null) {
                 val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
                 if (nodeRecord != null && (nodeRecord.nodeIp != startInfo.hostIp ||
-                        nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
+                            nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
                 ) {
                     nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                     nodeRecord.nodeIp = startInfo.hostIp
@@ -1087,9 +1093,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     slaveVersion = "",
                     AgentStatus = AgentStatus.DELETE.name,
                     ParallelTaskCount = -1,
-                    envs = mapOf()
+                    envs = mapOf(),
+                    props = mapOf()
                 )
             }
+
+            val oldUserProps = getUserProps(projectId, agentRecord.id, agentRecord)
 
             var agentChanged = false
             if (newHeartbeatInfo.masterVersion != agentRecord.masterVersion) {
@@ -1127,8 +1136,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (newHeartbeatInfo.props != null) {
                 val props = JsonUtil.toJson(
                     AgentProps(
-                        newHeartbeatInfo.props!!.arch,
-                        newHeartbeatInfo.props!!.jdkVersion ?: listOf()
+                        arch = newHeartbeatInfo.props!!.arch,
+                        jdkVersion = newHeartbeatInfo.props!!.jdkVersion ?: listOf(),
+                        userProps = oldUserProps
                     ),
                     false
                 )
@@ -1153,9 +1163,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     )
                     AgentStatus.UN_IMPORT_OK
                 }
+
                 AgentStatus.UN_IMPORT_OK -> {
                     AgentStatus.UN_IMPORT_OK
                 }
+
                 else /* AgentStatus.IMPORT_OK || AgentStatus.IMPORT_EXCEPTION */ -> {
                     if (agentRecord.status == AgentStatus.IMPORT_EXCEPTION.status) {
                         logger.info("update agent($agentHashId) status from exception to ok")
@@ -1186,7 +1198,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 slaveVersion = "",
                                 AgentStatus = AgentStatus.DELETE.name,
                                 ParallelTaskCount = -1,
-                                envs = mapOf()
+                                envs = mapOf(),
+                                props = mapOf()
                             )
                         }
                         if (nodeRecord.nodeIp != newHeartbeatInfo.agentIp ||
@@ -1220,7 +1233,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     envVar.associate { it.name to it.value }
                 },
                 gateway = agentRecord.gateway,
-                fileGateway = agentRecord.fileGateway
+                fileGateway = agentRecord.fileGateway,
+                props = oldUserProps
             )
         }
     }
@@ -1275,6 +1289,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     thirdPartyAgentDao.updateStatus(context, agentRecord.id, null, projectId, AgentStatus.UN_IMPORT_OK)
                     AgentStatus.UN_IMPORT_OK
                 }
+
                 AgentStatus.isImportException(status) -> {
                     logger.info("Update the agent($agentId) from exception to ok")
                     agentDisconnectNotifyService?.online(
@@ -1294,6 +1309,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     }
                     AgentStatus.IMPORT_OK
                 }
+
                 else -> {
                     logger.info("Get the node id(${agentRecord.nodeId}) of agent($agentId)")
                     if (agentRecord.nodeId != null) {
@@ -1395,7 +1411,31 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
     }
 
-    fun getAgentProps(projectId: String, nodeHashId: String): AgentProps? {
+    fun saveAgentProps(userId: String, projectId: String, nodeHashId: String, props: Map<String, Any>) {
+        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        checkEditPermmission(userId, projectId, nodeId)
+
+        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
+            ?: throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(nodeHashId)
+            )
+
+        val agentProps = try {
+            JsonUtil.to(agentRecord.agentProps, AgentProps::class.java)
+        } catch (ignore: Exception) {
+            logger.warn("projectId: $projectId|agentId: $agentRecord.id|json to props error", ignore)
+            null
+        }?.copy(userProps = props) ?: AgentProps("", listOf(), props)
+
+        thirdPartyAgentDao.saveAgentProps(
+            dslContext = dslContext,
+            agentId = agentRecord.id,
+            propsJsonStr = JsonUtil.toJson(agentProps, formatted = false)
+        )
+    }
+
+    fun getAgentProps(projectId: String, nodeHashId: String): Map<String, Any> {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
             ?: throw ErrorCodeException(
@@ -1403,7 +1443,22 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 params = arrayOf(nodeHashId)
             )
 
-        return agentRecord.agentProps?.let { self -> JsonUtil.to(self) }
+        return getUserProps(projectId, agentRecord.id, agentRecord)
+    }
+
+    private fun getUserProps(
+        projectId: String,
+        agentId: Long,
+        record: TEnvironmentThirdpartyAgentRecord
+    ): Map<String, Any> {
+        return record.agentProps?.let { self ->
+            try {
+                JsonUtil.to(self, AgentProps::class.java).userProps
+            } catch (ignore: Exception) {
+                logger.warn("projectId: $projectId|agentId: $agentId|json to props error", ignore)
+                mapOf()
+            }
+        } ?: mapOf()
     }
 
     companion object {

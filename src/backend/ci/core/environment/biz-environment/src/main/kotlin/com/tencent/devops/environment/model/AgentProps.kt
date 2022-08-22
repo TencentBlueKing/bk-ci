@@ -7,5 +7,6 @@ package com.tencent.devops.environment.model
  */
 data class AgentProps(
     val arch: String,
-    val jdkVersion: List<String>
+    val jdkVersion: List<String>,
+    val userProps: Map<String, Any>?
 )

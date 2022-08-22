@@ -193,7 +193,6 @@ func downloadUpgradeFiles(item *api.UpgradeItem) (agentChanged, workAgentChanged
 		jdkChanged = downloadUpgradeJdk(upgradeDir)
 	}
 
-	// #4686 devopsDaemon 暂时不考虑单独的替换升级，windows 无法自动升级，仅当devopsAgent有变化时升级。
 	return agentChanged, workAgentChanged, jdkChanged
 }
 
