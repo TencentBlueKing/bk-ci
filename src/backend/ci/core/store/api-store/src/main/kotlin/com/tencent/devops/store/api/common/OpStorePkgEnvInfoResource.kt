@@ -29,17 +29,15 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.StorePkgRunEnvRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.glassfish.jersey.media.multipart.FormDataParam
-import java.io.InputStream
+import javax.validation.Valid
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
+import javax.ws.rs.DELETE
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -47,39 +45,53 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STORE_LOGO"], description = "STORE-LOGO")
-@Path("/user/store/logo")
+@Api(tags = ["OP_STORE_PKG_ENVS"], description = "安装包环境信息")
+@Path("/op/store/pkg/envs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserStoreLogoResource {
+interface OpStorePkgEnvInfoResource {
 
-    @ApiOperation("上传logo")
+    @ApiOperation("新增环境变量")
     @POST
-    @Path("/upload")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun uploadStoreLogo(
+    @Path("/create")
+    fun create(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("contentLength", required = true)
-        @HeaderParam("content-length")
-        contentLength: Long,
-        @ApiParam("logo", required = true)
-        @FormDataParam("logo")
-        inputStream: InputStream,
-        @FormDataParam("logo")
-        disposition: FormDataContentDisposition
-    ): Result<StoreLogoInfo?>
+        @ApiParam("环境变量请求报文体", required = true)
+        @Valid
+        storePkgRunEnvRequest: StorePkgRunEnvRequest
+    ): Result<Boolean>
 
-    @ApiOperation("获取logo列表")
-    @GET
-    @Path("/type/{logoType}")
-    fun list(
+    @ApiOperation("更新环境变量")
+    @POST
+    @Path("/ids/{id}/update")
+    fun update(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("logoType", required = true)
-        @PathParam("logoType")
-        logoType: LogoTypeEnum
-    ): Result<List<Logo>?>
+        @ApiParam("主键ID", required = true)
+        @PathParam("id")
+        @BkField(patternStyle = BkStyleEnum.ID_STYLE)
+        id: String,
+        @ApiParam("安装包运行时环境信息请求报文体", required = true)
+        @Valid
+        storePkgRunEnvRequest: StorePkgRunEnvRequest
+    ): Result<Boolean>
+
+    @ApiOperation("删除环境变量")
+    @DELETE
+    @Path("/ids/{id}/delete")
+    fun delete(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("主键ID", required = true)
+        @PathParam("id")
+        @BkField(patternStyle = BkStyleEnum.ID_STYLE)
+        id: String,
+        @ApiParam("安装包运行时环境信息请求报文体", required = true)
+        @Valid
+        storePkgRunEnvRequest: StorePkgRunEnvRequest
+    ): Result<Boolean>
 }

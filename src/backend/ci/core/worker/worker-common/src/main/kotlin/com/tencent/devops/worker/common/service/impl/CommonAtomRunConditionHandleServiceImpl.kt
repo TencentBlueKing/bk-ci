@@ -25,16 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.worker.common.service.impl
 
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
+import java.io.File
 
-@ApiModel("插件市场-归档插件包响应报文体")
-data class ArchiveAtomResponse(
-    @ApiModelProperty("插件环境信息", required = true)
-    val atomEnvRequests: List<AtomEnvRequest>,
-    @ApiModelProperty("task.json参数", required = true)
-    val taskDataMap: Map<String, Any>
-)
+class CommonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
+
+    override fun prepareRunEnv(
+        osType: OSType,
+        language: String,
+        runtimeVersion: String,
+        workspace: File
+    ): Boolean {
+        return true
+    }
+
+    override fun handleAtomTarget(
+        target: String,
+        osType: OSType,
+        postEntryParam: String?
+    ): String {
+        return target
+    }
+
+    override fun handleAtomPreCmd(
+        preCmd: String,
+        osType: OSType,
+        pkgName: String,
+        runtimeVersion: String?
+    ): String {
+        return preCmd
+    }
+}
