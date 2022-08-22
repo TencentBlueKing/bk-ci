@@ -394,8 +394,12 @@ func compileTest(c *commandCli.Context) error {
 	if err != nil {
 		return err
 	}
-
 	fmt.Printf("preCmds(%d),compileCmds(%d)", len(preCmds), len(compileCmds))
+
+	for i := 0; i < 5 && i < len(preCmds); i++ {
+		res, _ := handle(c, preCmds[i])
+		preCmds[i] = res
+	}
 	timeStats := runCmds(preCmds, c)
 	fmt.Println(timeStats)
 	return nil
@@ -429,7 +433,7 @@ func getCommands(c *commandCli.Context) ([][]string, [][]string, error) {
 			continue
 		}
 		for _, job := range jobstats {
-			res, _ := handle(c, job.OriginArgs)
+			res := job.OriginArgs
 			tail := res[len(res)-1]
 			if strings.Contains(tail, "showIncludes") {
 				tail = res[len(res)-2]
@@ -450,9 +454,6 @@ func getCommands(c *commandCli.Context) ([][]string, [][]string, error) {
 					compileCmds = append(compileCmds, res)
 				}
 			}*/
-			if len(preCmds) >= 5 {
-				break
-			}
 		}
 	}
 	return preCmds, compileCmds, nil
@@ -463,9 +464,9 @@ func handle(c *commandCli.Context, cmd []string) ([]string, error) {
 	var res []string
 	for _, s := range cmd {
 		if index := strings.Index(s, ":\\"); index > 0 {
+			i := strings.LastIndex(s, "\\")
+			des := "C:\\Users\\michealhe\\.bk_dist\\tmp" + s[index+1:i]
 			src := s[index-1:]
-			//dir := filepath.Join(dcUtil.GetRuntimeDir(), "tmp")
-			des := "C:\\Users\\michealhe\\.bk_dist\\tmp" + s[index+1:]
 			dir := "C:\\Users\\michealhe\\.bk_dist\\" + "tmp\\"
 			if c.IsSet(FlagPack) {
 				copyFile(src, des)
@@ -482,14 +483,14 @@ func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
 	maxccy, _ := strconv.Atoi(c.String(FlagCcy))
 	ch := make(chan time.Duration, 10)
 
-	var index int = 0
+	var index, done int = 0, 0
 	var ccy int = 0
 	var timeStats []float64
 	for {
-		if !(index < count && index < len(Cmds)) {
+		if done >= count || done >= len(Cmds)-1 {
 			break
 		}
-		if ccy < maxccy {
+		if ccy < maxccy && !(index < count && index < len(Cmds)) {
 			ccy++
 			index++
 			go runCmd(ch, Cmds[index-1])
@@ -498,6 +499,7 @@ func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
 		case t := <-ch:
 			ccy--
 			timeStats = append(timeStats, t.Seconds())
+			done++
 		default:
 			continue
 		}
@@ -524,7 +526,7 @@ func copyFile(src string, dest string) {
 
 	switch runtime.GOOS {
 	case "windows":
-		cmd = exec.Command("echo", "f", "|", "xcopy", src, dest)
+		cmd = exec.Command("xcopy", src, dest, "/I", "/E")
 	case "darwin", "linux":
 		cmd = exec.Command("cp", src, dest)
 	}
