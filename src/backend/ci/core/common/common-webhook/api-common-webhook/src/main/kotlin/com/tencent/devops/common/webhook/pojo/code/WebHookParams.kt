@@ -68,6 +68,6 @@ data class WebHookParams(
     // note事件action
     var includeNoteComment: String? = null,
     var includeNoteTypes: String? = null,
-    val enableMonitorCreate: Boolean? = true,
-    val enableMonitorUpdate: Boolean? = true
+    // push事件action
+    var includePushAction: String? = null
 )
