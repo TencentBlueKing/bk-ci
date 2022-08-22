@@ -274,7 +274,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String
     ): Result<Map<String, String>?>
 
-    abstract fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum
+    abstract fun getAtomPackageSourceType(): AtomPackageSourceTypeEnum
 
     @Suppress("UNCHECKED_CAST")
     @BkTimed(extraTags = ["publish", "updateMarketAtom"], value = "store_publish_pipeline_atom")
@@ -285,7 +285,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     ): Result<String?> {
         logger.info("updateMarketAtom userId is :$userId,marketAtomUpdateRequest is :$marketAtomUpdateRequest")
         val atomCode = marketAtomUpdateRequest.atomCode
-        val atomPackageSourceType = getAtomPackageSourceType(atomCode)
+        val atomPackageSourceType = getAtomPackageSourceType()
         logger.info("updateMarketAtom atomPackageSourceType is :$atomPackageSourceType")
         val version = marketAtomUpdateRequest.version
         // 判断插件是不是首次创建版本
@@ -507,8 +507,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             releaseType = releaseType,
             versionContent = marketAtomUpdateRequest.versionContent
         )
-        atomEnvRequests.forEach { atomEnvRequest ->
-            marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
+        val atomPackageSourceType = getAtomPackageSourceType()
+        if (atomPackageSourceType != AtomPackageSourceTypeEnum.UPLOAD) {
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
@@ -780,7 +781,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomRecord = atomRecord,
             atomRequest = marketAtomUpdateRequest
         )
-        val atomPackageSourceType = getAtomPackageSourceType(atomRecord.atomCode)
+        val atomPackageSourceType = getAtomPackageSourceType()
         if (atomPackageSourceType != AtomPackageSourceTypeEnum.UPLOAD) {
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
