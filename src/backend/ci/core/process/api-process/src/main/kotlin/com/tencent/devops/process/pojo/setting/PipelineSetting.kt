@@ -81,7 +81,9 @@ data class PipelineSetting(
     @ApiModelProperty("构建号生成规则", required = false)
     val buildNumRule: String? = null, // 构建号生成规则
     @ApiModelProperty("重试时清理引擎变量表", required = false)
-    val cleanVariablesWhenRetry: Boolean? = false
+    val cleanVariablesWhenRetry: Boolean? = false,
+    @ApiModelProperty("YAML流水线特殊配置", required = false)
+    val pipelineAsCodeSettings: PipelineAsCodeSettings? = null
 ) {
 
     @Suppress("ALL")
@@ -103,8 +105,10 @@ data class PipelineSetting(
                 throw InvalidParamException("最大排队数量非法", params = arrayOf("maxQueueSize"))
             }
         }
-        if (maxConRunningQueueSize != null && (maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-                maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX)
+        if (maxConRunningQueueSize != null && (
+            maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
+                maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+            )
         ) {
             throw InvalidParamException("最大并发数量非法", params = arrayOf("maxConRunningQueueSize"))
         }

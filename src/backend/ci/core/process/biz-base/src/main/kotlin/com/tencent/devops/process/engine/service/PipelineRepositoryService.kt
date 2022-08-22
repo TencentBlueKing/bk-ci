@@ -72,6 +72,7 @@ import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
+import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -1014,7 +1015,10 @@ class PipelineRepositoryService constructor(
                 buildNumRule = t.buildNumRule,
                 concurrencyCancelInProgress = t.concurrencyCancelInProgress,
                 concurrencyGroup = t.concurrencyGroup,
-                cleanVariablesWhenRetry = t.cleanVariablesWhenRetry
+                cleanVariablesWhenRetry = t.cleanVariablesWhenRetry,
+                pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
+                    JsonUtil.to(self, PipelineAsCodeSettings::class.java)
+                }
             )
         } else null
     }

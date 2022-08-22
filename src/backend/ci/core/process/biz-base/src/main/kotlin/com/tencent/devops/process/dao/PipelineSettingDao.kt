@@ -28,9 +28,11 @@
 package com.tencent.devops.process.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
+import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.util.NotifyTemplateUtils
@@ -58,7 +60,8 @@ class PipelineSettingDao {
         isTemplate: Boolean = false,
         successNotifyTypes: String = "",
         failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
-        maxPipelineResNum: Int? = PIPELINE_RES_NUM_MIN
+        maxPipelineResNum: Int? = PIPELINE_RES_NUM_MIN,
+        pipelineAsCodeSettings: PipelineAsCodeSettings? = null
     ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.insertInto(
@@ -79,7 +82,8 @@ class PipelineSettingDao {
                 WAIT_QUEUE_TIME_SECOND,
                 MAX_QUEUE_SIZE,
                 IS_TEMPLATE,
-                MAX_PIPELINE_RES_NUM
+                MAX_PIPELINE_RES_NUM,
+                PIPELINE_AS_CODE_SETTINGS
             )
                 .values(
                     projectId,
@@ -98,7 +102,10 @@ class PipelineSettingDao {
                     DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
                     PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
                     isTemplate,
-                    maxPipelineResNum
+                    maxPipelineResNum,
+                    pipelineAsCodeSettings?.let { self ->
+                        JsonUtil.toJson(self, false)
+                    }
                 )
                 .execute()
         }
@@ -140,7 +147,8 @@ class PipelineSettingDao {
                     BUILD_NUM_RULE,
                     CONCURRENCY_GROUP,
                     CONCURRENCY_CANCEL_IN_PROGRESS,
-                    CLEAN_VARIABLES_WHEN_RETRY
+                    CLEAN_VARIABLES_WHEN_RETRY,
+                    PIPELINE_AS_CODE_SETTINGS
                 ).values(
                     setting.projectId,
                     setting.pipelineName,
@@ -171,7 +179,10 @@ class PipelineSettingDao {
                     setting.buildNumRule,
                     setting.concurrencyGroup,
                     setting.concurrencyCancelInProgress,
-                    setting.cleanVariablesWhenRetry
+                    setting.cleanVariablesWhenRetry,
+                    setting.pipelineAsCodeSettings?.let { self ->
+                        JsonUtil.toJson(self, false)
+                    }
                 ).execute()
             } else {
                 val updateSetMoreStep = dslContext.update(this)
@@ -201,6 +212,12 @@ class PipelineSettingDao {
                     .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
                     .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
                     .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
+                    .set(
+                        PIPELINE_AS_CODE_SETTINGS,
+                        setting.pipelineAsCodeSettings?.let { self ->
+                            JsonUtil.toJson(self, false)
+                        }
+                    )
                 // maxConRunningQueueSize 默认传空不更新
                 if (setting.maxConRunningQueueSize != null) {
                     updateSetMoreStep.set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
