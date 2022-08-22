@@ -53,6 +53,7 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
+@Suppress("ComplexMethod")
 @Service
 class UpgradeService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -222,7 +223,8 @@ class UpgradeService @Autowired constructor(
 
             agentGrayUtils.checkLockUpgrade(agentId, AgentUpgradeType.GO_AGENT) -> false
             agentGrayUtils.checkForceUpgrade(agentId, AgentUpgradeType.GO_AGENT) -> true
-            else -> canUpgrade && (info.goAgentVersion.isNullOrBlank() || (currentGoAgentVersion != info.goAgentVersion))
+            else -> canUpgrade &&
+                    (info.goAgentVersion.isNullOrBlank() || (currentGoAgentVersion != info.goAgentVersion))
         }
 
         val jdkVersion = when {
