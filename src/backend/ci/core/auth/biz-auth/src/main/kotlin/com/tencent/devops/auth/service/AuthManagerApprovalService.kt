@@ -8,6 +8,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
+import com.tencent.devops.model.auth.tables.records.TAuthManagerApprovalRecord
+import com.tencent.devops.model.auth.tables.records.TAuthManagerUserRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.WeworkMarkdownAction
 import com.tencent.devops.notify.pojo.WeworkMarkdownAttachment
@@ -23,6 +25,7 @@ class AuthManagerApprovalService @Autowired constructor(
     val dslContext: DSLContext,
     val authManagerApprovalDao: AuthManagerApprovalDao,
     val managerUserDao: ManagerUserDao,
+    val managerOrganizationService: ManagerOrganizationService,
     private val client: Client,
 ) {
     fun userRenewalAuth(
@@ -30,30 +33,53 @@ class AuthManagerApprovalService @Autowired constructor(
         approvalType: ApprovalType,
     ): Boolean {
         val approvalRecord = authManagerApprovalDao.getApprovalById(dslContext, approvalId)
-        if (approvalRecord == null) {
-            logger.warn("userRenewalAuth : approvalRecord is not exist! | approvalId = $approvalId")
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.APPROVAL_RECORD_NOT_EXIST,
-                defaultMessage = "审批记录不存在！"
-            )
-        }
-        val managerId = approvalRecord.managerId
-        val userId = approvalRecord.userId
-        // 校验是否权限过期
-        val userManagerRecord = managerUserDao.get(dslContext, managerId, userId)
-        if (userManagerRecord == null) {
-            logger.warn("userRenewalAuth : Manager permission has expired! | userId = $userId | managerId = $managerId")
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.MANAGER_PERMISSION_EXPIRE,
-                defaultMessage = "管理员权限已经失效，请重新发起申请！"
-            )
-        }
-        // todo 进一步 检验是否权限是否需要续约
-        val userExpiringRecord = managerUserDao.getExpiringRecord(dslContext, managerId, userId)
-        if (userExpiringRecord == null) {
-            logger.info("userRenewalAuth : User permissions have not expired | userId = $userId | managerId = $managerId")
+        val checkResult = checkBeforeExecute(dslContext, approvalId, approvalRecord)
+        if (checkResult) {
             return true
         }
+        val managerId = approvalRecord!!.managerId
+        val userId = approvalRecord.userId
+        val userManagerRecord = managerUserDao.get(dslContext, managerId, userId)
+        val managerOrganization = managerOrganizationService.getManagerOrganization(managerId)
+        val authName = managerOrganization!!.name
+        val authDetail = "${managerOrganization.organizationName}->${managerOrganization.strategyName}"
+        val expiredTime = userManagerRecord!!.endTime
+        when (approvalType) {
+            ApprovalType.AGREE -> {
+                authManagerApprovalDao.updateApprovalStatus(
+                    dslContext = dslContext,
+                    approvalId = approvalId,
+                    status = USER_AGREE_TO_RENEWAL
+                )
+                val weworkRobotNotifyMessage = buildManagerApprovalMessage(
+                    userId = userId,
+                    approvalId = approvalId,
+                    manager = userManagerRecord.createUser,
+                    authName = authName,
+                    authDetail = authDetail,
+                    expiredTime = expiredTime.toString()
+                )
+                client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
+            }
+            ApprovalType.REFUSE -> {
+                authManagerApprovalDao.updateApprovalStatus(
+                    dslContext = dslContext,
+                    approvalId = approvalId,
+                    status = USER_REFUSE_TO_RENEWAL
+                )
+            }
+        }
+        return true
+    }
+
+    private fun buildManagerApprovalMessage(
+        userId: String,
+        approvalId: Int,
+        manager: String,
+        authName: String,
+        authDetail: String,
+        expiredTime: String
+    ): WeworkRobotNotifyMessage {
         val actions: MutableList<WeworkMarkdownAction> = ArrayList()
         val agreeButton = WeworkMarkdownAction(
             name = "agree",
@@ -75,28 +101,17 @@ class AuthManagerApprovalService @Autowired constructor(
         )
         actions.add(agreeButton)
         actions.add(refuseButton)
-        when (approvalType) {
-            ApprovalType.AGREE -> {
-                authManagerApprovalDao.updateApprovalStatus(dslContext, approvalId, 2)
-                val weworkRobotNotifyMessage = WeworkRobotNotifyMessage(
-                    //审批人 要修改
-                    receivers = "greysonfang",
-                    receiverType = WeworkReceiverType.single,
-                    textType = WeworkTextType.markdown,
-                    message = "**蓝盾超级管理员权限续期申请审批**\\n管理员ID：$managerId\\n 用户ID：$userId" +
-                        "logo+白色T\\n\\n请选择是否同意用户续期权限\\n",
-                    attachments = WeworkMarkdownAttachment(
-                        callbackId = "approval",
-                        actions = actions
-                    )
-                )
-                client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
-            }
-            ApprovalType.REFUSE -> {
-                authManagerApprovalDao.updateApprovalStatus(dslContext, approvalId, 1)
-            }
-        }
-        return true
+        return WeworkRobotNotifyMessage(
+            receivers = manager,
+            receiverType = WeworkReceiverType.single,
+            textType = WeworkTextType.markdown,
+            message = "**蓝盾超级管理员权限续期申请审批**\\n申请人：$userId\\n授权名称：$authName" +
+                "\\n授权详情：$authDetail\\n过期时间：$expiredTime\\n请选择是否同意用户续期权限\\n",
+            attachments = WeworkMarkdownAttachment(
+                callbackId = "approval",
+                actions = actions
+            )
+        )
     }
 
     fun managerApproval(
@@ -104,33 +119,19 @@ class AuthManagerApprovalService @Autowired constructor(
         approvalType: ApprovalType
     ): Boolean {
         val approvalRecord = authManagerApprovalDao.getApprovalById(dslContext, approvalId)
-        if (approvalRecord == null) {
-            logger.warn("userRenewalAuth : approvalRecord is not exist! | approvalId = $approvalId")
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.APPROVAL_RECORD_NOT_EXIST,
-                defaultMessage = "审批记录不存在！"
-            )
+        val checkResult = checkBeforeExecute(dslContext, approvalId, approvalRecord)
+        if (checkResult) {
+            return true
         }
-        val managerId = approvalRecord.managerId
+        val managerId = approvalRecord!!.managerId
         val userId = approvalRecord.userId
-        // 校验是否权限过期
-        val userManagerRecord = managerUserDao.get(dslContext, managerId, userId)
-        if (userManagerRecord == null) {
-            logger.warn("userRenewalAuth : Manager permission has expired! | userId = $userId | managerId = $managerId")
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.MANAGER_PERMISSION_EXPIRE,
-                defaultMessage = "管理员权限已经失效，请重新发起申请！"
-            )
-        }
-        // todo 进一步 检验是否权限是否需要续约
-        val userExpiringRecord = managerUserDao.getExpiringRecord(dslContext, managerId, userId)
-        if (userExpiringRecord == null) {
-            logger.info("userRenewalAuth : User permissions have not expired | userId = $userId | managerId = $managerId")
-            return false
-        }
         when (approvalType) {
             ApprovalType.AGREE -> {
-                authManagerApprovalDao.updateApprovalStatus(dslContext, approvalId, 4)
+                authManagerApprovalDao.updateApprovalStatus(
+                    dslContext = dslContext,
+                    approvalId = approvalId,
+                    status = MANAGER_AGREE_TO_APPROVAL
+                )
                 managerUserDao.updateRecordsExpireTime(dslContext, managerId, userId)
                 val weworkRobotNotifyMessage = WeworkRobotNotifyMessage(
                     receivers = userId,
@@ -141,7 +142,11 @@ class AuthManagerApprovalService @Autowired constructor(
                 client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
             }
             ApprovalType.REFUSE -> {
-                authManagerApprovalDao.updateApprovalStatus(dslContext, approvalId, 3)
+                authManagerApprovalDao.updateApprovalStatus(
+                    dslContext = dslContext,
+                    approvalId = approvalId,
+                    status = MANAGER_REFUSE_TO_APPROVAL
+                )
                 val weworkRobotNotifyMessage = WeworkRobotNotifyMessage(
                     receivers = userId,
                     receiverType = WeworkReceiverType.single,
@@ -156,57 +161,77 @@ class AuthManagerApprovalService @Autowired constructor(
 
     fun checkExpiringManager() {
         val expiringRecords = managerUserDao.listExpiringRecords(dslContext) ?: return
-        logger.info("sentNotifyToExpiringUser : expiringRecords = ${expiringRecords}")
+        logger.info("sentNotifyToExpiringUser : expiringRecords = $expiringRecords")
         expiringRecords.map {
             val approvalRecord = authManagerApprovalDao.get(dslContext, it.managerId, it.userId)
+            val managerOrganization = managerOrganizationService.getManagerOrganization(it.managerId)
+            val authName = managerOrganization!!.name
+            val authDetail = "${managerOrganization.organizationName}->${managerOrganization.strategyName}"
             logger.info("approvalRecord : $approvalRecord")
+            // 若该过期记录为空，则从未发起审批，则直接发送续期消息给用户
             if (approvalRecord == null) {
-                val approvalId = authManagerApprovalDao.createApproval(
+                startRenewalProcess(
+                    authManagerUserRecord = it,
                     dslContext = dslContext,
-                    userId = it.userId,
-                    managerId = it.managerId,
-                    expireTime = it.endTime,
-                    status = 0
+                    authName = authName,
+                    authDetail = authDetail
                 )
-                val weworkRobotNotifyMessage = buildWeworkRobotNotifyMessage(
-                    userId = it.userId,
-                    managerId = it.managerId,
-                    approvalId = approvalId
-                )
-                client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
             } else {
                 val now = LocalDateTime.now()
-                // 审核单还未失效，不用发起审批
-                if (now < approvalRecord.endTime) {
+                val approvalRecordNotExpired = now < approvalRecord.endTime
+                // 审核单还未失效，不用重复发起审批
+                if (approvalRecordNotExpired) {
                     return@map
                 } else {
-                    // 表示本次审批，而且上次被审批人拒绝了，不再发送
-                    if (approvalRecord.expiredTime == it.endTime && approvalRecord.status == 3)
+                    // 若是本轮审批，并且上一次用户发起续期被审批人拒绝了，不再发送
+                    if (approvalRecord.expiredTime == it.endTime &&
+                        approvalRecord.status == MANAGER_REFUSE_TO_APPROVAL
+                    ) {
                         return@map
-                    else {
-                        val approvalId = authManagerApprovalDao.createApproval(
+                    } else {
+                        startRenewalProcess(
+                            authManagerUserRecord = it,
                             dslContext = dslContext,
-                            userId = it.userId,
-                            managerId = it.managerId,
-                            expireTime = it.endTime,
-                            status = 0
+                            authName = authName,
+                            authDetail = authDetail
                         )
-                        val weworkRobotNotifyMessage = buildWeworkRobotNotifyMessage(
-                            userId = it.userId,
-                            managerId = it.managerId,
-                            approvalId = approvalId
-                        )
-                        client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
                     }
                 }
             }
         }
     }
 
-    private fun buildWeworkRobotNotifyMessage(
+    private fun startRenewalProcess(
+        authManagerUserRecord: TAuthManagerUserRecord,
+        dslContext: DSLContext,
+        authName: String,
+        authDetail: String
+    ) {
+        val approvalId = authManagerApprovalDao.createApproval(
+            dslContext = dslContext,
+            userId = authManagerUserRecord.userId,
+            managerId = authManagerUserRecord.managerId,
+            expireTime = authManagerUserRecord.endTime,
+            status = START_APPROVAL
+        )
+        val weworkRobotNotifyMessage = buildUserRenewalMessage(
+            userId = authManagerUserRecord.userId,
+            manager = authManagerUserRecord.createUser,
+            approvalId = approvalId,
+            authName = authName,
+            authDetail = authDetail,
+            expiredTime = authManagerUserRecord.endTime.toString()
+        )
+        client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
+    }
+
+    private fun buildUserRenewalMessage(
         userId: String,
-        managerId: Int,
-        approvalId: Int
+        manager: String,
+        approvalId: Int,
+        authName: String,
+        authDetail: String,
+        expiredTime: String
     ): WeworkRobotNotifyMessage {
         val agreeButton = WeworkMarkdownAction(
             name = "agree",
@@ -233,8 +258,8 @@ class AuthManagerApprovalService @Autowired constructor(
             receivers = userId,
             receiverType = WeworkReceiverType.single,
             textType = WeworkTextType.markdown,
-            message = "**蓝盾超级管理员权限续期**\\n管理员ID：$managerId\\n 用户ID：$userId" +
-                "\\n\\n请选择是否需要续期权限\\n",
+            message = "**蓝盾超级管理员权限续期**\\n授权名称：$authName\\n授权详情：$authDetail" +
+                "\\n审批人：$manager\\n过期时间：$expiredTime\\n请选择是否需要续期权限\\n",
             attachments = WeworkMarkdownAttachment(
                 callbackId = "renewal",
                 actions = actions
@@ -242,7 +267,53 @@ class AuthManagerApprovalService @Autowired constructor(
         )
     }
 
+    private fun checkBeforeExecute(
+        dslContext: DSLContext,
+        approvalId: Int,
+        approvalRecord: TAuthManagerApprovalRecord?
+    ): Boolean {
+        if (approvalRecord == null) {
+            logger.warn("userRenewalAuth : approvalRecord is not exist! | approvalId = $approvalId")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.APPROVAL_RECORD_NOT_EXIST,
+                defaultMessage = "审批记录不存在！"
+            )
+        }
+        val managerId = approvalRecord.managerId
+        val userId = approvalRecord.userId
+        // 校验是否权限过期
+        val userManagerRecord = managerUserDao.get(dslContext, managerId, userId)
+        if (userManagerRecord == null) {
+            logger.warn("userRenewalAuth : Manager permission has expired! | userId = $userId | managerId = $managerId")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.MANAGER_PERMISSION_EXPIRE,
+                defaultMessage = "管理员权限已经失效，请重新发起申请！"
+            )
+        }
+        val userExpiringRecord = managerUserDao.getExpiringRecord(dslContext, managerId, userId)
+        if (userExpiringRecord == null) {
+            logger.info(
+                "userRenewalAuth : User permissions have not expired | " +
+                    "userId = $userId | managerId = $managerId"
+            )
+            val weworkRobotNotifyMessage = WeworkRobotNotifyMessage(
+                receivers = userId,
+                receiverType = WeworkReceiverType.single,
+                textType = WeworkTextType.markdown,
+                message = "权限还未过期，不需要操作！"
+            )
+            client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
+            return true
+        }
+        return false
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(AuthManagerApprovalService::class.java)
+        const val START_APPROVAL = 0
+        const val USER_REFUSE_TO_RENEWAL = 1
+        const val USER_AGREE_TO_RENEWAL = 2
+        const val MANAGER_REFUSE_TO_APPROVAL = 3
+        const val MANAGER_AGREE_TO_APPROVAL = 4
     }
 }

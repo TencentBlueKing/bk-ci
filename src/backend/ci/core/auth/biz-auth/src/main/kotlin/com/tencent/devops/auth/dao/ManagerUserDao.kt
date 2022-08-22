@@ -103,9 +103,9 @@ class ManagerUserDao {
 
     fun updateRecordsExpireTime(dslContext: DSLContext, managerId: Int, userId: String): Int {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            logger.info("updateRecordsExpireTime: ${END_TIME.add(100)}")
+            logger.info("updateRecordsExpireTime: ${END_TIME.add(182)}")
             return dslContext.update(this)
-                .set(END_TIME, END_TIME.add(100)).where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).execute()
+                .set(END_TIME, END_TIME.add(182)).where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).execute()
         }
     }
 
