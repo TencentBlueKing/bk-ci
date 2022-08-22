@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -41,15 +40,14 @@ class ExtServiceCommonService @Autowired constructor(
     private val dslContext: DSLContext,
     private val extServiceDao: ExtServiceDao
 ) {
-    private val logger = LoggerFactory.getLogger(ExtServiceCommonService::class.java)
 
     fun checkEditCondition(serviceCode: String): Boolean {
         // 查询微扩展的最新记录
         val newestServiceRecord = extServiceDao.getNewestServiceByCode(dslContext, serviceCode)
-        logger.info("checkEditCondition newestServiceRecord is :$newestServiceRecord")
-        if (null == newestServiceRecord) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(serviceCode))
-        }
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceCode)
+            )
         val serviceFinalStatusList = listOf(
             ExtServiceStatusEnum.AUDIT_REJECT.status.toByte(),
             ExtServiceStatusEnum.RELEASED.status.toByte(),

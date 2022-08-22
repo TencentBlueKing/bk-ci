@@ -53,8 +53,7 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
         cc: MutableSet<String>?,
         bcc: MutableSet<String>?
     ): Result<Boolean> {
-        logger.info("sendNotifyMessage templateCode is:$templateCode,sender is:$sender,receivers is:$receivers")
-        logger.info("sendNotifyMessage titleParams is:$titleParams,bodyParams is:$bodyParams,cc is:$cc,bcc is:$bcc")
+        logger.info("sendNotifyMessage params:[$templateCode|$sender|$receivers|$titleParams|$bodyParams|$cc|:$bcc")
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = templateCode,
             receivers = receivers,

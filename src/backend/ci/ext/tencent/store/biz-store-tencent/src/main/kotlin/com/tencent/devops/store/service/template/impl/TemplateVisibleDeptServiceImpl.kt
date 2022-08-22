@@ -101,7 +101,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
      * 设置模板可见范围
      */
     override fun addVisibleDept(userId: String, templateCode: String, deptInfos: List<DeptInfo>): Result<Boolean> {
-        logger.info("the userId is :$userId,templateCode is :$templateCode,deptInfos is :$deptInfos")
+        logger.info("addVisibleDept userId is :$userId,templateCode is :$templateCode,deptInfos is :$deptInfos")
         val validateResult = validateTemplateVisibleDept(templateCode, deptInfos)
         logger.info("the validateResult is :$validateResult")
         if (validateResult.isNotOk()) {
@@ -262,7 +262,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
             if (!imageCode.isNullOrBlank()) {
                 handleInvalidImageList(
                     storeType = storeType,
-                    imageCode = imageCode!!,
+                    imageCode = imageCode,
                     imageName = imageName,
                     templateImageDeptMap = templateImageDeptMap,
                     deptInfos = deptInfos,

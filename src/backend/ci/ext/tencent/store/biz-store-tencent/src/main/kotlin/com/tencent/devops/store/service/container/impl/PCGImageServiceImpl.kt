@@ -163,8 +163,8 @@ class PCGImageServiceImpl @Autowired constructor(
                 pcgImageCache.clear()
                 pcgImageCache.addAll(getImage(responseContent))
             }
-        } catch (t: Throwable) {
-            logger.warn("Fail to reload pcg image with url - ($pcgImageUrl)", t)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to reload pcg image with url - ($pcgImageUrl)", ignored)
         } finally {
             pcgImageCacheLastUpdate = System.currentTimeMillis()
         }

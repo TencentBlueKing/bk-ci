@@ -49,7 +49,7 @@ class MarketIdeAtomClassifyServiceImpl : AbstractClassifyService() {
         // 允许删除分类是条件：1、该分类下的原子插件都不处于上架状态
         var flag = false
         val releaseAtomNum = ideAtomDao.countReleaseAtomNumByClassifyId(dslContext, classifyId)
-        logger.info("the releaseAtomNum is :$releaseAtomNum")
+        logger.info("$classifyId releaseAtomNum is :$releaseAtomNum")
         if (releaseAtomNum == 0) {
             flag = true
         }

@@ -73,7 +73,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         storeId: String?,
         buildId: String?
     ): Result<CodeccMeasureInfo?> {
-        logger.info("getCodeccMeasureInfo userId:$userId,storeType:$storeType,storeCode:$storeCode,storeId:$storeId,buildId:$buildId")
+        logger.info("getCodeccMeasureInfo params:[$userId|$storeType|$storeCode|$storeId|$buildId]")
         validatePermission(userId, storeCode, storeType)
         var codeccBuildId: String? = buildId
         if (codeccBuildId == null && storeId != null) {
