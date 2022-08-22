@@ -181,8 +181,7 @@ class TGitPushTriggerHandler(
                 pipelineId = pipelineId,
                 operationKind = event.operation_kind!!,
                 actionKind = event.action_kind!!,
-                isMonitorCreate = webHookParams.enableMonitorCreate ?: true,
-                isMonitorUpdate = webHookParams.enableMonitorUpdate ?: true
+                included = convert(webHookParams.includePushAction)
             )
             return listOf(skipCiFilter, pathFilter, commitMessageFilter, pushKindFilter)
         }

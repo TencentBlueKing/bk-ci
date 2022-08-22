@@ -13,19 +13,17 @@ class PushKindFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "create",
             actionKind = "createbranch",
-            isMonitorCreate = false,
-            isMonitorUpdate = false
+            included = emptyList()
         )
-        // 两个都不见监听 false
+        // 空 默认两个都监听
         // 远程仓库新增分支
-        Assertions.assertFalse(pushKindFilter.doFilter(response))
+        Assertions.assertTrue(pushKindFilter.doFilter(response))
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "create",
             actionKind = "createbranch",
-            isMonitorCreate = true,
-            isMonitorUpdate = false
+            included = listOf("createBranch")
         )
         // 只监听创建分支
         // 远程仓库新增分支
@@ -35,8 +33,7 @@ class PushKindFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "create",
             actionKind = "createbranch",
-            isMonitorCreate = false,
-            isMonitorUpdate = true
+            included = listOf("updateFile")
         )
         // 只监听新增文件
         // 远程仓库新增分支
@@ -46,8 +43,7 @@ class PushKindFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "create",
             actionKind = "createbranch",
-            isMonitorCreate = true,
-            isMonitorUpdate = true
+            included = listOf("updateFile","createBranch")
         )
         // 两个都监听
         // 远程仓库新增分支
@@ -58,18 +54,16 @@ class PushKindFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "update",
             actionKind = "clientpush",
-            isMonitorCreate = false,
-            isMonitorUpdate = false
+            included = emptyList()
         )
-        // 两个都不见监听 false
-        Assertions.assertFalse(pushKindFilter.doFilter(response))
+        // 空 默认两个都监听
+        Assertions.assertTrue(pushKindFilter.doFilter(response))
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "update",
             actionKind = "clientpush",
-            isMonitorCreate = true,
-            isMonitorUpdate = false
+            included = listOf("createBranch")
         )
         // 只监听创建分支
         Assertions.assertFalse(pushKindFilter.doFilter(response))
@@ -78,8 +72,7 @@ class PushKindFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "update",
             actionKind = "clientpush",
-            isMonitorCreate = false,
-            isMonitorUpdate = true
+            included = listOf("updateFile")
         )
         // 只监听新增文件
         Assertions.assertTrue(pushKindFilter.doFilter(response))
@@ -88,8 +81,7 @@ class PushKindFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "update",
             actionKind = "clientpush",
-            isMonitorCreate = true,
-            isMonitorUpdate = true
+            included = listOf("updateFile","createBranch")
         )
         // 两个都监听
         Assertions.assertTrue(pushKindFilter.doFilter(response))
@@ -99,18 +91,16 @@ class PushKindFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "create",
             actionKind = "clientpush",
-            isMonitorCreate = false,
-            isMonitorUpdate = false
+            included = emptyList()
         )
-        // 两个都不见监听 false
-        Assertions.assertFalse(pushKindFilter.doFilter(response))
+        // 空 默认两个都监听
+        Assertions.assertTrue(pushKindFilter.doFilter(response))
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "create",
             actionKind = "clientpush",
-            isMonitorCreate = true,
-            isMonitorUpdate = false
+            included = listOf("createBranch")
         )
         // 只监听创建分支
         Assertions.assertFalse(pushKindFilter.doFilter(response))
@@ -119,8 +109,7 @@ class PushKindFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "create",
             actionKind = "clientpush",
-            isMonitorCreate = false,
-            isMonitorUpdate = true
+            included = listOf("updateFile")
         )
         // 只监听新增文件
         Assertions.assertTrue(pushKindFilter.doFilter(response))
@@ -129,8 +118,7 @@ class PushKindFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             operationKind = "create",
             actionKind = "clientpush",
-            isMonitorCreate = true,
-            isMonitorUpdate = true
+            included = listOf("updateFile","createBranch")
         )
         // 两个都监听
         Assertions.assertTrue(pushKindFilter.doFilter(response))
