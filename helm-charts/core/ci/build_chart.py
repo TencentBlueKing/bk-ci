@@ -115,6 +115,8 @@ value_file.close()
 # 生成服务tpl
 config_re = re.compile(r'-[a-z\-]*|common')
 for config_name in os.listdir(config_parent):
+    if "turbo" in config_name:
+        continue
     if config_name.endswith('yaml') or config_name.endswith('yml'):
         config_file = open(config_parent + config_name, 'r')
         the_name = config_re.findall(config_name)[0].replace('-', '', 1)
