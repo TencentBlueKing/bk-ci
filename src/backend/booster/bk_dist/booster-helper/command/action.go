@@ -383,7 +383,7 @@ func compileTest(c *commandCli.Context) error {
 
 	dir := filepath.Join(dcUtil.GetRuntimeDir(), "tmp")
 	_ = os.MkdirAll(FormatPath(dir), os.ModePerm)
-	fmt.Println(FormatPath(dir))
+	fmt.Printf("mkdir dir (%s)", FormatPath(dir))
 
 	count, _ := strconv.Atoi(c.String(FlagCnt))
 
@@ -451,6 +451,9 @@ func getCommands(c *commandCli.Context) ([][]string, [][]string, error) {
 					compileCmds = append(compileCmds, res)
 				}
 			}*/
+			if len(preCmds) >= 5 {
+				break
+			}
 		}
 	}
 	return preCmds, compileCmds, nil
@@ -503,6 +506,7 @@ func runCmds(Cmds [][]string, c *commandCli.Context) []float64 {
 	return timeStats
 }
 func runCmd(ch chan time.Duration, s []string) {
+	fmt.Printf("string to run cmd : (%s)", s)
 	start := time.Now()
 	cmd := exec.Command(s[0], s[1:]...)
 	out, err := cmd.CombinedOutput()
@@ -544,6 +548,7 @@ func copyDir(src string, dest string) {
 	}
 
 	outPut, e := cmd.Output()
+	fmt.Printf("copying from src (%s) to des(%s)", src, dest)
 	if e != nil {
 		fmt.Println(e.Error())
 		return
