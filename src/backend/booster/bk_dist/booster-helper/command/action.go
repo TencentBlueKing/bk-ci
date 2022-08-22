@@ -382,7 +382,7 @@ func compileTest(c *commandCli.Context) error {
 
 	dir := filepath.Join(dcUtil.GetRuntimeDir(), "tmp")
 	_ = os.MkdirAll(FormatPath(dir), os.ModePerm)
-	fmt.Printf("mkdir dir (%s)", FormatPath(dir))
+	fmt.Printf("mkdir dir (%s)\n", FormatPath(dir))
 
 	count, _ := strconv.Atoi(c.String(FlagCnt))
 
@@ -394,18 +394,18 @@ func compileTest(c *commandCli.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("preCmds(%d),compileCmds(%d)", len(preCmds), len(compileCmds))
 
 	var cmds [][]string
 	for i := 0; i < count && i < len(preCmds); i++ {
 		res, _ := handle(c, preCmds[i])
 		cmds = append(cmds, res)
 	}
+	fmt.Printf("preCmds(%d),compileCmds(%d),cmd(%d)\n", len(preCmds), len(compileCmds), len(cmds))
 	timeStats, fails := runCmds(cmds, c)
 
-	for i := 0; i < count && i < len(preCmds); i++ {
-		for j, ss := range preCmds[i] {
-			fmt.Printf("%s       %s", ss, cmds[i][j])
+	for i := 0; i < count && i < len(preCmds) && i < len(cmds); i++ {
+		for j := 0; j < len(preCmds) && j < len(cmds); j++ {
+			fmt.Printf("[i][j]: %s       %s\n", preCmds[i][j], cmds[i][j])
 		}
 	}
 	fmt.Println(timeStats, fails)
@@ -539,7 +539,7 @@ func copyFile(src string, dest string) {
 
 	switch runtime.GOOS {
 	case "windows":
-		cmd = exec.Command("xcopy", src, dest, "/I", "/E")
+		cmd = exec.Command("xcopy", src, dest, "/I", "/E", "/y")
 	case "darwin", "linux":
 		cmd = exec.Command("cp", src, dest)
 	}
