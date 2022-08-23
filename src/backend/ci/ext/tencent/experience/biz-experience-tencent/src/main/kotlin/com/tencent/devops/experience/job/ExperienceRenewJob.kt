@@ -46,7 +46,7 @@ class ExperienceRenewJob @Autowired constructor(
                                     0
                                 )
                             } catch (e: Exception) {
-                                logger.error("update record:${record.id} failed", e)
+                                logger.warn("update record:${record.id} failed", e)
                             }
                             logger.info("update record:${record.id} success")
                         }
