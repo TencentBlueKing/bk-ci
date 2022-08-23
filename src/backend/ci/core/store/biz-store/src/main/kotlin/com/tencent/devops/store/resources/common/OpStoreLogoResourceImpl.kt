@@ -55,7 +55,6 @@ class OpStoreLogoResourceImpl @Autowired constructor(
             userId = userId,
             sizeLimitiFlag = sizeLimitiFlag,
             contentLength = contentLength,
-            compressFlag = true,
             inputStream = inputStream,
             disposition = disposition
         )

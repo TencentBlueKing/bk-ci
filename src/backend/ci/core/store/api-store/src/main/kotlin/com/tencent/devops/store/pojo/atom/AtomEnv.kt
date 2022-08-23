@@ -81,6 +81,8 @@ data class AtomEnv(
     val classifyCode: String? = null,
     @ApiModelProperty("所属插件分类名称", required = false)
     val classifyName: String? = null,
+    @ApiModelProperty("运行时版本", required = false)
+    val runtimeVersion: String? = null,
     @ApiModelProperty("插件运行结束后是否立即杀掉其进程", required = false)
     val finishKillFlag: Boolean? = null
 )

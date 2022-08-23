@@ -53,6 +53,7 @@ interface MarketAtomCommonService {
 
     fun parseBaseTaskJson(
         taskJsonStr: String,
+        projectCode: String,
         atomCode: String,
         version: String,
         userId: String
