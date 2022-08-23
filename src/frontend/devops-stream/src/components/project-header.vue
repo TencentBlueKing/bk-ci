@@ -85,7 +85,6 @@
                     size="18"
                     name="notify"
                 ></icon>
-                {{$t('header.notifications')}}
                 <span class="user-hint" v-if="messageNum > 0"></span>
             </span>
             <toggle-language></toggle-language>
