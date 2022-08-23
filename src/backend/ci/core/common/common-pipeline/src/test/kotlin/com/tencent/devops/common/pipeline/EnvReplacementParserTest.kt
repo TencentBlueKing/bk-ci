@@ -1,36 +1,10 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
- * the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
-package com.tencent.devops.common.api.util
+package com.tencent.devops.common.pipeline
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
-class EnvUtilTest {
+@Suppress("ALL")
+internal class EnvReplacementParserTest {
 
     @Test
     fun parseEnvTwice() {
@@ -52,7 +26,7 @@ class EnvUtilTest {
         data["t.cd"] = "\${ab.cd}"
 
         val template2 = "abcd_\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
-        val buff = EnvUtils.parseEnv(template2, data)
+        val buff = EnvReplacementParser.parse(template2, data)
         Assertions.assertEquals(template2, buff)
 
         parseAndEquals(
@@ -91,7 +65,7 @@ class EnvUtilTest {
         expect: String,
         contextMap: Map<String, String> = emptyMap()
     ) {
-        val buff = EnvUtils.parseEnv(template, data, contextMap = contextMap)
+        val buff = EnvReplacementParser.parse(template, contextMap.plus(data))
         println("template=$template\nreplaced=$buff\n")
         Assertions.assertEquals(expect, buff)
     }
@@ -117,50 +91,47 @@ class EnvUtilTest {
             "variables.abc" to "variables.value",
             "variables.hello" to "hahahahaha"
         )
-
-        Assertions.assertEquals("", EnvUtils.parseEnv(null, emptyMap(), contextMap = data))
-        Assertions.assertEquals("", EnvUtils.parseEnv("", emptyMap(), contextMap = data))
+        // 与EnvUtils的差异点：不支持传可空对象
+//        Assertions.assertEquals("", EnvReplacementParser.parse(null, data))
+        Assertions.assertEquals("", EnvReplacementParser.parse("", data))
 
         Assertions.assertEquals(
             "hello variables.value world",
-            EnvUtils.parseEnv(command1, emptyMap(), contextMap = data)
+            EnvReplacementParser.parse(command1, data)
         )
         Assertions.assertEquals(
             "variables.valueworld",
-            EnvUtils.parseEnv(command2, emptyMap(), contextMap = data)
+            EnvReplacementParser.parse(command2, data)
         )
         Assertions.assertEquals(
             "hellovariables.value",
-            EnvUtils.parseEnv(command3, emptyMap(), contextMap = data)
+            EnvReplacementParser.parse(command3, data)
         )
         Assertions.assertEquals(
             "hello\${{variables.abc",
-            EnvUtils.parseEnv(command4, emptyMap(), contextMap = data)
+            EnvReplacementParser.parse(command4, data)
         )
         Assertions.assertEquals(
             "hello\${{variables.abc}",
-            EnvUtils.parseEnv(command5, emptyMap(), contextMap = data)
+            EnvReplacementParser.parse(command5, data)
         )
         Assertions.assertEquals(
             "hellovariables.value}",
-            EnvUtils.parseEnv(command6, emptyMap(), contextMap = data)
+            EnvReplacementParser.parse(command6, data)
         )
         Assertions.assertEquals(
             "hello\$variables.abc}}",
-            EnvUtils.parseEnv(command7, emptyMap(), contextMap = data)
+            EnvReplacementParser.parse(command7, data)
         )
         Assertions.assertEquals(
             "echo hahahahaha",
-            EnvUtils.parseEnv(command8, emptyMap(), contextMap = data)
+            EnvReplacementParser.parse(command8, data)
         )
         Assertions.assertEquals(
             "echo /data/landun/workspace",
-            EnvUtils.parseEnv(
-                command = command9,
-                data = map,
-                replaceWithEmpty = true,
-                isEscape = true,
-                contextMap = mapOf("ci.workspace" to "/data/landun/workspace")
+            EnvReplacementParser.parse(
+                obj = command9,
+                contextMap = map.plus("ci.workspace" to "/data/landun/workspace")
             )
         )
     }
@@ -174,7 +145,7 @@ class EnvUtilTest {
         println("parseEnvTestData $command")
         Assertions.assertEquals(
             "{\"age\": ${map["age"]} , \"sex\": \"boy\", \"name\": ${map["name"]}}",
-            EnvUtils.parseEnv(command, map)
+            EnvReplacementParser.parse(command, map)
         )
 
         val command1 = "hello \${{variables.abc}} world"
@@ -194,22 +165,19 @@ class EnvUtilTest {
             "{variables.abc" to "jacky"
         )
 
-        Assertions.assertEquals("hello variables.value world", EnvUtils.parseEnv(command1, data))
-        Assertions.assertEquals("variables.valueworld", EnvUtils.parseEnv(command2, data))
-        Assertions.assertEquals("hellovariables.value", EnvUtils.parseEnv(command3, data))
-        Assertions.assertEquals("hello\${{variables.abc", EnvUtils.parseEnv(command4, data))
-        Assertions.assertEquals("hello\${{variables.abc}", EnvUtils.parseEnv(command5, data))
-        Assertions.assertEquals("hellovariables.value}", EnvUtils.parseEnv(command6, data))
-        Assertions.assertEquals("hello\$variables.abc}}", EnvUtils.parseEnv(command7, data))
-        Assertions.assertEquals("echo hahahahaha", EnvUtils.parseEnv(command8, data))
+        Assertions.assertEquals("hello variables.value world", EnvReplacementParser.parse(command1, data))
+        Assertions.assertEquals("variables.valueworld", EnvReplacementParser.parse(command2, data))
+        Assertions.assertEquals("hellovariables.value", EnvReplacementParser.parse(command3, data))
+        Assertions.assertEquals("hello\${{variables.abc", EnvReplacementParser.parse(command4, data))
+        Assertions.assertEquals("hello\${{variables.abc}", EnvReplacementParser.parse(command5, data))
+        Assertions.assertEquals("hellovariables.value}", EnvReplacementParser.parse(command6, data))
+        Assertions.assertEquals("hello\$variables.abc}}", EnvReplacementParser.parse(command7, data))
+        Assertions.assertEquals("echo hahahahaha", EnvReplacementParser.parse(command8, data))
         Assertions.assertEquals(
             "echo /data/landun/workspace || hahahahaha",
-            EnvUtils.parseEnv(
-                command = command9,
-                data = data,
-                replaceWithEmpty = false,
-                isEscape = false,
-                contextMap = mapOf("ci.workspace" to "/data/landun/workspace")
+            EnvReplacementParser.parse(
+                obj = command9,
+                contextMap = data.plus("ci.workspace" to "/data/landun/workspace")
             )
         )
     }

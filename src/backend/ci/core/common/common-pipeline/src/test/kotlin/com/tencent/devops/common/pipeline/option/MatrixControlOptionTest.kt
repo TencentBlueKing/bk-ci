@@ -158,7 +158,8 @@ var2:
             println("$index: $map")
         }
         Assertions.assertEquals(
-            contextCase, JsonUtil.to(
+            contextCase,
+            JsonUtil.to(
                 "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\"," +
                     "\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"," +
                     "\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"}," +
