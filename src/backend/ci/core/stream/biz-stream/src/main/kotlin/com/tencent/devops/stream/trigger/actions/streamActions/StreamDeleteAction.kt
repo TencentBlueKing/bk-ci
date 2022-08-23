@@ -121,5 +121,7 @@ class StreamDeleteAction(
         gitAction.updateLastBranch(pipelineId, branch)
     }
 
-    override fun updatePipelineDisplayName(pipelineId: String, displayName: String) {}
+    override fun updatePipelineDisplayName(pipelineId: String, displayName: String) {
+        gitAction.updatePipelineDisplayName(pipelineId, displayName)
+    }
 }
