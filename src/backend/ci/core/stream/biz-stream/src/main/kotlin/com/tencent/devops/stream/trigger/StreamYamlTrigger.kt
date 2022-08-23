@@ -41,6 +41,7 @@ import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.format
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -210,6 +211,7 @@ class StreamYamlTrigger @Autowired constructor(
             )
         }
 
+        // 获取蓝盾流水线的pipelineAsCodeSetting
         val pipelineSettings = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
             projectId = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong()),
             pipelineId = pipeline.pipelineId,
@@ -411,7 +413,10 @@ class StreamYamlTrigger @Autowired constructor(
                 getTemplateMethod = yamlTemplateService::getTemplate,
                 nowRepo = null,
                 repo = null,
-                resourcePoolMapExt = resourcePoolExt
+                resourcePoolMapExt = resourcePoolExt,
+                conf = YamlTemplateConf(
+                    useOldParametersExpression = action.data.context.pipelineAsCodeSettings?.enable != true
+                )
             ).replace()
 
             val newPreYamlObject = preYamlObject.copy(
