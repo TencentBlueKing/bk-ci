@@ -80,7 +80,7 @@ class TxArtifactoryDataClearServiceImpl @Autowired constructor(
         val request = Request.Builder()
             .url(url)
             .put(body)
-            .addHeader("Authorization" , Credentials.basic(repoUserName, repoPassword))
+            .addHeader("Authorization", Credentials.basic(repoUserName, repoPassword))
             .addHeader(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .build()
         OkhttpUtils.doHttp(request).use { response ->
