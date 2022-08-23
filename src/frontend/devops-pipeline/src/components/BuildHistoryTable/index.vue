@@ -124,12 +124,8 @@
                             <span :title="artifactory.name" class="artifact-name">{{ artifactory.name }}</span>
                             <span class="artifact-size">{{ artifactory.size }}</span>
                         </p>
-                        <bk-popover ref="popover" placement="top" :content="$t('download')" transfer>
-                            <i class="devops-icon icon-download download-link history-text-link" @click.stop="downloadFile(artifactory)" />
-                        </bk-popover>
-                        <bk-popover ref="popover" placement="top" :content="$t('history.copyToCustomArtifactory')" transfer>
-                            <Logo class="icon-copy" name="copy" size="12" v-if="artifactory.artifactoryType === 'PIPELINE'" @click.stop.native="copyToCustom(artifactory)"></Logo>
-                        </bk-popover>
+                        <i class="devops-icon icon-download download-link history-text-link" v-bk-tooltips="{ content: $t('download') }" @click.stop="downloadFile(artifactory)" />
+                        <Logo class="icon-copy" name="copy" size="12" v-bk-tooltips="{ content: $t('history.copyToCustomArtifactory') }" v-if="artifactory.artifactoryType === 'PIPELINE'" @click.stop.native="copyToCustom(artifactory)"></Logo>
                     </li>
                     <footer v-if="needShowAll" @click.stop="showAllArtifactory" class="history-text-link">{{ $t('history.showAll') }}</footer>
                 </ul>
@@ -175,9 +171,6 @@
             },
             showLog: {
                 type: Function
-            },
-            loadingMore: {
-                type: Boolean
             }
         },
         data () {
@@ -467,17 +460,18 @@
             async downloadFile ({ artifactoryType, path, name }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
+                    const isDevnet = await this.$store.dispatch('common/requestDevnetGateway')
                     const res = await this.$store.dispatch('common/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
                     })
-
+                    const url = isDevnet ? res.url : res.url2
                     this.$showTips({
                         message: `${this.$t('history.downloading')}${name}`,
                         theme: 'success'
                     })
-                    window.open(res.url, '_self')
+                    window.open(url, '_self')
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'

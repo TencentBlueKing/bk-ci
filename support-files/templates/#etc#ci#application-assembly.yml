@@ -399,12 +399,6 @@ pipeline:
     spec_channels: "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
     spec_channel_max_keep_num: 2
 
-#### sign
-# 签名服务临时解压缩目录
-bkci:
-  sign:
-    tmpDir: "/tmp/enterprise_sign_tmp/"
-
 notify:
   weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  #发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)
 

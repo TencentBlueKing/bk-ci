@@ -159,8 +159,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     )
                 }
             }
-        } catch (t: Throwable) {
-            logger.warn("pipelineBuildHistoryDataClear failed", t)
+        } catch (ignored: Throwable) {
+            logger.warn("pipelineBuildHistoryDataClear failed", ignored)
         } finally {
             lock.unlock()
         }
@@ -226,8 +226,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     expired = false,
                     isDistinguishCluster = true
                 )
-            } catch (ignore: Exception) {
-                logger.warn("pipelineBuildHistoryDataClear doClearBus failed", ignore)
+            } catch (ignored: Throwable) {
+                logger.warn("pipelineBuildHistoryDataClear doClearBus failed", ignored)
             } finally {
                 // 释放redis集合中的线程编号
                 redisOperation.sremove(key = PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY,
@@ -343,7 +343,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             pipelineHistoryBuildIdList?.forEach { buildId ->
                 // 依次删除process表中的相关构建记录(T_PIPELINE_BUILD_HISTORY做为基准表，
                 // 为了保证构建流水记录删干净，T_PIPELINE_BUILD_HISTORY记录要最后删)
-                processDataClearService.clearBaseBuildData(projectId, buildId)
+                // processDataClearService.clearBaseBuildData(projectId, buildId)
                 repositoryDataClearService.clearBuildData(buildId)
                 if (isCompletelyDelete) {
                     dispatchDataClearService.clearBuildData(buildId)

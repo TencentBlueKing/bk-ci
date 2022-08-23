@@ -64,7 +64,13 @@ class BuildNotifyResourceImpl @Autowired constructor(
 
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkRtxMessage(message)
-        rtxService.sendMqMsg(message)
+        val weworkNotifyTextMessage = WeworkNotifyTextMessage(
+            receivers = message.getReceivers(),
+            receiverType = WeworkReceiverType.single,
+            textType = WeworkTextType.text,
+            message = "${message.title}" + "\n\n" + "${message.body}"
+        )
+        weworkService.sendTextMessage(weworkNotifyTextMessage)
         return Result(true)
     }
 

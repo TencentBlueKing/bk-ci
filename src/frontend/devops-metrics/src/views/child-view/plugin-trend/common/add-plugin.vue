@@ -131,12 +131,12 @@ watch(
       width="22px"
       height="22px"
     />
-    Add plugin
+    {{ t('Add plugin') }}
   </bk-button>
   <bk-sideslider
     class="add-plugin-slider"
     width="640"
-    title="Add plugin"
+    :title="t('Add plugin')"
     quick-close
     v-model:isShow="isShow"
   >

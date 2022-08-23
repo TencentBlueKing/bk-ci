@@ -53,6 +53,8 @@
     "signInGithub": "SIGN IN WITH GITHUB",
     "project": "project",
     "group": "group",
+    "failToGetData": "get data failed",
+    "noPermToView": "no view permission",
     "header": {
         "pipelines": "Pipelines",
         "metrics": "Metrics",
@@ -126,10 +128,10 @@
         "showLog": "show Debug Log",
         "hideLog": "Hide Debug Log",
         "downloadLog": "Download Log",
-        "logEmpty": "日志为空",
-        "logClosed": "日志关闭",
-        "logCleared": "日志被清理",
-        "logErr": "日志错误",
+        "logEmpty": "The log is error",
+        "logClosed": "The log is closed",
+        "logCleared": "The Log has been cleand",
+        "logErr": "The Log is error",
         "allJobs": "Re-run all jobs",
         "allFailedJobs": "Re-run all failed jobs",
         "automation": "Automation",
@@ -171,7 +173,10 @@
         "alias": "Alias",
         "options": "Options",
         "defaultValue": "Default value",
-        "required": "Required"
+        "required": "Required",
+        "yamError": "YAML parse failed",
+        "noYamlOrDisable": "Pipeline does not exist or dose not have a manual trigger in this branch",
+        "variable": "variable"
     },
     "exception": {
         "systemErrTips": "'System error, please try again later!'",

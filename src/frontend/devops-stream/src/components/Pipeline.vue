@@ -5,6 +5,7 @@
             :editable="false"
             :is-exec-detail="true"
             :match-rules="[]"
+            :user-name="userName"
             :pipeline="pipeline"
             @click="handlePipelineClick"
             @stage-check="handleStageCheck"
@@ -75,9 +76,11 @@
         },
 
         computed: {
-            ...mapState(['projectId', 'permission', 'curPipeline'])
+            ...mapState(['projectId', 'permission', 'curPipeline', 'user']),
+            userName () {
+                return this.user && this.user.username ? this.user.username : 'unknow'
+            }
         },
-
         watch: {
             pipeline (val) {
                 if (val.stages?.length > 0 && this.firstIn) {
@@ -87,7 +90,6 @@
                 }
             }
         },
-
         methods: {
             ...mapActions([
                 'toggleStageReviewPanel',
@@ -116,10 +118,10 @@
                     stageIndex: stageIndex
                 }
                 const job = this.getJob(this.editingElementPos)
-                if (!Reflect.has(args, 'containerGroupIndex')) {
-                    this.editingElementPos.logData = job
-                } else if (Number.isInteger(elementIndex)) {
+                if (Number.isInteger(elementIndex)) {
                     this.editingElementPos.logData = job.elements[elementIndex]
+                } else if (!Reflect.has(args, 'containerGroupIndex')) {
+                    this.editingElementPos.logData = job
                 } else if (Number.isInteger(containerIndex)) {
                     this.editingElementPos.job = job
                 }
@@ -133,19 +135,30 @@
                 const query = this.$route.query || {}
                 const checkIn = query.checkIn
                 const checkOut = query.checkOut
-                this.pipeline.stages.every(stage => {
-                    if (stage.id === checkIn) {
-                        return this.handleStageCheck('checkIn')
-                    } else if (stage.id === checkOut) {
-                        return this.handleStageCheck('checkOut')
+                const checkId = checkIn ?? checkOut
+                if (checkId) {
+                    const type = checkIn ? 'checkIn' : 'checkOut'
+                    const stageIndex = this.pipeline.stages.findIndex(stage => checkId === stage.id)
+                    if (stageIndex > -1) {
+                        this.handleStageCheck({
+                            type,
+                            stageIndex
+                        })
                     }
-                    return true
-                })
+                }
             },
 
             autoOpenLog () {
                 if (this.$route.query.stageIndex) {
-                    this.handlePipelineClick(this.$route.query)
+                    const { stageIndex, elementIndex, containerGroupIndex, containerIndex } = this.$route.query
+                    const params = {
+                        // stream 流水线隐藏了第一个stage,所以减去1
+                        stageIndex: Number(stageIndex) - 1,
+                        elementIndex: Number(elementIndex),
+                        containerIndex: Number(containerIndex)
+                    }
+                    if (containerGroupIndex) params.containerGroupIndex = Number(containerGroupIndex)
+                    this.handlePipelineClick(params)
                 }
             },
 

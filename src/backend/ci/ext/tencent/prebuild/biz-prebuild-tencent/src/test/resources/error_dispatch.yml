@@ -1,0 +1,18 @@
+version: v2.0
+
+stages:
+  - name: "stage1"
+    jobs:
+      job1:
+        runs-on:
+          pool-name: nonono
+          needs:
+            jdk: "1.8.0_161"
+            maven: "3.8"
+        steps:
+          - uses: CodeccCheckAtomDebug@4.*
+            name: 腾讯代码分析
+            with:
+              beAutoLang: true
+              checkerSetType: "openScan"
+              toolScanType: "0" # 扫描方式。0是全量扫描，1是增量扫描

@@ -59,10 +59,10 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val atomId = storeBuildResultRequest.storeId
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
-        logger.info("handleStoreBuildResult atomRecord is:$atomRecord")
-        if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomId)
+            )
         // 防止重复的mq消息造成的状态异常
         if (atomRecord.atomStatus != AtomStatusEnum.BUILDING.status.toByte()) {
             return Result(true)

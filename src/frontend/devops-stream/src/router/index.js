@@ -8,6 +8,7 @@ import VueRouter from 'vue-router'
 import websocket from '@/utils/websocket'
 Vue.use(VueRouter)
 
+const homePage = () => import(/* webpackChunkName: 'home' */'@/views/home')
 const dashboard = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard')
 const main = () => import(/* webpackChunkName: 'entry' */'@/views/index')
 const projectIndex = () => import(/* webpackChunkName: 'entry' */'@/views/project-index')
@@ -19,17 +20,18 @@ const pipelineDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/view
 const buildDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/detail')
 const buildReports = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/reports')
 const buildConfig = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/config')
+const buildArtifacts = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/artifacts')
 const webConsole = () => import(/* webpackChunkName: "webConsole" */'@/views/pipeline/web-console.vue')
-const setting = () => import(/* webpackChunkName: 'setting' */'@/views/setting/index')
-const basicSetting = () => import(/* webpackChunkName: 'setting' */'@/views/setting/basic')
-const credentialList = () => import(/* webpackChunkName: 'credential' */'@/views/setting/credential/credential-list')
-const credentialSettings = () => import(/* webpackChunkName: 'credential' */'@/views/setting/credential/credential-settings')
-const expGroupsList = () => import(/* webpackChunkName: 'expGroups' */'@/views/setting/exp-groups')
-const agentPools = () => import(/* webpackChunkName: 'pool' */'@/views/setting/agent-pools/index')
-const poolSettings = () => import(/* webpackChunkName: 'pool' */'@/views/setting/agent-pools/pool-settings')
-const addAgent = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/add-agent')
-const agentList = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/agent-list')
-const agentDetail = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/agent-detail')
+const setting = () => import(/* webpackChunkName: 'setting' */'@/views/setting/index.vue')
+const basicSetting = () => import(/* webpackChunkName: 'setting' */'@/views/setting/basic.vue')
+const credentialList = () => import(/* webpackChunkName: 'credential' */'@/views/setting/credential/credential-list.vue')
+const credentialSettings = () => import(/* webpackChunkName: 'credential' */'@/views/setting/credential/credential-settings.vue')
+const expGroupsList = () => import(/* webpackChunkName: 'expGroups' */'@/views/setting/exp-groups/index.vue')
+const agentPools = () => import(/* webpackChunkName: 'pool' */'@/views/setting/agent-pools/index.vue')
+const poolSettings = () => import(/* webpackChunkName: 'pool' */'@/views/setting/agent-pools/pool-settings.vue')
+const addAgent = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/add-agent.vue')
+const agentList = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/agent-list.vue')
+const agentDetail = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/agent-detail.vue')
 const metric = () => import(/* webpackChunkName: 'metric' */'@/views/metric.vue')
 
 const routes = [
@@ -40,6 +42,11 @@ const routes = [
             exception: exception
         },
         children: [
+            {
+                path: 'home',
+                name: 'home',
+                component: homePage
+            },
             {
                 path: 'dashboard',
                 name: 'dashboard',
@@ -79,6 +86,11 @@ const routes = [
                                         meta: {
                                             websocket: true
                                         }
+                                    },
+                                    {
+                                        path: 'artifacts',
+                                        name: 'buildArtifacts',
+                                        component: buildArtifacts
                                     },
                                     {
                                         path: 'reports',

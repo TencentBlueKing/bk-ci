@@ -68,8 +68,8 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         queryProjectAtomFlag: Boolean,
         fitOsFlag: Boolean?,
         queryFitAgentBuildLessAtomFlag: Boolean?,
-        page: Int,
-        pageSize: Int
+        page: Int?,
+        pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
         return atomService.getPipelineAtoms(
             accessToken = accessToken,
@@ -85,8 +85,8 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
             queryProjectAtomFlag = queryProjectAtomFlag,
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
             fitOsFlag = fitOsFlag,
-            page = page,
-            pageSize = pageSize
+            page = page ?: 1,
+            pageSize = pageSize ?: 10
         )
     }
 

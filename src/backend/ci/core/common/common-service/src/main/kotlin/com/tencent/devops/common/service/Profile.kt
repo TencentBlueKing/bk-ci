@@ -42,6 +42,7 @@ const val PROFILE_DEVELOPMENT = "dev"
 const val PROFILE_PRODUCTION = "prod"
 const val PROFILE_TEST = "test"
 const val PROFILE_EXP = "exp"
+const val PROFILE_PROD_GRAY = "prod-gray"
 const val PROFILE_STREAM = "stream"
 const val PROFILE_AUTO = "auto"
 
@@ -70,6 +71,10 @@ class Profile(private val environment: Environment) {
 
     fun isProd(): Boolean {
         return activeProfiles.contains(PROFILE_PRODUCTION)
+    }
+
+    fun isProdGray(): Boolean {
+        return activeProfiles.contains(PROFILE_PROD_GRAY)
     }
 
     fun isLocal() =

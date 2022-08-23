@@ -34,18 +34,12 @@ import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.ERROR_TYPE_NAME_PREFIX
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
 object QueryParamCheckUtil {
-
-    fun getIntervalTime(
-        fromDate: LocalDateTime,
-        toDate: LocalDateTime
-    ) = if (fromDate.isEqual(toDate)) 1 else ChronoUnit.DAYS.between(fromDate, toDate)
 
     val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     fun getStartDateTime(): String {

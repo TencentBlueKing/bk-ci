@@ -75,5 +75,7 @@ data class NodeWithPermission(
     @ApiModelProperty("流水线Job引用数")
     val pipelineRefCount: Int? = 0,
     @ApiModelProperty("流水线Job引用数")
-    val lastBuildTime: String? = ""
+    val lastBuildTime: String? = "",
+    @ApiModelProperty("agent hash id")
+    val agentHashId: String? = ""
 )

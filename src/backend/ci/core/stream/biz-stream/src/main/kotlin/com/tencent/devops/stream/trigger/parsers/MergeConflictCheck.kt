@@ -162,15 +162,13 @@ class MergeConflictCheck @Autowired constructor(
                 isTrigger = false
                 // 如果最后一次检查还未检查完就是检查超时
                 if (isEndCheck) {
-                    // 第一次之后已经在not build中有数据了，修改构建原因
-                    gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
+                    // 超时走正常触发流程，以兼容工蜂unchecked 状态异常
+                    gitRequestEventNotBuildDao.deleteNoBuildsById(
                         dslContext = dslContext,
-                        recordId = notBuildRecordId,
-                        reason = TriggerReason.CI_MERGE_CHECK_TIMEOUT.name,
-                        reasonDetail = TriggerReason.CI_MERGE_CHECK_TIMEOUT.detail
+                        recordId = notBuildRecordId
                     )
                     isFinish = true
-                    isTrigger = false
+                    isTrigger = true
                 }
             }
             TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {

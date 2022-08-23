@@ -77,37 +77,39 @@
                         <div class="table-node-item node-item-agstatus">{{ $t('environment.nodeInfo.gseAgentStatus') }}</div>
                     </div>
                     <div class="table-node-body">
-                        <div class="table-node-row" v-for="(col, index) of rowList" :key="index" v-if="col.isDisplay">
-                            <div class="table-node-item node-item-checkbox">
-                                <bk-checkbox
-                                    :true-value="true"
-                                    :false-value="false"
-                                    :disabled="col.isEixtEnvNode"
-                                    v-model="col.isChecked"
-                                    @change="toggleNodeSelect"
-                                ></bk-checkbox>
+                        <template v-for="(col, index) of rowList">
+                            <div class="table-node-row" :key="index" v-if="col.isDisplay">
+                                <div class="table-node-item node-item-checkbox">
+                                    <bk-checkbox
+                                        :true-value="true"
+                                        :false-value="false"
+                                        :disabled="col.isEixtEnvNode"
+                                        v-model="col.isChecked"
+                                        @change="toggleNodeSelect"
+                                    ></bk-checkbox>
+                                </div>
+                                <div class="table-node-item node-item-ip">
+                                    <span class="node-ip">{{ col.ip }}</span>
+                                </div>
+                                <div class="table-node-item node-item-name">
+                                    <span class="node-name">{{ col.name }}</span>
+                                </div>
+                                <div class="table-node-item node-item-operator">
+                                    <span class="node-operator" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 10 }" :title="col.operator">{{ col.operator }}</span>
+                                </div>
+                                <div class="table-node-item node-item-operator">
+                                    <P class="node-operator node-bkOperator" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 10 }" :title="col.bakOperator">{{ col.bakOperator }}</P>
+                                </div>
+                                <div class="table-node-item node-item-agstatus">
+                                    <span class="node-agstatus normal-status-node"
+                                        :class="{
+                                            'abnormal-status-node': !col.agentStatus,
+                                            'over-content': selectHandlercConf.curDisplayCount > 10
+                                        }">{{ col.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
+                                    </span>
+                                </div>
                             </div>
-                            <div class="table-node-item node-item-ip">
-                                <span class="node-ip">{{ col.ip }}</span>
-                            </div>
-                            <div class="table-node-item node-item-name">
-                                <span class="node-name">{{ col.name }}</span>
-                            </div>
-                            <div class="table-node-item node-item-operator">
-                                <span class="node-operator" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 10 }" :title="col.operator">{{ col.operator }}</span>
-                            </div>
-                            <div class="table-node-item node-item-operator">
-                                <P class="node-operator node-bkOperator" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 10 }" :title="col.bakOperator">{{ col.bakOperator }}</P>
-                            </div>
-                            <div class="table-node-item node-item-agstatus">
-                                <span class="node-agstatus normal-status-node"
-                                    :class="{
-                                        'abnormal-status-node': !col.agentStatus,
-                                        'over-content': selectHandlercConf.curDisplayCount > 10
-                                    }">{{ col.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
-                                </span>
-                            </div>
-                        </div>
+                        </template>
                     </div>
                 </div>
                 <div class="no-data-row" v-if="selectHandlercConf.searchEmpty || !rowList.length">
@@ -231,7 +233,7 @@
                     const res = await this.$store.dispatch('environment/requestCmdbNode', { params })
 
                     this.rowList.splice(0, this.rowList.length)
-                    res.records && res.records.map(item => {
+                    res.records && res.records.forEach(item => {
                         this.rowList.push({
                             ...item,
                             isChecked: !!this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip),

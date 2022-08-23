@@ -1,0 +1,10 @@
+version: v2.0
+
+stages:
+  - name: "stage1"
+    jobs:
+      job1:
+        runs-on: local
+        steps:
+          - run: |
+              echo "hello world"

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>跳转页面</title>
+    <style type="text/css">
+        html,
+        body,
+        div,
+        p,
+        a,
+        img {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, PingFang SC, BlinkMacSystemFont, Segoe UI, Roboto, Ubuntu, Helvetica Neue, Helvetica, Arial, Hiragino Sans GB, Microsoft YaHei UI, Microsoft YaHei, Source Han Sans CN, sans-serif;
+            color: #63656E;
+            text-align: center;
+        }
+
+        .logo {
+            display: block;
+            width: 24.8vw;
+            height: 24.8vw;
+            margin: 3.2vw auto;
+            border-radius: 0.8vw;
+        }
+
+        .container {
+            display: block;
+            margin-top: 20.267vw;
+        }
+
+        h2 {
+            font-size: 5.333vw;
+            line-height: 7.2vw;
+        }
+
+        .tips {
+            font-size: 4vw;
+            line-height: 5.6vw;
+            margin-bottom: 17.867vw;
+        }
+
+        #btn_install {
+            display: block;
+            width: 91.467vw;
+            height: 11.733vw;
+            text-decoration: none;
+            background: #3A84FF;
+            border-radius: 0.8vw;
+            line-height: 11.733vw;
+            color: white;
+            margin: 0 auto;
+            font-size: 4vw;
+        }
+
+        .warning {
+            margin-top: 3.2vw;
+            font-size: 3.2vw;
+            color: #EA3636;
+        }
+    </style>
+</head>
+
+<body cz-shortcut-listen="true">
+    <div class="wrapper" style="display: block;" id="showContent">
+        <div class="container">
+            <img class="logo" src="/app/download/devops_app.png" alt="蓝盾DevOps平台logo">
+            <h2>蓝盾</h2>
+            <p class="tips">请通过蓝盾APP访问内部体验<br>如果页面没有自动跳转，请先安装蓝盾APP</br></p>
+            <a id="btn_install" class="downloadbtn" href="javascript:download();" style="display: block;">立即安装蓝盾App</a>
+            <p class="warning">仅限腾讯员工和合作伙伴使用</p>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        download = function () {
+            var terminal = getTerminal();
+            if (terminal == 1) {
+                window.location.href = "/app/download/devops_app.apk";
+            }
+            if (terminal == 2 || terminal == 3) {
+                window.location.href = "/app/download/devops_app_download.html";
+            }
+
+        }
+
+        var timeout;
+        var t = 1000;
+        var hasApp = true
+        var flag = true;
+        setTimeout(function () {
+            if (hasApp) {
+                var te = document.getElementById('te');
+                te.click();
+
+            } else if (!hasApp && flag) {
+                var divCon = document.getElementById("showContent");
+                divCon.style.display = "block";
+
+                var installButton = document.getElementById("btn_install");
+                installButton.style.display = "block";
+            }
+        }, 2000);
+
+        function openApp() {
+            var terminal = getTerminal();
+
+            var t1 = Date.now();
+            var ifr = document.createElement("iframe");
+            var validateParam = true;
+            ifr.id = "ifr";
+            var flag = getQueryVariable("flag");        //体验版本=1;流水线=2；
+            var experienceId = getQueryVariable("experienceId");
+            var projectId = getQueryVariable("projectId");
+            var pipelineId = getQueryVariable("pipelineId");
+            var buildId = getQueryVariable("buildId");
+            var artifactoryType = getQueryVariable("artifactoryType");
+            var artifactoryPath = getQueryVariable("artifactoryPath");
+
+
+
+            //验证参数的有效性
+            var pagePrefixList = ["experienceDetail", "buildReport", "buildArchive", "artifactoryDetail"];
+            if (pagePrefixList.indexOf(flag) > -1) {
+                validateParam = false;
+            }
+
+            var schemaPrefix = "bkdevopsapp://";
+            if (terminal == 1) {
+                schemaPrefix = "bkdevopsapp://bkdevopsapp/"
+            }
+
+            switch (flag) {
+                case "experienceDetail":
+                    validateParam = !!experienceId;
+                    ifr.src = schemaPrefix + "expDetail/" + experienceId;
+                    break;
+                case "buildArchive":
+                case "buildReport":
+                    validateParam = projectId && pipelineId && buildId;
+                    var tab = flag === 'buildArchive' ? '0' : '2';
+                    ifr.src = schemaPrefix + "buildDetail/" + projectId + "/" + pipelineId + "/" + buildId + "/" + tab;
+                    break;
+                case "artifactoryDetail":
+                    validateParam = projectId && artifactoryType && artifactoryPath;
+                    ifr.src = schemaPrefix + "artifactoryDetail/" + projectId + "/" + artifactoryType + "/" + artifactoryPath.replace(/%2F/g, '@@');
+                    break;
+            }
+
+            if (!validateParam) {
+                alert("非法参数！");
+                return;
+            }
+
+            if (terminal == 1 || terminal == 2 || terminal == 3) {
+                //在 IOS 9 中，使用 ifr 的方式还是拉不起来程序，需要使用 window.location 的方式
+                //微信从6.5.6新版本后，拉起其它应该有了新限制
+                if (isNewWeixin()) {  //大于等于6.5.6
+                    if (window.WeixinJSBridge) {
+                        doLaunch(ifr.src);
+                    } else {
+                        document.addEventListener('WeixinJSBridgeReady', function () {
+                            doLaunch(ifr.src); //此时立即调用权限可能还未准备好，所以doLaunch里需要延迟调用
+                        });
+                    }
+                } else {
+                    location.href = ifr.src;
+                }
+            }
+
+
+            //显示下载页面
+            timeout = setTimeout(function () {
+                // 检查到webview有QQ/或者微信 关键字时, 再拉起一次应用
+                var math = navigator.userAgent.toLowerCase().match(/qq\//);
+                var mathWeixin = navigator.userAgent.toLowerCase().match(/micromessenger/);
+
+                if ((math || mathWeixin) && (navigator.userAgent.indexOf('iPhone') > -1)) {
+                    var div = document.createElement('div');
+                    div.style.visibility = 'hidden';
+                    div.innerHTML = "<iframe id=\"schema\" src=\"" + ifr.src + "\" scrolling=\"no\" width=\"1\" height=\"1\"></iframe>";
+                    document.body.appendChild(div);
+                }
+                try_to_open_app(t1);
+            }, t);
+
+
+        }
+
+        function isNewWeixin() {
+            var wechatInfo = navigator.userAgent.match(/MicroMessenger\/([\d\.]+)/i);
+            var isWxwork = navigator.userAgent.match(/wxwork\/([\d\.]+)/i);
+
+            if (isWxwork) return false
+
+            if (!wechatInfo || !wechatInfo[1]) {
+                return false;
+            }
+
+            if (wechatInfo[1] == "6.5.6") {
+                return true;
+            }
+
+            var wxVersionParts = wechatInfo[1].split('.');
+            //版本大于等于 6.5.6 返回 true
+            if (wxVersionParts[0] > 6) {
+                return true;
+            } else if (wxVersionParts[0] < 6) {
+                return false;
+            }
+
+            if (wxVersionParts[1] > 5) {
+                return true;
+            } else if (wxVersionParts[1] < 5) {
+                return false;
+            }
+
+            if (wxVersionParts[2] > 6) {
+                return true;
+            } else if (wxVersionParts[2] < 6) {
+                return false;
+            }
+
+            return true;
+        };
+
+        function doLaunch(schemeUrl) {
+            setTimeout(function () {
+                window.WeixinJSBridge.invoke('launchApplication', {
+                    "schemeUrl": schemeUrl,
+                }, function (res) {
+                }), 500
+            }
+            )
+        }
+
+
+        function try_to_open_app(t1) {
+            var t2 = Date.now();
+
+            if (!t1 || t2 - t1 < t + 200) {
+                hasApp = false;
+            }
+        }
+
+        function getTerminal() {
+            var terminal = 0;
+            var u = navigator.userAgent;
+
+            if (u.indexOf('Android') > -1 || u.indexOf('Linux') > -1) { //Android
+                terminal = 1;
+            }
+            else if (u.indexOf('iPhone') > -1) {//iPhone
+                terminal = 2;
+            }
+            else if (u.indexOf('iPad') > -1 && u.indexOf('Mac') > -1) {
+                terminal = 3;
+            } else { // PC
+                return terminal = 4;
+            }
+
+            return terminal;
+        }
+
+        //获取url中的参数
+        function getQueryVariable(variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split("=");
+                if (pair[0] == variable) { return pair[1]; }
+            }
+            return (false);
+        }
+
+
+        openApp();
+
+    </script>
+</body>
+
+</html>

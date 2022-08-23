@@ -1,0 +1,24 @@
+version: v2.0
+
+stages:
+  - name: "stage1"
+    jobs:
+      job1:
+        runs-on:
+          pool-name: docker-on-devcloud
+          container:
+            image: mirrors.tencent.com/ci/tlinux_ci:0.5.0.4
+          nfs-mount:
+            jdk: "1.8.0_161"
+            gradle: "4.2"
+        steps:
+          - uses: syncLocalCode@latest
+            name: 同步文件到云端插件
+            with:
+              syncGitRepository: true
+          - uses: CodeccCheckAtomDebug@4.*
+            name: 腾讯代码分析
+            with:
+              beAutoLang: true
+              checkerSetType: "openScan"
+              toolScanType: "0" # 扫描方式。0是全量扫描，1是增量扫描

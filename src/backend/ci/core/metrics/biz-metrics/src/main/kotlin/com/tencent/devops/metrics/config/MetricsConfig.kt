@@ -49,4 +49,7 @@ class MetricsConfig {
 
     @Value("\${metrics.queryDaysMax:180}")
     val queryDaysMax: Long = 180
+
+    @Value("\${metrics.unReportClusterTags:}")
+    val unReportClusterTags: String = ""
 }

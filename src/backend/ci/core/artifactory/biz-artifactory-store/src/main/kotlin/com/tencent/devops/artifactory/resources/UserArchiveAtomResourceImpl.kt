@@ -46,6 +46,7 @@ class UserArchiveAtomResourceImpl @Autowired constructor(private val archiveAtom
     override fun archiveAtom(
         userId: String,
         projectCode: String,
+        atomId: String,
         atomCode: String,
         version: String,
         releaseType: ReleaseTypeEnum,
@@ -57,6 +58,7 @@ class UserArchiveAtomResourceImpl @Autowired constructor(private val archiveAtom
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
+            atomId = atomId,
             archiveAtomRequest = ArchiveAtomRequest(
                 projectCode = projectCode,
                 atomCode = atomCode,

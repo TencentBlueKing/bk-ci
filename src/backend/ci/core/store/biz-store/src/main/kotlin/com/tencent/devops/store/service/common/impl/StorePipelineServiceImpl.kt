@@ -28,6 +28,10 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
+import com.tencent.devops.common.api.constant.KEY_SCRIPT
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
@@ -41,10 +45,16 @@ import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
+import com.tencent.devops.process.utils.KEY_PIPELINE_NAME
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.OperationLogDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
+import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.OperationLogCreateRequest
 import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
 import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum
@@ -114,7 +124,7 @@ class StorePipelineServiceImpl : StorePipelineService {
             pipelineModel = pipelineModelConfig.configValue
             grayPipelineModel = grayPipelineModelConfig.configValue
         } else {
-            pipelineModel = updatePipelineModel!!
+            pipelineModel = updatePipelineModel
             grayPipelineModel = updatePipelineModel
         }
         when (scopeType) {
@@ -247,17 +257,20 @@ class StorePipelineServiceImpl : StorePipelineService {
         val storeInfoRecords = storeCommonDao.getLatestStoreInfoListByCodes(dslContext, storeCodeList)
         val pipelineModelVersionList = mutableListOf<PipelineModelVersion>()
         storeInfoRecords?.forEach { storeInfo ->
-            val projectCode = storeInfo["projectCode"] as String
-            val storeCode = storeInfo["storeCode"] as String
-            val pipelineName = "am-$projectCode-$storeCode-${System.currentTimeMillis()}"
+            val projectCode = storeInfo[KEY_PROJECT_CODE] as String
+            val storeCode = storeInfo[KEY_STORE_CODE] as String
+            var pipelineName = "am-$projectCode-$storeCode-${System.currentTimeMillis()}"
+            if (pipelineName.toCharArray().size > 128) {
+                pipelineName = "am-$storeCode-${UUIDUtil.generate()}"
+            }
             val paramMap = mapOf(
-                "pipelineName" to pipelineName,
-                "storeCode" to storeCode,
-                "version" to storeInfo["version"],
-                "language" to storeInfo["language"],
-                "script" to StringEscapeUtils.escapeJava(storeInfo["script"] as String),
-                "repositoryHashId" to storeInfo["repositoryHashId"],
-                "repositoryPath" to (storeInfo["repositoryPath"] ?: "")
+                KEY_PIPELINE_NAME to pipelineName,
+                KEY_STORE_CODE to storeCode,
+                KEY_VERSION to storeInfo[KEY_VERSION],
+                KEY_LANGUAGE to storeInfo[KEY_LANGUAGE],
+                KEY_SCRIPT to StringEscapeUtils.escapeJava(storeInfo[KEY_SCRIPT] as String),
+                KEY_REPOSITORY_HASH_ID to storeInfo[KEY_REPOSITORY_HASH_ID],
+                KEY_REPOSITORY_PATH to (storeInfo[KEY_REPOSITORY_PATH] ?: "")
             )
             // 将流水线模型中的变量替换成具体的值
             var convertModel = if (checkGrayFlag) {
@@ -274,8 +287,8 @@ class StorePipelineServiceImpl : StorePipelineService {
             pipelineModelVersionList.add(
                 PipelineModelVersion(
                     projectId = projectCode,
-                    pipelineId = storeInfo["pipelineId"] as String,
-                    creator = storeInfo["creator"] as String,
+                    pipelineId = storeInfo[KEY_PIPELINE_ID] as String,
+                    creator = storeInfo[KEY_CREATOR] as String,
                     model = convertModel
                 )
             )
@@ -292,8 +305,8 @@ class StorePipelineServiceImpl : StorePipelineService {
             if (updatePipelineModelResult.isNotOk()) {
                 batchAddOperateLogs(storeCodeList, storeType, userId, taskId)
             }
-        } catch (e: Exception) {
-            logger.error("updatePipelineModel error is :", e)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|updatePipelineModel|error=${ignored.message}", ignored)
             // 将刷新失败的组件信息入库
             batchAddOperateLogs(storeCodeList, storeType, userId, taskId)
         }

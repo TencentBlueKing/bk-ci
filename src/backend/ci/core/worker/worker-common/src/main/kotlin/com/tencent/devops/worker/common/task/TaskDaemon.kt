@@ -34,7 +34,6 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.util.concurrent.Callable
@@ -105,10 +104,10 @@ class TaskDaemon(
                         "more than $PARAM_MAX_LENGTH characters(len=${value.length})")
                     return@forEach
                 }
-                if (SensitiveValueService.matchSensitiveValue(value)) {
-                    LoggerService.addWarnLine("Warning, credentials cannot be assigned to variable[$key]")
-                    return@forEach
-                }
+//                if (SensitiveValueService.matchSensitiveValue(value)) {
+//                    LoggerService.addWarnLine("Warning, credentials cannot be assigned to variable[$key]")
+//                    return@forEach
+//                }
                 buildResult[key] = value
             }
         }

@@ -94,6 +94,12 @@
                 :quick-close="sideSliderConfig.quickClose"
                 :width="sideSliderConfig.width"
                 @hidden="closrSlider">
+                <template slot="header">
+                    <div class="rule-side-header">
+                        <p>{{ ruleDetail.name }}</p>
+                        <a style="font-weight: normal;" @click="handleGoEditRule">编辑</a>
+                    </div>
+                </template>
                 <template slot="content">
                     <div class="rule-slider-info"
                         v-if="sideSliderConfig.show && ruleDetail"
@@ -326,12 +332,16 @@
                     current: 1,
                     count: 0,
                     limit: 10
-                }
+                },
+                ruleHashId: null
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -498,28 +508,27 @@
             },
             toDeleteRule (row) {
                 if (row.permissions.canDelete) {
-                    const h = this.$createElement
-                    const content = h('p', {
-                        style: {
-                            textAlign: 'center'
-                        }
-                    }, `确定删除规则(${row.name})？`)
-
                     this.$bkInfo({
-                        title: '删除',
-                        subHeader: content,
+                        type: 'warning',
+                        theme: 'warning',
+                        subTitle: `确定删除规则(${row.name})？`,
                         confirmFn: async () => {
                             this.deleteRule(row.ruleHashId)
                         }
                     })
                 } else {
-                    const params = {
-                        noPermissionList: [
-                            { resource: '质量红线', option: '删除规则' }
-                        ],
-                        applyPermissionUrl: PERM_URL_PREFIX
-                    }
-                    this.$showAskPermissionDialog(params)
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.delete,
+                            resourceId: this.$permissionResourceMap.rule,
+                            instanceId: [{
+                                id: row.ruleHashId,
+                                name: row.name
+                            }],
+                            projectId: this.projectId
+                        }],
+                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}`
+                    })
                 }
             },
             async toSwitchRule (row) {
@@ -634,6 +643,15 @@
                     }
                 })
             },
+            handleGoEditRule () {
+                this.$router.push({
+                    name: 'editRule',
+                    params: {
+                        projectId: this.projectId,
+                        ruleId: this.ruleHashId
+                    }
+                })
+            },
             editRule (row) {
                 if (row.permissions.canEdit) {
                     this.$router.push({
@@ -644,13 +662,18 @@
                         }
                     })
                 } else {
-                    const params = {
-                        noPermissionList: [
-                            { resource: '质量红线', option: '编辑规则' }
-                        ],
-                        applyPermissionUrl: PERM_URL_PREFIX
-                    }
-                    this.$showAskPermissionDialog(params)
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.edit,
+                            resourceId: this.$permissionResourceMap.rule,
+                            instanceId: [{
+                                id: row.ruleHashId,
+                                name: row.name
+                            }],
+                            projectId: this.projectId
+                        }],
+                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}`
+                    })
                 }
             },
             switchRule (row) {
@@ -671,16 +694,22 @@
                         }
                     })
                 } else {
-                    const params = {
-                        noPermissionList: [
-                            { resource: '质量红线', option: '启用和停用规则' }
-                        ],
-                        applyPermissionUrl: PERM_URL_PREFIX
-                    }
-                    this.$showAskPermissionDialog(params)
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.enable,
+                            resourceId: this.$permissionResourceMap.rule,
+                            instanceId: [{
+                                id: row.ruleHashId,
+                                name: row.name
+                            }],
+                            projectId: this.projectId
+                        }],
+                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}`
+                    })
                 }
             },
             async toShowSlider (ruleHashId, type) {
+                this.ruleHashId = ruleHashId
                 this.curActiveTab = type === 'detail' ? 'detailInfo' : 'recordDate'
                 this.lastClickRule = ruleHashId
                 this.sideSliderConfig.isLoading = true
@@ -829,6 +858,15 @@
         .bk-sideslider-content {
             height: calc(100% - 60px);
             overflow: hidden;
+        }
+        .rule-side-header {
+            display: flex;
+            justify-content: space-between;
+            padding-right: 48px;
+            a {
+                cursor: pointer;
+                color: #3a84ff;
+            }
         }
         .rule-slider-info {
             height: 100%;

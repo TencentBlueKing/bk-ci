@@ -217,18 +217,20 @@ object JsonUtil {
      * 注意：会忽略掉值为null的属性
      */
     fun toMap(bean: Any): Map<String, Any> {
-        return toMutableMap(bean)
+        return toMutableMap(bean, false)
     }
 
     /**
      * 将对象转不可修改的Map
      * 注意：会忽略掉值为null的属性, 不会忽略空串和空数组/列表对象
+     * 历史包袱：腾讯内部增加了[skipEmpty]=true参数默认会忽略空串和空数组/列表对象 此为腾讯内部有较多的插件对参数判断过于简单，依赖于
+     * 对空串的null判断，所以如果将skipEmpty设置为false，会出现兼容问题，先暂时继续保留
      */
-    fun toMutableMap(bean: Any): MutableMap<String, Any> {
+    fun toMutableMap(bean: Any, skipEmpty: Boolean = true): MutableMap<String, Any> {
         return when {
             ReflectUtil.isNativeType(bean) -> mutableMapOf()
             bean is String -> to(bean)
-            else -> to(getObjectMapper().writeValueAsString(bean))
+            else -> to((if (skipEmpty) skipEmptyObjectMapper else getObjectMapper()).writeValueAsString(bean))
         }
     }
 

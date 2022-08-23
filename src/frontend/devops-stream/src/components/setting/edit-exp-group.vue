@@ -5,12 +5,28 @@
                 <bk-input v-model="formData.name" placeholder="No more than 10 characters"></bk-input>
             </bk-form-item>
             <bk-form-item :label="$t('setting.userGroup.innerUsers')" property="innerUsers" error-display-type="normal">
-                <bk-input
+                <bk-member-selector
                     v-model="formData.innerUsers"
                     class="user-select-item"
                     style="height: 100px"
                     :placeholder="$t('setting.userGroup.innerUsersPlaceholder')"
-                ></bk-input>
+                >
+                </bk-member-selector>
+            </bk-form-item>
+            <bk-form-item :label="$t('setting.userGroup.outerUsers')" property="outerUsers" :desc="{ content: 'Non-OA users 为外部协作用户，需要在蓝鲸用户管理先注册用户，指引参考：https://iwiki.woa.com/pages/viewpage.action?pageId=1556183163', width: '400px' }">
+                <bk-select
+                    v-model="formData.outerUsers"
+                    ext-cls="select-custom"
+                    ext-popover-cls="select-popover-custom"
+                    placeholder="Please select"
+                    multiple
+                    searchable>
+                    <bk-option v-for="option in outersList"
+                        :key="option.id"
+                        :id="option.id"
+                        :name="option.name">
+                    </bk-option>
+                </bk-select>
             </bk-form-item>
             <bk-form-item :label="$t('description')" property="remark">
                 <bk-input type="textarea" v-model="formData.remark" :placeholder="$t('descriptionPlaceholder')"></bk-input>
@@ -26,7 +42,6 @@
 <script>
     import { setting } from '@/http'
     import { mapState } from 'vuex'
-    import LINK_CONFIG from '@/conf/link-config.js'
 
     export default {
         props: {
@@ -47,8 +62,7 @@
                     validator: (val) => val.length <= 10,
                     message: 'no more than 10 words',
                     trigger: 'blur'
-                },
-                LINK_CONFIG
+                }
             }
         },
 
