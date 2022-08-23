@@ -39,4 +39,8 @@ class SampleArtifactoryDataClearServiceImpl @Autowired constructor(
     override fun deleteTableData(dslContext: DSLContext, buildId: String) {
         // 开源版无需额外清理数据
     }
+
+    override fun cleanBuildHistoryRepoData(projectId: String, pipelineId: String, buildIds: List<String>) {
+        // 开源版无需额外清理数据
+    }
 }
