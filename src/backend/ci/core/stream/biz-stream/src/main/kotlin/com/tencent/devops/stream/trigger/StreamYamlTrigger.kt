@@ -31,8 +31,11 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
@@ -64,13 +67,16 @@ import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("LongParameterList", "LongMethod")
 class StreamYamlTrigger @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val triggerMatcher: TriggerMatcher,
     private val yamlSchemaCheck: YamlSchemaCheck,
@@ -203,6 +209,22 @@ class StreamYamlTrigger @Autowired constructor(
                 branch = action.data.eventCommon.branch
             )
         }
+
+        val pipelineSettings = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+            projectId = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong()),
+            pipelineId = pipeline.pipelineId,
+            channelCode = ChannelCode.GIT
+        ).data ?: throw StreamTriggerException(
+            action = action,
+            triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
+            reasonParams = listOf("Pipeline settings not found"),
+            commitCheck = CommitCheck(
+                block = false,
+                state = StreamCommitCheckState.FAILURE
+            )
+        )
+        action.data.context.pipelineAsCodeSettings = pipelineSettings.pipelineAsCodeSettings
+
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
