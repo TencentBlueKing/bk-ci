@@ -104,6 +104,30 @@ class PipelineFailDao constructor(private val metricsConfig: MetricsConfig) {
         }
     }
 
+    fun queryPipelineFailTrendInfoCount(
+        dslContext: DSLContext,
+        queryPipelineFailTrendQo: QueryPipelineOverviewQO,
+        errorType: Int
+    ): Int {
+        with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
+            val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
+            val pipelineIds = queryPipelineFailTrendQo.baseQueryReq.pipelineIds
+            val conditions = getConditions(
+                projectId = queryPipelineFailTrendQo.projectId,
+                baseQueryReq = queryPipelineFailTrendQo.baseQueryReq,
+                pipelineIds = pipelineIds,
+                tProjectPipelineLabelInfo = tProjectPipelineLabelInfo
+            )
+            val step = dslContext.selectCount().from(this)
+            conditions.add(ERROR_TYPE.eq(errorType))
+            if (!queryPipelineFailTrendQo.baseQueryReq.pipelineLabelIds.isNullOrEmpty()) {
+                step.leftJoin(tProjectPipelineLabelInfo)
+                    .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
+            }
+            return step.where(conditions).fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
     fun queryPipelineFailErrorTypeInfo(
         dslContext: DSLContext,
         queryPipelineFailTrendQo: QueryPipelineOverviewQO

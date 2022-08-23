@@ -22,7 +22,7 @@ open class AbsPermissionService @Autowired constructor(
 ) : PermissionService {
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
-        logger.info("[iam V3] validateUserActionPermission $userId $action")
+        logger.info("[iam V3] validateUserActionPermission :  userId = $userId | action = $action")
         return authHelper.isAllowed(userId, action)
     }
 
@@ -50,8 +50,11 @@ open class AbsPermissionService @Autowired constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
-        logger.info("[iam V3]validateUserResourcePermissionByRelation: $userId $action $projectCode " +
-            "$resourceCode $resourceType $relationResourceType")
+        logger.info(
+            "[iam V3]validateUserResourcePermissionByRelation : user = $userId | action = $action " +
+                "| projectCode = $projectCode | resourceCode = $resourceCode |" +
+                " resourceType = $resourceType | relationResourceType = $relationResourceType"
+        )
 
         if (iamCacheService.checkProjectManager(userId, projectCode)) {
             return true
@@ -78,7 +81,7 @@ open class AbsPermissionService @Autowired constructor(
             instanceDTO.type = relationResourceType
         }
 
-        logger.info("[iam V3] validateUserResourcePermission instanceDTO[$instanceDTO]")
+        logger.info("[iam V3] validateUserResourcePermission : instanceDTO = $instanceDTO")
         return authHelper.isAllowed(userId, action, instanceDTO)
     }
 
@@ -89,13 +92,16 @@ open class AbsPermissionService @Autowired constructor(
         resourceType: String
     ): List<String> {
         try {
-            logger.info("[iam V3] getUserResourceByPermission $userId $action $projectCode $resourceType")
+            logger.info(
+                "[iam V3] getUserResourceByAction : userId = $userId | action = $action " +
+                    "| projectCode = $projectCode | resourceType = $resourceType"
+            )
             // 管理员直接返回“*”
             if (iamCacheService.checkProjectManager(userId, projectCode)) {
                 return arrayListOf("*")
             }
             val expression = iamCacheService.getUserExpression(userId, action, resourceType)
-            logger.info("[iam V3] getUserResourceByPermission action: $action, expression:$expression")
+            logger.info("[iam V3] getUserResourceByAction : action = $action | expression = $expression")
 
             if (expression == null) {
                 return emptyList()
@@ -121,7 +127,7 @@ open class AbsPermissionService @Autowired constructor(
                 }
             }
         } catch (e: Exception) {
-            logger.warn("getUserResourceByAction fail {}", e)
+            logger.warn("getUserResourceByAction fail : $e")
         }
         return emptyList()
     }
@@ -132,7 +138,10 @@ open class AbsPermissionService @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>> {
-        logger.info("[iam V3] getUserResourcesByActions $userId $actions $projectCode $resourceType")
+        logger.info(
+            "[iam V3] getUserResourcesByActions : userId = $userId | actions = $actions |" +
+                " projectCode = $projectCode | resourceType = $resourceType"
+        )
         val result = mutableMapOf<AuthPermission, List<String>>()
         actions.forEach {
             val actionResourceList = getUserResourceByAction(
