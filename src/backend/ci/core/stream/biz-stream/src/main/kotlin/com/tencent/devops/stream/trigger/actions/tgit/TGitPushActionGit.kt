@@ -26,7 +26,6 @@
  */
 
 package com.tencent.devops.stream.trigger.actions.tgit
-
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client

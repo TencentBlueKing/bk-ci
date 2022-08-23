@@ -111,65 +111,64 @@ class StreamYamlBaseBuild @Autowired constructor(
         updateLastModifyUser: Boolean
     ) {
         val processClient = client.get(ServicePipelineResource::class)
-       try {
-        if (pipeline.pipelineId.isBlank()) {
-            // 直接新建
-            logger.info("StreamYamlBaseBuild|savePipeline|create newpipeline|$pipeline")
-
-            pipeline.pipelineId = processClient.create(
+        try {
+            if (pipeline.pipelineId.isBlank()) {
+                // 直接新建
+                logger.info("StreamYamlBaseBuild|savePipeline|create newpipeline|$pipeline")
+                pipeline.pipelineId = processClient.create(
+                    userId = userId,
+                    projectId = projectCode,
+                    pipeline = modelAndSetting.model,
+                    channelCode = channelCode
+                ).data!!.id
+                gitPipelineResourceDao.createPipeline(
+                    dslContext = dslContext,
+                    gitProjectId = gitProjectId,
+                    pipeline = pipeline.toGitPipeline(),
+                    version = ymlVersion
+                )
+                websocketService.pushPipelineWebSocket(
+                    projectId = projectCode,
+                    pipelineId = pipeline.pipelineId,
+                    userId = userId
+                )
+            } else {
+                // 编辑流水线model
+                processClient.edit(
+                    userId = userId,
+                    projectId = projectCode,
+                    pipelineId = pipeline.pipelineId,
+                    pipeline = modelAndSetting.model,
+                    channelCode = channelCode,
+                    updateLastModifyUser = updateLastModifyUser
+                )
+                // 已有的流水线需要更新下Stream这里的状态
+                logger.info("StreamYamlBaseBuild|savePipeline|update pipeline|$pipeline")
+                gitPipelineResourceDao.updatePipeline(
+                    dslContext = dslContext,
+                    gitProjectId = gitProjectId,
+                    pipelineId = pipeline.pipelineId,
+                    displayName = pipeline.displayName,
+                    version = ymlVersion
+                )
+            }
+            processClient.saveSetting(
                 userId = userId,
                 projectId = projectCode,
-                pipeline = modelAndSetting.model,
+                pipelineId = pipeline.pipelineId,
+                setting = modelAndSetting.setting.copy(
+                    projectId = projectCode,
+                    pipelineId = pipeline.pipelineId,
+                    pipelineName = modelAndSetting.model.name,
+                    maxConRunningQueueSize = null
+                ),
+                updateLastModifyUser = updateLastModifyUser,
                 channelCode = channelCode
-            ).data!!.id
-            gitPipelineResourceDao.createPipeline(
-                dslContext = dslContext,
-                gitProjectId = gitProjectId,
-                pipeline = pipeline.toGitPipeline(),
-                version = ymlVersion
             )
-            websocketService.pushPipelineWebSocket(
-                projectId = projectCode,
-                pipelineId = pipeline.pipelineId,
-                userId = userId
-            )
-        } else {
-            // 编辑流水线model
-            processClient.edit(
-                userId = userId,
-                projectId = projectCode,
-                pipelineId = pipeline.pipelineId,
-                pipeline = modelAndSetting.model,
-                channelCode = channelCode,
-                updateLastModifyUser = updateLastModifyUser
-            )
-            // 已有的流水线需要更新下Stream这里的状态
-            logger.info("StreamYamlBaseBuild|savePipeline|update pipeline|$pipeline")
-            gitPipelineResourceDao.updatePipeline(
-                dslContext = dslContext,
-                gitProjectId = gitProjectId,
-                pipelineId = pipeline.pipelineId,
-                displayName = pipeline.displayName,
-                version = ymlVersion
-            )
+        } catch (e: Throwable) {
+            logger.warn("StreamYamlBaseBuild|savePipeline|failed|msg|${e.message}")
+            throw StreamTriggerException(action, TriggerReason.SAVE_PIPELINE_FAILED)
         }
-        processClient.saveSetting(
-            userId = userId,
-            projectId = projectCode,
-            pipelineId = pipeline.pipelineId,
-            setting = modelAndSetting.setting.copy(
-                projectId = projectCode,
-                pipelineId = pipeline.pipelineId,
-                pipelineName = modelAndSetting.model.name,
-                maxConRunningQueueSize = null
-            ),
-            updateLastModifyUser = updateLastModifyUser,
-            channelCode = channelCode
-        )
-       }catch (e: Throwable) {
-           logger.warn("StreamYamlBaseBuild|savePipeline|failed|msg|${e.message}")
-           throw StreamTriggerException(action, TriggerReason.SAVE_PIPELINE_FAILED)
-       }
     }
 
     fun createNewPipeLine(pipeline: StreamTriggerPipeline, projectCode: String, action: BaseAction) {
