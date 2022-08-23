@@ -198,6 +198,14 @@ class ImageDao {
         }
     }
 
+    fun deleteByCode(dslContext: DSLContext, imageCode: String) {
+        with(TImage.T_IMAGE) {
+            dslContext.deleteFrom(this)
+                .where(IMAGE_CODE.eq(imageCode))
+                .execute()
+        }
+    }
+
     fun getImageByCodeAndVersion(dslContext: DSLContext, imageCode: String, imageVersion: String): TImageRecord? {
         return with(TImage.T_IMAGE) {
             val query = dslContext.selectFrom(this)

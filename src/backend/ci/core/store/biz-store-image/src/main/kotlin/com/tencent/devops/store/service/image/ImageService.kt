@@ -1037,6 +1037,7 @@ abstract class ImageService @Autowired constructor() {
                 // 删除镜像版本日志
                 imageVersionLogDao.deleteByImageId(context, it.id)
             }
+            imageDao.deleteByCode(context, imageCode)
         }
     }
 
