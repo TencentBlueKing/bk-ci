@@ -58,7 +58,6 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
-import com.tencent.devops.common.api.enums.OSArch
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -224,7 +223,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))
     }
 
-    override fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum {
+    override fun getAtomPackageSourceType(): AtomPackageSourceTypeEnum {
         // 内部版暂时只支持代码库打包的方式，后续支持用户传可执行包的方式
         return AtomPackageSourceTypeEnum.REPO
     }
@@ -238,7 +237,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         branch: String?
     ): String? {
         logger.info("getFileStr $projectCode|$atomCode|$atomVersion|$fileName|$repositoryHashId|$branch")
-        val atomPackageSourceType = getAtomPackageSourceType(atomCode)
+        val atomPackageSourceType = getAtomPackageSourceType()
         return if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
             // 从工蜂拉取文件
             try {
@@ -582,7 +581,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         // 获取打包所需的操作系统名称和操作系统cpu架构
         val atomEnvRecords = marketAtomEnvInfoDao.getMarketAtomEnvInfosByAtomId(context, atomId)
         val osNames = mutableSetOf(OSType.LINUX.name.toLowerCase())
-        val osArchs = mutableSetOf(OSArch.AMD_64.archStr)
+        val osArchs = mutableSetOf("amd64")
         var runtimeVersion: String? = null
         atomEnvRecords?.forEach { atomEnvRecord ->
             if (runtimeVersion == null) {
