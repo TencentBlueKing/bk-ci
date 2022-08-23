@@ -27,12 +27,23 @@
 
 package com.tencent.devops.misc.service.artifactory
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.misc.dao.artifactory.TxArtifactoryDataClearDao
+import okhttp3.Credentials
+import okhttp3.MediaType
+import okhttp3.Request
+import okhttp3.RequestBody
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
+@Primary
 class TxArtifactoryDataClearServiceImpl @Autowired constructor(
     dslContext: DSLContext
 ) : ArtifactoryDataClearService(dslContext) {
@@ -40,7 +51,52 @@ class TxArtifactoryDataClearServiceImpl @Autowired constructor(
     @Autowired
     private lateinit var txArtifactoryDataClearDao: TxArtifactoryDataClearDao
 
+    @Value("\${build.data.clear.basicAuth.bkrepo.baseUrl:}")
+    private val bkRepoBaseUrl: String = ""
+
+    @Value("\${build.data.clear.basicAuth.bkrepo.username:}")
+    private val repoUserName: String = ""
+    @Value("\${build.data.clear.basicAuth.bkrepo.password:}")
+    private val repoPassword: String = ""
+
     override fun deleteTableData(dslContext: DSLContext, buildId: String) {
         txArtifactoryDataClearDao.deleteArtifacetoryInfoByBuildId(dslContext, buildId)
+    }
+
+    override fun cleanBuildHistoryRepoData(projectId: String, pipelineId: String, buildIds: List<String>) {
+        val url = "${getBkRepoUrl()}/repository/api/ext/pipeline/build/data/clear"
+        logger.info("pipelineBuildHistoryDataClear|$projectId|$pipelineId|buildIds = $buildIds")
+        val context = mapOf<String, Any>(
+            "projectId" to projectId,
+            "pipelineId" to pipelineId,
+            "buildIds" to buildIds
+        )
+
+        val body = RequestBody.create(
+            MediaType.parse("application/json"),
+            JsonUtil.toJson(context)
+        )
+
+        val request = Request.Builder()
+            .url(url)
+            .put(body)
+            .addHeader("Authorization" , Credentials.basic(repoUserName, repoPassword))
+            .addHeader(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.warn("cleanBuildHistoryRepoData fail body is $body")
+            }
+            logger.info("cleanBuildHistoryRepoData response is $responseContent")
+        }
+    }
+
+    private fun getBkRepoUrl(): String {
+        return bkRepoBaseUrl.removeSuffix("/")
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TxArtifactoryDataClearServiceImpl::class.java)
     }
 }
