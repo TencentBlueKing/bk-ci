@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -277,6 +278,22 @@ class PipelineBuildFacadeService(
         )
     }
 
+    fun buildManualSearchOptions(
+        userId: String?,
+        projectId: String,
+        pipelineId: String,
+        search: String? = null,
+        property: BuildFormProperty
+    ): List<BuildFormValue> {
+        return paramFacadeService.filterOptions(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            search = search,
+            property = property
+        )
+    }
+
     fun getBuildParameters(
         userId: String,
         projectId: String,
@@ -390,6 +407,13 @@ class PipelineBuildFacadeService(
                     model.stages.forEach { s ->
                         // stage 级重试
                         if (s.id == taskId) {
+                            pipelineStageService.getStage(projectId, buildId, stageId = s.id) ?: run {
+                                throw ErrorCodeException(
+                                    errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
+                                    defaultMessage = "构建数据已过期，请使用rebuild进行重试(Please use rebuild)"
+                                )
+                            }
+
                             paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                                 key = PIPELINE_RETRY_START_TASK_ID, value = s.id!!
                             )
@@ -409,12 +433,26 @@ class PipelineBuildFacadeService(
                             val pos = if (c.id == taskId) 0 else -1 // 容器job级别的重试，则找job的第一个原子
                             c.elements.forEachIndexed { index, element ->
                                 if (index == pos) {
+                                    pipelineContainerService.getContainer(projectId, buildId, s.id, c.id!!) ?: run {
+                                        throw ErrorCodeException(
+                                            errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
+                                            defaultMessage = "构建数据已过期，请使用rebuild进行重试(Please use rebuild)"
+                                        )
+                                    }
                                     paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                                         key = PIPELINE_RETRY_START_TASK_ID, value = element.id!!
                                     )
+
                                     return@run
                                 }
                                 if (element.id == taskId) {
+                                    pipelineTaskService.getByTaskId(null, projectId, buildId, taskId)
+                                        ?: run {
+                                            throw ErrorCodeException(
+                                                errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
+                                                defaultMessage = "构建数据已过期，请使用rebuild进行重试(Please use rebuild)"
+                                            )
+                                        }
                                     paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                                         key = PIPELINE_RETRY_START_TASK_ID, value = element.id!!
                                     )
@@ -625,7 +663,10 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         parameters: Map<String, Any> = emptyMap(),
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        startType: StartType = StartType.WEB_HOOK,
+        startValues: Map<String, String>? = null,
+        userParameters: List<BuildParameters>? = null
     ): String? {
 
         if (checkPermission) {
@@ -653,6 +694,12 @@ class PipelineBuildFacadeService(
             parameters.forEach { (key, value) ->
                 pipelineParamMap[key] = BuildParameters(key, value)
             }
+
+            // 添加用户自定义参数
+            userParameters?.forEach { param ->
+                pipelineParamMap[param.key] = param
+            }
+
             triggerContainer.params.forEach {
                 if (pipelineParamMap.contains(it.id)) {
                     return@forEach
@@ -662,13 +709,14 @@ class PipelineBuildFacadeService(
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = readyToBuildPipelineInfo,
-                startType = StartType.WEB_HOOK,
+                startType = startType,
                 pipelineParamMap = pipelineParamMap,
                 channelCode = readyToBuildPipelineInfo.channelCode,
                 isMobile = false,
                 model = model,
                 signPipelineVersion = null,
-                frequencyLimit = false
+                frequencyLimit = false,
+                startValues = startValues
             )
             if (buildId.isNotBlank()) {
                 webhookBuildParameterService.save(
@@ -764,6 +812,7 @@ class PipelineBuildFacadeService(
                                 ManualReviewParamType.BOOLEAN -> {
                                     it.value = it.value ?: false
                                 }
+
                                 else -> {
                                     it.value = buildVariableService.replaceTemplate(
                                         projectId = projectId,
@@ -940,9 +989,11 @@ class PipelineBuildFacadeService(
             ControlPointPosition.BEFORE_POSITION -> {
                 Pair(buildStage.checkIn, true)
             }
+
             ControlPointPosition.AFTER_POSITION -> {
                 Pair(buildStage.checkOut, false)
             }
+
             else -> {
                 throw ErrorCodeException(
                     statusCode = Response.Status.FORBIDDEN.statusCode,
@@ -1007,6 +1058,7 @@ class PipelineBuildFacadeService(
                                 ManualReviewParamType.BOOLEAN -> {
                                     param.value = param.value ?: false
                                 }
+
                                 else -> {
                                     param.value = buildVariableService.replaceTemplate(
                                         projectId = projectId,
@@ -1231,7 +1283,6 @@ class PipelineBuildFacadeService(
             endTime = buildHistory.endTime,
             status = buildHistory.status,
             stageStatus = buildHistory.stageStatus,
-            deleteReason = buildHistory.deleteReason,
             currentTimestamp = buildHistory.currentTimestamp,
             isMobileStart = buildHistory.isMobileStart,
             material = buildHistory.material,
@@ -2029,14 +2080,17 @@ class PipelineBuildFacadeService(
                     throw ParamBlankException("param: ${originParam.key} value not in multipleParams")
                 }
             }
+
             ManualReviewParamType.ENUM -> {
                 if (!originParam.options!!.map { it.key }.toList().contains(param)) {
                     throw ParamBlankException("param: ${originParam.key} value not in enumParams")
                 }
             }
+
             ManualReviewParamType.BOOLEAN -> {
                 originParam.value = param.toBoolean()
             }
+
             else -> {
                 originParam.value = param
             }

@@ -133,7 +133,7 @@ export default defineComponent({
                 padding: 10,
                 sampleSize: 20,
                 autoSkip: true,
-                maxRotation: 0,
+                maxRotation: 50,
               },
             },
           },

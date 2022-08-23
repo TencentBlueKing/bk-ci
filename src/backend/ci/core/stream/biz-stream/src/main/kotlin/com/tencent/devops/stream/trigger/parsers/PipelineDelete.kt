@@ -33,6 +33,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
+import com.tencent.devops.stream.dao.StreamPipelineTriggerDao
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
@@ -51,6 +52,7 @@ class PipelineDelete @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val client: Client,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
+    private val streamPipelineTriggerDao: StreamPipelineTriggerDao,
     private val streamPipelineBranchService: StreamPipelineBranchService,
     private val streamEventService: StreamEventService,
     private val repoTriggerEventService: RepoTriggerEventService
@@ -104,6 +106,14 @@ class PipelineDelete @Autowired constructor(
             redisLock.lock()
             streamPipelineBranchService.deleteBranch(
                 gitProjectId = gitProjectId.toLong(),
+                pipelineId = pipelineId,
+                branch = action.data.eventCommon.branch
+            )
+
+            // 删除分支流水线记录时同步删除掉触发器缓存
+            streamPipelineTriggerDao.deleteTrigger(
+                dslContext = dslContext,
+                projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong()),
                 pipelineId = pipelineId,
                 branch = action.data.eventCommon.branch
             )

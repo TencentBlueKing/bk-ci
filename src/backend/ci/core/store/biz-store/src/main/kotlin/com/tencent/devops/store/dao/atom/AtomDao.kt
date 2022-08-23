@@ -138,9 +138,9 @@ class AtomDao : AtomBaseDao() {
                     atomRequest.name,
                     atomRequest.atomCode,
                     classType,
-                    JsonUtil.getObjectMapper().writeValueAsString(atomRequest.serviceScope),
+                    JsonUtil.toJson(atomRequest.serviceScope, formatted = false),
                     atomRequest.jobType.name,
-                    JsonUtil.getObjectMapper().writeValueAsString(atomRequest.os),
+                    JsonUtil.toJson(atomRequest.os, formatted = false),
                     atomRequest.classifyId,
                     atomRequest.docsLink,
                     atomRequest.atomType.type.toByte(),
@@ -452,7 +452,8 @@ class AtomDao : AtomBaseDao() {
         projectCode: String,
         atomCode: String,
         defaultFlag: Boolean,
-        atomStatusList: List<Byte>?
+        atomStatusList: List<Byte>? = null,
+        limitNum: Int? = null
     ): Result<out Record>? {
         val tAtom = TAtom.T_ATOM
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
@@ -500,7 +501,7 @@ class AtomDao : AtomBaseDao() {
             delim = ".",
             count = -1
         )
-        return dslContext.select(
+        val queryStep = dslContext.select(
             t.field(KEY_VERSION),
             t.field(KEY_ATOM_STATUS),
             firstVersion,
@@ -508,7 +509,8 @@ class AtomDao : AtomBaseDao() {
             thirdVersion
         ).from(t)
             .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
-            .fetch()
+        limitNum?.let { queryStep.limit(it) }
+        return queryStep.fetch()
     }
 
     fun getPipelineAtoms(
@@ -966,9 +968,9 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(NAME, atomUpdateRequest.name)
-                .set(SERVICE_SCOPE, JsonUtil.getObjectMapper().writeValueAsString(atomUpdateRequest.serviceScope))
+                .set(SERVICE_SCOPE, JsonUtil.toJson(atomUpdateRequest.serviceScope, formatted = false))
                 .set(JOB_TYPE, atomUpdateRequest.jobType.name)
-                .set(OS, JsonUtil.getObjectMapper().writeValueAsString(atomUpdateRequest.os))
+                .set(OS, JsonUtil.toJson(atomUpdateRequest.os, formatted = false))
                 .set(CLASS_TYPE, classType)
                 .set(CLASSIFY_ID, atomUpdateRequest.classifyId)
                 .set(DOCS_LINK, atomUpdateRequest.docsLink)

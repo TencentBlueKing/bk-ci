@@ -365,7 +365,9 @@ class YamlTemplate<T>(
                     variableMap[key] = Variable(value.toString(), false)
                 } else {
                     variableMap[key] = YamlObjects.getVariable(
-                        YamlObjects.transValue(fromPath, TemplateType.VARIABLE.text, value)
+                        fromPath = fromPath,
+                        key = key,
+                        variable = YamlObjects.transValue(fromPath, TemplateType.VARIABLE.text, value)
                     )
                 }
             }

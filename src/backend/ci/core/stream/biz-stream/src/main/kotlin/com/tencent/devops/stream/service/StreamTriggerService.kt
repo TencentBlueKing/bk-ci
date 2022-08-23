@@ -60,7 +60,6 @@ class StreamTriggerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StreamTriggerService::class.java)
         private const val ymlVersion = "v2.0"
         const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
-        const val VARIABLE_PREFIX = "variables."
     }
 
     fun retry(

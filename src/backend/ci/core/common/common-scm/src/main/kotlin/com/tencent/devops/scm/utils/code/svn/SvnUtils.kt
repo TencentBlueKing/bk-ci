@@ -87,7 +87,7 @@ object SvnUtils {
 
     fun isSSHProtocol(protocol: String?): Boolean {
         if (protocol == "http" ||
-            protocol == "https"
+            protocol == "https" || protocol == "svn"
         ) {
             return false
         }
