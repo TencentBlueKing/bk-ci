@@ -1428,6 +1428,7 @@ class PipelineListFacadeService @Autowired constructor(
         val count = pipelineInfoDao.countByProjectIds(
             dslContext = dslContext,
             projectIds = listOf(projectId),
+            channelCodes = channelCodes,
             keyword = keyword
         )
         return Page(

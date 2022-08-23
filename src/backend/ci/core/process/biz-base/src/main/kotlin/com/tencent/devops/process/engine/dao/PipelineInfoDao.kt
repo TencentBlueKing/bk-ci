@@ -209,6 +209,28 @@ class PipelineInfoDao {
         }
     }
 
+    fun countByProjectIds(
+        dslContext: DSLContext,
+        projectIds: Collection<String>,
+        channelCodes: List<ChannelCode>? = null,
+        keyword: String? = null
+    ): Int {
+        return with(T_PIPELINE_INFO) {
+            val query = dslContext.selectCount().from(this)
+                .where(PROJECT_ID.`in`(projectIds))
+
+            if (channelCodes != null) {
+                query.and(CHANNEL.`in`(channelCodes))
+            }
+
+            if (!keyword.isNullOrBlank()) {
+                query.and(PIPELINE_NAME.like("%$keyword%"))
+            }
+
+            query.and(DELETE.eq(false)).fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun listPipelineIdByProject(dslContext: DSLContext, projectId: String): List<String> {
         return with(T_PIPELINE_INFO) {
             dslContext.select(PIPELINE_ID).from(this)
