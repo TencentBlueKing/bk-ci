@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -41,6 +43,7 @@ import com.tencent.devops.notify.dao.TNotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import com.tencent.devops.support.api.service.ServiceMessageApproveResource
 import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
 import com.tencent.devops.support.model.approval.MoaWorkItemCreateAction
@@ -55,6 +58,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Primary
 @Service
@@ -206,6 +210,28 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
             )
         }
         return Result(true)
+    }
+
+    override fun getOtherNotifyMessageTemplate(
+        subTemplateList: MutableList<SubNotifyMessageTemplate>,
+        templateId: String
+    ) {
+        val moa = tNotifyMessageTemplateDao.getMoaNotifyMessageTemplate(dslContext, templateId)
+        if (null != moa) {
+            subTemplateList.add(
+                SubNotifyMessageTemplate(
+                    notifyTypeScope = listOf("MOA"),
+                    title = moa.title,
+                    body = moa.body,
+                    creator = moa.creator,
+                    modifier = moa.modifior,
+                    callBackUrl = moa.callbackUrl,
+                    processName = moa.processName,
+                    createTime = (moa.createTime as LocalDateTime).timestampmilli(),
+                    updateTime = (moa.updateTime as LocalDateTime).timestampmilli()
+                )
+            )
+        }
     }
 
     override fun updateOtherNotifyMessageTemplate(
