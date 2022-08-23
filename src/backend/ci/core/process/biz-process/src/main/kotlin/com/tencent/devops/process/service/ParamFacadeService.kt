@@ -95,7 +95,7 @@ class ParamFacadeService @Autowired constructor(
         val refs = try {
             codeService.getGitRefs(projectId, formProperty.repoHashId)
         } catch (e: Exception) {
-            logger.error("projectId:$projectId,repoHashId:${formProperty.repoHashId} add git refs error", e)
+            logger.warn("projectId:$projectId,repoHashId:${formProperty.repoHashId} add git refs error", e)
             listOf<String>()
         }
         val options = refs.map {
@@ -122,7 +122,7 @@ class ParamFacadeService @Autowired constructor(
                 relativePath = svnTagBuildFormProperty.relativePath
             )
         } catch (e: Exception) {
-            logger.error("projectId:$projectId,repoHashId:${svnTagBuildFormProperty.repoHashId} add svn tag error", e)
+            logger.warn("projectId:$projectId,repoHashId:${svnTagBuildFormProperty.repoHashId} add svn tag error", e)
             listOf<String>()
         }
         val options = directories.map {

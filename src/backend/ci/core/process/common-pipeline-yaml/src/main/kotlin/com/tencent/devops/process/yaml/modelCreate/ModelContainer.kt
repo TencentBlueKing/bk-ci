@@ -196,7 +196,7 @@ class ModelContainer @Autowired(required = false) constructor(
         return if (!job.ifField.isNullOrBlank()) {
             if (finalStage) {
                 JobControlOption(
-                    timeout = job.timeoutMinutes,
+                    timeout = job.timeoutMinutes ?: 480,
                     runCondition = when (job.ifField) {
                         IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
                         IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
@@ -211,7 +211,7 @@ class ModelContainer @Autowired(required = false) constructor(
             } else {
                 JobControlOption(
                     enable = jobEnable,
-                    timeout = job.timeoutMinutes,
+                    timeout = job.timeoutMinutes ?: 480,
                     runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                     customCondition = job.ifField.toString(),
                     dependOnType = DependOnType.ID,
@@ -223,7 +223,7 @@ class ModelContainer @Autowired(required = false) constructor(
         } else {
             JobControlOption(
                 enable = jobEnable,
-                timeout = job.timeoutMinutes,
+                timeout = job.timeoutMinutes ?: 480,
                 dependOnType = DependOnType.ID,
                 dependOnId = job.dependOn,
                 prepareTimeout = job.runsOn.queueTimeoutMinutes,

@@ -65,6 +65,7 @@ class StreamRepoTriggerAction(
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
+        val changeSet = getChangeSet()
         return TGitActionCommon.getYamlPathList(
             action = baseAction,
             gitProjectId = data.getGitProjectId(),
@@ -213,11 +214,19 @@ class StreamRepoTriggerAction(
                 reasonParams = listOf("401 Unauthorized. Repo:(${repoHook.name})")
             )
         }
-        val check = this.api.getProjectUserInfo(
-            cred = this.data.context.repoTrigger?.repoTriggerCred as TGitCred,
-            userId = userInfo.id,
-            gitProjectId = this.data.eventCommon.gitProjectId
-        ).accessLevel >= 40
+        val check = try {
+            this.api.getProjectUserInfo(
+                cred = this.data.context.repoTrigger?.repoTriggerCred as TGitCred,
+                userId = userInfo.id,
+                gitProjectId = this.data.eventCommon.gitProjectId
+            ).accessLevel >= 40
+        } catch (e: Throwable) {
+            throw StreamTriggerException(
+                action = this,
+                triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
+                reasonParams = listOf("401 Unauthorized. Repo:(${repoHook.name}).user:(${userInfo.username})")
+            )
+        }
         return Pair(check, userInfo.username)
     }
 }

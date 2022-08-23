@@ -69,7 +69,7 @@ class ModelElement @Autowired(required = false) constructor(
         job.steps!!.forEach { step ->
             val additionalOptions = ElementAdditionalOptions(
                 continueWhenFailed = step.continueOnError ?: false,
-                timeout = step.timeoutMinutes?.toLong(),
+                timeout = step.timeoutMinutes?.toLong() ?: 480,
                 retryWhenFailed = step.retryTimes != null,
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,

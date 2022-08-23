@@ -217,6 +217,7 @@ class TGitPushActionGit(
     }
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
+        val changeSet = getChangeSet()
         return TGitActionCommon.getYamlPathList(
             action = this,
             gitProjectId = this.data.getGitProjectId(),
