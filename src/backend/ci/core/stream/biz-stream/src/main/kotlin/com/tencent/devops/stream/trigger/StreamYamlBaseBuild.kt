@@ -166,7 +166,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 channelCode = channelCode
             )
         } catch (e: Throwable) {
-            logger.warn("StreamYamlBaseBuild|savePipeline|failed|msg|${e.message}")
+            logger.warn("StreamYamlBaseBuild|savePipeline|failed|error|${e.message}")
             throw StreamTriggerException(action, TriggerReason.SAVE_PIPELINE_FAILED)
         }
     }
