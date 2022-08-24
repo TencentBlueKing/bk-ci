@@ -38,7 +38,6 @@ import com.tencent.devops.common.job.api.pojo.BkJobProperties
 import com.tencent.devops.common.job.api.pojo.ExecuteTaskRequest
 import com.tencent.devops.common.job.api.pojo.FastExecuteScriptRequest
 import com.tencent.devops.common.job.api.pojo.FastPushFileRequest
-import com.tencent.devops.common.job.api.pojo.OpenStateFastPushFileRequest
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -79,22 +78,6 @@ class JobClient @Autowired constructor(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "start jobDevOpsFastPushfile failed"
-            )
-        }
-        return taskInstanceId
-    }
-
-    fun openStateFastPushFileDevops(pushFileRequest: OpenStateFastPushFileRequest, projectId: String): Long {
-        val requestBody = objectMapper.writeValueAsString(pushFileRequest)
-        val url = "${jobProperties.url}/service/file/$projectId/push/"
-        val taskInstanceId = sendTaskRequest(requestBody, url)
-        if (taskInstanceId <= 0) {
-            // 失败处理
-            logger.info("start openStateFastPushFileDevops failed")
-            throw TaskExecuteException(
-                errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorMsg = "start openStateFastPushFileDevops failed"
             )
         }
         return taskInstanceId
@@ -153,8 +136,7 @@ class JobClient @Autowired constructor(
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 if (response["status"] == 0) {
                     val responseData = response["data"] as Map<String, Any>
-                    val status = responseData["status"] as Int
-                    return when (status) {
+                    return when (responseData["status"] as Int) {
                         3 -> {
                             logger.info("Job execute task finished and success")
                             TaskResult(isFinish = true, success = true, msg = "Success")
@@ -189,6 +171,7 @@ class JobClient @Autowired constructor(
         logger.info("request body: $requestBody")
         val httpReq = Request.Builder()
             .url(url)
+            .header("X-DEVOPS-JOB-API-TOKEN", jobProperties.token!!)
             .post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             .build()
         OkhttpUtils.doHttp(httpReq).use { resp ->
