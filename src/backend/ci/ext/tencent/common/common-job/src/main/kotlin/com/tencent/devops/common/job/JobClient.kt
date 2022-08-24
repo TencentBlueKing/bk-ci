@@ -103,7 +103,7 @@ class JobClient @Autowired constructor(
         try {
             val url = "${jobProperties.url}/service/task/$projectId/$taskId/detail"
             logger.info("Get request url: $url")
-            OkhttpUtils.doGet(url).use { resp ->
+            OkhttpUtils.doGet(url, mapOf("X-DEVOPS-JOB-API-TOKEN" to jobProperties.token!!)).use { resp ->
                 val responseStr = resp.body()!!.string()
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
@@ -130,7 +130,7 @@ class JobClient @Autowired constructor(
         try {
             val url = "${jobProperties.url}/service/history/$projectId/$taskInstanceId/status"
             logger.info("Get request url: $url")
-            OkhttpUtils.doGet(url).use { resp ->
+            OkhttpUtils.doGet(url, mapOf("X-DEVOPS-JOB-API-TOKEN" to jobProperties.token!!)).use { resp ->
                 val responseStr = resp.body()!!.string()
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
@@ -141,10 +141,12 @@ class JobClient @Autowired constructor(
                             logger.info("Job execute task finished and success")
                             TaskResult(isFinish = true, success = true, msg = "Success")
                         }
+
                         4 -> {
                             logger.info("Job execute task failed")
                             TaskResult(isFinish = true, success = false, msg = "Job failed")
                         }
+
                         else -> {
                             logger.info("Job execute task running")
                             TaskResult(isFinish = false, success = false, msg = "Job Running")
