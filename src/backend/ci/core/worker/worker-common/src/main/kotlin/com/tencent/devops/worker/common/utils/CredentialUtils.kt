@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -93,7 +94,7 @@ object CredentialUtils {
         acrossProjectId: String? = null
     ) = ReplacementUtils.replace(
         this,
-        object : ReplacementUtils.KeyReplacement {
+        object : KeyReplacement {
             override fun getReplacement(key: String): String? {
                 // 支持嵌套的二次替换
                 context?.get(key)?.let { return it }
