@@ -69,7 +69,7 @@ include_dict = {
     '__BK_CI_RABBITMQ_PASSWORD__': '{{ include "bkci.rabbitmqPassword" . }}',
     '__BK_CI_RABBITMQ_USER__': '{{ include "bkci.rabbitmqUser" . }}',
     '__BK_CI_RABBITMQ_VHOST__': '{{ include "bkci.rabbitmqVhost" . }}',
-    '__BK_CI_INFLUXDB_HOST__': '{{ if eq .Values.redis.enabled true }}{{ printf "%s.%s.%s" (include "bkci.influxdbHost" .) .Release.Namespace "svc.cluster.local" | quote}}{{ else }}{{ include "bkci.influxdbHost" . }}{{ end }}',
+    '__BK_CI_INFLUXDB_HOST__': '{{ if eq .Values.influxdb.enabled true }}{{ printf "%s.%s.%s" (include "bkci.influxdbHost" .) .Release.Namespace "svc.cluster.local" | quote}}{{ else }}{{ include "bkci.influxdbHost" . }}{{ end }}',
     '__BK_CI_INFLUXDB_PORT__': '{{ include "bkci.influxdbPort" . }}',
     '__BK_CI_INFLUXDB_USER__': '{{ include "bkci.influxdbUsername" . }}',
     '__BK_CI_INFLUXDB_PASSWORD__': '{{ include "bkci.influxdbPassword" . }}',
