@@ -28,7 +28,7 @@
 package com.tencent.devops.common.pipeline.type.agent
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchType
 import io.swagger.annotations.ApiModelProperty
@@ -50,9 +50,9 @@ data class ThirdPartyDevCloudDispatchType(
     }
 
     override fun replaceField(variables: Map<String, String>) {
-        displayName = EnvUtils.parseEnv(displayName, variables)
+        displayName = EnvReplacementParser.parse(displayName, variables)
         if (!workspace.isNullOrBlank()) {
-            workspace = EnvUtils.parseEnv(workspace!!, variables)
+            workspace = EnvReplacementParser.parse(workspace!!, variables)
         }
     }
 

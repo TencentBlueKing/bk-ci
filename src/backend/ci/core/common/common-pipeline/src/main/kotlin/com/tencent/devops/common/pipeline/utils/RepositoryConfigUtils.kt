@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
@@ -138,7 +138,7 @@ object RepositoryConfigUtils {
             if (!repositoryConfig.repositoryName.isNullOrBlank()) {
                 return RepositoryConfig(
                     repositoryHashId = repositoryConfig.repositoryHashId,
-                    repositoryName = EnvUtils.parseEnv(repositoryConfig.repositoryName!!, variables),
+                    repositoryName = EnvReplacementParser.parse(repositoryConfig.repositoryName!!, variables),
                     repositoryType = repositoryConfig.repositoryType
                 )
             }

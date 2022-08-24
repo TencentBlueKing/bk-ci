@@ -1,7 +1,7 @@
 package com.tencent.devops.common.pipeline.type.bcs
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
@@ -40,8 +40,8 @@ data class PublicBcsDispatchType(
     }
 
     override fun replaceField(variables: Map<String, String>) {
-        image = EnvUtils.parseEnv(image!!, variables)
-        credentialId = EnvUtils.parseEnv(credentialId, variables)
+        image = EnvReplacementParser.parse(image!!, variables)
+        credentialId = EnvReplacementParser.parse(credentialId, variables)
     }
 
     override fun buildType() = BuildType.valueOf(BuildType.PUBLIC_BCS.name)
