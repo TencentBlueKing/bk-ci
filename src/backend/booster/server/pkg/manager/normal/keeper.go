@@ -34,11 +34,15 @@ type Keeper interface {
 
 // NewKeeper get a new keeper with given layer. If debug mode set, it will skip all checks during keeper process.
 func NewKeeper(layer TaskBasicLayer, debugMode bool, config conf.CommonEngineConfig) Keeper {
+	timeoutValue := keeperStartingTimeout
+	if config.KeeperStartingTimeout != 0 {
+		timeoutValue = time.Duration(config.KeeperStartingTimeout) * time.Second
+	}
 	return &keeper{
 		layer:     layer,
 		debugMode: debugMode,
 		conf: commonEngineConfig{
-			KeepStartingTimeout: time.Duration(config.KeeperStartingTimeout) * time.Second,
+			KeepStartingTimeout: timeoutValue,
 		},
 	}
 }
