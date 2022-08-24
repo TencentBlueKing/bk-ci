@@ -35,4 +35,4 @@ container:
 github:
   redirectUrl: __BK_CI_STREAM_URL__/auth/api/external/third/login?code=%s&userId=%s&type=%s
   orgWhite: __BK_CI_GITHUB_ORGWHITE__
-  signSecret: __BK_CI_GITHUB_SIGN_SECRET__
+  signSecret: __BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__
