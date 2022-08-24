@@ -68,7 +68,7 @@ internal class MatrixControlOptionTest {
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap(), true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -152,7 +152,7 @@ var2:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap(), true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -248,7 +248,7 @@ var2:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap(), true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -297,7 +297,7 @@ var2:
             {"service":["api","project","gateway"],"cpu":["amd64", "arm64"]}
         """
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext, true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -343,7 +343,7 @@ var2:
                 ["amd64", "arm64"]
             """.trim()
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext, true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -394,7 +394,7 @@ var2:
                 ["amd64", "arm64"]
             """.trim()
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext, true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -442,7 +442,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
                 ["amd64", "arm64"]
             """.trim()
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext, true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -493,7 +493,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
                 ["amd64", "arm64"]
             """.trim()
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext, true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -564,7 +564,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
 }
         """
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext, true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -609,7 +609,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap(), true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -656,7 +656,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap(), true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -697,7 +697,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap(), true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -737,7 +737,7 @@ os:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap(), true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -793,7 +793,7 @@ os:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap(), true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
@@ -845,7 +845,7 @@ os:
             fastKill = true,
             maxConcurrency = 50
         )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap(), true).getAllCombinations()
         println(contextCase.size)
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
