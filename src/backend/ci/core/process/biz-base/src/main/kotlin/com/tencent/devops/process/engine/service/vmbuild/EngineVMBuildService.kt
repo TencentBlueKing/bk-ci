@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
@@ -43,6 +42,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
@@ -95,7 +95,14 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
-@Suppress("LongMethod", "LongParameterList", "ReturnCount", "TooManyFunctions", "MagicNumber")
+@Suppress(
+    "LongMethod",
+    "LongParameterList",
+    "ReturnCount",
+    "TooManyFunctions",
+    "MagicNumber",
+    "LargeClass"
+)
 @Service
 class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -208,7 +215,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             // 设置Job环境变量customBuildEnv到variablesWithType和variables中
                             // TODO 此处应收敛到variablesWithType或variables的其中一个
                             c.customBuildEnv?.map { (t, u) ->
-                                val value = EnvUtils.parseEnv(u, contextMap)
+                                val value = EnvReplacementParser.parse(u, contextMap)
                                 contextMap[t] = value
                                 BuildParameters(
                                     key = t,
@@ -276,7 +283,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         customBuildEnv?.let {
             context.putAll(
                 customBuildEnv.map {
-                    "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvUtils.parseEnv(it.value, context)
+                    "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvReplacementParser.parse(it.value, context)
                 }.toMap()
             )
         }
