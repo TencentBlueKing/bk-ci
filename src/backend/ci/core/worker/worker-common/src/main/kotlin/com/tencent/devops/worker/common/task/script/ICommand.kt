@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.task.script
 
+import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
@@ -68,16 +69,20 @@ interface ICommand {
             TemplateAcrossInfoUtil.getAcrossInfo(data, taskId)?.targetProjectId
         }
 
-        return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String): String? = data[key] ?: try {
-                CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
-            } catch (ignore: Exception) {
-                CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
-            }
-        }, mapOf(
-            WORKSPACE_CONTEXT to dir.absolutePath,
-            CI_TOKEN_CONTEXT to (data[CI_TOKEN_CONTEXT] ?: ""),
-            JOB_OS_CONTEXT to AgentEnv.getOS().name
-        ))
+        return ReplacementUtils.replace(
+            command,
+            object : KeyReplacement {
+                override fun getReplacement(key: String): String? = data[key] ?: try {
+                    CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
+                } catch (ignore: Exception) {
+                    CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
+                }
+            },
+            mapOf(
+                WORKSPACE_CONTEXT to dir.absolutePath,
+                CI_TOKEN_CONTEXT to (data[CI_TOKEN_CONTEXT] ?: ""),
+                JOB_OS_CONTEXT to AgentEnv.getOS().name
+            )
+        )
     }
 }
