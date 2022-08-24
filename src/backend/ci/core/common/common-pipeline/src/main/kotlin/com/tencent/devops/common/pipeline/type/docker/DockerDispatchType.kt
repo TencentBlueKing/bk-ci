@@ -28,7 +28,7 @@
 package com.tencent.devops.common.pipeline.type.docker
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
@@ -60,20 +60,18 @@ data class DockerDispatchType(
     var imageRepositoryUserName: String = "",
     @ApiModelProperty("镜像仓库密码", required = false)
     var imageRepositoryPassword: String = ""
-) : StoreDispatchType(
-    dockerBuildVersion = if (dockerBuildVersion.isNullOrBlank()) {
-        imageCode
-    } else {
-        dockerBuildVersion
-    },
+) : StoreDispatchType(dockerBuildVersion = if (dockerBuildVersion.isNullOrBlank()) {
+    imageCode
+} else {
+    dockerBuildVersion
+},
     routeKeySuffix = DispatchRouteKeySuffix.DOCKER_VM,
     imageType = imageType,
     credentialId = credentialId,
     credentialProject = credentialProject,
     imageCode = imageCode,
     imageVersion = imageVersion,
-    imageName = imageName
-) {
+    imageName = imageName) {
 
     override fun cleanDataBeforeSave() {
         this.dockerBuildVersion = this.dockerBuildVersion?.trim()
@@ -89,7 +87,7 @@ data class DockerDispatchType(
     }
 
     override fun replaceField(variables: Map<String, String>) {
-        dockerBuildVersion = EnvReplacementParser.parse(dockerBuildVersion!!, variables)
-        credentialId = EnvReplacementParser.parse(credentialId, variables)
+        dockerBuildVersion = EnvUtils.parseEnv(dockerBuildVersion!!, variables)
+        credentialId = EnvUtils.parseEnv(credentialId, variables)
     }
 }
