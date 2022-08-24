@@ -47,7 +47,8 @@ default_value_dict = {
     'bkCiStreamScmType': 'CODE_GIT',
     'bkCiStreamUrl': 'devops.example.com',
     'bkCiStreamGitUrl': 'www.github.com',
-    'bkCiClusterTag': 'devops'
+    'bkCiClusterTag': 'devops',
+    'bkCiRepositoryGithubServer':'repository',
 }
 
 if os.path.isfile(default_value_json):
