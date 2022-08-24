@@ -31,7 +31,7 @@ import com.cronutils.mapper.CronMapper
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
-import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
@@ -96,7 +96,7 @@ data class TimerTriggerElement(
             }
             if (advanceExpression != null && advanceExpression.isNotEmpty()) {
                 advanceExpression.forEach { expression ->
-                    EnvUtils.parseEnv(command = expression, data = params)
+                    EnvReplacementParser.parse(expression, params)
                         .split("\n")
                         .forEach { expr ->
                             expressions.add(convertExpression(expr))

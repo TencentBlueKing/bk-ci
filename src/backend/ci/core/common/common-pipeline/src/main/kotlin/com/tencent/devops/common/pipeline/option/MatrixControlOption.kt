@@ -29,11 +29,11 @@ package com.tencent.devops.common.pipeline.option
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ExecuteException
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
 import io.swagger.annotations.ApiModel
@@ -74,24 +74,28 @@ data class MatrixControlOption(
     /**
      * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到的矩阵配置
      */
-    fun convertMatrixConfig(buildContext: Map<String, String>): MatrixConfig {
+    fun convertMatrixConfig(buildContext: Map<String, String>, asCodeEnabled: Boolean): MatrixConfig {
         val matrixConfig = try {
             // 由于yaml和json结构不同，就不放在同一函数进行解析了
-            convertStrategyYaml(buildContext)
+            convertStrategyYaml(buildContext, asCodeEnabled)
         } catch (ignore: Throwable) {
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
             convertStrategyJson(buildContext)
         }
-        matrixConfig.include!!.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext), buildContext))
-        matrixConfig.exclude!!.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext), buildContext))
+        matrixConfig.include!!.addAll(
+            convertCase(EnvReplacementParser.parse(includeCaseStr, buildContext, asCodeEnabled), buildContext)
+        )
+        matrixConfig.exclude!!.addAll(
+            convertCase(EnvReplacementParser.parse(excludeCaseStr, buildContext, asCodeEnabled), buildContext)
+        )
         return matrixConfig
     }
 
-    fun convertMatrixToYamlConfig(): Any? {
+    fun convertMatrixToYamlConfig(asCodeEnabled: Boolean): Any? {
         val result = mutableMapOf<String, Any>()
         val matrixConfig = try {
             // 由于yaml和json结构不同，就不放在同一函数进行解析了
-            convertStrategyYaml(emptyMap())
+            convertStrategyYaml(emptyMap(), asCodeEnabled)
         } catch (ignore: Throwable) {
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
             return strategyStr
@@ -125,13 +129,13 @@ data class MatrixControlOption(
     /**
      * 根据[strategyStr]生成对应的矩阵参数表
      */
-    private fun convertStrategyYaml(buildContext: Map<String, String>): MatrixConfig {
+    private fun convertStrategyYaml(buildContext: Map<String, String>, asCodeEnabled: Boolean): MatrixConfig {
         if (strategyStr.isNullOrBlank()) {
             return MatrixConfig(
                 emptyMap(), mutableListOf(), mutableListOf()
             )
         }
-        val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
+        val contextStr = EnvReplacementParser.parse(strategyStr, buildContext, asCodeEnabled)
         return MatrixConfig(
             strategy = JsonUtil.anyTo(
                 YamlUtil.to<Map<String, List<String>>>(contextStr),

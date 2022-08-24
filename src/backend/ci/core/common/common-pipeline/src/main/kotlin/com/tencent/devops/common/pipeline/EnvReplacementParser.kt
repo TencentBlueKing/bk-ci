@@ -40,11 +40,11 @@ object EnvReplacementParser {
      * @param replacement 自定义替换逻辑（如果指定则不使用表达式替换或默认替换逻辑）
      * @param onlyExpression 只进行表达式替换（若指定了自定义替换逻辑此字段无效，为false）
      */
-    fun <T : Any> parse(
+    fun <T : Any?> parse(
         obj: T,
         contextMap: Map<String, String>,
-        replacement: KeyReplacement? = null,
-        onlyExpression: Boolean? = false
+        onlyExpression: Boolean? = false,
+        replacement: KeyReplacement? = null
     ): T {
         val realReplacement = replacement ?: if (onlyExpression == true) {
             // #7115 如果出现无法表达式解析则保持原文

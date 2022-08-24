@@ -27,10 +27,10 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.atom
 
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -73,7 +73,7 @@ data class ManualReviewParam(
             )
         }
         options = if (!variableOption.isNullOrBlank()) {
-            EnvUtils.parseEnv(variableOption, variables).let {
+            EnvReplacementParser.parse(variableOption, variables).let {
                 val optionList = try {
                     JsonUtil.to<List<Any>>(it)
                 } catch (ignore: Throwable) {
