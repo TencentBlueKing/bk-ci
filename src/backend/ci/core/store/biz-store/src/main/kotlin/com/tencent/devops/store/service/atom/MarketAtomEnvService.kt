@@ -57,7 +57,10 @@ interface MarketAtomEnvService {
         projectCode: String,
         atomCode: String,
         version: String,
-        atomStatus: Byte? = null
+        atomStatus: Byte? = null,
+        osName: String? = null,
+        osArch: String? = null,
+        convertOsFlag: Boolean? = null
     ): Result<AtomEnv?>
 
     /**

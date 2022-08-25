@@ -122,6 +122,15 @@ class EventActionFactory @Autowired constructor(
             else -> TODO("对接其他Git平台时需要补充")
         }
 
+        return loadByData(event, actionCommonData, actionContext, actionSetting)
+    }
+
+    fun loadByData(
+        event: CodeWebhookEvent,
+        actionCommonData: EventCommonData,
+        actionContext: StreamTriggerContext,
+        actionSetting: StreamTriggerSetting?
+    ): BaseAction? {
         val action = loadEvent(event) ?: return null
         action.data.eventCommon = actionCommonData
         action.data.context = actionContext

@@ -173,8 +173,7 @@ abstract class ImageReleaseService {
         marketImageRelRequest: MarketImageRelRequest,
         needAuth: Boolean = true
     ): Result<String> {
-        logger.info("addMarketImage accessToken is :$accessToken, userId is :$userId")
-        logger.info("addMarketImage imageCode is :$imageCode, marketImageRelRequest is :$marketImageRelRequest")
+        logger.info("addMarketImage params:[$accessToken|$userId|$imageCode|$marketImageRelRequest|$needAuth]")
         // 判断镜像代码是否存在
         val codeCount = imageDao.countByCode(dslContext, imageCode)
         if (codeCount > 0) {
@@ -197,16 +196,17 @@ abstract class ImageReleaseService {
             )
         }
         if (needAuth) {
+            val projectCode = marketImageRelRequest.projectCode
             val validateFlag: Boolean?
             try {
                 // 判断用户是否项目的成员
                 validateFlag = client.get(ServiceProjectResource::class)
-                    .verifyUserProjectPermission(accessToken, marketImageRelRequest.projectCode, userId).data
-            } catch (e: Exception) {
-                logger.error("verifyUserProjectPermission error is :$e")
+                    .verifyUserProjectPermission(accessToken, projectCode, userId).data
+            } catch (ignored: Throwable) {
+                logger.warn("verifyUserProjectPermission error, params[$userId|$projectCode]", ignored)
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
-            logger.info("the validateFlag is :$validateFlag")
+            logger.info("verifyUserProjectPermission validateFlag is :$validateFlag")
             if (null == validateFlag || !validateFlag) {
                 // 抛出错误提示
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
@@ -281,7 +281,7 @@ abstract class ImageReleaseService {
         sendCheckResultNotify: Boolean = true,
         runCheckPipeline: Boolean = true
     ): Result<String?> {
-        logger.info("updateMarketImage userId is :$userId, marketImageUpdateRequest is :$marketImageUpdateRequest")
+        logger.info("updateMarketImage params:[$userId|$marketImageUpdateRequest|$checkLatest|$sendCheckResultNotify]")
         if (marketImageUpdateRequest.category.equals(CATEGORY_PIPELINE_JOB) &&
             marketImageUpdateRequest.agentTypeScope.isEmpty()) {
             throw InvalidParamException(
@@ -325,7 +325,6 @@ abstract class ImageReleaseService {
                 projectId = projectCode,
                 searchKey = imageRepoName
             )
-            logger.info("the listProjectImagesResult is :$listProjectImagesResult")
             if (listProjectImagesResult.isNotOk()) {
                 return Result(listProjectImagesResult.status, listProjectImagesResult.message, null)
             }
@@ -337,7 +336,7 @@ abstract class ImageReleaseService {
                     userId = userId,
                     searchKey = imageRepoName
                 )
-                logger.info("the listPublicImagesResult is :$listPublicImagesResult")
+                logger.info("$imageRepoName listPublicImagesResult is :$listPublicImagesResult")
                 if (listPublicImagesResult.isNotOk()) {
                     return Result(listPublicImagesResult.status, listPublicImagesResult.message, null)
                 }
@@ -476,7 +475,7 @@ abstract class ImageReleaseService {
         imageId: String,
         validateUserFlag: Boolean = true
     ): Result<Boolean> {
-        logger.info("recheck userId is:$userId,imageId is:$imageId, validateUserFlag:$validateUserFlag")
+        logger.info("recheck params:[$userId|$imageId|$validateUserFlag]")
         // 判断是否可以重新验证镜像
         val status = ImageStatusEnum.CHECKING.status.toByte()
         val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, status, validateUserFlag)
@@ -494,7 +493,7 @@ abstract class ImageReleaseService {
         imageId: String,
         validateUserFlag: Boolean = true
     ): Result<Boolean> {
-        logger.info("passTest, userId:$userId, imageId:$imageId, validateUserFlag:$validateUserFlag")
+        logger.info("passTest params:[$userId|$imageId|$validateUserFlag]")
         val imageRecord = imageDao.getImage(dslContext, imageId)
             ?: return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
@@ -577,7 +576,7 @@ abstract class ImageReleaseService {
         imageId: String,
         sendCheckResultNotify: Boolean = true
     ) {
-        logger.info("runCheckImagePipeline userId is:$userId,imageId is:$imageId")
+        logger.info("runCheckImagePipeline params:[$userId|$imageId|$sendCheckResultNotify]")
         val imageRecord = imageDao.getImage(context, imageId)!!
         val imageCode = imageRecord.imageCode
         val version = imageRecord.version
@@ -619,7 +618,6 @@ abstract class ImageReleaseService {
                 )
             }
         }
-        logger.info("runCheckImagePipeline:$imageId,username=$userName,password=$password")
         val dockerImageName = if (imageRecord.imageRepoUrl.isNullOrBlank()) {
             "${imageRecord.imageRepoName}:${imageRecord.imageTag}"
         } else {
@@ -638,15 +636,15 @@ abstract class ImageReleaseService {
             )
             val checkImageInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initCheckImagePipeline(userId, projectCode!!, checkImageInitPipelineReq).data
-            logger.info("the checkImageInitPipelineResp is:$checkImageInitPipelineResp")
+            logger.info("runCheckImagePipeline checkImageInitPipelineResp is:$checkImageInitPipelineResp")
             if (null != checkImageInitPipelineResp) {
                 storePipelineRelDao.add(context, imageCode, StoreTypeEnum.IMAGE, checkImageInitPipelineResp.pipelineId)
                 marketImageDao.updateImageStatusById(
-                    context,
-                    imageId,
-                    checkImageInitPipelineResp.imageCheckStatus.status.toByte(),
-                    userId,
-                    null
+                    dslContext = context,
+                    imageId = imageId,
+                    imageStatus = checkImageInitPipelineResp.imageCheckStatus.status.toByte(),
+                    userId = userId,
+                    msg = null
                 )
                 val buildId = checkImageInitPipelineResp.buildId
                 if (null != buildId) {
@@ -680,19 +678,19 @@ abstract class ImageReleaseService {
             if (null != buildIdObj) {
                 storePipelineBuildRelDao.add(context, imageId, imagePipelineRelRecord.pipelineId, buildIdObj.id)
                 marketImageDao.updateImageStatusById(
-                    context,
-                    imageId,
-                    ImageStatusEnum.CHECKING.status.toByte(),
-                    userId,
-                    null
+                    dslContext = context,
+                    imageId = imageId,
+                    imageStatus = ImageStatusEnum.CHECKING.status.toByte(),
+                    userId = userId,
+                    msg = null
                 ) // 验证中
             } else {
                 marketImageDao.updateImageStatusById(
-                    context,
-                    imageId,
-                    ImageStatusEnum.CHECK_FAIL.status.toByte(),
-                    userId,
-                    null
+                    dslContext = context,
+                    imageId = imageId,
+                    imageStatus = ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                    userId = userId,
+                    msg = null
                 ) // 验证失败
             }
         }
@@ -763,9 +761,8 @@ abstract class ImageReleaseService {
      * 获取发布进度
      */
     fun getProcessInfo(userId: String, imageId: String): Result<StoreProcessInfo> {
-        logger.info("getProcessInfo imageId: $imageId")
+        logger.info("getProcessInfo params: [$userId|$imageId]")
         val record = imageDao.getImage(dslContext, imageId)
-        logger.info("getProcessInfo record: $record")
         if (null == record) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(imageId))
         } else {
@@ -799,7 +796,7 @@ abstract class ImageReleaseService {
      * 取消发布
      */
     fun cancelRelease(userId: String, imageId: String): Result<Boolean> {
-        logger.info("cancelRelease userId is:$userId, imageId is:$imageId")
+        logger.info("cancelRelease params:[$userId|$imageId]")
         val status = ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         // 判断用户是否有权限
         val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, status)
@@ -839,7 +836,6 @@ abstract class ImageReleaseService {
         ) {
             return Triple(false, CommonMessageCode.PERMISSION_DENIED, null)
         }
-        logger.info("imageRecord status=$imageStatus, status=$status")
         val allowReleaseStatus = getAllowReleaseStatus(isNormalUpgrade)
         var validateFlag = true
         if (status == ImageStatusEnum.COMMITTING.status.toByte() &&

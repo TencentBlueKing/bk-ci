@@ -218,11 +218,12 @@ class StoreDockingPlatformDao {
     fun getStoreDockingPlatforms(
         dslContext: DSLContext,
         platformName: String?,
+        id: String?,
         page: Int,
         pageSize: Int
     ): List<StoreDockingPlatformInfo>? {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            val conditions = getStoreDockingPlatformsCondition(platformName)
+            val conditions = getStoreDockingPlatformsCondition(platformName, id)
             val storeDockingPlatformRecords = dslContext
                 .selectFrom(this)
                 .where(conditions).orderBy(CREATE_TIME.desc())
@@ -261,10 +262,11 @@ class StoreDockingPlatformDao {
 
     fun getStoreDockingPlatformCount(
         dslContext: DSLContext,
-        platformName: String?
+        platformName: String?,
+        id: String?
     ): Long {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            val conditions = getStoreDockingPlatformsCondition(platformName)
+            val conditions = getStoreDockingPlatformsCondition(platformName, id)
             return dslContext
                 .selectCount()
                 .from(this)
@@ -274,11 +276,15 @@ class StoreDockingPlatformDao {
     }
 
     private fun TStoreDockingPlatform.getStoreDockingPlatformsCondition(
-        platformName: String?
+        platformName: String?,
+        id: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!platformName.isNullOrBlank()) {
             conditions.add(PLATFORM_NAME.contains(platformName))
+        }
+        if (!id.isNullOrBlank()) {
+            conditions.add(ID.eq(id))
         }
         return conditions
     }

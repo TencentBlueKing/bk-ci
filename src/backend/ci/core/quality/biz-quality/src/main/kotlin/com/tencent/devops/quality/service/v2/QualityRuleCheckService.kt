@@ -344,7 +344,6 @@ class QualityRuleCheckService @Autowired constructor(
         ruleInterceptList: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
     ): RuleCheckResult {
         // generate result
-        logger.info("QUALITY|ruleInterceptList is: $ruleInterceptList")
         val failRule = ruleInterceptList.filter { !it.second }.map { it.first }
         logger.info("QUALITY|failRule is: $failRule")
         val allPass = failRule.isEmpty()
@@ -366,7 +365,6 @@ class QualityRuleCheckService @Autowired constructor(
         result.forEach {
             val rule = it.first
             val ruleId = HashUtil.decodeIdToLong(rule.hashId)
-            logger.info("ruleId is: $ruleId")
             val interceptResult = it.second
 
             with(buildCheckParams) {
@@ -377,7 +375,7 @@ class QualityRuleCheckService @Autowired constructor(
 
                     try {
                         if (rule.opList != null) {
-                            logger.info("do op list action: $buildId, $rule")
+                            logger.info("do op list action: $buildId, ${rule.name}")
                             rule.opList!!.forEach { ruleOp ->
                                 val finalRule = qualityRuleBuildHisService.listRuleBuildHis(
                                     listOf(ruleId)).firstOrNull()
@@ -401,7 +399,7 @@ class QualityRuleCheckService @Autowired constructor(
                                 }
                             }
                         } else {
-                            logger.info("op list is empty for rule and build: $buildId, $rule")
+                            logger.info("op list is empty for rule and build: $buildId, ${rule.name}")
                             doRuleOperation(
                                 this,
                                 resultList.filter { result -> result.ruleName == rule.name },
@@ -416,7 +414,7 @@ class QualityRuleCheckService @Autowired constructor(
                             )
                         }
                     } catch (ignored: Throwable) {
-                        logger.error("send notification fail", ignored)
+                        logger.warn("QUALITY|checkPostHandle|send notification fail|$buildId|warn=${ignored.message}")
                     }
                 }
                 countService.countIntercept(projectId, pipelineId, ruleId, interceptResult)
@@ -583,7 +581,6 @@ class QualityRuleCheckService @Autowired constructor(
                 }
                 // 布尔类型把所有基础数据求与
                 QualityDataType.BOOLEAN -> {
-                    logger.info("is boolean...")
                     var result: Boolean? = null
                     val threshold = indicator.threshold.toBoolean()
                     logger.info("boolean threshold: $threshold")

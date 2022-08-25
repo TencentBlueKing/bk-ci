@@ -58,9 +58,6 @@ const atomFieldMixin = {
             type: Boolean,
             default: false
         },
-        clickUnfold: {
-            type: Boolean
-        },
         descTooltips: {
             type: String,
             default: ''

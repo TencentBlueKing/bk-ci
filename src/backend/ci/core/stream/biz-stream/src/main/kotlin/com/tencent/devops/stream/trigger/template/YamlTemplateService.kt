@@ -77,15 +77,15 @@ class YamlTemplateService @Autowired constructor(
         with(param) {
             // 获取当前库的模板
             if (targetRepo == null) {
-                val (ref, content) = extraParameters.getYamlContent(templateDirectory + path)
+                val content = extraParameters.getYamlContent(templateDirectory + path)
 
-                if (content.isBlank()) {
-                    throw YamlBlankException(templateDirectory + path, ref)
+                if (content.content.isBlank()) {
+                    throw YamlBlankException(templateDirectory + path, content.ref)
                 }
 
-                schemaCheck(templateDirectory + path, content, templateType)
+                schemaCheck(templateDirectory + path, content.content, templateType)
 
-                return ScriptYmlUtils.formatYaml(content)
+                return ScriptYmlUtils.formatYaml(content.content)
             }
             // 获取目标库模板，但没有填写凭证token信息，使用开启人的
             if (targetRepo?.credentials?.personalAccessToken.isNullOrBlank()) {
