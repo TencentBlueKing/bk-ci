@@ -30,7 +30,7 @@ class AuthManagerApprovalService @Autowired constructor(
 ) {
     fun userRenewalAuth(
         approvalId: Int,
-        approvalType: ApprovalType,
+        approvalType: ApprovalType
     ): Boolean {
         val approvalRecord = authManagerApprovalDao.getApprovalById(dslContext, approvalId)
         val checkResult = checkBeforeExecute(dslContext, approvalId, approvalRecord)
