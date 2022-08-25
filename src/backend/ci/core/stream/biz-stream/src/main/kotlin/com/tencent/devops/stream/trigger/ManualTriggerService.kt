@@ -43,6 +43,9 @@ import com.tencent.devops.common.web.form.data.TimePropData
 import com.tencent.devops.common.web.form.data.TipPropData
 import com.tencent.devops.common.web.form.models.Form
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
+import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfo
+import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfoParam
+import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.VariablePropType
@@ -132,6 +135,43 @@ class ManualTriggerService @Autowired constructor(
         val schema = parseVariablesToForm(variables)
 
         return ManualTriggerInfo(yaml = yaml, schema = schema)
+    }
+
+    fun getManualStartUpInfo(
+        yaml: String,
+        preYaml: PreTemplateScriptBuildYaml,
+        userId: String,
+        pipelineId: String,
+        projectId: String,
+        branchName: String,
+        commitId: String?
+    ): List<DynamicParameterInfo> {
+        // 关闭了手动触发的直接返回
+        if (preYaml.triggerOn?.manual == EnableType.FALSE.value) {
+            return emptyList()
+        }
+
+        val variables = parseManualVariables(
+            userId = userId,
+            triggerBuildReq = TriggerBuildReq(
+                projectId = projectId,
+                branch = branchName,
+                customCommitMsg = null,
+                yaml = yaml,
+                description = null,
+                commitId = commitId,
+                payload = null,
+                eventType = null,
+                inputs = null
+            ),
+            yamlObject = preYaml
+        )
+
+        if (variables.isNullOrEmpty()) {
+            return emptyList()
+        }
+
+        return parseVariablesToStartUp(variables)
     }
 
     private fun parseManualVariables(
@@ -332,6 +372,133 @@ class ManualTriggerService @Autowired constructor(
             }
 
             return builder.build()
+        }
+
+        /**
+         * 子流水线插件使用
+         */
+        fun parseVariablesToStartUp(variables: Map<String, Variable>): List<DynamicParameterInfo> {
+            // 去掉不能在前端页面展示的
+            return variables.filter { it.value.allowModifyAtStartup == true }.map { (name, value) ->
+                when (VariablePropType.findType(value.props?.type)) {
+                    VariablePropType.SELECTOR ->
+                        DynamicParameterInfo(
+                            id = name,
+                            paramModels = listOf(
+                                DynamicParameterInfoParam(
+                                    id = "key",
+                                    type = "input",
+                                    disabled = true,
+                                    value = name
+                                ),
+                                DynamicParameterInfoParam(
+                                    id = "value",
+                                    type = "select",
+                                    disabled = false,
+                                    value = value.value ?: "",
+                                    listType = "list",
+                                    isMultiple = value.props?.multiple,
+                                    list = value.props?.options?.map { option ->
+                                        StartUpInfo(
+                                            id = option.id.toString(),
+                                            name = option.id.toString()
+                                        )
+                                    }
+                                )
+                            )
+                        )
+                    VariablePropType.CHECKBOX ->
+                        DynamicParameterInfo(
+                            id = name,
+                            paramModels = listOf(
+                                DynamicParameterInfoParam(
+                                    id = "key",
+                                    type = "input",
+                                    disabled = true,
+                                    value = name
+                                ),
+                                DynamicParameterInfoParam(
+                                    id = "value",
+                                    type = "select",
+                                    disabled = false,
+                                    value = value.value ?: "",
+                                    listType = "list",
+                                    isMultiple = value.props?.multiple,
+                                    list = value.props?.options?.map { option ->
+                                        StartUpInfo(
+                                            id = option.id.toString(),
+                                            name = option.id.toString()
+                                        )
+                                    }
+                                )
+                            )
+                        )
+                    VariablePropType.BOOLEAN ->
+                        DynamicParameterInfo(
+                            id = name,
+                            paramModels = listOf(
+                                DynamicParameterInfoParam(
+                                    id = "key",
+                                    type = "input",
+                                    disabled = true,
+                                    value = name
+                                ),
+                                DynamicParameterInfoParam(
+                                    id = "value",
+                                    type = "select",
+                                    disabled = false,
+                                    value = value.value ?: "",
+                                    listType = "list",
+                                    list = listOf(
+                                        StartUpInfo(
+                                            id = "true",
+                                            name = "true"
+                                        ), StartUpInfo(
+                                            id = "false",
+                                            name = "false"
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    VariablePropType.TIPS ->
+                        DynamicParameterInfo(
+                            id = name,
+                            paramModels = listOf(
+                                DynamicParameterInfoParam(
+                                    id = "key",
+                                    type = "input",
+                                    disabled = true,
+                                    value = name
+                                ),
+                                DynamicParameterInfoParam(
+                                    id = "value",
+                                    type = "input",
+                                    disabled = true,
+                                    value = value.value ?: ""
+                                )
+                            )
+                        )
+                    // 默认按input, string类型算
+                    else -> DynamicParameterInfo(
+                        id = name,
+                        paramModels = listOf(
+                            DynamicParameterInfoParam(
+                                id = "key",
+                                type = "input",
+                                disabled = true,
+                                value = name
+                            ),
+                            DynamicParameterInfoParam(
+                                id = "value",
+                                type = "input",
+                                disabled = false,
+                                value = value.value ?: ""
+                            )
+                        )
+                    )
+                }
+            }
         }
 
         // 将string转为其他可能的类型，如double，int或bool
