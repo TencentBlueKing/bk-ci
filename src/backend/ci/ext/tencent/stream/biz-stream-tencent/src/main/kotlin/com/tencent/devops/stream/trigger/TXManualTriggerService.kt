@@ -47,6 +47,8 @@ import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.V1TriggerBuildReq
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.service.StreamPipelineService
+import com.tencent.devops.stream.service.StreamYamlService
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.service.StreamEventService
@@ -85,7 +87,9 @@ class TXManualTriggerService @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCIEventService: V1GitCIEventService,
     private val yamlBuild: V1YamlBuild,
-    private val streamYamlService: V1StreamYamlService
+    private val streamYamlService: V1StreamYamlService,
+    private val streamPipelineService: StreamPipelineService,
+    private val streamYamlServiceV2: StreamYamlService,
 ) : ManualTriggerService(
     dslContext = dslContext,
     actionFactory = actionFactory,
@@ -98,7 +102,9 @@ class TXManualTriggerService @Autowired constructor(
     gitPipelineResourceDao = gitPipelineResourceDao,
     gitRequestEventBuildDao = gitRequestEventBuildDao,
     streamYamlBuild = streamYamlBuild,
-    yamlTemplateService = yamlTemplateService
+    yamlTemplateService = yamlTemplateService,
+    streamPipelineService = streamPipelineService,
+    streamYamlService = streamYamlServiceV2
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
