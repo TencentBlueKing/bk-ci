@@ -53,18 +53,20 @@ const (
 	templateKeyAgentSecret = "###{agentSecret}###"
 	templateKeyGateway     = "###{gateway}###"
 	templateKeyTlsCa       = "###{tls_ca}###"
+	templateKeyProjectId   = "###{projectId}###"
 )
 
 const configTemplateLinux = `[global_tags]
+  projectId = "###{projectId}###"
   agentId = "###{agentId}###"
   agentSecret = "###{agentSecret}###"
 [agent]
-  interval = "10s"
+  interval = "1m"
   round_interval = true
   metric_batch_size = 1000
   metric_buffer_limit = 10000
   collection_jitter = "0s"
-  flush_interval = "10s"
+  flush_interval = "1m"
   flush_jitter = "0s"
   precision = ""
   debug = false
@@ -94,15 +96,16 @@ const configTemplateLinux = `[global_tags]
 `
 
 const configTemplateWindows = `[global_tags]
+  projectId = "###{projectId}###"
   agentId = "###{agentId}###"
   agentSecret = "###{agentSecret}###"
 [agent]
-  interval = "10s"
+  interval = "1m"
   round_interval = true
   metric_batch_size = 1000
   metric_buffer_limit = 10000
   collection_jitter = "0s"
-  flush_interval = "10s"
+  flush_interval = "1m"
   flush_jitter = "0s"
   precision = ""
   debug = false
@@ -261,15 +264,18 @@ func writeTelegrafConfig() {
 	configContent := strings.Replace(configTemplate, templateKeyAgentId, config.GAgentConfig.AgentId, 1)
 	configContent = strings.Replace(configContent, templateKeyAgentSecret, config.GAgentConfig.SecretKey, 1)
 	configContent = strings.Replace(configContent, templateKeyGateway, buildGateway(config.GAgentConfig.Gateway), 1)
+	configContent = strings.Replace(configContent, templateKeyProjectId, config.GAgentConfig.ProjectId, 1)
 	if config.UseCert {
 		configContent = strings.Replace(configContent, templateKeyTlsCa, `tls_ca = ".cert"`, 1)
 	} else {
 		configContent = strings.Replace(configContent, templateKeyTlsCa, "", 1)
 	}
-	ioutil.WriteFile(
-		systemutil.GetWorkDir()+"/telegraf.conf",
-		[]byte(configContent),
-		0666)
+
+	err := ioutil.WriteFile(systemutil.GetWorkDir()+"/telegraf.conf", []byte(configContent), 0666)
+	if err != nil {
+		logs.Error("write telegraf config err: ", err)
+		return
+	}
 }
 
 func buildGateway(gateway string) string {
