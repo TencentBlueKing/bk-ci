@@ -206,7 +206,7 @@ class RobotService @Autowired constructor(
             xmlString = rototWxcpt.DecryptMsg(signature, timestamp.toString(), nonce, reqData)
         } catch (e: Exception) {
             // 转换失败，错误原因请查看异常
-            e.printStackTrace()
+            logger.warn("getDecrypeMsg :$e")
         }
         return xmlString
     }
