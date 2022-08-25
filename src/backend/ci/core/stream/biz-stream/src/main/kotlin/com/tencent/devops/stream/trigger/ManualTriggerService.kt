@@ -28,6 +28,10 @@
 package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.form.FormBuilder
 import com.tencent.devops.common.web.form.data.CheckboxPropData
 import com.tencent.devops.common.web.form.data.CompanyStaffPropData
@@ -48,14 +52,19 @@ import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.VariablePropType
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.ManualTriggerInfo
+import com.tencent.devops.stream.pojo.StreamGitYamlString
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.service.StreamPipelineService
+import com.tencent.devops.stream.service.StreamYamlService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
@@ -76,6 +85,8 @@ class ManualTriggerService @Autowired constructor(
     streamGitConfig: StreamGitConfig,
     streamEventService: StreamEventService,
     streamBasicSettingService: StreamBasicSettingService,
+    private val streamPipelineService: StreamPipelineService,
+    private val streamYamlService: StreamYamlService
     streamYamlTrigger: StreamYamlTrigger,
     streamBasicSettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
@@ -96,14 +107,66 @@ class ManualTriggerService @Autowired constructor(
 ) {
 
     fun getManualTriggerInfo(
-        yaml: String,
-        preYaml: PreTemplateScriptBuildYaml,
         userId: String,
         pipelineId: String,
         projectId: String,
         branchName: String,
         commitId: String?
     ): ManualTriggerInfo {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+
+        // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
+        val yaml = try {
+            streamPipelineService.getYamlByPipeline(
+                gitProjectId, pipelineId,
+                if (commitId.isNullOrBlank()) {
+                    branchName
+                } else {
+                    commitId
+                }
+            )
+        } catch (e: RemoteServiceException) {
+            if (e.httpStatus == 404) {
+                throw ErrorCodeException(
+                    statusCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode,
+                    errorCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode.toString(),
+                    defaultMessage = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
+                )
+            } else {
+                throw e
+            }
+        }
+        if (yaml.isNullOrBlank()) {
+            throw ErrorCodeException(
+                statusCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode,
+                errorCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode.toString(),
+                defaultMessage = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
+            )
+        }
+
+        // 进行读取yaml对象之前对yaml做校验
+        val (message, ok) = streamYamlService.checkYaml(userId, StreamGitYamlString(yaml))
+        if (!ok) {
+            throw ErrorCodeException(
+                statusCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_INVALID.errorCode,
+                errorCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_INVALID.errorCode.toString(),
+                defaultMessage = message.message
+            )
+        }
+
+        val preYaml = YamlUtil.getObjectMapper().readValue(
+            ScriptYmlUtils.formatYaml(yaml),
+            PreTemplateScriptBuildYaml::class.java
+        ).copy(
+            stages = null,
+            jobs = null,
+            steps = null,
+            extends = null,
+            notices = null,
+            finally = null,
+            concurrency = null
+        )
+
         // 关闭了手动触发的直接返回
         if (preYaml.triggerOn?.manual == EnableType.FALSE.value) {
             return ManualTriggerInfo(yaml = yaml, schema = null, enable = false)
