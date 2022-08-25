@@ -183,7 +183,8 @@ open class MarketAtomTask : ITask() {
             parseInputParams(
                 inputMap = input as Map<String, Any>,
                 variables = variables.plus(getContainerVariables(buildTask, buildVariables, workspacePath)),
-                acrossInfo = acrossInfo
+                acrossInfo = acrossInfo,
+                asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
             )
         } ?: emptyMap()
         printInput(atomData, inputParams, inputTemplate)
@@ -375,13 +376,14 @@ open class MarketAtomTask : ITask() {
     private fun parseInputParams(
         inputMap: Map<String, Any>,
         variables: Map<String, String>,
-        acrossInfo: BuildTemplateAcrossInfo?
+        acrossInfo: BuildTemplateAcrossInfo?,
+        asCodeEnabled: Boolean?
     ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
             inputMap.forEach { (name, value) ->
                 // 修复插件input环境变量替换问题 #5682
-                atomParams[name] = EnvReplacementParser.parse(JsonUtil.toJson(value), variables)
+                atomParams[name] = EnvReplacementParser.parse(JsonUtil.toJson(value), variables, asCodeEnabled)
                     .parseCredentialValue(null, acrossInfo?.targetProjectId)
             }
         } catch (e: Throwable) {

@@ -61,10 +61,7 @@ class PipelineAsCodeService @Autowired constructor(
         .expireAfterAccess(ENABLE_PIPELINE_AS_CODE_EXPIRE_MINUTES, TimeUnit.MINUTES)
         .build<String/*projectAndPipelineId*/, Boolean/*enabled*/> { pipelineKey ->
             val (projectId, pipelineId) = getPipelineIdByCacheKey(pipelineKey)
-            val result = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
-                ?.pipelineAsCodeSettings?.let { self ->
-                    JsonUtil.to(self, PipelineAsCodeSettings::class.java).enable
-                } == true
+            val result = getPipelineAsCodeSettings(projectId, pipelineId)?.enable == true
             logger.info("[$projectId][$pipelineId]|setEnabledCache|$pipelineKey=$result")
             result
         }
@@ -73,4 +70,11 @@ class PipelineAsCodeService @Autowired constructor(
         projectId: String,
         pipelineId: String
     ) = asCodeEnabledCache.get(getPipelineCacheKey(projectId, pipelineId))
+
+    fun getPipelineAsCodeSettings(projectId: String, pipelineId: String): PipelineAsCodeSettings? {
+        return pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
+            ?.pipelineAsCodeSettings?.let { self ->
+                JsonUtil.to(self, PipelineAsCodeSettings::class.java)
+            }
+    }
 }

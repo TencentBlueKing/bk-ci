@@ -79,6 +79,7 @@ import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.util.TaskUtils
@@ -120,6 +121,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val buildExtService: PipelineBuildExtService,
     private val client: Client,
     private val pipelineContainerService: PipelineContainerService,
+    private val pipelineAsCodeService: PipelineAsCodeService,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
     private val redisOperation: RedisOperation
 ) {
@@ -172,6 +174,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val variables = buildVariableService.getAllVariable(projectId, buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
+        val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(projectId, buildInfo.pipelineId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
         var vmId = 1
 
@@ -260,7 +263,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         jobId = c.jobId,
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills,
-                        containerType = c.getClassType()
+                        containerType = c.getClassType(),
+                        pipelineAsCodeSettings = asCodeSettings
                     )
                 }
                 vmId++
