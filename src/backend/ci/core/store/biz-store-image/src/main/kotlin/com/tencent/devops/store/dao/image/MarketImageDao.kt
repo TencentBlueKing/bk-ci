@@ -594,8 +594,8 @@ class MarketImageDao @Autowired constructor(
     }
 
     fun getImagesIdByImageCode(dslContext: DSLContext, imageCode: String): List<String> {
-         with(TImage.T_IMAGE) {
-             return dslContext.select(ID)
+        with(TImage.T_IMAGE) {
+            return dslContext.select(ID)
                 .from(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .orderBy(CREATE_TIME.desc())
