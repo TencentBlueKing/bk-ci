@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfo
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.api.user.UserStreamTriggerResource
@@ -96,6 +97,38 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
         try {
             return Result(
                 manualTriggerService.getManualTriggerInfo(
+                    userId = userId,
+                    pipelineId = pipelineId,
+                    projectId = projectId,
+                    branchName = branchName,
+                    commitId = commitId
+                )
+            )
+        } catch (e: ErrorCodeException) {
+            return Result(
+                status = e.statusCode,
+                message = e.defaultMessage
+            )
+        } catch (e: Exception) {
+            return Result(
+                status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_INVALID.errorCode,
+                message = "Invalid yaml: ${e.message}"
+            )
+        }
+    }
+
+    override fun getManualStartupInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        commitId: String?
+    ): Result<List<DynamicParameterInfo>> {
+        checkParam(userId)
+        // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
+        try {
+            return Result(
+                manualTriggerService.getManualStartUpInfo(
                     userId = userId,
                     pipelineId = pipelineId,
                     projectId = projectId,

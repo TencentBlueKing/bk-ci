@@ -25,29 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.utils
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
+import io.swagger.annotations.ApiModel
+import com.fasterxml.jackson.annotation.JsonProperty
 
-object StreamEnvUtils {
-    fun checkEnv(env: Map<String, Any?>?, fileName: String? = null): Boolean {
-        if (env != null) {
-            if (env.size > 100) {
-                throw YamlFormatException("${fileName ?: ""}配置Env数量超过100限制!")
-            }
+@ApiModel("DynamicParameter模型-ID")
+data class DynamicParameterInfo(
+    @JsonProperty("id")
+    val id: String, // 该行的唯一标识，必填
+    @JsonProperty("paramModels")
+    val paramModels: List<DynamicParameterInfoParam>
+)
 
-            env.forEach { (t, u) ->
-                if (t.length > 128) {
-                    throw YamlFormatException("${fileName ?: ""}Env单变量key长度超过128字符!($t)")
-                }
-
-                if (u != null && u.toString().length > 4000) {
-                    throw YamlFormatException("${fileName ?: ""}Env单变量value长度超过4K字符!($t)")
-                }
-            }
-            return true
-        } else {
-            return true
-        }
-    }
-}
+data class DynamicParameterInfoParam(
+    @JsonProperty("value")
+    val value: String? = null, // 值，可做为初始化的默认值
+    @JsonProperty("disabled")
+    val disabled: Boolean, // 控制是否可编辑
+    @JsonProperty("id")
+    val id: String, // 该模型的唯一标识，必填
+    @JsonProperty("isMultiple")
+    val isMultiple: Boolean? = null, // select是否多选
+    @JsonProperty("label")
+    val label: String? = null, // testLabel
+    @JsonProperty("list")
+    val list: List<StartUpInfo>? = null, // type是select起作用，需要有id和name字段
+    @JsonProperty("listType")
+    val listType: String? = null, // 获取列表方式，可以是url或者list
+    @JsonProperty("type")
+    val type: String, // 可以是input或者select
+    @JsonProperty("url")
+    val url: String? = null, // type是select且listType是url起作用
+    @JsonProperty("dataPath")
+    val dataPath: String? = null // 接口返回值，取数的路径，默认为 data.records
+)

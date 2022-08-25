@@ -30,7 +30,6 @@ package com.tencent.devops.stream.trigger
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.form.FormBuilder
 import com.tencent.devops.common.web.form.data.CheckboxPropData
@@ -47,6 +46,9 @@ import com.tencent.devops.common.web.form.data.TimePropData
 import com.tencent.devops.common.web.form.data.TipPropData
 import com.tencent.devops.common.web.form.models.Form
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
+import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfo
+import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfoParam
+import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.VariablePropType
@@ -86,7 +88,7 @@ class ManualTriggerService @Autowired constructor(
     streamEventService: StreamEventService,
     streamBasicSettingService: StreamBasicSettingService,
     private val streamPipelineService: StreamPipelineService,
-    private val streamYamlService: StreamYamlService
+    private val streamYamlService: StreamYamlService,
     streamYamlTrigger: StreamYamlTrigger,
     streamBasicSettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
@@ -113,6 +115,45 @@ class ManualTriggerService @Autowired constructor(
         branchName: String,
         commitId: String?
     ): ManualTriggerInfo {
+        val (yaml, preYaml) = getYamlAndCheck(projectId, pipelineId, commitId, branchName, userId)
+
+        // 关闭了手动触发的直接返回
+        if (preYaml.triggerOn?.manual == EnableType.FALSE.value) {
+            return ManualTriggerInfo(yaml = yaml, schema = null, enable = false)
+        }
+
+        val variables = parseManualVariables(
+            userId = userId,
+            triggerBuildReq = TriggerBuildReq(
+                projectId = projectId,
+                branch = branchName,
+                customCommitMsg = null,
+                yaml = yaml,
+                description = null,
+                commitId = commitId,
+                payload = null,
+                eventType = null,
+                inputs = null
+            ),
+            yamlObject = preYaml
+        )
+
+        if (variables.isNullOrEmpty()) {
+            return ManualTriggerInfo(yaml = yaml, schema = null)
+        }
+
+        val schema = parseVariablesToForm(variables)
+
+        return ManualTriggerInfo(yaml = yaml, schema = schema)
+    }
+
+    private fun getYamlAndCheck(
+        projectId: String,
+        pipelineId: String,
+        commitId: String?,
+        branchName: String,
+        userId: String
+    ): Pair<String?, PreTemplateScriptBuildYaml> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
 
         // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
@@ -166,10 +207,21 @@ class ManualTriggerService @Autowired constructor(
             finally = null,
             concurrency = null
         )
+        return Pair(yaml, preYaml)
+    }
+
+    fun getManualStartUpInfo(
+        userId: String,
+        pipelineId: String,
+        projectId: String,
+        branchName: String,
+        commitId: String?
+    ): List<DynamicParameterInfo> {
+        val (yaml, preYaml) = getYamlAndCheck(projectId, pipelineId, commitId, branchName, userId)
 
         // 关闭了手动触发的直接返回
         if (preYaml.triggerOn?.manual == EnableType.FALSE.value) {
-            return ManualTriggerInfo(yaml = yaml, schema = null, enable = false)
+            return emptyList()
         }
 
         val variables = parseManualVariables(
@@ -189,12 +241,10 @@ class ManualTriggerService @Autowired constructor(
         )
 
         if (variables.isNullOrEmpty()) {
-            return ManualTriggerInfo(yaml = yaml, schema = null)
+            return emptyList()
         }
 
-        val schema = parseVariablesToForm(variables)
-
-        return ManualTriggerInfo(yaml = yaml, schema = schema)
+        return parseVariablesToStartUp(variables)
     }
 
     private fun parseManualVariables(
@@ -395,6 +445,133 @@ class ManualTriggerService @Autowired constructor(
             }
 
             return builder.build()
+        }
+
+        /**
+         * 子流水线插件使用
+         */
+        fun parseVariablesToStartUp(variables: Map<String, Variable>): List<DynamicParameterInfo> {
+            // 去掉不能在前端页面展示的
+            return variables.filter { it.value.allowModifyAtStartup == true }.map { (name, value) ->
+                when (VariablePropType.findType(value.props?.type)) {
+                    VariablePropType.SELECTOR ->
+                        DynamicParameterInfo(
+                            id = name,
+                            paramModels = listOf(
+                                DynamicParameterInfoParam(
+                                    id = "key",
+                                    type = "input",
+                                    disabled = true,
+                                    value = name
+                                ),
+                                DynamicParameterInfoParam(
+                                    id = "value",
+                                    type = "select",
+                                    disabled = false,
+                                    value = value.value ?: "",
+                                    listType = "list",
+                                    isMultiple = value.props?.multiple,
+                                    list = value.props?.options?.map { option ->
+                                        StartUpInfo(
+                                            id = option.id.toString(),
+                                            name = option.id.toString()
+                                        )
+                                    }
+                                )
+                            )
+                        )
+                    VariablePropType.CHECKBOX ->
+                        DynamicParameterInfo(
+                            id = name,
+                            paramModels = listOf(
+                                DynamicParameterInfoParam(
+                                    id = "key",
+                                    type = "input",
+                                    disabled = true,
+                                    value = name
+                                ),
+                                DynamicParameterInfoParam(
+                                    id = "value",
+                                    type = "select",
+                                    disabled = false,
+                                    value = value.value ?: "",
+                                    listType = "list",
+                                    isMultiple = value.props?.multiple,
+                                    list = value.props?.options?.map { option ->
+                                        StartUpInfo(
+                                            id = option.id.toString(),
+                                            name = option.id.toString()
+                                        )
+                                    }
+                                )
+                            )
+                        )
+                    VariablePropType.BOOLEAN ->
+                        DynamicParameterInfo(
+                            id = name,
+                            paramModels = listOf(
+                                DynamicParameterInfoParam(
+                                    id = "key",
+                                    type = "input",
+                                    disabled = true,
+                                    value = name
+                                ),
+                                DynamicParameterInfoParam(
+                                    id = "value",
+                                    type = "select",
+                                    disabled = false,
+                                    value = value.value ?: "",
+                                    listType = "list",
+                                    list = listOf(
+                                        StartUpInfo(
+                                            id = "true",
+                                            name = "true"
+                                        ), StartUpInfo(
+                                            id = "false",
+                                            name = "false"
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    VariablePropType.TIPS ->
+                        DynamicParameterInfo(
+                            id = name,
+                            paramModels = listOf(
+                                DynamicParameterInfoParam(
+                                    id = "key",
+                                    type = "input",
+                                    disabled = true,
+                                    value = name
+                                ),
+                                DynamicParameterInfoParam(
+                                    id = "value",
+                                    type = "input",
+                                    disabled = true,
+                                    value = value.value ?: ""
+                                )
+                            )
+                        )
+                    // 默认按input, string类型算
+                    else -> DynamicParameterInfo(
+                        id = name,
+                        paramModels = listOf(
+                            DynamicParameterInfoParam(
+                                id = "key",
+                                type = "input",
+                                disabled = true,
+                                value = name
+                            ),
+                            DynamicParameterInfoParam(
+                                id = "value",
+                                type = "input",
+                                disabled = false,
+                                value = value.value ?: ""
+                            )
+                        )
+                    )
+                }
+            }
         }
 
         // 将string转为其他可能的类型，如double，int或bool
