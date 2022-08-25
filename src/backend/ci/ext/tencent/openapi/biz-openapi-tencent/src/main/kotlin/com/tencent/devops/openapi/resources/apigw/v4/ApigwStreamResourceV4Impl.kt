@@ -14,6 +14,7 @@ import com.tencent.devops.stream.api.service.v1.GitCIPipelineResource
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
+import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.OpenapiTriggerReq
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
@@ -52,6 +53,16 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
             pipelineId = pipelineId,
             streamTriggerBuildReq = streamTriggerBuildReq
         )
+    }
+
+    override fun getManualTriggerInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        commitId: String?
+    ): Result<ManualTriggerInfo> {
+        TODO("Not yet implemented")
     }
 
     override fun openapiTrigger(

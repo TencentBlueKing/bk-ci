@@ -11,6 +11,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.OpenapiTriggerReq
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
@@ -68,6 +69,30 @@ interface ApigwStreamResourceV4 {
         @ApiParam("TriggerBuild请求", required = true)
         streamTriggerBuildReq: StreamTriggerBuildReq
     ): Result<TriggerBuildResult>
+
+    @ApiOperation(
+        "人工TriggerBuild拿启动信息",
+        tags = ["v4_stream_app_pipelines_manualTriggerInfo", "v4_stream_user_pipelines_manualTriggerInfo"]
+    )
+    @GET
+    @Path("/gitProjects/{gitProjectId}/manual")
+    fun getManualTriggerInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("gitProjectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("分支名称", required = false)
+        @QueryParam("branchName")
+        branchName: String,
+        @ApiParam("COMMIT_ID", required = false)
+        @QueryParam("commitId")
+        commitId: String?
+    ): Result<ManualTriggerInfo>
 
     @ApiOperation(
         "openapi 触发",
