@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
+import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 
 object EnvReplacementParser {
@@ -51,8 +52,12 @@ object EnvReplacementParser {
             // #7115 如果出现无法表达式解析则保持原文
             object : KeyReplacement {
                 override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String {
-                    return ExpressionParser.evaluateByMap(key, contextMap, true)?.let {
-                        JsonUtil.toJson(it, false)
+                    return try {
+                        ExpressionParser.evaluateByMap(key, contextMap, true)?.let {
+                            JsonUtil.toJson(it, false)
+                        }
+                    } catch (ignore: ExpressionParseException) {
+                        null
                     } ?: key
                 }
             }

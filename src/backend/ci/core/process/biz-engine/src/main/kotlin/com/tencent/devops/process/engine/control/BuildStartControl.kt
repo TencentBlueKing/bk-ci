@@ -467,7 +467,9 @@ class BuildStartControl @Autowired constructor(
                                             return@nextElement
                                         }
                                     }
-                                    !ele.branchName.isNullOrBlank() -> EnvReplacementParser.parse(ele.branchName!!, variables)
+                                    !ele.branchName.isNullOrBlank() -> EnvReplacementParser.parse(
+                                        ele.branchName!!, variables
+                                    )
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
@@ -481,7 +483,9 @@ class BuildStartControl @Autowired constructor(
                                             return@nextElement
                                         }
                                     }
-                                    !ele.branchName.isNullOrBlank() -> EnvReplacementParser.parse(ele.branchName!!, variables)
+                                    !ele.branchName.isNullOrBlank() -> EnvReplacementParser.parse(
+                                        ele.branchName!!, variables
+                                    )
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName

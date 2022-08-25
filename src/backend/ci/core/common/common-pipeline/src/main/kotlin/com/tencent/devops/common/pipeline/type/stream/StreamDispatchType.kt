@@ -28,7 +28,7 @@
 package com.tencent.devops.common.pipeline.type.stream
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
@@ -43,7 +43,7 @@ class StreamDispatchType(@JsonProperty("value") var image: String) :
     }
 
     override fun replaceField(variables: Map<String, String>) {
-        image = EnvReplacementParser.parse(image, variables)
+        image = EnvUtils.parseEnv(image, variables)
     }
 
     override fun buildType() = BuildType.valueOf(BuildType.STREAM.name)
