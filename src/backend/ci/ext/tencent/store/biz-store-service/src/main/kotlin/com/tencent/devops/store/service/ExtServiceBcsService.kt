@@ -132,9 +132,17 @@ class ExtServiceBcsService {
             namespaceName = namespaceName,
             appCode = serviceCode,
             appDeployment = AppDeployment(
-                replicas = if (grayFlag) extServiceDeploymentConfig.grayReplicas.toInt() else extServiceDeploymentConfig.replicas.toInt(),
+                replicas = if (grayFlag) {
+                    extServiceDeploymentConfig.grayReplicas.toInt()
+                } else {
+                    extServiceDeploymentConfig.replicas.toInt()
+                },
                 image = "${extServiceImageSecretConfig.repoRegistryUrl}/$imageName:$version",
-                pullImageSecretName = if (grayFlag) extServiceDeploymentConfig.grayPullImageSecretName else extServiceDeploymentConfig.pullImageSecretName,
+                pullImageSecretName = if (grayFlag) {
+                    extServiceDeploymentConfig.grayPullImageSecretName
+                } else {
+                    extServiceDeploymentConfig.pullImageSecretName
+                },
                 containerPort = extServiceDeploymentConfig.containerPort.toInt(),
                 envVarList = envVarList
             ),
@@ -146,7 +154,11 @@ class ExtServiceBcsService {
                 contextPath = extServiceIngressConfig.contextPath,
                 ingressAnnotationMap = mapOf(
                     "kubernetes.io/ingress.class" to extServiceIngressConfig.annotationClass,
-                    "kubernetes.io/ingress.existLbId" to if (grayFlag) extServiceIngressConfig.annotationGrayExistLbId else extServiceIngressConfig.annotationExistLbId
+                    "kubernetes.io/ingress.existLbId" to if (grayFlag) {
+                        extServiceIngressConfig.annotationGrayExistLbId
+                    } else {
+                        extServiceIngressConfig.annotationExistLbId
+                    }
                 )
             ),
             deployTimeOut = extServiceBcsConfig.deployTimeOut.toInt()
@@ -168,12 +180,20 @@ class ExtServiceBcsService {
         version: String,
         checkPermissionFlag: Boolean = true
     ): Result<Boolean> {
-        logger.info("deployExtService userId is:$userId,grayFlag is:$grayFlag")
-        logger.info("deployExtService serviceCode is:$serviceCode,version is:$version,checkPermissionFlag is:$checkPermissionFlag")
-        if (checkPermissionFlag && !storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
+        logger.info("deployExtService params:[$userId|$grayFlag|$serviceCode|$version|$checkPermissionFlag]")
+        if (checkPermissionFlag && !storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = serviceCode,
+                storeType = StoreTypeEnum.SERVICE.type.toByte())
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
-        val namespaceName = if (!grayFlag) extServiceBcsNameSpaceConfig.namespaceName else extServiceBcsNameSpaceConfig.grayNamespaceName
+        val namespaceName = if (!grayFlag) {
+            extServiceBcsNameSpaceConfig.namespaceName
+        } else {
+            extServiceBcsNameSpaceConfig.grayNamespaceName
+        }
         val deployApp = generateDeployApp(
             userId = userId,
             namespaceName = namespaceName,
@@ -218,9 +238,14 @@ class ExtServiceBcsService {
         checkPermissionFlag: Boolean = true,
         grayFlag: Boolean? = null
     ): Result<Boolean> {
-        logger.info("stopExtService userId is:$userId,serviceCode is:$serviceCode,grayFlag is:$grayFlag")
-        logger.info("stopExtService deploymentName is:$deploymentName,serviceName is:$serviceName,checkPermissionFlag is:$checkPermissionFlag")
-        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
+        logger.info("stopExtService params:[$userId|$serviceCode|$deploymentName|$serviceName|" +
+            "$checkPermissionFlag|$grayFlag")
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = serviceCode,
+                storeType = StoreTypeEnum.SERVICE.type.toByte())
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         var grayNamespaceName = ""
@@ -268,11 +293,20 @@ class ExtServiceBcsService {
     ): Result<DeploymentStatus?> {
         logger.info("getExtServiceDeployStatus userId is:$userId,serviceCode is:$serviceCode,grayFlag is:$grayFlag")
         // 判断用户是否有权限查询部署状态
-        if (!storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = serviceCode,
+                storeType = StoreTypeEnum.SERVICE.type.toByte())
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val deployment = client.get(ServiceBcsResource::class).getBcsDeploymentInfo(
-            namespaceName = if (grayFlag == null || !grayFlag) extServiceBcsNameSpaceConfig.namespaceName else extServiceBcsNameSpaceConfig.grayNamespaceName,
+            namespaceName = if (grayFlag == null || !grayFlag) {
+                extServiceBcsNameSpaceConfig.namespaceName
+            } else {
+                extServiceBcsNameSpaceConfig.grayNamespaceName
+            },
             deploymentName = serviceCode,
             bcsUrl = extServiceBcsConfig.masterUrl,
             token = extServiceBcsConfig.token

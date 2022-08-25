@@ -45,7 +45,6 @@ import com.tencent.devops.store.service.ideatom.IdeAtomCategoryService
 import com.tencent.devops.store.service.ideatom.IdeAtomLabelService
 import com.tencent.devops.store.service.ideatom.IdeAtomService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -61,12 +60,8 @@ class IdeAtomServiceImpl @Autowired constructor(
     private val atomCategoryService: IdeAtomCategoryService
 ) : IdeAtomService {
 
-    private val logger = LoggerFactory.getLogger(IdeAtomServiceImpl::class.java)
-
     override fun getIdeAtomById(atomId: String): Result<IdeAtom?> {
-        logger.info("deleteIdeAtomById atomId is :$atomId")
         val atomRecord = ideAtomDao.getIdeAtomById(dslContext, atomId)
-        logger.info("the atomRecord is :$atomRecord")
         return Result(if (null == atomRecord) {
             null
         } else {
@@ -115,7 +110,6 @@ class IdeAtomServiceImpl @Autowired constructor(
     }
 
     override fun getIdeAtomByCode(atomCode: String, version: String?): Result<IdeAtom?> {
-        logger.info("getIdeAtomByCode atomCode is :$atomCode,version is :$version")
         val atomRecord = if (null == version) {
             ideAtomDao.getLatestAtomByCode(dslContext, atomCode)
         } else {

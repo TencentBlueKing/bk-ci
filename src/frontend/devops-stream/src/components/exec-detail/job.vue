@@ -4,7 +4,7 @@
         :status="job.status"
     >
         <section v-if="showDebugBtn" class="web-console" :style="{ right: executeCount > 1 ? '390px' : '280px' }">
-            <span onclick="startDebug">
+            <span @click="startDebug">
                 {{$t('pipeline.webConsole')}}
             </span>
         </section>

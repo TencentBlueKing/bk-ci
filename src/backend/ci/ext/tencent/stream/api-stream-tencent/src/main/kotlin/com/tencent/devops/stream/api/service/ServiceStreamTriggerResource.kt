@@ -27,9 +27,11 @@
 
 package com.tencent.devops.stream.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.stream.pojo.OpenapiTriggerReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
@@ -65,6 +67,26 @@ interface ServiceStreamTriggerResource {
         pipelineId: String,
         @ApiParam("TriggerBuild请求", required = true)
         streamTriggerBuildReq: StreamTriggerBuildReq
+    ): Result<TriggerBuildResult>
+
+    @ApiOperation(
+        "openapi 触发",
+        tags = ["v4_stream_app_openapi_trigger", "v4_stream_user_openapi_trigger"]
+    )
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/openapi_trigger")
+    fun openapiTrigger(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工蜂项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("TriggerBuild请求", required = true)
+        triggerBuildReq: OpenapiTriggerReq
     ): Result<TriggerBuildResult>
 
     @ApiOperation("yaml schema check", tags = ["v4_stream_app_check_yaml", "v4_stream_user_check_yaml"])

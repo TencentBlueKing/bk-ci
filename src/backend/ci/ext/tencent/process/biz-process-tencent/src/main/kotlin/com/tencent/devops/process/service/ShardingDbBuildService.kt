@@ -46,6 +46,7 @@ import com.tencent.devops.process.pojo.constant.PROCESS_SHARDING_TABLE_BUILD_NUM
 import com.tencent.devops.process.pojo.constant.PROCESS_SHARDING_TABLE_BUILD_PROJECT_NUM_REDIS_KEY
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -68,6 +69,9 @@ class ShardingDbBuildService @Autowired constructor(
         private const val TOTAL_BUILD_NUM = "TOTAL_BUILD_NUM"
         private const val TOTAL_PROJECT_NUM = "TOTAL_PROJECT_NUM"
     }
+
+    @Value("\${sharding.maxBkDataSyncNum:3000}")
+    private var maxBkDataSyncNum: Int = 3000
 
     /**
      * 同步分区库和分区表构建信息
@@ -110,7 +114,8 @@ class ShardingDbBuildService @Autowired constructor(
         val clusterName = CommonUtils.getDbClusterName()
         val bkDataQueryParam = BkDataQueryParam("SELECT $MODULE_CODE, $TYPE, $DATA_SOURCE_NAME, $TABLE_NAME, " +
             "$ROUTING_RULE, $TOTAL_BUILD_NUM, thedate FROM 100205_T_SHARDING_DB_BUILD_DETAIL\n" +
-            "WHERE CLUSTER_NAME='$clusterName' AND thedate>='$startDateStr' AND thedate<'$endDateStr'")
+            "WHERE CLUSTER_NAME='$clusterName' AND thedate>='$startDateStr' AND thedate<'$endDateStr' " +
+            "LIMIT $maxBkDataSyncNum")
         val bkDataQueryData = queryBkData(bkDataQueryParam).data
         // 2、统计各分区库、各分区表最近总构建量
         val shardingBuildInfoMap = mutableMapOf<String, Long>()
@@ -167,7 +172,8 @@ class ShardingDbBuildService @Autowired constructor(
         val clusterName = CommonUtils.getDbClusterName()
         val bkDataQueryParam = BkDataQueryParam("SELECT $MODULE_CODE, $TYPE, $DATA_SOURCE_NAME, $TABLE_NAME, " +
             "$ROUTING_RULE, $TOTAL_PROJECT_NUM, thedate FROM 100205_T_SHARDING_DB_ACTIVE_PROJECT_DETAIL\n" +
-            "WHERE CLUSTER_NAME='$clusterName' AND thedate>='$startDateStr' AND thedate<'$endDateStr'")
+            "WHERE CLUSTER_NAME='$clusterName' AND thedate>='$startDateStr' AND thedate<'$endDateStr' " +
+            "LIMIT $maxBkDataSyncNum")
         val bkDataQueryData = queryBkData(bkDataQueryParam).data
         // 2、统计各分区库、各分区表最近总构建项目数量
         val shardingBuildProjectInfoMap = mutableMapOf<String, Long>()

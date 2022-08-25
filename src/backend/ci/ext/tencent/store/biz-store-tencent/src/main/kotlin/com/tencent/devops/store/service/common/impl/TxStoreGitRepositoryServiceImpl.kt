@@ -34,25 +34,35 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.store.pojo.common.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
-import com.tencent.devops.store.service.common.TxStoreGitResitoryService
+import com.tencent.devops.store.service.common.TxStoreGitRepositoryService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TxStoreGitResitoryServiceImpl @Autowired constructor(
+class TxStoreGitRepositoryServiceImpl @Autowired constructor(
     private val client: Client
-) : TxStoreGitResitoryService {
+) : TxStoreGitRepositoryService {
     override fun addRepoMember(
         storeMemberReq: StoreMemberReq,
         userId: String,
         repositoryHashId: String
     ): Result<Boolean> {
-        logger.info("addRepoMember storeMemberReq is:$storeMemberReq,userId is:$userId,repositoryHashId is:$repositoryHashId")
+        logger.info("addRepoMember params:[$storeMemberReq|$userId|$repositoryHashId]")
         if (repositoryHashId.isNotBlank()) {
-            val gitAccessLevel = if (storeMemberReq.type == StoreMemberTypeEnum.ADMIN) GitAccessLevelEnum.MASTER else GitAccessLevelEnum.DEVELOPER
+            val gitAccessLevel = if (storeMemberReq.type == StoreMemberTypeEnum.ADMIN) {
+                GitAccessLevelEnum.MASTER
+            } else {
+                GitAccessLevelEnum.DEVELOPER
+            }
             val addGitProjectMemberResult = client.get(ServiceGitRepositoryResource::class)
-                .addGitProjectMember(userId, storeMemberReq.member, repositoryHashId, gitAccessLevel, TokenTypeEnum.PRIVATE_KEY)
+                .addGitProjectMember(
+                    userId = userId,
+                    userIdList = storeMemberReq.member,
+                    repoId = repositoryHashId,
+                    gitAccessLevel = gitAccessLevel,
+                    tokenType = TokenTypeEnum.PRIVATE_KEY
+                )
             logger.info("addGitProjectMemberResult is:$addGitProjectMemberResult")
             return addGitProjectMemberResult
         }
@@ -60,7 +70,7 @@ class TxStoreGitResitoryServiceImpl @Autowired constructor(
     }
 
     override fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean> {
-        logger.info("deleteRepoMember userId is:$userId,username is:$username,repositoryHashId is:$repositoryHashId")
+        logger.info("deleteRepoMember params:[$userId|$username|$repositoryHashId]")
         if (repositoryHashId.isNotBlank()) {
             val deleteGitProjectMemberResult = client.get(ServiceGitRepositoryResource::class)
                 .deleteGitProjectMember(userId, listOf(username), repositoryHashId, TokenTypeEnum.PRIVATE_KEY)
@@ -71,6 +81,6 @@ class TxStoreGitResitoryServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(TxStoreGitResitoryServiceImpl::class.java)
+        val logger = LoggerFactory.getLogger(TxStoreGitRepositoryServiceImpl::class.java)
     }
 }

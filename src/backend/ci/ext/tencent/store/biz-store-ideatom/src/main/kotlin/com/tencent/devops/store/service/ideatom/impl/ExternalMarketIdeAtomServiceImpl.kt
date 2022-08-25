@@ -177,20 +177,27 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
         logger.info("installIdeAtom installIdeAtomReq is:$installIdeAtomReq")
         val atomCode = installIdeAtomReq.atomCode
         val atomRecord = ideAtomDao.getLatestReleaseAtomByCode(dslContext, atomCode)
-        logger.info("atomRecord is:$atomRecord")
-        if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode), null)
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode),
+                data = null
+            )
         val atomEnvInfoRecord = ideAtomEnvInfoDao.getIdeAtomEnvInfo(dslContext, atomRecord.id)
-        logger.info("atomEnvInfoRecord is:$atomEnvInfoRecord")
         // 更新安装量
-        storeStatisticDao.updateDownloads(dslContext, "", atomRecord.id, atomCode, StoreTypeEnum.IDE_ATOM.type.toByte(), 1)
+        storeStatisticDao.updateDownloads(
+            dslContext = dslContext,
+            userId = "",
+            storeId = atomRecord.id,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.IDE_ATOM.type.toByte(),
+            increment = 1
+        )
         operationLogService.add(
-                storeCode = atomCode,
-                storeType = StoreTypeEnum.IDE_ATOM,
-                optType = StoreOperationTypeEnum.INSTALL_IDE_PLUGIN,
-                optDesc = "",
-                optUser = installIdeAtomReq.userName)
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.IDE_ATOM,
+            optType = StoreOperationTypeEnum.INSTALL_IDE_PLUGIN,
+            optDesc = "",
+            optUser = installIdeAtomReq.userName)
         val pkgPath = atomEnvInfoRecord?.pkgPath
         return Result(InstallIdeAtomResp(
             atomFileDevnetUrl = if (null == pkgPath) null else "$devnetGatewayUrl$IDE_ATOM_CONTEXT_NAME/$pkgPath",

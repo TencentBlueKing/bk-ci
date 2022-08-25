@@ -288,7 +288,7 @@ class TXManualTriggerService @Autowired constructor(
                 "(${TriggerReason.PIPELINE_RUN_ERROR.detail})"
         )
         return TriggerBuildResult(
-            projectId = v1TriggerBuildReq.gitProjectId,
+            projectId = GitCommonUtils.getCiProjectId(v1TriggerBuildReq.gitProjectId),
             branch = v1TriggerBuildReq.branch,
             customCommitMsg = v1TriggerBuildReq.customCommitMsg,
             description = v1TriggerBuildReq.description,

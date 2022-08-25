@@ -70,14 +70,14 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
                     client.get(ServiceGitRepositoryResource::class)
                         .delete(
                             userId = userId,
-                            projectId = projectCode!!,
+                            projectId = projectCode,
                             repositoryHashId = repositoryHashId,
                             tokenType = tokenType
                         )
                 logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
                 return delGitRepositoryResult
-            } catch (t: Throwable) {
-                logger.error("delete code Repository exception", t)
+            } catch (ignored: Throwable) {
+                logger.warn("deleteAtomRepository fail!", ignored)
             }
         }
         return Result(true)

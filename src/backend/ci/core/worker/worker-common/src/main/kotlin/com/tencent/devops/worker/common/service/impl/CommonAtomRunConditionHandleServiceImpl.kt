@@ -25,13 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.worker.common.service.impl
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
+import java.io.File
 
-interface TxStoreGitResitoryService {
-    fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean>
+class CommonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
 
-    fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>
+    override fun prepareRunEnv(
+        osType: OSType,
+        language: String,
+        runtimeVersion: String,
+        workspace: File
+    ): Boolean {
+        return true
+    }
+
+    override fun handleAtomTarget(
+        target: String,
+        osType: OSType,
+        postEntryParam: String?
+    ): String {
+        return target
+    }
+
+    override fun handleAtomPreCmd(
+        preCmd: String,
+        osType: OSType,
+        pkgName: String,
+        runtimeVersion: String?
+    ): String {
+        return preCmd
+    }
 }

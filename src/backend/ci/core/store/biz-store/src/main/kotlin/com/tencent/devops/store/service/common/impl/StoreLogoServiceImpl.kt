@@ -38,8 +38,6 @@ import com.tencent.devops.store.pojo.common.Logo
 import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.StoreLogoReq
 import com.tencent.devops.store.service.common.StoreLogoService
-import net.coobird.thumbnailator.Thumbnails
-import org.apache.commons.codec.binary.Base64
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -91,7 +89,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
     override fun uploadStoreLogo(
         userId: String,
         contentLength: Long,
-        compressFlag: Boolean?,
+        sizeLimitiFlag: Boolean?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<StoreLogoInfo?> {
@@ -123,11 +121,13 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             // 判断上传的logo是否为512x512规格
             val width = img.width
             val height = img.height
-            if (width != height || width < allowUploadLogoWidth.toInt()) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
-                    arrayOf(allowUploadLogoWidth, allowUploadLogoHeight)
-                )
+            if (sizeLimitiFlag != false) {
+                if (width != height || width < allowUploadLogoWidth.toInt()) {
+                    return MessageCodeUtil.generateResponseDataObject(
+                        StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
+                        arrayOf(allowUploadLogoWidth, allowUploadLogoHeight)
+                    )
+                }
             }
             ImageIO.write(img, fileType, output)
         } else {
@@ -152,23 +152,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         }
         val logoUrl = uploadStoreLogo(userId, file).data
         logger.info("uploadStoreLogo logoUrl is:$logoUrl")
-        var iconData: String? = null
-        if (compressFlag == true && "svg" != fileType) {
-            // 生成压缩图标
-            val tmpFile = Files.createTempFile(UUIDUtil.generate(), ".png").toFile()
-            val bytes: ByteArray?
-            try {
-                Thumbnails.of(file)
-                    .size(18, 18)
-                    .outputFormat("png")
-                    .toFile(tmpFile)
-                bytes = Files.readAllBytes(tmpFile.toPath())
-                iconData = "data:image/png;base64," + Base64.encodeBase64String(bytes)
-            } finally {
-                tmpFile.delete()
-            }
-        }
-        return Result(StoreLogoInfo(logoUrl, iconData))
+        return Result(StoreLogoInfo(logoUrl))
     }
 
     abstract fun uploadStoreLogo(userId: String, file: File): Result<String?>
