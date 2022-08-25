@@ -124,69 +124,22 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
         branchName: String,
         commitId: String?
     ): Result<List<DynamicParameterInfo>> {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-
-        val yaml = try {
-            streamPipelineService.getYamlByPipeline(
-                gitProjectId, pipelineId,
-                if (commitId.isNullOrBlank()) {
-                    branchName
-                } else {
-                    commitId
-                }
-            )
-        } catch (e: RemoteServiceException) {
-            if (e.httpStatus == 404) {
-                return Result(
-                    status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode,
-                    message = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
-                )
-            } else {
-                throw e
-            }
-        }
-        if (yaml.isNullOrBlank()) {
-            return Result(
-                status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode,
-                message = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
-            )
-        }
-
-        // 进行读取yaml对象之前对yaml做校验
-        val (message, ok) = streamYamlService.checkYaml(userId, StreamGitYamlString(yaml))
-        if (!ok) {
-            return Result(
-                status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_INVALID.errorCode,
-                message = message.message
-            )
-        }
-
         // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
         try {
-            val preYaml = YamlUtil.getObjectMapper().readValue(
-                ScriptYmlUtils.formatYaml(yaml),
-                PreTemplateScriptBuildYaml::class.java
-            ).copy(
-                stages = null,
-                jobs = null,
-                steps = null,
-                extends = null,
-                notices = null,
-                finally = null,
-                concurrency = null
-            )
-
             return Result(
                 manualTriggerService.getManualStartUpInfo(
-                    yaml = yaml,
-                    preYaml = preYaml,
                     userId = userId,
                     pipelineId = pipelineId,
                     projectId = projectId,
                     branchName = branchName,
                     commitId = commitId
                 )
+            )
+        } catch (e: ErrorCodeException) {
+            return Result(
+                status = e.statusCode,
+                message = e.defaultMessage
             )
         } catch (e: Exception) {
             return Result(
