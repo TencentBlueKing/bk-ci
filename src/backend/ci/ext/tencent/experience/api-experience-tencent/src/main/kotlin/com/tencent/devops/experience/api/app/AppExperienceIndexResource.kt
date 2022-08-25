@@ -163,4 +163,16 @@ interface AppExperienceIndexResource {
         @BeanParam
         newCategoryParam: NewCategoryParam
     ): Result<Pagination<IndexAppInfoVO>>
+
+    @ApiOperation("MiniGame--公开体验")
+    @Path("/minigame")
+    @GET
+    fun miniGameExperience(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: Int,
+    ): Result<List<IndexAppInfoVO>>
 }

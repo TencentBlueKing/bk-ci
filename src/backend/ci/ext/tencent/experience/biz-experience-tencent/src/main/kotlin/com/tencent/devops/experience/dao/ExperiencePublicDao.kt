@@ -28,8 +28,10 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.constant.ExperiencePublicType
+import com.tencent.devops.model.experience.tables.TExperienceExtendBanner
 import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.TExperienceSubscribe
+import com.tencent.devops.model.experience.tables.records.TExperienceExtendBannerRecord
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
@@ -132,6 +134,19 @@ class ExperiencePublicDao {
                 }
                 .orderBy(BANNER_INDEX.asc())
                 .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun listWithExtendBanner(
+        dslContext: DSLContext
+    ): Result<TExperienceExtendBannerRecord>? {
+        val now = LocalDateTime.now()
+        return with(TExperienceExtendBanner.T_EXPERIENCE_EXTEND_BANNER) {
+            dslContext.selectFrom(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .and(BANNER_URL.ne(StringUtils.EMPTY))
                 .fetch()
         }
     }
@@ -437,5 +452,23 @@ class ExperiencePublicDao {
             .orderBy(p.UPDATE_TIME.desc())
             .limit(limit)
             .fetch(p.RECORD_ID)
+    }
+
+    fun listMiniGameExperience(
+        dslContext: DSLContext,
+        platform: String?,
+        projectId: String
+    ): Result<TExperiencePublicRecord> {
+        val now = LocalDateTime.now()
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .and(PROJECT_ID.eq(projectId))
+                .let {
+                    if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .fetch()
+        }
     }
 }

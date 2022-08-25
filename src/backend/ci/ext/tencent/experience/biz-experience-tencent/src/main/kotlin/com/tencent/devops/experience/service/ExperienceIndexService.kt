@@ -48,6 +48,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.NotFoundException
 
 @Service
 class ExperienceIndexService @Autowired constructor(
@@ -74,7 +75,14 @@ class ExperienceIndexService @Autowired constructor(
                 externalUrl = it.externalLink
             )
         }.toMutableList()
-
+        val extendBanners = experiencePublicDao.listWithExtendBanner(dslContext)?.map {
+            IndexBannerVO(
+                experienceHashId = "",
+                bannerUrl = UrlUtil.toOuterPhotoAddr(it.bannerUrl),
+                type = it.type,
+                externalUrl = it.link
+            )
+        }?.toMutableList()
         val hasNext = if (banners.size < pageSize) {
             false
         } else {
@@ -84,22 +92,9 @@ class ExperienceIndexService @Autowired constructor(
                 withBanner = true
             ) > (offset + pageSize)
         }
-
         if (page == 1) {
-            val banner = redisOperation.get("bk:experience:banner")
-            if (null != banner) {
-                val bannerDatas = banner.split(",,,")
-                banners.add(
-                    0, IndexBannerVO(
-                        experienceHashId = "",
-                        bannerUrl = UrlUtil.toOuterPhotoAddr(bannerDatas[0]),
-                        type = ExperiencePublicType.BANNER_URL.id,
-                        externalUrl = bannerDatas[1]
-                    )
-                )
-            }
+            extendBanners?.map { banners.add(it) }
         }
-
         return Result(Pagination(hasNext, banners))
     }
 
@@ -264,6 +259,23 @@ class ExperienceIndexService @Autowired constructor(
         return Result(Pagination(hasNext, records))
     }
 
+    fun miniGameExperience(
+        userId: String,
+        platform: Int
+    ): Result<List<IndexAppInfoVO>> {
+        val projectId = redisOperation.get(MINIGAME_PROJECT_ID_KEY)
+            ?: throw NotFoundException("MiniGame projectId not found")
+        val platformStr = PlatformEnum.of(platform)?.name
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
+        val records = experiencePublicDao.listMiniGameExperience(
+            dslContext = dslContext,
+            platform = platformStr,
+            projectId = projectId
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
+        // 乱序
+        return Result(records.shuffled())
+    }
+
     private fun toIndexAppInfoVO(
         userId: String,
         it: TExperiencePublicRecord,
@@ -311,5 +323,6 @@ class ExperienceIndexService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceIndexService::class.java)
+        const private val MINIGAME_PROJECT_ID_KEY = "experience:minigame:projectid"
     }
 }

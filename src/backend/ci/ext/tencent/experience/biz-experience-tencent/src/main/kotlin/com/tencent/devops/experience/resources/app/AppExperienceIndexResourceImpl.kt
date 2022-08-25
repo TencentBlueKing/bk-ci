@@ -96,4 +96,11 @@ class AppExperienceIndexResourceImpl @Autowired constructor(
     ): Result<Pagination<IndexAppInfoVO>> {
         return experienceIndexService.newCategory(userId, platform, newCategoryParam)
     }
+
+    override fun miniGameExperience(
+        userId: String,
+        platform: Int
+    ): Result<List<IndexAppInfoVO>> {
+        return experienceIndexService.miniGameExperience(userId, platform)
+    }
 }
