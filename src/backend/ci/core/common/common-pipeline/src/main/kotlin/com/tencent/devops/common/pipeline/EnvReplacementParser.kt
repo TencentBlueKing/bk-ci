@@ -58,12 +58,13 @@ object EnvReplacementParser {
                         }
                     } catch (ignore: ExpressionParseException) {
                         null
-                    }
+                    } ?: if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
                 }
             }
         } else {
             object : KeyReplacement {
-                override fun getReplacement(key: String, doubleCurlyBraces: Boolean) = contextMap[key]
+                override fun getReplacement(key: String, doubleCurlyBraces: Boolean)
+                    = if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
             }
         }
         return ObjectReplaceEnvVarUtil.replaceEnvVar(obj, contextMap, realReplacement) as T

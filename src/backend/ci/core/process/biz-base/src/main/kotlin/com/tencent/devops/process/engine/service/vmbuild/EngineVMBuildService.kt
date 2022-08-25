@@ -525,7 +525,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(
                             it.value, buildVariable,
                             object : KeyReplacement {
-                                override fun getReplacement(key: String) = buildVariable[key]
+                                override fun getReplacement(key: String, doubleCurlyBraces: Boolean)
+                                    = if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
                             }
                         )
                         it.key to JsonUtil.toJson(obj, formatted = false)
