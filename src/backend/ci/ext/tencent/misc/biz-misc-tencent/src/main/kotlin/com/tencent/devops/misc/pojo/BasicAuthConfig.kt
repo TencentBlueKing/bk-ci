@@ -25,29 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.artifactory
+package com.tencent.devops.misc.pojo
 
-import com.tencent.devops.misc.dao.artifactory.TxArtifactoryDataClearDao
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Service
+data class BasicAuthConfig(
+    val index: Int, // 序号
+    val biz: String, //业务类型
+    val url: String, // 数据源url
+    val username: String, // 用户名
+    val password: String, // 密码
+)
 
-@Service
-@Primary
-class TxArtifactoryDataClearServiceImpl @Autowired constructor(
-    dslContext: DSLContext
-) : ArtifactoryDataClearService(dslContext) {
-
-    @Autowired
-    private lateinit var txArtifactoryDataClearDao: TxArtifactoryDataClearDao
-
-    override fun deleteTableData(dslContext: DSLContext, buildId: String) {
-        txArtifactoryDataClearDao.deleteArtifacetoryInfoByBuildId(dslContext, buildId)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(TxArtifactoryDataClearServiceImpl::class.java)
-    }
-}

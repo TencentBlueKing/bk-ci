@@ -25,29 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.artifactory
+package com.tencent.devops.misc.service.process
 
-import com.tencent.devops.misc.dao.artifactory.TxArtifactoryDataClearDao
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Service
+interface ProcessRelatedPlatformDataClearService {
 
-@Service
-@Primary
-class TxArtifactoryDataClearServiceImpl @Autowired constructor(
-    dslContext: DSLContext
-) : ArtifactoryDataClearService(dslContext) {
-
-    @Autowired
-    private lateinit var txArtifactoryDataClearDao: TxArtifactoryDataClearDao
-
-    override fun deleteTableData(dslContext: DSLContext, buildId: String) {
-        txArtifactoryDataClearDao.deleteArtifacetoryInfoByBuildId(dslContext, buildId)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(TxArtifactoryDataClearServiceImpl::class.java)
-    }
+    /**
+     * 清除构建相关平台数据
+     */
+    fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>)
 }
+

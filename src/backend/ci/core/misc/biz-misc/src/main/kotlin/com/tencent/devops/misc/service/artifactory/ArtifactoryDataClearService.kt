@@ -53,8 +53,4 @@ abstract class ArtifactoryDataClearService @Autowired constructor(
      */
     abstract fun deleteTableData(dslContext: DSLContext, buildId: String)
 
-    /**
-     * 清除构建相关制品数据
-     */
-    abstract fun cleanBuildHistoryRepoData(projectId: String, pipelineId: String, buildIds: List<String>)
 }
