@@ -29,13 +29,9 @@ package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfo
-import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
-import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.api.user.UserStreamTriggerResource
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.permission.StreamPermissionService
