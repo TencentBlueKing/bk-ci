@@ -29,9 +29,9 @@ package com.tencent.devops.process.engine.atom
 
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -206,7 +206,7 @@ interface IAtomTask<T> {
         if (value.isNullOrBlank()) {
             return ""
         }
-        return EnvReplacementParser.parse(value!!, runVariables)
+        return EnvUtils.parseEnv(value!!, runVariables)
     }
 }
 
