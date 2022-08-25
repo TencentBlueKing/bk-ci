@@ -179,9 +179,8 @@ class TGitPushTriggerHandler(
             )
             val pushKindFilter = PushKindFilter(
                 pipelineId = pipelineId,
-                operationKind = event.operation_kind!!,
-                actionKind = event.action_kind!!,
-                included = convert(webHookParams.includePushAction)
+                checkCreateAndUpdate = event.create_and_update,
+                actionList = convert(webHookParams.includePushAction)
             )
             return listOf(skipCiFilter, pathFilter, commitMessageFilter, pushKindFilter)
         }
