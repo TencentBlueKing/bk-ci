@@ -56,7 +56,7 @@ interface ICommand {
         stepId: String? = null,
         charsetType: String? = null,
         taskId: String? = null,
-        asCodeEnabled: Boolean?
+        asCodeEnabled: Boolean? = null
     )
 
     fun parseTemplate(
