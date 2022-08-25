@@ -89,7 +89,7 @@ class TXManualTriggerService @Autowired constructor(
     private val yamlBuild: V1YamlBuild,
     private val streamYamlService: V1StreamYamlService,
     private val streamPipelineService: StreamPipelineService,
-    private val streamYamlServiceV2: StreamYamlService,
+    private val streamYamlServiceV2: StreamYamlService
 ) : ManualTriggerService(
     dslContext = dslContext,
     actionFactory = actionFactory,
