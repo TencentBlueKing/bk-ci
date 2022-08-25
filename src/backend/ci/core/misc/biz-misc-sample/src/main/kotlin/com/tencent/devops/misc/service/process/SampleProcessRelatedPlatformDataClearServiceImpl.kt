@@ -25,32 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.artifactory
+package com.tencent.devops.misc.service.process
 
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-abstract class ArtifactoryDataClearService @Autowired constructor(
-    private val dslContext: DSLContext
-) {
-
-    /**
-     * 清除构建数据
-     * @param buildId 构建ID
-     */
-    fun clearBuildData(buildId: String) {
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            deleteTableData(context, buildId)
-        }
+@Service
+class SampleProcessRelatedPlatformDataClearServiceImpl: ProcessRelatedPlatformDataClearService {
+    override fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>) {
+        // 开源版无需额外清理数据
     }
-
-    /**
-     * 删除表中构建数据
-     * @param dslContext jooq上下文
-     * @param buildId 构建ID
-     */
-    abstract fun deleteTableData(dslContext: DSLContext, buildId: String)
-
 }
