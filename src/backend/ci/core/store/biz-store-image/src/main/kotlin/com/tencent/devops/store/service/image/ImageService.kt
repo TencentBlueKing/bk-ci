@@ -1004,13 +1004,15 @@ abstract class ImageService @Autowired constructor() {
             imageAgentTypeDao.deleteAgentTypeByImageCode(context, imageCode)
             // 删除镜像特性信息
             marketImageFeatureDao.daleteImageFeature(context, imageCode)
-            // 删除镜像与范畴关联关系
-            imageCategoryRelDao.batchDeleteByImageId(context, imageIds)
-            // 删除镜像与标签关联关系
-            imageLabelRelDao.deleteByImageIds(context, imageIds)
-            // 删除镜像版本日志
-            imageVersionLogDao.deleteByImageIds(context, imageIds)
-            imageDao.deleteByImageIds(context, imageIds)
+            if (!imageIds.isNullOrEmpty()) {
+                // 删除镜像与范畴关联关系
+                imageCategoryRelDao.batchDeleteByImageId(context, imageIds)
+                // 删除镜像与标签关联关系
+                imageLabelRelDao.deleteByImageIds(context, imageIds)
+                // 删除镜像版本日志
+                imageVersionLogDao.deleteByImageIds(context, imageIds)
+                imageDao.deleteByImageIds(context, imageIds)
+            }
         }
     }
 

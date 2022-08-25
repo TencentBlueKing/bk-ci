@@ -97,13 +97,11 @@ class ImageCategoryRelDao {
         }
     }
 
-    fun batchDeleteByImageId(dslContext: DSLContext, imageIds: List<String>?) {
-        if (!imageIds.isNullOrEmpty()) {
-            with(TImageCategoryRel.T_IMAGE_CATEGORY_REL) {
-                dslContext.deleteFrom(this)
-                    .where(IMAGE_ID.`in`(imageIds))
-                    .execute()
-            }
+    fun batchDeleteByImageId(dslContext: DSLContext, imageIds: List<String>) {
+        with(TImageCategoryRel.T_IMAGE_CATEGORY_REL) {
+            dslContext.deleteFrom(this)
+                .where(IMAGE_ID.`in`(imageIds))
+                .execute()
         }
     }
 
