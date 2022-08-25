@@ -63,8 +63,8 @@ object EnvReplacementParser {
             }
         } else {
             object : KeyReplacement {
-                override fun getReplacement(key: String, doubleCurlyBraces: Boolean)
-                    = if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
+                override fun getReplacement(key: String, doubleCurlyBraces: Boolean) =
+                    if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
             }
         }
         return ObjectReplaceEnvVarUtil.replaceEnvVar(obj, contextMap, realReplacement) as T
