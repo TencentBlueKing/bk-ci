@@ -998,7 +998,7 @@ abstract class ImageService @Autowired constructor() {
     ) {
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            val imageIds = marketImageDao.getImagesByImageCode(context, imageCode)?.map { it.id }
+            val imageIds = marketImageDao.getImagesIdByImageCode(context, imageCode)
             storeCommonService.deleteStoreInfo(context, imageCode, StoreTypeEnum.IMAGE.type.toByte())
             // 删除镜像代理类型数据
             imageAgentTypeDao.deleteAgentTypeByImageCode(context, imageCode)
