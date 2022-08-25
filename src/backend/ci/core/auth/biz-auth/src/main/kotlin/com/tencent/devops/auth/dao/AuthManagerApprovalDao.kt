@@ -1,6 +1,8 @@
 package com.tencent.devops.auth.dao
 
+import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.model.auth.tables.TAuthManagerApproval
+import com.tencent.devops.model.auth.tables.TAuthManagerUser
 import com.tencent.devops.model.auth.tables.records.TAuthManagerApprovalRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -76,4 +78,12 @@ class AuthManagerApprovalDao {
         }
     }
 
+    fun deleteByapprovalId(
+        dslContext: DSLContext,
+        approvalId: Int
+    ): Int {
+        with(TAuthManagerApproval.T_AUTH_MANAGER_APPROVAL) {
+            return dslContext.deleteFrom(this).where(ID.eq(approvalId)).execute()
+        }
+    }
 }
