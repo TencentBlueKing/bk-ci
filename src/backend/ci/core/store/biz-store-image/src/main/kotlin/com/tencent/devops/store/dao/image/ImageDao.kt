@@ -198,10 +198,10 @@ class ImageDao {
         }
     }
 
-    fun deleteByCode(dslContext: DSLContext, imageCode: String) {
+    fun deleteByImageIds(dslContext: DSLContext, imageIds: List<String>?) {
         with(TImage.T_IMAGE) {
             dslContext.deleteFrom(this)
-                .where(IMAGE_CODE.eq(imageCode))
+                .where(ID.`in`(imageIds))
                 .execute()
         }
     }

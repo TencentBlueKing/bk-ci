@@ -84,6 +84,16 @@ class ImageLabelRelDao {
         }
     }
 
+    fun deleteByImageIds(dslContext: DSLContext, imageIds: List<String>?) {
+        if (!imageIds.isNullOrEmpty()) {
+            with(TImageLabelRel.T_IMAGE_LABEL_REL) {
+                dslContext.deleteFrom(this)
+                    .where(IMAGE_ID.`in`(imageIds))
+                    .execute()
+            }
+        }
+    }
+
     fun batchAdd(dslContext: DSLContext, userId: String, imageId: String, labelIdList: List<String>?) {
         with(TImageLabelRel.T_IMAGE_LABEL_REL) {
             val addStep = labelIdList?.map {
