@@ -30,8 +30,8 @@ package com.tencent.devops.process.engine.control.command.container.impl
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -163,6 +163,7 @@ class InitializeMatrixGroupStageCmd(
 
         val event = commandContext.event
         val variables = commandContext.variables
+        val asCodeEnabled = commandContext.pipelineAsCodeEnabled ?: false
         val modelStage = containerBuildDetailService.getBuildModel(
             projectId = parentContainer.projectId,
             buildId = parentContainer.buildId
@@ -192,7 +193,7 @@ class InitializeMatrixGroupStageCmd(
         LOG.info(
             "ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
                 "matrixGroupId=$matrixGroupId|containerHashId=${modelContainer.containerHashId}" +
-                "|context=$context"
+                "|context=$context|asCodeEnabled=$asCodeEnabled"
         )
 
         val matrixOption: MatrixControlOption
@@ -242,8 +243,8 @@ class InitializeMatrixGroupStageCmd(
                     val customBuildEnv = parsedInfo?.buildEnv
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
-                            mutexGroupName = EnvUtils.parseEnv(self.mutexGroupName, allContext),
-                            linkTip = EnvUtils.parseEnv(self.linkTip, allContext)
+                            mutexGroupName = EnvReplacementParser.parse(self.mutexGroupName, allContext, asCodeEnabled),
+                            linkTip = EnvReplacementParser.parse(self.linkTip, allContext, asCodeEnabled)
                         )
                     }
                     val newSeq = context.containerSeq++
@@ -255,7 +256,7 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.elements, context.executeCount, postParentIdMap
                     )
                     val newContainer = VMBuildContainer(
-                        name = EnvUtils.parseEnv(modelContainer.name, allContext),
+                        name = EnvReplacementParser.parse(modelContainer.name, allContext, asCodeEnabled),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),
@@ -276,13 +277,13 @@ class InitializeMatrixGroupStageCmd(
                         dispatchType = customDispatchType ?: modelContainer.dispatchType,
                         buildEnv = customBuildEnv ?: modelContainer.buildEnv,
                         thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
-                            EnvUtils.parseEnv(self, allContext)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled)
                         },
                         thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId?.let { self ->
-                            EnvUtils.parseEnv(self, allContext)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled)
                         },
                         thirdPartyWorkspace = modelContainer.thirdPartyWorkspace?.let { self ->
-                            EnvUtils.parseEnv(self, allContext)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled)
                         }
                     )
 
@@ -339,12 +340,12 @@ class InitializeMatrixGroupStageCmd(
                     )
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
-                            mutexGroupName = EnvUtils.parseEnv(self.mutexGroupName, contextCase),
-                            linkTip = EnvUtils.parseEnv(self.linkTip, contextCase)
+                            mutexGroupName = EnvReplacementParser.parse(self.mutexGroupName, contextCase, asCodeEnabled),
+                            linkTip = EnvReplacementParser.parse(self.linkTip, contextCase, asCodeEnabled)
                         )
                     }
                     val newContainer = NormalContainer(
-                        name = EnvUtils.parseEnv(modelContainer.name, contextCase),
+                        name = EnvReplacementParser.parse(modelContainer.name, contextCase, asCodeEnabled),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),

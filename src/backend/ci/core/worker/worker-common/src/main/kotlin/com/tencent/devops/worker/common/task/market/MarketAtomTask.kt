@@ -44,10 +44,10 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -183,7 +183,8 @@ open class MarketAtomTask : ITask() {
             parseInputParams(
                 inputMap = input as Map<String, Any>,
                 variables = variables.plus(getContainerVariables(buildTask, buildVariables, workspacePath)),
-                acrossInfo = acrossInfo
+                acrossInfo = acrossInfo,
+                asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
             )
         } ?: emptyMap()
         printInput(atomData, inputParams, inputTemplate)
@@ -375,16 +376,15 @@ open class MarketAtomTask : ITask() {
     private fun parseInputParams(
         inputMap: Map<String, Any>,
         variables: Map<String, String>,
-        acrossInfo: BuildTemplateAcrossInfo?
+        acrossInfo: BuildTemplateAcrossInfo?,
+        asCodeEnabled: Boolean?
     ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
             inputMap.forEach { (name, value) ->
                 // 修复插件input环境变量替换问题 #5682
-                atomParams[name] = EnvUtils.parseEnv(
-                    command = JsonUtil.toJson(value),
-                    data = variables
-                ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+                atomParams[name] = EnvReplacementParser.parse(JsonUtil.toJson(value), variables, asCodeEnabled)
+                    .parseCredentialValue(null, acrossInfo?.targetProjectId)
             }
         } catch (e: Throwable) {
             logger.error("plugin input illegal! ", e)

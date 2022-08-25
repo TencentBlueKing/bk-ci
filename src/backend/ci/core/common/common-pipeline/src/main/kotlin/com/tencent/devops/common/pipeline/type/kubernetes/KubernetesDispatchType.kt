@@ -28,7 +28,7 @@
 package com.tencent.devops.common.pipeline.type.kubernetes
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
@@ -77,7 +77,7 @@ data class KubernetesDispatchType(
     }
 
     override fun replaceField(variables: Map<String, String>) {
-        kubernetesBuildVersion = EnvUtils.parseEnv(kubernetesBuildVersion!!, variables)
-        credentialId = EnvUtils.parseEnv(credentialId, variables)
+        kubernetesBuildVersion = EnvReplacementParser.parse(kubernetesBuildVersion!!, variables)
+        credentialId = EnvReplacementParser.parse(credentialId, variables)
     }
 }

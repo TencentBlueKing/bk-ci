@@ -132,12 +132,14 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         val runVariables = buildVariableService.getAllVariable(projectId, buildId)
         val userId =
             runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)]
-            ?: "null"
+                ?: "null"
         val triggerUser =
-            runVariables[PIPELINE_START_USER_NAME] ?: runVariables[PipelineVarUtil.newVarToOldVar(
-                PIPELINE_START_USER_NAME
-            )]
-            ?: userId
+            runVariables[PIPELINE_START_USER_NAME] ?: runVariables[
+                PipelineVarUtil.newVarToOldVar(
+                    PIPELINE_START_USER_NAME
+                )
+            ]
+                ?: userId
 
         logger.info(
             "[$buildId]|callPipelineStartup|$userId|$triggerUser|$fixProjectId|$callProjectId" +

@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -36,6 +35,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -462,12 +462,12 @@ class BuildStartControl @Autowired constructor(
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
                                         if (ele.gitPullMode!!.type != GitPullModeType.COMMIT_ID) {
-                                            EnvUtils.parseEnv(ele.gitPullMode!!.value, variables)
+                                            EnvReplacementParser.parse(ele.gitPullMode!!.value, variables)
                                         } else {
                                             return@nextElement
                                         }
                                     }
-                                    !ele.branchName.isNullOrBlank() -> EnvUtils.parseEnv(ele.branchName!!, variables)
+                                    !ele.branchName.isNullOrBlank() -> EnvReplacementParser.parse(ele.branchName!!, variables)
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
@@ -476,12 +476,12 @@ class BuildStartControl @Autowired constructor(
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
                                         if (ele.gitPullMode!!.type != GitPullModeType.COMMIT_ID) {
-                                            EnvUtils.parseEnv(ele.gitPullMode!!.value, variables)
+                                            EnvReplacementParser.parse(ele.gitPullMode!!.value, variables)
                                         } else {
                                             return@nextElement
                                         }
                                     }
-                                    !ele.branchName.isNullOrBlank() -> EnvUtils.parseEnv(ele.branchName!!, variables)
+                                    !ele.branchName.isNullOrBlank() -> EnvReplacementParser.parse(ele.branchName!!, variables)
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
@@ -490,7 +490,7 @@ class BuildStartControl @Autowired constructor(
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
                                         if (ele.gitPullMode!!.type != GitPullModeType.COMMIT_ID) {
-                                            EnvUtils.parseEnv(ele.gitPullMode!!.value, variables)
+                                            EnvReplacementParser.parse(ele.gitPullMode!!.value, variables)
                                         } else {
                                             return@nextElement
                                         }

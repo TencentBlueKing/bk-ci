@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.actions.data.context
 
+import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
 import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
@@ -56,7 +57,8 @@ data class StreamTriggerContext(
     var originYaml: String? = null,
     var parsedYaml: String? = null,
     var normalizedYaml: String? = null,
-    var finishData: BuildFinishData? = null
+    var finishData: BuildFinishData? = null,
+    var pipelineAsCodeSettings: PipelineAsCodeSettings? = null
 )
 
 /**

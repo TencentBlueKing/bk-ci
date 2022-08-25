@@ -25,31 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task.script.powershell
+package com.tencent.devops.process.pojo.setting
 
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.worker.common.task.script.ICommand
-import java.io.File
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Suppress("UNUSED")
-class CommandPowerShellImpl : ICommand {
-
-    override fun execute(
-        buildId: String,
-        script: String,
-        taskParam: Map<String, String>,
-        runtimeVariables: Map<String, String>,
-        projectId: String,
-        dir: File,
-        buildEnvs: List<BuildEnv>,
-        continueNoneZero: Boolean,
-        errorMessage: String?,
-        jobId: String?,
-        stepId: String?,
-        charsetType: String?,
-        taskId: String?,
-        asCodeEnabled: Boolean?
-    ) {
-        TODO("Not yet implemented")
-    }
-}
+@ApiModel("设置-YAML流水线功能设置")
+data class PipelineAsCodeSettings(
+    @ApiModelProperty("是否支持YAML流水线功能", required = true)
+    val enable: Boolean = false
+)

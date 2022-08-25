@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -42,6 +42,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
@@ -78,6 +79,7 @@ import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.util.TaskUtils
@@ -87,14 +89,21 @@ import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.NotFoundException
 
-@Suppress("LongMethod", "LongParameterList", "ReturnCount", "TooManyFunctions", "MagicNumber")
+@Suppress(
+    "LongMethod",
+    "LongParameterList",
+    "ReturnCount",
+    "TooManyFunctions",
+    "MagicNumber",
+    "LargeClass"
+)
 @Service
 class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -112,6 +121,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val buildExtService: PipelineBuildExtService,
     private val client: Client,
     private val pipelineContainerService: PipelineContainerService,
+    private val pipelineAsCodeService: PipelineAsCodeService,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
     private val redisOperation: RedisOperation
 ) {
@@ -164,6 +174,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val variables = buildVariableService.getAllVariable(projectId, buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
+        val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(projectId, buildInfo.pipelineId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
         var vmId = 1
 
@@ -207,7 +218,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             // 设置Job环境变量customBuildEnv到variablesWithType和variables中
                             // TODO 此处应收敛到variablesWithType或variables的其中一个
                             c.customBuildEnv?.map { (t, u) ->
-                                val value = EnvUtils.parseEnv(u, contextMap)
+                                val value = EnvReplacementParser.parse(u, contextMap)
                                 contextMap[t] = value
                                 BuildParameters(
                                     key = t,
@@ -252,7 +263,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         jobId = c.jobId,
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills,
-                        containerType = c.getClassType()
+                        containerType = c.getClassType(),
+                        pipelineAsCodeSettings = asCodeSettings
                     )
                 }
                 vmId++
@@ -273,9 +285,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         matrixContext: Map<String, String>?
     ) {
         customBuildEnv?.let {
-            context.putAll(customBuildEnv.map {
-                "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvUtils.parseEnv(it.value, context)
-            }.toMap())
+            context.putAll(
+                customBuildEnv.map {
+                    "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvReplacementParser.parse(it.value, context)
+                }.toMap()
+            )
         }
 
         if (matrixContext?.isNotEmpty() == true) context.putAll(matrixContext)
@@ -508,7 +522,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     stepId = task.stepId,
                     type = task.taskType,
                     params = task.taskParams.map {
-                        val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(it.value, buildVariable)
+                        val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(
+                            it.value, buildVariable,
+                            object : KeyReplacement {
+                                override fun getReplacement(key: String) = buildVariable[key]
+                            }
+                        )
                         it.key to JsonUtil.toJson(obj, formatted = false)
                     }.filter {
                         !it.first.startsWith("@type")
@@ -811,10 +830,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         task?.run {
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
-                    (errorCode?.let {
-                        "\n${MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString())}\n"
-                    }
-                        ?: "") +
+                    (
+                        errorCode?.let {
+                            "\n${MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString())}\n"
+                        }
+                            ?: ""
+                        ) +
                     when (errorType) {
                         ErrorType.USER -> "Please check your input or service."
                         ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
