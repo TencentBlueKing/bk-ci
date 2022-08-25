@@ -38,7 +38,6 @@ import com.tencent.devops.common.job.api.pojo.BkJobProperties
 import com.tencent.devops.common.job.api.pojo.ExecuteTaskRequest
 import com.tencent.devops.common.job.api.pojo.FastExecuteScriptRequest
 import com.tencent.devops.common.job.api.pojo.FastPushFileRequest
-import com.tencent.devops.common.job.api.pojo.OpenStateFastPushFileRequest
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -84,22 +83,6 @@ class JobClient @Autowired constructor(
         return taskInstanceId
     }
 
-    fun openStateFastPushFileDevops(pushFileRequest: OpenStateFastPushFileRequest, projectId: String): Long {
-        val requestBody = objectMapper.writeValueAsString(pushFileRequest)
-        val url = "${jobProperties.url}/service/file/$projectId/push/"
-        val taskInstanceId = sendTaskRequest(requestBody, url)
-        if (taskInstanceId <= 0) {
-            // 失败处理
-            logger.info("start openStateFastPushFileDevops failed")
-            throw TaskExecuteException(
-                errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorMsg = "start openStateFastPushFileDevops failed"
-            )
-        }
-        return taskInstanceId
-    }
-
     fun executeTaskDevops(executeTaskRequest: ExecuteTaskRequest, projectId: String): Long {
         val requestBody = objectMapper.writeValueAsString(executeTaskRequest)
         val url = "${jobProperties.url}/service/task/$projectId/${executeTaskRequest.taskId}/execute/"
@@ -120,7 +103,7 @@ class JobClient @Autowired constructor(
         try {
             val url = "${jobProperties.url}/service/task/$projectId/$taskId/detail"
             logger.info("Get request url: $url")
-            OkhttpUtils.doGet(url).use { resp ->
+            OkhttpUtils.doGet(url, mapOf("X-DEVOPS-JOB-API-TOKEN" to jobProperties.token!!)).use { resp ->
                 val responseStr = resp.body()!!.string()
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
@@ -147,22 +130,23 @@ class JobClient @Autowired constructor(
         try {
             val url = "${jobProperties.url}/service/history/$projectId/$taskInstanceId/status"
             logger.info("Get request url: $url")
-            OkhttpUtils.doGet(url).use { resp ->
+            OkhttpUtils.doGet(url, mapOf("X-DEVOPS-JOB-API-TOKEN" to jobProperties.token!!)).use { resp ->
                 val responseStr = resp.body()!!.string()
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 if (response["status"] == 0) {
                     val responseData = response["data"] as Map<String, Any>
-                    val status = responseData["status"] as Int
-                    return when (status) {
+                    return when (responseData["status"] as Int) {
                         3 -> {
                             logger.info("Job execute task finished and success")
                             TaskResult(isFinish = true, success = true, msg = "Success")
                         }
+
                         4 -> {
                             logger.info("Job execute task failed")
                             TaskResult(isFinish = true, success = false, msg = "Job failed")
                         }
+
                         else -> {
                             logger.info("Job execute task running")
                             TaskResult(isFinish = false, success = false, msg = "Job Running")
@@ -189,6 +173,7 @@ class JobClient @Autowired constructor(
         logger.info("request body: $requestBody")
         val httpReq = Request.Builder()
             .url(url)
+            .header("X-DEVOPS-JOB-API-TOKEN", jobProperties.token!!)
             .post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             .build()
         OkhttpUtils.doHttp(httpReq).use { resp ->
