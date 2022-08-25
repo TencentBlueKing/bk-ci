@@ -51,14 +51,14 @@ object EnvReplacementParser {
         val realReplacement = replacement ?: if (onlyExpression == true) {
             // #7115 如果出现无法表达式解析则保持原文
             object : KeyReplacement {
-                override fun getReplacement(key: String): String {
+                override fun getReplacement(key: String): String? {
                     return try {
                         ExpressionParser.evaluateByMap(key, contextMap, true)?.let {
                             JsonUtil.toJson(it, false)
                         }
                     } catch (ignore: ExpressionParseException) {
                         null
-                    } ?: key
+                    }
                 }
             }
         } else {

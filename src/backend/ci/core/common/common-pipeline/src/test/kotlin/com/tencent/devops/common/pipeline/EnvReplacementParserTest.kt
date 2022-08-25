@@ -230,7 +230,7 @@ internal class EnvReplacementParserTest {
                 onlyExpression = true
             )
         )
-        Assertions.assertEquals("echo ci.xyz == 'zzzz'", EnvReplacementParser.parse(command10, data, true))
+        Assertions.assertEquals("echo \${{ ci.xyz == 'zzzz' }}", EnvReplacementParser.parse(command10, data, true))
         Assertions.assertEquals("echo true", EnvReplacementParser.parse(command11, data, true))
     }
 }
