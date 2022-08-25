@@ -54,5 +54,5 @@ data class WeworkRobotContentMessage(
     val mentionedMobileList: Set<String>?,
 
     @ApiModelProperty("attachments消息事件", required = false)
-    val attachments: WeworkMarkdownAttachment? = null,
+    val attachments: WeworkMarkdownAttachment? = null
 )

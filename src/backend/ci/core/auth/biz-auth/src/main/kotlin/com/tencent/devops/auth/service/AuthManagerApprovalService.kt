@@ -26,7 +26,7 @@ class AuthManagerApprovalService @Autowired constructor(
     val authManagerApprovalDao: AuthManagerApprovalDao,
     val managerUserDao: ManagerUserDao,
     val managerOrganizationService: ManagerOrganizationService,
-    private val client: Client,
+    private val client: Client
 ) {
     fun userRenewalAuth(
         approvalId: Int,

@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class AuthManagerApprovalResourceImpl @Autowired constructor(
-    val authManagerApprovalService: AuthManagerApprovalService,
+    val authManagerApprovalService: AuthManagerApprovalService
 ) : AuthManagerApprovalResource {
     override fun userRenewalAuth(
         approvalId: Int,

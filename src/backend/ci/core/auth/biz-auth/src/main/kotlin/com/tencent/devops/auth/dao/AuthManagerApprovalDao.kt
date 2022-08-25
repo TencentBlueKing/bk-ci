@@ -1,8 +1,6 @@
 package com.tencent.devops.auth.dao
 
-import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.model.auth.tables.TAuthManagerApproval
-import com.tencent.devops.model.auth.tables.TAuthManagerUser
 import com.tencent.devops.model.auth.tables.records.TAuthManagerApprovalRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
