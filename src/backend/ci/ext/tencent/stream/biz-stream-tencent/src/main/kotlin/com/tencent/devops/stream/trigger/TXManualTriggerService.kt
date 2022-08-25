@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -79,6 +80,7 @@ class TXManualTriggerService @Autowired constructor(
     streamYamlBuild: StreamYamlBuild,
     yamlTemplateService: YamlTemplateService,
     private val dslContext: DSLContext,
+    private val client: Client,
     private val gitRequestEventHandle: V1GitRequestEventHandle,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
@@ -88,6 +90,7 @@ class TXManualTriggerService @Autowired constructor(
     private val streamYamlService: V1StreamYamlService
 ) : ManualTriggerService(
     dslContext = dslContext,
+    client = client,
     actionFactory = actionFactory,
     streamGitConfig = streamGitConfig,
     streamEventService = streamEventService,
