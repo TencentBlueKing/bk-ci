@@ -161,7 +161,7 @@ class AuthManagerApprovalService @Autowired constructor(
 
     fun checkExpiringManager() {
         val expiringRecords = managerUserDao.listExpiringRecords(dslContext) ?: return
-        logger.info("sentNotifyToExpiringUser : expiringRecords = $expiringRecords")
+        logger.info("sentNotifyToExpiringUser : expiringRecords = ${expiringRecords}")
         expiringRecords.map {
             val approvalRecord = authManagerApprovalDao.get(dslContext, it.managerId, it.userId)
             val managerOrganization = managerOrganizationService.getManagerOrganization(it.managerId)
@@ -178,11 +178,8 @@ class AuthManagerApprovalService @Autowired constructor(
                 )
             } else {
                 val now = LocalDateTime.now()
-                val approvalRecordNotExpired = now < approvalRecord.endTime
-                // 审核单还未失效，不用重复发起审批
-                if (approvalRecordNotExpired) {
-                    return@map
-                } else {
+                val isApprovalExpired = now > approvalRecord.endTime
+                if (isApprovalExpired) {
                     val isRefuseLastTime = approvalRecord.status == MANAGER_REFUSE_TO_APPROVAL
                         || approvalRecord.status == USER_REFUSE_TO_RENEWAL
                     // 若是本轮审批，并且上一次用户拒绝续期或者审批拒绝续期，则不再重发
@@ -197,6 +194,9 @@ class AuthManagerApprovalService @Autowired constructor(
                             authDetail = authDetail
                         )
                     }
+                } else {
+                    // 审核单还未失效，不用重复发起审批
+                    return@map
                 }
             }
         }
