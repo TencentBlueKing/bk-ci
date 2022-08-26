@@ -41,6 +41,11 @@ func (dt *distTask) EnoughAvailableResource() bool {
 	return dt.Stats.CPUTotal >= dt.InheritSetting.LeastCPU
 }
 
+// if task has all resource ready
+func (dt *distTask) AllResourceReady() bool {
+	return dt.Stats.WorkerCount >= dt.Operator.RequestInstance
+}
+
 // WorkerList return worker list
 func (dt *distTask) WorkerList() []string {
 	workers := make([]string, 0)

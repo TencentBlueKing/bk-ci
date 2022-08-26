@@ -43,11 +43,12 @@ type ParamApply struct {
 
 // RespTaskInfo contains the return data of Apply and Query
 type RespTaskInfo struct {
-	TaskID      string                `json:"task_id"`
-	Status      engine.TaskStatusType `json:"status"`
-	HostList    []string              `json:"host_list"`
-	QueueNumber int                   `json:"queue_number"`
-	Message     string                `json:"message"`
+	TaskID           string                `json:"task_id"`
+	Status           engine.TaskStatusType `json:"status"`
+	HostList         []string              `json:"host_list"`
+	QueueNumber      int                   `json:"queue_number"`
+	Message          string                `json:"message"`
+	AllResourceReady bool                  `json:"all_resource_ready"`
 
 	Extra string `json:"extra"`
 }

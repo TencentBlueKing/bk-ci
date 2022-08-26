@@ -78,6 +78,11 @@ func (dt *distccTask) EnoughAvailableResource() bool {
 	return dt.Stats.CompilerCount >= dt.Operator.LeastInstance
 }
 
+// if task has all resource ready
+func (dt *distccTask) AllResourceReady() bool {
+	return dt.Stats.CompilerCount >= dt.Operator.RequestInstance
+}
+
 // WorkerList no need
 func (dt *distccTask) WorkerList() []string {
 	return nil

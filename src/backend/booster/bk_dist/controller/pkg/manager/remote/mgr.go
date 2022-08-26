@@ -249,6 +249,12 @@ func (m *Mgr) resourceCheck(ctx context.Context) {
 			return
 
 		case <-ticker.C:
+			var res []uint
+			for _, cnt := range m.resource.jobMap {
+				res = append(res, cnt)
+			}
+			blog.Infof("remote: kkk : worker jobs stats", res)
+
 			if m.getRemoteJobs() <= 0 { // no remote worker in use
 				needfree := false
 				// 从最近一次使用后的时间开始计算空闲时间
@@ -293,6 +299,23 @@ func (m *Mgr) resourceCheck(ctx context.Context) {
 			}
 		}
 	}
+}
+
+func (m *Mgr) AddHosts(newHosts []*dcProtocol.Host) []*dcProtocol.Host {
+	for _, newHost := range newHosts {
+		found := false
+		for _, worker := range m.resource.worker {
+			if newHost.Equal(worker.host) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			blog.Infof("remote: task (%s) got a new worker (%s) ,now has (%d) worker", m.work.Basic().Info().TaskID(), newHost.Server, len(m.resource.worker))
+			m.resource.addWorker(newHost)
+		}
+	}
+	return nil
 }
 
 // ExecuteTask run the task in remote worker and ensure the dependent files

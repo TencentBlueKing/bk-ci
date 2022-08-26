@@ -69,6 +69,11 @@ func (dt *distccTask) EnoughAvailableResource() bool {
 	return dt.Stats.CompilerCount >= dt.Operator.LeastInstance
 }
 
+// if task has all resource ready
+func (dt *distccTask) AllResourceReady() bool {
+	return dt.Stats.CompilerCount >= dt.Operator.RequestInstance
+}
+
 // WorkerList do not support worker list. The distcc hosts contains sin custom data.
 func (dt *distccTask) WorkerList() []string {
 	return nil

@@ -534,6 +534,7 @@ func (m *Mgr) inspectInfo(taskID string) {
 	infoTicker := time.NewTicker(m.infoTick)
 	defer infoTicker.Stop()
 
+	isRunning := false
 	for {
 		select {
 		case <-ctx.Done():
@@ -560,18 +561,28 @@ func (m *Mgr) inspectInfo(taskID string) {
 			// Once task is running or terminated, no need keep inspecting info.
 			switch info.Status {
 			case engine.TaskStatusRunning:
-				m.addRes(&info, ResourceApplySucceed)
-				// 更新work info状态
-				m.work.Lock()
-				workinfo := m.work.Basic().Info()
-				if workinfo.CanBeResourceApplied() {
-					workinfo.ResourceApplied()
-				}
-				m.work.Unlock()
+				if !isRunning {
+					m.addRes(&info, ResourceApplySucceed)
+					// 更新work info状态
+					m.work.Lock()
+					workinfo := m.work.Basic().Info()
+					if workinfo.CanBeResourceApplied() {
+						workinfo.ResourceApplied()
+					}
+					m.work.Unlock()
 
-				m.updateApplyEndStatus(true)
-				blog.Infof("resource: success to apply resources and get host(%d): %v",
-					len(info.HostList), info.HostList)
+					m.updateApplyEndStatus(true)
+					isRunning = true
+					blog.Infof("resource: success to apply resources and get host(%d): %v",
+						len(info.HostList), info.HostList)
+				}
+				if !info.AllResourceReady {
+					blog.Infof("resource: task(%s) has current workers:(%d)", info.TaskID, len(info.HostList))
+					m.addRes(&info, ResourceApplySucceed)
+					continue
+				}
+				m.addRes(&info, ResourceApplySucceed)
+				blog.Infof("resource: task(%s) got all resource", info.TaskID)
 				return
 
 			case engine.TaskStatusFinish, engine.TaskStatusFailed:

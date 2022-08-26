@@ -241,12 +241,13 @@ func getTaskInfo(taskID string) (*RespTaskInfo, error) {
 	}
 
 	return &RespTaskInfo{
-		TaskID:      tb.ID,
-		Status:      tb.Status.Status,
-		HostList:    te.WorkerList(),
-		QueueNumber: rank,
-		Message:     tb.Status.Message,
-		Extra:       string(te.Dump()),
+		TaskID:           tb.ID,
+		Status:           tb.Status.Status,
+		HostList:         te.WorkerList(),
+		QueueNumber:      rank,
+		Message:          tb.Status.Message,
+		AllResourceReady: te.AllResourceReady(),
+		Extra:            string(te.Dump()),
 	}, nil
 }
 

@@ -72,6 +72,7 @@ func newResource(hl []*dcProtocol.Host, usageLimit map[dcSDK.JobUsage]int) *reso
 		worker:        wl,
 
 		waitingList: list.New(),
+		jobMap:      make(map[string]uint, 20),
 	}
 }
 
@@ -93,6 +94,10 @@ type resource struct {
 
 	// to save waiting requests
 	waitingList *list.List
+
+	mapLock sync.RWMutex
+	// 统计每个ip完成的job数
+	jobMap map[string]uint
 }
 
 // reset with []*dcProtocol.Host
@@ -314,6 +319,15 @@ func (wr *resource) occupyWorkerSlots() *dcProtocol.Host {
 
 	worker := wr.getWorkerWithMostFreeSlots()
 	_ = worker.occupySlot()
+
+	wr.mapLock.Lock()
+	defer wr.mapLock.Unlock()
+	_, ok := wr.jobMap[worker.host.Server]
+	if !ok {
+		wr.jobMap[worker.host.Server] = 1
+	} else {
+		wr.jobMap[worker.host.Server]++
+	}
 
 	return worker.host
 }

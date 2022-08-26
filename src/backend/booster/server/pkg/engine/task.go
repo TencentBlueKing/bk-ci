@@ -20,6 +20,9 @@ type TaskExtension interface {
 	// if task get enough available resource
 	EnoughAvailableResource() bool
 
+	// if task has all resource ready
+	AllResourceReady() bool
+
 	// get worker list from task
 	WorkerList() []string
 

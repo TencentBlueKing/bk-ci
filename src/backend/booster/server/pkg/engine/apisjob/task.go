@@ -91,6 +91,11 @@ func (t *apisTask) EnoughAvailableResource() bool {
 	return len(t.WorkerList()) > 0
 }
 
+// if task has all resource ready
+func (t *apisTask) AllResourceReady() bool {
+	return len(t.WorkerList()) > 0
+}
+
 // WorkerList get the worker list.
 func (t *apisTask) WorkerList() []string {
 	return t.WorkerIPList

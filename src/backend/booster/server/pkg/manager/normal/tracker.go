@@ -127,20 +127,28 @@ func (t *tracker) track(taskID string, egn engine.Engine) {
 	timeTicker := time.NewTicker(trackerTrackGapTime)
 	defer timeTicker.Stop()
 
+	isRunning := false
 	for {
 		select {
 		case <-t.ctx.Done():
 			blog.Warnf("tracker: context done, stop tracking task(%s)", taskID)
 			return
 		case <-timeTicker.C:
-			if !t.isFinishStarting(taskID, egn) {
+			if !isRunning && !t.isFinishStarting(taskID, egn) {
 				continue
 			}
 
-			blog.Infof("tracker: task(%s) finish status starting, stop tracking", taskID)
-			t.startingLock.Lock()
-			delete(t.startingMap, taskID)
-			t.startingLock.Unlock()
+			if !isRunning {
+				blog.Infof("tracker: task(%s) finish status starting", taskID)
+				t.startingLock.Lock()
+				delete(t.startingMap, taskID)
+				t.startingLock.Unlock()
+				isRunning = true
+			}
+
+			if !isResourceAllReady(taskID, egn) {
+				continue
+			}
 			return
 		}
 	}
@@ -208,5 +216,24 @@ func (t *tracker) isFinishStarting(taskID string, egn engine.Engine) bool {
 		return false
 	}
 	blog.Infof("tracker: task(%s) is running successfully", taskID)
+	return true
+}
+
+func isResourceAllReady(taskID string, egn engine.Engine) bool {
+	_, err := egn.LaunchDone(taskID)
+	if err != nil {
+		blog.Errorf("tracker: check task(%s) launch done failed: %v", taskID, err)
+		return false
+	}
+	task, err := egn.GetTaskExtension(taskID)
+	if err != nil {
+		blog.Error("tracker: get task extension(%s) from engine(%s) failed: %v", taskID, egn.Name(), err)
+		return false
+	}
+	if !task.AllResourceReady() {
+		blog.Infof("tracker: running task(%s) still has partly resource")
+		return false
+	}
+	blog.Infof("tracker: running task(%s) got all resource")
 	return true
 }

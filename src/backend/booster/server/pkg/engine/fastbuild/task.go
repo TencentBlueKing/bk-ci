@@ -86,6 +86,11 @@ func (t *fastbuildTask) EnoughAvailableResource() bool {
 	return true
 }
 
+// if task has all resource ready
+func (t *fastbuildTask) AllResourceReady() bool {
+	return true
+}
+
 // get the worker list.
 func (t *fastbuildTask) WorkerList() []string {
 	return t.WorkerIPList
