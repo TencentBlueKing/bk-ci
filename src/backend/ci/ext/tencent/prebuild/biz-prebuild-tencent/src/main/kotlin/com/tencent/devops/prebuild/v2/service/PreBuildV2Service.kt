@@ -46,6 +46,7 @@ import com.tencent.devops.prebuild.service.CommonPreBuildService
 import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidatorV2
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
 import com.tencent.devops.process.yaml.modelCreate.ModelCreate
 import com.tencent.devops.process.yaml.modelCreate.inner.ExtraParam
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
@@ -165,7 +166,8 @@ class PreBuildV2Service @Autowired constructor(
             modelName = pipelineName,
             event = modelCreateEvent,
             yaml = scriptBuildYaml,
-            pipelineParams = getPipelineParams(scriptBuildYaml.variables, userId, pipelineName)
+            pipelineParams = getPipelineParams(scriptBuildYaml.variables, userId, pipelineName),
+            asCodeSettings = PipelineAsCodeSettings(true)
         ).model
 
         // 若是本机构建，需后置填充调度信息
