@@ -196,6 +196,21 @@ object CommonUtils {
     }
 
     /**
+     * 把字符串转换成数组对象
+     * @param str 字符串
+     * @return 数组对象
+     */
+    fun strToList(str: String): List<String> {
+        val dataList = mutableListOf<String>()
+        if (str.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*]\\s*$"))) {
+            dataList.addAll(JsonUtil.to(str))
+        } else {
+            dataList.add(str)
+        }
+        return dataList
+    }
+
+    /**
      * 获取db集群名称
      */
     fun getDbClusterName(): String {

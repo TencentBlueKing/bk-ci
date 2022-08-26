@@ -78,6 +78,21 @@ class PipelineFailServiceImpl @Autowired constructor(
             )
         )
         return typeInfos.map { typeInfo ->
+            val queryPipelineFailTrendInfoCount = pipelineFailDao.queryPipelineFailTrendInfoCount(
+                dslContext = dslContext,
+                queryPipelineFailTrendQo = QueryPipelineOverviewQO(
+                    projectId = queryPipelineFailTrendDTO.projectId,
+                    baseQueryReq = queryPipelineFailTrendDTO.baseQueryReq
+                ),
+                errorType = typeInfo
+            )
+            // 查询记录过多，提醒用户缩小查询范围
+            if (queryPipelineFailTrendInfoCount > metricsConfig.queryCountMax) {
+                throw ErrorCodeException(
+                    errorCode = MetricsMessageCode.QUERY_DETAILS_COUNT_BEYOND,
+                    params = arrayOf("${metricsConfig.queryCountMax}")
+                )
+            }
             val result = pipelineFailDao.queryPipelineFailTrendInfo(
                 dslContext = dslContext,
                 queryPipelineFailTrendQo = QueryPipelineOverviewQO(

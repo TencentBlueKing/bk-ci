@@ -46,15 +46,11 @@ import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_FI
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE_FIELD_NAME_ENGLISH
-import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_AVG_COST_TIME_SUM
+import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.constant.MetricsMessageCode
-import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getBetweenDate
-import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
-import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getIntervalTime
-import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
 import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
 import com.tencent.devops.metrics.dao.AtomStatisticsDao
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
@@ -67,6 +63,9 @@ import com.tencent.devops.metrics.pojo.vo.AtomTrendInfoVO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.ListPageVO
 import com.tencent.devops.metrics.service.AtomStatisticsManageService
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getBetweenDate
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -255,16 +254,11 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                 )
             }
         }
-            //  查询的时间区间天数
-        val days = getIntervalTime(
-            DateTimeUtil.stringToLocalDate(queryAtomTrendInfoDTO.startTime)!!.atStartOfDay(),
-            DateTimeUtil.stringToLocalDate(queryAtomTrendInfoDTO.endTime)!!.atStartOfDay()
-        )
         val atomExecutionStatisticsInfos = mutableListOf<AtomExecutionStatisticsInfoDO>()
         atomStatisticResult.forEach {
             val totalExecuteCount = (it[BK_TOTAL_EXECUTE_COUNT_SUM] as BigDecimal).toLong()
             val successExecuteCount = (it[BK_SUCCESS_EXECUTE_COUNT_SUM] as BigDecimal).toLong()
-            val avgCostTimeSum = (it[BK_TOTAL_AVG_COST_TIME_SUM] as BigDecimal).toLong()
+            val totalCostTimeSum = (it[BK_TOTAL_COST_TIME_SUM] as BigDecimal).toLong()
             atomExecutionStatisticsInfos.add(
                 AtomExecutionStatisticsInfoDO(
                     projectId = queryAtomTrendInfoDTO.projectId,
@@ -274,7 +268,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
                     ),
                     classifyCode = it[BK_CLASSIFY_CODE] as String,
                     avgCostTime =
-                    String.format("%.2f", (avgCostTimeSum.toDouble() / days.toDouble())).toDouble(),
+                    String.format("%.2f", (totalCostTimeSum.toDouble() / totalExecuteCount.toDouble())).toDouble(),
                     totalExecuteCount = totalExecuteCount,
                     successExecuteCount = successExecuteCount,
                     successRate = if (successExecuteCount <= 0L || totalExecuteCount <= 0L) 0.0
