@@ -14,9 +14,9 @@ stream:
   scmType: __BK_CI_STREAM_SCM_TYPE__
   # 配置 run 插件运行的研发商店具体插件
   marketRun:
-  enable: true
-  atomCode: run
-  atomVersion: 1.*
+    enable: true
+    atomCode: run
+    atomVersion: 1.*
 
 git:
   gitUrl: __BK_CI_STREAM_GIT_URL__
