@@ -66,7 +66,8 @@ class ModelCreate @Autowired constructor(
         modelName: String,
         event: ModelCreateEvent,
         yaml: ScriptBuildYaml,
-        pipelineParams: List<BuildFormProperty>
+        pipelineParams: List<BuildFormProperty>,
+        asCodeSettings: PipelineAsCodeSettings?
     ): PipelineModelAndSetting {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, yaml)
@@ -160,7 +161,7 @@ class ModelCreate @Autowired constructor(
                 cleanVariablesWhenRetry = true,
                 maxQueueSize = 1,
                 labels = labelList,
-                pipelineAsCodeSettings = PipelineAsCodeSettings()
+                pipelineAsCodeSettings = asCodeSettings
             )
         )
     }
