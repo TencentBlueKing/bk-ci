@@ -575,50 +575,6 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
     }
 
     @Test
-    fun calculateValueMatrix9() {
-        val matrixControlOption = MatrixControlOption(
-            // 2*3*3 = 18
-            strategyStr = """${'$'}{{ fromJSON(\'{\"service\":[\"api\",\"project\",\"gateway\"],\"cpu\":[\"amd64\",\"arm64\"]}\') }}""",
-            includeCaseStr = YamlUtil.toYaml(
-                listOf(
-                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
-                    mapOf(
-                        "service" to "api",
-                        "var1" to "b",
-                        "var3" to "yyy"
-                    ),
-                    // +0 符合 var1 = c 的增加 var3 = zzz
-                    mapOf(
-                        "service" to "c",
-                        "cpu" to "zzz"
-                    )
-                )
-            ),
-            // -1
-            excludeCaseStr = YamlUtil.toYaml(
-                listOf(
-                    mapOf(
-                        "service" to "project",
-                        "cpu" to "arm64"
-                    )
-                )
-            ),
-            totalCount = 10,
-            finishCount = 1,
-            fastKill = true,
-            maxConcurrency = 50
-        )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
-        println(contextCase.size)
-        contextCase.forEachIndexed { index, map ->
-            println("$index: $map")
-        }
-        Assertions.assertEquals(
-            contextCase.size, 7
-        )
-    }
-
-    @Test
     fun calculateValueMatrixMaxSizeTest() {
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
