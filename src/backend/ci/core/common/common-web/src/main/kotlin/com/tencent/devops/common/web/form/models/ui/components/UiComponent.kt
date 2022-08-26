@@ -42,14 +42,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = TimeComponent::class, name = TimeComponent.classType),
     JsonSubTypes.Type(value = TipComponent::class, name = TipComponent.classType)
 )
-interface UiComponent {
+open class UiComponent(
     // 必需，所需渲染组件的名称，例如组件库里的bk-input、bk-table，也可以是通过插件注册的自定义组件
-    val name: String
+    open val name: String,
     // 可选，透传到组件的属性，可传入的属性由渲染的组件决定，组件支持的属性都可传入
-    val props: Map<String, Any>?
-}
+    open val props: Map<String, Any>?
+)
 
 data class UiComponentCommon(
     override val name: String,
     override val props: Map<String, Any>?
-) : UiComponent
+) : UiComponent(name, props)

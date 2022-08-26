@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 data class InputComponent(
     override val name: String = classType,
     override val props: Map<String, Any>? = null
-) : UiComponent {
+) : UiComponent(name, props) {
     companion object {
         const val classType = "input"
     }
