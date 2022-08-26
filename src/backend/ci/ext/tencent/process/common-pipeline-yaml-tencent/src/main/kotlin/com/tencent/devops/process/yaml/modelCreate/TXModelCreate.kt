@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.modelCreate
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
@@ -48,11 +49,12 @@ class TXModelCreate @Autowired constructor(
         modelName: String,
         event: ModelCreateEvent,
         yaml: ScriptBuildYaml,
-        pipelineParams: List<BuildFormProperty>
+        pipelineParams: List<BuildFormProperty>,
+        asCodeSettings: PipelineAsCodeSettings?
     ): PipelineModelAndSetting {
         // 预安装插件市场的插件
         modelStage.inner?.preInstallMarketAtom(client, event)
 
-        return super.createPipelineModel(modelName, event, yaml, pipelineParams)
+        return super.createPipelineModel(modelName, event, yaml, pipelineParams, asCodeSettings)
     }
 }
