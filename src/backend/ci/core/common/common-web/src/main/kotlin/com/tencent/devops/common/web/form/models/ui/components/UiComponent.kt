@@ -33,7 +33,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 /**
  * 表单项中的组件项接口类，不同组件自己实现
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "name")
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "name",
+    defaultImpl = UiComponentCommon::class,
+    visible = true
+)
 @JsonSubTypes(
     JsonSubTypes.Type(value = CheckboxComponent::class, name = CheckboxComponent.classType),
     JsonSubTypes.Type(value = InputComponent::class, name = InputComponent.classType),
