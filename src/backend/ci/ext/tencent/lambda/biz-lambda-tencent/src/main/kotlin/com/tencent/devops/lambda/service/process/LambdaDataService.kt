@@ -642,6 +642,7 @@ class LambdaDataService @Autowired constructor(
                 channel = channel,
                 labels = labelList,
                 isSecrecy = isSecrecy,
+                buildMsg = buildMsg,
                 bgId = projectInfo.bgId,
                 deptId = projectInfo.deptId,
                 centerId = projectInfo.centerId
