@@ -273,7 +273,7 @@ steps:
                 ),
                 Arguments.of(
                     "echo \${{parameters.bool == true}} == \${{parameters.bool == variables.xxx}}",
-                    "echo \${{ (false == true) }} == \${{ (false == variables.xxx) }}",
+                    "echo \${{ (false == true) }} == \${{ (false == variables.xxx) }}"
                 ),
                 Arguments.of(
                     "echo \${{parameters.bool == parameters.\${{ parameters.bool }}}} == \${{variables.\${{ parameters.bool }}.xxx == true}}",
@@ -281,15 +281,15 @@ steps:
                 ),
                 Arguments.of(
                     "if: \${{(\${{ parameters.var }} == true) && \${{ parameters.str }} != test}}",
-                    "if: ((\${{varaibles.xxx == settings.xxx}} == true) && ('12138' != test))",
+                    "if: ((\${{varaibles.xxx == settings.xxx}} == true) && ('12138' != test))"
                 ),
                 Arguments.of(
                     "if: \${{( parameters.var == true) && parameters.str != test}}",
-                    "if: ((\${{varaibles.xxx == settings.xxx}} == true) && ('12138' != test))",
+                    "if: ((\${{varaibles.xxx == settings.xxx}} == true) && ('12138' != test))"
                 ),
                 Arguments.of(
                     "echo: \${{( parameters.var == true) && parameters.str != 'test'}}",
-                    "echo: \${{ ((\${{varaibles.xxx == settings.xxx}} == true) && ('12138' != 'test')) }}",
+                    "echo: \${{ ((\${{varaibles.xxx == settings.xxx}} == true) && ('12138' != 'test')) }}"
                 ),
                 Arguments.of(
                     "echo: \${{( parameters.dic.\${{ varaibles.xxx }} == parameters.arry[\${{ varaibles.xxx }}]) }}",
