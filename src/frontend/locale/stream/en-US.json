@@ -223,7 +223,7 @@
         "enableCi": "Enable CI",
         "ciAuthorization": "CI Authorization",
         "resetAuthorization": "Reset Authorization",
-        "mrRunPerm": "Merge request run permission",
+        "mrRunPerm": "Pull request run permission",
         "mrNoApproval": "No approval required for the project members",
         "mrNoApprovalTips": "Project members do not require approval to run pipepines on their merge requests",
         "whiteList": "WhiteList",

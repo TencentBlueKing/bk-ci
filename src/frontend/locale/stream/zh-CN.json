@@ -222,7 +222,7 @@
         "enableCi": "启用 CI",
         "ciAuthorization": "CI授权",
         "resetAuthorization": "重置授权",
-        "mrRunPerm": "MR触发权限",
+        "mrRunPerm": "PR触发权限",
         "mrNoApproval": "项目成员无需审核",
         "mrNoApprovalTips": "勾选后，项目成员提交的MR触发的流水线，无需审核",
         "whiteList": "白名单",
