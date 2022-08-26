@@ -1032,7 +1032,7 @@ class BkRepoClient constructor(
             } catch (e: JacksonException) {
                 throw RemoteServiceException(responseContent, this.code())
             }
-            if (allowCode == this.code()) {
+            if (allowCode == responseData.code) {
                 logger.info("request bkrepo api failed but it can be allowed: ${responseData.message}")
                 return null
             }
