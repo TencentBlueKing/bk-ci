@@ -234,7 +234,7 @@ steps:
             listOf(listOf(ExpressionBlock(13, 20)), listOf(ExpressionBlock(7, 23), ExpressionBlock(25, 32))),
             listOf(listOf(ExpressionBlock(13, 20)), listOf(ExpressionBlock(7, 23), ExpressionBlock(25, 32))),
             listOf(listOf(ExpressionBlock(9, 16)), listOf(ExpressionBlock(0, 19), ExpressionBlock(21, 28))),
-            listOf(listOf(ExpressionBlock(5, 12))),
+            listOf(listOf(ExpressionBlock(5, 12)))
         )
         Assertions.assertEquals(expects[index.trim().toInt()], list)
     }
