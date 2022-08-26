@@ -383,7 +383,7 @@ open class MarketAtomTask : ITask() {
         try {
             inputMap.forEach { (name, value) ->
                 // 修复插件input环境变量替换问题 #5682
-                atomParams[name] = EnvReplacementParser.parse(JsonUtil.toJson(value), variables, asCodeEnabled)
+                atomParams[name] = JsonUtil.toJson(EnvReplacementParser.parse(value, variables, asCodeEnabled))
                     .parseCredentialValue(null, acrossInfo?.targetProjectId)
             }
         } catch (e: Throwable) {

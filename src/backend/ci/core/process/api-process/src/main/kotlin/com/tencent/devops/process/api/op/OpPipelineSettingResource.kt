@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import io.swagger.annotations.Api
@@ -87,5 +88,22 @@ interface OpPipelineSettingResource {
         @ApiParam("最大并发队列大小", required = true)
         @QueryParam("maxConRunningQueueSize")
         maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
+    ): Result<String>
+
+    @ApiOperation("更新YAML流水线配置")
+    @POST
+    @Path("/updatePipelineAsCodeSettings")
+    fun updatePipelineAsCodeSettings(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("流水线id", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("YAML流水线设置", required = true)
+        pipelineAsCodeSettings: PipelineAsCodeSettings
     ): Result<String>
 }

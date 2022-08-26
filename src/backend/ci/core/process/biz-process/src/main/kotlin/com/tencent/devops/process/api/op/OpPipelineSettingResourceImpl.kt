@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
@@ -45,19 +46,42 @@ class OpPipelineSettingResourceImpl @Autowired constructor(
     }
 
     override fun getSetting(userId: String, projectId: String, pipelineId: String): Result<PipelineSetting> {
-        return Result(pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId
-        ))
+        return Result(
+            pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+        )
     }
 
     override fun updateMaxConRunningQueueSize(pipelineId: String, maxConRunningQueueSize: Int): Result<String> {
         checkMaxConRunningQueueSize(maxConRunningQueueSize)
-        return Result(pipelineSettingFacadeService.updateMaxConRunningQueueSize(
-            pipelineId = pipelineId,
-            maxConRunningQueueSize = maxConRunningQueueSize
-        ))
+        return Result(
+            pipelineSettingFacadeService.updateMaxConRunningQueueSize(
+                pipelineId = pipelineId,
+                maxConRunningQueueSize = maxConRunningQueueSize
+            )
+        )
+    }
+
+    override fun updatePipelineAsCodeSettings(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipelineAsCodeSettings: PipelineAsCodeSettings
+    ): Result<String> {
+        val setting = pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        return Result(
+            pipelineSettingFacadeService.saveSetting(
+                userId = userId,
+                setting = setting.copy(pipelineAsCodeSettings = pipelineAsCodeSettings)
+            )
+        )
     }
 
     private fun checkMaxConRunningQueueSize(maxConRunningQueueSize: Int) {
