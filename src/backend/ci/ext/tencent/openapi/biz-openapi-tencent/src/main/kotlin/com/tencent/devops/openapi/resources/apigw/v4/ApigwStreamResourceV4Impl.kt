@@ -62,7 +62,13 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         branchName: String,
         commitId: String?
     ): Result<ManualTriggerInfo> {
-        TODO("Not yet implemented")
+        return client.get(ServiceStreamTriggerResource::class).getManualTriggerInfo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            branchName = branchName,
+            commitId = commitId
+        )
     }
 
     override fun openapiTrigger(
