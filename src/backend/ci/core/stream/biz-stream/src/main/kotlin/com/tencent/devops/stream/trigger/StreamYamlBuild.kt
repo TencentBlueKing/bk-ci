@@ -337,7 +337,8 @@ class StreamYamlBuild @Autowired constructor(
             modelName = pipeline.displayName,
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
-            pipelineParams = modelParams.userVariables
+            pipelineParams = modelParams.userVariables,
+            asCodeSettings = action.data.context.pipelineAsCodeSettings
         )
         // 判断是否更新最后修改人
         val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
@@ -376,7 +377,8 @@ class StreamYamlBuild @Autowired constructor(
             modelName = pipeline.displayName,
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
-            pipelineParams = modelParams.userVariables
+            pipelineParams = modelParams.userVariables,
+            asCodeSettings = action.data.context.pipelineAsCodeSettings
         )
         logger.info(
             "StreamYamlBuild|savePipeline" +
