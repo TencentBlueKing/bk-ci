@@ -263,21 +263,13 @@ class CallBackControl @Autowired constructor(
 
         var errorMsg: String? = null
         var status = ProjectPipelineCallbackStatus.SUCCESS
+        // 熔断处理
+        val breaker = callbackCircuitBreakerRegistry.circuitBreaker(callBack.callBackUrl)
         try {
-            // 熔断处理
-            val breaker = callbackCircuitBreakerRegistry.circuitBreaker(callBack.callBackUrl)
             breaker.executeCallable {
                 HttpRetryUtils.retry(MAX_RETRY_COUNT) {
                     callbackClient.newCall(request).execute()
                 }
-            }
-            // 如果请求100%失败，则说明回调地址已经失效，禁用
-            if (breaker.metrics.failureRate == 100.0F) {
-                logger.warn(
-                    "remove callbacks because of 100% failure rate|" +
-                        "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}"
-                )
-                projectPipelineCallBackService.disable(callBack.projectId, callBack.id!!)
             }
         } catch (e: CallNotPermittedException) {
             logger.warn(
@@ -302,6 +294,14 @@ class CallBackControl @Autowired constructor(
                 startTime = startTime,
                 endTime = System.currentTimeMillis()
             )
+            // 如果请求100%失败，则说明回调地址已经失效，禁用
+            if (breaker.metrics.failureRate == 100.0F) {
+                logger.warn(
+                    "remove callbacks because of 100% failure rate|" +
+                        "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}"
+                )
+                projectPipelineCallBackService.disable(callBack.projectId, callBack.id!!)
+            }
         }
     }
 
