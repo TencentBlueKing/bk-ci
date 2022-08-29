@@ -93,7 +93,7 @@ data class CodeGitWebHookTriggerElement(
     @ApiModelProperty("mr事件action")
     val includeMrAction: List<String>? = null,
     @ApiModelProperty("push事件action")
-    val includePushAction: List<String>? = null,
+    val includePushAction: List<String>? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"

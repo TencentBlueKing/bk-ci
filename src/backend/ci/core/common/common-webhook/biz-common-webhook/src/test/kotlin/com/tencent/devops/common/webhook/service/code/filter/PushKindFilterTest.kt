@@ -100,5 +100,4 @@ class PushKindFilterTest {
 
         Assertions.assertTrue(pushKindFilter.doFilter(response))
     }
-
 }
