@@ -30,17 +30,21 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpPipelineSettingResourceImpl @Autowired constructor(
     private val pipelineSettingFacadeService: PipelineSettingFacadeService
 ) : OpPipelineSettingResource {
+
+    private val logger = LoggerFactory.getLogger(OpPipelineSettingResourceImpl::class.java)
+
     override fun updateSetting(userId: String, setting: PipelineSetting): Result<String> {
         return Result(pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting))
     }
@@ -74,7 +78,12 @@ class OpPipelineSettingResourceImpl @Autowired constructor(
         val setting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            checkPermission = false
+        )
+        logger.info(
+            "[$projectId]|updatePipelineAsCodeSettings|userId=$userId|" +
+                "pipelineId=$pipelineId|$pipelineAsCodeSettings"
         )
         return Result(
             pipelineSettingFacadeService.saveSetting(

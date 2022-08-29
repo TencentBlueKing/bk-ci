@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.setting
 
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN

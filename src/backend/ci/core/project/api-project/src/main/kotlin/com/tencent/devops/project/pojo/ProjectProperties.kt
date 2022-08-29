@@ -25,13 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.project.pojo
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("设置-YAML流水线功能设置")
-data class PipelineAsCodeSettings(
-    @ApiModelProperty("是否支持YAML流水线功能", required = true)
-    val enable: Boolean = false
+@ApiModel("项目其他配置")
+data class ProjectProperties(
+    @ApiModelProperty("YAML流水线功能设置")
+    val pipelineAsCodeSettings: PipelineAsCodeSettings
 )
