@@ -35,13 +35,6 @@
         get consultTypeList () {
             return [
                 {
-                    icon: 'telephone',
-                    id: 'telephone',
-                    label: this.$t('hotline') + '56000',
-                    href: '#',
-                    target: ''
-                },
-                {
                     icon: 'service',
                     label: this.$t('contactUs'),
                     href: 'wxwork://message?username=DevOps-helper',
