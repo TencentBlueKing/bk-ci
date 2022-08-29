@@ -136,6 +136,5 @@ class ManagerUserDao {
     companion object {
         const val HALF_A_YEAR = 182
         const val EXPIRE_TIME = 7
-
     }
 }
