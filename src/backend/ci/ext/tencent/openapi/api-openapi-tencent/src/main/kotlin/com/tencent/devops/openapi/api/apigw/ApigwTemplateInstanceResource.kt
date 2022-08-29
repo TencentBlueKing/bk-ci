@@ -62,7 +62,7 @@ interface ApigwTemplateInstanceResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("模板ID", required = true)
