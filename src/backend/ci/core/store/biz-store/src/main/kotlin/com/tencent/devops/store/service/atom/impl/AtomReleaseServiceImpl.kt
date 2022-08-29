@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEPLOY
 import com.tencent.devops.common.api.constant.DEVELOP
@@ -57,6 +58,7 @@ import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
@@ -64,6 +66,7 @@ import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
+import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -81,6 +84,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
+import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.KEY_CODE_SRC
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
@@ -89,6 +94,7 @@ import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
 import com.tencent.devops.store.pojo.common.QUALITY_JSON_NAME
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
@@ -137,6 +143,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var atomLabelRelDao: AtomLabelRelDao
     @Autowired
     lateinit var storeReleaseDao: StoreReleaseDao
+    @Autowired
+    lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
     @Autowired
     lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
     @Autowired
@@ -369,6 +377,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             repositoryHashId = atomRecord.repositoryHashId,
             branch = branch
         )
+        // 插件error.json文件数据入库
+        syncAtomErrorCodeConfig(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            atomVersion = version,
+            userId = userId,
+            repositoryHashId = atomRecord.repositoryHashId,
+            branch = branch
+        )
         logger.info("update market atom, getAtomQualityResult: $getAtomQualityResult")
         if (getAtomQualityResult.errorCode == StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL) {
             logger.info("quality.json not found , skip...")
@@ -513,6 +530,43 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
+    }
+
+    protected fun syncAtomErrorCodeConfig(
+        projectCode: String,
+        atomCode: String,
+        atomVersion: String,
+        userId: String,
+        repositoryHashId: String? = null,
+        branch: String? = null
+    ) {
+        try {
+            val errorJsonStr = getFileStr(
+                projectCode = projectCode,
+                atomCode = atomCode,
+                atomVersion = atomVersion,
+                fileName = ERROR_JSON_NAME,
+                repositoryHashId = repositoryHashId,
+                branch = branch
+            )
+            if (!errorJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(errorJsonStr)) {
+                val storeErrorCodeInfo = StoreErrorCodeInfo(
+                    storeCode = atomCode,
+                    storeType = StoreTypeEnum.ATOM,
+                    errorCodeInfos = JsonUtil.to(errorJsonStr, object : TypeReference<List<ErrorCodeInfo>>() {})
+                )
+                if (storeErrorCodeInfo.errorCodeInfos.isNotEmpty()) {
+                    storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(dslContext, userId, storeErrorCodeInfo)
+                }
+            } else {
+                throw ErrorCodeException(
+                    errorCode = USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL,
+                    params = arrayOf(branch ?: MASTER, ERROR_JSON_NAME)
+                )
+            }
+        } catch (ignored: Throwable) {
+            logger.error("syncAtomErrorCodeConfig$atomCode|error=${ignored.message}", ignored)
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
