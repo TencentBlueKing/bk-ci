@@ -105,7 +105,6 @@ object SdkHttpUtil {
                 )
                 throw SdkException(errCode = resp.code(), errMsg = responseContent)
             }
-            logger.debug("request response body:$responseContent")
             responseContent
         }
     }
