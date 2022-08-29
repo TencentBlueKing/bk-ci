@@ -208,7 +208,12 @@ class StreamYamlBaseBuild @Autowired constructor(
             )
         } catch (e: Throwable) {
             logger.warn("StreamYamlBaseBuild|savePipeline|failed|error|${e.message}")
-            throw StreamTriggerException(action, TriggerReason.SAVE_PIPELINE_FAILED)
+            throw StreamTriggerException(
+                action = action,
+                triggerReason = TriggerReason.SAVE_PIPELINE_FAILED,
+                reasonParams = listOf(e.message ?: "")
+            )
+
         }
     }
 
