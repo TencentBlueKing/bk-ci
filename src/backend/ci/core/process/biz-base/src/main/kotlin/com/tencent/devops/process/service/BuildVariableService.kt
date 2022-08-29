@@ -58,7 +58,11 @@ class BuildVariableService @Autowired constructor(
      * 获取构建执行次数（重试次数+1），如没有重试过，则为1
      */
     fun getBuildExecuteCount(projectId: String, buildId: String): Int {
-        val retryCount = getVariable(projectId = projectId, buildId = buildId, varName = PIPELINE_RETRY_COUNT)
+        val retryCount = getVariable(
+            projectId = projectId,
+            buildId = buildId,
+            varName = PIPELINE_RETRY_COUNT
+        )
         return try {
             if (NumberUtils.isParsable(retryCount)) 1 + retryCount!!.toInt() else 1
         } catch (ignored: Exception) {
@@ -82,15 +86,15 @@ class BuildVariableService @Autowired constructor(
         }
     }
 
-    fun getVariable(projectId: String, buildId: String, varName: String): String? {
-        val vars = getAllVariable(projectId, buildId)
+    fun getVariable(projectId: String, buildId: String, varName: String, asCodeEnabled: Boolean?): String? {
+        val vars = getAllVariable(projectId, buildId, asCodeEnabled)
         return if (vars.isNotEmpty()) vars[varName] else null
     }
 
     fun getAllVariable(
         projectId: String,
         buildId: String,
-        asCodeEnabled: Boolean? = false
+        asCodeEnabled: Boolean?
     ): Map<String, String> {
         return if (asCodeEnabled == true) {
             pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId)

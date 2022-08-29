@@ -94,7 +94,7 @@ BEGIN
             FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_PROJECT'
-                AND COLUMN_NAME = 'TABLE_NAME') THEN
+                AND COLUMN_NAME = 'properties') THEN
         ALTER TABLE T_PROJECT
             ADD `properties` text NULL COMMENT '项目其他配置';
     END IF;
