@@ -102,8 +102,8 @@ interface OpPipelineSettingResource {
         projectId: String,
         @ApiParam("流水线id", required = true)
         @QueryParam("pipelineId")
-        pipelineId: String,
+        pipelineId: String?,
         @ApiParam("YAML流水线设置", required = true)
         pipelineAsCodeSettings: PipelineAsCodeSettings
-    ): Result<String>
+    ): Result<Int>
 }

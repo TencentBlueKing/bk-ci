@@ -44,6 +44,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
@@ -83,6 +84,9 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
 
     @Autowired
     lateinit var pipelineBuildService: PipelineBuildService
+
+    @Autowired
+    lateinit var pipelineRuntimeService: PipelineRuntimeService
 
     @Autowired
     lateinit var pipelineBuildTaskDao: PipelineBuildTaskDao
@@ -129,7 +133,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         val fixProjectId = callProjectId.ifBlank { projectId }
 
         // 通过 runVariables获取 userId 和 channelCode
-        val runVariables = buildVariableService.getAllVariable(projectId, buildId)
+        val runVariables = buildVariableService.getAllVariable(projectId, parentPipelineId, buildId)
         val userId =
             runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)]
                 ?: "null"
@@ -445,7 +449,9 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
 
         val subBuildId = task.subBuildId ?: return Result(emptyMap())
         val subProjectId = task.subProjectId ?: return Result(emptyMap())
-        return Result(buildVariableService.getAllVariable(subProjectId, subBuildId))
+        val subPipelineId = pipelineRuntimeService.getBuildInfo(subProjectId, subBuildId)?.pipelineId
+            ?: return Result(emptyMap())
+        return Result(buildVariableService.getAllVariable(subProjectId, subPipelineId, subBuildId))
     }
 
     fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {

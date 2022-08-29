@@ -52,7 +52,7 @@ class BuildVarResourceImpl @Autowired constructor(
     override fun getBuildVar(buildId: String, projectId: String, pipelineId: String): Result<Map<String, String>> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
         checkPermission(projectId = projectId, pipelineId = pipelineId)
-        return Result(buildVariableService.getAllVariable(projectId, buildId))
+        return Result(buildVariableService.getAllVariable(projectId, pipelineId, buildId))
     }
 
     override fun getContextVariableByName(
@@ -78,7 +78,7 @@ class BuildVarResourceImpl @Autowired constructor(
         } else ""
         // 如果无法替换上下文预置变量则保持原变量名去查取
         val varName = pipelineContextService.getBuildVarName(contextName) ?: contextName
-        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         val allContext = pipelineContextService.buildContext(
             projectId = projectId,
             buildId = buildId,

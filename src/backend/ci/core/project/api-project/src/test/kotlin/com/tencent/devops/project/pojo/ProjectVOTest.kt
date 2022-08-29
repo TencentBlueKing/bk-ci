@@ -81,7 +81,7 @@ class ProjectVOTest {
             cc_app_name = "XXG",
             routerTag = "",
             relationId = "",
-            properties = ProjectProperties(pipelineAsCodeSettings = PipelineAsCodeSettings())
+            properties = ProjectProperties(PipelineAsCodeSettings())
         )
         val message = JsonUtil.toJson(p)
         println(message)
@@ -144,7 +144,7 @@ class ProjectVOTest {
             cc_app_name = null,
             routerTag = "",
             relationId = "",
-            properties = ProjectProperties(pipelineAsCodeSettings = PipelineAsCodeSettings())
+            properties = ProjectProperties(PipelineAsCodeSettings())
         )
         val message = JsonUtil.toJson(p)
         println(message)

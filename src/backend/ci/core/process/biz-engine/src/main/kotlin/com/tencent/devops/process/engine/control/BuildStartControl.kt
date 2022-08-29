@@ -130,7 +130,7 @@ class BuildStartControl @Autowired constructor(
     }
 
     fun PipelineBuildStartEvent.execute(watcher: Watcher) {
-        val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
+        val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
         buildLogPrinter.addDebugLine(
             buildId = buildId, message = "Enter BuildStartControl",
             tag = TAG, jobId = JOB_ID, executeCount = executeCount
@@ -550,7 +550,9 @@ class BuildStartControl @Autowired constructor(
             message = "Async fetch latest commit/revision, please wait...",
             buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
-        val startParams: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, buildId) }
+        val startParams: Map<String, String> by lazy {
+            buildVariableService.getAllVariable(projectId, pipelineId, buildId)
+        }
         if (actionType == ActionType.START) {
             supplementModel(
                 projectId = projectId, pipelineId = pipelineId,
