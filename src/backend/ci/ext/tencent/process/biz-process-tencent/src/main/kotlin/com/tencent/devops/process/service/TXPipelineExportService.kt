@@ -1139,7 +1139,6 @@ class TXPipelineExportService @Autowired constructor(
                 !variables?.get(originKey).isNullOrBlank() -> "\${{ variables.$originKeyWithNamespace }}"
                 !ciName.isNullOrBlank() -> "\${{ $ciName }}"
                 else -> "\${{ $originKeyWithNamespace }}"
-
             }
             newValue = newValue.replace(matcher.group(), realValue)
         }
