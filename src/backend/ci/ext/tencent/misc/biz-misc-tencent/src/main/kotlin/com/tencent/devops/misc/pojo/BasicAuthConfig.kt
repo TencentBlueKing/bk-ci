@@ -29,9 +29,8 @@ package com.tencent.devops.misc.pojo
 
 data class BasicAuthConfig(
     val index: Int, // 序号
-    val biz: String, //业务类型
+    val biz: String, // 业务类型
     val url: String, // 数据源url
     val username: String, // 用户名
     val password: String // 密码
 )
-
