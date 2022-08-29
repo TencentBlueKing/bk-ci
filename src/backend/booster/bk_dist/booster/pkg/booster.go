@@ -48,6 +48,8 @@ const (
 	renderKeyJobs = "JOBS"
 
 	osWindows = "windows"
+
+	envValueTrue = "true"
 )
 
 // ExtraItems describe the info from extra-project-data
@@ -233,7 +235,7 @@ func (b *Booster) getWorkersEnv() map[string]string {
 	requiredEnv[env.BoosterType] = b.config.Type.String()
 	requiredEnv[env.ProjectID] = b.config.ProjectID
 	if b.config.BatchMode {
-		requiredEnv[env.BatchMode] = "true"
+		requiredEnv[env.BatchMode] = envValueTrue
 	} else {
 		requiredEnv[env.BatchMode] = "false"
 	}
@@ -257,7 +259,7 @@ func (b *Booster) getWorkersEnv() map[string]string {
 	}
 
 	if b.config.Works.CheckMd5 {
-		requiredEnv[env.KeyCommonCheckMd5] = "true"
+		requiredEnv[env.KeyCommonCheckMd5] = envValueTrue
 	}
 
 	if b.work != nil {
@@ -273,27 +275,27 @@ func (b *Booster) getWorkersEnv() map[string]string {
 	}
 
 	if b.config.Works.SupportDirectives {
-		requiredEnv[env.KeyExecutorSupportDirectives] = "true"
+		requiredEnv[env.KeyExecutorSupportDirectives] = envValueTrue
 	}
 
 	if b.config.Works.Pump {
-		requiredEnv[env.KeyExecutorPump] = "true"
+		requiredEnv[env.KeyExecutorPump] = envValueTrue
 	}
 
 	if b.config.Works.PumpDisableMacro {
-		requiredEnv[env.KeyExecutorPumpDisableMacro] = "true"
+		requiredEnv[env.KeyExecutorPumpDisableMacro] = envValueTrue
 	}
 
 	if b.config.Works.PumpIncludeSysHeader {
-		requiredEnv[env.KeyExecutorPumpIncludeSysHeader] = "true"
+		requiredEnv[env.KeyExecutorPumpIncludeSysHeader] = envValueTrue
 	}
 
 	if b.config.Works.PumpCheck {
-		requiredEnv[env.KeyExecutorPumpCheck] = "true"
+		requiredEnv[env.KeyExecutorPumpCheck] = envValueTrue
 	}
 
 	if b.config.Works.PumpCache {
-		requiredEnv[env.KeyExecutorPumpCache] = "true"
+		requiredEnv[env.KeyExecutorPumpCache] = envValueTrue
 	}
 
 	requiredEnv[env.KeyExecutorPumpCacheDir] = b.config.Works.PumpCacheDir
@@ -304,11 +306,11 @@ func (b *Booster) getWorkersEnv() map[string]string {
 	}
 
 	if b.config.Works.WorkerSideCache {
-		requiredEnv[env.KeyExecutorWorkerSideCache] = "true"
+		requiredEnv[env.KeyExecutorWorkerSideCache] = envValueTrue
 	}
 
 	if b.config.Works.LocalRecord {
-		requiredEnv[env.KeyExecutorLocalRecord] = "true"
+		requiredEnv[env.KeyExecutorLocalRecord] = envValueTrue
 	}
 
 	if len(b.config.Works.ForceLocalList) > 0 {
@@ -316,7 +318,7 @@ func (b *Booster) getWorkersEnv() map[string]string {
 	}
 
 	if b.config.Works.WriteMemroy {
-		requiredEnv[env.KeyExecutorWriteMemory] = "true"
+		requiredEnv[env.KeyExecutorWriteMemory] = envValueTrue
 	}
 
 	if b.config.Works.IdleKeepSecs > 0 {

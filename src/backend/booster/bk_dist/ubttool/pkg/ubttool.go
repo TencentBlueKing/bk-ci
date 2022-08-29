@@ -205,7 +205,6 @@ func (h *UBTTool) executeActions() error {
 	}
 }
 
-// issue: https://git.woa.com/buildfast/BuildBooster/issues/503
 // to simply print log
 func getActionDesc(cmd, arg string) string {
 	// _, _ = fmt.Fprintf(os.Stdout, "cmd %s arg %s\n", cmd, arg)

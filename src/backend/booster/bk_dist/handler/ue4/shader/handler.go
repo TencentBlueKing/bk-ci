@@ -129,7 +129,6 @@ func (u *UE4Shader) PreExecute(command []string) (*dcSDK.BKDistCommand, error) {
 		}
 	}
 
-	// issue: https://git.woa.com/buildfast/BuildBooster/issues/500
 	info := dcFile.Stat(inputFile)
 	existed, fileSize, modifyTime, fileMode := info.Batch()
 	if !existed {
