@@ -1,9 +1,9 @@
 package com.tencent.devops.process.init
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.context.annotation.Configuration
+import org.springframework.boot.context.properties.ConstructorBinding
 
-@Configuration
+@ConstructorBinding
 @ConfigurationProperties(prefix = "resilience4j.circuitbreaker.callback")
 data class CallbackCircuitBreakerProperties(
     // 熔断器闭合状态下的错误率阈值，50表示50%，如果错误率达到这个阈值，那么熔断器将进入全熔断状态

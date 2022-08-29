@@ -44,6 +44,7 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Duration
@@ -52,6 +53,7 @@ import java.time.Duration
  * 流水线回调扩展配置
  */
 @Configuration
+@EnableConfigurationProperties(CallbackCircuitBreakerProperties::class)
 class PipelineCallBackConfiguration {
 
     /**
@@ -141,7 +143,7 @@ class PipelineCallBackConfiguration {
 
     @Bean
     fun callbackCircuitBreakerRegistry(
-        @Autowired callbackCircuitBreakerProperties: CallbackCircuitBreakerProperties
+        callbackCircuitBreakerProperties: CallbackCircuitBreakerProperties
     ): CircuitBreakerRegistry {
         val builder = CircuitBreakerConfig.custom()
         builder.enableAutomaticTransitionFromOpenToHalfOpen()
