@@ -29,6 +29,7 @@ package com.tencent.devops.prebuild.v2.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
@@ -46,7 +47,6 @@ import com.tencent.devops.prebuild.service.CommonPreBuildService
 import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidatorV2
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
 import com.tencent.devops.process.yaml.modelCreate.ModelCreate
 import com.tencent.devops.process.yaml.modelCreate.inner.ExtraParam
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent

@@ -218,7 +218,7 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals("variables.valueworld", EnvReplacementParser.parse(command2, data, true))
         Assertions.assertEquals("hellovariables.value", EnvReplacementParser.parse(command3, data, true))
         Assertions.assertEquals("hello\${{variables.abc", EnvReplacementParser.parse(command4, data, true))
-        Assertions.assertEquals("hello\${{variables.abc}", EnvReplacementParser.parse(command5, data, true))
+        Assertions.assertEquals("hellojacky", EnvReplacementParser.parse(command5, data, true))
         Assertions.assertEquals("hellovariables.value}", EnvReplacementParser.parse(command6, data, true))
         Assertions.assertEquals("hello\$variables.abc}}", EnvReplacementParser.parse(command7, data, true))
         Assertions.assertEquals("echo hahahahaha", EnvReplacementParser.parse(command8, data, true))

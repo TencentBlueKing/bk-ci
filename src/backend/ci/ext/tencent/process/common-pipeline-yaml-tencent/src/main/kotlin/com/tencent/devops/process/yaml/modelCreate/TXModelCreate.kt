@@ -27,9 +27,9 @@
 
 package com.tencent.devops.process.yaml.modelCreate
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
