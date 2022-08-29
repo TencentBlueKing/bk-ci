@@ -284,6 +284,6 @@ class OpProjectServiceImpl @Autowired constructor(
     }
 
     override fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean {
-        TODO("Not yet implemented")
+        return projectDao.updatePropertiesByCode(dslContext, projectCode, properties) == 1
     }
 }
