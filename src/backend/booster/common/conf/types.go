@@ -61,7 +61,7 @@ type ServiceConfig struct {
 }
 
 type CommonEngineConfig struct {
-	KeeperStartingTimeout uint `json:"keep_starting_timeout_second" default:"120"`
+	KeeperStartingTimeout uint `json:"keep_starting_timeout_second" value:"120" usage:"timeout of starting task" mapstructure:"120"`
 }
 
 // Local info
