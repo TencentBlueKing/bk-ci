@@ -301,23 +301,6 @@ func (m *Mgr) resourceCheck(ctx context.Context) {
 	}
 }
 
-func (m *Mgr) AddHosts(newHosts []*dcProtocol.Host) []*dcProtocol.Host {
-	for _, newHost := range newHosts {
-		found := false
-		for _, worker := range m.resource.worker {
-			if newHost.Equal(worker.host) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			blog.Infof("remote: task (%s) got a new worker (%s) ,now has (%d) worker", m.work.Basic().Info().TaskID(), newHost.Server, len(m.resource.worker))
-			m.resource.addWorker(newHost)
-		}
-	}
-	return nil
-}
-
 // ExecuteTask run the task in remote worker and ensure the dependent files
 func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTaskExecuteResult, error) {
 	if m.TotalSlots() <= 0 {
