@@ -172,7 +172,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
         LOG.info("ENGINE|$buildId|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         // var表中获取环境变量，并对老版本变量进行兼容
-        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val variables = buildVariableService.getAllVariable(projectId, buildInfo.pipelineId, buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
         val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(projectId, buildInfo.pipelineId)
@@ -477,7 +477,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
             }
             else -> {
-                val allVariable = buildVariableService.getAllVariable(task.projectId, buildId)
+                val allVariable = buildVariableService.getAllVariable(task.projectId, task.pipelineId, buildId)
                 // 构造扩展变量
                 val extMap = buildExtService.buildExt(task, allVariable)
                 val buildVariable = mutableMapOf(

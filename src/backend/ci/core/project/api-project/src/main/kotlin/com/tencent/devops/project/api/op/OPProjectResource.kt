@@ -54,6 +54,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface OPProjectResource {
 
     @GET

@@ -134,7 +134,7 @@ class ContainerControl @Autowired constructor(
     private fun PipelineBuildContainer.execute(watcher: Watcher, event: PipelineBuildContainerEvent) {
 
         watcher.start("init_context")
-        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         val mutexGroup = mutexControl.decorateMutexGroup(controlOption?.mutexGroup, variables)
 
         // 当build的状态是结束的时候，直接返回
@@ -157,7 +157,7 @@ class ContainerControl @Autowired constructor(
 
         // 已按任务序号递增排序，如未排序要注意
         val containerTasks = pipelineTaskService.listContainerBuildTasks(projectId, buildId, containerId)
-        val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
+        val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
         val stageMatrixCount = pipelineContainerService.countStageContainers(
             transactionContext = null,
             projectId = projectId,

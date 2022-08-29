@@ -27,12 +27,12 @@
 
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.util.NotifyTemplateUtils
@@ -358,6 +358,23 @@ class PipelineSettingDao {
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, maxConRunningQueueSize)
                 .where(PIPELINE_ID.`in`(pipelineIdList))
                 .execute()
+        }
+    }
+
+    fun updatePipelineAsCodeSettings(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        pipelineAsCodeSettings: PipelineAsCodeSettings
+    ): Int {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val update = dslContext.update(this)
+                .set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(pipelineAsCodeSettings, false))
+                .where(PROJECT_ID.eq(projectId))
+            pipelineId?.let {  self ->
+                update.and(PIPELINE_ID.eq(self))
+            }
+            return update.execute()
         }
     }
 }
