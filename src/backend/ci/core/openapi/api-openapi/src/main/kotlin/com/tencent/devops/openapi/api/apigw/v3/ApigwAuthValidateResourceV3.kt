@@ -17,7 +17,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_AUTh_V3"], description = "OPENAPI-权限相关")
+@Api(tags = ["OPENAPI_AUTH_V3"], description = "OPENAPI-权限相关")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/auth/validate")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

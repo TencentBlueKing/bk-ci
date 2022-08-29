@@ -39,6 +39,8 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import io.swagger.annotations.Example
+import io.swagger.annotations.ExampleProperty
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -71,7 +73,7 @@ interface ApigwRepositoryResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("仓库类型", required = false)
@@ -92,10 +94,29 @@ interface ApigwRepositoryResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "代码库模型", required = true)
+        @ApiParam(
+            value = "代码库模型", required = true, examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "user00通过OAUTH认证给项目关联 Tencent/bk-ci 的github代码库",
+                        value = """
+                    {
+                      "@type": "github",
+                      "aliasName": "Tencent/bk-ci",
+                      "credentialId": "",
+                      "projectName": "Tencent/bk-ci",
+                      "url": "https://github.com/Tencent/bk-ci.git",
+                      "authType": "OAUTH",
+                      "userName": "user00"
+                    }
+                """
+                    )
+                ]
+            )
+        )
         repository: Repository
     ): Result<RepositoryId>
 
@@ -112,7 +133,7 @@ interface ApigwRepositoryResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("代码库哈希ID", required = true)
@@ -133,7 +154,7 @@ interface ApigwRepositoryResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("代码库哈希ID", required = true)
