@@ -35,9 +35,9 @@ data class ErrorCodeInfo(
     @ApiModelProperty("组件错误码")
     val errorCode: String,
     @ApiModelProperty("中文简体描述信息")
-    val errorDetailZhCn: String,
+    val errorMsgZhCn: String,
     @ApiModelProperty("中文繁体描述信息")
-    val errorDetailZhTw: String? = null,
+    val errorMsgZhTw: String? = null,
     @ApiModelProperty("英文描述信息")
-    val errorDetailEn: String? = null
+    val errorMsgEn: String? = null
 )
