@@ -34,6 +34,7 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.PaasProject
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ApproveStatus
@@ -588,6 +589,15 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
                 .set(RELATION_ID, relationId).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun updatePropertiesByCode(dslContext: DSLContext, projectCode: String, properties: ProjectProperties): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(PROPERTIES, JsonUtil.toJson(properties, false))
+                .where(ENGLISH_NAME.eq(projectCode))
                 .execute()
         }
     }
