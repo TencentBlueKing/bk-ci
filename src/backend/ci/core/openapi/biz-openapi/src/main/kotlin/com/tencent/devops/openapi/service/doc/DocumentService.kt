@@ -93,7 +93,7 @@ class DocumentService {
     /**
      * swagger生成 markdown 文档。然后归档
      */
-    @Suppress("NestedBlockDepth")
+    @Suppress("NestedBlockDepth", "LongMethod")
     fun docInit(
         checkMetaData: Boolean,
         checkMDData: Boolean,
@@ -114,11 +114,11 @@ class DocumentService {
                 val onLoadModel = mutableListOf<String>()
                 // 该path 已组装的model
                 val loadedModel = mutableListOf<String>()
-                loadMarkdown.add(Text(level = 1, body = "资源文档: ${operation.tags}", key = "resource_documentation"))
+//                loadMarkdown.add(Text(level = 1, body = "资源文档: ${operation.tags}", key = "resource_documentation"))
                 loadMarkdown.add(Text(level = 3, body = "请求方法/请求路径", key = "request_method"))
                 loadMarkdown.add(Text(level = 4, body = "$httpMethod $path", key = "http_method_path"))
                 loadMarkdown.add(Text(level = 3, body = "资源描述", key = "resource_description"))
-                loadMarkdown.add(Text(level = 4, body = operation.summary, key = "summary"))
+                loadMarkdown.add(Text(level = 4, body = operation.summary ?: "", key = "summary"))
                 loadMarkdown.add(Text(level = 3, body = "输入参数说明", key = "input_parameter_description"))
                 loadMarkdown.add(Text(level = 4, body = "Path参数", key = "path_parameter_title"))
                 loadMarkdown.add(
@@ -149,7 +149,7 @@ class DocumentService {
                             "header_parameter"
                         ).checkLoadModel(onLoadModel)
                             .setRow(AUTH_HEADER_USER_ID, "string", "应用态必填、用户态不填", "用户名", "{X-DEVOPS-UID}")
-                            .setRow("Content-Type", "string", "", "", "application/json")
+                            .setRow("Content-Type", "string", "是", "", "application/json")
                             .removeRow(AUTH_HEADER_DEVOPS_APP_CODE)
                     }, path + httpMethod + "header")
                 )
@@ -335,7 +335,7 @@ class DocumentService {
     private fun parsePayloadExample(body: List<BodyParameter>): List<MarkdownElement> {
         if (body.getOrNull(0)?.examples?.isEmpty() != false) return emptyList()
         val res = mutableListOf<MarkdownElement>()
-        res.add(Text(level = 3, body = "Payload 举例", key = "Payload_request_sample_title"))
+        res.add(Text(level = 3, body = "Request Payload 举例", key = "Payload_request_sample_title"))
         res.add(
             Text(
                 level = 0,
@@ -351,7 +351,12 @@ class DocumentService {
                     key = "Payload_request_sample_title_$texplain"
                 )
             )
-            res.add(Code(language = "Json", body = jsonSimple, key = "Payload_request_sample_json_$texplain"))
+            val jsonString = try {
+                JsonUtil.toJson(JsonUtil.to(jsonSimple))
+            } catch (e: Throwable) {
+                jsonSimple
+            }
+            res.add(Code(language = "Json", body = jsonString, key = "Payload_request_sample_json_$texplain"))
         }
         return res
     }
@@ -359,26 +364,38 @@ class DocumentService {
     private fun parseRequestExampleJson(httpMethod: String, body: List<BodyParameter>): List<MarkdownElement> {
         if (body.isEmpty()) return emptyList()
         val schema = body[0].schema
-        val loadJson = mutableMapOf<String, Any>()
-        when (schema) {
+        val outJson: Any = when (schema) {
             is ComposedModel -> {
+                val loadJson = mutableMapOf<String, Any>()
                 schema.allOf?.forEach {
                     loadModelJson(it, loadJson)
                 }
+                loadJson
             }
             is ModelImpl -> {
+                val loadJson = mutableMapOf<String, Any>()
                 schema.properties?.forEach { (key, property) ->
                     loadJson[key] = loadPropertyJson(property)
                 }
+                loadJson
             }
             is RefModel -> {
+                val loadJson = mutableMapOf<String, Any>()
                 loadModelJson(schema, loadJson)
+                loadJson
             }
-            else -> {}
+            is ArrayModel -> {
+                val loadJson = mutableListOf<Any>()
+                loadJson.add(loadPropertyJson(schema.items))
+                loadJson
+            }
+            else -> {
+                emptyMap<String, String>()
+            }
         }
         return listOf(
             Text(level = 3, body = "$httpMethod 请求样例", key = "${httpMethod}_request_sample_title"),
-            Code(language = "Json", body = JsonUtil.toJson(loadJson), key = "${httpMethod}_request_sample")
+            Code(language = "Json", body = JsonUtil.toJson(outJson), key = "${httpMethod}_request_sample")
         )
     }
 
@@ -514,7 +531,7 @@ class DocumentService {
                             key,
                             loadPropertyType(property),
                             if (property.required) "是" else "否",
-                            property.description,
+                            loadDescriptionInfo(property),
                             loadPropertyDefault(property)
                         )
                     )
@@ -540,6 +557,16 @@ class DocumentService {
             }
             else -> {}
         }
+    }
+
+    private fun loadDescriptionInfo(property: Property?): String {
+        if (property == null) return ""
+        val res = StringBuffer()
+        if (property.readOnly == true) {
+            res.append("(该字段只读)")
+        }
+        res.append(property.description ?: "")
+        return res.toString()
     }
 
     private fun loadModelType(model: Model?): String {
@@ -570,6 +597,9 @@ class DocumentService {
                 }
             }
             is ModelImpl -> {
+                if (model.discriminator != null) {
+                    loadJson[model.discriminator] = "string"
+                }
                 model.properties?.forEach { (key, property) ->
                     loadJson[key] = loadPropertyJson(property)
                 }
@@ -593,7 +623,7 @@ class DocumentService {
                 mapOf("string" to loadPropertyJson(property.additionalProperties))
             }
             is ObjectProperty -> {
-                mapOf("your key" to "your value")
+                "Any 任意类型，参照实际请求或返回"
             }
             is ArrayProperty -> {
                 listOf(loadPropertyJson(property.items))
@@ -691,8 +721,10 @@ class DocumentService {
     }
 
     private fun MutableList<TableRow>.addNoRepeat(table: TableRow) {
-        if (this.find { it.columns[0] == table.columns[0] } == null) {
-            this.add(table)
+        val row = this.find { it.columns[0] == table.columns[0] }
+        if (row != null) {
+            this.remove(row)
         }
+        this.add(table)
     }
 }

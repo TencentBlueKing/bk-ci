@@ -82,30 +82,25 @@ class DocumentServiceTest @Autowired constructor(
     }
 
     fun getAllApiModelInfo(reflections: Reflections): Map<String, Map<String, SwaggerDocParameterInfo>> {
-        val clazz = reflections.getTypesAnnotatedWith(ApiModel::class.java)
+        val clazz = reflections.getTypesAnnotatedWith(ApiModel::class.java).toList()
         val res = mutableMapOf<String, Map<String, SwaggerDocParameterInfo>>()
-        clazz.forEach {
-            val name = it.getAnnotation(ApiModel::class.java).value
-            val info = try {
-                getDataClassParameterDefault(it)
+        for (i in 0 until clazz.size){
+            val it = clazz.getOrNull(i) ?: continue
+
+            println("$i${it.name}")
+            try {
+                val name = it.getAnnotation(ApiModel::class.java).value
+                res[name] = getDataClassParameterDefault(it)
             } catch (e: Throwable) {
-                println(it.name)
-                println(e)
-                emptyMap()
+//                println(it.name)
+//                println(e)
             }
-            res[name] = info
         }
         return res
     }
 
     @Test
     fun getDataClassParameterDefaultTest() {
-        val config = ConfigurationBuilder()
-        config.addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
-        config.setExpandSuperTypes(true)
-        config.setScanners(Scanners.TypesAnnotated)
-        val reflections = Reflections(config)
-        println(getAllApiModelInfo(reflections))
         println(
             getDataClassParameterDefault(
                 Class.forName("com.tencent.devops.openapi.service.doc.DocumentServiceTest\$A")

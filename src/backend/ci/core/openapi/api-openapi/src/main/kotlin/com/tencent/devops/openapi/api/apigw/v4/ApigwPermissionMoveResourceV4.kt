@@ -17,7 +17,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_API_MOVE"], description = "OPEN-API-迁移")
+@Api(tags = ["OPEN_API_MOVE_V4"], description = "OPEN-API-迁移")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/permission/move/projects/{projectId}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
