@@ -70,7 +70,6 @@ class TxProcessRelatedPlatformDataClearServiceImpl(
         userName: String,
         password: String
     ) {
-        logger.info("cleanBuildDataRequest|$projectId|$pipelineId|buildIds = $buildIds")
         val context = mapOf<String, Any>(
             "projectId" to projectId,
             "pipelineId" to pipelineId,
