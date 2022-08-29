@@ -602,7 +602,7 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = "### 可以通过 runs-on: macos-10.15 使用macOS公共构建集群。" +
-                                        "注意默认的Xcode版本为12.2，若需自定义，请在JOB下自行执行 xcode-select 命令切换 ###",
+                                    "注意默认的Xcode版本为12.2，若需自定义，请在JOB下自行执行 xcode-select 命令切换 ###",
                                 container = null,
                                 agentSelector = null
                             )
@@ -820,7 +820,7 @@ class TXPipelineExportService @Autowired constructor(
                     } else null
                     logger.info(
                         "[$projectId] getV2StepFromJob export MarketBuildAtom " +
-                                "atomCode(${step.getAtomCode()}), inputMap=$inputMap, step=$step"
+                            "atomCode(${step.getAtomCode()}), inputMap=$inputMap, step=$step"
                     )
                     if (output != null && !(output as MutableMap<String, Any>).isNullOrEmpty()) {
                         output.keys.forEach { key ->
@@ -945,7 +945,7 @@ class TXPipelineExportService @Autowired constructor(
                     logger.info("Not support plugin:${element.getClassType()}, skip...")
                     comment.append(
                         "# 注意：不支持插件【${element.name}(${element.getClassType()})】的导出，" +
-                                "请在蓝盾研发商店查找推荐的替换插件！\n"
+                            "请在蓝盾研发商店查找推荐的替换插件！\n"
                     )
                     stepList.add(
                         PreStep(
@@ -983,49 +983,69 @@ class TXPipelineExportService @Autowired constructor(
         }
         val result = mutableMapOf<String, Any>()
         inputMap.forEach lit@{ (key, value) ->
-            if (!relyMap.isNullOrEmpty()) {
-                var rely: Map<String, Any>? = null
-                try {
-                    rely = relyMap[key] as Map<String, Any>
-                    if (null != rely["expression"]) {
-                        val expression = rely["expression"] as List<Map<String, Any>>
-                        if (rely["operation"] == "AND") {
-                            expression.forEach {
-                                if (inputMap[it["key"]] != it["value"]) {
-                                    return@lit
-                                }
+            val rely = relyMap?.get(key) as Map<String, Any>?
+            if (rely.isNullOrEmpty()) {
+                result[key] = replaceValueWithDoubleCurlyBraces(
+                    value = value,
+                    output2Elements = output2Elements,
+                    variables = variables,
+                    outputConflictMap = outputConflictMap,
+                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                    exportFile = exportFile
+                )
+                return@lit
+            }
+
+            if (rely["expression"] == null) {
+                return@lit
+            }
+
+            try {
+                val expression = rely["expression"] as List<Map<String, Any>>
+                when (rely["operation"]) {
+                    "AND" -> {
+                        expression.forEach {
+                            if (checkRely(inputMap[it["key"]], it["value"], it["regex"])) {
+                                result[key] = replaceValueWithDoubleCurlyBraces(
+                                    value = value,
+                                    output2Elements = output2Elements,
+                                    variables = variables,
+                                    outputConflictMap = outputConflictMap,
+                                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                    exportFile = exportFile
+                                )
+                                return@lit
                             }
-                        } else if (rely["operation"] == "OR") {
-                            expression.forEach {
-                                if (inputMap[it["key"]] == it["value"]) {
-                                    result[key] = replaceValueWithDoubleCurlyBraces(
-                                        value = value,
-                                        output2Elements = output2Elements,
-                                        variables = variables,
-                                        outputConflictMap = outputConflictMap,
-                                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                                        exportFile = exportFile
-                                    )
-                                    return@lit
-                                }
-                            }
-                            return@lit
                         }
                     }
-                } catch (e: Exception) {
-                    logger.info("load atom input[rely] with error: ${e.message} ,rely=$rely")
+                    "OR" -> {
+                        expression.forEach {
+                            if (checkRely(inputMap[it["key"]], it["value"], it["regex"])) {
+                                result[key] = replaceValueWithDoubleCurlyBraces(
+                                    value = value,
+                                    output2Elements = output2Elements,
+                                    variables = variables,
+                                    outputConflictMap = outputConflictMap,
+                                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                                    exportFile = exportFile
+                                )
+                                return@lit
+                            }
+                        }
+                        return@lit
+                    }
                 }
+            } catch (e: Exception) {
+                logger.warn("load atom input[rely] with error: ${e.message} ,rely=$rely")
             }
-            result[key] = replaceValueWithDoubleCurlyBraces(
-                value = value,
-                output2Elements = output2Elements,
-                variables = variables,
-                outputConflictMap = outputConflictMap,
-                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                exportFile = exportFile
-            )
         }
         return result
+    }
+
+    private fun checkRely(key: Any?, value: Any?, regex: Any?): Boolean {
+        if (value != null) return key == value
+        if (regex != null) return key.toString().contains(Regex(regex.toString()))
+        return false
     }
 
     private fun replaceValueWithDoubleCurlyBraces(
@@ -1102,27 +1122,24 @@ class TXPipelineExportService @Autowired constructor(
                 originKey.replace("${namespace}_", "")
             } else originKey
 
-            val realValue = if (lastExistingOutputElements.stepAtom != null) {
-                checkConflictOutput(
-                    key = originKey,
-                    existingOutputElements = existingOutputElements!!,
-                    outputConflictMap = outputConflictMap,
-                    pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
-                    exportFile = exportFile
-                )
-                if (namespace.isNullOrBlank()) {
+            val realValue = when {
+                lastExistingOutputElements.stepAtom != null &&
+                    lastExistingOutputElements.jobLocation?.jobId != null -> {
+                    checkConflictOutput(
+                        key = originKey,
+                        existingOutputElements = existingOutputElements!!,
+                        outputConflictMap = outputConflictMap,
+                        pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                        exportFile = exportFile
+                    )
                     "\${{ jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
-                            "${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace }}"
-                } else {
-                    "\${{ jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
-                            "$namespace.outputs.$originKeyWithNamespace }}"
+                        "${namespace?.ifBlank { null } ?: lastExistingOutputElements.stepAtom?.id}" +
+                        ".outputs.$originKeyWithNamespace }}"
                 }
-            } else if (!variables?.get(originKey).isNullOrBlank()) {
-                "\${{ variables.$originKeyWithNamespace }}"
-            } else if (!ciName.isNullOrBlank()) {
-                "\${{ $ciName }}"
-            } else {
-                "\${{ $originKeyWithNamespace }}"
+                !variables?.get(originKey).isNullOrBlank() -> "\${{ variables.$originKeyWithNamespace }}"
+                !ciName.isNullOrBlank() -> "\${{ $ciName }}"
+                else -> "\${{ $originKeyWithNamespace }}"
+
             }
             newValue = newValue.replace(matcher.group(), realValue)
         }
@@ -1144,7 +1161,7 @@ class TXPipelineExportService @Autowired constructor(
         val yamlSb = StringBuilder()
         yamlSb.append(
             "############################################################################" +
-                    "#########################################\n"
+                "#########################################\n"
         )
         yamlSb.append("# 项目ID: $projectId \n")
         yamlSb.append("# 流水线ID: $pipelineId \n")
@@ -1158,7 +1175,7 @@ class TXPipelineExportService @Autowired constructor(
         }
         yamlSb.append(
             "########################################################" +
-                    "#############################################################\n\n"
+                "#############################################################\n\n"
         )
         return yamlSb
     }
@@ -1576,17 +1593,17 @@ class TXPipelineExportService @Autowired constructor(
             val originKeyWithNamespace = if (!namespace.isNullOrBlank()) {
                 keyStr.replace("${namespace}_", "")
             } else keyStr
-            if (namespace.isNullOrBlank()) {
-                val stepID = lastExistingOutputElements.stepAtom?.id
-                if (stepID.isNullOrBlank()) {
-                    originKeyWithNamespace
-                } else {
-                    "jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
-                            "${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
-                }
-            } else {
-                "jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
-                        "$namespace.outputs.$originKeyWithNamespace"
+
+            when {
+                lastExistingOutputElements.jobLocation?.jobId == null -> originKeyWithNamespace
+
+                !namespace.isNullOrBlank() -> "jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
+                    "$namespace.outputs.$originKeyWithNamespace"
+
+                lastExistingOutputElements.stepAtom?.id.isNullOrBlank() -> originKeyWithNamespace
+
+                else -> "jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
+                    "${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
             }
         } else if (!ciName.isNullOrBlank()) {
             ciName
