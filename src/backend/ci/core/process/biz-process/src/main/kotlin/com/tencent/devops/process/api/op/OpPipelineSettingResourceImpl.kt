@@ -92,13 +92,14 @@ class OpPipelineSettingResourceImpl @Autowired constructor(
         if (!pipelineId.isNullOrBlank()) {
             val projectVO = client.get(ServiceProjectResource::class).get(projectId).data
                 ?: throw ExecuteException("项目不存在")
-            client.get(OPProjectResource::class).setProjectProperties(
+            val success = client.get(OPProjectResource::class).setProjectProperties(
                 userId = userId,
                 projectCode = projectId,
                 properties = projectVO.properties?.copy(
                     pipelineAsCodeSettings = pipelineAsCodeSettings
                 ) ?: ProjectProperties(pipelineAsCodeSettings)
-            )
+            ).data == true
+            if (!success) return Result(0)
         }
         return Result(
             pipelineSettingDao.updatePipelineAsCodeSettings(
