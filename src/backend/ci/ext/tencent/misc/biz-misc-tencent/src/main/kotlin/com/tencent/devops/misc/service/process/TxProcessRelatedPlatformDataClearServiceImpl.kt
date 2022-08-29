@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service
 @Service
 class TxProcessRelatedPlatformDataClearServiceImpl(
     properties: BasicAuthProperties
-): ProcessRelatedPlatformDataClearService {
+) : ProcessRelatedPlatformDataClearService {
 
     private val basicAuths = properties.basicAuths
 

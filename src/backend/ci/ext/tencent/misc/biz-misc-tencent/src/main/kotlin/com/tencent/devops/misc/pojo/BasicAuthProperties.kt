@@ -32,6 +32,6 @@ import org.springframework.boot.context.properties.ConstructorBinding
 
 @ConstructorBinding
 @ConfigurationProperties(prefix = "build.data.clear")
-data class BasicAuthProperties (
-    val basicAuths: List<BasicAuthConfig> //流水线构建相关平台配置
+data class BasicAuthProperties(
+    val basicAuths: List<BasicAuthConfig> // 流水线构建相关平台配置
 )

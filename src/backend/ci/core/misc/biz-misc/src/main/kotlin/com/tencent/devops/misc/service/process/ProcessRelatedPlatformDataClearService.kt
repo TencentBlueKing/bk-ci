@@ -34,4 +34,3 @@ interface ProcessRelatedPlatformDataClearService {
      */
     fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>)
 }
-

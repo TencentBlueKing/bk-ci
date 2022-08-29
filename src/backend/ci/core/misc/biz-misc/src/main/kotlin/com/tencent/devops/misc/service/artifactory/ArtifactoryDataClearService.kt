@@ -52,5 +52,4 @@ abstract class ArtifactoryDataClearService @Autowired constructor(
      * @param buildId 构建ID
      */
     abstract fun deleteTableData(dslContext: DSLContext, buildId: String)
-
 }
