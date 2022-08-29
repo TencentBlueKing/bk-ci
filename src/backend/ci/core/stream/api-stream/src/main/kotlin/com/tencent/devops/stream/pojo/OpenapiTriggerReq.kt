@@ -25,23 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service.impl
+package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-import com.tencent.devops.worker.common.service.AtomTargetHandleService
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class CommonAtomTargetHandleServiceImpl : AtomTargetHandleService {
-
-    override fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String {
-        return target
-    }
-}
+@ApiModel("openapi触发请求")
+data class OpenapiTriggerReq(
+    @ApiModelProperty("蓝盾项目ID(带前缀 如git_xxx)")
+    val projectId: String,
+    @ApiModelProperty("分支")
+    val branch: String,
+    @ApiModelProperty("yaml路径")
+    val path: String,
+    @ApiModelProperty("Custom commit message")
+    val customCommitMsg: String,
+    @ApiModelProperty("用户选择的触发CommitId")
+    val commitId: String? = null,
+    @ApiModelProperty("输入参数(json对象)")
+    val inputs: Map<String, Any?>?
+)

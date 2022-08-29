@@ -45,8 +45,8 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
-import org.jooq.Record2
 import org.jooq.Record3
+import org.jooq.Record4
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -167,7 +167,7 @@ class TemplatePipelineDao {
         pipelineIds: Set<String>,
         instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type,
         projectId: String? = null
-    ): Result<Record2<String, String>> {
+    ): Result<Record4<String, String, Long, String>> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PIPELINE_ID.`in`(pipelineIds))
@@ -176,7 +176,7 @@ class TemplatePipelineDao {
             if (projectId != null) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
-            return dslContext.select(PIPELINE_ID, TEMPLATE_ID).from(this)
+            return dslContext.select(PIPELINE_ID, TEMPLATE_ID, VERSION, VERSION_NAME).from(this)
                 .where(conditions)
                 .fetch()
         }

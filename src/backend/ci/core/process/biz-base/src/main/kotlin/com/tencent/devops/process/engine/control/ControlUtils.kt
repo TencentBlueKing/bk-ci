@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
+import com.tencent.devops.common.expression.expression.EvaluationResult
 import com.tencent.devops.common.expression.expression.ParseExceptionKind
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -306,12 +307,16 @@ object ControlUtils {
     ): Boolean {
         return if (!customCondition.isNullOrBlank()) {
             try {
-                val expressionResult = ExpressionParser.evaluateByMap(customCondition, variables)
+                val expressionResult = ExpressionParser.evaluateByMap(customCondition, variables, false)
                 logger.info(
                     "[$buildId]|EXPRESSION_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
                         "|result=$expressionResult"
                 )
-                val resultIsTrue = expressionResult == true
+                val resultIsTrue = if (expressionResult is EvaluationResult) {
+                    expressionResult.equalsTrue
+                } else {
+                    expressionResult.toString().toBoolean()
+                }
                 message.append(
                     "Custom condition($customCondition) result is $expressionResult. " +
                         if (!resultIsTrue) {
