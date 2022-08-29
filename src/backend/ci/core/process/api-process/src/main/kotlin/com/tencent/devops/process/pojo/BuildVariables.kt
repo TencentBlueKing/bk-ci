@@ -27,9 +27,9 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.engine.common.Timeout
-import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
 import com.tencent.devops.store.pojo.app.BuildEnv
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty

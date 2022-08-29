@@ -87,8 +87,16 @@ class BuildVariableService @Autowired constructor(
         return if (vars.isNotEmpty()) vars[varName] else null
     }
 
-    fun getAllVariable(projectId: String, buildId: String): Map<String, String> {
-        return PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId))
+    fun getAllVariable(
+        projectId: String,
+        buildId: String,
+        asCodeEnabled: Boolean? = false
+    ): Map<String, String> {
+        return if (asCodeEnabled == true) {
+            pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId)
+        } else {
+            PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId))
+        }
     }
 
     fun getAllVariableWithType(projectId: String, buildId: String): List<BuildParameters> {
@@ -110,7 +118,8 @@ class BuildVariableService @Autowired constructor(
     fun batchUpdateVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
         commonDslContext.transaction { t ->
             val context = DSL.using(t)
-            batchSetVariable(dslContext = context,
+            batchSetVariable(
+                dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
