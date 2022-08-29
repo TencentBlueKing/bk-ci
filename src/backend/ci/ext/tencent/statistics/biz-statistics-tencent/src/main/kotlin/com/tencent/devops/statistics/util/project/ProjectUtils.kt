@@ -33,6 +33,7 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
 
+@Suppress("ComplexMethod")
 object ProjectUtils {
 
     fun packagingBean(tProjectRecord: TProjectRecord): ProjectVO {

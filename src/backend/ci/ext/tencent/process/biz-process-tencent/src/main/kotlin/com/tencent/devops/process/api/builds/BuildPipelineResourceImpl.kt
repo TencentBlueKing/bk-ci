@@ -74,7 +74,11 @@ class BuildPipelineResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun list(currentBuildId: String, projectId: String, pipelineIdListString: String?): Result<List<Pipeline>> {
+    override fun list(
+        currentBuildId: String,
+        projectId: String,
+        pipelineIdListString: String?
+    ): Result<List<Pipeline>> {
         logger.info("the method of being done is: list")
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, currentBuildId)
             ?: return Result(emptyList())
