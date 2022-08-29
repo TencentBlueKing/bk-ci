@@ -54,7 +54,6 @@ import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -82,7 +81,6 @@ class PipelineStageService @Autowired constructor(
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildVariableService: BuildVariableService,
     private val stageBuildDetailService: StageBuildDetailService,
-    private val pipelineAsCodeService: PipelineAsCodeService,
     private val client: Client
 ) {
     companion object {
@@ -250,11 +248,7 @@ class PipelineStageService @Autowired constructor(
             )
             // 如果还有待审核的审核组，则直接通知并返回
             if (checkIn?.groupToReview() != null) {
-                val variables = buildVariableService.getAllVariable(
-                    projectId = projectId,
-                    buildId = buildId,
-                    asCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId)
-                )
+                val variables = buildVariableService.getAllVariable(projectId, buildId)
                 pauseStageNotify(
                     userId = userId,
                     stage = buildStage,
