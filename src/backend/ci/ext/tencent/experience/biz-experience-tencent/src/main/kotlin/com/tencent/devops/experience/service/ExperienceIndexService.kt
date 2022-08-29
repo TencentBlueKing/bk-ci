@@ -316,7 +316,8 @@ class ExperienceIndexService @Autowired constructor(
             lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                 ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
             type = it.type,
-            version = it.version
+            version = it.version,
+            downloadTime = it.downloadTime
         )
     }
 
