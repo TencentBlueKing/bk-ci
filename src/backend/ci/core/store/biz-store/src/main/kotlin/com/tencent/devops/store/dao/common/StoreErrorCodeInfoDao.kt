@@ -29,8 +29,12 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreErrorCodeInfo
+import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
+import org.jooq.Record5
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -60,5 +64,23 @@ class StoreErrorCodeInfoDao {
                     .set(UPDATE_TIME, LocalDateTime.now())
             }
         }).execute()
+    }
+
+    fun getStoreErrorCodeInfo(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): List<ErrorCodeInfo> {
+        with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
+            return dslContext.select(
+                ERROR_CODE,
+                ERROR_MSG_ZH_CN,
+                ERROR_MSG_ZH_TW,
+                ERROR_MSG_EN
+            ).from(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .fetchInto(ErrorCodeInfo::class.java)
+        }
     }
 }
