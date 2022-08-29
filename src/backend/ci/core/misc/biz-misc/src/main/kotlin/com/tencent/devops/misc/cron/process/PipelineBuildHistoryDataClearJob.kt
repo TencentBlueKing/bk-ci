@@ -159,8 +159,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     )
                 }
             }
-        } catch (t: Throwable) {
-            logger.warn("pipelineBuildHistoryDataClear failed", t)
+        } catch (ignored: Throwable) {
+            logger.warn("pipelineBuildHistoryDataClear failed", ignored)
         } finally {
             lock.unlock()
         }
@@ -226,8 +226,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     expired = false,
                     isDistinguishCluster = true
                 )
-            } catch (ignore: Exception) {
-                logger.warn("pipelineBuildHistoryDataClear doClearBus failed", ignore)
+            } catch (ignored: Throwable) {
+                logger.warn("pipelineBuildHistoryDataClear doClearBus failed", ignored)
             } finally {
                 // 释放redis集合中的线程编号
                 redisOperation.sremove(key = PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY,

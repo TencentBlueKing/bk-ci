@@ -475,7 +475,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
             val count = projectDao.getCount(dslContext)
             success = true
-            logger.info("list count$count")
+            logger.info("list count : $count")
             return Page(
                 count = count,
                 page = limit,
@@ -496,7 +496,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 list.add(ProjectUtils.packagingBean(it))
             }
             val count = projectDao.getCount(dslContext)
-            logger.info("list count$count")
+            logger.info("list count : $count")
             return Page(
                 count = count,
                 page = limit,
@@ -546,7 +546,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         disposition: FormDataContentDisposition,
         accessToken: String?
     ): Result<ProjectLogo> {
-        logger.info("Update the logo of project $englishName")
+        logger.info("Update the logo of project : englishName = $englishName")
         val projectRecord = projectDao.getByEnglishName(dslContext, englishName)
         if (projectRecord != null) {
             var logoFile: File? = null
