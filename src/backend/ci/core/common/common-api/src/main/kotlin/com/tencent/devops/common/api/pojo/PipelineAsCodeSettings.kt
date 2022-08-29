@@ -25,20 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.common.api.pojo
 
-import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
-import com.tencent.devops.project.pojo.ProjectProperties
-import com.tencent.devops.project.pojo.Result
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Suppress("ALL")
-interface OpProjectService {
-
-    fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int
-
-    fun synProject(projectCode: String, isRefresh: Boolean? = true): Result<Boolean>
-
-    fun synProjectInit(isRefresh: Boolean? = true): Result<List<String>>
-
-    fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean
-}
+@ApiModel("设置-YAML流水线功能设置")
+data class PipelineAsCodeSettings(
+    @ApiModelProperty("是否支持YAML流水线功能", required = true)
+    val enable: Boolean = false
+)

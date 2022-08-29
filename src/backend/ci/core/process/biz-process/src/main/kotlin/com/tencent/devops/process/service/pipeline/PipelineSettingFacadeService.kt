@@ -43,7 +43,7 @@ import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
 import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.process.pojo.setting.JobCommonSetting
-import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
