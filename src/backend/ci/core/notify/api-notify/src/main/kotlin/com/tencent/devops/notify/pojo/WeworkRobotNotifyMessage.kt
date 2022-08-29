@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -24,17 +24,23 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.pojo
 
-dependencies {
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-event"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:auth:api-auth"))
-    api(project(":core:auth:model-auth"))
-    api(project(":core:notify:api-notify"))
-    testImplementation(project(":core:common:common-test"))
-    api(project(":core:project:api-project"))
-    api("com.github.ben-manes.caffeine:caffeine")
-}
+import com.tencent.devops.common.notify.enums.WeworkReceiverType
+import com.tencent.devops.common.notify.enums.WeworkTextType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("企业微信机器人消息")
+data class WeworkRobotNotifyMessage(
+    @ApiModelProperty("接收人Id", required = true)
+    val receivers: String,
+    @ApiModelProperty("接收人类型", required = true)
+    val receiverType: WeworkReceiverType,
+    @ApiModelProperty("文本内容类型", required = true)
+    var textType: WeworkTextType,
+    @ApiModelProperty("文本内容", required = true)
+    var message: String,
+    @ApiModelProperty("attachments消息事件", required = false)
+    var attachments: WeworkMarkdownAttachment? = null
+)

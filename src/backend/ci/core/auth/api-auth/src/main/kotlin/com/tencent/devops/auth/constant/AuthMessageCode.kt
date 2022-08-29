@@ -75,4 +75,6 @@ object AuthMessageCode {
     const val MANAGER_GRANT_WHITELIST_USER_EXIST = "2121207" // 权限系统： 用户{0}不在白名单内,请先配置策略白名单
     const val STRATEGT_NAME_EXIST = "2121208" // 权限系统： 权限集合名称重复
     const val STRATEGT_NAME_NOT_EXIST = "2121209" // 权限系统： 权限集合{0}不存在
+    const val APPROVAL_RECORD_NOT_EXIST = "2121210" // 审批记录不存在
+    const val MANAGER_PERMISSION_EXPIRE = "2121211" // 管理员权限过期
 }
