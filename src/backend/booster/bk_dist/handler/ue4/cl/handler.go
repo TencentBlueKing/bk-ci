@@ -17,15 +17,18 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
 	dcEnv "github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
 	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
+	dcPump "github.com/Tencent/bk-ci/src/booster/bk_dist/common/pump"
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
 	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
 	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler"
 	commonUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/handler/common"
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
@@ -85,6 +88,7 @@ type TaskCL struct {
 	rewriteCrossArgs []string
 	preProcessArgs   []string
 	serverSideArgs   []string
+	pumpArgs         []string
 
 	// file names
 	inputFile        string
@@ -200,7 +204,12 @@ func (cl *TaskCL) PreExecuteNeedLock(command []string) bool {
 
 // PostExecuteNeedLock 防止回传的文件读写跑满本机磁盘
 func (cl *TaskCL) PostExecuteNeedLock(result *dcSDK.BKDistResult) bool {
-	return true
+	// to avoid memory overflow when pump
+	if dcPump.SupportPump(cl.sandbox.Env) {
+		return false
+	} else {
+		return true
+	}
 }
 
 // PreLockWeight decide pre-execute lock weight, default 1
@@ -274,12 +283,262 @@ func (cl *TaskCL) GetFilterRules() ([]dcSDK.FilterRuleItem, error) {
 	}, nil
 }
 
+func (cl *TaskCL) getIncludeExe() (string, error) {
+	blog.Debugf("cl: ready get include exe")
+
+	target := "bk-includes"
+	if runtime.GOOS == "windows" {
+		target = "bk-includes.exe"
+	}
+
+	includePath, err := dcUtil.CheckExecutable(target)
+	if err != nil {
+		// blog.Infof("cl: not found exe file with default path, info: %v", err)
+
+		includePath, err = dcUtil.CheckFileWithCallerPath(target)
+		if err != nil {
+			blog.Errorf("cl: not found exe file with error: %v", err)
+			return includePath, err
+		}
+	}
+	absPath, err := filepath.Abs(includePath)
+	if err == nil {
+		includePath = absPath
+	}
+	includePath = dcUtil.QuoteSpacePath(includePath)
+	// blog.Infof("cl: got include exe file full path: %s", includePath)
+
+	return includePath, nil
+}
+
+func uniqArr(arr []string) []string {
+	newarr := make([]string, 0)
+	tempMap := make(map[string]bool, len(newarr))
+	for _, v := range arr {
+		if tempMap[v] == false {
+			tempMap[v] = true
+			newarr = append(newarr, v)
+		}
+	}
+
+	return newarr
+}
+
+func (cl *TaskCL) analyzeIncludes(f string, workdir string) ([]string, error) {
+	data, err := ioutil.ReadFile(f)
+	if err != nil {
+		return nil, err
+	}
+
+	lines := strings.Split(string(data), "\r\n")
+	includes := []string{}
+	uniqlines := uniqArr(lines)
+	blog.Infof("cl: got %d uniq include file from file: %s", len(uniqlines), f)
+
+	for _, l := range uniqlines {
+		if !filepath.IsAbs(l) {
+			l, _ = filepath.Abs(filepath.Join(workdir, l))
+		}
+		if dcFile.Stat(l).Exist() {
+			includes = append(includes, l)
+		} else {
+			blog.Warnf("cl: failed to got include file: %s in file:%s", l, f)
+		}
+	}
+
+	return includes, nil
+}
+
+// search all include files for this compile command
+func (cl *TaskCL) Includes(args []string, workdir string, forcefresh bool) ([]string, error) {
+	pumpdir := dcPump.PumpCacheDir(cl.sandbox.Env)
+	if pumpdir == "" {
+		pumpdir = dcUtil.GetPumpCacheDir()
+	}
+
+	if !dcFile.Stat(pumpdir).Exist() {
+		if err := os.MkdirAll(pumpdir, os.ModePerm); err != nil {
+			return nil, err
+		}
+	}
+
+	outputFile, err := getPumpIncludeFile(pumpdir, "pump_heads", ".txt", args)
+	if err != nil {
+		blog.Errorf("cl: do includes get output file failed: %v", err)
+		return nil, err
+	}
+
+	existed, fileSize, _, _ := dcFile.Stat(outputFile).Batch()
+	if dcPump.IsPumpCache(cl.sandbox.Env) && !forcefresh && existed && fileSize > 0 {
+		return cl.analyzeIncludes(outputFile, workdir)
+	}
+
+	err = createFile(outputFile)
+	if err != nil {
+		return nil, err
+	}
+
+	execName, err := cl.getIncludeExe()
+	if err != nil {
+		return nil, err
+	}
+
+	// do not delete to use when cache mode
+	// cl.addTmpFile(outputFile)
+
+	execArgs := []string{"-Xiwyu", "--verbose=0", "--driver-mode=cl"}
+	execArgs = append(execArgs, args[1:]...)
+
+	// TODO : ensure all absolute file path
+	sandbox := cl.sandbox.Fork()
+
+	output, err := os.OpenFile(outputFile, os.O_WRONLY, 0666)
+	if err != nil {
+		blog.Errorf("cc: failed to open output file \"%s\" when pre-processing: %v", outputFile, err)
+		return nil, err
+	}
+	defer func() {
+		_ = output.Close()
+	}()
+
+	sandbox.Stdout = output
+	var errBuf bytes.Buffer
+	sandbox.Stderr = &errBuf
+
+	blog.Infof("cl: ready to do Includes %s %s", execName, strings.Join(execArgs, " "))
+	if _, err = sandbox.ExecCommand(execName, execArgs...); err != nil {
+		blog.Warnf("cl: failed to do Includes %s %s with error:%v", execName, strings.Join(execArgs, " "), err)
+		return nil, err
+	}
+
+	return cl.analyzeIncludes(outputFile, workdir)
+}
+
+func (cl *TaskCL) trypump(command []string) (*dcSDK.BKDistCommand, error) {
+	blog.Infof("cl: trypump: %v", command)
+
+	// TODO : !! ensureCompilerRaw changed the command slice, it maybe not we need !!
+	tstart := time.Now().Local()
+	responseFile, args, showinclude, sourcedependfile, objectfile, pchfile, err := ensureCompilerRaw(command, cl.sandbox.Dir)
+	if err != nil {
+		blog.Debugf("cl: pre execute ensure compiler failed %v: %v", args, err)
+		return nil, err
+	} else {
+		blog.Infof("cl: after parse command, got responseFile:%s,sourcedepent:%s,objectfile:%s,pchfile:%s",
+			responseFile, sourcedependfile, objectfile, pchfile)
+	}
+	tend := time.Now().Local()
+	blog.Debugf("cl: trypump time record: %s for ensureCompilerRaw for rsp file:%s", tend.Sub(tstart), responseFile)
+	tstart = tend
+
+	_, err = scanArgs(args)
+	if err != nil {
+		blog.Debugf("cl: try pump not support, scan args %v: %v", args, err)
+		return nil, err
+	}
+
+	tend = time.Now().Local()
+	blog.Debugf("cl: trypump time record: %s for scanArgs for rsp file:%s", tend.Sub(tstart), responseFile)
+	tstart = tend
+
+	cl.responseFile = responseFile
+	cl.showinclude = showinclude
+	cl.pumpArgs = args
+
+	includes, err := cl.Includes(args, cl.sandbox.Dir, false)
+
+	tend = time.Now().Local()
+	blog.Debugf("cl: trypump time record: %s for Includes for rsp file:%s", tend.Sub(tstart), responseFile)
+	tstart = tend
+
+	if err == nil {
+		blog.Infof("cl: parse command,got total %d includes files", len(includes))
+
+		// add pch file as input
+		if pchfile != "" {
+			includes = append(includes, pchfile)
+		}
+
+		// add response file as input
+		if responseFile != "" {
+			includes = append(includes, responseFile)
+		}
+
+		inputFiles := []dcSDK.FileDesc{}
+		// priority := dcSDK.MaxFileDescPriority
+		for _, f := range includes {
+			existed, fileSize, modifyTime, fileMode := dcFile.Stat(f).Batch()
+			if !existed {
+				err := fmt.Errorf("input response file %s not existed", f)
+				blog.Errorf("%v", err)
+				return nil, err
+			}
+			inputFiles = append(inputFiles, dcSDK.FileDesc{
+				FilePath:           f,
+				Compresstype:       protocol.CompressLZ4,
+				FileSize:           fileSize,
+				Lastmodifytime:     modifyTime,
+				Md5:                "",
+				Filemode:           fileMode,
+				Targetrelativepath: filepath.Dir(f),
+				NoDuplicated:       true,
+				// Priority:           priority,
+			})
+			// priority++
+
+			blog.Debugf("cl: added include file:%s for object:%s", f, objectfile)
+		}
+
+		results := []string{objectfile}
+		// add source depend file as result
+		if sourcedependfile != "" {
+			results = append(results, sourcedependfile)
+		}
+
+		exeName := command[0]
+		params := command[1:]
+		blog.Infof("cl: parse command,server command:[%s %s],dir[%s]",
+			exeName, strings.Join(params, " "), cl.sandbox.Dir)
+		return &dcSDK.BKDistCommand{
+			Commands: []dcSDK.BKCommand{
+				{
+					WorkDir:         cl.sandbox.Dir,
+					ExePath:         "",
+					ExeName:         exeName,
+					ExeToolChainKey: dcSDK.GetJsonToolChainKey(command[0]),
+					Params:          params,
+					Inputfiles:      inputFiles,
+					ResultFiles:     results,
+				},
+			},
+			CustomSave: true,
+		}, nil
+	}
+
+	tend = time.Now().Local()
+	blog.Debugf("cl: trypump time record: %s for return dcSDK.BKCommand for rsp file:%s", tend.Sub(tstart), responseFile)
+
+	return nil, err
+}
+
 func (cl *TaskCL) preExecute(command []string) (*dcSDK.BKDistCommand, error) {
 	blog.Infof("cl: start pre execute for: %v", command)
 
 	// debugRecordFileName(fmt.Sprintf("cl: start pre execute for: %v", command))
 
 	cl.originArgs = command
+
+	// ++ try with pump,only support windows now
+	if dcPump.SupportPump(cl.sandbox.Env) {
+		req, err := cl.trypump(command)
+		if err != nil {
+			blog.Warnf("cl: pre execute failed to try pump %v: %v", command, err)
+		} else {
+			return req, err
+		}
+	}
+	// --
+
 	responseFile, args, showinclude, err := ensureCompiler(command, cl.sandbox.Dir)
 	if err != nil {
 		blog.Warnf("cl: pre execute ensure compiler failed %v: %v", args, err)
@@ -331,10 +590,15 @@ func (cl *TaskCL) preExecute(command []string) (*dcSDK.BKDistCommand, error) {
 
 	// debugRecordFileName("preBuild begin")
 
+	tstart := time.Now().Local()
+
 	if err = cl.preBuild(args); err != nil {
-		blog.Warnf("cl: pre execute pre-build %v: %v", args, err)
+		blog.Debugf("cl: pre execute pre-build %v: %v", args, err)
 		return nil, err
 	}
+
+	tend := time.Now().Local()
+	blog.Debugf("cl: trypump time record: %s for preBuild for rsp file:%s", tend.Sub(tstart), responseFile)
 
 	// debugRecordFileName("FileInfo begin")
 
@@ -450,11 +714,15 @@ func (cl *TaskCL) postExecute(r *dcSDK.BKDistResult) error {
 		goto ERROREND
 	}
 
+	blog.Debugf("cl: output [%s] errormessage [%s]", r.Results[0].OutputMessage, r.Results[0].ErrorMessage)
+
 	if r.Results[0].RetCode == 0 {
 		blog.Infof("cl: success done post execute for: %v", cl.originArgs)
 		if cl.showinclude {
-			// simulate output with preprocessed error output
-			r.Results[0].OutputMessage = []byte(cl.preprocessedErrorBuf)
+			if !dcPump.SupportPump(cl.sandbox.Env) {
+				// simulate output with preprocessed error output
+				r.Results[0].OutputMessage = []byte(cl.preprocessedErrorBuf)
+			}
 		} else {
 			// simulate output with inputFile
 			r.Results[0].OutputMessage = []byte(filepath.Base(cl.inputFile))
@@ -478,6 +746,12 @@ ERROREND:
 		}
 	}
 
+	// if remote failed with pump mode, we need refresh the header list
+	if dcPump.SupportPump(cl.sandbox.Env) && dcPump.IsPumpCache(cl.sandbox.Env) {
+		blog.Infof("cl: ready to fresh pump header files for cmd: [%v]", cl.pumpArgs)
+		_, _ = cl.Includes(cl.pumpArgs, cl.sandbox.Dir, true)
+	}
+
 	return fmt.Errorf("cl: failed to remote execute, retcode %d, error message:%s, output message:%s",
 		r.Results[0].RetCode,
 		r.Results[0].ErrorMessage,
@@ -497,7 +771,7 @@ func (cl *TaskCL) saveTemp() bool {
 }
 
 func (cl *TaskCL) preBuild(args []string) error {
-	blog.Infof("cl: pre-build begin got args: %v", args)
+	blog.Debugf("cl: pre-build begin got args: %v", args)
 
 	var err error
 	cl.expandArgs = args

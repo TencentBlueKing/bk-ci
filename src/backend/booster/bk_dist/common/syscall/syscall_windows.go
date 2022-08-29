@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -300,7 +301,7 @@ func (s *Sandbox) startCommand(name string, arg ...string) (*exec.Cmd, error) {
 	if !strings.HasPrefix(name, ".") {
 		name, err = s.LookPath(name)
 	}
-	
+
 	var cmd *exec.Cmd
 	if s.Ctx != nil {
 		cmd = exec.CommandContext(s.Ctx, name, arg...)

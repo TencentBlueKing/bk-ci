@@ -79,7 +79,10 @@ func (r *Res) needHeartBeat() bool {
 }
 
 func (r *Res) canRelease() bool {
-	return r.status == ResourceApplying || r.status == ResourceApplySucceed || r.status == ResourceReleaseFailed
+	return r.status == ResourceApplying ||
+		r.status == ResourceApplySucceed ||
+		r.status == ResourceReleaseFailed ||
+		r.status == ResourceApplyFailed // https://git.woa.com/buildfast/BuildBooster/issues/510
 }
 
 func (r *Res) isReleaseStatus() bool {

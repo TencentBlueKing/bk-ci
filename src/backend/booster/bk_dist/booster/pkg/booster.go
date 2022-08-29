@@ -292,6 +292,13 @@ func (b *Booster) getWorkersEnv() map[string]string {
 		requiredEnv[env.KeyExecutorPumpCheck] = "true"
 	}
 
+	if b.config.Works.PumpCache {
+		requiredEnv[env.KeyExecutorPumpCache] = "true"
+	}
+
+	requiredEnv[env.KeyExecutorPumpCacheDir] = b.config.Works.PumpCacheDir
+	requiredEnv[env.KeyExecutorPumpCacheSizeMaxMB] = strconv.Itoa(int(b.config.Works.PumpCacheSizeMaxMB))
+
 	if b.config.Works.IOTimeoutSecs > 0 {
 		requiredEnv[env.KeyExecutorIOTimeout] = strconv.Itoa(b.config.Works.IOTimeoutSecs)
 	}
@@ -475,6 +482,9 @@ func (b *Booster) run(pCtx context.Context) (int, error) {
 	if err := b.preliminaryChecks(); err != nil {
 		return b.runDegradeWorks(pCtx)
 	}
+
+	// support pump cache check
+	b.checkPumpCache()
 
 	// no work commands do not register
 	if b.config.Works.NoWork {
@@ -1247,4 +1257,25 @@ func (b *Booster) setToolChainWithJSON(tools *dcSDK.Toolchain) error {
 
 	blog.Debugf("booster: success to set tool chain")
 	return nil
+}
+
+func (b *Booster) checkPumpCache() {
+	if b.config.Works.PumpCache || b.config.Works.PumpCacheRemoveAll {
+		pumpdir := b.config.Works.PumpCacheDir
+		if pumpdir == "" {
+			pumpdir = dcUtil.GetPumpCacheDir()
+		}
+
+		if pumpdir != "" {
+			blog.Infof("booster: ready clean pump cache dir:%s", pumpdir)
+			if b.config.Works.PumpCacheRemoveAll {
+				os.RemoveAll(pumpdir)
+			} else {
+				limitsize := int64(b.config.Works.PumpCacheSizeMaxMB * 1024 * 1024)
+				cleanDirByTime(pumpdir, limitsize)
+			}
+		} else {
+			blog.Infof("booster: not found pump cache dir, do nothing")
+		}
+	}
 }

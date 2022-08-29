@@ -43,6 +43,9 @@ const (
 	KeyExecutorPumpDisableMacro        = "PUMP_DISABLE_MACRO"
 	KeyExecutorPumpIncludeSysHeader    = "PUMP_INCLUDE_SYS_HEADER"
 	KeyExecutorPumpCheck               = "PUMP_CHECK"
+	KeyExecutorPumpCache               = "PUMP_CACHE"             // cache pump inlude files
+	KeyExecutorPumpCacheDir            = "PUMP_CACHE_DIR"         // cache pump inlude files
+	KeyExecutorPumpCacheSizeMaxMB      = "PUMP_CACHE_SIZE_MAX_MB" // cache pump inlude files
 	KeyExecutorForceLocalKeys          = "FORCE_LOCAL_KEYS"
 	KeyExecutorEnvProfile              = "ENV_PROFILE"
 	KeyExecutorWorkerSideCache         = "WORKER_SIDE_CACHE"

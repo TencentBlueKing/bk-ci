@@ -608,7 +608,7 @@ func (m *mgr) checkNet() {
 }
 
 func (m *mgr) setCommonConfig(config *types.CommonConfig) error {
-	blog.Infof("mgr: try to set common config: %+v", *config)
+	blog.Infof("mgr: try to set common config")
 
 	if err := m.saveCommonConfig(config); err != nil {
 		blog.Infof("mgr: failed to save common config with error: %v", err)
