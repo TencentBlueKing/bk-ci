@@ -93,7 +93,7 @@ class PushKindFilterTest {
         Assertions.assertFalse(pushKindFilter.doFilter(response))
 
         pushKindFilter = PushKindFilter(
-            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedee",
             actionList = listOf(PushActionType.NEW_BRANCH.value),
             checkCreateAndUpdate = false
         )
