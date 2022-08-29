@@ -61,7 +61,7 @@ class PipelineSettingDao {
         successNotifyTypes: String = "",
         failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
         maxPipelineResNum: Int? = PIPELINE_RES_NUM_MIN,
-        pipelineAsCodeSettings: PipelineAsCodeSettings? = null
+        pipelineAsCodeSettings: PipelineAsCodeSettings?
     ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.insertInto(
@@ -371,7 +371,7 @@ class PipelineSettingDao {
             val update = dslContext.update(this)
                 .set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(pipelineAsCodeSettings, false))
                 .where(PROJECT_ID.eq(projectId))
-            pipelineId?.let {  self ->
+            pipelineId?.let { self ->
                 update.and(PIPELINE_ID.eq(self))
             }
             return update.execute()

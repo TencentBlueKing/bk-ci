@@ -116,6 +116,7 @@ import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
@@ -202,14 +203,7 @@ class TemplateFacadeService @Autowired constructor(
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
 
-            pipelineSettingDao.insertNewSetting(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = templateId,
-                pipelineName = template.name,
-                isTemplate = true,
-                failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
-            )
+            insertTemplateSetting(context, projectId, templateId, template.name)
             logger.info("Get the template version $version")
         }
 
@@ -260,14 +254,7 @@ class TemplateFacadeService @Autowired constructor(
                 )
                 saveTemplatePipelineSetting(userId, setting, true)
             } else {
-                pipelineSettingDao.insertNewSetting(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = newTemplateId,
-                    pipelineName = copyTemplateReq.templateName,
-                    isTemplate = true,
-                    failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
-                )
+                insertTemplateSetting(context, projectId, newTemplateId, copyTemplateReq.templateName)
             }
 
             logger.info("Get the template version $version")
@@ -323,14 +310,7 @@ class TemplateFacadeService @Autowired constructor(
                 )
                 saveTemplatePipelineSetting(userId, setting, true)
             } else {
-                pipelineSettingDao.insertNewSetting(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = templateId,
-                    pipelineName = saveAsTemplateReq.templateName,
-                    isTemplate = true,
-                    failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
-                )
+                insertTemplateSetting(context, projectId, templateId, saveAsTemplateReq.templateName)
             }
 
             logger.info("Get the template version $version")
@@ -1290,13 +1270,7 @@ class TemplateFacadeService @Autowired constructor(
                         )
                         saveTemplatePipelineSetting(userId, setting)
                     } else {
-                        pipelineSettingDao.insertNewSetting(
-                            dslContext = context,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            pipelineName = pipelineName,
-                            failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
-                        )
+                        insertTemplateSetting(context, projectId, pipelineId, pipelineName)
                     }
                     addRemoteAuth(instanceModel, projectId, pipelineId, userId)
                     successPipelines.add(instance.pipelineName)
@@ -2011,6 +1985,29 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
+    private fun insertTemplateSetting(
+        context: DSLContext,
+        projectId: String,
+        templateId: String,
+        pipelineName: String
+    ) {
+        pipelineSettingDao.insertNewSetting(
+            dslContext = context,
+            projectId = projectId,
+            pipelineId = templateId,
+            pipelineName = pipelineName,
+            isTemplate = true,
+            failNotifyTypes = pipelineInfoExtService.failNotifyChannel(),
+            pipelineAsCodeSettings = try {
+                client.get(ServiceProjectResource::class).get(projectId).data
+                    ?.properties?.pipelineAsCodeSettings
+            } catch (ignore: Throwable) {
+                logger.warn("[$projectId]|Failed to sync project|templateId=$templateId", ignore)
+                null
+            }
+        )
+    }
+
     fun listLatestModel(projectId: String, pipelineIds: Set<String>): Map<String/*Pipeline ID*/, String/*Model*/> {
         val modelResources = pipelineResDao.listLatestModelResource(dslContext, pipelineIds, projectId)
         return modelResources?.map { modelResource ->
@@ -2075,14 +2072,7 @@ class TemplateFacadeService @Autowired constructor(
                     weight = 0,
                     version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
                 )
-                pipelineSettingDao.insertNewSetting(
-                    dslContext = context,
-                    projectId = it,
-                    pipelineId = templateId,
-                    pipelineName = templateName,
-                    isTemplate = true,
-                    failNotifyTypes = pipelineInfoExtService.failNotifyChannel()
-                )
+                insertTemplateSetting(context, it, templateId, templateName)
                 projectTemplateMap[it] = templateId
             }
         }
