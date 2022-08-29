@@ -575,6 +575,7 @@ func (m *Mgr) inspectInfo(taskID string) {
 					isRunning = true
 					blog.Infof("resource: success to apply resources and get host(%d): %v",
 						len(info.HostList), info.HostList)
+					infoTicker = time.NewTicker(3 * time.Second)
 				}
 				if !info.AllResourceReady {
 					blog.Infof("resource: task(%s) has current workers:(%d)", info.TaskID, len(info.HostList))
