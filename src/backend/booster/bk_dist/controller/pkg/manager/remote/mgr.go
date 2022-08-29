@@ -253,7 +253,7 @@ func (m *Mgr) resourceCheck(ctx context.Context) {
 			for _, cnt := range m.resource.jobMap {
 				res = append(res, cnt)
 			}
-			blog.Infof("remote: kkk : worker jobs stats", res)
+			blog.Infof("remote: worker jobs stats (%v)", res)
 
 			if m.getRemoteJobs() <= 0 { // no remote worker in use
 				needfree := false
