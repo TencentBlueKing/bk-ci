@@ -46,7 +46,7 @@ import com.tencent.devops.common.web.form.data.TipPropData
 import com.tencent.devops.common.web.form.models.Form
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
-import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.VariablePropType

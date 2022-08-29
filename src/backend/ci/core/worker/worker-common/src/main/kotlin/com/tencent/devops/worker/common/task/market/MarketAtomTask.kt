@@ -44,6 +44,7 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
@@ -381,10 +382,18 @@ open class MarketAtomTask : ITask() {
     ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
+            logger.info("parseInputParams|inputMap=\n$inputMap")
             inputMap.forEach { (name, value) ->
                 // 修复插件input环境变量替换问题 #5682
-                atomParams[name] = JsonUtil.toJson(EnvReplacementParser.parse(value, variables, asCodeEnabled))
-                    .parseCredentialValue(null, acrossInfo?.targetProjectId)
+                atomParams[name] = EnvUtils.parseEnv(
+                    command = JsonUtil.toJson(value),
+                    data = variables
+                ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+                logger.info(
+                    "parseInputParams|jsonStr=" +
+                        "\n\n${JsonUtil.toJson(value)}" +
+                        "\n\n${EnvReplacementParser.parse(value, variables, asCodeEnabled)}"
+                )
             }
         } catch (e: Throwable) {
             logger.error("plugin input illegal! ", e)

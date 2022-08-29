@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.trigger.actions.data.context
 
-import com.tencent.devops.process.pojo.setting.PipelineAsCodeSettings
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
