@@ -13,7 +13,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -156,7 +158,7 @@ func (h *UBTTool) executeActions() error {
 
 	fmt.Fprintf(os.Stderr, "UBTTool: Building %d actions with %d jobs...", len(h.allactions), h.maxjobs)
 
-	h.dump()
+	// h.dump()
 
 	// execute actions no more than max jobs
 	blog.Infof("UBTTool: try to run actions with %d jobs", h.maxjobs)
@@ -198,9 +200,44 @@ func (h *UBTTool) executeActions() error {
 				blog.Errorf("UBTTool: faile to execute actions with error:%v", ErrorOverMaxTime)
 				return ErrorOverMaxTime
 			}
-			h.dump()
+			// h.dump()
 		}
 	}
+}
+
+// issue: https://git.woa.com/buildfast/BuildBooster/issues/503
+// to simply print log
+func getActionDesc(cmd, arg string) string {
+	// _, _ = fmt.Fprintf(os.Stdout, "cmd %s arg %s\n", cmd, arg)
+
+	exe := filepath.Base(cmd)
+	targetsuffix := []string{}
+	switch exe {
+	case "cl.exe", "cl-filter.exe", "clang.exe", "clang++.exe", "clang", "clang++":
+		targetsuffix = []string{".cpp", ".c", ".response\"", ".response"}
+		break
+	case "lib.exe", "link.exe", "link-filter.exe":
+		targetsuffix = []string{".dll", ".lib", ".response\"", ".response"}
+	default:
+		return exe
+	}
+
+	args, _ := shlex.Split(replaceWithNextExclude(arg, '\\', "\\\\", []byte{'"'}))
+	if len(args) == 1 {
+		argbase := strings.TrimRight(filepath.Base(arg), "\"")
+		return fmt.Sprintf("%s %s", exe, argbase)
+	} else {
+		for _, v := range args {
+			for _, s := range targetsuffix {
+				if strings.HasSuffix(v, s) {
+					vtrime := strings.TrimRight(v, "\"")
+					return fmt.Sprintf("%s %s", exe, vtrime)
+				}
+			}
+		}
+	}
+
+	return exe
 }
 
 func (h *UBTTool) selectActionsToExecute() error {
@@ -215,9 +252,9 @@ func (h *UBTTool) selectActionsToExecute() error {
 
 		h.readyactions[index].Running = true
 		h.runningnumber++
-		_, _ = fmt.Fprintf(os.Stdout, "[bk_ubt_tool] finished:%d,running:%d,total:%d, current action: %s %s\n",
-			h.finishednumber, h.runningnumber, len(h.allactions),
-			h.readyactions[index].Cmd, h.readyactions[index].Arg)
+		_, _ = fmt.Fprintf(os.Stdout, "[bk_ubt_tool] [%d/%d] %s\n",
+			h.finishednumber+h.runningnumber, len(h.allactions),
+			getActionDesc(h.readyactions[index].Cmd, h.readyactions[index].Arg))
 		go h.executeOneAction(h.readyactions[index], h.actionchan)
 	}
 
