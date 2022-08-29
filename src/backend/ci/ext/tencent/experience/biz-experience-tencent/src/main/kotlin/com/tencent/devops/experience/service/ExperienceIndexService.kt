@@ -273,7 +273,7 @@ class ExperienceIndexService @Autowired constructor(
             projectId = projectId
         ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
         // 乱序
-        return Result(records.shuffled())
+        return Result(records)
     }
 
     private fun toIndexAppInfoVO(

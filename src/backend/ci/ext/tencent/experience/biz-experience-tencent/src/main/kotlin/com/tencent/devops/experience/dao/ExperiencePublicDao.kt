@@ -468,6 +468,7 @@ class ExperiencePublicDao {
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
                 }
+                .orderBy(DOWNLOAD_TIME.desc())
                 .fetch()
         }
     }
