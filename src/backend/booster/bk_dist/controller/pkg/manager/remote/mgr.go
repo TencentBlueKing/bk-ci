@@ -1274,7 +1274,7 @@ func (m *Mgr) getCorkFiles(getall bool) []*[]*corkFile {
 		if getall {
 			index = len(*v) - 1
 		} else {
-			for index, _ = range *v {
+			for index = range *v {
 				totalsize += (*v)[index].file.FileSize
 				if totalsize > m.corkSize {
 					break
