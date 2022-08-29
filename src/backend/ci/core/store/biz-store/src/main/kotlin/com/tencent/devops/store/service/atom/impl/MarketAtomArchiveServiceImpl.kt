@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
@@ -43,11 +42,9 @@ import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
-import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
-import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -58,7 +55,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StringUtils
 import java.net.URLEncoder
 
 @Suppress("ALL")
@@ -90,11 +86,9 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         version: String,
         fileName: String
     ): String {
-        logger.info("getFileStr projectCode is:$projectCode,atomCode is :$atomCode")
-        logger.info("getFileStr version is :$version,fileName is :$fileName")
+        logger.info("getFileStr params:[$projectCode|$atomCode|$version|$fileName")
         val filePath = URLEncoder.encode("$projectCode/$atomCode/$version/$fileName", "UTF-8")
         val taskJsonStr = client.get(ServiceArchiveAtomResource::class).getAtomFileContent(filePath).data
-        logger.info("the taskJsonStr is :$taskJsonStr")
         return taskJsonStr!!
     }
 
@@ -110,7 +104,10 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         // 校验用户是否是该插件的开发成员
         val flag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
         if (!flag) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(atomCode)
+            )
         }
         val atomCount = atomDao.countByCode(dslContext, atomCode)
         if (atomCount < 0) {
@@ -144,27 +141,15 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         val taskJsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME)
         val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(
             taskJsonStr = taskJsonStr,
+            projectCode = projectCode,
             atomCode = atomCode,
             version = version,
             userId = userId
         )
-        logger.info("parseTaskJson result is :$taskJsonStr")
         return if (getAtomConfResult.errorCode != "0") {
             MessageCodeUtil.generateResponseDataObject(getAtomConfResult.errorCode, getAtomConfResult.errorParams)
         } else {
-            val taskDataMap = JsonUtil.toMap(taskJsonStr)
-            val executionInfoMap = taskDataMap[KEY_EXECUTION] as Map<String, Any>
-            val packagePath = executionInfoMap[KEY_PACKAGE_PATH] as? String
-            if (StringUtils.isEmpty(packagePath)) {
-                MessageCodeUtil.generateResponseDataObject(
-                    StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                    arrayOf(KEY_PACKAGE_PATH)
-                )
-            } else {
-                val atomEnvRequest = getAtomConfResult.atomEnvRequest!!
-                atomEnvRequest.pkgPath = "$projectCode/$atomCode/$version/$packagePath"
-                Result(getAtomConfResult)
-            }
+            Result(getAtomConfResult)
         }
     }
 
@@ -183,6 +168,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         val taskJsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME)
         val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(
             taskJsonStr = taskJsonStr,
+            projectCode = projectCode,
             atomCode = atomCode,
             version = version,
             userId = userId
@@ -223,7 +209,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)
             marketAtomDao.updateMarketAtomProps(context, atomId, props, userId)
-            marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomId, atomPkgInfoUpdateRequest.atomEnvRequest)
+            marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
+            marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomPkgInfoUpdateRequest.atomEnvRequests)
         }
         return Result(true)
     }

@@ -203,7 +203,9 @@ class ExtServiceSearchService @Autowired constructor(
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
         val count =
             extServiceDao.count(dslContext, keyword, classifyCode, bkServiceId, rdType, labelCodeList, score)
-        logger.info("doList userId[$userId],userDeptList[$userDeptList],keyword[$keyword], rdType[$rdType],classifyCode[$classifyCode],labelCode[$labelCode], bkService[$bkServiceId] sortType[$sortType] count[$count]")
+        logger.info("doList userId[$userId],userDeptList[$userDeptList],keyword[$keyword], rdType[$rdType]," +
+            "classifyCode[$classifyCode],labelCode[$labelCode], bkService[$bkServiceId] sortType[$sortType]" +
+            " count[$count]")
         val services = extServiceDao.list(
             dslContext = dslContext,
             keyword = keyword,
@@ -217,7 +219,8 @@ class ExtServiceSearchService @Autowired constructor(
             page = page,
             pageSize = pageSize
         ) ?: return SearchExtServiceVO(0, page, pageSize, results)
-        logger.info("[list] userId[$userId],userDeptList[$userDeptList],keyword[$keyword],rdType[$rdType],bkService[$bkServiceId],labelCode[$labelCode] sortType[$sortType] get services: $services")
+        logger.info("[list] userId[$userId],userDeptList[$userDeptList],keyword[$keyword],rdType[$rdType]," +
+            "bkService[$bkServiceId],labelCode[$labelCode] sortType[$sortType] get services: $services")
 
         val serviceCodeList = services.map {
             it["SERVICE_CODE"] as String

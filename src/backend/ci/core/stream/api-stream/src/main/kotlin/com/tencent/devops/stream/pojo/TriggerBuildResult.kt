@@ -32,8 +32,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("手动触发返回结果")
 data class TriggerBuildResult(
-    @ApiModelProperty("项目ID")
-    val projectId: Long,
+    @ApiModelProperty("蓝盾项目ID")
+    val projectId: String,
     @ApiModelProperty("分支")
     val branch: String,
     @ApiModelProperty("Custom commit message")

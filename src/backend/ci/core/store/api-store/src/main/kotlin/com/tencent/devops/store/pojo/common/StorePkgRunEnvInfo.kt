@@ -25,21 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.job.api.pojo
+package com.tencent.devops.store.pojo.common
 
-data class OpenStateFastPushFileRequest(
-    val userId: String,
-    val fileSources: List<FileSource>,
-    val fileTargetPath: String,
-    val envSet: EnvSet,
-    val account: String,
-    val timeout: Long,
-    val appId: Int,
-    val openState: String
-) {
-    data class FileSource(
-        val files: List<String>,
-        val envSet: EnvSet,
-        val account: String
-    )
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("store组件安装包运行时环境信息")
+data class StorePkgRunEnvInfo(
+    @ApiModelProperty("环境变量ID", required = true)
+    val id: String,
+    @ApiModelProperty("store组件类型", required = true)
+    val storeType: String,
+    @ApiModelProperty("开发语言", required = true)
+    val language: String,
+    @ApiModelProperty("支持的操作系统名称", required = true)
+    val osName: String,
+    @ApiModelProperty("支持的操作系统架构", required = true)
+    val osArch: String,
+    @ApiModelProperty("运行时版本", required = true)
+    val runtimeVersion: String,
+    @ApiModelProperty("安装包名称", required = true)
+    val pkgName: String,
+    @ApiModelProperty("安装包下载路径", required = true)
+    val pkgDownloadPath: String,
+    @ApiModelProperty("是否为默认安装包", required = true)
+    val defaultFlag: Boolean,
+    @ApiModelProperty("添加用户", required = true)
+    val creator: String,
+    @ApiModelProperty("修改用户", required = true)
+    val modifier: String,
+    @ApiModelProperty("添加时间", required = true)
+    val createTime: String,
+    @ApiModelProperty("修改时间", required = true)
+    val updateTime: String
+)

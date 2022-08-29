@@ -25,31 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service.impl
+package com.tencent.devops.common.pipeline.element.store
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-import com.tencent.devops.worker.common.service.AtomTargetHandleService
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class GolangAtomTargetHandleServiceImpl : AtomTargetHandleService {
+@ApiModel("插件运行环境准备", description = AtomRunEnvPrepareElement.classType)
+data class AtomRunEnvPrepareElement(
+    @ApiModelProperty("任务名称", required = true)
+    override val name: String = "插件运行环境准备",
+    @ApiModelProperty("id", required = false)
+    override var id: String? = null,
+    @ApiModelProperty("状态", required = false)
+    override var status: String? = null,
+    @ApiModelProperty("开发语言", required = true)
+    val language: String = "\${language}",
+    @ApiModelProperty("运行时环境版本", required = false)
+    val runtimeVersion: String? = "\${runtimeVersion}"
+) : Element(name, id, status) {
 
-    private val logger = LoggerFactory.getLogger(GolangAtomTargetHandleServiceImpl::class.java)
-
-    override fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String {
-        var convertTarget = target
-        if (!postEntryParam.isNullOrBlank()) {
-            convertTarget = "$target --postAction=$postEntryParam"
-        }
-        logger.info("handleAtomTarget convertTarget:$convertTarget")
-        return convertTarget
+    companion object {
+        const val classType = "atomRunEnvPrepare"
     }
+
+    override fun getClassType() = classType
 }

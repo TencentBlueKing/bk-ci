@@ -51,7 +51,7 @@ class ImageCommonService @Autowired constructor(
         projectCode: String
     ): MutableList<Byte> {
         val flag = storeProjectRelDao.isTestProjectCode(dslContext, imageCode, StoreTypeEnum.IMAGE, projectCode)
-        logger.info("the isInitTestProjectCode flag is :$flag")
+        logger.info("generateImageStatusList imageCode=$imageCode|projectCode=$projectCode|flag=$flag")
         // 普通项目的查已发布、下架中、已下架的镜像
         var imageStatusList =
             mutableListOf(
@@ -75,10 +75,7 @@ class ImageCommonService @Autowired constructor(
     fun checkEditCondition(imageCode: String): Boolean {
         // 查询镜像的最新记录
         val newestImageRecord = marketImageDao.getNewestImageByCode(dslContext, imageCode)
-        logger.info("checkEditCondition newestImageRecord is :$newestImageRecord")
-        if (null == newestImageRecord) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(imageCode))
-        }
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(imageCode))
         val imageFinalStatusList = listOf(
             ImageStatusEnum.AUDIT_REJECT.status.toByte(),
             ImageStatusEnum.RELEASED.status.toByte(),

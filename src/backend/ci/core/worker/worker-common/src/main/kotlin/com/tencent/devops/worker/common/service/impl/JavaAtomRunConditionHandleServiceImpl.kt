@@ -28,28 +28,50 @@
 package com.tencent.devops.worker.common.service.impl
 
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-import com.tencent.devops.worker.common.service.AtomTargetHandleService
+import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
+import com.tencent.devops.worker.common.JAVA_PATH_ENV
+import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
 import org.slf4j.LoggerFactory
+import java.io.File
 
-class PythonAtomTargetHandleServiceImpl : AtomTargetHandleService {
+class JavaAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
 
-    private val logger = LoggerFactory.getLogger(PythonAtomTargetHandleServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(JavaAtomRunConditionHandleServiceImpl::class.java)
+
+    override fun prepareRunEnv(
+        osType: OSType,
+        language: String,
+        runtimeVersion: String,
+        workspace: File
+    ): Boolean {
+        return true
+    }
 
     override fun handleAtomTarget(
         target: String,
         osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
         postEntryParam: String?
     ): String {
+        logger.info("handleAtomTarget|target:$target,osType:$osType,postEntryParam:$postEntryParam")
         var convertTarget = target
-        if (!postEntryParam.isNullOrBlank()) {
-            convertTarget = "$target --post_action=$postEntryParam"
+        // java插件先统一采用agent带的jre执行，如果是windows构建机需把target的启动命令替换下
+        if (osType == OSType.WINDOWS) {
+            convertTarget = target.replace("\$" + JAVA_PATH_ENV, "%$JAVA_PATH_ENV%")
+        }
+        if (postEntryParam != null) {
+            convertTarget = convertTarget.replace(oldValue = " -jar ",
+                newValue = " -D$ATOM_POST_ENTRY_PARAM=$postEntryParam -jar ")
         }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
         return convertTarget
+    }
+
+    override fun handleAtomPreCmd(
+        preCmd: String,
+        osType: OSType,
+        pkgName: String,
+        runtimeVersion: String?
+    ): String {
+        return preCmd
     }
 }

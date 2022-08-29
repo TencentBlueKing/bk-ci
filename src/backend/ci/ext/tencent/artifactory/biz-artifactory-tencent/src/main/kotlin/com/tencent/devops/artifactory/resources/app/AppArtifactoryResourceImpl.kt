@@ -202,7 +202,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         val fileDetail = try {
             bkRepoService.show(userId, projectId, artifactoryType, path)
         } catch (e: Exception) {
-            logger.error("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
+            logger.info("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
@@ -218,7 +218,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         }
 
         if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
-            logger.error("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
+            logger.info("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,

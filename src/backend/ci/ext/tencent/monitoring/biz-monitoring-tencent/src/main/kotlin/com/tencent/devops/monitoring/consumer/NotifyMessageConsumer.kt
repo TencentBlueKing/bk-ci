@@ -110,8 +110,8 @@ class NotifyMessageConsumer @Autowired constructor(
             if (wechatUsers.isNotEmpty()) {
                 sendWechat(tofConfs, wechatUsers, alert)
             }
-        } catch (t: Throwable) {
-            logger.warn("Fail to send the notify message", t)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to send the notify message", ignored)
             throw ErrorCodeException(
                 errorCode = ERROR_MONITORING_SEND_NOTIFY_FAIL,
                 defaultMessage = "Fail to send the notify message"
@@ -229,8 +229,8 @@ class NotifyMessageConsumer @Autowired constructor(
             it.notifyTypes.split(",").map { it.trim() }.forEach {
                 try {
                     notifyTypes.add(NotifyType.valueOf(it))
-                } catch (e: Exception) {
-                    logger.warn("Fail to translate the notify type $it", e)
+                } catch (ignored: Throwable) {
+                    logger.warn("Fail to translate the notify type $it", ignored)
                 }
             }
             val notifyUsers = it.users.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toHashSet()
