@@ -124,7 +124,7 @@ object ShellUtil {
         workspace: File = dir
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
-        val userScriptFile = Files.createTempFile("devops_script_user", ".sh").toFile()
+        val userScriptFile = Files.createTempFile("devops_script_user_", ".sh").toFile()
         file.deleteOnExit()
 
         val command = StringBuilder()
