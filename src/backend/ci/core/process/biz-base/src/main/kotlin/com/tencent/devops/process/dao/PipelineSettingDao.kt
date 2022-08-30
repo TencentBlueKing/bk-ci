@@ -212,12 +212,10 @@ class PipelineSettingDao {
                     .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
                     .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
                     .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
-                    .set(
-                        PIPELINE_AS_CODE_SETTINGS,
-                        setting.pipelineAsCodeSettings?.let { self ->
-                            JsonUtil.toJson(self, false)
-                        }
-                    )
+                // pipelineAsCodeSettings 默认传空不更新
+                setting.pipelineAsCodeSettings?.let { self ->
+                    updateSetMoreStep.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
+                }
                 // maxConRunningQueueSize 默认传空不更新
                 if (setting.maxConRunningQueueSize != null) {
                     updateSetMoreStep.set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
