@@ -577,9 +577,12 @@ func (m *Mgr) inspectInfo(taskID string) {
 						len(info.HostList), info.HostList)
 					infoTicker = time.NewTicker(3 * time.Second)
 				}
+
 				if !info.AllResourceReady {
-					blog.Infof("resource: task(%s) has current workers:(%d)", info.TaskID, len(info.HostList))
-					m.addRes(&info, ResourceApplySucceed)
+					if m.ifResourceChange(info) {
+						blog.Infof("resource: task(%s) now has (%d) workers", info.TaskID, len(info.HostList))
+						m.addRes(&info, ResourceApplySucceed)
+					}
 					continue
 				}
 				m.addRes(&info, ResourceApplySucceed)
@@ -602,6 +605,18 @@ func (m *Mgr) inspectInfo(taskID string) {
 			}
 		}
 	}
+}
+
+func (m *Mgr) ifResourceChange(info v2.RespTaskInfo) bool {
+	for _, r := range m.resources {
+		if r.taskid == info.TaskID {
+			if len(r.taskInfo.HostList) != len(info.HostList) {
+				return true
+			}
+			break
+		}
+	}
+	return false
 }
 
 func (m *Mgr) addRes(info *v2.RespTaskInfo, status Status) error {
