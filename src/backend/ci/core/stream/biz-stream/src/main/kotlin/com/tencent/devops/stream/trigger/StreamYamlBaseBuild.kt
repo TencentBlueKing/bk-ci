@@ -213,7 +213,6 @@ class StreamYamlBaseBuild @Autowired constructor(
                 triggerReason = TriggerReason.SAVE_PIPELINE_FAILED,
                 reasonParams = listOf(e.message ?: "")
             )
-
         }
     }
 
