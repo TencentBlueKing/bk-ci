@@ -98,7 +98,7 @@ class RobotService @Autowired constructor(
         val callbackId = robotCallBack.callbackId
         val actionName = robotCallBack.actionName
         val actionValue = robotCallBack.actionValue
-        // 若callbackId为空，则表示没有回调事件，则不需要再进行下一步回调事件处理
+        // 若callbackId为空，则表示没有回调事件，不需要再进行下一步回调事件处理
         if (checkParams(callbackId, actionValue)) {
             return true
         }
