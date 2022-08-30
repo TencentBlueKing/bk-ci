@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_MANAGER_APPROVAL`
     `END_TIME`     timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '审批单失效时间',
     `STATUS`       int(2)                              NOT NULL COMMENT '发送状态 0-审核流程中 ,1-用户拒绝续期,2-用户同意续期,3-审批人拒绝续期，4-审批人同意续期',
     `CREATE_TIME`  timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
-    `UPDATE_TIME`  timestamp                           NOT NULL COMMENT '修改时间',
+    `UPDATE_TIME`  timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
     INDEX `IDX_USER_ID` (`USER_ID`),
     INDEX `IDX_MANAGER_ID` (`MANAGER_ID`),
     PRIMARY KEY (`ID`)
