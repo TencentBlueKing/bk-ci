@@ -139,6 +139,7 @@ class RobotService @Autowired constructor(
         return true
     }
 
+    @SuppressWarnings("ComplexMethod")
     private fun checkParams(
         callbackId: String?,
         actionValue: String?
@@ -200,7 +201,6 @@ class RobotService @Autowired constructor(
     /*
     * 获取密文的xml字符串
     * */
-    @SuppressWarnings("ComplexMethod")
     fun getDecrypeMsg(signature: String, timestamp: Long, nonce: String, reqData: String?): String {
         var xmlString = ""
         try {
