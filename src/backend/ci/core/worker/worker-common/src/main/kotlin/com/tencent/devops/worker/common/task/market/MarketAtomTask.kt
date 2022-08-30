@@ -44,6 +44,7 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
@@ -381,14 +382,24 @@ open class MarketAtomTask : ITask() {
     ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
-            inputMap.forEach { (name, value) ->
-                logger.info("parseInputParams|[$asCodeEnabled]|name=$name|value=$value")
-                // 修复插件input环境变量替换问题 #5682
-                atomParams[name] = EnvReplacementParser.parse(
-                    obj = JsonUtil.toJson(value),
-                    contextMap = variables,
-                    onlyExpression = asCodeEnabled
-                ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+            if (asCodeEnabled == true) { // TODO 利用缓存字典和自定义结构进行表达式内凭据替换
+                val customReplacement = EnvReplacementParser.getCustomReplacementByMap(variables)
+                inputMap.forEach { (name, value) ->
+                    logger.info("parseInputParams|[$asCodeEnabled]|name=$name|value=$value")
+                    atomParams[name] = EnvReplacementParser.parse(
+                        obj = JsonUtil.toJson(value),
+                        contextMap = variables,
+                        replacement = customReplacement
+                    )
+                }
+            } else {
+                inputMap.forEach { (name, value) ->
+                    // 修复插件input环境变量替换问题 #5682
+                    atomParams[name] = EnvUtils.parseEnv(
+                        command = JsonUtil.toJson(value),
+                        data = variables
+                    ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+                }
             }
         } catch (e: Throwable) {
             logger.error("plugin input illegal! ", e)
@@ -703,8 +714,8 @@ open class MarketAtomTask : ITask() {
                 ) {
                     val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
                     env[contextKey] = value
-                    // TODO 待定：是否进行原变量名输出，暂时保留
-                    // env.remove(key)
+                    // 原变量名输出只在未开启 pipeline as code 的逻辑中保留
+                    if (buildVariables.pipelineAsCodeSettings?.enable == true) env.remove(key)
                 }
 
                 TaskUtil.removeTaskId()
