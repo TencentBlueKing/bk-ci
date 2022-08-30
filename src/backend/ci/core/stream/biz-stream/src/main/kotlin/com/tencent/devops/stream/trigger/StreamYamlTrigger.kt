@@ -197,11 +197,11 @@ class StreamYamlTrigger @Autowired constructor(
             )
             // 新建流水线放
             action.data.context.pipeline = pipeline
-        } else  {
+        } else {
             action.updatePipelineLastBranchAndDisplayName(
                 pipelineId = pipeline.pipelineId,
-                branch = if(needUpdateLastBuildBranch(action)) action.data.eventCommon.branch else null,
-                displayName =if(needChangePipelineDisplayName(action)) getDisplayName(action) else null
+                branch = if (needUpdateLastBuildBranch(action)) action.data.eventCommon.branch else null,
+                displayName = if (needChangePipelineDisplayName(action)) getDisplayName(action) else null
             )
         }
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新

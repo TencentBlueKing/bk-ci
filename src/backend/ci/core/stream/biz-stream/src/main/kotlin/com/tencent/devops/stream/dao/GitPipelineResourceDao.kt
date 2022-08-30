@@ -134,12 +134,12 @@ class GitPipelineResourceDao {
             if (!branch.isNullOrEmpty()) {
                 dsl.set(LAST_UPDATE_BRANCH, branch)
             }
-            if(!displayName.isNullOrEmpty()) {
+            if (!displayName.isNullOrEmpty()) {
                 dsl.set(DISPLAY_NAME, displayName)
             }
-           dsl.set(UPDATE_TIME, LocalDateTime.now())
-              .where(PIPELINE_ID.eq(pipelineId))
-              .execute()
+            dsl.set(UPDATE_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 

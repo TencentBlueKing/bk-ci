@@ -115,5 +115,5 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     }
 
     override fun needAddWebhookParams() = action is GitBaseAction
-    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String,branch: String?,displayName: String?) = Unit
+    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) = Unit
 }
