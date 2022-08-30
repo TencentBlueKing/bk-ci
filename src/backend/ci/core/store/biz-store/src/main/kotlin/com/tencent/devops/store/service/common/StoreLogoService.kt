@@ -48,7 +48,6 @@ interface StoreLogoService {
         userId: String,
         contentLength: Long,
         sizeLimitiFlag: Boolean? = true,
-        compressFlag: Boolean? = false,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<StoreLogoInfo?>

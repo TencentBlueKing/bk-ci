@@ -119,6 +119,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
         const val ENV_CONTEXT_KEY_PREFIX = "envs."
+
         // 任务结束上报Key
         private fun completeTaskKey(buildId: String, vmSeqId: String) = "build:$buildId:job:$vmSeqId:ending_task"
     }
@@ -812,7 +813,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
                     (errorCode?.let {
-                        "\n${MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString())}\n"
+                        "\n${
+                            MessageCodeUtil.getCodeLanMessage(
+                                messageCode = errorCode.toString(),
+                                checkUrlDecoder = true
+                            )
+                        }\n"
                     }
                         ?: "") +
                     when (errorType) {

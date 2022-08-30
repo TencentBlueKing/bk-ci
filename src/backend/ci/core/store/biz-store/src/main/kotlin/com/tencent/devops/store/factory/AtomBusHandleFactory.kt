@@ -25,60 +25,60 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task.market
+package com.tencent.devops.store.factory
 
 import com.tencent.devops.common.api.constant.GOLANG
 import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.constant.PYTHON
-import com.tencent.devops.worker.common.service.AtomTargetHandleService
-import com.tencent.devops.worker.common.service.impl.CommonAtomTargetHandleServiceImpl
-import com.tencent.devops.worker.common.service.impl.GolangAtomTargetHandleServiceImpl
-import com.tencent.devops.worker.common.service.impl.JavaAtomTargetHandleServiceImpl
-import com.tencent.devops.worker.common.service.impl.NodeJsAtomTargetHandleServiceImpl
-import com.tencent.devops.worker.common.service.impl.PythonAtomTargetHandleServiceImpl
+import com.tencent.devops.store.service.atom.AtomBusHandleService
+import com.tencent.devops.store.service.atom.impl.CommonAtomBusHandleHandleServiceImpl
+import com.tencent.devops.store.service.atom.impl.GolangAtomBusHandleHandleServiceImpl
+import com.tencent.devops.store.service.atom.impl.JavaAtomBusHandleHandleServiceImpl
+import com.tencent.devops.store.service.atom.impl.NodeJsAtomBusHandleHandleServiceImpl
+import com.tencent.devops.store.service.atom.impl.PythonAtomBusHandleHandleServiceImpl
 import java.util.concurrent.ConcurrentHashMap
 
-object AtomTargetFactory {
+object AtomBusHandleFactory {
 
-    private val atomTargetMap = ConcurrentHashMap<String, AtomTargetHandleService>()
+    private val atomBusHandleMap = ConcurrentHashMap<String, AtomBusHandleService>()
 
-    fun createAtomTargetHandleService(
+    fun createAtomBusHandleService(
         language: String
-    ): AtomTargetHandleService {
-        var atomTargetHandleService = atomTargetMap[language]
+    ): AtomBusHandleService {
+        var atomBusHandleService = atomBusHandleMap[language]
         when (language) {
             JAVA -> {
-                if (atomTargetHandleService == null) {
-                    atomTargetHandleService = JavaAtomTargetHandleServiceImpl()
-                    atomTargetMap[language] = atomTargetHandleService
+                if (atomBusHandleService == null) {
+                    atomBusHandleService = JavaAtomBusHandleHandleServiceImpl()
+                    atomBusHandleMap[language] = atomBusHandleService
                 }
             }
             NODEJS -> {
-                if (atomTargetHandleService == null) {
-                    atomTargetHandleService = NodeJsAtomTargetHandleServiceImpl()
-                    atomTargetMap[language] = atomTargetHandleService
+                if (atomBusHandleService == null) {
+                    atomBusHandleService = NodeJsAtomBusHandleHandleServiceImpl()
+                    atomBusHandleMap[language] = atomBusHandleService
                 }
             }
             PYTHON -> {
-                if (atomTargetHandleService == null) {
-                    atomTargetHandleService = PythonAtomTargetHandleServiceImpl()
-                    atomTargetMap[language] = atomTargetHandleService
+                if (atomBusHandleService == null) {
+                    atomBusHandleService = PythonAtomBusHandleHandleServiceImpl()
+                    atomBusHandleMap[language] = atomBusHandleService
                 }
             }
             GOLANG -> {
-                if (atomTargetHandleService == null) {
-                    atomTargetHandleService = GolangAtomTargetHandleServiceImpl()
-                    atomTargetMap[language] = atomTargetHandleService
+                if (atomBusHandleService == null) {
+                    atomBusHandleService = GolangAtomBusHandleHandleServiceImpl()
+                    atomBusHandleMap[language] = atomBusHandleService
                 }
             }
             else -> {
-                if (atomTargetHandleService == null) {
-                    atomTargetHandleService = CommonAtomTargetHandleServiceImpl()
-                    atomTargetMap[language] = atomTargetHandleService
+                if (atomBusHandleService == null) {
+                    atomBusHandleService = CommonAtomBusHandleHandleServiceImpl()
+                    atomBusHandleMap[language] = atomBusHandleService
                 }
             }
         }
-        return atomTargetHandleService
+        return atomBusHandleService
     }
 }

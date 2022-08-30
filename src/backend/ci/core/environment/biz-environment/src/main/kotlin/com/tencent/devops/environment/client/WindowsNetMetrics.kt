@@ -39,6 +39,8 @@ import javax.annotation.PostConstruct
 @AgentMetrics(metricsType = UsageMetrics.MetricsType.NET, osTypes = [OS.WINDOWS])
 class WindowsNetMetrics @Autowired constructor(val influxdbClient: InfluxdbClient) : UsageMetrics {
 
+    private val emptyNetMetrics = mapOf("net" to listOf(mapOf("time" to "0")))
+
     @PostConstruct
     private fun init() {
         UsageMetrics.registerBean(this)
@@ -53,8 +55,11 @@ class WindowsNetMetrics @Autowired constructor(val influxdbClient: InfluxdbClien
                 "SELECT non_negative_derivative(mean(\"Bytes_Sent_persec\"), $timeGroupBy) as \"sent\"" +
                 " FROM \"win_net\" WHERE \"agentId\" =~ /$agentHashId\$/ AND $timePart, \"instance\" fill(null)"
 
-        val queryResult = influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB))
-            ?: return mapOf("net" to listOf(mapOf("time" to "0")))
+        val queryResult = try {
+            influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyNetMetrics
+        } catch (ignore: Exception) {
+            return emptyNetMetrics
+        }
 
         if (queryResult.hasError()) {
             throw ErrorCodeException(

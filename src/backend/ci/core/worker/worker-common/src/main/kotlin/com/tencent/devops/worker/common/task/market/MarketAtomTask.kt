@@ -50,6 +50,7 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.BuildVariables
@@ -65,6 +66,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import com.tencent.devops.worker.common.BK_CI_ATOM_EXECUTE_ENV_PATH
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
@@ -133,7 +135,13 @@ open class MarketAtomTask : ITask() {
         )
 
         // 获取插件基本信息
-        val atomEnvResult = atomApi.getAtomEnv(buildVariables.projectId, atomCode, atomVersion)
+        val atomEnvResult = atomApi.getAtomEnv(
+            projectCode = buildVariables.projectId,
+            atomCode = atomCode,
+            atomVersion = atomVersion,
+            osName = AgentEnv.getOS().name,
+            osArch = System.getProperty("os.arch")
+        )
         logger.info("atomEnvResult is:$atomEnvResult")
         val atomData =
             atomEnvResult.data ?: throw TaskExecuteException(
@@ -259,14 +267,8 @@ open class MarketAtomTask : ITask() {
             val preCmd = atomData.preCmd
             val buildEnvs = buildVariables.buildEnvs
             if (!preCmd.isNullOrBlank()) {
-                val preCmds = mutableListOf<String>()
-                if (preCmd.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*]\\s*$"))) {
-                    preCmds.addAll(JsonUtil.to(preCmd))
-                } else {
-                    preCmds.add(preCmd)
-                }
                 runPreCmds(
-                    preCmds = preCmds,
+                    preCmds = CommonUtils.strToList(preCmd),
                     buildVariables = buildVariables,
                     atomTmpSpace = atomTmpSpace,
                     workspace = workspace,
@@ -277,7 +279,22 @@ open class MarketAtomTask : ITask() {
             }
             LoggerService.addFoldEndLine("-----")
             LoggerService.addNormalLine("")
-            val atomTargetHandleService = AtomTargetFactory.createAtomTargetHandleService(atomLanguage)
+            val atomRunConditionHandleService = AtomRunConditionFactory.createAtomRunConditionHandleService(
+                language = atomLanguage
+            )
+            atomData.runtimeVersion?.let {
+                // 准备插件运行环境
+                atomRunConditionHandleService.prepareRunEnv(
+                    osType = AgentEnv.getOS(),
+                    language = atomLanguage,
+                    runtimeVersion = it,
+                    workspace = workspace
+                )
+                val atomExecutePath = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
+                atomExecutePath?.let {
+                    runtimeVariables[BK_CI_ATOM_EXECUTE_ENV_PATH] = atomExecutePath
+                }
+            }
             val additionalOptions = taskParams["additionalOptions"]
             // 获取插件post操作入口参数
             var postEntryParam: String? = null
@@ -286,12 +303,9 @@ open class MarketAtomTask : ITask() {
                 val elementPostInfoMap = additionalOptionMap["elementPostInfo"] as? Map<String, Any>
                 postEntryParam = elementPostInfoMap?.get(ATOM_POST_ENTRY_PARAM)?.toString()
             }
-            val atomTarget = atomTargetHandleService.handleAtomTarget(
+            val atomTarget = atomRunConditionHandleService.handleAtomTarget(
                 target = atomData.target!!,
                 osType = AgentEnv.getOS(),
-                buildHostType = buildHostType,
-                systemEnvVariables = systemEnvVariables,
-                buildEnvs = buildEnvs,
                 postEntryParam = postEntryParam
             )
 

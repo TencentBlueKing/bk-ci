@@ -36,32 +36,54 @@ import (
 	"os/exec"
 	"os/user"
 	"strconv"
+	strings "strings"
 	"syscall"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
+var envHome = "HOME"
+var envUser = "USER"
+var envLogName = "LOGNAME"
+
 func setUser(cmd *exec.Cmd, runUser string) error {
-	logs.Info("set user(linux or darwin): ", runUser)
+
+	// 解决重启构建机后，Linux的 /etc/rc.local 自动启动的agent，读取到HOME 变量为空的问题
 	if len(runUser) == 0 || runUser == systemutil.GetCurrentUser().Username {
-		return nil
+		envHomeFound := false
+		envUserFound := false
+		envLogNameFound := false
+		for i := range cmd.Env {
+			splits := strings.Split(cmd.Env[i], "=")
+			if splits[0] == envHome && len(splits[1]) > 0 {
+				envHomeFound = true
+			} else if splits[0] == envUser && len(splits[1]) > 0 {
+				envUserFound = true
+			} else if splits[0] == envLogName && len(splits[1]) > 0 {
+				envLogNameFound = true
+			}
+		}
+		if envHomeFound && envUserFound && envLogNameFound {
+			return nil
+		}
 	}
 
-	user, err := user.Lookup(runUser)
+	logs.Info("set user(linux or darwin): ", runUser)
+
+	rUser, err := user.Lookup(runUser)
 	if err != nil {
 		logs.Error("user lookup failed, user: -", runUser, "-, error: ", err.Error())
 		return errors.New("user lookup failed, user: " + runUser)
 	}
-	uid, _ := strconv.Atoi(user.Uid)
-	gid, _ := strconv.Atoi(user.Gid)
+	uid, _ := strconv.Atoi(rUser.Uid)
+	gid, _ := strconv.Atoi(rUser.Gid)
 	cmd.SysProcAttr = &syscall.SysProcAttr{}
 	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)}
 
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", "HOME", user.HomeDir))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", "USER", runUser))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", "USERNAME", runUser))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", "LOGNAME", runUser))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envHome, rUser.HomeDir))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envUser, runUser))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envLogName, runUser))
 
 	return nil
 }
