@@ -187,7 +187,12 @@ class PipelineBuildService(
             realStartParamKeys.forEach { key ->
                 pipelineParamMap[key]?.let { param ->
                     originStartParams.add(param)
-                    originStartContexts.add(param.copy(key = "$CONTEXT_PREFIX${param.key}"))
+                    val keyWithPrefix = if (key.startsWith(CONTEXT_PREFIX)) {
+                        param.key
+                    } else {
+                        CONTEXT_PREFIX + param.key
+                    }
+                    originStartContexts.add(param.copy(key = keyWithPrefix))
                 }
             }
             pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
