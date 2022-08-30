@@ -127,11 +127,7 @@ class StreamRepoTriggerAction(
         }
     }
 
-    override fun updateLastBranch(pipelineId: String, branch: String) {
-        baseAction.updateLastBranch(pipelineId, branch)
-    }
-
-    override fun updatePipelineDisplayName(pipelineId: String, displayName: String) {}
+    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String,branch: String?,displayName: String?) {}
 
     private fun checkHaveGroupName(
         name: String,

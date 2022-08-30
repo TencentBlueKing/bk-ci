@@ -144,12 +144,9 @@ interface BaseAction {
 
     fun needAddWebhookParams() = false
 
-    fun updateLastBranch(
+    fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
-        branch: String
-    )
-    fun updatePipelineDisplayName(
-        pipelineId: String,
-        displayName: String
+        branch: String?,
+        displayName: String?
     )
 }

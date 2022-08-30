@@ -363,32 +363,20 @@ class TGitPushActionGit(
         )
     }
 
-    override fun updateLastBranch(
+    override fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
-        branch: String
+        branch: String?,
+        displayName: String?
     ) {
         try {
-            gitPipelineResourceDao.updatePipelineLastBranch(
+            gitPipelineResourceDao.updatePipelineLastBranchAndDisplayName(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
-                branch = branch
-            )
-        } catch (e: Exception) {
-            logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
-        }
-    }
-    override fun updatePipelineDisplayName(
-        pipelineId: String,
-        displayName: String
-    ) {
-        try {
-            gitPipelineResourceDao.updatePipelineDisplayName(
-                dslContext = dslContext,
-                pipelineId = pipelineId,
+                branch = branch,
                 displayName = displayName
             )
         } catch (e: Exception) {
-            logger.warn("updateLastBranch fail,pipelineId:$pipelineId,displayName:$displayName,")
+            logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
         }
     }
     // 判断是否注册定时任务来看是修改还是删除

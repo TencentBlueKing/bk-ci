@@ -121,17 +121,25 @@ class GitPipelineResourceDao {
         }
     }
 
-    fun updatePipelineLastBranch(
+    fun updatePipelineLastBranchAndDisplayName(
         dslContext: DSLContext,
         pipelineId: String,
-        branch: String
+        branch: String? = null,
+        displayName: String? = null
     ) {
+
+        if (branch.isNullOrEmpty() && displayName.isNullOrEmpty()) return
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            dslContext.update(this)
-                .set(LAST_UPDATE_BRANCH, branch)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PIPELINE_ID.eq(pipelineId))
-                .execute()
+            val dsl = dslContext.update(this)
+            if (!branch.isNullOrEmpty()) {
+                dsl.set(LAST_UPDATE_BRANCH, branch)
+            }
+            if(!displayName.isNullOrEmpty()) {
+                dsl.set(DISPLAY_NAME, displayName)
+            }
+           dsl.set(UPDATE_TIME, LocalDateTime.now())
+              .where(PIPELINE_ID.eq(pipelineId))
+              .execute()
         }
     }
 
