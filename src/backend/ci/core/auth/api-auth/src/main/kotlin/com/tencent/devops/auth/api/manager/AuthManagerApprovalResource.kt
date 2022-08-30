@@ -52,7 +52,7 @@ interface AuthManagerApprovalResource {
         @QueryParam("approvalId")
         approvalId: Int,
         @ApiParam(value = "用户是否续期")
-        @QueryParam("approvalId")
+        @QueryParam("approvalType")
         approvalType: ApprovalType
     ): Result<Boolean>
 
@@ -64,7 +64,7 @@ interface AuthManagerApprovalResource {
         @QueryParam("approvalId")
         approvalId: Int,
         @ApiParam(value = "是否同意用户续期")
-        @QueryParam("approvalId")
+        @QueryParam("approvalType")
         approvalType: ApprovalType
     ): Result<Boolean>
 

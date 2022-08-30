@@ -161,7 +161,6 @@ class AuthManagerApprovalService @Autowired constructor(
 
     fun checkExpiringManager() {
         val expiringRecords = managerUserDao.listExpiringRecords(dslContext) ?: return
-        logger.info("sentNotifyToExpiringUser : expiringRecords = $expiringRecords")
         expiringRecords.map {
             val approvalRecord = authManagerApprovalDao.get(dslContext, it.managerId, it.userId)
             val managerOrganization = managerOrganizationService.getManagerOrganization(it.managerId)
