@@ -30,6 +30,7 @@ package collector
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/influxdata/telegraf/logger"
 	"time"
 
@@ -218,9 +219,14 @@ func DoAgentCollect() {
 
 	writeTelegrafConfig()
 
+	// 每次重启agent要清理掉无意义的telegraf.log日志，重新记录
+	logFile := fmt.Sprintf("%s/logs/telegraf.log", systemutil.GetWorkDir())
+	if fileutil.Exists(logFile) {
+		_ = fileutil.TryRemoveFile(logFile)
+	}
 	tAgent, err := getTelegrafAgent(
 		fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), telegrafConfigFile),
-		fmt.Sprintf("%s/logs/telegraf.log", systemutil.GetWorkDir()),
+		logFile,
 	)
 	if err != nil {
 		logs.Error("init telegraf agent failed: %v", err)
