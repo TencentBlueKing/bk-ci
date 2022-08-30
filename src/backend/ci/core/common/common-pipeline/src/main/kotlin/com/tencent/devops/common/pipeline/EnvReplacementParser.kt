@@ -30,10 +30,16 @@ package com.tencent.devops.common.pipeline
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
+import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
+import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
+import org.slf4j.LoggerFactory
 
 object EnvReplacementParser {
+
+    private val logger = LoggerFactory.getLogger(EnvReplacementParser::class.java)
 
     /**
      * 根据环境变量map进行object处理并保持原类型
@@ -57,6 +63,7 @@ object EnvReplacementParser {
                             JsonUtil.toJson(it, false)
                         }
                     } catch (ignore: ExpressionParseException) {
+                        logger.warn("[$onlyExpression] Expression evaluation failed: ", ignore)
                         null
                     }
                 }
@@ -67,5 +74,23 @@ object EnvReplacementParser {
             }
         }
         return ObjectReplaceEnvVarUtil.replaceEnvVar(obj, contextMap, realReplacement) as T
+    }
+
+    fun getCustomReplacementByMap(variables: Map<String, String>): KeyReplacement {
+        val context = ExecutionContext(DictionaryContextData())
+        val nameValue = mutableListOf<NamedValueInfo>()
+        ExpressionParser.fillContextByMap(variables, context, nameValue)
+        return object : KeyReplacement {
+            override fun getReplacement(key: String): String? {
+                return try {
+                    ExpressionParser.evaluateByContext(key, context, nameValue, true)?.let {
+                        JsonUtil.toJson(it, false)
+                    }
+                } catch (ignore: ExpressionParseException) {
+                    logger.warn("Expression evaluation failed: ", ignore)
+                    null
+                }
+            }
+        }
     }
 }

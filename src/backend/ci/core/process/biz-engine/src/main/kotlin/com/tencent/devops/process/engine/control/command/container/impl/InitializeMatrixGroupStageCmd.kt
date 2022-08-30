@@ -223,7 +223,7 @@ class InitializeMatrixGroupStageCmd(
                 }
 
                 contextCaseList.forEach { contextCase ->
-
+                    val replacement = EnvReplacementParser.getCustomReplacementByMap(variables)
                     // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                     val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
 
@@ -243,8 +243,10 @@ class InitializeMatrixGroupStageCmd(
                     val customBuildEnv = parsedInfo?.buildEnv
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
-                            mutexGroupName = EnvReplacementParser.parse(self.mutexGroupName, allContext, asCodeEnabled),
-                            linkTip = EnvReplacementParser.parse(self.linkTip, allContext, asCodeEnabled)
+                            mutexGroupName = EnvReplacementParser.parse(
+                                self.mutexGroupName, allContext, asCodeEnabled, replacement
+                            ),
+                            linkTip = EnvReplacementParser.parse(self.linkTip, allContext, asCodeEnabled, replacement)
                         )
                     }
                     val newSeq = context.containerSeq++
@@ -256,7 +258,7 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.elements, context.executeCount, postParentIdMap
                     )
                     val newContainer = VMBuildContainer(
-                        name = EnvReplacementParser.parse(modelContainer.name, allContext, asCodeEnabled),
+                        name = EnvReplacementParser.parse(modelContainer.name, allContext, asCodeEnabled, replacement),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),
@@ -277,13 +279,13 @@ class InitializeMatrixGroupStageCmd(
                         dispatchType = customDispatchType ?: modelContainer.dispatchType,
                         buildEnv = customBuildEnv ?: modelContainer.buildEnv,
                         thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
-                            EnvReplacementParser.parse(self, allContext, asCodeEnabled)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, replacement)
                         },
                         thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId?.let { self ->
-                            EnvReplacementParser.parse(self, allContext, asCodeEnabled)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, replacement)
                         },
                         thirdPartyWorkspace = modelContainer.thirdPartyWorkspace?.let { self ->
-                            EnvReplacementParser.parse(self, allContext, asCodeEnabled)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, replacement)
                         }
                     )
 
@@ -338,18 +340,20 @@ class InitializeMatrixGroupStageCmd(
                     val statusElements = generateMatrixElements(
                         modelContainer.elements, context.executeCount, postParentIdMap
                     )
+                    val replacement = EnvReplacementParser.getCustomReplacementByMap(contextCase)
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
                             mutexGroupName = EnvReplacementParser.parse(
                                 obj = self.mutexGroupName,
                                 contextMap = contextCase,
-                                onlyExpression = asCodeEnabled
+                                onlyExpression = asCodeEnabled,
+                                replacement = replacement
                             ),
-                            linkTip = EnvReplacementParser.parse(self.linkTip, contextCase, asCodeEnabled)
+                            linkTip = EnvReplacementParser.parse(self.linkTip, contextCase, asCodeEnabled, replacement)
                         )
                     }
                     val newContainer = NormalContainer(
-                        name = EnvReplacementParser.parse(modelContainer.name, contextCase, asCodeEnabled),
+                        name = EnvReplacementParser.parse(modelContainer.name, contextCase, asCodeEnabled, replacement),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),

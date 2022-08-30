@@ -71,7 +71,7 @@ interface ICommand {
         val acrossTargetProjectId by lazy {
             TemplateAcrossInfoUtil.getAcrossInfo(data, taskId)?.targetProjectId
         }
-
+        // TODO 替换直接使用表达式处理
         val parsedCredentialCommand = ReplacementUtils.replace(
             command,
             object : KeyReplacement {
