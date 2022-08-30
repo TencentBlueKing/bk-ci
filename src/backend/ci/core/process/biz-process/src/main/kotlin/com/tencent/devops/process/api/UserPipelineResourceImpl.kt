@@ -488,6 +488,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         filterByPipelineName: String?,
         filterByCreator: String?,
         filterByLabels: String?,
+        filterByViewIds: String?,
         viewId: String
     ): Result<PipelineViewPipelinePage<Pipeline>> {
         checkParam(userId, projectId)
@@ -503,7 +504,8 @@ class UserPipelineResourceImpl @Autowired constructor(
                 checkPermission = true,
                 filterByPipelineName = filterByPipelineName,
                 filterByCreator = filterByCreator,
-                filterByLabels = filterByLabels
+                filterByLabels = filterByLabels,
+                filterByViewIds = filterByViewIds
             )
         )
     }

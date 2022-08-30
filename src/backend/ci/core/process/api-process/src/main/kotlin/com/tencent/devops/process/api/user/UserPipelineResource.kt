@@ -367,7 +367,10 @@ interface UserPipelineResource {
         @ApiParam("按标签过滤", required = false)
         @QueryParam("filterByLabels")
         filterByLabels: String?,
-        @ApiParam("用户视图ID", required = true)
+        @ApiParam("按视图过滤", required = false)
+        @QueryParam("filterByViewIds")
+        filterByViewIds: String?,
+        @ApiParam("用户视图ID,表示用户当前所在视图", required = true)
         @QueryParam("viewId")
         viewId: String
     ): Result<PipelineViewPipelinePage<Pipeline>>

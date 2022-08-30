@@ -222,18 +222,12 @@ class PipelineViewGroupService @Autowired constructor(
         return pipelineViewGroupDao.distinctPipelineIds(dslContext, projectId)
     }
 
-    fun listPipelineIdsByViewId(projectId: String, viewIdEncode: String): List<String> {
-        val viewId = HashUtil.decodeIdToLong(viewIdEncode)
-        val view = pipelineViewDao.get(dslContext, projectId, viewId)
-        if (view == null) {
-            logger.warn("null view , project:$projectId , view:$viewId")
-            return emptyList()
-        }
-        val isStatic = view.viewType == PipelineViewType.STATIC
+    fun listPipelineIdsByViewIds(projectId: String, viewIdsEncode: List<String>): List<String> {
+        val viewIds = viewIdsEncode.map { HashUtil.decodeIdToLong(it) }
         val pipelineIds = mutableListOf<String>()
-        val viewGroups = pipelineViewGroupDao.listByViewId(dslContext, projectId, viewId)
+        val viewGroups = pipelineViewGroupDao.listByViewIds(dslContext, projectId, viewIds)
         if (viewGroups.isEmpty()) {
-            pipelineIds.addAll(if (isStatic) emptyList() else initDynamicViewGroup(view, view.createUser))
+            pipelineIds.addAll(emptyList())
         } else {
             pipelineIds.addAll(viewGroups.map { it.pipelineId }.toList())
         }
@@ -241,6 +235,10 @@ class PipelineViewGroupService @Autowired constructor(
             pipelineIds.add("##NONE##") // 特殊标志,避免有些判空逻辑导致过滤器没有执行
         }
         return pipelineIds
+    }
+
+    fun listPipelineIdsByViewId(projectId: String, viewIdEncode: String): List<String> {
+        return listPipelineIdsByViewIds(projectId, listOf(viewIdEncode))
     }
 
     fun updateGroupAfterPipelineCreate(projectId: String, pipelineId: String, userId: String) {
