@@ -144,11 +144,16 @@ class RobotService @Autowired constructor(
         callbackId: String?,
         actionValue: String?
     ): Boolean {
-        if (callbackId == null || callbackId.isEmpty() || actionValue == null || actionValue.isEmpty()) {
+        if (isLegal(callbackId, actionValue)) {
             return true
         }
         return false
     }
+
+    private fun isLegal(
+        callbackId: String?,
+        actionValue: String?
+    ) = (callbackId == null || callbackId.isEmpty() || actionValue == null || actionValue.isEmpty())
 
     /*
   * 获取密文的CallbackInfo对象
