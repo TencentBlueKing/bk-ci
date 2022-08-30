@@ -82,7 +82,7 @@ object EnvReplacementParser {
         val nameValue = mutableListOf<NamedValueInfo>()
         ExpressionParser.fillContextByMap(variables, context, nameValue)
         return object : KeyReplacement {
-            override fun getReplacement(key: String): String? {
+            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String {
                 return try {
                     ExpressionParser.evaluateByContext(key, context, nameValue, true)?.let {
                         JsonUtil.toJson(it, false)
@@ -90,7 +90,7 @@ object EnvReplacementParser {
                 } catch (ignore: ExpressionParseException) {
                     logger.warn("Expression evaluation failed: ", ignore)
                     null
-                }
+                } ?: if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
             }
         }
     }
