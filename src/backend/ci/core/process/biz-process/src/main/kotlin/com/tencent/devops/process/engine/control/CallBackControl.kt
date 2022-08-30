@@ -280,7 +280,7 @@ class CallBackControl @Autowired constructor(
         } catch (e: Exception) {
             logger.warn(
                 "BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
-                    "url=${callBack.callBackUrl}|${callBack.events}",
+                    "url=${callBack.callBackUrl}|${callBack.events}|failureRate=${breaker.metrics.failureRate}",
                 e
             )
             errorMsg = e.message
@@ -297,7 +297,7 @@ class CallBackControl @Autowired constructor(
             // 如果请求100%失败，则说明回调地址已经失效，禁用
             if (breaker.metrics.failureRate == 100.0F) {
                 logger.warn(
-                    "remove callbacks because of 100% failure rate|" +
+                    "BKSystemErrorMonitor|Removing callbacks because of 100% failure rate|" +
                         "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}"
                 )
                 projectPipelineCallBackService.disable(callBack.projectId, callBack.id!!)
