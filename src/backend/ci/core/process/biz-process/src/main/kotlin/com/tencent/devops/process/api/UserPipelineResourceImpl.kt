@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -58,6 +59,7 @@ import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
+import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -401,6 +403,24 @@ class UserPipelineResourceImpl @Autowired constructor(
             )
         )
         return Result(true)
+    }
+
+    override fun batchDelete(userId: String, batchDeletePipeline: BatchDeletePipeline): Result<Map<String, Boolean>> {
+        val pipelineIds = batchDeletePipeline.pipelineIds
+        if (pipelineIds.isEmpty()) {
+            return Result(emptyMap())
+        }
+        if (pipelineIds.size > 100) {
+            throw InvalidParamException(message = "流水线列表长度不能超过100")
+        }
+        val result = pipelineIds.associateWith {
+            try {
+                softDelete(userId, batchDeletePipeline.projectId, it).data ?: false
+            } catch (e: Exception) {
+                false
+            }
+        }
+        return Result(result)
     }
 
     override fun deleteVersion(

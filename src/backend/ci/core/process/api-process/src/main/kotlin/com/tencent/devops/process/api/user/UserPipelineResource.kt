@@ -46,6 +46,7 @@ import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
+import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
@@ -288,7 +289,6 @@ interface UserPipelineResource {
 
     @ApiOperation("删除流水线编排")
     @DELETE
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
     fun softDelete(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -301,6 +301,16 @@ interface UserPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>
+
+    @ApiOperation("批量删除流水线编排")
+    @DELETE
+    @Path("/batchDelete")
+    fun batchDelete(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        batchDeletePipeline: BatchDeletePipeline
+    ): Result<Map<String, Boolean>>
 
     @ApiOperation("删除流水线版本")
     @DELETE
