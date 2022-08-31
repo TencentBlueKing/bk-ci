@@ -459,6 +459,7 @@ class WechatWorkCallbackService @Autowired constructor(
                 null,
                 null,
                 null,
+                null,
                 PIPELINE_VIEW_ALL_PIPELINES
         )
         if (userViewResult.data != null && (userViewResult.data as PipelineViewPipelinePage).records.isNotEmpty()) {
