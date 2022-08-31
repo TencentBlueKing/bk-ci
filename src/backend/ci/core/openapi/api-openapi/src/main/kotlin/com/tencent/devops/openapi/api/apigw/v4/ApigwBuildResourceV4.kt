@@ -246,16 +246,16 @@ interface ApigwBuildResourceV4 {
         @ApiParam("排队于-结束时间(时间戳形式)", required = false)
         @QueryParam("queueTimeEndTime")
         queueTimeEndTime: Long?,
-        @ApiParam("开始于-开始时间(时间戳形式)", required = false)
+        @ApiParam("开始于-流水线的执行开始时间(时间戳形式)", required = false)
         @QueryParam("startTimeStartTime")
         startTimeStartTime: Long?,
-        @ApiParam("开始于-结束时间(时间戳形式)", required = false)
+        @ApiParam("开始于-流水线的执行结束时间(时间戳形式)", required = false)
         @QueryParam("startTimeEndTime")
         startTimeEndTime: Long?,
-        @ApiParam("结束于-开始时间(时间戳形式)", required = false)
+        @ApiParam("结束于-流水线的执行开始时间(时间戳形式)", required = false)
         @QueryParam("endTimeStartTime")
         endTimeStartTime: Long?,
-        @ApiParam("结束于-结束时间(时间戳形式)", required = false)
+        @ApiParam("结束于-流水线的执行结束时间(时间戳形式)", required = false)
         @QueryParam("endTimeEndTime")
         endTimeEndTime: Long?,
         @ApiParam("耗时最小值", required = false)

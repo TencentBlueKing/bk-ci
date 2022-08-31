@@ -118,7 +118,10 @@ interface ApigwTemplateInstanceResourceV4 {
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
-    @ApiOperation("批量更新流水线模板实例", tags = ["v4_user_templateInstance_update", "v4_app_templateInstance_update"])
+    @ApiOperation(
+        "批量更新流水线模板实例",
+        tags = ["v4_user_templateInstance_update_versionName", "v4_app_templateInstance_update_versionName"]
+    )
     @PUT
     @Path("/update")
     fun updateTemplateInstances(
