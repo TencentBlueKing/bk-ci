@@ -44,7 +44,7 @@ internal class RuntimeDictionaryContextDataTest {
     @DisplayName("上下文单独测试")
     @Test
     fun contextSingleBuildTest() {
-        val context = RuntimeDictionaryContextData(RuntimeValueImpl())
+        val context = RuntimeDictionaryContextData(RuntimeNamedValueImpl())
         data.forEach { (k, v) ->
             Assertions.assertEquals(v, context.tryGetValue(k).first)
         }
@@ -82,10 +82,11 @@ internal class RuntimeDictionaryContextDataTest {
         @BeforeAll
         @JvmStatic
         fun initData() {
-            nameValue.add(NamedValueInfo("settings", ContextValueNode()))
+            val runtimeNamedValue = RuntimeNamedValueImpl()
+            nameValue.add(NamedValueInfo(runtimeNamedValue.key, ContextValueNode()))
             ev.expressionValues.add(
-                "settings",
-                RuntimeDictionaryContextData(RuntimeValueImpl())
+                runtimeNamedValue.key,
+                RuntimeDictionaryContextData(runtimeNamedValue)
             )
         }
 
@@ -118,7 +119,7 @@ internal class RuntimeDictionaryContextDataTest {
             }
         )
 
-        class RuntimeValueImpl : RuntimeValue {
+        class RuntimeNamedValueImpl(override val key: String = "settings") : RuntimeNamedValue {
             override fun getValue(key: String) = data[key]
         }
     }

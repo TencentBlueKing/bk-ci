@@ -34,7 +34,8 @@ import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 import java.lang.Exception
 import java.util.TreeMap
 
-interface RuntimeValue {
+interface RuntimeNamedValue {
+    val key: String
     fun getValue(key: String): PipelineContextData?
 }
 
@@ -44,7 +45,7 @@ interface RuntimeValue {
  * @throws ContextDataRuntimeException
  */
 @Suppress("TooManyFunctions", "ReturnCount")
-class RuntimeDictionaryContextData(private val runtimeValue: RuntimeValue) :
+class RuntimeDictionaryContextData(private val runtimeNamedValue: RuntimeNamedValue) :
     PipelineContextData(PipelineContextDataType.DICTIONARY),
     Iterable<Pair<String, PipelineContextData?>>,
     IReadOnlyObject {
@@ -54,7 +55,7 @@ class RuntimeDictionaryContextData(private val runtimeValue: RuntimeValue) :
 
     private fun requestAndSaveValue(key: String): PipelineContextData? {
         return try {
-            val value = runtimeValue.getValue(key)
+            val value = runtimeNamedValue.getValue(key)
             if (value != null) {
                 set(key, value)
             }
@@ -142,7 +143,7 @@ class RuntimeDictionaryContextData(private val runtimeValue: RuntimeValue) :
     }
 
     override fun clone(): PipelineContextData {
-        val result = RuntimeDictionaryContextData(runtimeValue)
+        val result = RuntimeDictionaryContextData(runtimeNamedValue)
 
         if (mList.isNotEmpty()) {
             result.mList = mutableListOf()

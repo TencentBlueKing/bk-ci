@@ -33,7 +33,10 @@ import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
+import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.RuntimeDictionaryContextData
+import com.tencent.devops.common.expression.context.RuntimeNamedValue
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import org.slf4j.LoggerFactory
 
@@ -76,9 +79,19 @@ object EnvReplacementParser {
         return ObjectReplaceEnvVarUtil.replaceEnvVar(obj, contextMap, realReplacement) as T
     }
 
-    fun getCustomReplacementByMap(variables: Map<String, String>): KeyReplacement {
+    fun getCustomReplacementByMap(
+        variables: Map<String, String>,
+        extendNamedValueMap: List<RuntimeNamedValue>? = null
+    ): KeyReplacement {
         val context = ExecutionContext(DictionaryContextData())
         val nameValue = mutableListOf<NamedValueInfo>()
+        extendNamedValueMap?.forEach { namedValue ->
+            nameValue.add(NamedValueInfo(namedValue.key, ContextValueNode()))
+            context.expressionValues.add(
+                namedValue.key,
+                RuntimeDictionaryContextData(namedValue)
+            )
+        }
         ExpressionParser.fillContextByMap(variables, context, nameValue)
         return object : KeyReplacement {
             override fun getReplacement(key: String): String? {
