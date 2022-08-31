@@ -273,14 +273,15 @@ class CallBackControl @Autowired constructor(
             }
         } catch (e: CallNotPermittedException) {
             logger.warn(
-                "[${callBack.projectId}]|CALL_BACK|" +
-                    "url=${callBack.callBackUrl}|${callBack.events}",
-                e
+                "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}|" +
+                    "failureRate=${breaker.metrics.failureRate}|${e.message}"
             )
+            errorMsg = e.message
+            status = ProjectPipelineCallbackStatus.FAILED
         } catch (e: Exception) {
             logger.warn(
                 "BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
-                    "url=${callBack.callBackUrl}|${callBack.events}|failureRate=${breaker.metrics.failureRate}",
+                    "url=${callBack.callBackUrl}|${callBack.events}",
                 e
             )
             errorMsg = e.message
