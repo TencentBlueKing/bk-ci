@@ -44,7 +44,7 @@ internal class RuntimeDictionaryContextDataTest {
     @DisplayName("上下文单独测试")
     @Test
     fun contextSingleBuildTest() {
-        val context = RuntimeDictionaryContextData(Companion::getValueFun)
+        val context = RuntimeDictionaryContextData(RuntimeValueImpl())
         data.forEach { (k, v) ->
             Assertions.assertEquals(v, context.tryGetValue(k).first)
         }
@@ -85,7 +85,7 @@ internal class RuntimeDictionaryContextDataTest {
             nameValue.add(NamedValueInfo("settings", ContextValueNode()))
             ev.expressionValues.add(
                 "settings",
-                RuntimeDictionaryContextData(Companion::getValueFun)
+                RuntimeDictionaryContextData(RuntimeValueImpl())
             )
         }
 
@@ -118,6 +118,8 @@ internal class RuntimeDictionaryContextDataTest {
             },
         )
 
-        fun getValueFun(key: String): PipelineContextData? = data[key]
+        class RuntimeValueImpl : RuntimeValue {
+            override fun getValueFun(key: String) = data[key]
+        }
     }
 }

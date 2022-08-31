@@ -34,12 +34,16 @@ import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 import java.lang.Exception
 import java.util.TreeMap
 
+interface RuntimeValue {
+    fun getValueFun(key: String): PipelineContextData?
+}
+
 /**
  * 通过函数参数在在运行时动态的获取value的Dict上下文
  * 例如：凭据
  * @throws ContextDataRuntimeException
  */
-class RuntimeDictionaryContextData(private val getValueFunc: (key: String) -> PipelineContextData?) :
+class RuntimeDictionaryContextData(private val runtimeValue: RuntimeValue) :
     PipelineContextData(PipelineContextDataType.DICTIONARY),
     Iterable<Pair<String, PipelineContextData?>>,
     IReadOnlyObject {
@@ -49,7 +53,7 @@ class RuntimeDictionaryContextData(private val getValueFunc: (key: String) -> Pi
 
     private fun requestAndSaveValue(key: String): PipelineContextData? {
         return try {
-            val value = getValueFunc(key)
+            val value = runtimeValue.getValueFun(key)
             if (value != null) {
                 set(key, value)
             }
@@ -137,7 +141,7 @@ class RuntimeDictionaryContextData(private val getValueFunc: (key: String) -> Pi
     }
 
     override fun clone(): PipelineContextData {
-        val result = RuntimeDictionaryContextData(getValueFunc)
+        val result = RuntimeDictionaryContextData(runtimeValue)
 
         if (mList.isNotEmpty()) {
             result.mList = mutableListOf()
