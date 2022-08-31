@@ -119,7 +119,7 @@ internal class RuntimeDictionaryContextDataTest {
         )
 
         class RuntimeValueImpl : RuntimeValue {
-            override fun getValueFun(key: String) = data[key]
+            override fun getValue(key: String) = data[key]
         }
     }
 }

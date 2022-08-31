@@ -35,7 +35,7 @@ import java.lang.Exception
 import java.util.TreeMap
 
 interface RuntimeValue {
-    fun getValueFun(key: String): PipelineContextData?
+    fun getValue(key: String): PipelineContextData?
 }
 
 /**
@@ -43,6 +43,7 @@ interface RuntimeValue {
  * 例如：凭据
  * @throws ContextDataRuntimeException
  */
+@Suppress("TooManyFunctions", "ReturnCount")
 class RuntimeDictionaryContextData(private val runtimeValue: RuntimeValue) :
     PipelineContextData(PipelineContextDataType.DICTIONARY),
     Iterable<Pair<String, PipelineContextData?>>,
@@ -53,7 +54,7 @@ class RuntimeDictionaryContextData(private val runtimeValue: RuntimeValue) :
 
     private fun requestAndSaveValue(key: String): PipelineContextData? {
         return try {
-            val value = runtimeValue.getValueFun(key)
+            val value = runtimeValue.getValue(key)
             if (value != null) {
                 set(key, value)
             }
