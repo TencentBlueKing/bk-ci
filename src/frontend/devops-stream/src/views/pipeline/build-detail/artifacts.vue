@@ -157,7 +157,7 @@
                 const projectInfo = properties.find(property => property.key === 'projectId') || {}
                 const artifactoryType = row.artifactoryType === 'CUSTOM_DIR' ? 'custom' : 'pipeline'
                 if (projectInfo.value && artifactoryType) {
-                    window.open(`https://${BKREPO_HOST}/ui/${projectInfo.value}/generic?repoName=${artifactoryType}&path=${window.encodeURIComponent(row.path)}`, '_blank')
+                    window.open(`https://${BKREPO_HOST}/ui/${projectInfo.value}/generic?repoName=${artifactoryType}&path=${window.encodeURIComponent(row.fullPath)}`, '_blank')
                 }
             }
         }
