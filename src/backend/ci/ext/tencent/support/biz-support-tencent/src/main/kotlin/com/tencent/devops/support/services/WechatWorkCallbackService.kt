@@ -451,16 +451,15 @@ class WechatWorkCallbackService @Autowired constructor(
         val pipelineList = mutableListOf<Pipeline>()
         // 获取流水线列表
         val userViewResult = client.get(UserPipelineResource::class).listViewPipelines(
-                userName,
-                projectCode,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                PIPELINE_VIEW_ALL_PIPELINES
+            userId = userName,
+            projectId = projectCode,
+            page = null,
+            pageSize = null,
+            filterByPipelineName = null,
+            filterByCreator = null,
+            filterByLabels = null,
+            filterByViewIds = null,
+            viewId = PIPELINE_VIEW_ALL_PIPELINES
         )
         if (userViewResult.data != null && (userViewResult.data as PipelineViewPipelinePage).records.isNotEmpty()) {
             pipelineList.addAll((userViewResult.data as PipelineViewPipelinePage).records)
