@@ -115,7 +115,7 @@ internal class RuntimeDictionaryContextDataTest {
                 add("token", StringContextData("212223"))
                 add("username", StringContextData("789"))
                 add("password", StringContextData("123"))
-            },
+            }
         )
 
         class RuntimeValueImpl : RuntimeValue {
