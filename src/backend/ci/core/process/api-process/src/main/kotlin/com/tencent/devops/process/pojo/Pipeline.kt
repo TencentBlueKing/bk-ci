@@ -102,5 +102,17 @@ data class Pipeline(
     @ApiModelProperty("自定义构建号规则", required = false)
     var buildNumRule: String? = null,
     @ApiModelProperty("编排详情", required = false)
-    var model: Model? = null
+    var model: Model? = null,
+    @ApiModelProperty("流水线组名称列表", required = false)
+    var viewNames: List<String>? = null,
+    @ApiModelProperty("最后一次构建的构建信息", required = false)
+    var lastBuildMsg: String? = null,
+    @ApiModelProperty("最后一次构建所有的任务个数", required = false)
+    var lastBuildTotalCount: Int? = null,
+    @ApiModelProperty("最后一次构建已完成的任务个数", required = false)
+    var lastBuildFinishCount: Int? = null,
+    @ApiModelProperty("触发方式", required = false)
+    var trigger: String? = null,
+    @ApiModelProperty("webhook仓库地址", required = false)
+    var webhookRepoUrl: String? = null
 )

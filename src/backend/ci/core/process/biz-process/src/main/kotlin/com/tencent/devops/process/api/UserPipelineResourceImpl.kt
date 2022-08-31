@@ -35,6 +35,8 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.audit.service.AuditService
@@ -43,7 +45,6 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
@@ -66,7 +67,6 @@ import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -488,6 +488,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         filterByPipelineName: String?,
         filterByCreator: String?,
         filterByLabels: String?,
+        filterByViewIds: String?,
         viewId: String
     ): Result<PipelineViewPipelinePage<Pipeline>> {
         checkParam(userId, projectId)
@@ -503,7 +504,8 @@ class UserPipelineResourceImpl @Autowired constructor(
                 checkPermission = true,
                 filterByPipelineName = filterByPipelineName,
                 filterByCreator = filterByCreator,
-                filterByLabels = filterByLabels
+                filterByLabels = filterByLabels,
+                filterByViewIds = filterByViewIds
             )
         )
     }

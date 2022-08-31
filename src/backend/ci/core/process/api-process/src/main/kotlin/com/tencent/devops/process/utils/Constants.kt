@@ -78,6 +78,7 @@ const val BK_CI_BUILD_FAIL_TASKNAMES = "BK_CI_BUILD_FAIL_TASKNAMES"
 const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"
 const val PIPELINE_VIEW_ALL_PIPELINES = "allPipeline"
+const val PIPELINE_VIEW_UNCLASSIFIED = "unclassified"
 
 const val PIPELINE_MATERIAL_URL = "BK_CI_PIEPLEINE_MATERIAL_URL" // pipeline.material.url
 const val PIPELINE_MATERIAL_BRANCHNAME = "BK_CI_PIPELINE_MATERIAL_BRANCHNAME" // pipeline.material.branchName

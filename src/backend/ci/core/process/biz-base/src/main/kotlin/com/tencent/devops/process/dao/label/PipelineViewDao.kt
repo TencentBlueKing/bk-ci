@@ -89,7 +89,8 @@ class PipelineViewDao {
         isProject: Boolean,
         filters: String,
         userId: String,
-        id: Long? = null
+        id: Long? = null,
+        viewType: Int
     ): Long {
         with(TPipelineView.T_PIPELINE_VIEW) {
             val now = LocalDateTime.now()
@@ -105,7 +106,8 @@ class PipelineViewDao {
                 CREATE_TIME,
                 UPDATE_TIME,
                 CREATE_USER,
-                ID
+                ID,
+                VIEW_TYPE
             )
                 .values(
                     projectId,
@@ -118,7 +120,8 @@ class PipelineViewDao {
                     now,
                     now,
                     userId,
-                    id
+                    id,
+                    viewType
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -153,7 +156,8 @@ class PipelineViewDao {
         name: String,
         logic: String,
         isProject: Boolean,
-        filters: String
+        filters: String,
+        viewType: Int
     ): Boolean {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.update(this)
@@ -163,6 +167,7 @@ class PipelineViewDao {
                 .set(FILTER_BY_PIPEINE_NAME, "")
                 .set(FILTER_BY_CREATOR, "")
                 .set(FILTERS, filters)
+                .set(VIEW_TYPE, viewType)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(viewId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1
@@ -185,6 +190,15 @@ class PipelineViewDao {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .fetch()
+        }
+    }
+
+    fun list(dslContext: DSLContext, projectId: String, viewType: Int): Result<TPipelineViewRecord> {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_TYPE.eq(viewType))
                 .fetch()
         }
     }
@@ -229,6 +243,36 @@ class PipelineViewDao {
 
     fun list(
         dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        isProject: Boolean? = null,
+        viewType: Int? = null
+    ): List<TPipelineViewRecord> {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .let {
+                    if (isProject == null) {
+                        it.and(IS_PROJECT.eq(true).or(CREATE_USER.eq(userId)))
+                    } else {
+                        if (isProject) {
+                            it.and(IS_PROJECT.eq(true))
+                        } else {
+                            it.and(CREATE_USER.eq(userId)).and(IS_PROJECT.eq(false))
+                        }
+                    }
+                }.let {
+                    if (viewType == null) {
+                        it
+                    } else {
+                        it.and(VIEW_TYPE.eq(viewType))
+                    }
+                }.fetch()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
         projectId: String,
         viewIds: Set<Long>
     ): Result<TPipelineViewRecord> {
@@ -236,6 +280,21 @@ class PipelineViewDao {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(viewIds))
                 .and(PROJECT_ID.eq(projectId))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+
+    fun listAll(
+        dslContext: DSLContext,
+        projectId: String,
+        isProject: Boolean,
+        userId: String
+    ): Result<TPipelineViewRecord> {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(IS_PROJECT.eq(isProject).or(CREATE_USER.eq(userId)))
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
@@ -250,7 +309,8 @@ class PipelineViewDao {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(IS_PROJECT.eq(isProject).or(CREATE_USER.eq(userId)))
+                .and(IS_PROJECT.eq(isProject))
+                .let { if (isProject) it else it.and(CREATE_USER.eq(userId)) }
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
@@ -276,6 +336,36 @@ class PipelineViewDao {
                 .and(CREATE_USER.eq(userId))
                 .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
+        }
+    }
+
+    fun countByName(
+        dslContext: DSLContext,
+        projectId: String,
+        name: String
+    ): Int {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NAME.eq(name))
+                .fetchOne()?.component1() ?: 0
+        }
+    }
+
+    fun countForLimit(
+        dslContext: DSLContext,
+        projectId: String,
+        isProject: Boolean,
+        userId: String
+    ): Int {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(IS_PROJECT.eq(isProject))
+                .let { if (isProject) it else it.and(CREATE_USER.eq(userId)) }
+                .fetchOne()?.component1() ?: 0
         }
     }
 }

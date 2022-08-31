@@ -42,19 +42,22 @@ data class PipelineViewPipelinePage<out T>(
     @ApiModelProperty("总共多少页", required = true)
     val totalPages: Int,
     @ApiModelProperty("数据", required = true)
-    val records: List<T>
+    val records: List<T>,
+    @ApiModelProperty("我的收藏个数", required = false)
+    var myFavoriteCount: Int? = null,
+    @ApiModelProperty("我创建的个数", required = false)
+    var myCreatedCount: Int? = null
 ) {
     constructor(
         page: Int,
         pageSize: Int,
         count: Long,
         records: List<T>
-    ) :
-        this(
-            count = count,
-            page = page,
-            pageSize = pageSize,
-            totalPages = if (pageSize == -1) 1 else ceil(count * 1.0 / pageSize).toInt(),
-            records = records
-        )
+    ) : this(
+        count = count,
+        page = page,
+        pageSize = pageSize,
+        totalPages = if (pageSize == -1) 1 else ceil(count * 1.0 / pageSize).toInt(),
+        records = records
+    )
 }
