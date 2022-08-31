@@ -127,19 +127,19 @@ class KubernetesBuilderClient @Autowired constructor(
         val (request, action) = when (param) {
             is DeleteBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, url)
-                    .delete(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+                    .delete(RequestBody.create(null, ""))
                     .build(),
-                "delete"
+                ""
             )
             is StopBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, "$url/stop")
-                    .post(RequestBody.create(null, ""))
+                    .put(RequestBody.create(null, ""))
                     .build(),
                 "stop"
             )
             is StartBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, "$url/start")
-                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+                    .put(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
                     .build(),
                 "start"
             )
