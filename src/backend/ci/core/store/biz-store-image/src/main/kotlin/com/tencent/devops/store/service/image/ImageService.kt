@@ -695,9 +695,9 @@ abstract class ImageService @Autowired constructor() {
             bodyParams["url"] = buildResultBaseUrl.removeSuffix("/") + "/$projectCode/$pipelineId/detail/$buildId"
             try {
                 supportService.sendImageExecuteNullToManagers(titleParams, bodyParams)
-            } catch (e: Exception) {
+            } catch (ignored: Throwable) {
                 // 通知失败不应影响执行
-                logger.error("$interfaceName:getImageRepoInfoByCodeAndVersion:sendImageExecuteNullToManagers fail", e)
+                logger.warn("sendImageExecuteNullToManagers fail", ignored)
             }
             getDefaultImageRepoInfo()
         } else {
@@ -708,7 +708,6 @@ abstract class ImageService @Autowired constructor() {
     fun getSelfDevelopPublicImages(
         interfaceName: String? = "Anon interface"
     ): List<ImageRepoInfo> {
-        logger.info("$interfaceName:Input()")
         val records = imageDao.listRunnableSelfDevelopPublicImages(dslContext)
         return records?.map {
             getImageRepoInfoByRecord(it)
@@ -829,8 +828,8 @@ abstract class ImageService @Autowired constructor() {
             } else {
                 imageSizeStr.toLong()
             }
-        } catch (e: NumberFormatException) {
-            logger.warn("imageSizeStr=$imageSizeStr", e)
+        } catch (ignored: Throwable) {
+            logger.warn("imageSizeStr=$imageSizeStr", ignored)
         }
         val imageSize = if (0L == imageSizeNum) {
             "-"
@@ -1062,7 +1061,6 @@ abstract class ImageService @Autowired constructor() {
      */
     @Suppress("UNCHECKED_CAST")
     fun getPipelineImageVersions(projectCode: String, imageCode: String): List<VersionInfo> {
-        logger.info("the projectCode is: $projectCode,imageCode is: $imageCode")
         val imageStatusList = imageCommonService.generateImageStatusList(imageCode, projectCode)
         val versionList = mutableListOf<VersionInfo>()
         val versionRecords =
@@ -1097,7 +1095,6 @@ abstract class ImageService @Autowired constructor() {
             }
             versionList.add(VersionInfo(versionName + "(Tag: $imageTag)", imageVersion)) // 添加具体的版本号
         }
-        logger.info("the imageCode is: $imageCode,versionList is: $versionList")
         return versionList
     }
 

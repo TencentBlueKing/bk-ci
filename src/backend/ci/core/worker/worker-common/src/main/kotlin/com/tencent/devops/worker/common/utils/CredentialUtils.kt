@@ -51,6 +51,7 @@ import java.util.Base64
 object CredentialUtils {
 
     private val sdkApi = ApiFactory.create(CredentialSDKApi::class)
+    var signToken = ""
 
     fun getCredential(
         buildId: String,
@@ -107,14 +108,23 @@ object CredentialUtils {
         val encoder = Base64.getEncoder()
         logger.info("Start to get the credential($credentialId|$acrossProjectId)")
 
-        val result = sdkApi.get(credentialId, encoder.encodeToString(pair.publicKey))
+        val result = sdkApi.get(
+            credentialId = credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey),
+            signToken = signToken
+        )
         if (result.isOk() && result.data != null) {
             return result
         }
         // 当前项目取不到查看是否有跨项目凭证
         if (!acrossProjectId.isNullOrBlank()) {
             val acrossResult =
-                sdkApi.getAcrossProject(acrossProjectId, credentialId, encoder.encodeToString(pair.publicKey))
+                sdkApi.getAcrossProject(
+                    targetProjectId = acrossProjectId,
+                    credentialId = credentialId,
+                    publicKey = encoder.encodeToString(pair.publicKey),
+                    signToken = signToken
+                )
             if (acrossResult.isNotOk() || acrossResult.data == null) {
                 logger.error("Fail to get the across project($acrossProjectId) " +
                     "credential($credentialId) because of ${result.message}")

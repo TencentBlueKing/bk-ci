@@ -68,7 +68,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return Result(data = null)
     }
 
-    override fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum {
+    override fun getAtomPackageSourceType(): AtomPackageSourceTypeEnum {
         return AtomPackageSourceTypeEnum.UPLOAD
     }
 

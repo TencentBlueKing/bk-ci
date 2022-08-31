@@ -436,17 +436,14 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
     }
 
     fun getSubVar(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {
-        logger.info("getSubVar | $buildId | $taskId")
-        val taskRecord = pipelineBuildTaskDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId
-        ) ?: return Result(emptyMap())
-        logger.info("getSubVar sub buildId :${taskRecord.subBuildId}")
+        val task = pipelineBuildTaskDao.get(dslContext, projectId = projectId, buildId = buildId, taskId = taskId)
+            ?: return Result(emptyMap())
 
-        val subBuildId = taskRecord.subBuildId
-        return Result(buildVariableService.getAllVariable(taskRecord.subProjectId, subBuildId))
+        logger.info("getSubVar sub build :${task.subBuildId}|${task.subProjectId}")
+
+        val subBuildId = task.subBuildId ?: return Result(emptyMap())
+        val subProjectId = task.subProjectId ?: return Result(emptyMap())
+        return Result(buildVariableService.getAllVariable(subProjectId, subBuildId))
     }
 
     fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {
@@ -455,13 +452,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         val data: MutableList<PipelineId?> = mutableListOf()
         if (pipelines.isNotEmpty()) {
             pipelines.forEach { (k, v) ->
-                if (k == pipelineName) {
-                    data.add(
-                        PipelineId(
-                            id = v
-                        )
-                    )
-                }
+                if (k == pipelineName) data.add(PipelineId(id = v))
             }
         }
 

@@ -148,11 +148,14 @@ class StreamBuildReviewListener @Autowired constructor(
                 }
                 // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
                 BuildReviewType.TASK_REVIEW -> {
-                    logger.warn("buildReviewListener event not match: ${buildReviewEvent.reviewType}")
+                    logger.warn(
+                        "StreamBuildReviewListener|buildReviewListener" +
+                            "|event not match|${buildReviewEvent.reviewType}"
+                    )
                 }
             }
         } catch (e: Exception) {
-            logger.warn("buildReviewListener ${buildReviewEvent.buildId} error: ${e.message}")
+            logger.warn("StreamBuildReviewListener|buildReviewListener|${buildReviewEvent.buildId}|error|${e.message}")
         }
     }
 }

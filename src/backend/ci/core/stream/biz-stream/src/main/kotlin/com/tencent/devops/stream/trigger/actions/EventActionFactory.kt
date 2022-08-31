@@ -112,13 +112,25 @@ class EventActionFactory @Autowired constructor(
                 try {
                     objectMapper.readValue<GitEvent>(eventStr)
                 } catch (ignore: Exception) {
-                    logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
+                    logger.warn(
+                        "EventActionFactory|loadByData" +
+                            "|Fail to parse the git web hook commit event|errMsg|${ignore.message}"
+                    )
                     return null
                 }
             }
             else -> TODO("对接其他Git平台时需要补充")
         }
 
+        return loadByData(event, actionCommonData, actionContext, actionSetting)
+    }
+
+    fun loadByData(
+        event: CodeWebhookEvent,
+        actionCommonData: EventCommonData,
+        actionContext: StreamTriggerContext,
+        actionSetting: StreamTriggerSetting?
+    ): BaseAction? {
         val action = loadEvent(event) ?: return null
         action.data.eventCommon = actionCommonData
         action.data.context = actionContext

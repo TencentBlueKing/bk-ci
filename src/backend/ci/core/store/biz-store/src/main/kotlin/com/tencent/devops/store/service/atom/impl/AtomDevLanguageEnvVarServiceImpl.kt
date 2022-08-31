@@ -66,13 +66,12 @@ class AtomDevLanguageEnvVarServiceImpl @Autowired constructor(
         if (buildHostOs != BuildHostOsEnum.ALL) {
             buildHostOsList.add(buildHostOs.name)
         }
-        val atomLabelRecords = atomDevLanguageEnvVarDao
-            .getAtomEnvVars(
-                dslContext,
-                language,
-                buildHostTypeList,
-                buildHostOsList
-            )
+        val atomLabelRecords = atomDevLanguageEnvVarDao.getAtomEnvVars(
+            dslContext = dslContext,
+            language = language,
+            buildHostTypeList = buildHostTypeList,
+            buildHostOsList = buildHostOsList
+        )
         atomLabelRecords?.forEach {
             atomDevLanguageEnvVarList.add(
                 AtomDevLanguageEnvVar(
@@ -84,7 +83,7 @@ class AtomDevLanguageEnvVarServiceImpl @Autowired constructor(
                 )
             )
         }
-        logger.info("getAtomDevLanguageEnvVars atomDevLanguageEnvVarList is :$atomDevLanguageEnvVarList")
+        logger.info("getAtomDevLanguageEnvVars language=$language|atomDevLanguageEnvVarList=$atomDevLanguageEnvVarList")
         return Result(atomDevLanguageEnvVarList)
     }
 }

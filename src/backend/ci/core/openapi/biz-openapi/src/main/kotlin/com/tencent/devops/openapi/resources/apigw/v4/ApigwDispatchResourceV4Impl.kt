@@ -27,7 +27,6 @@
 package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
@@ -47,7 +46,7 @@ class ApigwDispatchResourceV4Impl @Autowired constructor(
         userId: String,
         specialDockerHostVOs: List<SpecialDockerHostVO>
     ): Result<Boolean> {
-        logger.info("$userId add special dockerhost: ${JsonUtil.toJson(specialDockerHostVOs)}")
+        logger.info("OPENAPI_DISPATCH_V4|$userId|create special docker host|$specialDockerHostVOs")
         client.get(ServiceDockerHostResource::class).createSpecialDockerHost(
             userId = userId,
             specialDockerHostVOs = specialDockerHostVOs

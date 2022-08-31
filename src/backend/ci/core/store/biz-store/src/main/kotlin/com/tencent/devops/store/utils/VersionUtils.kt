@@ -34,6 +34,11 @@ object VersionUtils {
         return "$versionPrefix*"
     }
 
+    fun convertLatestVersionName(version: String): String {
+        val versionPrefix = version.substring(0, version.indexOf(".") + 1)
+        return "${versionPrefix}latest"
+    }
+
     /**
      * 生成查询版本号
      * @param version 版本号

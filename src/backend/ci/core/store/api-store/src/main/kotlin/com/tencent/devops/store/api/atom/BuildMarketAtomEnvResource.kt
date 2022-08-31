@@ -63,7 +63,16 @@ interface BuildMarketAtomEnvResource {
         version: String,
         @ApiParam("插件状态", required = false)
         @QueryParam("atomStatus")
-        atomStatus: Byte?
+        atomStatus: Byte? = null,
+        @ApiParam("操作系统名称", required = false)
+        @QueryParam("osName")
+        osName: String? = null,
+        @ApiParam("操作系统架构", required = false)
+        @QueryParam("osArch")
+        osArch: String? = null,
+        @ApiParam("是否需要转换操作系统相关信息", required = false)
+        @QueryParam("convertOsFlag")
+        convertOsFlag: Boolean? = null
     ): Result<AtomEnv?>
 
     @ApiOperation("插件工作台-更新插件执行环境信息")
