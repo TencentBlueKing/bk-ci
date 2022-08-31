@@ -162,7 +162,7 @@ interface OPProjectResource {
 
     @ApiOperation("修改项目配置")
     @PUT
-    @Path("/setProjectProperties")
+    @Path("/{projectId}/setProjectProperties")
     fun setProjectProperties(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
