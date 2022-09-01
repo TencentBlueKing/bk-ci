@@ -119,7 +119,8 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                         commitId = commitId,
                         payload = null,
                         eventType = null,
-                        inputs = ManualTriggerService.parseInputs(inputs)
+                        inputs = ManualTriggerService.parseInputs(inputs),
+                        checkPipelineTrigger = inputs?.keys?.contains("ThisIsSubPipelineExecStream") ?: false
                     )
                 )
             )
