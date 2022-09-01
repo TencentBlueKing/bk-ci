@@ -28,6 +28,8 @@
 package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.YamlUtil
@@ -46,6 +48,8 @@ import com.tencent.devops.common.web.form.data.TimePropData
 import com.tencent.devops.common.web.form.data.TipPropData
 import com.tencent.devops.common.web.form.models.Form
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
+import com.tencent.devops.process.api.service.ServicePipelineSettingResource
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfo
 import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfoParam
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
@@ -54,6 +58,7 @@ import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.VariablePropType
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -83,6 +88,7 @@ import javax.ws.rs.core.Response
 @SuppressWarnings("LongParameterList", "ThrowsCount", "ComplexMethod")
 class ManualTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val actionFactory: EventActionFactory,
     streamGitConfig: StreamGitConfig,
     streamEventService: StreamEventService,
@@ -122,6 +128,13 @@ class ManualTriggerService @Autowired constructor(
             return ManualTriggerInfo(yaml = yaml, schema = null, enable = false)
         }
 
+        // 获取蓝盾流水线的pipelineAsCodeSetting
+        val pipelineSettings = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = ChannelCode.GIT
+        ).data ?: throw RuntimeException("get pipeline setting error")
+
         val variables = parseManualVariables(
             userId = userId,
             triggerBuildReq = TriggerBuildReq(
@@ -135,7 +148,8 @@ class ManualTriggerService @Autowired constructor(
                 eventType = null,
                 inputs = null
             ),
-            yamlObject = preYaml
+            yamlObject = preYaml,
+            pipelineSetting = pipelineSettings.pipelineAsCodeSettings
         )
 
         if (variables.isNullOrEmpty()) {
@@ -250,7 +264,8 @@ class ManualTriggerService @Autowired constructor(
     private fun parseManualVariables(
         userId: String,
         triggerBuildReq: TriggerBuildReq,
-        yamlObject: PreTemplateScriptBuildYaml
+        yamlObject: PreTemplateScriptBuildYaml,
+        pipelineSetting: PipelineAsCodeSettings?
     ): Map<String, Variable>? {
         val streamTriggerSetting = getSetting(triggerBuildReq)
 
@@ -263,7 +278,10 @@ class ManualTriggerService @Autowired constructor(
             getTemplateMethod = yamlTemplateService::getTemplate,
             nowRepo = null,
             repo = null,
-            resourcePoolMapExt = null
+            resourcePoolMapExt = null,
+            conf = YamlTemplateConf(
+                useOldParametersExpression = pipelineSetting?.enable != true
+            )
         ).replace().variables
     }
 

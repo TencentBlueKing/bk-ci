@@ -109,6 +109,7 @@ class ExpressionParserTest {
         assertThrows<ExpressionParseException> {
             ExpressionParser.evaluateByMap("a==a", variables, true)
         }
+        println(ExpressionParser.evaluateByMap("variables.pipeline_id2", variables, true) ?: "variables.pipeline_id2")
     }
 
     @DisplayName("测试解析文字")

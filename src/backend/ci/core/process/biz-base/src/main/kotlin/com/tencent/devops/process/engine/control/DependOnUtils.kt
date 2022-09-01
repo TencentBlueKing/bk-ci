@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -184,7 +184,7 @@ object DependOnUtils {
                     listOf()
                 } else {
                     val dependONames = dependOnConfig.dependOnName!!.split(regex)
-                    dependONames.map { EnvUtils.parseEnv(it, params) }
+                    dependONames.map { EnvReplacementParser.parse(it, params) }
                 }
             }
             else -> listOf()

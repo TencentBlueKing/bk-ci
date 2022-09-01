@@ -48,6 +48,7 @@ import com.tencent.devops.process.yaml.v2.models.Repositories
 import com.tencent.devops.process.yaml.v2.parameter.Parameters
 import com.tencent.devops.process.yaml.v2.parameter.ParametersType
 import com.tencent.devops.process.yaml.v2.parsers.template.models.NoReplaceTemplate
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import org.apache.commons.text.StringEscapeUtils
 import org.apache.tools.ant.filters.StringInputStream
 import org.slf4j.LoggerFactory
@@ -191,9 +192,11 @@ object TemplateYamlUtil {
                     val arr = fromJsonToArrayContext(path, param.name, param.default)
                     parameterContext.add(param.name, arr)
                 }
+
                 ParametersType.BOOLEAN.value, ParametersType.NUMBER.value, ParametersType.STRING.value -> {
                     parameterContext.add(param.name, nativeTypeToContext(param.default!!))
                 }
+
                 else -> throw error(
                     Constants.PARAMETER_FORMAT_ERROR.format(
                         path, "parameter ${param.name} type ${param.type} not support"
@@ -243,6 +246,7 @@ object TemplateYamlUtil {
                 context == null -> {
                     ctx
                 }
+
                 ctx is ArrayContextData -> {
                     val c = DictionaryContextData()
                     ctx.add(c)
@@ -254,6 +258,7 @@ object TemplateYamlUtil {
                     ctx.add(nodeName!!, c)
                     c
                 }
+
                 else -> return ctx
             }
             while (fields.hasNext()) {
@@ -272,16 +277,19 @@ object TemplateYamlUtil {
                 context == null -> {
                     ctx
                 }
+
                 ctx is ArrayContextData -> {
                     val c = ArrayContextData()
                     ctx.add(c)
                     c
                 }
+
                 ctx is DictionaryContextData -> {
                     val c = ArrayContextData()
                     ctx.add(nodeName!!, c)
                     c
                 }
+
                 else -> return ctx
             }
             while (iter.hasNext()) {
@@ -533,4 +541,66 @@ object TemplateYamlUtil {
     }
 
     private fun error(content: String) = YamlFormatException(content)
+
+    /**
+     * 为模板中的变量赋值(旧版本只是为了兼容，非必要不要使用)
+     * @param fromPath 来自哪个文件
+     * @param path 读取的哪个模板文件
+     * @param template 被读取的模板文件内容
+     * @param templateParameters 被读取的模板文件自带的参数
+     * @param parameters 引用模板文件时传入的参数
+     */
+    @Deprecated("旧版本，只是为了兼容，非必要不要使用")
+    fun parseTemplateParametersOld(
+        fromPath: String,
+        path: String,
+        template: String,
+        templateParameters: MutableList<Parameters>?,
+        parameters: Map<String, Any?>?
+    ): String {
+        if (!templateParameters.isNullOrEmpty()) {
+            templateParameters.forEachIndexed { index, param ->
+                if (parameters != null) {
+                    val valueName = param.name
+
+                    if (param.name.contains(".")) {
+                        logger.info("PARAMETERS|NAME|WARNING|${param.name}")
+                    }
+
+                    val newValue = parameters[param.name]
+                    if (parameters.keys.contains(valueName)) {
+                        if (!param.values.isNullOrEmpty() && !param.values!!.contains(newValue)) {
+                            kotlin.error(
+                                Constants.VALUE_NOT_IN_ENUM.format(
+                                    fromPath,
+                                    valueName,
+                                    newValue,
+                                    param.values.joinToString(",")
+                                )
+                            )
+                        } else {
+                            templateParameters[index] = param.copy(default = newValue)
+                        }
+                    }
+                }
+            }
+        } else {
+            return template
+        }
+        // 模板替换 先替换调用模板传入的参数，再替换模板的默认参数
+        val parametersListMap = templateParameters.filter {
+            it.default != null && it.type == ParametersType.ARRAY.value
+        }.associate {
+            "parameters.${it.name}" to it.default
+        }
+        val parametersStringMap = templateParameters.filter { it.default != null }.associate {
+            "parameters.${it.name}" to if (it.default == null) {
+                null
+            } else {
+                it.default.toString()
+            }
+        }
+        val replacedList = ScriptYmlUtils.parseParameterValue(template, parametersListMap, ParametersType.ARRAY)
+        return ScriptYmlUtils.parseParameterValue(replacedList, parametersStringMap, ParametersType.STRING)
+    }
 }

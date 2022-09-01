@@ -85,7 +85,6 @@
                     size="18"
                     name="notify"
                 ></icon>
-                {{$t('header.notifications')}}
                 <span class="user-hint" v-if="messageNum > 0"></span>
             </span>
             <toggle-language></toggle-language>
@@ -192,8 +191,9 @@
         color: #f5f7fa;
         .header-info {
             display: flex;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
+            flex: 1;
             .ci-name {
                 display: inline-block;
                 margin: 0 121px 0 12px;

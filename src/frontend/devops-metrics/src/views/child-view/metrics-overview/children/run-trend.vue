@@ -62,6 +62,12 @@ const handleRunTimePointClick = ([{ datasetIndex, index }]) => {
   }
 }
 
+const handleRunTimePointHover = ([{ datasetIndex, index }]) => {
+  if (datasetIndex) {
+    document.getElementsByClassName('double-line-canvas')[0]['style']['cursor'] = 'pointer'
+  }
+}
+
 const handleRunFailPointClick = ([{ datasetIndex, index }]) => {
   router.push({
     name: 'FailAnalysis',
@@ -70,6 +76,10 @@ const handleRunFailPointClick = ([{ datasetIndex, index }]) => {
       time: runFailTrend.value.labels[index]
     }
   })
+}
+
+const handleRunFailPointHover = ([{ datasetIndex, index }]) => {
+  document.getElementsByClassName('bar-canvas')[0]['style']['cursor'] = 'pointer'
 }
 
 const init = () => {
@@ -130,6 +140,7 @@ onBeforeMount(init);
         :labels="runTimeTrend.labels"
         :titles="[t('Total runs'), t('Failed runs')]"
         @point-click="handleRunTimePointClick"
+        @point-hover="handleRunTimePointHover"
       />
     </section>
     <section class="run-trend-card overview-card">
@@ -139,6 +150,7 @@ onBeforeMount(init);
         :labels="runFailTrend.labels"
         :title="t('Run times')"
         @point-click="handleRunFailPointClick"
+        @point-hover="handleRunFailPointHover"
       />
     </section>
   </bk-loading>
