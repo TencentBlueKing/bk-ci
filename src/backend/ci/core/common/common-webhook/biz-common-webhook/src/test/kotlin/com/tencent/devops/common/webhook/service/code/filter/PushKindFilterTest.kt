@@ -1,6 +1,6 @@
 package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PushActionType
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -19,14 +19,14 @@ class PushKindFilterTest {
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            actionList = listOf(PushActionType.PUSH_FILE.value, PushActionType.NEW_BRANCH.value),
+            actionList = listOf(TGitPushActionType.PUSH_FILE.value, TGitPushActionType.NEW_BRANCH.value),
             checkCreateAndUpdate = null
         )
         Assertions.assertTrue(pushKindFilter.doFilter(response))
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            actionList = listOf(PushActionType.PUSH_FILE.value),
+            actionList = listOf(TGitPushActionType.PUSH_FILE.value),
             checkCreateAndUpdate = null
         )
 
@@ -34,7 +34,7 @@ class PushKindFilterTest {
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            actionList = listOf(PushActionType.NEW_BRANCH.value),
+            actionList = listOf(TGitPushActionType.NEW_BRANCH.value),
             checkCreateAndUpdate = null
         )
 
@@ -49,14 +49,14 @@ class PushKindFilterTest {
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            actionList = listOf(PushActionType.PUSH_FILE.value, PushActionType.NEW_BRANCH.value),
+            actionList = listOf(TGitPushActionType.PUSH_FILE.value, TGitPushActionType.NEW_BRANCH.value),
             checkCreateAndUpdate = true
         )
         Assertions.assertTrue(pushKindFilter.doFilter(response))
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            actionList = listOf(PushActionType.PUSH_FILE.value),
+            actionList = listOf(TGitPushActionType.PUSH_FILE.value),
             checkCreateAndUpdate = true
         )
 
@@ -64,7 +64,7 @@ class PushKindFilterTest {
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            actionList = listOf(PushActionType.NEW_BRANCH.value),
+            actionList = listOf(TGitPushActionType.NEW_BRANCH.value),
             checkCreateAndUpdate = true
         )
 
@@ -79,14 +79,14 @@ class PushKindFilterTest {
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            actionList = listOf(PushActionType.PUSH_FILE.value, PushActionType.NEW_BRANCH.value),
+            actionList = listOf(TGitPushActionType.PUSH_FILE.value, TGitPushActionType.NEW_BRANCH.value),
             checkCreateAndUpdate = false
         )
         Assertions.assertTrue(pushKindFilter.doFilter(response))
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            actionList = listOf(PushActionType.PUSH_FILE.value),
+            actionList = listOf(TGitPushActionType.PUSH_FILE.value),
             checkCreateAndUpdate = false
         )
 
@@ -94,7 +94,7 @@ class PushKindFilterTest {
 
         pushKindFilter = PushKindFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedee",
-            actionList = listOf(PushActionType.NEW_BRANCH.value),
+            actionList = listOf(TGitPushActionType.NEW_BRANCH.value),
             checkCreateAndUpdate = false
         )
 
