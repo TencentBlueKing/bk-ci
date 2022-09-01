@@ -1,6 +1,5 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
