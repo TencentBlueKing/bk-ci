@@ -158,8 +158,7 @@ var2:
             println("$index: $map")
         }
         Assertions.assertEquals(
-            contextCase,
-            JsonUtil.to(
+            contextCase, JsonUtil.to(
                 "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\"," +
                     "\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"," +
                     "\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"}," +
@@ -409,7 +408,7 @@ var2:
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
             strategyStr = """---
-service: ${'$'}{{ fromJson(depends.job1.outputs.service) }}
+service: ${'$'}{{ fromJSON(depends.job1.outputs.service) }}
 cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
             includeCaseStr = "\${{ fromJSON(depends.job1.outputs.matrix_include) }}",
             // -1

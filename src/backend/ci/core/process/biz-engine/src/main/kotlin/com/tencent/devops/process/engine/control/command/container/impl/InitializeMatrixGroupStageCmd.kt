@@ -223,7 +223,9 @@ class InitializeMatrixGroupStageCmd(
                 }
 
                 contextCaseList.forEach { contextCase ->
-                    val replacement = EnvReplacementParser.getCustomReplacementByMap(variables)
+                    val replacement = if (asCodeEnabled) {
+                        EnvReplacementParser.getCustomReplacementByMap(variables)
+                    } else null
                     // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                     val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
 
@@ -340,7 +342,9 @@ class InitializeMatrixGroupStageCmd(
                     val statusElements = generateMatrixElements(
                         modelContainer.elements, context.executeCount, postParentIdMap
                     )
-                    val replacement = EnvReplacementParser.getCustomReplacementByMap(contextCase)
+                    val replacement = if (asCodeEnabled) {
+                        EnvReplacementParser.getCustomReplacementByMap(variables)
+                    } else null
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
                             mutexGroupName = EnvReplacementParser.parse(
