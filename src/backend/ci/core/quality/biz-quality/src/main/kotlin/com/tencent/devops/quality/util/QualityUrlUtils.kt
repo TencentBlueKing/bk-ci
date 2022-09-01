@@ -53,6 +53,7 @@ class QualityUrlUtils {
     ): String {
         val variable = client.get(ServiceVarResource::class).getBuildVar(
             projectId = projectId,
+            pipelineId = pipelineId,
             buildId = buildId,
             varName = CodeccUtils.BK_CI_CODECC_TASK_ID
         ).data

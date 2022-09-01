@@ -394,7 +394,7 @@ class PipelineBuildFacadeService(
 
             val paramMap = HashMap<String, BuildParameters>(100, 1F)
             // #2821 构建重试均要传递触发插件ID，否则当有多个事件触发插件时，rebuild后触发器的标记不对
-            buildVariableService.getVariable(projectId, buildId, PIPELINE_START_TASK_ID)?.let { startTaskId ->
+            buildVariableService.getVariable(projectId, pipelineId, buildId, PIPELINE_START_TASK_ID)?.let { startTaskId ->
                 paramMap[PIPELINE_START_TASK_ID] = BuildParameters(PIPELINE_START_TASK_ID, startTaskId)
             }
             val startType = StartType.toStartType(buildInfo.trigger)
@@ -1272,7 +1272,7 @@ class PipelineBuildFacadeService(
                 params = arrayOf(buildId)
             )
 
-        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         return BuildHistoryWithVars(
             id = buildHistory.id,
             userId = buildHistory.userId,
@@ -1327,7 +1327,7 @@ class PipelineBuildFacadeService(
                 arrayOf(buildId)
             )
 
-        val allVariable = buildVariableService.getAllVariable(projectId, buildId)
+        val allVariable = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
 
         return Result(
             BuildHistoryVariables(
@@ -1363,7 +1363,7 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val allVariable = buildVariableService.getAllVariable(projectId, buildId)
+        val allVariable = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
 
         val varMap = HashMap<String, String>()
         variableNames.forEach {

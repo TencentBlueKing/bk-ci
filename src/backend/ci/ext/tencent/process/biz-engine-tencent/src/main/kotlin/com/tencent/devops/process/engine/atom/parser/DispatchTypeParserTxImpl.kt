@@ -112,7 +112,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     // 第三方镜像
                     if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的第三方源镜像，带凭证
-                        genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
+                        genThirdDevCloudDispatchMessage(dispatchType, projectId, pipelineId, buildId)
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value
                     } else {
@@ -140,7 +140,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             } else {
                 // 第三方镜像 DevCloud
                 if (dispatchType is PublicDevCloudDispathcType) {
-                    genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
+                    genThirdDevCloudDispatchMessage(dispatchType, projectId, pipelineId, buildId)
                 }
             }
             logger.info("$buildId DispatchTypeParserTxImpl:AfterTransfer:" +
@@ -157,7 +157,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         customInfo: DispatchInfo,
         context: Map<String, String>
     ): SampleDispatchInfo? {
-        val runVariables = buildVariableService.getAllVariable(projectId, buildId)
+        val runVariables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         // 获取跨项目引用模板信息
         val buildTemplateAcrossInfo =
             if (runVariables[TEMPLATE_ACROSS_INFO_ID] != null && customInfo is StreamDispatchInfo) {
@@ -198,6 +198,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
     private fun genThirdDevCloudDispatchMessage(
         dispatchType: PublicDevCloudDispathcType,
         projectId: String,
+        pipelineId: String,
         buildId: String
     ) {
         var user = ""
@@ -210,7 +211,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         if (!dispatchType.credentialId.isNullOrBlank()) {
             val realCredentialId = EnvUtils.parseEnv(
                 command = dispatchType.credentialId!!,
-                data = buildVariableService.getAllVariable(projectId, buildId))
+                data = buildVariableService.getAllVariable(projectId, pipelineId, buildId))
             if (realCredentialId.isNotEmpty()) {
                 val ticketsMap = CommonCredentialUtils.getCredential(
                     client = client,

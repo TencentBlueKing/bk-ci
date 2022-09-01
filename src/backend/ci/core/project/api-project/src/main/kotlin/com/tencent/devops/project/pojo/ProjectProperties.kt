@@ -25,21 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.job.api.pojo
+package com.tencent.devops.project.pojo
 
-data class OpenStateFastPushFileRequest(
-    val userId: String,
-    val fileSources: List<FileSource>,
-    val fileTargetPath: String,
-    val envSet: EnvSet,
-    val account: String,
-    val timeout: Long,
-    val appId: Int,
-    val openState: String
-) {
-    data class FileSource(
-        val files: List<String>,
-        val envSet: EnvSet,
-        val account: String
-    )
-}
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("项目其他配置")
+data class ProjectProperties(
+    @ApiModelProperty("YAML流水线功能设置")
+    val pipelineAsCodeSettings: PipelineAsCodeSettings
+)
