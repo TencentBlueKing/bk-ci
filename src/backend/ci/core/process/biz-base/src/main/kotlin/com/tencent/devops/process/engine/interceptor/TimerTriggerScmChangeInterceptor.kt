@@ -423,23 +423,25 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         val repositoryConfig = getMarketBuildRepoConfig(input, variables)
 
         val gitPullMode = EnvUtils.parseEnv(input["pullType"] as String?, variables)
-        val branchName =
-            if (ele.getAtomCode().equals("checkout")) {
-                EnvUtils.parseEnv(input["refName"] as String?, variables)
-            } else {
-                when (gitPullMode) {
-                    GitPullModeType.BRANCH.name -> EnvUtils.parseEnv(input["branchName"] as String?, variables)
-                    GitPullModeType.TAG.name -> EnvUtils.parseEnv(input["tagName"] as String?, variables)
-                    GitPullModeType.COMMIT_ID.name -> EnvUtils.parseEnv(input["commitId"] as String?, variables)
-                    else -> return false
-                }
+        val branchName = if (ele.getAtomCode() == "checkout") {
+            EnvUtils.parseEnv(input["refName"] as String?, variables)
+        } else {
+            when (gitPullMode) {
+                GitPullModeType.BRANCH.name -> EnvUtils.parseEnv(input["branchName"] as String?, variables)
+                GitPullModeType.TAG.name -> EnvUtils.parseEnv(input["tagName"] as String?, variables)
+                GitPullModeType.COMMIT_ID.name -> EnvUtils.parseEnv(input["commitId"] as String?, variables)
+                else -> return false
             }
+        }
 
+        LOG.info("check change new | atomCode is ${ele.getAtomCode()} | branchName is : $branchName")
         // 如果是commit id ,则gitPullModeType直接比对就可以了，不需要再拉commit id
         // get pre vision
         val preCommit =
-            if (gitPullMode == GitPullModeType.COMMIT_ID.name) {
+            if (gitPullMode == GitPullModeType.COMMIT_ID.name && ele.getAtomCode() != "checkout") {
                 EnvUtils.parseEnv(input["commitId"] as String?, variables)
+            } else if (gitPullMode == GitPullModeType.COMMIT_ID.name && ele.getAtomCode() == "checkout") {
+                EnvUtils.parseEnv(input["refName"] as String?, variables)
             } else {
                 val result =
                     scmProxyService.recursiveFetchLatestRevision(
