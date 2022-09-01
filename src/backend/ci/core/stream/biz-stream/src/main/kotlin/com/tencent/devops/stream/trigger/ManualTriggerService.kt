@@ -237,6 +237,12 @@ class ManualTriggerService @Autowired constructor(
         if (preYaml.triggerOn?.manual == EnableType.FALSE.value) {
             return emptyList()
         }
+        // 获取蓝盾流水线的pipelineAsCodeSetting
+        val pipelineSettings = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = ChannelCode.GIT
+        ).data ?: throw RuntimeException("get pipeline setting error")
 
         val variables = parseManualVariables(
             userId = userId,
@@ -251,7 +257,8 @@ class ManualTriggerService @Autowired constructor(
                 eventType = null,
                 inputs = null
             ),
-            yamlObject = preYaml
+            yamlObject = preYaml,
+            pipelineSetting = pipelineSettings.pipelineAsCodeSettings
         )
 
         if (variables.isNullOrEmpty()) {
