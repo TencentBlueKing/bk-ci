@@ -144,6 +144,14 @@
                 </div>
             </article>
         </aside>
+        <section class="bkci-footer">
+            <div class="item">
+                <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">技术支持</a> |
+                <a href="https://bk.tencent.com/s-mart/community/" target="_blank">社区论坛</a> |
+                <a href="https://bk.tencent.com/index/" target="_blank">产品官网</a>
+            </div>
+            <p class="bkci-copyright">Copyright © 2012-{{ getFullYear }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
+        </section>
     </div>
 </template>
 
@@ -213,6 +221,10 @@
         serviceName (name = ''): string {
             const charPos = name.indexOf('(')
             return charPos > -1 ? name.slice(0, charPos) : name
+        }
+
+        getFullYear () {
+            return (new Date()).getFullYear()
         }
 
         created () {
@@ -409,6 +421,17 @@
                 a {
                     color: $primaryColor;
                 }
+            }
+        }
+        .bkci-footer {
+            position: absolute;
+            bottom: 20px;
+            text-align: center;
+            .item {
+                margin-bottom: 5px;
+            }
+            a {
+                color: #3c96ff;
             }
         }
     }

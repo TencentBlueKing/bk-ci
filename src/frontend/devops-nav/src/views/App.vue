@@ -46,6 +46,7 @@
         }
 
         async created () {
+            document.title = String(this.$t('documentTitleHome'))
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
                 this.setAnnouncement(announce)
