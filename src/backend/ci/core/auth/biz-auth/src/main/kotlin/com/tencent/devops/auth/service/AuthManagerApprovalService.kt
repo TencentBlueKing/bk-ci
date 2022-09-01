@@ -5,7 +5,6 @@ import com.tencent.devops.auth.dao.AuthManagerApprovalDao
 import com.tencent.devops.auth.dao.ManagerUserDao
 import com.tencent.devops.auth.pojo.enum.ApprovalType
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
@@ -312,16 +311,6 @@ class AuthManagerApprovalService @Autowired constructor(
             return true
         }
         return false
-    }
-
-    fun test() {
-        authManagerApprovalDao.getAll(dslContext).map {
-            val id = it.value1()
-            logger.info("test :$id")
-            val encodeIntId = HashUtil.encodeIntId(it.value1())
-            logger.info("test :$encodeIntId")
-            authManagerApprovalDao.updateTest(dslContext, id, encodeIntId)
-        }
     }
 
     companion object {
