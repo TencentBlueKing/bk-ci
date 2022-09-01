@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.dao
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
@@ -265,6 +266,70 @@ class NodeDao {
                 .set(NODE_STATUS, status.name)
                 .where(NODE_ID.eq(id))
                 .execute()
+        }
+    }
+
+    fun batchAddNode(dslContext: DSLContext, nodes: List<CreateNodeModel>) {
+        if (nodes.isEmpty()) {
+            return
+        }
+        val now = LocalDateTime.now()
+        with(TNode.T_NODE) {
+            nodes.map {
+                val nodeId = dslContext.insertInto(
+                    this,
+                    NODE_STRING_ID,
+                    PROJECT_ID,
+                    NODE_IP,
+                    NODE_NAME,
+                    NODE_STATUS,
+                    NODE_TYPE,
+                    NODE_CLUSTER_ID,
+                    NODE_NAMESPACE,
+                    CREATED_USER,
+                    CREATED_TIME,
+                    EXPIRE_TIME,
+                    OS_NAME,
+                    OPERATOR,
+                    BAK_OPERATOR,
+                    AGENT_STATUS,
+                    DISPLAY_NAME,
+                    IMAGE,
+                    TASK_ID,
+                    LAST_MODIFY_TIME,
+                    LAST_MODIFY_USER,
+                    PIPELINE_REF_COUNT,
+                    LAST_BUILD_TIME
+                ).values(
+                    it.nodeStringId,
+                    it.projectId,
+                    it.nodeIp,
+                    it.nodeName,
+                    it.nodeStatus,
+                    it.nodeType,
+                    it.nodeClusterId,
+                    it.nodeNamespace,
+                    it.createdUser,
+                    now,
+                    it.expireTime,
+                    it.osName,
+                    it.operator,
+                    it.bakOperator,
+                    it.agentStatus,
+                    it.displayName,
+                    it.image,
+                    it.taskId,
+                    now,
+                    it.createdUser,
+                    it.pipelineRefCount,
+                    it.lastBuildTime
+                ).returning(NODE_ID).fetchOne()!!.nodeId
+                val hashId = HashUtil.encodeLongId(nodeId)
+                dslContext.update(this)
+                    .set(NODE_HASH_ID, hashId)
+                    .where(NODE_ID.eq(nodeId))
+                    .execute()
+            }
         }
     }
 
