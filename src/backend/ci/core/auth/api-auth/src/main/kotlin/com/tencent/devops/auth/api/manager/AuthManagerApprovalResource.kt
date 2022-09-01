@@ -72,4 +72,9 @@ interface AuthManagerApprovalResource {
     @Path("/checkExpiringManager")
     @ApiOperation("测试")
     fun checkExpiringManager()
+
+    @POST
+    @Path("/test")
+    @ApiOperation("测试")
+    fun test()
 }

@@ -59,6 +59,10 @@ class AuthManagerApprovalResourceImpl @Autowired constructor(
         authManagerApprovalService.checkExpiringManager()
     }
 
+    override fun test() {
+        authManagerApprovalService.test()
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(AuthManagerApprovalResourceImpl::class.java)
     }
