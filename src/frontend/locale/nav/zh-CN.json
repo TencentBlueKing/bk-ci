@@ -171,5 +171,8 @@
     "documentTitlePerm": "持续集成平台-蓝盾 | 腾讯蓝鲸智云 | 权限中心",
     "documentTitleTicket": "持续集成平台-蓝盾 | 腾讯蓝鲸智云 | 凭证管理",
     "documentTitleStore": "持续集成平台-蓝盾 | 腾讯蓝鲸智云 | 研发商店",
-    "documentTitleMetrics": "持续集成平台-蓝盾 | 腾讯蓝鲸智云 | Metrics"
+    "documentTitleMetrics": "持续集成平台-蓝盾 | 腾讯蓝鲸智云 | Metrics",
+    "technicalSupport": "技术支持",
+    "communityForum": "社区论坛",
+    "ProductOfficialWebsite": "产品官网"
 }

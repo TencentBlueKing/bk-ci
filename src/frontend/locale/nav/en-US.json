@@ -171,5 +171,8 @@
     "documentTitlePerm": "BK-CI | Tencent BlueKing | Perm",
     "documentTitleTicket": "BK-CI | Tencent BlueKing | Ticket",
     "documentTitleStore": "BK-CI | Tencent BlueKing | Store",
-    "documentTitleMetrics": "BK-CI | Tencent BlueKing | Metrics"
+    "documentTitleMetrics": "BK-CI | Tencent BlueKing | Metrics",
+    "technicalSupport": "technical Support",
+    "communityForum": "Community Forum",
+    "ProductOfficialWebsite": "Product official website"
 }

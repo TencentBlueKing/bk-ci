@@ -146,9 +146,9 @@
         </aside>
         <section class="bkci-footer">
             <div class="item">
-                <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">技术支持</a> |
-                <a href="https://bk.tencent.com/s-mart/community/" target="_blank">社区论坛</a> |
-                <a href="https://bk.tencent.com/index/" target="_blank">产品官网</a>
+                <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('technicalSupport') }}</a> |
+                <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('communityForum') }}</a> |
+                <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('ProductOfficialWebsite') }}</a>
             </div>
             <p class="bkci-copyright">Copyright © 2012-{{ getFullYear }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
         </section>

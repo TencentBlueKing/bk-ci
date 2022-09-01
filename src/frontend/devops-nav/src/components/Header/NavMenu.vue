@@ -67,6 +67,7 @@
                             :services="services"
                             :current-page="currentPage"
                             :toggle-collect="toggleCollect"
+                            :get-document-title="getDocumentTitle"
                         />
                     </div>
                 </div>
@@ -162,7 +163,7 @@
             return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
         }
 
-        getdocumentTitle (linkNew) {
+        getDocumentTitle (linkNew) {
             const title = linkNew.split('/')[1]
             const titlesMap = {
                 pipeline: this.$t('documentTitlePipeline'),
@@ -201,7 +202,7 @@
                 return
             }
             this.$router.push(destUrl)
-            document.title = this.getdocumentTitle(linkNew)
+            document.title = this.getDocumentTitle(linkNew)
         }
 
         created () {
