@@ -248,7 +248,7 @@ class PipelineStageService @Autowired constructor(
             )
             // 如果还有待审核的审核组，则直接通知并返回
             if (checkIn?.groupToReview() != null) {
-                val variables = buildVariableService.getAllVariable(projectId, buildId)
+                val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
                 pauseStageNotify(
                     userId = userId,
                     stage = buildStage,
