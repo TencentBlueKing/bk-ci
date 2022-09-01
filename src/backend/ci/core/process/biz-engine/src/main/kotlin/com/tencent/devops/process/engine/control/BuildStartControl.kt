@@ -463,13 +463,13 @@ class BuildStartControl @Autowired constructor(
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
                                         if (ele.gitPullMode!!.type != GitPullModeType.COMMIT_ID) {
-                                            EnvReplacementParser.parse(ele.gitPullMode!!.value, variables, null, replacement)
+                                            EnvReplacementParser.parse(ele.gitPullMode!!.value, variables, null)
                                         } else {
                                             return@nextElement
                                         }
                                     }
                                     !ele.branchName.isNullOrBlank() -> EnvReplacementParser.parse(
-                                        ele.branchName!!, variables, null, replacement
+                                        ele.branchName!!, variables, null
                                     )
                                     else -> return@nextElement
                                 }
@@ -479,13 +479,13 @@ class BuildStartControl @Autowired constructor(
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
                                         if (ele.gitPullMode!!.type != GitPullModeType.COMMIT_ID) {
-                                            EnvReplacementParser.parse(ele.gitPullMode!!.value, variables, null, replacement)
+                                            EnvReplacementParser.parse(ele.gitPullMode!!.value, variables, null)
                                         } else {
                                             return@nextElement
                                         }
                                     }
                                     !ele.branchName.isNullOrBlank() -> EnvReplacementParser.parse(
-                                        ele.branchName!!, variables, null, replacement
+                                        ele.branchName!!, variables, null
                                     )
                                     else -> return@nextElement
                                 }
@@ -495,7 +495,7 @@ class BuildStartControl @Autowired constructor(
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
                                         if (ele.gitPullMode!!.type != GitPullModeType.COMMIT_ID) {
-                                            EnvReplacementParser.parse(ele.gitPullMode!!.value, variables, null, replacement)
+                                            EnvReplacementParser.parse(ele.gitPullMode!!.value, variables, null)
                                         } else {
                                             return@nextElement
                                         }

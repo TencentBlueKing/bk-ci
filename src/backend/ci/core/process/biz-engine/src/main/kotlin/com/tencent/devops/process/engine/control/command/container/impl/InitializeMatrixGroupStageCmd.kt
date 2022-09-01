@@ -347,7 +347,7 @@ class InitializeMatrixGroupStageCmd(
                                 obj = self.mutexGroupName,
                                 contextMap = contextCase,
                                 onlyExpression = asCodeEnabled,
-                                replacement = replacement
+                                executionPair = replacement
                             ),
                             linkTip = EnvReplacementParser.parse(self.linkTip, contextCase, asCodeEnabled, replacement)
                         )

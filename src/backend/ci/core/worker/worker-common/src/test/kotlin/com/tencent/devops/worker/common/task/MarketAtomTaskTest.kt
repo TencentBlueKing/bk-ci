@@ -74,7 +74,7 @@ internal class MarketAtomTaskTest {
             atomParams[name] = EnvReplacementParser.parse(
                 obj = JsonUtil.toJson(value),
                 contextMap = variables,
-                replacement = replacement
+                executionPair = replacement
             )
         }
         return atomParams

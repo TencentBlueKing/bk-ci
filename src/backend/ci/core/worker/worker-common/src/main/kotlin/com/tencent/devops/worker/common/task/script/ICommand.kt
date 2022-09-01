@@ -74,7 +74,7 @@ interface ICommand {
             EnvReplacementParser.parse(
                 obj = command,
                 contextMap = variables,
-                replacement = EnvReplacementParser.getCustomReplacementByMap(
+                executionPair = EnvReplacementParser.getCustomReplacementByMap(
                     variables = variables,
                     extendNamedValueMap = listOf(
                         CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId)
@@ -93,7 +93,7 @@ interface ICommand {
                     )
                 ),
                 onlyExpression = false,
-                replacement = object : KeyReplacement {
+                executionPair = object : KeyReplacement {
                     override fun getReplacement(key: String): String? = variables[key] ?: try {
                         CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
                     } catch (ignore: Exception) {

@@ -97,6 +97,12 @@ class Join : Function() {
         }
     }
 
-    override fun subNameValueEvaluateCore(context: EvaluationContext) =
-        "$name(${parameters[0].subNameValueEvaluate(context)}, ${parameters[1].subNameValueEvaluate(context)})"
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
+        val left = parameters[0].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+        if (parameters.size == 1) {
+            return Pair("$name($left)", false)
+        }
+        val right = parameters[1].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+        return Pair("$name($left, $right)", false)
+    }
 }
