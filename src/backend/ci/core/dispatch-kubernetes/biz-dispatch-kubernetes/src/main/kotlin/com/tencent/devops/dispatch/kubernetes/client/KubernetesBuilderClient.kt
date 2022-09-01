@@ -92,7 +92,7 @@ class KubernetesBuilderClient @Autowired constructor(
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                     "${ConstantsMessage.TROUBLE_SHOOTING}获取构建机详情接口异常" +
-                        "（Fail to get builder detail, http response code: ${response.code()}"
+                            "（Fail to get builder detail, http response code: ${response.code()}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -100,7 +100,7 @@ class KubernetesBuilderClient @Autowired constructor(
             if (retryTime > 0) {
                 logger.info(
                     "[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail SocketTimeoutException." +
-                        " retry:$retryTime"
+                            " retry:$retryTime"
                 )
                 return getBuilderDetail(buildId, vmSeqId, userId, name, retryTime - 1)
             } else {
@@ -131,18 +131,21 @@ class KubernetesBuilderClient @Autowired constructor(
                     .build(),
                 ""
             )
+
             is StopBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, "$url/stop")
                     .put(RequestBody.create(null, ""))
                     .build(),
                 "stop"
             )
+
             is StartBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, "$url/start")
                     .put(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
                     .build(),
                 "start"
             )
+
             else -> return ""
         }
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
@@ -156,7 +159,7 @@ class KubernetesBuilderClient @Autowired constructor(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
                         "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口异常" +
-                            "（Fail to $action docker, http response code: ${response.code()}"
+                                "（Fail to $action docker, http response code: ${response.code()}"
                     )
                 }
                 logger.info("[$buildId]|[$vmSeqId] response: $responseContent")
@@ -188,10 +191,10 @@ class KubernetesBuilderClient @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         userId: String,
-        bcsBuilder: Builder
+        builder: Builder
     ): String {
         val url = "/api/builders"
-        val body = ObjectMapper().writeValueAsString(bcsBuilder)
+        val body = ObjectMapper().writeValueAsString(builder)
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         logger.info("[$buildId]|[$vmSeqId] request body: $body")
         val request = clientCommon.baseRequest(userId, url)
@@ -208,7 +211,7 @@ class KubernetesBuilderClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
                         "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口异常: Fail to createBuilder, http response code: " +
-                            "${response.code()}"
+                                "${response.code()}"
                     )
                 }
 
@@ -251,7 +254,7 @@ class KubernetesBuilderClient @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("dev cloud container start timeout")
-                return KubernetesBuilderStatusEnum.ERROR
+                return KubernetesBuilderStatusEnum.FAILED
             }
             Thread.sleep(1 * 1000)
 
@@ -272,8 +275,9 @@ class KubernetesBuilderClient @Autowired constructor(
                 !isFinish -> continue@loop
                 !success -> {
                     logger.error("execute job failed, msg: $statusResponse")
-                    KubernetesBuilderStatusEnum.ERROR
+                    KubernetesBuilderStatusEnum.FAILED
                 }
+
                 else -> KubernetesBuilderStatusEnum.RUNNING
             }
         }
@@ -305,12 +309,12 @@ class KubernetesBuilderClient @Autowired constructor(
                         "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code()}"
                     )
                 }
-                val bcsResult: KubernetesResult<String> = objectMapper.readValue(responseContent)
-                if (bcsResult.isNotOk()) {
-                    throw RuntimeException(bcsResult.message)
+                val result: KubernetesResult<String> = objectMapper.readValue(responseContent)
+                if (result.isNotOk()) {
+                    throw RuntimeException(result.message)
                 }
 
-                return bcsResult
+                return result
             }
         } catch (e: Exception) {
             logger.error("[$projectId]|[$pipelineId] builderName: $builderName getWebsocketUrl failed.", e)

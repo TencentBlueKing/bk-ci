@@ -35,8 +35,8 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
-import com.tencent.devops.dispatch.common.common.ENV_KEY_PROJECT_ID
-import com.tencent.devops.dispatch.common.common.SLAVE_ENVIRONMENT
+import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
+import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse

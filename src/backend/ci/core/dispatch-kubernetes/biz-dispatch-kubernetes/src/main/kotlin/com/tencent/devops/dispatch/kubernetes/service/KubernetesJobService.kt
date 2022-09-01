@@ -50,9 +50,7 @@ import org.springframework.stereotype.Service
 
 @Service("kubernetesJobService")
 class KubernetesJobService @Autowired constructor(
-    private val kubernetesTaskClient: KubernetesTaskClient,
-    private val kubernetesJobClient: KubernetesJobClient,
-    private val kubernetesBuilderClient: KubernetesBuilderClient
+    private val kubernetesJobClient: KubernetesJobClient
 ) : JobService {
 
     companion object {
@@ -67,9 +65,6 @@ class KubernetesJobService @Autowired constructor(
 
     @Value("\${bcs.resources.job.disk}")
     var disk: Int = 500
-
-    @Value("\${bcs.sleepEntrypoint}")
-    val entrypoint: String = "sleep.sh"
 
     override val slaveEnv = "Bcs"
 

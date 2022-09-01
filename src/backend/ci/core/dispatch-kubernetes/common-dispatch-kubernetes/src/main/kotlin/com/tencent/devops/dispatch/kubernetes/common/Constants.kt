@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.common.common
+package com.tencent.devops.dispatch.kubernetes.common
 
 const val SLAVE_ENVIRONMENT = "devops.slave.environment"
 const val BUILDER_NAME = "HOSTNAME"

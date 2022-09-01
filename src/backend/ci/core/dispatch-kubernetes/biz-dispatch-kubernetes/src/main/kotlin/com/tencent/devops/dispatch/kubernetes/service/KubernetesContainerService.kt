@@ -32,13 +32,13 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.dispatch.common.common.BUILDER_NAME
-import com.tencent.devops.dispatch.common.common.ENV_JOB_BUILD_TYPE
-import com.tencent.devops.dispatch.common.common.ENV_KEY_AGENT_ID
-import com.tencent.devops.dispatch.common.common.ENV_KEY_AGENT_SECRET_KEY
-import com.tencent.devops.dispatch.common.common.ENV_KEY_GATEWAY
-import com.tencent.devops.dispatch.common.common.ENV_KEY_PROJECT_ID
-import com.tencent.devops.dispatch.common.common.SLAVE_ENVIRONMENT
+import com.tencent.devops.dispatch.kubernetes.common.BUILDER_NAME
+import com.tencent.devops.dispatch.kubernetes.common.ENV_JOB_BUILD_TYPE
+import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_ID
+import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_SECRET_KEY
+import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_GATEWAY
+import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
+import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
 import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
@@ -179,11 +179,11 @@ class KubernetesContainerService @Autowired constructor(
             val password = containerPool.credential?.password
 
             val builderName = getOnlyName(userId)
-            val bcsTaskId = kubernetesBuilderClient.createBuilder(
+            val taskId = kubernetesBuilderClient.createBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 userId = userId,
-                bcsBuilder = Builder(
+                builder = Builder(
                     name = builderName,
                     image = "$name:$tag",
                     registry = DockerRegistry(host, userName, password),
@@ -196,30 +196,27 @@ class KubernetesContainerService @Autowired constructor(
                         ENV_KEY_AGENT_SECRET_KEY to secretKey,
                         ENV_KEY_GATEWAY to gateway,
                         "TERM" to "xterm-256color",
-                        SLAVE_ENVIRONMENT to "Bcs",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
-                        BUILDER_NAME to builderName
+                        SLAVE_ENVIRONMENT to "Kubernetes",
+                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
                     ),
                     command = listOf("/bin/sh", entrypoint)
                 )
             )
             logger.info(
                 "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo createBuilder, " +
-                    "taskId:($bcsTaskId)"
+                        "taskId:($taskId)"
             )
             logsPrinter.printLogs(
-                this,
-                "下发创建构建机请求成功，" +
-                    "builderName: $builderName 等待机器创建..."
+                this, "下发创建构建机请求成功，builderName: $builderName 等待机器创建..."
             )
 
-            val (taskStatus, failedMsg) = kubernetesTaskClient.waitTaskFinish(userId, bcsTaskId)
+            val (taskStatus, failedMsg) = kubernetesTaskClient.waitTaskFinish(userId, taskId)
 
             if (taskStatus == TaskStatusEnum.SUCCEEDED) {
                 // 启动成功
                 logger.info(
                     "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
-                        "create kubernetes vm success, wait vm start..."
+                            "create kubernetes vm success, wait vm start..."
                 )
                 logsPrinter.printLogs(this, "构建机创建成功，等待机器启动...")
             } else {
@@ -245,7 +242,7 @@ class KubernetesContainerService @Autowired constructor(
         disk: String
     ): String {
         with(dispatchMessages) {
-            val bcsTaskId = kubernetesBuilderClient.operateBuilder(
+            return kubernetesBuilderClient.operateBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 userId = userId,
@@ -257,15 +254,12 @@ class KubernetesContainerService @Autowired constructor(
                         ENV_KEY_AGENT_SECRET_KEY to secretKey,
                         ENV_KEY_GATEWAY to gateway,
                         "TERM" to "xterm-256color",
-                        SLAVE_ENVIRONMENT to "Bcs",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
-                        BUILDER_NAME to builderName
+                        SLAVE_ENVIRONMENT to "Kubernetes",
+                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
                     ),
                     command = listOf("/bin/sh", entrypoint)
                 )
             )
-
-            return bcsTaskId
         }
     }
 
@@ -287,10 +281,10 @@ class KubernetesContainerService @Autowired constructor(
 
     override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
         val startResult = kubernetesTaskClient.waitTaskFinish(userId, taskId)
-        if (startResult.first == TaskStatusEnum.SUCCEEDED) {
-            return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
+        return if (startResult.first == TaskStatusEnum.SUCCEEDED) {
+            DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
         } else {
-            return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, startResult.second)
+            DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, startResult.second)
         }
     }
 
@@ -312,6 +306,7 @@ class KubernetesContainerService @Autowired constructor(
             status.isSuccess() -> {
                 DispatchBuildStatusResp(DispatchBuildStatusEnum.succeeded.name)
             }
+
             else -> DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, status.message)
         }
     }
@@ -333,10 +328,11 @@ class KubernetesContainerService @Autowired constructor(
             containerName = builderName
         )
         return when (status) {
-            KubernetesBuilderStatusEnum.READY_TO_RUN, KubernetesBuilderStatusEnum.STOP_FAILED ->
+            KubernetesBuilderStatusEnum.READY_TO_RUN, KubernetesBuilderStatusEnum.SUCCEEDED ->
                 DispatchBuilderDebugStatus.CAN_RESTART
+
             KubernetesBuilderStatusEnum.RUNNING -> DispatchBuilderDebugStatus.RUNNING
-            KubernetesBuilderStatusEnum.STARTING -> DispatchBuilderDebugStatus.STARTING
+            KubernetesBuilderStatusEnum.PENDING -> DispatchBuilderDebugStatus.STARTING
             else -> DispatchBuilderDebugStatus.UNKNOWN
         }
     }
@@ -356,14 +352,18 @@ class KubernetesContainerService @Autowired constructor(
         buildId: String,
         dispatchBuildImageReq: DispatchBuildImageReq
     ): DispatchTaskResp {
-        logger.info("projectId: $projectId, buildId: $buildId build and push image. " +
-                        JsonUtil.toJson(dispatchBuildImageReq)
+        logger.info(
+            "projectId: $projectId, buildId: $buildId build and push image. " +
+                    JsonUtil.toJson(dispatchBuildImageReq)
         )
 
-        return DispatchTaskResp(kubernetesBuilderClient.buildAndPushImage(
-            userId, dispatchBuildImageReq))
+        return DispatchTaskResp(
+            kubernetesBuilderClient.buildAndPushImage(
+                userId, dispatchBuildImageReq
+            )
+        )
     }
 
-    private fun getOnlyName(userId: String) = "kubernetes-${userId}${System.currentTimeMillis()}-" +
-        RandomStringUtils.randomAlphabetic(16).toLowerCase()
+    private fun getOnlyName(userId: String) = "b-${userId}${System.currentTimeMillis()}-" +
+            RandomStringUtils.randomAlphabetic(16).toLowerCase()
 }
