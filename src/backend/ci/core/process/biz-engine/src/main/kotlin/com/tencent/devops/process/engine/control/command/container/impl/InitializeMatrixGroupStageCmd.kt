@@ -223,7 +223,7 @@ class InitializeMatrixGroupStageCmd(
                 }
 
                 contextCaseList.forEach { contextCase ->
-                    val replacement = EnvReplacementParser.getCustomReplacementByMap(variables)
+                    val replacement = if (asCodeEnabled) EnvReplacementParser.getCustomReplacementByMap(variables) else null
                     // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                     val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
 
