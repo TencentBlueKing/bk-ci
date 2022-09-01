@@ -43,6 +43,9 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -52,6 +55,7 @@ class QualityControlPointService @Autowired constructor(
     private val qualityRuleDao: QualityRuleDao,
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao
 ) {
+    val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
 
     fun userGetByType(projectId: String, elementType: String?): QualityControlPoint? {
         return serviceGetByType(projectId, elementType)
@@ -196,27 +200,24 @@ class QualityControlPointService @Autowired constructor(
     }
 
     fun addHashId() {
-        controlPointDao.getAllControlPoint(dslContext)?.map {
-            val id = it.value1()
-            logger.info("controlPoint :$id")
-            val hashId = HashUtil.encodeLongId(it.value1())
-            logger.info("controlPoint :$hashId")
-            controlPointDao.updateHashId(dslContext, id, hashId)
+        threadPoolExecutor.submit {
+            controlPointDao.getAllControlPoint(dslContext)?.map {
+                val id = it.value1()
+                val hashId = HashUtil.encodeLongId(it.value1())
+                controlPointDao.updateHashId(dslContext, id, hashId)
+            }
+            qualityRuleDao.getAllRule(dslContext)?.map {
+                val id = it.value1()
+                val hashId = HashUtil.encodeLongId(it.value1())
+                qualityRuleDao.updateHashId(dslContext, id, hashId)
+            }
+            qualityRuleBuildHisDao.getAllRuleBuildHis(dslContext)?.map {
+                val id = it.value1()
+                val hashId = HashUtil.encodeLongId(it.value1())
+                qualityRuleBuildHisDao.updateHashId(dslContext, id, hashId)
+            }
         }
-        qualityRuleDao.getAllRule(dslContext)?.map {
-            val id = it.value1()
-            logger.info("qualityRule :$id")
-            val hashId = HashUtil.encodeLongId(it.value1())
-            logger.info("qualityRule :$hashId")
-            qualityRuleDao.updateHashId(dslContext, id, hashId)
-        }
-        qualityRuleBuildHisDao.getAllRuleBuildHis(dslContext)?.map {
-            val id = it.value1()
-            logger.info("qualityRuleBuildHis :$id")
-            val hashId = HashUtil.encodeLongId(it.value1())
-            logger.info("qualityRuleBuildHis :$hashId")
-            qualityRuleBuildHisDao.updateHashId(dslContext, id, hashId)
-        }
+
     }
 
     companion object {
