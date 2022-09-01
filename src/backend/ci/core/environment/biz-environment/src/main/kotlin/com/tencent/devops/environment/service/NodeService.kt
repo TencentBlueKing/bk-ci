@@ -39,6 +39,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
@@ -63,6 +64,7 @@ import org.slf4j.LoggerFactory
 class NodeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
+    private val envDao: EnvDao,
     private val envNodeDao: EnvNodeDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
@@ -486,6 +488,23 @@ class NodeService @Autowired constructor(
         } catch (ignore: Throwable) {
             logger.error("AUTH|refreshGateway failed with error: ", ignore)
             false
+        }
+    }
+
+    fun addHashId() {
+        envDao.getAllEnv(dslContext)?.map {
+            val id = it.value1()
+            logger.info("test :$id")
+            val hashId = HashUtil.encodeLongId(it.value1())
+            logger.info("test :$hashId")
+            envDao.updateHashId(dslContext, id, hashId)
+        }
+        nodeDao.getAllNode(dslContext)?.map {
+            val id = it.value1()
+            logger.info("test :$id")
+            val hashId = HashUtil.encodeLongId(it.value1())
+            logger.info("test :$hashId")
+            nodeDao.updateHashId(dslContext, id, hashId)
         }
     }
 }

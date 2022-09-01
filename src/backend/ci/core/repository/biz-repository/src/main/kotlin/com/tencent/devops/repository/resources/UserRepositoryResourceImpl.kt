@@ -291,4 +291,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
         repositoryService.userUnLock(userId, projectId, repositoryHashId)
         return Result(true)
     }
+
+    override fun addHashId() {
+        repositoryService.addHashId()
+    }
 }

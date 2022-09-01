@@ -36,16 +36,21 @@ import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import com.tencent.devops.quality.api.v2.pojo.op.ControlPointData
 import com.tencent.devops.quality.api.v2.pojo.op.ControlPointUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
+import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
+import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.util.ElementUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class QualityControlPointService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val controlPointDao: QualityControlPointDao
+    private val controlPointDao: QualityControlPointDao,
+    private val qualityRuleDao: QualityRuleDao,
+    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao
 ) {
 
     fun userGetByType(projectId: String, elementType: String?): QualityControlPoint? {
@@ -145,8 +150,10 @@ class QualityControlPointService @Autowired constructor(
     }
 
     fun opUpdate(userId: String, id: Long, controlPointUpdate: ControlPointUpdate): Boolean {
-        logger.info("user($userId) update control point($id): ${controlPointUpdate.elementType}, " +
-                "stage: ${controlPointUpdate.stage}")
+        logger.info(
+            "user($userId) update control point($id): ${controlPointUpdate.elementType}, " +
+                "stage: ${controlPointUpdate.stage}"
+        )
         if (controlPointDao.update(userId, id, controlPointUpdate, dslContext) > 0) {
             return true
         }
@@ -169,7 +176,7 @@ class QualityControlPointService @Autowired constructor(
         return controlPoint != null && controlPoint.atomVersion <= atomVersion
     }
 
-    fun setTestControlPoint(userId: String, controlPoint: QualityControlPoint): Int {
+    fun setTestControlPoint(userId: String, controlPoint: QualityControlPoint): Long {
         logger.info("QUALITY|setTestControlPoint userId: $userId, controlPoint: ${controlPoint.type}")
         return controlPointDao.setTestControlPoint(dslContext, userId, controlPoint)
     }
@@ -186,6 +193,30 @@ class QualityControlPointService @Autowired constructor(
 
     fun deleteControlPoint(id: Long): Int {
         return controlPointDao.deleteControlPoint(dslContext, id)
+    }
+
+    fun addHashId() {
+        controlPointDao.getAllControlPoint(dslContext)?.map {
+            val id = it.value1()
+            logger.info("controlPoint :$id")
+            val hashId = HashUtil.encodeLongId(it.value1())
+            logger.info("controlPoint :$hashId")
+            controlPointDao.updateHashId(dslContext, id, hashId)
+        }
+        qualityRuleDao.getAllRule(dslContext)?.map {
+            val id = it.value1()
+            logger.info("qualityRule :$id")
+            val hashId = HashUtil.encodeLongId(it.value1())
+            logger.info("qualityRule :$hashId")
+            qualityRuleDao.updateHashId(dslContext, id, hashId)
+        }
+        qualityRuleBuildHisDao.getAllRuleBuildHis(dslContext)?.map {
+            val id = it.value1()
+            logger.info("qualityRuleBuildHis :$id")
+            val hashId = HashUtil.encodeLongId(it.value1())
+            logger.info("qualityRuleBuildHis :$hashId")
+            qualityRuleBuildHisDao.updateHashId(dslContext, id, hashId)
+        }
     }
 
     companion object {

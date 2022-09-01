@@ -27,13 +27,15 @@
 
 package com.tencent.devops.environment.dao
 
-import com.tencent.devops.environment.model.CreateNodeModel
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -191,36 +193,48 @@ class NodeDao {
         status: NodeStatus,
         type: NodeType,
         userId: String
-    ): Long /** Node ID **/ {
+    ): Long
+        /** Node ID **/
+    {
+        var nodeId = 0L
         with(TNode.T_NODE) {
-            return dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                NODE_IP,
-                NODE_NAME,
-                OS_NAME,
-                NODE_STATUS,
-                NODE_TYPE,
-                CREATED_USER,
-                CREATED_TIME,
-                LAST_MODIFY_USER,
-                LAST_MODIFY_TIME
-            )
-                .values(
-                    projectId,
-                    ip,
-                    name,
-                    osName,
-                    status.name,
-                    type.name,
-                    userId,
-                    LocalDateTime.now(),
-                    userId,
-                    LocalDateTime.now()
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                nodeId = transactionContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    NODE_IP,
+                    NODE_NAME,
+                    OS_NAME,
+                    NODE_STATUS,
+                    NODE_TYPE,
+                    CREATED_USER,
+                    CREATED_TIME,
+                    LAST_MODIFY_USER,
+                    LAST_MODIFY_TIME
                 )
-                .returning(NODE_ID)
-                .fetchOne()!!.nodeId
+                    .values(
+                        projectId,
+                        ip,
+                        name,
+                        osName,
+                        status.name,
+                        type.name,
+                        userId,
+                        LocalDateTime.now(),
+                        userId,
+                        LocalDateTime.now()
+                    )
+                    .returning(NODE_ID)
+                    .fetchOne()!!.nodeId
+                val hashId = HashUtil.encodeLongId(nodeId)
+                transactionContext.update(this)
+                    .set(NODE_HASH_ID, hashId)
+                    .where(NODE_ID.eq(nodeId))
+                    .execute()
+            }
         }
+        return nodeId
     }
 
     fun insertNodeStringIdAndDisplayName(
@@ -251,67 +265,6 @@ class NodeDao {
                 .set(NODE_STATUS, status.name)
                 .where(NODE_ID.eq(id))
                 .execute()
-        }
-    }
-
-    fun batchAddNode(dslContext: DSLContext, nodes: List<CreateNodeModel>) {
-        if (nodes.isEmpty()) {
-            return
-        }
-
-        val now = LocalDateTime.now()
-        with(TNode.T_NODE) {
-            val addStep = nodes.map {
-                dslContext.insertInto(
-                    this,
-                    NODE_STRING_ID,
-                    PROJECT_ID,
-                    NODE_IP,
-                    NODE_NAME,
-                    NODE_STATUS,
-                    NODE_TYPE,
-                    NODE_CLUSTER_ID,
-                    NODE_NAMESPACE,
-                    CREATED_USER,
-                    CREATED_TIME,
-                    EXPIRE_TIME,
-                    OS_NAME,
-                    OPERATOR,
-                    BAK_OPERATOR,
-                    AGENT_STATUS,
-                    DISPLAY_NAME,
-                    IMAGE,
-                    TASK_ID,
-                    LAST_MODIFY_TIME,
-                    LAST_MODIFY_USER,
-                    PIPELINE_REF_COUNT,
-                    LAST_BUILD_TIME
-                ).values(
-                    it.nodeStringId,
-                    it.projectId,
-                    it.nodeIp,
-                    it.nodeName,
-                    it.nodeStatus,
-                    it.nodeType,
-                    it.nodeClusterId,
-                    it.nodeNamespace,
-                    it.createdUser,
-                    now,
-                    it.expireTime,
-                    it.osName,
-                    it.operator,
-                    it.bakOperator,
-                    it.agentStatus,
-                    it.displayName,
-                    it.image,
-                    it.taskId,
-                    now,
-                    it.createdUser,
-                    it.pipelineRefCount,
-                    it.lastBuildTime
-                )
-            }
-            dslContext.batch(addStep).execute()
         }
     }
 
@@ -489,6 +442,23 @@ class NodeDao {
             dslContext.update(this)
                 .set(PIPELINE_REF_COUNT, count)
                 .where(NODE_ID.eq(nodeId))
+                .execute()
+        }
+    }
+
+    fun getAllNode(dslContext: DSLContext): Result<Record1<Long>>? {
+        with(TNode.T_NODE) {
+            return dslContext.select(NODE_ID).from(this).fetch()
+        }
+    }
+
+    fun updateHashId(
+        dslContext: DSLContext,
+        id: Long,
+        hashId: String
+    ) {
+        with(TNode.T_NODE) {
+            dslContext.update(this).set(NODE_HASH_ID, hashId).where(NODE_ID.eq(id))
                 .execute()
         }
     }

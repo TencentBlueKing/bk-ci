@@ -1748,6 +1748,16 @@ class RepositoryService @Autowired constructor(
         )
     }
 
+    fun addHashId() {
+        repositoryDao.getAllRepo(dslContext)?.map {
+            val id = it.value1()
+            logger.info("repository :$id")
+            val hashId = HashUtil.encodeLongId(it.value1())
+            logger.info("repository :$hashId")
+            repositoryDao.updateHashId(dslContext, id, hashId)
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
     }

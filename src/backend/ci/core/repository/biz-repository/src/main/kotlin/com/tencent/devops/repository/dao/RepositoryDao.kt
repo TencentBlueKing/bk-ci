@@ -28,13 +28,16 @@
 package com.tencent.devops.repository.dao
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
@@ -52,31 +55,40 @@ class RepositoryDao {
         type: ScmType
     ): Long {
         val now = LocalDateTime.now()
+        var repoId = 0L
         with(TRepository.T_REPOSITORY) {
-            val record = dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                USER_ID,
-                ALIAS_NAME,
-                URL,
-                TYPE,
-                CREATED_TIME,
-                UPDATED_TIME,
-                IS_DELETED
-            ).values(
-                projectId,
-                userId,
-                aliasName,
-                url,
-                type.name,
-                now,
-                now,
-                false
-            )
-                .returning(REPOSITORY_ID)
-                .fetchOne()!!
-            return record.repositoryId
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                repoId = dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    USER_ID,
+                    ALIAS_NAME,
+                    URL,
+                    TYPE,
+                    CREATED_TIME,
+                    UPDATED_TIME,
+                    IS_DELETED
+                ).values(
+                    projectId,
+                    userId,
+                    aliasName,
+                    url,
+                    type.name,
+                    now,
+                    now,
+                    false
+                )
+                    .returning(REPOSITORY_ID)
+                    .fetchOne()!!.repositoryId
+                val hashId = HashUtil.encodeLongId(repoId)
+                transactionContext.update(this)
+                    .set(REPOSITORY_HASH_ID, hashId)
+                    .where(REPOSITORY_ID.eq(repoId))
+                    .execute()
+            }
         }
+        return repoId
     }
 
     fun edit(dslContext: DSLContext, repositoryId: Long, aliasName: String, url: String) {
@@ -317,6 +329,23 @@ class RepositoryDao {
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetch()
+        }
+    }
+
+    fun getAllRepo(dslContext: DSLContext): Result<Record1<Long>>? {
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.select(REPOSITORY_ID).from(this).fetch()
+        }
+    }
+
+    fun updateHashId(
+        dslContext: DSLContext,
+        id: Long,
+        hashId: String
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this).set(REPOSITORY_HASH_ID, hashId).where(REPOSITORY_ID.eq(id))
+                .execute()
         }
     }
 }
