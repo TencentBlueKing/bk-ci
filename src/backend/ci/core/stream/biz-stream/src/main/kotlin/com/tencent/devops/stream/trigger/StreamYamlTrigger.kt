@@ -204,10 +204,11 @@ class StreamYamlTrigger @Autowired constructor(
             )
             // 新建流水线放
             action.data.context.pipeline = pipeline
-        } else if (needUpdateLastBuildBranch(action)) {
-            action.updateLastBranch(
+        } else {
+            action.updatePipelineLastBranchAndDisplayName(
                 pipelineId = pipeline.pipelineId,
-                branch = action.data.eventCommon.branch
+                branch = if (needUpdateLastBuildBranch(action)) action.data.eventCommon.branch else null,
+                displayName = if (needChangePipelineDisplayName(action)) getDisplayName(action) else null
             )
         }
 
@@ -480,6 +481,6 @@ class StreamYamlTrigger @Autowired constructor(
     private fun needChangePipelineDisplayName(
         action: BaseAction
     ): Boolean {
-        return action.data.context.pipeline!!.pipelineId.isBlank() || action is GitBaseAction
+        return action is GitBaseAction && action.data.context.pipeline!!.displayName != getDisplayName(action)
     }
 }
