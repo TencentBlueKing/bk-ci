@@ -20,6 +20,7 @@ import com.tencent.devops.stream.service.StreamYamlService
 import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.trigger.OpenApiTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -31,6 +32,10 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
     private val manualTriggerService: ManualTriggerService,
     private val streamYamlService: StreamYamlService
 ) : ServiceStreamTriggerResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceStreamTriggerResourceImpl::class.java)
+    }
 
     override fun triggerStartup(
         userId: String,
@@ -99,6 +104,7 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
         pipelineId: String,
         triggerBuildReq: OpenapiTriggerReq
     ): Result<TriggerBuildResult> {
+        logger.info("STREAM_TRIGGER_SERVICE|openapiTrigger|$userId|$projectId|$pipelineId|$triggerBuildReq")
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkStreamAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
