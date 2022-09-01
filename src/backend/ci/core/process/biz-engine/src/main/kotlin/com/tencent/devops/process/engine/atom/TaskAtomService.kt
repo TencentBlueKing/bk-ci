@@ -98,7 +98,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 taskId = task.taskId
             )
-            val runVariables = buildVariableService.getAllVariable(task.projectId, task.buildId)
+            val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载内置插件业务逻辑并执行
             atomResponse = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, runVariables)
         } catch (t: BuildTaskException) {
@@ -267,7 +267,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         var atomResponse = AtomResponse(BuildStatus.FAILED)
 
         try {
-            val runVariables = buildVariableService.getAllVariable(task.projectId, task.buildId)
+            val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载插件业务逻辑
             val iAtomTask = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom)
             atomResponse = iAtomTask.tryFinish(task = task, runVariables = runVariables, actionType = actionType)

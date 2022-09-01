@@ -33,7 +33,12 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
+import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.PipelineContextData
+import com.tencent.devops.common.expression.context.RuntimeNamedValue
+import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.api.ApiFactory
@@ -88,17 +93,45 @@ object CredentialUtils {
         }
     }
 
+    @Deprecated("保留原处理变量值逻辑，后续替换凭据建议使用表达式实现")
     fun String.parseCredentialValue(
         context: Map<String, String>? = null,
         acrossProjectId: String? = null
-    ) = ReplacementUtils.replace(this, object : ReplacementUtils.KeyReplacement {
-        override fun getReplacement(key: String): String? {
-            // 支持嵌套的二次替换
-            context?.get(key)?.let { return it }
-            // 如果不是凭据上下文则直接返回原value值
-            return getCredentialContextValue(key, acrossProjectId)
+    ) = ReplacementUtils.replace(
+        this,
+        object : KeyReplacement {
+            override fun getReplacement(key: String): String? {
+                // 支持嵌套的二次替换
+                context?.get(key)?.let { return it }
+                // 如果不是凭据上下文则直接返回原value值
+                return getCredentialContextValue(key, acrossProjectId)
+            }
+        },
+        context
+    )
+
+    class CredentialRuntimeNamedValue(
+        override val key: String = "settings",
+        private val targetProjectId: String? = null
+    ) : RuntimeNamedValue {
+        override fun getValue(key: String): PipelineContextData? {
+            return DictionaryContextData().apply {
+                try {
+                    val pair = DHUtil.initKey()
+                    val credentialInfo = requestCredential(key, pair, targetProjectId).data!!
+                    val credentialList = getDecodedCredentialList(credentialInfo, pair)
+                    val keyMap = CredentialType.Companion.getKeyMap(credentialInfo.credentialType.name)
+                    credentialList.forEachIndexed { index, credential ->
+                        val token = keyMap["v${index + 1}"] ?: return@forEachIndexed
+                        add(token, StringContextData(credential))
+                    }
+                } catch (ignore: Throwable) {
+                    logger.warn("[$key]|Expression get credential value: ", ignore)
+                    return null
+                }
+            }
         }
-    }, context)
+    }
 
     private fun requestCredential(
         credentialId: String,
@@ -126,8 +159,10 @@ object CredentialUtils {
                     signToken = signToken
                 )
             if (acrossResult.isNotOk() || acrossResult.data == null) {
-                logger.error("Fail to get the across project($acrossProjectId) " +
-                    "credential($credentialId) because of ${result.message}")
+                logger.error(
+                    "Fail to get the across project($acrossProjectId) " +
+                        "credential($credentialId) because of ${result.message}"
+                )
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
@@ -165,18 +200,19 @@ object CredentialUtils {
     private fun getCredentialKey(key: String): String {
         // 参考CredentialType
         return if (key.startsWith("settings.") && (
-                key.endsWith(".password") ||
-                    key.endsWith(".access_token") ||
-                    key.endsWith(".username") ||
-                    key.endsWith(".secretKey") ||
-                    key.endsWith(".appId") ||
-                    key.endsWith(".privateKey") ||
-                    key.endsWith(".passphrase") ||
-                    key.endsWith(".token") ||
-                    key.endsWith(".cosappId") ||
-                    key.endsWith(".secretId") ||
-                    key.endsWith(".region")
-                )) {
+            key.endsWith(".password") ||
+                key.endsWith(".access_token") ||
+                key.endsWith(".username") ||
+                key.endsWith(".secretKey") ||
+                key.endsWith(".appId") ||
+                key.endsWith(".privateKey") ||
+                key.endsWith(".passphrase") ||
+                key.endsWith(".token") ||
+                key.endsWith(".cosappId") ||
+                key.endsWith(".secretId") ||
+                key.endsWith(".region")
+            )
+        ) {
             key.substringAfter("settings.").substringBeforeLast(".")
         } else {
             key

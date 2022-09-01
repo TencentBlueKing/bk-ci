@@ -284,7 +284,13 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             pipelineId = task.pipelineId, buildId = task.buildId, dispatchType = dispatchType
         )
 
-        dispatchType.replaceVariable(buildVariableService.getAllVariable(task.projectId, task.buildId))
+        dispatchType.replaceVariable(
+            buildVariableService.getAllVariable(
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                buildId = task.buildId
+            )
+        )
         return dispatchType
     }
 
@@ -330,8 +336,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         } else {
             // 第三方构建机支持打印监控
             if (param.dispatchType is ThirdPartyAgentEnvDispatchType ||
-                param.dispatchType is ThirdPartyAgentIDDispatchType) {
-
+                param.dispatchType is ThirdPartyAgentIDDispatchType
+            ) {
                 thirdPartyAgentMnitorPrint(task)
             }
 
