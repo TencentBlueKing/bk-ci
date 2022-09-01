@@ -27,9 +27,9 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.redis.RedisLockByValue
@@ -46,7 +46,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 @Component
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 class MutexControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
@@ -81,7 +81,7 @@ class MutexControl @Autowired constructor(
         }
         // 替换环境变量
         val mutexGroupName = if (mutexGroup.mutexGroupName != null) {
-            EnvUtils.parseEnv(mutexGroup.mutexGroupName!!, variables)
+            EnvReplacementParser.parse(mutexGroup.mutexGroupName!!, variables)
         } else {
             null
         }

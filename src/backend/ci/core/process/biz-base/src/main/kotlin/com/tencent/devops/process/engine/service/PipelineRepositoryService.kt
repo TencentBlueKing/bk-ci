@@ -72,12 +72,14 @@ import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -537,7 +539,14 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId,
                             pipelineName = model.name,
                             failNotifyTypes = notifyTypes,
-                            maxPipelineResNum = maxPipelineResNum
+                            maxPipelineResNum = maxPipelineResNum,
+                            pipelineAsCodeSettings = try {
+                                client.get(ServiceProjectResource::class).get(projectId).data
+                                    ?.properties?.pipelineAsCodeSettings
+                            } catch (ignore: Throwable) {
+                                logger.warn("[$projectId]|Failed to sync project|pipelineId=$pipelineId", ignore)
+                                null
+                            }
                         )
                         pipelineSettingVersionDao.insertNewSetting(
                             dslContext = transactionContext,
@@ -1014,7 +1023,10 @@ class PipelineRepositoryService constructor(
                 buildNumRule = t.buildNumRule,
                 concurrencyCancelInProgress = t.concurrencyCancelInProgress,
                 concurrencyGroup = t.concurrencyGroup,
-                cleanVariablesWhenRetry = t.cleanVariablesWhenRetry
+                cleanVariablesWhenRetry = t.cleanVariablesWhenRetry,
+                pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
+                    JsonUtil.to(self, PipelineAsCodeSettings::class.java)
+                }
             )
         } else null
     }

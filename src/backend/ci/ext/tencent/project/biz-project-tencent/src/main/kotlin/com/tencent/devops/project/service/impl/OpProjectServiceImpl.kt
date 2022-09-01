@@ -43,6 +43,7 @@ import com.tencent.devops.project.dao.ProjectLocalDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
@@ -280,5 +281,10 @@ class OpProjectServiceImpl @Autowired constructor(
         logger.warn("syn fail list: $failList")
         logger.info("syn project time: ${endTime - startTime}, syn project count: ${synProject.size} ")
         return Result(synProject)
+    }
+
+    override fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean {
+        logger.info("[$projectCode]|updateProjectProperties|userId=$userId|properties=$properties")
+        return projectDao.updatePropertiesByCode(dslContext, projectCode, properties) == 1
     }
 }

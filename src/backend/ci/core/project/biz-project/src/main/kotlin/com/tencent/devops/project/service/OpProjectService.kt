@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.Result
 
 @Suppress("ALL")
@@ -38,4 +39,6 @@ interface OpProjectService {
     fun synProject(projectCode: String, isRefresh: Boolean? = true): Result<Boolean>
 
     fun synProjectInit(isRefresh: Boolean? = true): Result<List<String>>
+
+    fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean
 }
