@@ -1,11 +1,14 @@
 package com.tencent.devops.stream.resources.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.OpenapiTriggerReq
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
@@ -25,6 +28,7 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
     private val permissionService: StreamPermissionService,
     private val streamScmService: StreamScmService,
     private val streamGitTokenService: StreamGitTokenService,
+    private val manualTriggerService: ManualTriggerService,
     private val streamYamlService: StreamYamlService
 ) : ServiceStreamTriggerResource {
 
@@ -54,6 +58,39 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
             )
         }
         return Result(openApiTriggerService.triggerBuild(userId, pipelineId, new))
+    }
+
+    override fun getManualTriggerInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        commitId: String?
+    ): Result<ManualTriggerInfo> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
+        try {
+            return Result(
+                manualTriggerService.getManualTriggerInfo(
+                    userId = userId,
+                    pipelineId = pipelineId,
+                    projectId = projectId,
+                    branchName = branchName,
+                    commitId = commitId
+                )
+            )
+        } catch (e: ErrorCodeException) {
+            return Result(
+                status = e.statusCode,
+                message = e.defaultMessage
+            )
+        } catch (e: Exception) {
+            return Result(
+                status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_INVALID.errorCode,
+                message = "Invalid yaml: ${e.message}"
+            )
+        }
     }
 
     override fun openapiTrigger(
