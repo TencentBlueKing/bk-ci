@@ -58,7 +58,7 @@ internal class MarketAtomTaskTest {
         val nameValue = mutableListOf<NamedValueInfo>()
         ExpressionParser.fillContextByMap(variables, context, nameValue)
         val replacement = object : KeyReplacement {
-            override fun getReplacement(key: String): String? {
+            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
                 return try {
                     ExpressionParser.evaluateByContext(key, context, nameValue, true)?.let {
                         JsonUtil.toJson(it, false)
@@ -67,7 +67,7 @@ internal class MarketAtomTaskTest {
                     println("Expression evaluation failed: ")
                     ignore.printStackTrace()
                     null
-                }
+                } ?: if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
             }
         }
         inputMap.forEach { (name, value) ->
