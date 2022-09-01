@@ -89,6 +89,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
+import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
@@ -130,9 +131,10 @@ open class MarketAtomTask : ITask() {
         val workspacePath = workspace.absolutePath
         // 输出参数的用户命名空间：防止重名窘况
         val namespace: String? = map["namespace"] as String?
+        val asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable == true
         logger.info(
             "${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
-                "|workspace=$workspacePath"
+                "|workspace=$workspacePath|asCodeEnabled=$asCodeEnabled"
         )
 
         // 获取插件基本信息
@@ -185,7 +187,7 @@ open class MarketAtomTask : ITask() {
                 inputMap = input as Map<String, Any>,
                 variables = variables.plus(getContainerVariables(buildTask, buildVariables, workspacePath)),
                 acrossInfo = acrossInfo,
-                asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
+                asCodeEnabled = asCodeEnabled
             )
         } ?: emptyMap()
         printInput(atomData, inputParams, inputTemplate)
@@ -378,14 +380,19 @@ open class MarketAtomTask : ITask() {
         inputMap: Map<String, Any>,
         variables: Map<String, String>,
         acrossInfo: BuildTemplateAcrossInfo?,
-        asCodeEnabled: Boolean?
+        asCodeEnabled: Boolean
     ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
-            if (asCodeEnabled == true) { // TODO 利用缓存字典和自定义结构进行表达式内凭据替换
-                val customReplacement = EnvReplacementParser.getCustomReplacementByMap(variables)
+            if (asCodeEnabled) {
+                val customReplacement = EnvReplacementParser.getCustomReplacementByMap(
+                    variables = variables,
+                    extendNamedValueMap = listOf(
+                        CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossInfo?.targetProjectId)
+                    )
+                )
                 inputMap.forEach { (name, value) ->
-                    logger.info("parseInputParams|[$asCodeEnabled]|name=$name|value=$value")
+                    logger.info("parseInputParams|name=$name|value=$value")
                     atomParams[name] = EnvReplacementParser.parse(
                         obj = JsonUtil.toJson(value),
                         contextMap = variables,

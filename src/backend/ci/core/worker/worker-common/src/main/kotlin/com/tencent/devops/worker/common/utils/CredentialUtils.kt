@@ -35,6 +35,10 @@ import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
+import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.PipelineContextData
+import com.tencent.devops.common.expression.context.RuntimeNamedValue
+import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.api.ApiFactory
@@ -89,6 +93,7 @@ object CredentialUtils {
         }
     }
 
+    @Deprecated("保留原处理变量值逻辑，后续替换凭据建议使用表达式实现")
     fun String.parseCredentialValue(
         context: Map<String, String>? = null,
         acrossProjectId: String? = null
@@ -108,6 +113,29 @@ object CredentialUtils {
         },
         context
     )
+
+    class CredentialRuntimeNamedValue(
+        override val key: String = "settings",
+        private val targetProjectId: String? = null
+    ) : RuntimeNamedValue {
+        override fun getValue(key: String): PipelineContextData? {
+            return DictionaryContextData().apply {
+                try {
+                    val pair = DHUtil.initKey()
+                    val credentialInfo = requestCredential(key, pair, targetProjectId).data!!
+                    val credentialList = getDecodedCredentialList(credentialInfo, pair)
+                    val keyMap = CredentialType.Companion.getKeyMap(credentialInfo.credentialType.name)
+                    credentialList.forEachIndexed { index, credential ->
+                        val token = keyMap["v${index + 1}"] ?: return@forEachIndexed
+                        add(token, StringContextData(credential))
+                    }
+                } catch (ignore: Throwable) {
+                    logger.warn("[$key]|Expression get credential value: ", ignore)
+                    return null
+                }
+            }
+        }
+    }
 
     private fun requestCredential(
         credentialId: String,

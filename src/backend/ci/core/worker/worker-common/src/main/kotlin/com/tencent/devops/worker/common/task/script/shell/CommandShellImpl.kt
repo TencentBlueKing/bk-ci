@@ -53,7 +53,7 @@ class CommandShellImpl : ICommand {
         val realCommand = parseTemplate(
             buildId = buildId,
             command = script,
-            data = taskParam.plus(runtimeVariables),
+            variables = taskParam.plus(runtimeVariables),
             dir = dir,
             taskId = taskId,
             asCodeEnabled = asCodeEnabled

@@ -28,7 +28,6 @@
 package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.api.util.KeyReplacement
-import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
@@ -62,31 +61,47 @@ interface ICommand {
     fun parseTemplate(
         buildId: String,
         command: String,
-        data: Map<String, String>,
+        variables: Map<String, String>,
         dir: File,
         taskId: String?,
         asCodeEnabled: Boolean?
     ): String {
         // 解析跨项目模板信息
         val acrossTargetProjectId by lazy {
-            TemplateAcrossInfoUtil.getAcrossInfo(data, taskId)?.targetProjectId
+            TemplateAcrossInfoUtil.getAcrossInfo(variables, taskId)?.targetProjectId
         }
-
-        val parsedCredentialCommand = ReplacementUtils.replace(command, object : KeyReplacement {
-            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String = data[key] ?: try {
-                CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
-            } catch (ignore: Exception) {
-                CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId) ?: if (doubleCurlyBraces) {
-                    "\${{$key}}"
-                } else {
-                    "\${$key}"
+        return if (asCodeEnabled == true) {
+            EnvReplacementParser.parse(
+                obj = command,
+                contextMap = variables,
+                replacement = EnvReplacementParser.getCustomReplacementByMap(
+                    variables = variables,
+                    extendNamedValueMap = listOf(
+                        CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId)
+                    )
+                )
+            )
+        } else {
+            // 逻辑与原来ReplacementUtils相同
+            EnvReplacementParser.parse(
+                obj = command,
+                contextMap = variables.plus(
+                    mapOf(
+                        WORKSPACE_CONTEXT to dir.absolutePath,
+                        CI_TOKEN_CONTEXT to (variables[CI_TOKEN_CONTEXT] ?: ""),
+                        JOB_OS_CONTEXT to AgentEnv.getOS().name
+                    )
+                ),
+                onlyExpression = false,
+                replacement = object : KeyReplacement {
+                    override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? =
+                        variables[key] ?: try {
+                            CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
+                        } catch (ignore: Exception) {
+                            CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
+                        }
                 }
-            }
-        }, mapOf(
-            WORKSPACE_CONTEXT to dir.absolutePath,
-            CI_TOKEN_CONTEXT to (data[CI_TOKEN_CONTEXT] ?: ""),
-            JOB_OS_CONTEXT to AgentEnv.getOS().name
-        ))
-        return EnvReplacementParser.parse(parsedCredentialCommand, data, asCodeEnabled)
+            )
+        }
     }
 }

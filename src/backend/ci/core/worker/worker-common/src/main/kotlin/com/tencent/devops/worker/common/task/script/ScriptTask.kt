@@ -79,7 +79,8 @@ open class ScriptTask : ITask() {
                     errorMsg = "Empty build script content",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
-                ), "UTF-8"
+                ),
+            "UTF-8"
         ).replace("\r", "")
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
