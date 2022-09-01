@@ -27,12 +27,14 @@
 
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.PaasProject
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ApproveStatus
@@ -290,7 +292,8 @@ class ProjectDao {
                 CREATOR_DEPT_NAME,
                 CREATOR_CENTER_NAME,
                 CHANNEL,
-                ENABLED
+                ENABLED,
+                PROPERTIES
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -313,14 +316,17 @@ class ProjectDao {
                 userDeptDetail.deptName,
                 userDeptDetail.centerName,
                 channelCode!!.name,
-                true
+                true,
+                projectCreateInfo.properties?.let {
+                    JsonUtil.toJson(it, false)
+                }
             ).execute()
         }
     }
 
     fun update(dslContext: DSLContext, userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Int {
         with(TProject.T_PROJECT) {
-            return dslContext.update(this)
+            val update = dslContext.update(this)
                 .set(PROJECT_NAME, projectUpdateInfo.projectName)
                 .set(BG_ID, projectUpdateInfo.bgId)
                 .set(BG_NAME, projectUpdateInfo.bgName)
@@ -332,7 +338,8 @@ class ProjectDao {
                 .set(ENGLISH_NAME, projectUpdateInfo.englishName)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
-                .where(PROJECT_ID.eq(projectId)).execute()
+            projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
+            return update.where(PROJECT_ID.eq(projectId)).execute()
         }
     }
 
@@ -582,6 +589,15 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
                 .set(RELATION_ID, relationId).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun updatePropertiesByCode(dslContext: DSLContext, projectCode: String, properties: ProjectProperties): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(PROPERTIES, JsonUtil.toJson(properties, false))
+                .where(ENGLISH_NAME.eq(projectCode))
                 .execute()
         }
     }

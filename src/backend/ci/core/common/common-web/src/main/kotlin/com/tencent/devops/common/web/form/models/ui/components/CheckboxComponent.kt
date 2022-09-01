@@ -28,6 +28,10 @@
 package com.tencent.devops.common.web.form.models.ui.components
 
 data class CheckboxComponent(
-    override val name: String = "checkbox",
+    override val name: String = classType,
     override val props: Map<String, Any>?
-) : UiComponent
+) : UiComponent(name, props) {
+    companion object {
+        const val classType = "checkbox"
+    }
+}

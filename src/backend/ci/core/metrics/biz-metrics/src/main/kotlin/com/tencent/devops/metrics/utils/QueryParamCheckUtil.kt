@@ -34,12 +34,18 @@ import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.ERROR_TYPE_NAME_PREFIX
 import com.tencent.devops.metrics.constant.MetricsMessageCode
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
 
 object QueryParamCheckUtil {
+
+    fun getIntervalTime(
+        fromDate: LocalDateTime,
+        toDate: LocalDateTime
+    ) = if (fromDate.isEqual(toDate)) 1 else ChronoUnit.DAYS.between(fromDate, toDate)
 
     val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     fun getStartDateTime(): String {
@@ -76,19 +82,24 @@ object QueryParamCheckUtil {
 
     fun checkDateInterval(startTime: String, endTime: String) {
         val metricsConfig = MetricsConfig()
-        // 查询时间区间限制，当天的前一天至前六个月
+        // 目前仅支持6个月内的数据查询
         val startDate = DateTimeUtil.stringToLocalDate(startTime)
         val endDate = DateTimeUtil.stringToLocalDate(endTime)
-        val firstDate = LocalDate.now()
-        val secondDate = firstDate.minusMonths(metricsConfig.maximumQueryMonths)
-        if (startDate!!.isBefore(secondDate)) {
+        if ((startDate!!.until(endDate, ChronoUnit.DAYS)) > metricsConfig.queryDaysMax) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
+                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+                params = arrayOf("${metricsConfig.queryDaysMax}")
             )
         }
-        if (endDate!!.isAfter(firstDate)) {
+        val currentDate = LocalDate.now()
+        if (startDate.isBefore(currentDate) && ((startDate.until(
+                currentDate,
+                ChronoUnit.DAYS
+            )) > metricsConfig.queryDaysMax)
+        ) {
             throw ErrorCodeException(
-                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND
+                errorCode = MetricsMessageCode.QUERY_DATE_BEYOND,
+                params = arrayOf("${metricsConfig.queryDaysMax}")
             )
         }
     }

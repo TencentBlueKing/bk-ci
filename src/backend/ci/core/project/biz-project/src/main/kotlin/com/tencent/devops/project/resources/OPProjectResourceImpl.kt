@@ -31,6 +31,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPProjectResource
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.SystemEnums
@@ -117,5 +118,13 @@ class OPProjectResourceImpl @Autowired constructor(
 
     override fun synProjectInit(isRefresh: Boolean): Result<List<String>> {
         return opProjectService.synProjectInit(isRefresh)
+    }
+
+    override fun setProjectProperties(
+        userId: String,
+        projectCode: String,
+        properties: ProjectProperties
+    ): Result<Boolean> {
+        return Result(opProjectService.updateProjectProperties(userId, projectCode, properties))
     }
 }
