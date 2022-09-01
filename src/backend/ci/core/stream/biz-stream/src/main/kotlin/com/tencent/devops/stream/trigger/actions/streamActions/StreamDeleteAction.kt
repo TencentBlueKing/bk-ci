@@ -1,5 +1,6 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
@@ -120,4 +121,6 @@ class StreamDeleteAction(
     override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) {
         gitAction.updatePipelineLastBranchAndDisplayName(pipelineId, branch, displayName)
     }
+
+    override fun getStartType() = gitAction.getStartType()
 }

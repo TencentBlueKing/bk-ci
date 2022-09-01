@@ -359,7 +359,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     startValues = mutableMapOf(PIPELINE_NAME to pipeline.displayName)
                 ),
                 channelCode = channelCode,
-                startType = StartType.SERVICE
+                startType = action.getStartType()
             ).data!!
             logger.info(
                 "StreamYamlBaseBuild|startBuild|success|gitProjectId|${action.data.getGitProjectId()}|" +
