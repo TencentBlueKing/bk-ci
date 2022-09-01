@@ -49,8 +49,11 @@ var envLogName = "LOGNAME"
 
 func setUser(cmd *exec.Cmd, runUser string) error {
 
+	if len(runUser) == 0 {
+		return nil
+	}
 	// 解决重启构建机后，Linux的 /etc/rc.local 自动启动的agent，读取到HOME 变量为空的问题
-	if len(runUser) == 0 || runUser == systemutil.GetCurrentUser().Username {
+	if runUser == systemutil.GetCurrentUser().Username {
 		envHomeFound := false
 		envUserFound := false
 		envLogNameFound := false
