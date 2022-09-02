@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
@@ -45,6 +46,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.UUID
 
 /**
  * 插件协作逻辑处理
@@ -89,6 +91,7 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY)
         }
         val approveId = UUIDUtil.generate()
+        val token = UUID.randomUUID().toString().replace(StringPool.DASH, StringPool.EMPTY).toLowerCase()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             atomApproveRelDao.add(
@@ -107,10 +110,17 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
                 approveType = ApproveTypeEnum.ATOM_COLLABORATOR_APPLY,
                 approveStatus = ApproveStatusEnum.WAIT,
                 storeCode = atomCode,
-                storeType = StoreTypeEnum.ATOM
+                storeType = StoreTypeEnum.ATOM,
+                token = token
             )
         }
-        sendMoaMessage(atomCode, atomCollaboratorCreateReq, approveId, userId)
+        sendMoaMessage(
+            atomCode = atomCode,
+            atomCollaboratorCreateReq = atomCollaboratorCreateReq,
+            approveId = approveId,
+            userId = userId,
+            token = token
+        )
         return Result(AtomCollaboratorCreateResp(userId, ApproveStatusEnum.WAIT.name))
     }
 
@@ -118,6 +128,7 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
         atomCode: String,
         atomCollaboratorCreateReq: AtomCollaboratorCreateReq,
         approveId: String,
-        userId: String
+        userId: String,
+        token: String
     )
 }
