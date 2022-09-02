@@ -114,5 +114,7 @@ data class Pipeline(
     @ApiModelProperty("触发方式", required = false)
     var trigger: String? = null,
     @ApiModelProperty("webhook仓库地址", required = false)
-    var webhookRepoUrl: String? = null
+    var webhookRepoUrl: String? = null,
+    @ApiModelProperty("是否已删除", required = false)
+    val delete: Boolean? = false
 )

@@ -379,7 +379,7 @@ interface UserPipelineResource {
         filterByLabels: String?,
         @ApiParam("按视图过滤", required = false)
         @QueryParam("filterByViewIds")
-        filterByViewIds: String?,
+        filterByViewIds: String? = null,
         @ApiParam("用户视图ID,表示用户当前所在视图", required = true)
         @QueryParam("viewId")
         viewId: String
@@ -474,7 +474,6 @@ interface UserPipelineResource {
 
     @ApiOperation("列出等还原回收的流水线列表")
     @GET
-    // @Path("/projects/{projectId}/pipelineRecycleList")
     @Path("/{projectId}/pipelineRecycleList")
     fun recycleList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

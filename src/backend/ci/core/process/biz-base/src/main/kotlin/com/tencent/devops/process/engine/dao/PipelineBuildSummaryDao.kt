@@ -154,7 +154,8 @@ class PipelineBuildSummaryDao {
         favorPipelines: List<String> = emptyList(),
         authPipelines: List<String> = emptyList(),
         pipelineFilterParamList: List<PipelineFilterParam>? = null,
-        permissionFlag: Boolean? = null
+        permissionFlag: Boolean? = null,
+        includeDelete: Boolean? = false
     ): Long {
         val conditions = generatePipelineFilterCondition(
             projectId = projectId,
@@ -164,7 +165,8 @@ class PipelineBuildSummaryDao {
             favorPipelines = favorPipelines,
             authPipelines = authPipelines,
             pipelineFilterParamList = pipelineFilterParamList,
-            permissionFlag = permissionFlag
+            permissionFlag = permissionFlag,
+            includeDelete = includeDelete
         )
         return dslContext.selectCount().from(T_PIPELINE_INFO)
             .where(conditions)
@@ -184,7 +186,8 @@ class PipelineBuildSummaryDao {
         permissionFlag: Boolean? = null,
         page: Int? = null,
         pageSize: Int? = null,
-        pageOffsetNum: Int? = 0
+        pageOffsetNum: Int? = 0,
+        includeDelete: Boolean? = false
     ): Result<TPipelineInfoRecord> {
         val conditions = generatePipelineFilterCondition(
             projectId = projectId,
@@ -194,7 +197,8 @@ class PipelineBuildSummaryDao {
             favorPipelines = favorPipelines,
             authPipelines = authPipelines,
             pipelineFilterParamList = pipelineFilterParamList,
-            permissionFlag = permissionFlag
+            permissionFlag = permissionFlag,
+            includeDelete = includeDelete
         )
         return listPipelineInfoBuildSummaryByConditions(
             dslContext = dslContext,
@@ -215,12 +219,15 @@ class PipelineBuildSummaryDao {
         favorPipelines: List<String>,
         authPipelines: List<String>,
         pipelineFilterParamList: List<PipelineFilterParam>?,
-        permissionFlag: Boolean?
+        permissionFlag: Boolean?,
+        includeDelete: Boolean? = false
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(T_PIPELINE_INFO.PROJECT_ID.eq(projectId))
         conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
-        conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
+        if (includeDelete == false) {
+            conditions.add(T_PIPELINE_INFO.DELETE.eq(false))
+        }
         if (pipelineIds != null && pipelineIds.isNotEmpty()) {
             conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(pipelineIds))
         }
@@ -240,6 +247,7 @@ class PipelineBuildSummaryDao {
             PIPELINE_VIEW_ALL_PIPELINES -> {
                 // 查询所有流水线
             }
+
             else -> if (pipelineFilterParamList != null && pipelineFilterParamList.size > 1) {
                 logger.warn("this view logic has deprecated , viewId:$viewId")
                 handleFilterParamCondition(pipelineFilterParamList[1], conditions)
@@ -339,19 +347,24 @@ class PipelineBuildSummaryDao {
             com.tencent.devops.process.pojo.classify.enums.Condition.LIKE -> field.contains(
                 fieldValue
             )
+
             com.tencent.devops.process.pojo.classify.enums.Condition.NOT_LIKE -> field.notLike(
                 "%$fieldValue%"
             )
+
             com.tencent.devops.process.pojo.classify.enums.Condition.EQUAL -> field.eq(
                 fieldValue
             )
+
             com.tencent.devops.process.pojo.classify.enums.Condition.NOT_EQUAL -> field.ne(
                 fieldValue
             )
+
             com.tencent.devops.process.pojo.classify.enums.Condition.INCLUDE -> JooqUtils.strPosition(
                 field,
                 fieldValue
             ).gt(0)
+
             com.tencent.devops.process.pojo.classify.enums.Condition.NOT_INCLUDE -> JooqUtils.strPosition(
                 field,
                 fieldValue
@@ -377,12 +390,15 @@ class PipelineBuildSummaryDao {
                 PipelineSortType.NAME -> {
                     T_PIPELINE_INFO.PIPELINE_NAME_PINYIN.asc()
                 }
+
                 PipelineSortType.CREATE_TIME -> {
                     T_PIPELINE_INFO.CREATE_TIME.desc()
                 }
+
                 PipelineSortType.UPDATE_TIME -> {
                     T_PIPELINE_INFO.UPDATE_TIME.desc()
                 }
+
                 PipelineSortType.LAST_EXEC_TIME -> {
                     T_PIPELINE_INFO.LATEST_START_TIME.desc()
                 }
