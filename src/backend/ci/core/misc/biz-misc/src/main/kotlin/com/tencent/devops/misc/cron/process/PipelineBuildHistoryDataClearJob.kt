@@ -358,7 +358,9 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 }
             }
             totalHandleNum += DEFAULT_PAGE_SIZE
-            processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId, cleanBuilds)
+            if (!cleanBuilds.isNullOrEmpty()) {
+                processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId, cleanBuilds)
+            }
         }
     }
 }
