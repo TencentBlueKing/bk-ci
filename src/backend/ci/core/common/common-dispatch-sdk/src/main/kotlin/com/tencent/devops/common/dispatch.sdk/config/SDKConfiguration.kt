@@ -68,7 +68,7 @@ class SDKConfiguration {
         JobQuotaService(client, buildLogPrinter)
 
     @Bean
-    fun dockerRoutingService(
+    fun dockerRoutingSdkService(
         @Autowired redisOperation: RedisOperation
     ) =
         DockerRoutingSdkService(redisOperation)
