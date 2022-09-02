@@ -131,7 +131,6 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
 
         val pipelineTaskRet = client.get(ServicePipelineTaskResource::class)
                 .listByAtomCode(atomCode, projectCode, pageNotNull, pageSizeNotNull).data
-        logger.info("pipelineTaskRet: $pipelineTaskRet")
         if (pipelineTaskRet == null) {
             return Result(Page(pageNotNull, pageSizeNotNull, 0.toLong(), listOf()))
         } else {

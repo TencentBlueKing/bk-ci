@@ -83,6 +83,10 @@ enum class TriggerReason(val summary: String, val detail: String) {
         "repo trigger failed",
         "repo trigger failed: %s"
     ),
+    SAVE_PIPELINE_FAILED(
+        "save pipeline failed",
+        "save pipeline failed: %s"
+    ),
     UNKNOWN_ERROR(
         "Unknown error, please contact DevOps-helper",
         "Unknown error, please contact DevOps-helper. %s"

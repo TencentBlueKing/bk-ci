@@ -65,9 +65,48 @@ import java.util.regex.Pattern
 )
 object ExpressionParser {
 
-    fun evaluateByMap(expression: String, contextMap: Map<String, String>): Any? {
+    /**
+     * 通过已有字典计算表达式
+     * @param fetchValue 是否将计算结果还原为java类型
+     */
+    fun evaluateByContext(
+        expression: String,
+        context: ExecutionContext,
+        nameValue: List<NamedValueInfo>,
+        fetchValue: Boolean
+    ): Any? {
+        val result = createTree(expression.legalizeExpression(), null, nameValue, null)!!
+            .evaluate(null, context, null)
+        if (!fetchValue) {
+            return result
+        }
+        return if (result.value is PipelineContextData) result.value.fetchValue() else result.value
+    }
+
+    /**
+     * 通过Map变量表类型计算表达式
+     * @param fetchValue 是否将计算结果还原为java类型
+     */
+    fun evaluateByMap(expression: String, contextMap: Map<String, String>, fetchValue: Boolean): Any? {
         val context = ExecutionContext(DictionaryContextData())
         val nameValue = mutableListOf<NamedValueInfo>()
+        fillContextByMap(contextMap, context, nameValue)
+
+        val result = createTree(expression.legalizeExpression(), null, nameValue, null)!!
+            .evaluate(null, context, null)
+
+        if (!fetchValue) {
+            return result
+        }
+
+        return if (result.value is PipelineContextData) result.value.fetchValue() else result.value
+    }
+
+    fun fillContextByMap(
+        contextMap: Map<String, String>,
+        context: ExecutionContext,
+        nameValue: MutableList<NamedValueInfo>
+    ) {
         contextMap.forEach { (key, value) ->
             var data: DictionaryContextData? = null
             val tokens = key.split('.')
@@ -101,9 +140,6 @@ object ExpressionParser {
                 context.expressionValues[key] = StringContextData(value)
             }
         }
-        val result = createTree(expression.legalizeExpression(), null, nameValue, null)!!
-            .evaluate(null, context, null).value
-        return if (result is PipelineContextData) result.fetchValue() else result
     }
 
     fun createTree(
@@ -197,6 +233,7 @@ object ExpressionParser {
                     // Illegal
                     unexpectedLastToken = true
                 }
+
                 else -> {
                     unexpectedLastToken = context.lastToken?.isOperator == true
                 }
@@ -308,6 +345,7 @@ object ExpressionParser {
             TokenKind.EndIndex, // "]"
             TokenKind.EndParameters -> // ")" function call
                 flushTopOperator(context)
+
             else -> {}
         }
     }
@@ -329,6 +367,7 @@ object ExpressionParser {
                 flushTopEndParameters(context)
                 return
             }
+
             else -> {}
         }
 

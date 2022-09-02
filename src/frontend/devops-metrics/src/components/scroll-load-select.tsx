@@ -57,6 +57,7 @@ export default defineComponent({
     const getList = () => {
       if (isLoadEnd.value) return;
       if (pageData.value.page <= 1) {
+        list.value = []
         isLoading.value = true;
       } else {
         isLoadingMore.value = true;

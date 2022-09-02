@@ -8,7 +8,6 @@
             size="18"
             name="locale"
         ></icon>
-        {{$t('changeLang')}}
     </span>
 </template>
 

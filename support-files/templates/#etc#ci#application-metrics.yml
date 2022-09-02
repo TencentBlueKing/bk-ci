@@ -53,7 +53,7 @@ server:
 metrics:
   devopsUrl: __BK_CI_PUBLIC_URL__
   streamUrl: __BK_CI_STREAM_URL__
-  maximumQueryMonths: 6
+  queryDaysMax: 180
   queryCountMax: 10000
   defaultLimitNum: 10
 

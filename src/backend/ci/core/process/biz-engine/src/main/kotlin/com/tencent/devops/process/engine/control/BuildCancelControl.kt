@@ -197,9 +197,10 @@ class BuildCancelControl @Autowired constructor(
     @Suppress("ALL")
     private fun cancelAllPendingTask(event: PipelineBuildCancelEvent, model: Model) {
         val projectId = event.projectId
+        val pipelineId = event.pipelineId
         val buildId = event.buildId
-        val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, buildId) }
-        val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, buildId) }
+        val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, pipelineId, buildId) }
+        val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId) }
         val stages = model.stages
         stages.forEachIndexed nextStage@{ index, stage ->
             if (stage.status == null || index == 0) { // Trigger 和 未启动的忽略

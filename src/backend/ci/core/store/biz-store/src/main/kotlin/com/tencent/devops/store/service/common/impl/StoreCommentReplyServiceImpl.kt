@@ -46,7 +46,6 @@ import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreNotifyService
 import com.tencent.devops.store.service.common.StoreUserService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
@@ -61,8 +60,6 @@ import org.springframework.stereotype.Service
 @Service
 @RefreshScope
 class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyService {
-
-    private val logger = LoggerFactory.getLogger(StoreCommentReplyServiceImpl::class.java)
 
     @Autowired
     lateinit var dslContext: DSLContext
@@ -89,7 +86,6 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
      * 获取评论信息列表
      */
     override fun getStoreCommentReplysByCommentId(commentId: String): Result<List<StoreCommentReplyInfo>?> {
-        logger.info("commentId is :$commentId")
         val storeCommentReplyInfoList = storeCommentReplyDao.getStoreCommentReplysByCommentId(
             dslContext = dslContext,
             commentId = commentId
@@ -100,9 +96,7 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
     }
 
     override fun getStoreCommentReply(replyId: String): Result<StoreCommentReplyInfo?> {
-        logger.info("replyId is :$replyId")
         val storeCommentReplyRecord = storeCommentReplyDao.getStoreCommentReplyById(dslContext, replyId)
-        logger.info("storeCommentReplyRecord is :$storeCommentReplyRecord")
         return if (null != storeCommentReplyRecord) {
             Result(generateStoreCommentReplyInfo(storeCommentReplyRecord))
         } else {
@@ -133,9 +127,7 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
     ): Result<StoreCommentReplyInfo?> {
         val storeCommentRecord = storeCommentDao.getStoreComment(dslContext, commentId)
         ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(commentId))
-        logger.info("the storeCommentRecord is:$storeCommentRecord")
         val userDeptNameResult = storeUserService.getUserFullDeptName(userId)
-        logger.info("the userDeptNameResult is:$userDeptNameResult")
         if (userDeptNameResult.isNotOk()) {
             return Result(userDeptNameResult.status, userDeptNameResult.message ?: "")
         }
@@ -157,7 +149,6 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
         } else {
             storeCommentReplyRequest.replyToUser.plus(";").plus(commentNotifyAdmin).split(";").toSet()
         }
-        logger.info("the receivers is:$receivers")
         val storeType = StoreTypeEnum.getStoreTypeObj(storeCommentRecord.storeType.toInt())
         val storeCode = storeCommentRecord.storeCode
         val url = storeCommonService.getStoreDetailUrl(storeType!!, storeCode)

@@ -28,6 +28,10 @@
 package com.tencent.devops.common.web.form.models.ui.components
 
 data class RadioComponent(
-    override val name: String = "radio",
+    override val name: String = classType,
     override val props: Map<String, Any>?
-) : UiComponent
+) : UiComponent(name, props) {
+    companion object {
+        const val classType = "radio"
+    }
+}
