@@ -38,11 +38,10 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 interface ModelCheckPlugin {
 
     /**
-     * 检查model完整性
-     * @param
+     * 检查[model]编排的完整性，并返回[JobSize + ElementSize = MetaSize]所有元素数量
      * @throws RuntimeException 子类  将检查失败或异常的以RuntimeException子类抛出
      */
-    fun checkModelIntegrity(model: Model, projectId: String?)
+    fun checkModelIntegrity(model: Model, projectId: String?): Int
 
     fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String, finallyStage: Boolean)
 

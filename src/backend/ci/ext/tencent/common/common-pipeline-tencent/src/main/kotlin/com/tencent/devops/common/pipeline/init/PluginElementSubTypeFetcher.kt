@@ -87,6 +87,7 @@ import com.tencent.devops.common.pipeline.element.XcodeBuildElement2
 import com.tencent.devops.common.pipeline.element.ZhiyunInstanceMaintenanceElement
 import com.tencent.devops.common.pipeline.element.ZhiyunPushFileElement
 import com.tencent.devops.common.pipeline.element.ZhiyunUpdateAsyncEXElement
+import com.tencent.devops.common.pipeline.element.store.AtomRunEnvPrepareElement
 import com.tencent.devops.common.pipeline.element.store.ExtServiceBuildDeployElement
 import com.tencent.devops.common.pipeline.element.store.StoreCodeccValidateElement
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -155,14 +156,14 @@ class PluginElementSubTypeFetcher : ElementSubTypeFetcher {
             GitCommentCheckElement.classType to GitCommentCheckElement::class.java,
             AtomBuildArchiveElement.classType to AtomBuildArchiveElement::class.java,
             DeployDistributionElement.classType to DeployDistributionElement::class.java,
-            FileArchiveElement.classType to FileArchiveElement::class.java,
             MetaFileScanElement.classType to MetaFileScanElement::class.java,
             Unity3dBuildElement.classType to Unity3dBuildElement::class.java,
             XcodeBuildElement.classType to XcodeBuildElement::class.java,
             XcodeBuildElement2.classType to XcodeBuildElement2::class.java,
             SensitiveScanElement.classType to SensitiveScanElement::class.java,
             ExtServiceBuildDeployElement.classType to ExtServiceBuildDeployElement::class.java,
-            StoreCodeccValidateElement.classType to StoreCodeccValidateElement::class.java
+            StoreCodeccValidateElement.classType to StoreCodeccValidateElement::class.java,
+            AtomRunEnvPrepareElement.classType to AtomRunEnvPrepareElement::class.java
         )
     }
 }

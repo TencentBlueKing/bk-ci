@@ -27,8 +27,6 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
-import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 
 class PathRegexFilter(
@@ -36,61 +34,15 @@ class PathRegexFilter(
     private val triggerOnPath: List<String>,
     private val includedPaths: List<String>,
     private val excludedPaths: List<String>
-) : WebhookFilter {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PathRegexFilter::class.java)
-    }
+) : BasePathFilter(
+    pipelineId = pipelineId,
+    triggerOnPath = triggerOnPath,
+    includedPaths = includedPaths,
+    excludedPaths = excludedPaths
+) {
     private val matcher = AntPathMatcher()
 
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info(
-            "$pipelineId|triggerOnPath:$triggerOnPath|includedPaths:$includedPaths" +
-                "|excludedPaths:$excludedPaths|path regex filter"
-        )
-        return hasNoPathSpecs() || (isPathNotExcluded() && isPathIncluded(response))
-    }
-
-    private fun hasNoPathSpecs(): Boolean {
-        return includedPaths.isEmpty() && excludedPaths.isEmpty()
-    }
-
-    /**
-     * 路径过滤:触发的路径需要满足所有配置的路径
-     */
-    @Suppress("ReturnCount")
-    private fun isPathNotExcluded(): Boolean {
-        triggerOnPath.forEach eventPath@{ eventPath ->
-            excludedPaths.forEach userPath@{ userPath ->
-                if (matcher.match(userPath, eventPath)) {
-                    return@eventPath
-                }
-            }
-            return true
-        }
-        return false
-    }
-
-    /**
-     * 路径包含: 触发的路径只要有一个满足配置的路径
-     */
-    private fun isPathIncluded(response: WebhookFilterResponse): Boolean {
-        if (includedPaths.isEmpty()) {
-            return true
-        }
-        val matchPaths = mutableSetOf<String>()
-        triggerOnPath.forEach eventPath@{ eventPath ->
-            includedPaths.forEach userPath@{ userPath ->
-                if (matcher.match(userPath, eventPath)) {
-                    matchPaths.add(userPath)
-                }
-            }
-        }
-        return if (matchPaths.isNotEmpty()) {
-            response.addParam(MATCH_PATHS, matchPaths.joinToString(","))
-            true
-        } else {
-            false
-        }
+    override fun isPathMatch(eventPath: String, userPath: String): Boolean {
+        return matcher.match(userPath, eventPath)
     }
 }

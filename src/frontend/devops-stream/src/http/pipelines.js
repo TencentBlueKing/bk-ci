@@ -157,7 +157,7 @@ export default {
 
     resizeTerm (resizeUrl, params) {
         const protocol = document.location.protocol || 'http:'
-        return api.post(`${protocol}//${DEVNET_HOST}/${resizeUrl}`, params).then(res => {
+        return api.post(`${protocol}//${PROXY_URL_PREFIX}/${resizeUrl}`, params).then(res => {
             return res && res.Id
         })
     },
@@ -188,5 +188,9 @@ export default {
 
     getPipelineDirList (projectId, params) {
         return api.get(`${STREAM_PERFIX}/user/pipelines/${projectId}/dir_list`, { params })
+    },
+
+    getPipelineParamJson (projectId, pipelineId, params) {
+        return api.get(`${STREAM_PERFIX}/user/trigger/build/${projectId}/${pipelineId}/manual`, { params })
     }
 }

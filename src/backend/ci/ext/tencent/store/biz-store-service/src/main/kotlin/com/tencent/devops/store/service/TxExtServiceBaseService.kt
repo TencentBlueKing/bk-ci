@@ -89,24 +89,24 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         userId: String,
         serviceCode: String
     ): Result<Map<String, String>?> {
-        logger.info("handleServicePackage marketServiceCreateRequest is:$extensionInfo,serviceCode is:$serviceCode,userId is:$userId")
+        logger.info("handleServicePackage params:[$extensionInfo|$serviceCode|$userId]")
         extensionInfo.authType ?: return MessageCodeUtil.generateResponseDataObject(
-            CommonMessageCode.PARAMETER_IS_NULL,
-            arrayOf("authType"),
-            null
+            messageCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf("authType"),
+            data = null
         )
         extensionInfo.visibilityLevel ?: return MessageCodeUtil.generateResponseDataObject(
-            CommonMessageCode.PARAMETER_IS_NULL,
-            arrayOf("visibilityLevel"),
-            null
+            messageCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf("visibilityLevel"),
+            data = null
         )
         val repositoryInfo: RepositoryInfo?
         if (extensionInfo.visibilityLevel == VisibilityLevelEnum.PRIVATE) {
             if (extensionInfo.privateReason.isNullOrBlank()) {
                 return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_NULL,
-                    arrayOf("privateReason"),
-                    null
+                    messageCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("privateReason"),
+                    data = null
                 )
             }
         }
@@ -116,21 +116,25 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         itemInfoList?.forEach {
             itemCodeSet.add(it.itemCode)
         }
-        redisOperation.set("$KEY_EXT_SERVICE_ITEMS_PREFIX:$serviceCode", JsonUtil.toJson(itemCodeSet), TimeUnit.DAYS.toSeconds(1))
+        redisOperation.set(
+            key = "$KEY_EXT_SERVICE_ITEMS_PREFIX:$serviceCode",
+            value = JsonUtil.toJson(itemCodeSet),
+            expiredInSecond = TimeUnit.DAYS.toSeconds(1)
+        )
         // 远程调工蜂接口创建代码库
         try {
             val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
-                userId,
-                extensionInfo.projectCode,
-                serviceCode,
-                storeBuildInfoDao.getStoreBuildInfoByLanguage(
+                userId = userId,
+                projectCode = extensionInfo.projectCode,
+                repositoryName = serviceCode,
+                sampleProjectPath = storeBuildInfoDao.getStoreBuildInfoByLanguage(
                     dslContext,
                     extensionInfo.language!!,
                     StoreTypeEnum.SERVICE
                 ).sampleProjectPath,
-                serviceNameSpaceId.toInt(),
-                extensionInfo.visibilityLevel,
-                TokenTypeEnum.PRIVATE_KEY
+                namespaceId = serviceNameSpaceId.toInt(),
+                visibilityLevel = extensionInfo.visibilityLevel,
+                tokenType = TokenTypeEnum.PRIVATE_KEY
             )
             logger.info("the createGitRepositoryResult is :$createGitRepositoryResult")
             if (createGitRepositoryResult.isOk()) {
@@ -138,8 +142,8 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             } else {
                 return Result(createGitRepositoryResult.status, createGitRepositoryResult.message, null)
             }
-        } catch (e: Exception) {
-            logger.error("createGitCodeRepository error  is :$e", e)
+        } catch (ignored: Throwable) {
+            logger.error("service[$serviceCode] createGitCodeRepository fail!", ignored)
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
         }
         if (null == repositoryInfo) {
@@ -165,14 +169,18 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         val serviceRecord = extServiceDao.getServiceById(context, serviceId) ?: return false
         val serviceCode = serviceRecord.serviceCode
         val version = serviceRecord.version
-        val servicePipelineRelRecord = storePipelineRelDao.getStorePipelineRel(context, serviceCode, StoreTypeEnum.SERVICE)
+        val servicePipelineRelRecord = storePipelineRelDao.getStorePipelineRel(
+            dslContext = context,
+            storeCode = serviceCode,
+            storeType = StoreTypeEnum.SERVICE
+        )
         val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-            context,
-            serviceCode,
-            StoreTypeEnum.SERVICE.type.toByte()
+            dslContext = context,
+            storeCode = serviceCode,
+            storeType = StoreTypeEnum.SERVICE.type.toByte()
         ) // 查找新增扩展服务时关联的项目
         val buildInfo = extServiceBuildInfoDao.getServiceBuildInfo(context, serviceId)
-        logger.info("the buildInfo is:$buildInfo")
+        logger.info("service[$serviceCode] buildInfo is:$buildInfo")
         val script = buildInfo.value1()
         val repoAddr = extServiceImageSecretConfig.repoRegistryUrl
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
@@ -216,7 +224,12 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 .initExtServiceBuildPipeline(userId, projectCode!!, extServiceBuildInitPipelineReq).data
             logger.info("the serviceMarketInitPipelineResp is:$serviceMarketInitPipelineResp")
             if (null != serviceMarketInitPipelineResp) {
-                storePipelineRelDao.add(context, serviceCode, StoreTypeEnum.SERVICE, serviceMarketInitPipelineResp.pipelineId)
+                storePipelineRelDao.add(
+                    dslContext = context,
+                    storeCode = serviceCode,
+                    storeType = StoreTypeEnum.SERVICE,
+                    pipelineId = serviceMarketInitPipelineResp.pipelineId
+                )
                 extServiceDao.setServiceStatusById(
                     dslContext = context,
                     serviceId = serviceId,

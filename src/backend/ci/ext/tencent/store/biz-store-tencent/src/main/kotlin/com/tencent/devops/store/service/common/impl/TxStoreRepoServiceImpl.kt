@@ -30,7 +30,6 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.store.configuration.StoreRepoNameSpaceNameConfig
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.TxStoreRepoService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -39,17 +38,13 @@ class TxStoreRepoServiceImpl @Autowired constructor(
     private val storeRepoNameSpaceNameConfig: StoreRepoNameSpaceNameConfig
 ) : TxStoreRepoService {
 
-    private val logger = LoggerFactory.getLogger(TxStoreRepoServiceImpl::class.java)
-
     override fun getStoreRepoNameSpaceName(storeType: StoreTypeEnum): String {
-        logger.info("getStoreRepoNameSpaceName storeType is :$storeType,")
         val repoNameSpaceName = when (storeType) {
             StoreTypeEnum.ATOM -> "${storeRepoNameSpaceNameConfig.pluginNameSpaceName}"
             StoreTypeEnum.IDE_ATOM -> "${storeRepoNameSpaceNameConfig.idePluginNameSpaceName}"
             StoreTypeEnum.SERVICE -> "${storeRepoNameSpaceNameConfig.serviceNameSpaceName}"
             else -> ""
         }
-        logger.info("getStoreDetailUrl repoNameSpaceName is :$repoNameSpaceName")
         return repoNameSpaceName
     }
 }

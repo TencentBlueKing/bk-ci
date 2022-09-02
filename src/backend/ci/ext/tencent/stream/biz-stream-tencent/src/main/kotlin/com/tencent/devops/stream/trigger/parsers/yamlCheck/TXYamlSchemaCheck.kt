@@ -40,6 +40,7 @@ import com.tencent.devops.stream.config.TXStreamGitConfig
 import com.tencent.devops.stream.service.StreamGitTokenService
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.util.RetryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
@@ -89,8 +90,11 @@ class TXYamlSchemaCheck @Autowired constructor(
 
     private fun checkYamlSchema(originYaml: String, templateType: TemplateType? = null, isCiFile: Boolean) {
         val loadYaml = try {
-            YamlUtil.toYaml(yaml.load(originYaml))
+            RetryUtils.retryAnyException {
+                YamlUtil.toYaml(Yaml().load(originYaml))
+            }
         } catch (ignored: Throwable) {
+            logger.warn("TX_YAML_SCHEMA_CHECK|originYaml=$originYaml", ignored)
             throw YamlFormatException("There may be a problem with your yaml syntax ${ignored.message}")
         }
         // 解析锚点

@@ -29,20 +29,28 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreMemberReq
-import com.tencent.devops.store.service.common.TxStoreGitResitoryService
+import com.tencent.devops.store.service.common.TxStoreGitRepositoryService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class TxAtomMemberServiceImpl @Autowired constructor(
-    private val storeGitResitoryService: TxStoreGitResitoryService
+    private val storeGitRepositoryService: TxStoreGitRepositoryService
 ) : AtomMemberServiceImpl() {
 
-    override fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean> {
-        return storeGitResitoryService.addRepoMember(storeMemberReq, userId, repositoryHashId)
+    override fun addRepoMember(
+        storeMemberReq: StoreMemberReq,
+        userId: String,
+        repositoryHashId: String
+    ): Result<Boolean> {
+        return storeGitRepositoryService.addRepoMember(storeMemberReq, userId, repositoryHashId)
     }
 
-    override fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean> {
-        return storeGitResitoryService.deleteRepoMember(userId, username, repositoryHashId)
+    override fun deleteRepoMember(
+        userId: String,
+        username: String,
+        repositoryHashId: String
+    ): Result<Boolean> {
+        return storeGitRepositoryService.deleteRepoMember(userId, username, repositoryHashId)
     }
 }

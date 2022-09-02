@@ -73,7 +73,7 @@ class MessageCodeDetailService @Autowired constructor(
                 messageCodeDetailList?.forEach {
                     redisOperation.set(
                         key = BCI_CODE_PREFIX + it.messageCode,
-                        value = JsonUtil.getObjectMapper().writeValueAsString(it),
+                        value = JsonUtil.toJson(it, formatted = false),
                         expired = false
                     )
                 }
@@ -130,7 +130,7 @@ class MessageCodeDetailService @Autowired constructor(
         return if (null != messageCodeDetail) {
             redisOperation.set(
                 key = BCI_CODE_PREFIX + messageCode,
-                value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetailResult.data),
+                value = JsonUtil.toJson(messageCodeDetail, formatted = false),
                 expired = false
             )
             Result(data = true)
@@ -143,7 +143,7 @@ class MessageCodeDetailService @Autowired constructor(
      * 添加code信息信息
      */
     fun addMessageCodeDetail(addMessageCodeRequest: AddMessageCodeRequest): Result<Boolean> {
-        logger.info("addMessageCodeRequest is: $addMessageCodeRequest")
+        logger.info("addMessageCodeRequest : messageCodeDetail = $addMessageCodeRequest")
         val messageCodeDetailResult = getMessageCodeDetail(addMessageCodeRequest.messageCode)
         // 判断code信息是否存在，存在才添加
         val messageCode = addMessageCodeRequest.messageCode
@@ -164,7 +164,7 @@ class MessageCodeDetailService @Autowired constructor(
         )
         redisOperation.set(
             key = BCI_CODE_PREFIX + messageCode,
-            value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetail),
+            value = JsonUtil.toJson(messageCodeDetail, formatted = false),
             expired = false
         )
         return Result(data = true)
@@ -197,7 +197,7 @@ class MessageCodeDetailService @Autowired constructor(
         messageCodeDetail.messageDetailEn = updateMessageCodeRequest.messageDetailEn
         redisOperation.set(
             key = BCI_CODE_PREFIX + messageCode,
-            value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetail),
+            value = JsonUtil.toJson(messageCodeDetail, formatted = false),
             expired = false
         )
         return Result(data = true)

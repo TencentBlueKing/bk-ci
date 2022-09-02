@@ -34,8 +34,6 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.MacOSGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -45,20 +43,14 @@ import com.tencent.devops.project.dao.ProjectLocalDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
-import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
-import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
-import com.tencent.devops.project.service.ProjectTagService
-import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import org.springframework.util.CollectionUtils
@@ -70,32 +62,20 @@ class OpProjectServiceImpl @Autowired constructor(
     private val projectLocalDao: ProjectLocalDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val redisOperation: RedisOperation,
-    gray: Gray,
     private val projectDispatcher: ProjectDispatcher,
     private val paasCCService: ProjectPaasCCService,
     private val bkAuthProjectApi: AuthProjectApi,
     private val bsAuthTokenApi: AuthTokenApi,
-    macosGray: MacOSGray,
-    private val tofService: TOFService,
-    private val bsPipelineAuthServiceCode: AuthServiceCode,
-    private val projectTagService: ProjectTagService
+    private val bsPipelineAuthServiceCode: AuthServiceCode
 ) : AbsOpProjectServiceImpl(
-    dslContext,
-    projectDao,
-    projectLabelRelDao,
-    redisOperation,
-    gray,
-    macosGray,
-    projectDispatcher
+    dslContext = dslContext,
+    projectDao = projectDao,
+    projectLabelRelDao = projectLabelRelDao,
+    redisOperation = redisOperation,
+    projectDispatcher = projectDispatcher
 ) {
 
     private final val redisProjectKey = "BK:PROJECT:INFO:"
-
-    @Value("\${tag.prod:#{null}}")
-    private val prodTag: String? = null
-
-    @Value("\${tag.gray:#{null}}")
-    private val grayTag: String? = null
 
     override fun updateProjectFromOp(
         userId: String,
@@ -111,7 +91,8 @@ class OpProjectServiceImpl @Autowired constructor(
         }
         // 判断项目是不是审核的情况
         var flag = false
-        if (1 == dbProjectRecord.approvalStatus && (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
+        if (1 == dbProjectRecord.approvalStatus &&
+            (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
             flag = true
             projectInfoRequest.approver = projectInfoRequest.approver
             projectInfoRequest.approvalTime = System.currentTimeMillis()
@@ -176,9 +157,8 @@ class OpProjectServiceImpl @Autowired constructor(
     }
 
     override fun synProject(projectCode: String, isRefresh: Boolean?): Result<Boolean> {
-        var isSyn = false
         if (redisOperation.get(redisProjectKey + projectCode) != null) {
-            return Result(isSyn)
+            return Result(false)
         }
 
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode)
@@ -186,6 +166,7 @@ class OpProjectServiceImpl @Autowired constructor(
             logger.error("syn project $projectCode is not exist")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
         }
+        var isSyn = false
         val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
         val paasProjectInfo = paasCCService.getPaasCCProjectInfo(projectCode, accessToken)
         if (paasProjectInfo == null) {
@@ -270,8 +251,6 @@ class OpProjectServiceImpl @Autowired constructor(
                 creator = null,
                 approver = null,
                 approvalStatus = null,
-                grayFlag = false,
-                englishNames = null,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset
             )
@@ -301,49 +280,5 @@ class OpProjectServiceImpl @Autowired constructor(
         logger.warn("syn fail list: $failList")
         logger.info("syn project time: ${endTime - startTime}, syn project count: ${synProject.size} ")
         return Result(synProject)
-    }
-
-    override fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums) {
-        val routerTag = when (operateFlag) {
-            grayLable -> {
-                grayTag
-            }
-            prodLable -> {
-                prodTag
-            }
-            else -> {
-                null
-            }
-        }
-
-        if (routerTag.isNullOrEmpty()) {
-            return
-        }
-
-        if (system == SystemEnums.CI) {
-            val projectTagUpdateDTO = ProjectTagUpdateDTO(
-                routerTag = routerTag!!,
-                bgId = null,
-                deptId = null,
-                centerId = null,
-                projectCodeList = projectCodeList,
-                channel = null
-            )
-            projectTagService.updateTagByProject(projectTagUpdateDTO)
-        } else if (system == SystemEnums.CODECC || system == SystemEnums.REPO) {
-            val projectTagUpdateDTO = ProjectExtSystemTagDTO(
-                routerTag = routerTag!!,
-                projectCodeList = projectCodeList,
-                system = system.name
-            )
-            projectTagService.updateExtSystemRouterTag(projectTagUpdateDTO)
-        } else {
-            return
-        }
-    }
-
-    companion object {
-        final const val grayLable = 1
-        final const val prodLable = 2
     }
 }

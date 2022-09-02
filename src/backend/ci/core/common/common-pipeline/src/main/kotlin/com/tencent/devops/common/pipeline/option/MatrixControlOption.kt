@@ -130,8 +130,10 @@ data class MatrixControlOption(
         }
         val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
         return MatrixConfig(
-            strategy = JsonUtil.anyTo(YamlUtil.to<Map<String, List<String>>>(contextStr),
-                object : TypeReference<Map<String, List<String>>?>() {}),
+            strategy = JsonUtil.anyTo(
+                YamlUtil.to<Map<String, List<String>>>(contextStr),
+                object : TypeReference<Map<String, List<String>>?>() {}
+            ),
             include = mutableListOf(), exclude = mutableListOf()
         )
     }
@@ -171,12 +173,18 @@ data class MatrixControlOption(
             // 适用于matrix中是包含了key的map类型JSON，这种情况必包含strategy，可能包含include和exclude
             val matrixMap = JsonUtil.to<Map<String, List<Any>?>>(contextStr)
             return MatrixConfig(
-                strategy = JsonUtil.anyTo(matrixMap.filter { it.key != "include" && it.key != "exclude" }.toMap(),
-                    object : TypeReference<Map<String, List<String>>?>() {}),
-                include = JsonUtil.anyTo(matrixMap["include"],
-                    object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf(),
-                exclude = JsonUtil.anyTo(matrixMap["exclude"],
-                    object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf()
+                strategy = JsonUtil.anyTo(
+                    matrixMap.filter { it.key != "include" && it.key != "exclude" }.toMap(),
+                    object : TypeReference<Map<String, List<String>>?>() {}
+                ),
+                include = JsonUtil.anyTo(
+                    matrixMap["include"],
+                    object : TypeReference<MutableList<Map<String, String>>?>() {}
+                ) ?: mutableListOf(),
+                exclude = JsonUtil.anyTo(
+                    matrixMap["exclude"],
+                    object : TypeReference<MutableList<Map<String, String>>?>() {}
+                ) ?: mutableListOf()
             )
         } catch (ignore: Exception) {
             // 适用于不包含key的list类型JSON,这种情况只会是strategy

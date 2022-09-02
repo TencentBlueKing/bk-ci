@@ -34,20 +34,14 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
-import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
 
 @Suppress("UNUSED")
 @ApiPriority(priority = 9)
 class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKApi {
 
-    private fun identifyUrl(url: String, paramConcat: String = "&"): String {
-        val buildInfo = ThirdPartyAgentBuildInfoUtils.getBuildInfo()
-        return url + paramConcat + "buildId=${buildInfo?.buildId}"
-    }
-
     override fun getRequestUrl(path: String, retryCount: Int, executeCount: Int): String {
-        return identifyUrl("/ms/engine/$path?retryCount=$retryCount&executeCount=$executeCount")
+        return "/ms/engine/$path?retryCount=$retryCount&executeCount=$executeCount&buildId=$buildId"
     }
 
     override fun getJobContext(): Map<String, String> {
@@ -86,6 +80,6 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
         } catch (e: Exception) {
             logger.error("get context failed: ", e)
         }
-        return workerEnd(retryCount)
+        return super.endTask(buildVariables, retryCount)
     }
 }

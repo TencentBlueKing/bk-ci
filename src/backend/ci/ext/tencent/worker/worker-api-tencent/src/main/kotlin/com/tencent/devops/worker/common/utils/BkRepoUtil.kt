@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 
@@ -46,13 +47,19 @@ object BkRepoUtil {
         type: TokenType,
         expireSeconds: Long? = DEFAULT_EXPIRE_SECONDS
     ): String? {
-        return if (bkRepoResourceApi.tokenAccess()) bkRepoResourceApi.createBkRepoTemporaryToken(
-            userId = userId,
-            projectId = projectId,
-            repoName = repoName,
-            path = path,
-            type = type,
-            expireSeconds = expireSeconds ?: DEFAULT_EXPIRE_SECONDS
-        ) else null
+        return if (bkRepoResourceApi.tokenAccess()) {
+            HttpRetryUtils.retry(retryTime = 3, retryPeriodMills = 1000) {
+                bkRepoResourceApi.createBkRepoTemporaryToken(
+                    userId = userId,
+                    projectId = projectId,
+                    repoName = repoName,
+                    path = path,
+                    type = type,
+                    expireSeconds = expireSeconds ?: DEFAULT_EXPIRE_SECONDS
+                )
+            }
+        } else {
+            null
+        }
     }
 }

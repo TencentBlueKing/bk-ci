@@ -53,7 +53,7 @@ class GitProjectConfService @Autowired constructor(
     }
 
     fun create(gitProjectId: Long, name: String, url: String, enable: Boolean): Boolean {
-        logger.info("Create git project, id: $gitProjectId, name: $name, url: $url, enable: $enable")
+        logger.info("GitProjectConfService|Create|id|$gitProjectId|name|$name|url|$url|enable|$enable")
         val record = gitProjectConfDao.get(dslContext, gitProjectId)
         if (null != record) {
             throw CustomException(Response.Status.BAD_REQUEST, "项目已存在")
@@ -63,14 +63,14 @@ class GitProjectConfService @Autowired constructor(
     }
 
     fun update(gitProjectId: Long, name: String?, url: String?, enable: Boolean?): Boolean {
-        logger.info("update git project, id: $gitProjectId, name: $name, url: $url, enable: $enable")
+        logger.info("GitProjectConfService|update|id|$gitProjectId|name|$name|url|$url|enable|$enable")
         gitProjectConfDao.get(dslContext, gitProjectId) ?: throw CustomException(Response.Status.BAD_REQUEST, "项目不存在")
         gitProjectConfDao.update(dslContext, gitProjectId, name, url, enable)
         return true
     }
 
     fun delete(gitProjectId: Long): Boolean {
-        logger.info("Delete git project, id: $gitProjectId")
+        logger.info("GitProjectConfService|Delete|id|$gitProjectId")
         gitProjectConfDao.delete(dslContext, gitProjectId)
         return true
     }
@@ -112,7 +112,7 @@ class GitProjectConfService @Autowired constructor(
             }
             Thread.sleep(100)
         }
-        logger.info("fixPipelineVersion count: $count")
+        logger.info("GitProjectConfService|fixPipelineVersion|count|$count")
         fixBuildVersion()
         fixNotBuildVersion()
         return count
@@ -136,11 +136,14 @@ class GitProjectConfService @Autowired constructor(
                 startId = it.id
             }
             gitRequestEventBuildDao.batchUpdateBuild(dslContext, currBuilds)
-            logger.info("fixBuildVersion project ${currBuilds.map { it.id }.toList()}, fixed count: $count")
+            logger.info(
+                "GitProjectConfService|fixBuildVersion" +
+                    "|project|${currBuilds.map { it.id }.toList()}|fixed count|$count"
+            )
             Thread.sleep(100)
             currBuilds = gitRequestEventBuildDao.getProjectAfterId(dslContext, startId, limitCount)
         }
-        logger.info("fixBuildVersion finished count: $count")
+        logger.info("GitProjectConfService|fixBuildVersion|count|$count")
         return count
     }
 
@@ -158,11 +161,14 @@ class GitProjectConfService @Autowired constructor(
                 startId = it.id
             }
             gitRequestEventNotBuildDao.batchUpdateBuild(dslContext, currBuilds)
-            logger.info("fixNotBuildVersion project ${currBuilds.map { it.id }.toList()}, fixed count: $count")
+            logger.info(
+                "GitProjectConfService|fixNotBuildVersion" +
+                    "|project|${currBuilds.map { it.id }.toList()}|count|$count"
+            )
             Thread.sleep(100)
             currBuilds = gitRequestEventNotBuildDao.getProjectAfterId(dslContext, startId, limitCount)
         }
-        logger.info("fixNotBuildVersion finished count: $count")
+        logger.info("GitProjectConfService|fixNotBuildVersion|finished count|$count")
         return count
     }
 }

@@ -33,7 +33,6 @@ import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.service.common.LabelService
 import com.tencent.devops.store.service.template.TemplateLabelService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -47,13 +46,10 @@ class TemplateLabelServiceImpl : TemplateLabelService {
     @Autowired
     private lateinit var labelService: LabelService
 
-    private val logger = LoggerFactory.getLogger(TemplateLabelServiceImpl::class.java)
-
     /**
      * 查找模板标签
      */
     override fun getLabelsByTemplateId(templateId: String): Result<List<Label>?> {
-        logger.info("the templateId is :$templateId")
         val templateLabelList = mutableListOf<Label>()
         val templateLabelRecords = templateLabelRelDao.getLabelsByTemplateId(dslContext, templateId) // 查询模板标签信息
         templateLabelRecords?.forEach {

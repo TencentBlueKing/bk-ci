@@ -233,7 +233,7 @@ export default {
             Object.assign(atomClassifyMap, {
                 all: {
                     classifyCode: 'all',
-                    classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('all')) || 'all'
+                    classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('All')) || 'All'
                 },
                 rdStore: {
                     classifyCode: 'rdStore',
@@ -597,11 +597,11 @@ export default {
     },
 
     getMacSysVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions`)
+        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
     },
 
     getMacXcodeVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions`)
+        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2`)
     },
     setImportedPipelineJson ({ commit }, importedJson) {
         commit(SET_IMPORTED_JSON, importedJson)

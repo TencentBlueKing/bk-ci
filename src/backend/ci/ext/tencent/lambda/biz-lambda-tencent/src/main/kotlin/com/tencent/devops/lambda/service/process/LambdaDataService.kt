@@ -119,6 +119,7 @@ class LambdaDataService @Autowired constructor(
             )
             return
         }
+
         val projectInfo = projectCache.get(history.projectId)
         pushBuildHistory(projectInfo, history)
         pushBuildDetail(projectInfo, event.pipelineId, model)
@@ -202,19 +203,21 @@ class LambdaDataService @Autowired constructor(
                         createTime = createTime.format(dateTimeFormatter),
                         mrId = mergeRequestId,
                         url = url,
-                        eventType = eventType
+                        eventType = eventType,
+                        channel = channel
                     )
                 }
                 checkParamBlank(lambdaKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
                 kafkaClient.send(lambdaKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(buildCommits))
             }
         } catch (ignore: Throwable) {
-            logger.error("Push build commits to kafka error, buildId: ${event.buildId}", ignore)
+            logger.warn("Push build commits to kafka error, buildId: ${event.buildId}", ignore)
         }
     }
 
     private fun pushTaskDetail(projectInfo: ProjectOrganize, task: TPipelineBuildTaskRecord) {
         try {
+            val isSecrecy = projectInfo.secrecy
             val startTime = task.startTime?.timestampmilli() ?: 0
             val endTime = task.endTime?.timestampmilli() ?: 0
             val taskAtom = task.taskAtom
@@ -312,6 +315,7 @@ class LambdaDataService @Autowired constructor(
                     itemId = task.taskId,
                     atomCode = task.atomCode,
                     taskParams = taskParams,
+                    isSecrecy = isSecrecy,
                     status = BuildStatus.values()[task.status].statusName,
                     errorType = task.errorType,
                     errorCode = task.errorCode,
@@ -334,7 +338,7 @@ class LambdaDataService @Autowired constructor(
 //                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
             }
         } catch (e: Exception) {
-            logger.error("Push task detail to kafka error, buildId: ${task.buildId}, taskId: ${task.taskId}", e)
+            logger.warn("Push task detail to kafka error, buildId: ${task.buildId}, taskId: ${task.taskId}", e)
         }
     }
 
@@ -349,7 +353,7 @@ class LambdaDataService @Autowired constructor(
             kafkaClient.send(buildHistoryTopic, JsonUtil.toJson(history))
 //            kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
         } catch (e: Exception) {
-            logger.error("Push build history to kafka error, buildId: ${historyRecord.buildId}", e)
+            logger.warn("Push build history to kafka error, buildId: ${historyRecord.buildId}", e)
         }
     }
 
@@ -361,7 +365,7 @@ class LambdaDataService @Autowired constructor(
             kafkaClient.send(buildDetailTopic, JsonUtil.toJson(buildDetail))
 //            kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetail))
         } catch (e: Exception) {
-            logger.error("Push build detail to kafka error, buildId: ${model.buildId}", e)
+            logger.warn("Push build detail to kafka error, buildId: ${model.buildId}", e)
         }
     }
 
@@ -453,7 +457,7 @@ class LambdaDataService @Autowired constructor(
                 }
             }
         } catch (ignore: Exception) {
-            logger.error("Push git task to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", ignore)
+            logger.warn("Push git task to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", ignore)
         }
     }
 
@@ -486,6 +490,7 @@ class LambdaDataService @Autowired constructor(
                     }
                     return ProjectOrganize(
                         projectId = projectId,
+                        secrecy = projectInfo.secrecy,
                         bgName = projectInfo.bgName ?: "",
                         deptName = projectInfo.deptName ?: "",
                         centerName = projectInfo.centerName ?: "",
@@ -518,6 +523,7 @@ class LambdaDataService @Autowired constructor(
     ): DataPlatBuildDetail {
         return with(buildDetailRecord) {
             val projectId = projectInfo.projectId
+            val isSecrecy = projectInfo.secrecy
             DataPlatBuildDetail(
                 washTime = LocalDateTime.now().format(dateTimeFormatter),
                 buildId = buildId,
@@ -528,6 +534,7 @@ class LambdaDataService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNum = buildNum,
+                isSecrecy = isSecrecy,
                 model = model,
                 trigger = trigger,
                 startUser = startUser,
@@ -587,6 +594,7 @@ class LambdaDataService @Autowired constructor(
 
             val labelList = mutableListOf<String>()
             val projectId = projectInfo.projectId
+            val isSecrecy = projectInfo.secrecy
             lambdaPipelineLabelDao.getLables(dslContext, projectId, pipelineId)?.forEach { label ->
                 labelList.add(label["name"] as String)
             }
@@ -633,6 +641,7 @@ class LambdaDataService @Autowired constructor(
                 startUser = startUser,
                 channel = channel,
                 labels = labelList,
+                isSecrecy = isSecrecy,
                 bgId = projectInfo.bgId,
                 deptId = projectInfo.deptId,
                 centerId = projectInfo.centerId

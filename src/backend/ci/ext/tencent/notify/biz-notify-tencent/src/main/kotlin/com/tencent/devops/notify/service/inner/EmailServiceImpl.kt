@@ -82,6 +82,11 @@ class EmailServiceImpl @Autowired constructor(
             return
         }
 
+        if (emailNotifyMessageWithOperation.getReceivers().isEmpty()) {
+            logger.warn("email receivers is empty")
+            return
+        }
+
         val tof4SecurityInfo = TOF4SecurityInfo.get(emailNotifyMessageWithOperation, tof4EncryptKey)
         if (!tof4SecurityInfo.enable && !emailNotifyMessageWithOperation.v2ExtInfo.isNullOrBlank()) {
             return
