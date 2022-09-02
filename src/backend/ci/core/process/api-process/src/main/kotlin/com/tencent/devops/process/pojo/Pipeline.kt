@@ -116,5 +116,5 @@ data class Pipeline(
     @ApiModelProperty("webhook仓库地址", required = false)
     var webhookRepoUrl: String? = null,
     @ApiModelProperty("是否已删除", required = false)
-    val delete: Boolean? = false
+    var delete: Boolean? = false
 )
