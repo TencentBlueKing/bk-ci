@@ -58,6 +58,8 @@ import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE
+import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.dao.atom.AtomDao
@@ -119,6 +121,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
+import java.util.function.Function
+import java.util.stream.Collectors
 
 @Suppress("ALL")
 abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseService {
@@ -532,7 +536,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
     }
 
-    protected fun syncAtomErrorCodeConfig(
+    private fun syncAtomErrorCodeConfig(
         projectCode: String,
         atomCode: String,
         atomVersion: String,
@@ -553,9 +557,25 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 val storeErrorCodeInfo = StoreErrorCodeInfo(
                     storeCode = atomCode,
                     storeType = StoreTypeEnum.ATOM,
-                    errorCodeInfos = JsonUtil.to(errorJsonStr, object : TypeReference<List<ErrorCodeInfo>>() {})
+                    errorCodeInfos = JsonUtil.to(errorJsonStr, object: TypeReference<List<ErrorCodeInfo>>() {})
                 )
-                if (storeErrorCodeInfo.errorCodeInfos.isNotEmpty()) {
+                val errorCodeInfos = storeErrorCodeInfo.errorCodeInfos
+                if (errorCodeInfos.isNotEmpty()) {
+                    val errorCodes = errorCodeInfos.map { it.errorCode }
+                    val duplicateData = getDuplicateData(errorCodes)
+                    if (duplicateData.isNotEmpty()) {
+                        throw ErrorCodeException(
+                            errorCode = USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE,
+                            params = arrayOf(duplicateData.joinToString(","))
+                        )
+                    }
+                    errorCodes.forEach {
+                        if (it.length != 6 && (!it.startsWith("8"))) {
+                            throw ErrorCodeException(
+                                errorCode = USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
+                            )
+                        }
+                    }
                     storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(dslContext, userId, storeErrorCodeInfo)
                 }
             } else {
@@ -565,8 +585,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
             }
         } catch (ignored: Throwable) {
-            logger.error("syncAtomErrorCodeConfig$atomCode|error=${ignored.message}", ignored)
+            logger.error("syncAtomErrorCodeConfig fail $atomCode|error=${ignored.message}", ignored)
         }
+    }
+
+    private fun getDuplicateData(strList: List<String>): List<String> {
+        val set = strList.toSet()
+        val duplicateData = mutableListOf<String>()
+        strList.forEach { if (set.contains(it)) duplicateData.add(it) }
+        return duplicateData
     }
 
     @Suppress("UNCHECKED_CAST")
