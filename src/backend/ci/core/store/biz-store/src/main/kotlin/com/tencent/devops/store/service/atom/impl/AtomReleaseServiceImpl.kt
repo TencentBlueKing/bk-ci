@@ -590,7 +590,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     private fun getDuplicateData(strList: List<String>): List<String> {
         val set = strList.toSet()
         val duplicateData = mutableListOf<String>()
-        strList.forEach { if (set.contains(it)) duplicateData.add(it) }
+
         return duplicateData
     }
 
