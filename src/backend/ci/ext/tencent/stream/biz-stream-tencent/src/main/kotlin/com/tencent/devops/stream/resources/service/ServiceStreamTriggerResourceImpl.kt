@@ -109,6 +109,8 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
         checkParam(userId)
         permissionService.checkStreamAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
         return with(triggerBuildReq) {
+            val openapiInput = inputs?.toMutableMap()
+            val checkPipelineTrigger = openapiInput?.remove("ThisIsSubPipelineExecStream", "")
             Result(
                 openApiTriggerService.triggerBuild(
                     userId, pipelineId,
@@ -125,8 +127,8 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                         commitId = commitId,
                         payload = null,
                         eventType = null,
-                        inputs = ManualTriggerService.parseInputs(inputs),
-                        checkPipelineTrigger = inputs?.keys?.contains("ThisIsSubPipelineExecStream") ?: false
+                        inputs = ManualTriggerService.parseInputs(openapiInput),
+                        checkPipelineTrigger = checkPipelineTrigger ?: false
                     )
                 )
             )
