@@ -118,6 +118,7 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
         atomCode: String,
         atomCollaboratorCreateReq: AtomCollaboratorCreateReq,
         approveId: String,
-        userId: String
+        userId: String,
+        token: String
     )
 }
