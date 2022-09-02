@@ -57,7 +57,8 @@ class TxAtomCooperationServiceImpl @Autowired constructor() : AtomCooperationSer
         atomCode: String,
         atomCollaboratorCreateReq: AtomCollaboratorCreateReq,
         approveId: String,
-        userId: String
+        userId: String,
+        token: String
     ) {
         logger.info("sendMoaMessage params:[$atomCode|$atomCollaboratorCreateReq|$approveId|$userId")
         executorService.submit<Unit> {
@@ -75,7 +76,7 @@ class TxAtomCooperationServiceImpl @Autowired constructor() : AtomCooperationSer
                     params = arrayOf(userId, atomRecord!!.name, applyReason)
                 ) ?: applyReason,
                 taskId = approveId,
-                backUrl = moaApproveCallBackUrl
+                backUrl = "$moaApproveCallBackUrl/$token"
             )
             val createMoaMessageApprovalResult = client.get(ServiceMessageApproveResource::class)
                 .createMoaMessageApproval(userId = userId, createMoaApproveRequest = createMoaApproveRequest)
