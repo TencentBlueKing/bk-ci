@@ -689,6 +689,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 serviceCode,
                 StoreTypeEnum.SERVICE.type.toByte()
             )
+        // 停止bcs灰度命名空间和正式命名空间的应用
+        val bcsStopAppResult = extServiceBcsService.stopExtService(
+            userId = userId,
+            serviceCode = serviceCode,
+            deploymentName = serviceCode,
+            serviceName = "$serviceCode-service"
+        )
+        logger.info("the bcsStopAppResult is :$bcsStopAppResult")
         //  删除仓库镜像
         try {
             val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, extServiceId!!)
