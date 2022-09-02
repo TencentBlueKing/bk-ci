@@ -379,6 +379,13 @@ class KubernetesContainerService @Autowired constructor(
         )
     }
 
-    private fun getOnlyName(userId: String) = "b-${userId}${System.currentTimeMillis()}-" +
-        RandomStringUtils.randomAlphabetic(16).toLowerCase()
+    private fun getOnlyName(userId: String): String {
+        val subUserId = if (userId.length > 14) {
+            userId.substring(0 until 14)
+        } else {
+            userId
+        }
+        return "${subUserId}${System.currentTimeMillis()}-" +
+                RandomStringUtils.randomAlphabetic(8).toLowerCase()
+    }
 }
