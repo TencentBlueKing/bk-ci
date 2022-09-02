@@ -76,7 +76,7 @@
         }
 
         async created () {
-            const model = location.href.split('/')[4]
+            const model = location.href.split('/')[5]
             document.title = this.getDocumentTitle(model)
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
