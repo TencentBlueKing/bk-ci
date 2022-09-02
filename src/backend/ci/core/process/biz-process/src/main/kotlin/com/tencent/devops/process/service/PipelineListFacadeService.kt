@@ -486,6 +486,9 @@ class PipelineListFacadeService @Autowired constructor(
                         filterByViewIds.split(",")
                     ).toSet()
                 )
+                if (pipelineIds.isEmpty()) {
+                    pipelineIds.add("##NONE##") // 特殊标志,避免有些判空逻辑导致过滤器没有执行
+                }
             }
             pipelineViewService.addUsingView(userId = userId, projectId = projectId, viewId = viewId)
 
