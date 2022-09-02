@@ -482,7 +482,7 @@ class TGitApiService @Autowired constructor(
         }
     }
 
-    private fun StreamGitCred.toToken(): String {
+    protected fun StreamGitCred.toToken(): String {
         this as TGitCred
         if (this.accessToken != null) {
             return this.accessToken
@@ -494,7 +494,7 @@ class TGitApiService @Autowired constructor(
             )
     }
 
-    private fun StreamGitCred.toTokenType(): TokenTypeEnum {
+    protected fun StreamGitCred.toTokenType(): TokenTypeEnum {
         this as TGitCred
         return if (this.useAccessToken) {
             TokenTypeEnum.OAUTH

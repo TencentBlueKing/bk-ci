@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -89,7 +90,7 @@ class TXStreamTriggerRequestService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TXStreamTriggerRequestService::class.java)
     }
 
-    override fun externalCodeGitBuild(eventType: String?, event: String): Boolean? {
+    override fun externalCodeGitBuild(eventType: String?, webHookType: String, event: String): Boolean? {
         logger.info("TXStreamTriggerRequestService|externalCodeGitBuild|event|$event|type|$eventType")
         val eventObject = try {
             objectMapper.readValue<GitEvent>(event)
@@ -106,6 +107,6 @@ class TXStreamTriggerRequestService @Autowired constructor(
             txPreTrigger.enableAtomCi(eventObject)
         }
 
-        return start(eventObject, event)
+        return start(eventObject, event, ScmType.CODE_TGIT)
     }
 }

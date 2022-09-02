@@ -27,9 +27,10 @@
 
 package com.tencent.devops.stream.v1.pojo
 
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import io.swagger.annotations.ApiModel
@@ -80,7 +81,7 @@ data class V1GitRequestEvent(
     var mrTitle: String?,
     // TODO: 后续修改统一参数时可以将GitEvent统一放在这里维护
     @ApiModelProperty("Git事件对象")
-    var gitEvent: GitEvent?,
+    var gitEvent: CodeWebhookEvent?,
     @ApiModelProperty("去掉头部url的homepage")
     var gitProjectName: String?,
     @ApiModelProperty("远程仓库触发时得到的主库流水线列表")
@@ -131,13 +132,13 @@ data class V1GitRequestEvent(
     }
 
     // 当人工触发时不推送CommitCheck消息
-    fun sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value
+    fun sendCommitCheck() = objectKind != StreamGitObjectKind.MANUAL.value
 }
 
-fun V1GitRequestEvent.isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
+fun V1GitRequestEvent.isMr() = objectKind == StreamGitObjectKind.MERGE_REQUEST.value
 
 fun V1GitRequestEvent.isFork(): Boolean {
-    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
+    return objectKind == StreamGitObjectKind.MERGE_REQUEST.value &&
         sourceGitProjectId != null &&
         sourceGitProjectId != gitProjectId
 }
@@ -146,7 +147,7 @@ fun V1GitRequestEvent.isFork(): Boolean {
  * 判断是否是删除分支的event这个Event不做构建只做删除逻辑
  */
 fun V1GitRequestEvent.isDeleteBranch(): Boolean {
-    return objectKind == TGitObjectKind.PUSH.value &&
+    return objectKind == StreamGitObjectKind.PUSH.value &&
         operationKind == TGitPushOperationKind.DELETE.value &&
         (
             extensionAction == TGitPushActionKind.DELETE_BRANCH.value ||
@@ -155,6 +156,6 @@ fun V1GitRequestEvent.isDeleteBranch(): Boolean {
 }
 
 fun V1GitRequestEvent.isDeleteTag(): Boolean {
-    return objectKind == TGitObjectKind.TAG_PUSH.value &&
+    return objectKind == StreamGitObjectKind.TAG_PUSH.value &&
         operationKind == TGitPushOperationKind.DELETE.value
 }

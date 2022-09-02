@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -53,7 +54,8 @@ class TXStreamDetailService @Autowired constructor(
     pipelineResourceDao: GitPipelineResourceDao,
     streamGitProjectInfoCache: StreamGitProjectInfoCache,
     private val client: Client,
-    private val txStreamBasicSettingService: TXStreamBasicSettingService
+    private val txStreamBasicSettingService: TXStreamBasicSettingService,
+    private val streamGitConfig: StreamGitConfig
 ) : StreamDetailService(
     client = client,
     dslContext = dslContext,
@@ -61,7 +63,8 @@ class TXStreamDetailService @Autowired constructor(
     gitRequestEventDao = gitRequestEventDao,
     streamBasicSettingService = streamBasicSettingService,
     pipelineResourceDao = pipelineResourceDao,
-    streamGitProjectInfoCache = streamGitProjectInfoCache
+    streamGitProjectInfoCache = streamGitProjectInfoCache,
+    streamGitConfig = streamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamDetailService::class.java)

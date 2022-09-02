@@ -3,7 +3,7 @@ package com.tencent.devops.stream.v1.utils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
@@ -25,26 +25,26 @@ class V1StreamTriggerMessageUtils @Autowired constructor(
     @SuppressWarnings("ComplexMethod")
     fun getEventMessageTitle(event: V1GitRequestEvent): String {
         val messageTitle = when (event.objectKind) {
-            TGitObjectKind.MERGE_REQUEST.value -> {
+            StreamGitObjectKind.MERGE_REQUEST.value -> {
                 "Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
             }
-            TGitObjectKind.MANUAL.value -> {
+            StreamGitObjectKind.MANUAL.value -> {
                 "Manually run by ${event.userId}"
             }
-            TGitObjectKind.OPENAPI.value -> {
+            StreamGitObjectKind.OPENAPI.value -> {
                 "Run by OPENAPI(${event.userId})"
             }
-            TGitObjectKind.TAG_PUSH.value -> {
+            StreamGitObjectKind.TAG_PUSH.value -> {
                 if (event.operationKind == TGitTagPushOperationKind.DELETE.value) {
                     "Tag [${event.branch}] deleted by ${event.userId}"
                 } else {
                     "Tag [${event.branch}] pushed by ${event.userId}"
                 }
             }
-            TGitObjectKind.SCHEDULE.value -> {
+            StreamGitObjectKind.SCHEDULE.value -> {
                 "Scheduled"
             }
-            TGitObjectKind.PUSH.value -> {
+            StreamGitObjectKind.PUSH.value -> {
                 if (event.operationKind == TGitPushOperationKind.DELETE.value) {
                     "Branch [${event.branch}] deleted by ${event.userId}"
                 } else {
@@ -64,13 +64,13 @@ class V1StreamTriggerMessageUtils @Autowired constructor(
                     }
                 }
             }
-            TGitObjectKind.ISSUE.value -> {
+            StreamGitObjectKind.ISSUE.value -> {
                 "Issue [${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
             }
-            TGitObjectKind.REVIEW.value -> {
+            StreamGitObjectKind.REVIEW.value -> {
                 "Review [${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
             }
-            TGitObjectKind.NOTE.value -> {
+            StreamGitObjectKind.NOTE.value -> {
                 val noteEvent = try {
                     JsonUtil.to(event.event, GitNoteEvent::class.java)
                 } catch (e: Exception) {
@@ -103,16 +103,16 @@ class V1StreamTriggerMessageUtils @Autowired constructor(
         userId: String
     ): String {
         val messageTitle = when (objectKind) {
-            TGitObjectKind.MERGE_REQUEST.value -> {
+            StreamGitObjectKind.MERGE_REQUEST.value -> {
                 "$prefix Triggered by $userId. [$action]"
             }
-            TGitObjectKind.MANUAL.value -> {
+            StreamGitObjectKind.MANUAL.value -> {
                 "$prefix Triggered by $userId. [manual]"
             }
-            TGitObjectKind.TAG_PUSH.value -> {
+            StreamGitObjectKind.TAG_PUSH.value -> {
                 "$prefix Triggered by $userId. [tag-push]"
             }
-            TGitObjectKind.SCHEDULE.value -> {
+            StreamGitObjectKind.SCHEDULE.value -> {
                 "$prefix Triggered by stream [schedule]"
             }
             else -> {

@@ -30,7 +30,7 @@ package com.tencent.devops.stream.v1.components
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitIssueAction
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitReviewEventKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
@@ -72,7 +72,7 @@ class V1GitRequestEventHandle @Autowired constructor(
         }
         return GitRequestEvent(
             id = null,
-            objectKind = TGitObjectKind.PUSH.value,
+            objectKind = StreamGitObjectKind.PUSH.value,
             operationKind = gitPushEvent.operation_kind,
             extensionAction = gitPushEvent.action_kind,
             gitProjectId = gitPushEvent.project_id,
@@ -98,7 +98,7 @@ class V1GitRequestEventHandle @Autowired constructor(
         val latestCommit = gitMrEvent.object_attributes.last_commit
         return GitRequestEvent(
             id = null,
-            objectKind = TGitObjectKind.MERGE_REQUEST.value,
+            objectKind = StreamGitObjectKind.MERGE_REQUEST.value,
             operationKind = null,
             extensionAction = gitMrEvent.object_attributes.extension_action,
             gitProjectId = gitMrEvent.object_attributes.target_project_id,
@@ -137,7 +137,7 @@ class V1GitRequestEventHandle @Autowired constructor(
         }
         return GitRequestEvent(
             id = null,
-            objectKind = TGitObjectKind.TAG_PUSH.value,
+            objectKind = StreamGitObjectKind.TAG_PUSH.value,
             operationKind = gitTagPushEvent.operation_kind,
             extensionAction = null,
             gitProjectId = gitTagPushEvent.project_id,
@@ -174,7 +174,7 @@ class V1GitRequestEventHandle @Autowired constructor(
         )
         return GitRequestEvent(
             id = null,
-            objectKind = TGitObjectKind.ISSUE.value,
+            objectKind = StreamGitObjectKind.ISSUE.value,
             operationKind = "",
             extensionAction = TGitIssueAction.getDesc(gitIssueEvent.objectAttributes.action ?: ""),
             gitProjectId = gitProjectId,
@@ -211,7 +211,7 @@ class V1GitRequestEventHandle @Autowired constructor(
         )
         return GitRequestEvent(
             id = null,
-            objectKind = TGitObjectKind.NOTE.value,
+            objectKind = StreamGitObjectKind.NOTE.value,
             operationKind = "",
             extensionAction = "submitted",
             gitProjectId = gitProjectId,
@@ -248,7 +248,7 @@ class V1GitRequestEventHandle @Autowired constructor(
         )
         return GitRequestEvent(
             id = null,
-            objectKind = TGitObjectKind.REVIEW.value,
+            objectKind = StreamGitObjectKind.REVIEW.value,
             operationKind = "",
             extensionAction = when (gitReviewEvent.event) {
                 TGitReviewEventKind.CREATE.value -> "created"
@@ -331,7 +331,7 @@ class V1GitRequestEventHandle @Autowired constructor(
         ): GitRequestEvent {
             return GitRequestEvent(
                 id = null,
-                objectKind = TGitObjectKind.SCHEDULE.value,
+                objectKind = StreamGitObjectKind.SCHEDULE.value,
                 operationKind = null,
                 extensionAction = null,
                 gitProjectId = streamTimerEvent.gitProjectId,

@@ -28,7 +28,7 @@
 package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.webhook.enums.code.github.GithubPushOperationKind
-import com.tencent.devops.common.webhook.enums.code.tgit.StreamGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
