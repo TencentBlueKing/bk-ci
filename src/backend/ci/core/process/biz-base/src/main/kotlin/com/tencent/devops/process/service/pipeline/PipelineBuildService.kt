@@ -236,6 +236,7 @@ class PipelineBuildService(
                 logger.info("[$pipelineId]|Concurrency Group is ${setting.concurrencyGroup}")
             }
 
+            logger.info("[$pipelineId]TimeTiggerStart")
             val interceptResult = pipelineInterceptorChain.filter(
                 InterceptData(
                     pipelineInfo = pipeline,
