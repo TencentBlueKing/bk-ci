@@ -223,6 +223,7 @@ class LambdaDataService @Autowired constructor(
             val taskAtom = task.taskAtom
             val taskParamMap = JsonUtil.toMap(task.taskParams)
 
+            logger.info("Atom : $taskAtom, check pushTaskDetail build detail: ${task.buildId}| taskId: ${task.taskId} | taskType: ${task.taskType}")
             if (task.taskType == "VM" || task.taskType == "NORMAL") {
                 if (taskAtom == "dispatchVMShutdownTaskAtom") {
                     Thread.sleep(3000)
@@ -293,6 +294,9 @@ class LambdaDataService @Autowired constructor(
                             if (taskParamMap["params"] != null) {
                                 inputMap["desc"] = taskParamMap["params"] as String
                             }
+
+                            // 查看人工审核插件上报流程是否走到这
+                            logger.info("Atom : $taskAtom | ${task.buildId}| taskId: ${task.taskId} | taskType: ${task.taskType}  had run over all of the process")
                         }
                         else -> {
                             inputMap["key"] = "value"
