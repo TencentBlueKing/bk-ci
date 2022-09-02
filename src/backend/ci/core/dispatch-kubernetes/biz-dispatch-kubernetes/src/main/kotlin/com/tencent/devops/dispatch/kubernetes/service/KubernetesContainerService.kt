@@ -195,11 +195,11 @@ class KubernetesContainerService @Autowired constructor(
                     resource = KubernetesResource(
                         requestCPU = cpu.toString(),
                         requestDisk = "${disk}G",
-                        requestDiskIO = "",
+                        requestDiskIO = "1",
                         requestMem = "${memory}Mi",
                         limitCpu = cpu.toString(),
                         limitDisk = "${disk}G",
-                        limitDiskIO = "",
+                        limitDiskIO = "1",
                         limitMem = "${memory}Mi"
                     ),
                     env = mapOf(
