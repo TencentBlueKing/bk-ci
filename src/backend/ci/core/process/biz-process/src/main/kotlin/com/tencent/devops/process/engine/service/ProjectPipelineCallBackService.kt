@@ -213,6 +213,17 @@ class ProjectPipelineCallBackService @Autowired constructor(
         )
     }
 
+    fun disable(
+        projectId: String,
+        id: Long
+    ) {
+        projectPipelineCallbackDao.disable(
+            dslContext = dslContext,
+            projectId = projectId,
+            id = id
+        )
+    }
+
     fun createHistory(
         projectPipelineCallBackHistory: ProjectPipelineCallBackHistory
     ) {
@@ -402,11 +413,12 @@ class ProjectPipelineCallBackService @Autowired constructor(
         val newModel = mutableListOf<PipelineModelVersion>()
         newModel.add(
             PipelineModelVersion(
-            pipelineId = pipelineId,
-            projectId = projectId,
-            model = JsonUtil.toJson(model, formatted = false),
-            creator = model.pipelineCreator ?: userId
-        ))
+                pipelineId = pipelineId,
+                projectId = projectId,
+                model = JsonUtil.toJson(model, formatted = false),
+                creator = model.pipelineCreator ?: userId
+            )
+        )
         pipelineRepositoryService.batchUpdatePipelineModel(
             userId = userId,
             pipelineModelVersionList = newModel

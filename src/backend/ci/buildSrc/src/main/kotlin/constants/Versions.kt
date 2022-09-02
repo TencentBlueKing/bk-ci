@@ -44,4 +44,5 @@ object Versions {
     const val Pulsar = "2.7.2"
     const val JacksonDatatypeJsr = "2.11.4"
     const val reflections = "0.10.2"
+    const val Resilience4j = "1.7.1"
 }
