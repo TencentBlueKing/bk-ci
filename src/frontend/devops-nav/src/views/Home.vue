@@ -247,7 +247,7 @@
                 store: this.$t('documentTitleStore'),
                 metrics: this.$t('documentTitleMetrics')
             }
-            return titlesMap[title]
+            document.title = titlesMap[title]
         }
 
         serviceName (name = ''): string {
