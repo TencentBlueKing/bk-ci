@@ -58,7 +58,7 @@ class KubernetesJobClient @Autowired constructor(
         userId: String,
         job: Job
     ): KubernetesResult<TaskResp> {
-        val url = "/api/v1/devops/job/${job.name}"
+        val url = "/api/jobs"
         val body = JsonUtil.toJson(job)
         logger.info("createJob request url: $url, body: $body")
         val request = clientCommon.baseRequest(userId, url).post(
@@ -91,10 +91,10 @@ class KubernetesJobClient @Autowired constructor(
         }
     }
 
-    fun getJobLogs(userId: String, jobName: String, sinceTime: Int?): KubernetesResult<List<String>> {
-        val url = "/api/jobs/$jobName/logs".also {
+    fun getJobLogs(userId: String, jobName: String, sinceTime: Int?): KubernetesResult<String> {
+        val url = "/api/jobs/$jobName/log".also {
             if (sinceTime != null) {
-                it.plus("?since_time=$sinceTime")
+                it.plus("?sinceTime=$sinceTime")
             }
         }
         val request = clientCommon.baseRequest(userId, url).get().build()

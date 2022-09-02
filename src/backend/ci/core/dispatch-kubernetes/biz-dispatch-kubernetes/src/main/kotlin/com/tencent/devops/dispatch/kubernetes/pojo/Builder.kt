@@ -27,27 +27,33 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
-
 /**
  * 创建/启动构建机参数
  * @param name 构建机名称
  * @param image 镜像（镜像名:版本)
- * @param registry 镜像仓库信息
- * @param cpu 构建机cpu核数
- * @param mem 构建机内存大小， 256的倍数，比如512M， 1024M， 以M为单位
- * @param disk 构建机磁盘大小，10的倍数，比如50G，60G，以G为单位
+ * @param registry docker凭据
+ * @param resource kubernetes 需要的资源
  * @param env 构建机环境变量
  * @param command 构建机启动命令
+ * @param nfs Nfs配置
+ * @param specialBuilder 特殊构建集群配置
+ * @param privateBuilder 私有构建集群配置
  */
 data class Builder(
     val name: String,
     val image: String,
-    val registry: DockerRegistry,
-    val cpu: String,
-    val mem: String,
-    val disk: String,
+    val registry: KubernetesDockerRegistry?,
+    val resource: KubernetesResource,
     val env: Map<String, String>?,
     val command: List<String>?,
+    val nfs: List<NfsConfig>?,
+    val specialBuilder: SpecialBuilderConfig?,
+    val privateBuilder: SpecialBuilderConfig?
+)
+
+/**
+ * 一些特殊构建机调度的配置
+ */
+data class SpecialBuilderConfig(
+    val name: String
 )

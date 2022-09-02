@@ -33,7 +33,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
@@ -47,6 +46,7 @@ import com.tencent.devops.dispatch.bcs.pojo.BcsStopBuilderParams
 import com.tencent.devops.dispatch.bcs.pojo.getCodeMessage
 import com.tencent.devops.dispatch.bcs.pojo.isRunning
 import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -332,8 +332,11 @@ class BcsBuilderClient @Autowired constructor(
         logger.info("Build and push image, request url: $url, staffName: $userId")
 
         val request = clientCommon.baseRequest(userId, url)
-            .post(RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(buildImageReq)))
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(buildImageReq)
+                )
+            )
             .build()
 
         try {

@@ -59,8 +59,8 @@ import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
@@ -354,11 +354,15 @@ class BcsContainerService @Autowired constructor(
         buildId: String,
         dispatchBuildImageReq: DispatchBuildImageReq
     ): DispatchTaskResp {
-        logger.info("projectId: $projectId, buildId: $buildId build and push image. " +
-                        JsonUtil.toJson(dispatchBuildImageReq)
+        logger.info(
+            "projectId: $projectId, buildId: $buildId build and push image. " +
+                JsonUtil.toJson(dispatchBuildImageReq)
         )
 
-        return DispatchTaskResp(bcsBuilderClient.buildAndPushImage(
-            userId, dispatchBuildImageReq))
+        return DispatchTaskResp(
+            bcsBuilderClient.buildAndPushImage(
+                userId, dispatchBuildImageReq
+            )
+        )
     }
 }

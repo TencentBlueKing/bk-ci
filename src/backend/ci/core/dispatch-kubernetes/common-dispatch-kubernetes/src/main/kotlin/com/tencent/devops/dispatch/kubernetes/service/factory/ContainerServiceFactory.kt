@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.service.factory
 
-import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
@@ -37,7 +36,7 @@ import org.springframework.stereotype.Service
 @Service
 class ContainerServiceFactory @Autowired constructor(
     private val dockerRoutingSdkService: DockerRoutingSdkService
-)  {
+) {
 
     fun load(projectId: String): ContainerService {
         val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(projectId)

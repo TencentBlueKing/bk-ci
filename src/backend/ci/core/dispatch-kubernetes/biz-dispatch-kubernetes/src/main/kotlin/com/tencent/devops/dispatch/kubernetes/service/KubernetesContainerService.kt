@@ -32,24 +32,24 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.dispatch.kubernetes.common.BUILDER_NAME
+import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
+import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
+import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
 import com.tencent.devops.dispatch.kubernetes.common.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
-import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
-import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
-import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
-import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
-import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
+import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.StartBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
@@ -177,6 +177,11 @@ class KubernetesContainerService @Autowired constructor(
             val (host, name, tag) = CommonUtils.parseImage(containerPool.container!!)
             val userName = containerPool.credential?.user
             val password = containerPool.credential?.password
+            val registry = if (host.isBlank() || userName.isNullOrBlank() || password.isNullOrBlank()) {
+                null
+            } else {
+                KubernetesDockerRegistry(host, userName, password)
+            }
 
             val builderName = getOnlyName(userId)
             val taskId = kubernetesBuilderClient.createBuilder(
@@ -186,10 +191,17 @@ class KubernetesContainerService @Autowired constructor(
                 builder = Builder(
                     name = builderName,
                     image = "$name:$tag",
-                    registry = DockerRegistry(host, userName, password),
-                    cpu = cpu.toString(),
-                    mem = mem,
-                    disk = disk,
+                    registry = registry,
+                    resource = KubernetesResource(
+                        requestCPU = cpu.toString(),
+                        requestDisk = "${disk}G",
+                        requestDiskIO = "",
+                        requestMem = "${memory}Mi",
+                        limitCpu = cpu.toString(),
+                        limitDisk = "${disk}G",
+                        limitDiskIO = "",
+                        limitMem = "${memory}Mi"
+                    ),
                     env = mapOf(
                         ENV_KEY_PROJECT_ID to projectId,
                         ENV_KEY_AGENT_ID to id,
@@ -199,12 +211,15 @@ class KubernetesContainerService @Autowired constructor(
                         SLAVE_ENVIRONMENT to "Kubernetes",
                         ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
                     ),
-                    command = listOf("/bin/sh", entrypoint)
+                    command = listOf("/bin/sh", entrypoint),
+                    nfs = null,
+                    privateBuilder = null,
+                    specialBuilder = null
                 )
             )
             logger.info(
                 "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo createBuilder, " +
-                        "taskId:($taskId)"
+                    "taskId:($taskId)"
             )
             logsPrinter.printLogs(
                 this, "下发创建构建机请求成功，builderName: $builderName 等待机器创建..."
@@ -216,7 +231,7 @@ class KubernetesContainerService @Autowired constructor(
                 // 启动成功
                 logger.info(
                     "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
-                            "create kubernetes vm success, wait vm start..."
+                        "create kubernetes vm success, wait vm start..."
                 )
                 logsPrinter.printLogs(this, "构建机创建成功，等待机器启动...")
             } else {
@@ -354,7 +369,7 @@ class KubernetesContainerService @Autowired constructor(
     ): DispatchTaskResp {
         logger.info(
             "projectId: $projectId, buildId: $buildId build and push image. " +
-                    JsonUtil.toJson(dispatchBuildImageReq)
+                JsonUtil.toJson(dispatchBuildImageReq)
         )
 
         return DispatchTaskResp(
@@ -365,5 +380,5 @@ class KubernetesContainerService @Autowired constructor(
     }
 
     private fun getOnlyName(userId: String) = "b-${userId}${System.currentTimeMillis()}-" +
-            RandomStringUtils.randomAlphabetic(16).toLowerCase()
+        RandomStringUtils.randomAlphabetic(16).toLowerCase()
 }

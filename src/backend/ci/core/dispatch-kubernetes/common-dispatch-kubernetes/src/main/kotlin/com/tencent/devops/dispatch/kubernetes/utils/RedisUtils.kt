@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.utils
 
-import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component

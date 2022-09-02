@@ -34,7 +34,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
 import com.tencent.devops.dispatch.kubernetes.pojo.base.StartDebugReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.StopDebugReq
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseDebugService
-import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

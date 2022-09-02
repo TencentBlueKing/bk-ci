@@ -27,8 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 interface OperateBuilderParams
 
 class DeleteBuilderParams : OperateBuilderParams

@@ -27,14 +27,14 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
-import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
-import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
 import com.tencent.devops.dispatch.kubernetes.interfaces.JobService
-import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.Job
 import com.tencent.devops.dispatch.kubernetes.pojo.JobStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
+import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
 import com.tencent.devops.dispatch.kubernetes.pojo.NfsConfig
+import com.tencent.devops.dispatch.kubernetes.pojo.PodNameSelector
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobLogResp
@@ -42,8 +42,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchJobReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.isFailed
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
-import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
-import org.slf4j.LoggerFactory
+import com.tencent.devops.dispatch.kubernetes.pojo.isSucceeded
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -53,20 +52,16 @@ class KubernetesJobService @Autowired constructor(
     private val kubernetesJobClient: KubernetesJobClient
 ) : JobService {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(KubernetesJobService::class.java)
-    }
-
-    @Value("\${bcs.resources.job.cpu}")
+    @Value("\${kubernetes.resources.job.cpu}")
     var cpu: Double = 32.0
 
-    @Value("\${bcs.resources.job.memory}")
+    @Value("\${kubernetes.resources.job.memory}")
     var memory: Int = 65535
 
-    @Value("\${bcs.resources.job.disk}")
+    @Value("\${kubernetes.resources.job.disk}")
     var disk: Int = 500
 
-    override val slaveEnv = "Bcs"
+    override val slaveEnv = "Kubernetes"
 
     override fun createJob(userId: String, jobReq: DispatchJobReq): DispatchTaskResp {
         val job = with(jobReq) {
@@ -74,14 +69,23 @@ class KubernetesJobService @Autowired constructor(
                 name = alias,
                 activeDeadlineSeconds = activeDeadlineSeconds,
                 image = image,
-                registry = DockerRegistry(
-                    host = registry.host,
-                    username = registry.username,
-                    password = registry.password
+                registry = if (registry.host.isBlank() || registry.username.isNullOrBlank() ||
+                    registry.password.isNullOrBlank()
+                ) {
+                    null
+                } else {
+                    KubernetesDockerRegistry(registry.host, registry.username!!, registry.password!!)
+                },
+                resource = KubernetesResource(
+                    requestCPU = cpu.toString(),
+                    requestDisk = "${disk}G",
+                    requestDiskIO = "",
+                    requestMem = "${memory}Mi",
+                    limitCpu = cpu.toString(),
+                    limitDisk = "${disk}G",
+                    limitDiskIO = "",
+                    limitMem = "${memory}Mi"
                 ),
-                cpu = cpu,
-                memory = memory,
-                disk = disk,
                 env = params?.env,
                 command = params?.command,
                 nfs = params?.nfsVolume?.map { nfsVo ->
@@ -91,7 +95,10 @@ class KubernetesJobService @Autowired constructor(
                         mountPath = nfsVo.mountPath
                     )
                 },
-                podNameSelector = podNameSelector
+                podNameSelector = PodNameSelector(
+                    selector = podNameSelector,
+                    usePodData = true
+                )
             )
         }
 
@@ -118,7 +125,7 @@ class KubernetesJobService @Autowired constructor(
             return DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, status?.message)
         }
         return when {
-            status.isSuccess() -> DispatchBuildStatusResp(DispatchBuildStatusEnum.succeeded.name)
+            status.isSucceeded() -> DispatchBuildStatusResp(DispatchBuildStatusEnum.succeeded.name)
             status.isRunning() -> DispatchBuildStatusResp(DispatchBuildStatusEnum.running.name)
             else -> DispatchBuildStatusResp(DispatchBuildStatusEnum.failed.name, status.message)
         }
@@ -128,10 +135,10 @@ class KubernetesJobService @Autowired constructor(
         val result = kubernetesJobClient.getJobLogs(userId, jobName, sinceTime)
         if (result.isNotOk()) {
             return DispatchJobLogResp(
-                log = result.data,
+                log = result.data?.split("\n"),
                 errorMsg = result.message
             )
         }
-        return DispatchJobLogResp(log = result.data)
+        return DispatchJobLogResp(log = result.data?.split("\n"))
     }
 }

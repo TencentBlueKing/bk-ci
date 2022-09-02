@@ -80,8 +80,10 @@ class DispatchBaseDebugService @Autowired constructor(
         needCheckPermission: Boolean = true
     ): DebugResponse {
         val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(projectId)
-        logger.info("$userId start debug $dockerRoutingType pipelineId: $pipelineId buildId: " +
-                        "$buildId vmSeqId: $vmSeqId")
+        logger.info(
+            "$userId start debug $dockerRoutingType pipelineId: $pipelineId buildId: " +
+                "$buildId vmSeqId: $vmSeqId"
+        )
         // 根据是否传入buildId 查找builderName
         val buildHistory = if (buildId == null) {
             // 查找当前pipeline下的最近一次构建
@@ -258,8 +260,10 @@ class DispatchBaseDebugService @Autowired constructor(
                             builderName = debugBuilderName,
                             param = DispatchBuildOperateBuilderParams(DispatchBuildOperateBuilderType.DELETE, null)
                         )
-                        dispatchKubernetesBuildDao.delete(dslContext, dockerRoutingType.name, pipelineId,
-                                                          vmSeqId, builder.poolNo)
+                        dispatchKubernetesBuildDao.delete(
+                            dslContext, dockerRoutingType.name, pipelineId,
+                            vmSeqId, builder.poolNo
+                        )
                     }
                 } else {
                     logger.info(

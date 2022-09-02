@@ -30,7 +30,6 @@ package com.tencent.devops.dispatch.kubernetes.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
@@ -39,12 +38,12 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
 import com.tencent.devops.dispatch.kubernetes.pojo.OperateBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StartBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskResp
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
 import okhttp3.MediaType
@@ -92,7 +91,7 @@ class KubernetesBuilderClient @Autowired constructor(
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                     "${ConstantsMessage.TROUBLE_SHOOTING}获取构建机详情接口异常" +
-                            "（Fail to get builder detail, http response code: ${response.code()}"
+                        "（Fail to get builder detail, http response code: ${response.code()}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -100,7 +99,7 @@ class KubernetesBuilderClient @Autowired constructor(
             if (retryTime > 0) {
                 logger.info(
                     "[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail SocketTimeoutException." +
-                            " retry:$retryTime"
+                        " retry:$retryTime"
                 )
                 return getBuilderDetail(buildId, vmSeqId, userId, name, retryTime - 1)
             } else {
@@ -159,7 +158,7 @@ class KubernetesBuilderClient @Autowired constructor(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
                         "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口异常" +
-                                "（Fail to $action docker, http response code: ${response.code()}"
+                            "（Fail to $action docker, http response code: ${response.code()}"
                     )
                 }
                 logger.info("[$buildId]|[$vmSeqId] response: $responseContent")
@@ -211,7 +210,7 @@ class KubernetesBuilderClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
                         "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口异常: Fail to createBuilder, http response code: " +
-                                "${response.code()}"
+                            "${response.code()}"
                     )
                 }
 

@@ -35,7 +35,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchTaskResp
 /**
  * 用来获取不同类型的dispatchType的service来调用相关实现
  * 注：仅在接口层相关接口使用此类，构建层使用
- * @see com.tencent.devops.dispatch.common.interfaces.DispatchBuildTypeService
  */
 interface JobService {
 
