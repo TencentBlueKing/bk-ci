@@ -121,13 +121,15 @@ class BuildCancelControl @Autowired constructor(
                 setBuildCancelActionRedisFlag(buildId)
             }
             cancelAllPendingTask(event = event, model = model)
-            // 修改detail model
-            pipelineBuildDetailService.buildCancel(
-                projectId = event.projectId,
-                buildId = event.buildId,
-                buildStatus = event.status,
-                cancelUser = event.userId
-            )
+            if (event.actionType == ActionType.TERMINATE) {
+                // 修改detail model
+                pipelineBuildDetailService.buildCancel(
+                    projectId = event.projectId,
+                    buildId = event.buildId,
+                    buildStatus = event.status,
+                    cancelUser = event.userId
+                )
+            }
 
             // 排队的则不再获取Pending Stage，防止Final Stage被执行
             val pendingStage: PipelineBuildStage? =

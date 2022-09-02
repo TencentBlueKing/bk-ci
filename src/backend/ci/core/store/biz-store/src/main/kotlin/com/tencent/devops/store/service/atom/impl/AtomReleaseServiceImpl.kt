@@ -111,7 +111,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
 
 @Suppress("ALL")
@@ -159,9 +158,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
     }
-
-    @Value("\${store.atomDetailBaseUrl}")
-    protected lateinit var atomDetailBaseUrl: String
 
     private fun validateAddMarketAtomReq(
         marketAtomCreateRequest: MarketAtomCreateRequest
@@ -219,7 +215,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 id = id,
                 repositoryHashId = handleAtomPackageMap?.get(KEY_REPOSITORY_HASH_ID) ?: "",
                 codeSrc = handleAtomPackageMap?.get(KEY_CODE_SRC) ?: "",
-                docsLink = atomDetailBaseUrl + atomCode,
+                docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.ATOM, atomCode),
                 marketAtomCreateRequest = marketAtomCreateRequest
             )
             // 添加插件与项目关联关系，type为0代表新增插件时关联的初始化项目
