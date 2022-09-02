@@ -45,10 +45,9 @@
             })
         }
 
-        getDocumentTitle (linkNew) {
-            const title = linkNew.split('/')[1]
+        getDocumentTitle (model) {
             const titlesMap = {
-                '': this.$t('documentTitleHome'),
+                undefined: this.$t('documentTitleHome'),
                 pipeline: this.$t('documentTitlePipeline'),
                 codelib: this.$t('documentTitleCodelib'),
                 artifactory: this.$t('documentTitleArtifactory'),
@@ -72,7 +71,7 @@
                 store: this.$t('documentTitleStore'),
                 metrics: this.$t('documentTitleMetrics')
             }
-            return titlesMap[title]
+            return titlesMap[model]
         }
 
         async created () {

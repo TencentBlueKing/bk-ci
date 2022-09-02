@@ -4,6 +4,7 @@
             <router-link
                 class="header-logo"
                 to="/console/"
+                @click.native="document.title = $t('documentTitleHome')"
             >
                 <Logo
                     name="devops-logo"
