@@ -66,6 +66,7 @@ class StreamRepoTriggerAction(
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
+        val changeSet = getChangeSet()
         return TGitActionCommon.getYamlPathList(
             action = baseAction,
             gitProjectId = data.getGitProjectId(),
@@ -126,9 +127,7 @@ class StreamRepoTriggerAction(
         }
     }
 
-    override fun updateLastBranch(pipelineId: String, branch: String) {
-        baseAction.updateLastBranch(pipelineId, branch)
-    }
+    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) {}
 
     private fun checkHaveGroupName(
         name: String,

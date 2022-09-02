@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
@@ -79,15 +80,17 @@ object WorkspaceUtils {
             BuildType.AGENT -> {
                 val replaceWorkspace = if (workspace.isNotBlank()) {
                     ReplacementUtils.replace(
-                        workspace, object : ReplacementUtils.KeyReplacement {
-                        override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                            return variables[key]
-                                ?: throw IllegalArgumentException("工作空间未定义变量(undefined variable): $workspace")
-                        }
-                    }, mapOf(
-                        WORKSPACE_CONTEXT to workspace,
-                        JOB_OS_CONTEXT to AgentEnv.getOS().name
-                    )
+                        workspace,
+                        object : KeyReplacement {
+                            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+                                return variables[key]
+                                    ?: throw IllegalArgumentException("工作空间未定义变量(undefined variable): $workspace")
+                            }
+                        },
+                        mapOf(
+                            WORKSPACE_CONTEXT to workspace,
+                            JOB_OS_CONTEXT to AgentEnv.getOS().name
+                        )
                     )
                 } else {
                     workspace

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -47,6 +48,8 @@ import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.V1TriggerBuildReq
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.service.StreamPipelineService
+import com.tencent.devops.stream.service.StreamYamlService
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.service.StreamEventService
@@ -79,15 +82,19 @@ class TXManualTriggerService @Autowired constructor(
     streamYamlBuild: StreamYamlBuild,
     yamlTemplateService: YamlTemplateService,
     private val dslContext: DSLContext,
+    private val client: Client,
     private val gitRequestEventHandle: V1GitRequestEventHandle,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCIEventService: V1GitCIEventService,
     private val yamlBuild: V1YamlBuild,
-    private val streamYamlService: V1StreamYamlService
+    private val streamYamlService: V1StreamYamlService,
+    private val streamPipelineService: StreamPipelineService,
+    private val streamYamlServiceV2: StreamYamlService
 ) : ManualTriggerService(
     dslContext = dslContext,
+    client = client,
     actionFactory = actionFactory,
     streamGitConfig = streamGitConfig,
     streamEventService = streamEventService,
@@ -98,7 +105,9 @@ class TXManualTriggerService @Autowired constructor(
     gitPipelineResourceDao = gitPipelineResourceDao,
     gitRequestEventBuildDao = gitRequestEventBuildDao,
     streamYamlBuild = streamYamlBuild,
-    yamlTemplateService = yamlTemplateService
+    yamlTemplateService = yamlTemplateService,
+    streamPipelineService = streamPipelineService,
+    streamYamlService = streamYamlServiceV2
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")

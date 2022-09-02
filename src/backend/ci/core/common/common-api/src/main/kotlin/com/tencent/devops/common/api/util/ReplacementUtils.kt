@@ -210,8 +210,4 @@ object ReplacementUtils {
 
     private fun getVariable(key: String, replacement: KeyReplacement, doubleCurlyBraces: Boolean) =
         replacement.getReplacement(key, doubleCurlyBraces)
-
-    interface KeyReplacement {
-        fun getReplacement(key: String, doubleCurlyBraces: Boolean): String?
-    }
 }
