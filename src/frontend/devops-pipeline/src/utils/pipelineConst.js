@@ -23,6 +23,16 @@ export const allVersionKeyList = [
     'BK_CI_FIX_VERSION'
 ]
 
+export const NAME_FILTER_TYPE = 'filterByName'
+export const CREATOR_FILTER_TYPE = 'filterByCreator'
+export const FILTER_BY_LABEL = 'filterByLabel'
+export const FILTER_BY_VIEW_ID = 'filterByViewIds'
+
+export const PIPELINE_FILTER_PIPELINENAME = 'filterByPipelineName'
+export const PIPELINE_FILTER_CREATOR = 'filterByCreator'
+export const PIPELINE_FILTER_VIEWIDS = 'filterByViewIds'
+export const PIPELINE_FILTER_LABELS = 'filterByLabels'
+
 export const jobConst = {
     LINUX: 'Linux',
     MACOS: 'macOS',

@@ -9,22 +9,6 @@
                 slot="logo">
                 <logo size="32" name="pipeline"></logo>
             </span>
-
-            <bk-tab class="header-list" :active.sync="currentViewId" type="unborder-card" slot="center" @tab-change="changePageType" :scroll-step="700">
-                <bk-tab-panel
-                    v-for="(panel, index) in currentViewList"
-                    :name="panel.id"
-                    :label="panel.name"
-                    :key="index">
-                    <template slot="label">
-                        <span :title="panel.name">{{panel.name}}</span>
-                    </template>
-                </bk-tab-panel>
-                <div class="manage-view-btn" v-show="currentViewId" slot="setting">
-                    <i class="devops-icon icon-plus" @click="toggleShowViewManage()"></i>
-                </div>
-            </bk-tab>
-
             <div class="default-link-list" slot="right">
                 <div class="dropdown-trigger" @click.stop="toggleIsMoreHandler">
                     <span class="more-handler" id="moreHeaderHandler" :class="{ 'selectde-title': dropdownTitle !== $t('more') }">{{ dropdownTitle }}
@@ -69,10 +53,6 @@
             </div>
         </pipeline-header>
 
-        <view-manage v-if="showViewManage"></view-manage>
-
-        <div class="view-manage-background" v-if="showViewManage"></div>
-
         <router-view v-if="currentViewId" style="width: 100%"></router-view>
     </article>
 
@@ -80,15 +60,13 @@
 
 <script>
     import { mapActions, mapState, mapMutations } from 'vuex'
-    import pipelineHeader from '@/components/devops/pipeline_header'
+    import pipelineHeader from '@/components/devops/pipeline-header'
     import Logo from '@/components/Logo'
-    import ViewManage from '@/components/pipelineList/view_manage'
 
     export default {
         components: {
             'pipeline-header': pipelineHeader,
-            Logo,
-            ViewManage
+            Logo
         },
         data () {
             return {
@@ -197,7 +175,7 @@
             changePageType (type) {
                 this.updateCurrentViewId(type)
                 this.$router.push({
-                    name: 'pipelinesList',
+                    name: 'pipelineList',
                     params: {
                         type
                     }

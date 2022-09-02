@@ -7,13 +7,13 @@
             }">
             <div class="group-list-wrapper">
                 <section v-show="showContent" :class="['group-list-content','clearfix',{ 'group-list-center': hasGroup }]">
-                  
-                    <div class="group-list-hint" v-if="tagGroupList.length > 0">
+
+                    <div class="group-list-hint" v-if="labelList.length > 0">
                         <logo size="12" name="warning-circle" />
                         <span>{{ $t('group.groupNotice') }}</span>
                     </div>
                     <div class="group-list-cards"
-                        v-for="(group, groupIndex) in tagGroupList" :key="groupIndex"
+                        v-for="(group, groupIndex) in labelList" :key="groupIndex"
                         v-bkloading="{ isLoading: loading.isLoading }">
                         <div class="group-list-title">
                             <div class="title-text">
@@ -97,7 +97,7 @@
                             {{ $t('group.addGroup') }}
                         </bk-button>
                     </div>
-                    <div v-show="tagGroupList.length < 1">
+                    <div v-show="labelList.length < 1">
                         <empty-tips
                             :title="emptyTipsConfig.title"
                             :desc="emptyTipsConfig.desc"
@@ -217,10 +217,10 @@
         },
         computed: {
             ...mapGetters({
-                tagGroupList: 'pipelines/getTagGroupList'
+                labelList: 'pipelines/getLabelList'
             }),
             hasGroup () {
-                return (!this.tagGroupList.length || this.tagGroupList.length < 1)
+                return (!this.labelList.length || this.labelList.length < 1)
             },
             projectId () {
                 return this.$route.params.projectId
@@ -235,9 +235,9 @@
         },
         methods: {
             isShowGroupBtn () {
-                if (this.tagGroupList.length > 0 && this.tagGroupList.length < 10) {
+                if (this.labelList.length > 0 && this.labelList.length < 10) {
                     let boolean = true
-                    this.tagGroupList.forEach((item, index) => {
+                    this.labelList.forEach((item, index) => {
                         if (!item.labels.length) {
                             boolean = false
                             return false
@@ -286,18 +286,18 @@
                     projectId: this.projectId,
                     name: this.labelValue
                 }
-                
+
                 let theme, message
 
                 if (!params.name.length) {
                     const valid = await this.$validator.validate()
-                    
+
                     if (!valid) {
                         return false
                     }
                 }
                 try {
-                    params.id = this.tagGroupList[groupIndex].id
+                    params.id = this.labelList[groupIndex].id
                     await $store.dispatch('pipelines/modifyGroup', params).then(res => {
                         if (res) $store.commit('pipelines/modifyTagGroupById', params)
                         message = res ? '标签组名称保存成功。' : '标签组名称保存失败。'
@@ -331,7 +331,7 @@
                 // if (groupIndex || groupIndex === 0) {
                 //     setting.title = this.$t('rename')
                 //     setting.groupIndex = groupIndex
-                //     setting.value = this.tagGroupList[groupIndex].name
+                //     setting.value = this.labelList[groupIndex].name
                 // } else {
                 setting.title = this.$t('group.addGroup')
                 setting.groupIndex = null
@@ -362,7 +362,7 @@
                     })
                 } else {
                     try {
-                        params.id = this.tagGroupList[groups.groupIndex].id
+                        params.id = this.labelList[groups.groupIndex].id
                         await $store.dispatch('pipelines/modifyGroup', params).then(res => {
                             if (res) $store.commit('pipelines/modifyTagGroupById', params)
                         })
@@ -373,17 +373,17 @@
                 groups.isShow = false
             },
             deleteGroup (groupIndex) {
-                // const name = this.tagGroupList[groupIndex].name
+                // const name = this.labelList[groupIndex].name
                 // const content = this.$t('deleteReason')
                 // navConfirm({ type: 'warning', content })
                 //     .then(async () => {
                 //         try {
                 //             await $store.dispatch('pipelines/deleteGroup', {
-                //                 groupId: this.tagGroupList[groupIndex].id
+                //                 groupId: this.labelList[groupIndex].id
                 //             }).then(res => {
                 //                 if (res) {
                 //                     $store.commit('pipelines/removeTagGroupById', {
-                //                         groupId: this.tagGroupList[groupIndex].id
+                //                         groupId: this.labelList[groupIndex].id
                 //                     })
                 //                 }
                 //             })
@@ -406,13 +406,13 @@
                         try {
                             await $store.dispatch('pipelines/deleteGroup', {
                                 projectId: this.projectId,
-                                groupId: this.tagGroupList[groupIndex].id
+                                groupId: this.labelList[groupIndex].id
                             }).then(res => {
                                 theme = res ? 'success' : 'error'
                                 message = res ? '删除标签组成功。' : '删除标签组失败。'
                                 if (res) {
                                     $store.commit('pipelines/removeTagGroupById', {
-                                        groupId: this.tagGroupList[groupIndex].id
+                                        groupId: this.labelList[groupIndex].id
                                     })
                                 }
                                 this.$bkMessage({
@@ -438,12 +438,12 @@
                     confirmFn: () => {
                         this.REQUEST('deleteTag', {
                             projectId: this.projectId,
-                            labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
+                            labelId: this.labelList[groupIndex].labels[tagIndex].id
                         })
                     }
                 })
                 // this.REQUEST('deleteTag', {
-                //     labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
+                //     labelId: this.labelList[groupIndex].labels[tagIndex].id
                 // })
                 // if (this.toolsConfigInstance) {
                 //     this.toolsConfigInstance.hide()
@@ -471,7 +471,7 @@
             tagEdit (e, groupIndex, tagIndex) {
                 this.resetTag()
                 this.handleCancel()
-                const tagList = this.tagGroupList[groupIndex].labels
+                const tagList = this.labelList[groupIndex].labels
                 this.tagOriginalValue = tagList[tagIndex].name
                 this.tagOriginalGroupIndex = groupIndex
                 this.tagOriginalTagIndex = tagIndex
@@ -494,7 +494,7 @@
                 this.isShowInputIndex = -1
                 this.tagOriginalGroupIndex = null
                 this.tagOriginalTagIndex = null
-                const group = this.tagGroupList[groupIndex]
+                const group = this.labelList[groupIndex]
                 this.addTagGroupIndex = groupIndex
                 this.addTagIndex = group.labels.length
                 this.tagValue = ''
@@ -511,7 +511,7 @@
                 this.tagModify(groupIndex, tagIndex)
             },
             tagCancel (e, groupIndex, tagIndex) {
-                const group = this.tagGroupList[groupIndex]
+                const group = this.labelList[groupIndex]
                 if (this.tagOriginalValue) group.labels[tagIndex].name = this.tagOriginalValue
                 this.btnIsdisable = false
                 this.active.isGroupEdit = false
@@ -531,7 +531,7 @@
             },
             async tagModify (groupIndex, tagIndex) { // 标签input回车
                 const { $store } = this
-                const group = this.tagGroupList[groupIndex]
+                const group = this.labelList[groupIndex]
                 let path, params
                 this.tagOriginalValue = group.labels[tagIndex].name
                 this.isAddTagEnter = false
@@ -567,7 +567,7 @@
             },
             resetTag () {
                 if (typeof this.addTagGroupIndex === 'number' && this.addTagGroupIndex !== null && this.addTagIndex !== null) {
-                    const group = this.tagGroupList[this.addTagGroupIndex]
+                    const group = this.labelList[this.addTagGroupIndex]
                     this.btnIsdisable = false
                     this.active.isGroupEdit = false
                     if (!Object.prototype.hasOwnProperty.call(group.labels[this.addTagIndex], 'groupId')) {
@@ -585,7 +585,7 @@
                 let newTagIndex = tagIndex
                 if (groupIndex) {
                     for (let index = 0; index < groupIndex; index++) {
-                        newTagIndex += this.tagGroupList[index].labels.length
+                        newTagIndex += this.labelList[index].labels.length
                     }
                 }
                 if (this.$refs.tagInput[newTagIndex]) {
@@ -597,7 +597,7 @@
             },
             reset (groupIndex, tagIndex) {
                 this.tagValue = ''
-                this.active.isActiveGroup = 's' + groupIndex + (tagIndex || this.tagGroupList[groupIndex].labels.length - 1)
+                this.active.isActiveGroup = 's' + groupIndex + (tagIndex || this.labelList[groupIndex].labels.length - 1)
                 this.active.isGroupEdit = false
             },
 
@@ -651,7 +651,7 @@
                 } catch (err) {
                     this.errShowTips(err)
                     if (this.tagOriginalGroupIndex && this.tagOriginalTagIndex) {
-                        this.tagGroupList[this.tagOriginalGroupIndex].labels[this.tagOriginalTagIndex].name = this.tagOriginalValue
+                        this.labelList[this.tagOriginalGroupIndex].labels[this.tagOriginalTagIndex].name = this.tagOriginalValue
                     }
                 }
             }

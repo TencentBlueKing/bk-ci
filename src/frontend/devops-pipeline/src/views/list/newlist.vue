@@ -150,7 +150,7 @@
     import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import { bus } from '@/utils/bus'
-    import taskCard from '@/components/pipelineList/taskCard'
+    import taskCard from '@/components/piplineList/PipelineCard'
     import taskTable from '@/components/pipelineList/taskTable'
     import listEmpty from '@/components/pipelineList/listEmpty'
     import listCreateHeader from '@/components/pipelineList/listCreateHeader'

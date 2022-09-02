@@ -137,9 +137,9 @@ export default {
                         message: err.message || err,
                         theme: 'error'
                     })
-                    if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelinesList') {
+                    if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelineList') {
                         this.$router.push({
-                            name: 'pipelinesList'
+                            name: 'pipelineList'
                         })
                     }
                 }
@@ -175,9 +175,9 @@ export default {
                         message: err.message || err,
                         theme: 'error'
                     })
-                    if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelinesList') {
+                    if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelineList') {
                         this.$router.push({
-                            name: 'pipelinesList'
+                            name: 'pipelineList'
                         })
                     }
                 }

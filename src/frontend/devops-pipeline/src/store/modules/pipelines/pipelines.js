@@ -327,7 +327,7 @@ const actions = {
     },
     searchPipelineList ({ commit, state, dispatch }, { projectId, searchName = '' }) {
         const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${encodeURIComponent(searchName)}`
-        
+
         return ajax.get(url).then(response => {
             return response.data
         })
@@ -338,20 +338,14 @@ const actions = {
             return response.data
         })
     },
-    requestAllPipelinesListByFilter ({ commit, state, dispatch }, data) {
-        const projectId = data.projectId
-        const viewId = data.viewId
-        let url = `${prefix}projects/${projectId}/listViewPipelines?viewId=${viewId}`
-        let str = ''
-        for (const obj in data) {
-            if (obj !== 'viewId' && data[obj]) {
-                str += `&${obj}=${data[obj]}`
-            }
-        }
-        url += str
-        return ajax.get(url).then(response => {
-            return response.data
+    async requestAllPipelinesListByFilter ({ commit }, body) {
+        const { projectId, ...query } = body
+        const url = `${prefix}projects/${projectId}/listViewPipelines`
+        const { data } = await ajax.get(url, {
+            params: query
         })
+        commit('pipelines/updateAllPipelineList', data)
+        return data
     },
     /**
      * 获取流水线最近构建状态

@@ -17,37 +17,45 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-const pipelines = () => import(/* webpackChunkName: "pipelines" */'../../views')
+import {
+    ALL_PIPELINE_VIEW_ID
+} from '@/store/constants'
 
-const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../../views/list/newlist')
-const pipelinesListEntry = () => import(/* webpackChunkName: "pipelinesListEntry" */'../../views/list/index')
-const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../../views/list/group')
-const pipelinesView = () => import(/* webpackChunkName: "pipelinesView" */'../../views/list/view')
-const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/list/template')
-const pipelinesRestore = () => import(/* webpackChunkName: "pipelinesRestore" */'../../views/list/restore')
-const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../../views/list/audit')
+const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
+const RouteView = () => import(/* webpackChunkName: "pipelines" */'../views/entry')
 
-const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/template/')
-const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/template/edit.vue')
-const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/template/setting.vue')
-const templateInstance = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/template/instance.vue')
-const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/template/instance_create.vue')
+// const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/list/newlist')
+const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
+const pipelineListAuth = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/Auth')
+const AddPipeline = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/AddPipeline')
 
-const atomManage = () => import(/* webpackChunkName: "atomManage" */'../../views/list/atomManage.vue')
+const pipelineListEntry = () => import(/* webpackChunkName: "pipelineListEntry" */'../views/PipelineList')
+const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../views/list/group')
+const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/list/template')
+const pipelinesRestore = () => import(/* webpackChunkName: "pipelinesRestore" */'../views/list/restore')
+const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../views/list/audit')
+
+const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/')
+const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/edit.vue')
+const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
+const templateInstance = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance.vue')
+const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance_create.vue')
+
+const atomManage = () => import(/* webpackChunkName: "atomManage" */'../views/list/atomManage.vue')
 
 // 客户端流水线任务子页 - subpages
-const pipelinesEntry = () => import(/* webpackChunkName: "pipelinesEntry" */'../../views/subpages')
+const pipelinesEntry = () => import(/* webpackChunkName: "pipelinesEntry" */'../views/subpages')
 // 客户端流水线任务历史 - history
-const pipelinesHistory = () => import(/* webpackChunkName: "pipelinesHistory" */'../../views/subpages/history.vue')
+const pipelinesHistory = () => import(/* webpackChunkName: "pipelinesHistory" */'../views/subpages/history.vue')
 // 客户端流水线任务详情 - detail
-const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'../../views/subpages/exec_detail.vue')
+const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'../views/subpages/exec_detail.vue')
 // 客户端流水线编辑 - edit
-const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../../views/subpages/edit.vue')
+const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../views/subpages/edit.vue')
 // 客户端流水线执行预览 - edit
-const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../../views/subpages/preview.vue')
+const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../views/subpages/preview.vue')
 // 插件前端task.json在线调试
-const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../../views/atomDebug.vue')
-const ImportPipelineEdit = () => import(/* webpackChunkName: "atomDebug" */'../../views/list/ImportPipelineEdit.vue')
+const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/atomDebug.vue')
+const ImportPipelineEdit = () => import(/* webpackChunkName: "atomDebug" */'../views/list/ImportPipelineEdit.vue')
 
 const routes = [
     {
@@ -56,30 +64,18 @@ const routes = [
         children: [
             {
                 path: '',
+                component: pipelineListEntry,
                 redirect: {
-                    name: 'pipelinesList'
-                }
-            },
-            {
-                path: 'list',
-                name: 'pipelinesListEntry',
-                meta: {
-                    title: 'pipeline',
-                    header: 'pipeline',
-                    icon: 'pipeline',
-                    to: 'pipelinesList'
+                    name: 'pipelineList',
+                    params: {
+                        viewId: ALL_PIPELINE_VIEW_ID
+                    }
                 },
-                component: pipelinesListEntry,
                 children: [
                     {
                         path: 'group',
                         name: 'pipelinesGroup',
                         component: pipelinesGroup
-                    },
-                    {
-                        path: 'view',
-                        name: 'pipelinesView',
-                        component: pipelinesView
                     },
                     {
                         path: 'template',
@@ -103,15 +99,35 @@ const routes = [
                         component: pipelinesAudit
                     },
                     {
-                        path: ':type?',
-                        name: 'pipelinesList',
-                        component: pipelinesNewList,
-                        meta: {
-                            webSocket: true
-                        }
+                        path: ':viewId',
+                        component: RouteView,
+                        children: [
+                            {
+                                path: '',
+                                name: 'pipelineList',
+                                component: pipelinesNewList,
+                                meta: {
+                                    webSocket: true
+                                }
+                            },
+                            {
+                                path: 'auth',
+                                name: 'pipelineListAuth',
+                                component: pipelineListAuth,
+                                meta: {
+                                    breadcrumbs: ['{viewName}']
+                                }
+                            },
+                            {
+                                path: 'new',
+                                name: 'addPipeline',
+                                component: AddPipeline
+                            }
+                        ]
                     }
                 ]
             },
+
             {
                 path: 'template/:templateId',
                 component: templateEntry,
@@ -162,7 +178,7 @@ const routes = [
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
-                            to: 'pipelinesList'
+                            to: 'pipelineList'
                         },
                         component: pipelinesEdit
                     }
@@ -187,7 +203,7 @@ const routes = [
                             title: 'pipeline',
                             header: 'pipeline',
                             icon: 'pipeline',
-                            to: 'pipelinesList'
+                            to: 'pipelineList'
                         }
                     },
                     {
@@ -205,7 +221,7 @@ const routes = [
                             title: 'pipeline',
                             header: 'pipeline',
                             icon: 'pipeline',
-                            to: 'pipelinesList'
+                            to: 'pipelineList'
                         }
                     },
                     {
@@ -216,7 +232,7 @@ const routes = [
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
-                            to: 'pipelinesList'
+                            to: 'pipelineList'
                         },
                         component: pipelinesEdit
                     },
@@ -228,7 +244,7 @@ const routes = [
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
-                            to: 'pipelinesList'
+                            to: 'pipelineList'
                         },
                         component: pipelinesPreview
                     }

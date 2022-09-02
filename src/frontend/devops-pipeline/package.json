@@ -4,7 +4,7 @@
     "description": "devops-pipeline",
     "author": "",
     "scripts": {
-        "dev": "webpack-dev-server --mode development --progress",
+        "dev": "webpack-cli serve --mode development --progress",
         "dll": "webpack --mode production --config webpack.dll.config.js",
         "public": "npm run dll && webpack --mode production",
         "public:dev": "cross-env NODE_ENV=dev  npm run public --",
@@ -51,6 +51,7 @@
         "@babel/preset-env": "^7.15.8",
         "@babel/preset-react": "^7.16.0",
         "@vue/babel-preset-jsx": "^1.2.4",
+        "@webpack-cli/serve": "^1.7.0",
         "babel-helper-vue-jsx-merge-props": "^2.0.3",
         "babel-loader": "^8.2.2",
         "babel-plugin-transform-vue-jsx": "^4.0.1",

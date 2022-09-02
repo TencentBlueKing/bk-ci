@@ -86,7 +86,7 @@
         </bk-dialog>
         <export-dialog :is-show.sync="showExportDialog"></export-dialog>
         <import-pipeline-popup :handle-import-success="handleImportModifyPipeline" :is-show.sync="showImportDialog"></import-pipeline-popup>
-        
+
     </div>
 </template>
 
@@ -231,7 +231,7 @@
                     icon: 'pipeline',
                     selectedValue: this.$t('pipeline'),
                     to: {
-                        name: 'pipelinesList'
+                        name: 'pipelineList'
                     }
                 }, {
                     paramId: 'pipelineId',
@@ -257,7 +257,7 @@
             }
 
         },
-        
+
         created () {
             this.fetchPipelineList()
             this.$store.dispatch('requestProjectDetail', { projectId: this.projectId })
@@ -403,7 +403,7 @@
                     this.setPipelineEditing(true)
                 })
             },
-            
+
             copyPipeline () {
                 this.isDialogShow = true
                 this.dialogConfig = {
