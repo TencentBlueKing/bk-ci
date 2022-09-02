@@ -32,5 +32,6 @@ subprojects {
         api("com.fasterxml.jackson.core:jackson-annotations")
         api("com.squareup.okhttp3:okhttp")
         api("org.slf4j:slf4j-api")
+        api("org.apache.commons:commons-lang3")
     }
 }

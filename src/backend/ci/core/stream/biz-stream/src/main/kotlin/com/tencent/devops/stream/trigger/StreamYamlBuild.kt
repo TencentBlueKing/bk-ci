@@ -49,6 +49,7 @@ import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -72,6 +73,7 @@ import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.util.StreamPipelineUtils
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -88,7 +90,8 @@ class StreamYamlBuild @Autowired constructor(
     private val streamTriggerCache: StreamTriggerCache,
     private val repoTriggerEventService: RepoTriggerEventService,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val modelCreate: ModelCreate
+    private val modelCreate: ModelCreate,
+    private val streamGitConfig: StreamGitConfig
 ) {
 
     companion object {
@@ -470,7 +473,7 @@ class StreamYamlBuild @Autowired constructor(
                 gitProjectKey = objectData.remoteProjectId,
                 action = action,
                 getProjectInfo = action.api::getGitProjectInfo
-            )?.gitProjectId?.let { "git_$it" } ?: return@forEach
+            )?.gitProjectId?.let { GitCommonUtils.getCiProjectId(it, streamGitConfig.getScmType()) } ?: return@forEach
         }
 
         val results = mutableMapOf<String, BuildTemplateAcrossInfo>()
@@ -516,7 +519,10 @@ class StreamYamlBuild @Autowired constructor(
                         getProjectInfo = action.api::getGitProjectInfo
                     )!!
 
-                    val result = "git_${gitProjectInfo.gitProjectId}@${repoNameAndPool[1]}"
+                    val result = GitCommonUtils.getCiProjectId(
+                        "${gitProjectInfo.gitProjectId}@${repoNameAndPool[1]}",
+                        streamGitConfig.getScmType()
+                    )
 
                     logger.info("StreamYamlBuild|getEnvName|envName|$result")
                     return result

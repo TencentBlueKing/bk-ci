@@ -9,9 +9,10 @@ import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlContent
@@ -34,6 +35,7 @@ class StreamDeleteAction(
     }
 
     override fun getProjectCode(gitProjectId: String?) = gitAction.getProjectCode(gitProjectId)
+    override fun getGitProjectIdOrName(gitProjectId: String?) = gitAction.getGitProjectIdOrName(gitProjectId)
 
     override fun getGitCred(personToken: String?) = gitAction.getGitCred(personToken)
 
@@ -52,9 +54,9 @@ class StreamDeleteAction(
     }
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
-        return TGitActionCommon.getYamlPathList(
+        return GitActionCommon.getYamlPathList(
             action = gitAction,
-            gitProjectId = data.getGitProjectId(),
+            gitProjectId = getGitProjectIdOrName(),
             ref = data.context.defaultBranch
         ).map { (name, blobId) -> YamlPathListEntry(name, CheckType.NO_NEED_CHECK, data.context.defaultBranch, blobId) }
     }
@@ -64,7 +66,7 @@ class StreamDeleteAction(
             ref = data.context.defaultBranch!!,
             content = api.getFileContent(
                 cred = gitAction.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
+                gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
                 ref = data.context.defaultBranch!!,
                 retry = ApiRequestRetryInfo(true)
@@ -79,7 +81,7 @@ class StreamDeleteAction(
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         val deleteObjectKinds = triggerOn.delete?.getTypesObjectKind()?.map { it.value }?.toSet()
             ?: return TriggerResult(
-                trigger = false,
+                trigger = TriggerBody().triggerFail("on.delete.types", "does not currently exist"),
                 timeTrigger = false,
                 startParams = emptyMap(),
                 deleteTrigger = false
@@ -88,9 +90,22 @@ class StreamDeleteAction(
             val startParams = gitAction.getWebHookStartParam(
                 triggerOn = triggerOn
             )
-            TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = true)
+            TriggerResult(
+                trigger = TriggerBody(true),
+                timeTrigger = false,
+                startParams = startParams,
+                deleteTrigger = true
+            )
         } else {
-            TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
+            TriggerResult(
+                trigger = TriggerBody().triggerFail(
+                    "on.delete.types",
+                    "current type(${gitAction.metaData.streamObjectKind.value}) not match"
+                ),
+                timeTrigger = false,
+                startParams = emptyMap(),
+                deleteTrigger = false
+            )
         }
     }
 

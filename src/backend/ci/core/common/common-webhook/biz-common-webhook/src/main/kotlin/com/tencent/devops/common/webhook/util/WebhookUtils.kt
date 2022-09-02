@@ -73,8 +73,11 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANC
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import java.util.regex.Pattern
 
 object WebhookUtils {
@@ -174,20 +177,12 @@ object WebhookUtils {
 
     @SuppressWarnings("ComplexMethod")
     fun mrStartParam(
-        gitScmService: GitScmService,
+        mrInfo: GitMrInfo?,
+        reviewers: List<GitMrReviewInfo.GitMrInfoReviewer>?,
         mrRequestId: Long,
-        projectId: String?,
-        repository: Repository?,
         homepage: String? = null
     ): Map<String, Any> {
-        if (projectId == null || repository == null) {
-            return emptyMap()
-        }
         val startParams = mutableMapOf<String, Any>()
-        // MR提交人
-        val mrInfo = gitScmService.getMergeRequestInfo(projectId, mrRequestId, repository)
-        val reviewers = gitScmService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)?.reviewers
-
         startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = mrInfo?.sourceBranch ?: ""
         startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = mrInfo?.targetBranch ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = mrInfo?.targetBranch ?: ""
@@ -224,6 +219,53 @@ object WebhookUtils {
         startParams[PIPELINE_GIT_MR_PROPOSER] = mrInfo?.author?.username ?: ""
         if (!homepage.isNullOrBlank()) {
             startParams[PIPELINE_GIT_MR_URL] = "$homepage/merge_requests/${mrInfo?.mrNumber}"
+        }
+        return startParams
+    }
+
+    @SuppressWarnings("ComplexMethod")
+    fun prStartParam(
+        pullRequest: GithubPullRequest,
+        homepage: String? = null
+    ): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = pullRequest.head.ref ?: ""
+        startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = pullRequest.base.ref ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = pullRequest.base.ref ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = pullRequest.head.ref ?: ""
+        startParams[PIPELINE_WEBHOOK_SOURCE_PROJECT_ID] = pullRequest.head.repo.id ?: ""
+        startParams[PIPELINE_WEBHOOK_TARGET_PROJECT_ID] = pullRequest.base.repo.id ?: ""
+        startParams[PIPELINE_WEBHOOK_MR_ID] = pullRequest.id
+        startParams[PIPELINE_WEBHOOK_MR_COMMITTER] = pullRequest.user.login ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = pullRequest.user.login ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = pullRequest.createdAt ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = pullRequest.updatedAt ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] = DateTimeUtil.zoneDateToTimestamp(pullRequest.createdAt)
+        startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] = DateTimeUtil.zoneDateToTimestamp(pullRequest.updatedAt)
+        startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = pullRequest.id ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = pullRequest.number ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = pullRequest.body ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = pullRequest.title ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = pullRequest.assignee?.login ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] =
+            pullRequest.requestedReviewers.joinToString(",") { it.login } ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = pullRequest.milestone?.title ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = pullRequest.milestone?.dueOn ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = pullRequest.labels.joinToString(",") ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_BASE_COMMIT] = pullRequest.base.sha ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_COMMIT] = pullRequest.base.sha ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_COMMIT] = pullRequest.head.sha ?: ""
+
+        // 兼容stream变量
+        startParams[PIPELINE_GIT_HEAD_REF] = pullRequest.head.ref ?: ""
+        startParams[PIPELINE_GIT_BASE_REF] = pullRequest.base.ref ?: ""
+        startParams[PIPELINE_GIT_MR_ID] = pullRequest.id ?: ""
+        startParams[PIPELINE_GIT_MR_IID] = pullRequest.number ?: ""
+        startParams[PIPELINE_GIT_MR_TITLE] = pullRequest.title ?: ""
+        startParams[PIPELINE_GIT_MR_DESC] = pullRequest.body ?: ""
+        startParams[PIPELINE_GIT_MR_PROPOSER] = pullRequest.user.login ?: ""
+        if (!homepage.isNullOrBlank()) {
+            startParams[PIPELINE_GIT_MR_URL] = "$homepage/merge_requests/${pullRequest.number}"
         }
         return startParams
     }

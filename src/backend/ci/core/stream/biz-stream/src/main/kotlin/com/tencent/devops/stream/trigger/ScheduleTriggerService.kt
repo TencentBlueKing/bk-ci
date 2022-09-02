@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -37,6 +38,7 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.pojo.TriggerReviewSetting
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
@@ -50,6 +52,7 @@ import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptio
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -100,7 +103,8 @@ class ScheduleTriggerService @Autowired constructor(
                 enableMrBlock = it.enableMrBlock,
                 name = it.name,
                 enableMrComment = it.enableMrComment,
-                homepage = it.homepage
+                homepage = it.homepage,
+                triggerReviewSetting = it.triggerReviewSetting
             )
         }
         if (streamTriggerSetting == null || !streamTriggerSetting.enableCi) {
@@ -221,7 +225,7 @@ class ScheduleTriggerService @Autowired constructor(
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
-            action.data.getGitProjectId(),
+            action.getGitProjectIdOrName(),
             ApiRequestRetryInfo(true)
         )!!.toStreamGitProjectInfoWithProject()
         streamBasicSettingService.updateProjectInfo(action.data.getUserId(), gitProjectInfo)
@@ -229,7 +233,7 @@ class ScheduleTriggerService @Autowired constructor(
         return streamYamlBuild.gitStartBuild(
             action = action,
             triggerResult = TriggerResult(
-                trigger = true,
+                trigger = TriggerBody(true),
                 startParams = emptyMap(),
                 timeTrigger = false,
                 deleteTrigger = false

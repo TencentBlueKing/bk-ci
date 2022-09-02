@@ -231,7 +231,11 @@ class StreamPipelineService @Autowired constructor(
             logger.info(
                 "StreamPipelineService|enablePipeline|$gitProjectId|$pipelineId|$enabled|$edited"
             )
-            websocketService.pushPipelineWebSocket(gitProjectId.toString(), pipelineId, userId)
+            websocketService.pushPipelineWebSocket(
+                GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType()),
+                pipelineId,
+                userId
+            )
             return gitPipelineResourceDao.enablePipelineById(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
@@ -345,7 +349,10 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             filePath = pipeline.filePath
         )
-        val gitProjectCode = GitCommonUtils.getCiProjectId(gitProjectId = gitProjectId.toLong())
+        val gitProjectCode = GitCommonUtils.getCiProjectId(
+            gitProjectId = gitProjectId.toLong(),
+            scmType = gitConfig.getScmType()
+        )
         val realPipeline: StreamTriggerPipeline
         // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
         triggerLock.use {
@@ -454,7 +461,7 @@ class StreamPipelineService @Autowired constructor(
         try {
             val response = processClient.get(
                 userId = userId,
-                projectId = "${StreamConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId",
+                projectId = GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType()),
                 pipelineId = pipelineId,
                 channelCode = channelCode
             )
@@ -479,7 +486,7 @@ class StreamPipelineService @Autowired constructor(
         try {
             val response = processClient.edit(
                 userId = userId,
-                projectId = "${StreamConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId",
+                projectId = GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType()),
                 pipelineId = pipelineId,
                 pipeline = model,
                 channelCode = channelCode

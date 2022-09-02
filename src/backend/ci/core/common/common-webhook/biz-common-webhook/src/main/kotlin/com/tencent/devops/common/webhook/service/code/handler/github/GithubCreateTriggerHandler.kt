@@ -46,7 +46,7 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
     }
 
     override fun getUrl(event: GithubCreateEvent): String {
-        return event.repository.ssh_url
+        return event.repository.sshUrl
     }
 
     override fun getUsername(event: GithubCreateEvent): String {
@@ -58,7 +58,7 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
     }
 
     override fun getRepoName(event: GithubCreateEvent): String {
-        return GitUtils.getProjectName(event.repository.ssh_url)
+        return GitUtils.getProjectName(event.repository.sshUrl)
     }
 
     override fun getBranchName(event: GithubCreateEvent): String {

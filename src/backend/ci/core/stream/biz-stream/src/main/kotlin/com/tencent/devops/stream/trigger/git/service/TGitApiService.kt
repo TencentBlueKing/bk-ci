@@ -28,10 +28,7 @@
 package com.tencent.devops.stream.trigger.git.service
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
@@ -39,9 +36,11 @@ import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
+import com.tencent.devops.stream.pojo.StreamGitMember
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitChangeFileInfo
@@ -55,13 +54,13 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitUserInfo
+import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.util.QualityUtils
-import com.tencent.devops.stream.util.RetryUtils
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class TGitApiService @Autowired constructor(
@@ -87,6 +86,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitProjectInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get project $gitProjectId fail",
             apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR
@@ -108,6 +108,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitCommitInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get commit info $sha fail",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_INFO_ERROR
@@ -121,11 +122,47 @@ class TGitApiService @Autowired constructor(
         }?.let { TGitCommitInfo(it) }
     }
 
+    override fun getProjectMember(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): List<TGitProjectUserInfo> {
+        return doRetryFun(
+            logger = logger,
+            retry = ApiRequestRetryInfo(true, 1),
+            log = "$gitProjectId get project($gitProjectId) user($search) info fail",
+            apiErrorCode = ErrorCodeEnum.GET_USER_INFO_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getMembers(
+                token = cred.toToken(),
+                gitProjectId = gitProjectId,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20,
+                search = search,
+                tokenType = cred.toTokenType()
+            ).data?.map {
+                TGitProjectUserInfo(
+                    accessLevel = it.accessLevel,
+                    userId = it.username
+                )
+            } ?: emptyList()
+        }
+    }
+
     override fun getUserInfoByToken(cred: StreamGitCred): TGitUserInfo? {
-        return client.get(ServiceGitResource::class).getUserInfoByToken(
-            cred.toToken(),
-            cred.toTokenType()
-        ).data?.let { TGitUserInfo(id = it.id.toString(), username = it.username!!) }
+        return doRetryFun(
+            logger = logger,
+            retry = ApiRequestRetryInfo(true, 1),
+            log = "get user info by token fail",
+            apiErrorCode = ErrorCodeEnum.GET_USER_INFO_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getUserInfoByToken(
+                cred.toToken(),
+                cred.toTokenType()
+            ).data?.let { TGitUserInfo(id = it.id.toString(), username = it.username!!) }
+        }
     }
 
     override fun getProjectUserInfo(
@@ -133,13 +170,20 @@ class TGitApiService @Autowired constructor(
         userId: String,
         gitProjectId: String
     ): TGitProjectUserInfo {
-        return client.get(ServiceGitResource::class).getProjectUserInfo(
-            token = cred.toToken(),
-            tokenType = cred.toTokenType(),
-            gitProjectId = gitProjectId,
-            userId = userId
-        ).data!!.let {
-            TGitProjectUserInfo(it.accessLevel)
+        return doRetryFun(
+            logger = logger,
+            retry = ApiRequestRetryInfo(true, 1),
+            log = "$gitProjectId get project($gitProjectId) user($userId) info fail",
+            apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getProjectUserInfo(
+                token = cred.toToken(),
+                tokenType = cred.toTokenType(),
+                gitProjectId = gitProjectId,
+                userId = userId
+            ).data!!.let {
+                TGitProjectUserInfo(it.accessLevel, it.username)
+            }
         }
     }
 
@@ -150,6 +194,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitMrInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId info error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO
@@ -175,6 +220,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitMrChangeInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get mr $mrId changeInfo error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO
@@ -203,6 +249,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): List<TGitTreeFileInfo> {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get $path file tree error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
@@ -227,6 +274,7 @@ class TGitApiService @Autowired constructor(
     ): String {
         cred as TGitCred
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get yaml $fileName from $ref fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
@@ -261,6 +309,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitFileInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "getFileInfo: [$gitProjectId|$fileName][$ref] error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR
@@ -316,6 +365,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): TGitRevisionInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "timer|[$pipelineId] get latestRevision fail",
             apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
@@ -336,6 +386,21 @@ class TGitApiService @Autowired constructor(
         }
     }
 
+    override fun addCommitCheck(
+        request: CommitCheckRequest,
+        retry: ApiRequestRetryInfo
+    ) {
+        doRetryFun(
+            logger = logger,
+            retry = retry,
+            log = "commit check|[${request.commitId}] for state[${request.state}] " +
+                "in tgit project[${request.projectName}] fail",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
+        ) {
+            client.get(ServiceScmOauthResource::class).addCommitCheck(request)
+        }
+    }
+
     /**
      * 获取两个commit之间的差异文件
      * @param from 旧commit
@@ -353,6 +418,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): List<TGitChangeFileInfo> {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "getCommitChangeFileListRetry from: $from to: $to error",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
@@ -399,6 +465,7 @@ class TGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): List<GitCommit> {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitUrl|$mrId|$page|get mr commit list error",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
@@ -415,7 +482,7 @@ class TGitApiService @Autowired constructor(
         }
     }
 
-    protected fun StreamGitCred.toToken(): String {
+    private fun StreamGitCred.toToken(): String {
         this as TGitCred
         if (this.accessToken != null) {
             return this.accessToken
@@ -427,77 +494,12 @@ class TGitApiService @Autowired constructor(
             )
     }
 
-    protected fun StreamGitCred.toTokenType(): TokenTypeEnum {
+    private fun StreamGitCred.toTokenType(): TokenTypeEnum {
         this as TGitCred
         return if (this.useAccessToken) {
             TokenTypeEnum.OAUTH
         } else {
             TokenTypeEnum.PRIVATE_KEY
-        }
-    }
-
-    protected fun <T> doRetryFun(
-        retry: ApiRequestRetryInfo,
-        log: String,
-        apiErrorCode: ErrorCodeEnum,
-        action: () -> T
-    ): T {
-        return if (retry.retry) {
-            retryFun(
-                retry = retry,
-                log = log,
-                apiErrorCode = apiErrorCode
-            ) {
-                action()
-            }
-        } else {
-            action()
-        }
-    }
-
-    private fun <T> retryFun(
-        retry: ApiRequestRetryInfo,
-        log: String,
-        apiErrorCode: ErrorCodeEnum,
-        action: () -> T
-    ): T {
-        try {
-            return RetryUtils.clientRetry(
-                retry.retryTimes,
-                retry.retryPeriodMills
-            ) {
-                action()
-            }
-        } catch (e: ClientException) {
-            logger.warn("TGitApiService|retryFun|retry 5 times $log", e)
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
-            )
-        } catch (e: RemoteServiceException) {
-            logger.warn("TGitApiService|retryFun|GIT_API_ERROR $log", e)
-            throw ErrorCodeException(
-                statusCode = e.httpStatus,
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = "$log: ${e.errorMessage}"
-            )
-        } catch (e: CustomException) {
-            logger.warn("TGitApiService|retryFun|GIT_SCM_ERROR $log", e)
-            throw ErrorCodeException(
-                statusCode = e.status.statusCode,
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = "$log: ${e.message}"
-            )
-        } catch (e: Throwable) {
-            logger.warn("TGitApiService|retryFun|error $log", e)
-            throw ErrorCodeException(
-                errorCode = apiErrorCode.errorCode.toString(),
-                defaultMessage = if (e.message.isNullOrBlank()) {
-                    "$log: ${apiErrorCode.formatErrorMessage}"
-                } else {
-                    "$log: ${e.message}"
-                }
-            )
         }
     }
 }

@@ -69,6 +69,7 @@ import com.tencent.devops.stream.trigger.pojo.StreamBuildLock
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
@@ -513,7 +514,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                     gitProjectKey = remoteProjectString,
                     action = action,
                     getProjectInfo = action.api::getGitProjectInfo
-                )?.gitProjectId?.let { "git_$it" } ?: return@forEach
+                )?.gitProjectId?.let { GitCommonUtils.getCiProjectId(it, streamGitConfig.getScmType()) }
+                    ?: return@forEach
 
                 remoteProjectIdMap[remoteProjectString] = TemplateAcrossInfoType.values().associateWith {
                     BuildTemplateAcrossInfo(

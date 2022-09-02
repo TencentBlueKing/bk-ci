@@ -123,6 +123,12 @@ object StreamDispatchUtils {
             )
         }
 
+        // macos构建机
+        if (poolName.startsWith("macos")) {
+            // 外部版暂时不支持macos构建机，遇到直接报错
+            throw CustomException(Response.Status.BAD_REQUEST, "MACOS构建资源暂不支持，请检查yml配置.")
+        }
+
         // 公共docker构建机
         if (poolName == "docker") {
             var containerPool = Pool(
