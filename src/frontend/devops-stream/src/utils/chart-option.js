@@ -127,6 +127,8 @@ export const nodeOverview = {
                 showSymbol: false,
                 smooth: true,
                 hoverAnimation: false,
+                xAxisIndex: 0,
+                yAxisIndex: 0,
                 areaStyle: {
                     normal: {
                         color: {
@@ -259,6 +261,8 @@ export const nodeOverview = {
                 smooth: true,
                 showSymbol: false,
                 hoverAnimation: false,
+                xAxisIndex: 0,
+                yAxisIndex: 0,
                 areaStyle: {
                     normal: {
                         // color: {
@@ -447,6 +451,8 @@ export const nodeOverview = {
                 smooth: true,
                 showSymbol: false,
                 hoverAnimation: false,
+                xAxisIndex: 0,
+                yAxisIndex: 0,
                 areaStyle: {
                     normal: {
                     }
@@ -464,6 +470,8 @@ export const nodeOverview = {
                 smooth: true,
                 showSymbol: false,
                 hoverAnimation: false,
+                xAxisIndex: 0,
+                yAxisIndex: 0,
                 areaStyle: {
                     normal: {
                     }
@@ -602,6 +610,8 @@ export const nodeOverview = {
                 smooth: true,
                 showSymbol: false,
                 hoverAnimation: false,
+                xAxisIndex: 0,
+                yAxisIndex: 0,
                 areaStyle: {
                     normal: {
                     }
@@ -618,6 +628,8 @@ export const nodeOverview = {
                 smooth: true,
                 showSymbol: false,
                 hoverAnimation: false,
+                xAxisIndex: 0,
+                yAxisIndex: 0,
                 areaStyle: {
                     normal: {
                     }
