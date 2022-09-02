@@ -44,6 +44,7 @@ import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
@@ -85,7 +86,8 @@ class StreamYamlTrigger @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val yamlBuild: StreamYamlBuild,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val streamYamlBaseBuild: StreamYamlBaseBuild
+    private val streamYamlBaseBuild: StreamYamlBaseBuild,
+    private val streamGitConfig: StreamGitConfig
 ) {
 
     companion object {
@@ -214,7 +216,7 @@ class StreamYamlTrigger @Autowired constructor(
 
         // 获取蓝盾流水线的pipelineAsCodeSetting
         val pipelineSettings = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
-            projectId = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong()),
+            projectId = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong(), streamGitConfig.getScmType()),
             pipelineId = pipeline.pipelineId,
             channelCode = ChannelCode.GIT
         ).data ?: throw StreamTriggerException(
