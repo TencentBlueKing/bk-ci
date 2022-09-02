@@ -121,8 +121,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
-import java.util.function.Function
-import java.util.stream.Collectors
 
 @Suppress("ALL")
 abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseService {
@@ -557,7 +555,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 val storeErrorCodeInfo = StoreErrorCodeInfo(
                     storeCode = atomCode,
                     storeType = StoreTypeEnum.ATOM,
-                    errorCodeInfos = JsonUtil.to(errorJsonStr, object: TypeReference<List<ErrorCodeInfo>>() {})
+                    errorCodeInfos = JsonUtil.to(errorJsonStr, object : TypeReference<List<ErrorCodeInfo>>() {})
                 )
                 val errorCodeInfos = storeErrorCodeInfo.errorCodeInfos
                 if (errorCodeInfos.isNotEmpty()) {
