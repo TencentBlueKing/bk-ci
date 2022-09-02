@@ -56,70 +56,66 @@ export const nodeOverview = {
             bottom: '3%',
             containLabel: true
         },
-        xAxis: [
-            {
-                type: 'time',
-                boundaryGap: false,
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#dde4eb'
-                    }
-                },
-                axisTick: {
-                    alignWithLabel: true,
-                    length: 5,
-                    lineStyle: {
-                        color: '#ebf0f5'
-                    }
-                },
-                axisLabel: {
-                    color: '#868b97'
-                },
-                splitLine: {
-                    show: true,
-                    lineStyle: {
-                        color: ['#ebf0f5'],
-                        type: 'dashed'
-                    }
+        xAxis: {
+            type: 'time',
+            boundaryGap: false,
+            axisLine: {
+                show: true,
+                lineStyle: {
+                    color: '#dde4eb'
+                }
+            },
+            axisTick: {
+                alignWithLabel: true,
+                length: 5,
+                lineStyle: {
+                    color: '#ebf0f5'
+                }
+            },
+            axisLabel: {
+                color: '#868b97'
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: ['#ebf0f5'],
+                    type: 'dashed'
                 }
             }
-        ],
-        yAxis: [
-            {
-                // min: 0,
-                // max: 100,
-                // interval: 25,
-                boundaryGap: [0, '2%'],
-                type: 'value',
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#dde4eb'
-                    }
-                },
-                axisTick: {
-                    alignWithLabel: true,
-                    length: 0,
-                    lineStyle: {
-                        color: 'red'
-                    }
-                },
-                axisLabel: {
-                    color: '#868b97',
-                    formatter (value, index) {
-                        return `${value}%`
-                    }
-                },
-                splitLine: {
-                    show: true,
-                    lineStyle: {
-                        color: ['#ebf0f5'],
-                        type: 'dashed'
-                    }
+        },
+        yAxis: {
+            // min: 0,
+            // max: 100,
+            // interval: 25,
+            boundaryGap: [0, '2%'],
+            type: 'value',
+            axisLine: {
+                show: true,
+                lineStyle: {
+                    color: '#dde4eb'
+                }
+            },
+            axisTick: {
+                alignWithLabel: true,
+                length: 0,
+                lineStyle: {
+                    color: 'red'
+                }
+            },
+            axisLabel: {
+                color: '#868b97',
+                formatter (value, index) {
+                    return `${value}%`
+                }
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: ['#ebf0f5'],
+                    type: 'dashed'
                 }
             }
-        ],
+        },
         series: [
             {
                 type: 'line',
@@ -192,68 +188,64 @@ export const nodeOverview = {
             bottom: '3%',
             containLabel: true
         },
-        xAxis: [
-            {
-                type: 'time',
-                boundaryGap: false,
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#dde4eb'
-                    }
-                },
-                axisTick: {
-                    alignWithLabel: true,
-                    length: 5,
-                    lineStyle: {
-                        color: '#ebf0f5'
-                        // color: '#868b97'
-                    }
-                },
-                axisLabel: {
-                    color: '#868b97'
-                },
-                splitLine: {
-                    show: true,
-                    lineStyle: {
-                        color: ['#ebf0f5'],
-                        type: 'dashed'
-                    }
+        xAxis: {
+            type: 'time',
+            boundaryGap: false,
+            axisLine: {
+                show: true,
+                lineStyle: {
+                    color: '#dde4eb'
+                }
+            },
+            axisTick: {
+                alignWithLabel: true,
+                length: 5,
+                lineStyle: {
+                    color: '#ebf0f5'
+                    // color: '#868b97'
+                }
+            },
+            axisLabel: {
+                color: '#868b97'
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: ['#ebf0f5'],
+                    type: 'dashed'
                 }
             }
-        ],
-        yAxis: [
-            {
-                boundaryGap: [0, '2%'],
-                type: 'value',
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#dde4eb'
-                    }
-                },
-                axisTick: {
-                    alignWithLabel: true,
-                    length: 0,
-                    lineStyle: {
-                        color: 'red'
-                    }
-                },
-                axisLabel: {
-                    color: '#868b97',
-                    formatter (value, index) {
-                        return `${value}%`
-                    }
-                },
-                splitLine: {
-                    show: true,
-                    lineStyle: {
-                        color: ['#ebf0f5'],
-                        type: 'dashed'
-                    }
+        },
+        yAxis: {
+            boundaryGap: [0, '2%'],
+            type: 'value',
+            axisLine: {
+                show: true,
+                lineStyle: {
+                    color: '#dde4eb'
+                }
+            },
+            axisTick: {
+                alignWithLabel: true,
+                length: 0,
+                lineStyle: {
+                    color: 'red'
+                }
+            },
+            axisLabel: {
+                color: '#868b97',
+                formatter (value, index) {
+                    return `${value}%`
+                }
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: ['#ebf0f5'],
+                    type: 'dashed'
                 }
             }
-        ],
+        },
         series: [
             {
                 type: 'line',
@@ -374,76 +366,72 @@ export const nodeOverview = {
             bottom: '3%',
             containLabel: true
         },
-        xAxis: [
-            {
-                type: 'time',
-                boundaryGap: false,
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#dde4eb'
-                    }
-                },
-                axisTick: {
-                    alignWithLabel: true,
-                    length: 5,
-                    lineStyle: {
-                        color: '#ebf0f5'
-                        // color: '#868b97'
-                    }
-                },
-                axisLabel: {
-                    color: '#868b97'
-                },
-                splitLine: {
-                    show: true,
-                    lineStyle: {
-                        color: ['#ebf0f5'],
-                        type: 'dashed'
-                    }
+        xAxis: {
+            type: 'time',
+            boundaryGap: false,
+            axisLine: {
+                show: true,
+                lineStyle: {
+                    color: '#dde4eb'
+                }
+            },
+            axisTick: {
+                alignWithLabel: true,
+                length: 5,
+                lineStyle: {
+                    color: '#ebf0f5'
+                    // color: '#868b97'
+                }
+            },
+            axisLabel: {
+                color: '#868b97'
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: ['#ebf0f5'],
+                    type: 'dashed'
                 }
             }
-        ],
-        yAxis: [
-            {
-                boundaryGap: [0, '2%'],
-                type: 'value',
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#dde4eb'
-                    }
-                },
-                axisTick: {
-                    alignWithLabel: true,
-                    length: 0,
-                    lineStyle: {
-                        color: 'red'
-                    }
-                },
-                axisLabel: {
-                    color: '#868b97',
-                    formatter (value, index) {
-                        if ((value / (8 * 1024 * 1024 * 1024)) > 1) {
-                            return `${(value / (8 * 1024 * 1024 * 1024)).toFixed(0)}G`
-                        } else if ((value / (8 * 1024 * 1024)) > 1) {
-                            return `${(value / (8 * 1024 * 1024)).toFixed(0)}MB`
-                        } else if ((value / (8 * 1024)) > 1) {
-                            return `${(value / (8 * 1024)).toFixed(0)}KB`
-                        } else {
-                            return `${value / 8}B`
-                        }
-                    }
-                },
-                splitLine: {
-                    show: true,
-                    lineStyle: {
-                        color: ['#ebf0f5'],
-                        type: 'dashed'
+        },
+        yAxis: {
+            boundaryGap: [0, '2%'],
+            type: 'value',
+            axisLine: {
+                show: true,
+                lineStyle: {
+                    color: '#dde4eb'
+                }
+            },
+            axisTick: {
+                alignWithLabel: true,
+                length: 0,
+                lineStyle: {
+                    color: 'red'
+                }
+            },
+            axisLabel: {
+                color: '#868b97',
+                formatter (value, index) {
+                    if ((value / (8 * 1024 * 1024 * 1024)) > 1) {
+                        return `${(value / (8 * 1024 * 1024 * 1024)).toFixed(0)}G`
+                    } else if ((value / (8 * 1024 * 1024)) > 1) {
+                        return `${(value / (8 * 1024 * 1024)).toFixed(0)}MB`
+                    } else if ((value / (8 * 1024)) > 1) {
+                        return `${(value / (8 * 1024)).toFixed(0)}KB`
+                    } else {
+                        return `${value / 8}B`
                     }
                 }
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: ['#ebf0f5'],
+                    type: 'dashed'
+                }
             }
-        ],
+        },
         series: [
             {
                 type: 'line',
@@ -535,75 +523,71 @@ export const nodeOverview = {
             bottom: '3%',
             containLabel: true
         },
-        xAxis: [
-            {
-                type: 'time',
-                boundaryGap: false,
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#dde4eb'
-                    }
-                },
-                axisTick: {
-                    alignWithLabel: true,
-                    length: 5,
-                    lineStyle: {
-                        color: '#ebf0f5'
-                        // color: '#868b97'
-                    }
-                },
-                axisLabel: {
-                    color: '#868b97'
-                },
-                splitLine: {
-                    show: true,
-                    lineStyle: {
-                        color: ['#ebf0f5'],
-                        type: 'dashed'
-                    }
+        xAxis: {
+            type: 'time',
+            boundaryGap: false,
+            axisLine: {
+                show: true,
+                lineStyle: {
+                    color: '#dde4eb'
+                }
+            },
+            axisTick: {
+                alignWithLabel: true,
+                length: 5,
+                lineStyle: {
+                    color: '#ebf0f5'
+                    // color: '#868b97'
+                }
+            },
+            axisLabel: {
+                color: '#868b97'
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: ['#ebf0f5'],
+                    type: 'dashed'
                 }
             }
-        ],
-        yAxis: [
-            {
-                boundaryGap: [0, '2%'],
-                type: 'value',
-                axisLine: {
-                    show: true,
-                    lineStyle: {
-                        color: '#dde4eb'
-                    }
-                },
-                axisTick: {
-                    alignWithLabel: true,
-                    length: 0,
-                    lineStyle: {
-                        color: 'red'
-                    }
-                },
-                axisLabel: {
-                    color: '#868b97',
-                    formatter (value, index) {
-                        if ((value / (1024 * 1024 * 1024)) > 1) {
-                            return `${(value / (1024 * 1024 * 1024)).toFixed(0)}G`
-                        } else if ((value / (1024 * 1024)) > 1) {
-                            return `${(value / (1024 * 1024)).toFixed(0)}MB`
-                        } else if ((value / (1024)) > 1) {
-                            return `${(value / (1024)).toFixed(0)}KB`
-                        } else {
-                            return `${value}B`
-                        }
-                    }
-                },
-                splitLine: {
-                    lineStyle: {
-                        color: ['#ebf0f5'],
-                        type: 'dashed'
+        },
+        yAxis: {
+            boundaryGap: [0, '2%'],
+            type: 'value',
+            axisLine: {
+                show: true,
+                lineStyle: {
+                    color: '#dde4eb'
+                }
+            },
+            axisTick: {
+                alignWithLabel: true,
+                length: 0,
+                lineStyle: {
+                    color: 'red'
+                }
+            },
+            axisLabel: {
+                color: '#868b97',
+                formatter (value, index) {
+                    if ((value / (1024 * 1024 * 1024)) > 1) {
+                        return `${(value / (1024 * 1024 * 1024)).toFixed(0)}G`
+                    } else if ((value / (1024 * 1024)) > 1) {
+                        return `${(value / (1024 * 1024)).toFixed(0)}MB`
+                    } else if ((value / (1024)) > 1) {
+                        return `${(value / (1024)).toFixed(0)}KB`
+                    } else {
+                        return `${value}B`
                     }
                 }
+            },
+            splitLine: {
+                lineStyle: {
+                    color: ['#ebf0f5'],
+                    type: 'dashed'
+                }
             }
-        ],
+        },
         series: [
             {
                 type: 'line',
