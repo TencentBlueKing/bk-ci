@@ -65,7 +65,8 @@ object EnvReplacementParser {
         onlyExpression: Boolean? = false,
         contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null
     ): String {
-        return if (onlyExpression == true && obj != null) {
+        if (obj.isNullOrBlank()) return ""
+        return if (onlyExpression == true) {
             try {
                 val (context, nameValues) = contextPair ?: getCustomExecutionContextByMap(contextMap)
                 parseExpression(
@@ -129,7 +130,9 @@ object EnvReplacementParser {
                 var result = ExpressionParser.createTree(expression, null, nameValues, null)!!
                     .evaluate(null, context, null).value.let {
                         if (it is PipelineContextData) it.fetchValue() else it
-                    }.toString()
+                    }?.let {
+                        JsonUtil.toJson(it, false)
+                    } ?: return value
 
                 if ((blockLevel + 1 < blocks.size) &&
                     !(
