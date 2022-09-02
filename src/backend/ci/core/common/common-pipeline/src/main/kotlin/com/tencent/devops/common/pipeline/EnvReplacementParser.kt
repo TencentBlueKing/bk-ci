@@ -33,18 +33,21 @@ import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
-import com.tencent.devops.common.expression.SubNameValueEvaluateResult
-import com.tencent.devops.common.expression.SubNameValueResultType
 import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.RuntimeDictionaryContextData
 import com.tencent.devops.common.expression.context.RuntimeNamedValue
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import org.slf4j.LoggerFactory
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
 
+@Suppress(
+    "LoopWithTooManyJumpStatements",
+    "ComplexCondition",
+    "ComplexMethod",
+    "NestedBlockDepth",
+    "ReturnCount"
+)
 object EnvReplacementParser {
 
     private val logger = LoggerFactory.getLogger(EnvReplacementParser::class.java)
@@ -53,28 +56,31 @@ object EnvReplacementParser {
      * 根据环境变量map进行object处理并保持原类型
      * @param obj 等待进行环境变量替换的对象，可以是任意类型
      * @param contextMap 环境变量map值
-     * @param executionPair 自定义替换逻辑（如果指定则不使用表达式替换或默认替换逻辑）
+     * @param contextPair 自定义表达式计算上下文（如果指定则不使用表达式替换或默认替换逻辑）
      * @param onlyExpression 只进行表达式替换（若指定了自定义替换逻辑此字段无效，为false）
      */
-    fun <T: String?> parse(
-        obj: T,
+    fun parse(
+        obj: String?,
         contextMap: Map<String, String>,
         onlyExpression: Boolean? = false,
-        executionPair: Pair<ExecutionContext, List<NamedValueInfo>>
-    ): T {
-        return if (onlyExpression == true) {
-            // #7115 如果出现无法表达式解析则保持原文
-            object : KeyReplacement {
-                override fun getReplacement(key: String): String? {
-                    return try {
-                        ExpressionParser.evaluateByMap(key, contextMap, true)?.let {
-                            JsonUtil.toJson(it, false)
-                        }
-                    } catch (ignore: ExpressionParseException) {
-                        logger.warn("[$onlyExpression] Expression evaluation failed: ", ignore)
-                        null
-                    }
-                }
+        contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null
+    ): String {
+        return if (onlyExpression == true && obj != null) {
+            try {
+                val (context, nameValues) = contextPair ?: getCustomExecutionContextByMap(contextMap)
+                parseExpression(
+                    value = obj,
+                    blocks = findExpressions(obj),
+                    context = context,
+                    nameValues = nameValues
+                )
+            } catch (ignore: ExpressionParseException) {
+                logger.warn(
+                    "[$onlyExpression]|expression or named values invalid.|" +
+                        "expression=$obj|contextMap=$contextMap",
+                    ignore
+                )
+                obj
             }
         } else {
             ObjectReplaceEnvVarUtil.replaceEnvVar(
@@ -82,11 +88,13 @@ object EnvReplacementParser {
                 object : KeyReplacement {
                     override fun getReplacement(key: String) = contextMap[key]
                 }
-            ) as T
+            ).let {
+                JsonUtil.toJson(it, false)
+            }
         }
     }
 
-    fun getCustomReplacementByMap(
+    fun getCustomExecutionContextByMap(
         variables: Map<String, String>,
         extendNamedValueMap: List<RuntimeNamedValue>? = null
     ): Pair<ExecutionContext, List<NamedValueInfo>> {
@@ -103,55 +111,6 @@ object EnvReplacementParser {
         return Pair(context, nameValue)
     }
 
-
-    fun parseParameterValue(
-        value: String,
-        nameValues: List<NamedValueInfo>,
-        context: ExecutionContext
-    ): String {
-        val strReader = InputStreamReader(StringInputStream(value))
-        val bufferReader = BufferedReader(strReader)
-        val newValue = StringBuilder()
-        try {
-            var line = bufferReader.readLine()
-            while (line != null) {
-                // 跳过空行和注释行，如果一行除空格外最左是 # 那一定是注释
-                if (line.isBlank() || line.trimStart().startsWith("#")) {
-                    newValue.append(line).append("\n")
-                    line = bufferReader.readLine()
-                    continue
-                }
-
-                val lineString = line.trim().replace("\\s".toRegex(), "")
-
-                val condition = line
-                val blocks = findExpressions(condition)
-                if (blocks.isEmpty()) {
-                    newValue.append(line).append("\n")
-                    line = bufferReader.readLine()
-                    continue
-                }
-
-                val newLine = parseExpression(
-                    value = condition,
-                    blocks = blocks,
-                    nameValues = nameValues,
-                    context = context
-                )
-                newValue.append(newLine).append("\n")
-                line = bufferReader.readLine()
-            }
-        } finally {
-            try {
-                strReader.close()
-                bufferReader.close()
-            } catch (ignore: IOException) {
-            }
-        }
-
-        return newValue.toString()
-    }
-
     /**
      * 解析表达式，根据 findExpressions 寻找的括号优先级进行解析
      */
@@ -161,52 +120,43 @@ object EnvReplacementParser {
         nameValues: List<NamedValueInfo>,
         context: ExecutionContext
     ): String {
-        var lineChars = value.toList()
+        var chars = value.toList()
         blocks.forEachIndexed { blockLevel, blocksInLevel ->
             blocksInLevel.forEachIndexed { blockI, block ->
                 // 表达式因为含有 ${{ }} 所以起始向后推3位，末尾往前推两位
-                val expression = lineChars.joinToString("").substring(block.startIndex + 3, block.endIndex - 1)
+                val expression = chars.joinToString("").substring(block.startIndex + 3, block.endIndex - 1)
 
-                val result = expressionEvaluate(
-                    expression = expression,
-                    nameValues = nameValues,
-                    context = context
-                )
+                var result = ExpressionParser.createTree(expression, null, nameValues, null)!!
+                    .evaluate(null, context, null).value.let {
+                        if (it is PipelineContextData) it.fetchValue() else it
+                    }.toString()
 
-                // 格式化返回值
-                val (res, needFormatArr) = formatResult(
-                    blockLevel = blockLevel,
-                    blocks = blocks,
-                    block = block,
-                    lineChars = lineChars,
-                    evaluateResult = result
-                )
-
-                // 去掉前后的可能的引号
-                if (needFormatArr) {
-                    if (block.startIndex - 1 >= 0 && lineChars[block.startIndex - 1] == '"') {
-                        block.startIndex = block.startIndex - 1
-                    }
-                    if (block.endIndex + 1 < lineChars.size && lineChars[block.endIndex + 1] == '"') {
-                        block.endIndex = block.endIndex + 1
-                    }
+                if ((blockLevel + 1 < blocks.size) &&
+                    !(
+                        (block.startIndex - 1 >= 0 && chars[block.startIndex - 1] == '.') ||
+                            (block.endIndex + 1 < chars.size && chars[block.endIndex + 1] == '.')
+                        )
+                ) {
+                    result = "'$result'"
                 }
+
+                val charList = result.toList()
 
                 // 将替换后的表达式嵌入原本的line
                 val startSub = if (block.startIndex - 1 < 0) {
                     listOf()
                 } else {
-                    lineChars.slice(0 until block.startIndex)
+                    chars.slice(0 until block.startIndex)
                 }
-                val endSub = if (block.endIndex + 1 >= lineChars.size) {
+                val endSub = if (block.endIndex + 1 >= chars.size) {
                     listOf()
                 } else {
-                    lineChars.slice(block.endIndex + 1 until lineChars.size)
+                    chars.slice(block.endIndex + 1 until chars.size)
                 }
-                lineChars = startSub + res + endSub
+                chars = startSub + charList + endSub
 
                 // 将替换后的字符查传递给后边的括号位数
-                val diffNum = res.size - (block.endIndex - block.startIndex + 1)
+                val diffNum = charList.size - (block.endIndex - block.startIndex + 1)
                 blocks.forEachIndexed { i, bl ->
                     bl.forEachIndexed level@{ j, b ->
                         if (i <= blockLevel && j <= blockI) {
@@ -223,7 +173,7 @@ object EnvReplacementParser {
             }
         }
 
-        return lineChars.joinToString("")
+        return chars.joinToString("")
     }
 
     /**
@@ -294,46 +244,6 @@ object EnvReplacementParser {
     }
 
     /**
-     * 格式化表达式计算的返回值
-     * @return <格式化结果, 是否需要格式化列表>
-     */
-    private fun formatResult(
-        blockLevel: Int,
-        blocks: List<List<ExpressionBlock>>,
-        block: ExpressionBlock,
-        lineChars: List<Char>,
-        evaluateResult: SubNameValueEvaluateResult
-    ): Pair<List<Char>, Boolean> {
-        if (!evaluateResult.isComplete) {
-            return Pair(evaluateResult.value.toList(), false)
-        }
-
-        // ScriptUtils.formatYaml会将所有的带上 "" 但换时数组不需要"" 所以为数组去掉可能的额外的""
-        // 需要去掉额外""的情况只可能出现只替换了一次列表的情景，即作为参数 var_a: "{{ parameters.xxx }}"
-        // 需要将给表达式的转义 \" 转回 "
-        if (evaluateResult.type == SubNameValueResultType.ARRAY) {
-            return Pair(evaluateResult.value.replace("\\\"", "\"").toList(), (blocks.size == 1))
-        }
-
-        // 对于还有下一层的表达式，其替换出来的string需要加上 '' 方便后续第二层使用
-        // 例外: 当string前或后存在 . 时，说明是用来做索引，不加 ''
-        var result = evaluateResult.value
-        if ((blockLevel + 1 < blocks.size && evaluateResult.type == SubNameValueResultType.STRING) &&
-            !(
-                (block.startIndex - 1 >= 0 && lineChars[block.startIndex - 1] == '.') ||
-                    (block.endIndex + 1 < lineChars.size && lineChars[block.endIndex + 1] == '.')
-                )
-        ) {
-            result = "'$result'"
-        }
-
-        // 对于字符传可能用的非转义的 \n \s 改为转义后的
-        result = StringEscapeUtils.escapeJava(result)
-
-        return Pair(result.toList(), false)
-    }
-
-    /**
      * 表达式括号项 ${{ }}
      * @param startIndex 括号开始位置即 $ 位置
      * @param endIndex 括号结束位置即最后一个 } 位置
@@ -342,5 +252,4 @@ object EnvReplacementParser {
         var startIndex: Int,
         var endIndex: Int
     )
-
 }

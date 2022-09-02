@@ -74,7 +74,7 @@ interface ICommand {
             EnvReplacementParser.parse(
                 obj = command,
                 contextMap = variables,
-                executionPair = EnvReplacementParser.getCustomReplacementByMap(
+                executionPair = EnvReplacementParser.getCustomExecutionContextByMap(
                     variables = variables,
                     extendNamedValueMap = listOf(
                         CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId)
