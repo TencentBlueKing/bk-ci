@@ -82,6 +82,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         var hasCodeChange = false
         var hasScmElement = false
         val variables = HashMap<String, String>()
+        LOG.info("execute timerTrigger")
         run outer@{
             model.stages.forEach { stage ->
                 stage.containers.forEach { container ->
