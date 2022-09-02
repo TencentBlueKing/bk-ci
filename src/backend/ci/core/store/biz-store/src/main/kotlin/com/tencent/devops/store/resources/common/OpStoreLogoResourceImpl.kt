@@ -47,13 +47,13 @@ class OpStoreLogoResourceImpl @Autowired constructor(
     override fun uploadStoreLogo(
         userId: String,
         contentLength: Long,
-        sizeLimitiFlag: Boolean?,
+        sizeLimitFlag: Boolean?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<StoreLogoInfo?> {
         return storeLogoService.uploadStoreLogo(
             userId = userId,
-            sizeLimitiFlag = sizeLimitiFlag,
+            sizeLimitFlag = sizeLimitFlag,
             contentLength = contentLength,
             inputStream = inputStream,
             disposition = disposition
