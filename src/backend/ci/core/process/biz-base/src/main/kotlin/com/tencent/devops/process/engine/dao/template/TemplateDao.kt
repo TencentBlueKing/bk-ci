@@ -349,6 +349,19 @@ class TemplateDao {
         }
     }
 
+    fun getSrcTemplateIdByName(dslContext: DSLContext, projectId: String, templateName: String, versionName: String): String? {
+        return with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(TEMPLATE_NAME.eq(templateName))
+            conditions.add(VERSION_NAME.eq(versionName))
+            dslContext.select(SRC_TEMPLATE_ID).from(this)
+                .where(conditions)
+                .limit(1)
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     fun getTemplateVersionInfos(
         dslContext: DSLContext,
         projectId: String,
