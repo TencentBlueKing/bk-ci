@@ -179,6 +179,42 @@ internal class EnvReplacementParserTest {
         map["People"] = "1400000000"
         map["Country"] = "中华人民共和国"
         map["twice"] = "\${{Country}}" // twice 二次解析
+        map["variables.TXT"] = "txt"
+        map["variables.TXT2"] = "txt2"
+
+        parseAndEquals(
+            data = map,
+            template = "\${{ (variables.TXT == 'txt') }}",
+            expect = true.toString(),
+            onlyExpression = true
+        )
+
+        parseAndEquals(
+            data = map,
+            template = "\${{ (variables.TXT2 == 'txt2') }}",
+            expect = true.toString(),
+            onlyExpression = true
+        )
+
+        parseAndEquals(
+            data = map,
+            template = "\${{ ((variables.TXT == 'txt') && (variables.TXT2 == 'txt2')) }}",
+            expect = true.toString(),
+            onlyExpression = true
+        )
+
+        parseAndEquals(
+            data = map,
+            template = "echo \" 这可是来自master的改动 \"\n" +
+                "          echo \"  \${{ ('txt' == 'txt') }}  \"\n" +
+                "          echo \"  \${{ (variables.TXT2 == 'txt2') }}  \"\n" +
+                "          echo \"  \${{ (('txt' == 'txt') && (variables.TXT2 == 'txt2')) }}  \"",
+            expect = "echo \" 这可是来自master的改动 \"\n" +
+                "          echo \"  true  \"\n" +
+                "          echo \"  true  \"\n" +
+                "          echo \"  true  \"",
+            onlyExpression = true
+        )
 
         parseAndEquals(
             data = map,

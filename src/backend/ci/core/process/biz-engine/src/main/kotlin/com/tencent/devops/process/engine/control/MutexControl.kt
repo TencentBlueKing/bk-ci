@@ -27,9 +27,9 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.redis.RedisLockByValue
@@ -81,7 +81,7 @@ class MutexControl @Autowired constructor(
         }
         // 替换环境变量
         val mutexGroupName = if (mutexGroup.mutexGroupName != null) {
-            EnvReplacementParser.parse(mutexGroup.mutexGroupName!!, variables)
+            EnvUtils.parseEnv(mutexGroup.mutexGroupName!!, variables)
         } else {
             null
         }
