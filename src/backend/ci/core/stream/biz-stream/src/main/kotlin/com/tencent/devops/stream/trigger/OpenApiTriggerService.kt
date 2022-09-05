@@ -142,7 +142,8 @@ class OpenApiTriggerService @Autowired constructor(
         }
 
         val request =
-            action.buildRequestEvent(triggerBuildReq.payload!!)?.copy(objectKind = StreamGitObjectKind.OBJECT_KIND_OPENAPI)
+            action.buildRequestEvent(triggerBuildReq.payload!!)
+                ?.copy(objectKind = StreamGitObjectKind.OBJECT_KIND_OPENAPI)
                 ?: throw CustomException(
                     status = Response.Status.BAD_REQUEST,
                     message = "event invalid"

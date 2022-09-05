@@ -560,7 +560,7 @@ class GithubPRActionGit(
 
     override fun needSaveOrUpdateBranch() = !event().isPrForkEvent()
 
-    override fun sendUnlockWebhook() {}
+    override fun sendUnlockWebhook() = Unit
 }
 
 private fun GithubPullRequestEvent.getActionValue(): String? {
