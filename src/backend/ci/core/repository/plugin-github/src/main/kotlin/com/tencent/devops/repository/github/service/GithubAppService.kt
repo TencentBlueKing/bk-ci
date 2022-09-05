@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class GithubAppService @Autowired constructor(
-    private val defaultGithubClient: DefaultGithubClient,
+    private val defaultGithubClient: DefaultGithubClient
 ) {
 
     fun getAppInstallationForRepo(request: GetAppInstallationForRepoRequest): GetAppInstallationResponse? {

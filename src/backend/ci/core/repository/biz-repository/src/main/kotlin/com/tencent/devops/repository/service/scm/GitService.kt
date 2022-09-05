@@ -230,8 +230,10 @@ class GitService @Autowired constructor(
                             sshUrl = project["ssh_url_to_repo"].asString,
                             httpUrl = project["https_url_to_repo"].asString,
                             lastActivity = DateTimeUtil.convertLocalDateTimeToTimestamp(
-                                LocalDateTime.parse(lastActivityTime)) * 1000L
-                        ))
+                                LocalDateTime.parse(lastActivityTime)
+                            ) * 1000L
+                        )
+                    )
                 }
             }
         }
@@ -1044,8 +1046,10 @@ class GitService @Autowired constructor(
         token: String,
         repoUrl: String?
     ): GitMrInfo {
-        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(repoName, "UTF-8")}" +
-            "/merge_request/$mrId")
+        val url = StringBuilder(
+            "${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(repoName, "UTF-8")}" +
+                "/merge_request/$mrId"
+        )
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -1106,10 +1110,10 @@ class GitService @Autowired constructor(
     ): GitMrChangeInfo {
         val url = StringBuilder(
             "${getApiUrl(repoUrl)}/projects/${
-                URLEncoder.encode(
-                    id,
-                    "UTF-8"
-                )
+            URLEncoder.encode(
+                id,
+                "UTF-8"
+            )
             }/merge_request/$mrId/changes"
         )
         logger.info("get mr changes info url: $url")

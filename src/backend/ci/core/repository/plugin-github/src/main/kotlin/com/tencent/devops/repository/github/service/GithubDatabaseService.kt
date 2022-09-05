@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class GithubDatabaseService @Autowired constructor(
-    private val defaultGithubClient: DefaultGithubClient,
+    private val defaultGithubClient: DefaultGithubClient
 ) {
 
     fun getTree(

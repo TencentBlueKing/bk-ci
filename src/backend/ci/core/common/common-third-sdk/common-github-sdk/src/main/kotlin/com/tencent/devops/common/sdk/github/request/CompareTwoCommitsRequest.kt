@@ -46,7 +46,7 @@ data class CompareTwoCommitsRequest(
     val head: String,
     @JsonProperty("per_page")
     var perPage: Int = 30,
-    var page: Int = 1,
+    var page: Int = 1
 ) : GithubRequest<CompareTwoCommitsResponse>() {
     override fun getHttpMethod() = HttpMethod.GET
 

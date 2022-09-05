@@ -113,7 +113,7 @@ data class GithubUser(
 //    @JsonProperty("subscriptions_url")
 //    val subscriptionsUrl: String, // https://api.github.com/users/yongyiduan/subscriptions
     @JsonProperty("type")
-    val type: String, // User
+    val type: String // User
 //    @JsonProperty("url")
 //    val url: String // https://api.github.com/users/yongyiduan
 )

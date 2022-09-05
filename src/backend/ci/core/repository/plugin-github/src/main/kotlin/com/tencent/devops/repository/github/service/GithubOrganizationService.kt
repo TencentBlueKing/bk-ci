@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class GithubOrganizationService @Autowired constructor(
-    private val defaultGithubClient: DefaultGithubClient,
+    private val defaultGithubClient: DefaultGithubClient
 ) {
     fun listOrganizations(
         request: ListOrganizationsRequest,

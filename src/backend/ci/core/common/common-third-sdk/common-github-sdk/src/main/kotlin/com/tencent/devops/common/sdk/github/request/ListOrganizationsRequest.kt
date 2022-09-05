@@ -32,7 +32,6 @@ import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.pojo.Organization
 
-
 class ListOrganizationsRequest(
     @JsonProperty("per_page")
     val perPage: Int = 30,

@@ -56,7 +56,6 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
-import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_AUTHOR_PREFIX
@@ -73,9 +72,8 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANC
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
-import com.tencent.devops.common.webhook.service.code.GitScmService
-import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import java.util.regex.Pattern
@@ -124,8 +122,10 @@ object WebhookUtils {
     }
 
     fun getFullPath(projectRelativePath: String, relativeSubPath: String): String {
-        return ("${projectRelativePath.removeSuffix("/")}/" +
-            relativeSubPath.removePrefix("/")).removePrefix("/")
+        return (
+            "${projectRelativePath.removeSuffix("/")}/" +
+                relativeSubPath.removePrefix("/")
+            ).removePrefix("/")
     }
 
     fun genCommitsParam(commits: List<GitCommit>): Map<String, Any> {

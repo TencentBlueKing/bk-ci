@@ -183,37 +183,43 @@ class GithubService @Autowired constructor(
     override fun getBranch(token: String, projectName: String, branch: String?): GithubBranch? {
         logger.info("getBranch| $projectName - $branch")
 
-        return RetryUtils.execute(object : RetryUtils.Action<GithubBranch?> {
-            override fun fail(e: Throwable): GithubBranch? {
-                logger.error("getBranch fail| e=${e.message}", e)
-                throw e
-            }
+        return RetryUtils.execute(
+            object : RetryUtils.Action<GithubBranch?> {
+                override fun fail(e: Throwable): GithubBranch? {
+                    logger.error("getBranch fail| e=${e.message}", e)
+                    throw e
+                }
 
-            override fun execute(): GithubBranch? {
-                val sBranch = branch ?: "master"
-                val path = "repos/$projectName/branches/$sBranch"
-                val request = buildGet(token, path)
-                val body = getBody(OPERATION_GET_BRANCH, request)
-                return objectMapper.readValue(body)
-            }
-        }, 1, SLEEP_MILLS_FOR_RETRY_500)
+                override fun execute(): GithubBranch? {
+                    val sBranch = branch ?: "master"
+                    val path = "repos/$projectName/branches/$sBranch"
+                    val request = buildGet(token, path)
+                    val body = getBody(OPERATION_GET_BRANCH, request)
+                    return objectMapper.readValue(body)
+                }
+            },
+            1, SLEEP_MILLS_FOR_RETRY_500
+        )
     }
 
     override fun getTag(token: String, projectName: String, tag: String): GithubTag? {
         logger.info("getTag| $projectName - $tag")
-        return RetryUtils.execute(object : RetryUtils.Action<GithubTag?> {
-            override fun fail(e: Throwable): GithubTag? {
-                logger.error("getTag fail| e=${e.message}", e)
-                throw e
-            }
+        return RetryUtils.execute(
+            object : RetryUtils.Action<GithubTag?> {
+                override fun fail(e: Throwable): GithubTag? {
+                    logger.error("getTag fail| e=${e.message}", e)
+                    throw e
+                }
 
-            override fun execute(): GithubTag? {
-                val path = "repos/$projectName/git/refs/tags/$tag"
-                val request = buildGet(token, path)
-                val body = getBody(OPERATION_GET_TAG, request)
-                return objectMapper.readValue(body)
-            }
-        }, 1, SLEEP_MILLS_FOR_RETRY_500)
+                override fun execute(): GithubTag? {
+                    val path = "repos/$projectName/git/refs/tags/$tag"
+                    val request = buildGet(token, path)
+                    val body = getBody(OPERATION_GET_TAG, request)
+                    return objectMapper.readValue(body)
+                }
+            },
+            1, SLEEP_MILLS_FOR_RETRY_500
+        )
     }
 
     // TODO:脱敏
@@ -233,36 +239,42 @@ class GithubService @Autowired constructor(
 
     override fun listBranches(token: String, projectName: String): List<String> {
         logger.info("listBranches| $projectName")
-        return RetryUtils.execute(object : RetryUtils.Action<List<String>> {
-            override fun fail(e: Throwable): List<String> {
-                logger.error("listBranches fail| e=${e.message}", e)
-                throw e
-            }
+        return RetryUtils.execute(
+            object : RetryUtils.Action<List<String>> {
+                override fun fail(e: Throwable): List<String> {
+                    logger.error("listBranches fail| e=${e.message}", e)
+                    throw e
+                }
 
-            override fun execute(): List<String> {
-                val path = "repos/$projectName/branches?page=1&per_page=100"
-                val request = buildGet(token, path)
-                val body = getBody(OPERATION_LIST_BRANCHS, request)
-                return objectMapper.readValue<List<GithubRepoBranch>>(body).map { it.name }
-            }
-        }, 3, SLEEP_MILLS_FOR_RETRY_500)
+                override fun execute(): List<String> {
+                    val path = "repos/$projectName/branches?page=1&per_page=100"
+                    val request = buildGet(token, path)
+                    val body = getBody(OPERATION_LIST_BRANCHS, request)
+                    return objectMapper.readValue<List<GithubRepoBranch>>(body).map { it.name }
+                }
+            },
+            3, SLEEP_MILLS_FOR_RETRY_500
+        )
     }
 
     override fun listTags(token: String, projectName: String): List<String> {
         logger.info("listTags| $projectName")
-        return RetryUtils.execute(object : RetryUtils.Action<List<String>> {
-            override fun fail(e: Throwable): List<String> {
-                logger.error("listTags fail| e=${e.message}", e)
-                throw e
-            }
+        return RetryUtils.execute(
+            object : RetryUtils.Action<List<String>> {
+                override fun fail(e: Throwable): List<String> {
+                    logger.error("listTags fail| e=${e.message}", e)
+                    throw e
+                }
 
-            override fun execute(): List<String> {
-                val path = "repos/$projectName/tags?page=1&per_page=100"
-                val request = buildGet(token, path)
-                val body = getBody(OPERATION_LIST_TAGS, request)
-                return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
-            }
-        }, 3, SLEEP_MILLS_FOR_RETRY_500)
+                override fun execute(): List<String> {
+                    val path = "repos/$projectName/tags?page=1&per_page=100"
+                    val request = buildGet(token, path)
+                    val body = getBody(OPERATION_LIST_TAGS, request)
+                    return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
+                }
+            },
+            3, SLEEP_MILLS_FOR_RETRY_500
+        )
     }
 
     private fun buildPost(token: String, path: String, body: String): Request {

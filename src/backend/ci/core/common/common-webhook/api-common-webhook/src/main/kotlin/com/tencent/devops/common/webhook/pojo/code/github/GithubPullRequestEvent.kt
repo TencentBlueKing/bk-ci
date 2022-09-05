@@ -29,8 +29,6 @@ package com.tencent.devops.common.webhook.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -185,7 +183,7 @@ data class GithubMilestone(
     @JsonProperty("title")
     val title: String, // v1.0
     @JsonProperty("updated_at")
-    val updatedAt: String, // 2014-03-03T18:58:10Z
+    val updatedAt: String // 2014-03-03T18:58:10Z
 //    @JsonProperty("url")
 //    val url: String // https://api.github.com/repos/octocat/Hello-World/milestones/1
 )
