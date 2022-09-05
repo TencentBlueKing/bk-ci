@@ -67,7 +67,11 @@ abstract class ITask {
                     additionalOptions.customEnv!!.forEach {
                         if (!it.key.isNullOrBlank()) {
                             // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
-                            val value = EnvReplacementParser.parse(it.value ?: "", variablesBuild)
+                            val value = EnvReplacementParser.parse(
+                                obj = it.value ?: "",
+                                contextMap = variablesBuild,
+                                onlyExpression = buildVariables.pipelineAsCodeSettings?.enable
+                            )
                             variablesBuild["envs.${it.key}"] = value
                             variables[it.key!!] = value
                         }

@@ -82,6 +82,7 @@ interface ICommand {
             EnvReplacementParser.parse(
                 obj = command,
                 contextMap = contextMap,
+                onlyExpression = true,
                 contextPair = EnvReplacementParser.getCustomExecutionContextByMap(
                     variables = contextMap,
                     extendNamedValueMap = listOf(
