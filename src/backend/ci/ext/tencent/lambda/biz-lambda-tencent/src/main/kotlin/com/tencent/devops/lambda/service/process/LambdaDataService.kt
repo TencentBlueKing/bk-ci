@@ -360,6 +360,7 @@ class LambdaDataService @Autowired constructor(
                         "|${historyRecord.executeTime}|${historyRecord.buildNum}"
             )
             val history = genBuildHistory(projectInfo, historyRecord, BuildStatus.values(), System.currentTimeMillis())
+            logger.info("Making up the composition of build history : $history")
             val buildHistoryTopic = checkParamBlank(lambdaKafkaTopicConfig.buildHistoryTopic, "buildHistoryTopic")
             kafkaClient.send(buildHistoryTopic, JsonUtil.toJson(history))
 //            kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
@@ -596,6 +597,8 @@ class LambdaDataService @Autowired constructor(
         buildStatus: Array<BuildStatus>,
         currentTimestamp: Long
     ): DataPlatBuildHistory {
+        // 查看增加的字段数据是否有从db拿到
+        logger.info("Check the infomation about ${tPipelineBuildHistoryRecord.projectId}|${tPipelineBuildHistoryRecord.pipelineId}|${tPipelineBuildHistoryRecord.buildId}|${tPipelineBuildHistoryRecord.buildNum}|${tPipelineBuildHistoryRecord.buildMsg}")
         return with(tPipelineBuildHistoryRecord) {
             val totalTime = if (startTime == null || endTime == null) {
                 0
