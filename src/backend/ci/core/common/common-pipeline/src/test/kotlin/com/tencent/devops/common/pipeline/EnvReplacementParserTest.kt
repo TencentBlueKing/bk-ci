@@ -94,7 +94,7 @@ internal class EnvReplacementParserTest {
         // 与EnvUtils的差异点：不支持传可空对象
 //        Assertions.assertEquals("", EnvReplacementParser.parse(null, data))
         Assertions.assertEquals("", EnvReplacementParser.parse("", data))
-        Assertions.assertNull(EnvReplacementParser.parse(null, data))
+        Assertions.assertEquals("", EnvReplacementParser.parse(null, data))
 
         Assertions.assertEquals(
             "hello variables.value world",
