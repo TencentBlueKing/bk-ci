@@ -281,7 +281,6 @@ internal class EnvReplacementParserTest {
         )
     }
 
-
     @Test
     fun complexExpressionTest() {
         val contextMap = HashMap<String, String>()
@@ -306,15 +305,15 @@ internal class EnvReplacementParserTest {
                 "echo ::set-output name=a::i am a at step_1",
             expect = "env\n" +
                 "echo 引用不存在的系统变量 \\\${bcz}=\${bcz}\n" +
-                "echo 引用不存在的蓝盾变量\\\\\$\\{\\{bczd}}= bczd \n" +
-                "echo  ci.workspace \n" +
+                "echo 引用不存在的蓝盾变量\\\\\$\\{\\{bczd}}=\${{ bczd }}\n" +
+                "echo \${{ ci.workspace }}\n" +
                 "echo envs.env_a=a, env_a=\$env_a\n" +
                 "echo envs.env_b=b, env_b=\$env_b\n" +
                 "echo envs.env_c=c, env_c=\$env_c\n" +
                 "echo envs.env_d=d, env_d=\$env_d\n" +
                 "echo envs.env_e=e, env_e=\$env_e\n" +
-                "echo envs.a= envs.a , a=\$a\n" +
-                "echo settings.sensitive.password= settings.sensitive.password \n" +
+                "echo envs.a=\${{ envs.a }}, a=\$a\n" +
+                "echo settings.sensitive.password=\${{ settings.sensitive.password }}\n" +
                 "echo ::set-output name=a::i am a at step_1",
             onlyExpression = true
         )
