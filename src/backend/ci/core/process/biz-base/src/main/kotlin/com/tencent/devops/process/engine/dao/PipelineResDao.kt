@@ -142,23 +142,21 @@ class PipelineResDao {
     fun updatePipelineModel(
         dslContext: DSLContext,
         userId: String,
-        pipelineModelVersionList: List<PipelineModelVersion>
+        pipelineModelVersion: PipelineModelVersion
     ) {
         with(T_PIPELINE_RESOURCE) {
-            pipelineModelVersionList.map {
-                val conditions = mutableListOf<Condition>()
-                conditions.add(PROJECT_ID.eq(it.projectId))
-                conditions.add(PIPELINE_ID.eq(it.pipelineId))
-                val version = it.version
-                if (version != null) {
-                    conditions.add(VERSION.eq(version))
-                }
-                dslContext.update(this)
-                    .set(MODEL, it.model)
-                    .set(CREATOR, userId)
-                    .where(conditions)
-                    .execute()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(pipelineModelVersion.projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineModelVersion.pipelineId))
+            val version = pipelineModelVersion.version
+            if (version != null) {
+                conditions.add(VERSION.eq(version))
             }
+            dslContext.update(this)
+                .set(MODEL, pipelineModelVersion.model)
+                .set(CREATOR, userId)
+                .where(conditions)
+                .execute()
         }
     }
 

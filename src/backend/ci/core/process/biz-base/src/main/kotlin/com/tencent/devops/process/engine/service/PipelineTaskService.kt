@@ -509,8 +509,12 @@ class PipelineTaskService @Autowired constructor(
         val taskRecord = getBuildTask(projectId, buildId, taskId)
             ?: return
         val model = taskBuildDetailService.getBuildModel(projectId, buildId)
-        val failTask = pipelineVariableService.getVariable(projectId, buildId, BK_CI_BUILD_FAIL_TASKS)
-        val failTaskNames = pipelineVariableService.getVariable(projectId, buildId, BK_CI_BUILD_FAIL_TASKNAMES)
+        val failTask = pipelineVariableService.getVariable(
+            projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKS
+        )
+        val failTaskNames = pipelineVariableService.getVariable(
+            projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKNAMES
+        )
         try {
             val errorElement = findElementMsg(model, taskRecord)
             val errorElements = if (failTask.isNullOrBlank()) {
@@ -545,8 +549,12 @@ class PipelineTaskService @Autowired constructor(
             return
         }
         try {
-            val failTask = pipelineVariableService.getVariable(projectId, buildId, BK_CI_BUILD_FAIL_TASKS)
-            val failTaskNames = pipelineVariableService.getVariable(projectId, buildId, BK_CI_BUILD_FAIL_TASKNAMES)
+            val failTask = pipelineVariableService.getVariable(
+                projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKS
+            )
+            val failTaskNames = pipelineVariableService.getVariable(
+                projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKNAMES
+            )
             val newFailTask = failTask!!.replace(failTaskRecord, "")
             val newFailTaskNames = failTaskNames!!.replace(failTaskNameRecord, "")
             if (newFailTask != failTask || newFailTaskNames != failTaskNames) {

@@ -36,7 +36,6 @@ import (
 	"os/exec"
 	"os/user"
 	"strconv"
-	strings "strings"
 	"syscall"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
@@ -49,24 +48,8 @@ var envLogName = "LOGNAME"
 
 func setUser(cmd *exec.Cmd, runUser string) error {
 
-	// 解决重启构建机后，Linux的 /etc/rc.local 自动启动的agent，读取到HOME 变量为空的问题
 	if len(runUser) == 0 || runUser == systemutil.GetCurrentUser().Username {
-		envHomeFound := false
-		envUserFound := false
-		envLogNameFound := false
-		for i := range cmd.Env {
-			splits := strings.Split(cmd.Env[i], "=")
-			if splits[0] == envHome && len(splits[1]) > 0 {
-				envHomeFound = true
-			} else if splits[0] == envUser && len(splits[1]) > 0 {
-				envUserFound = true
-			} else if splits[0] == envLogName && len(splits[1]) > 0 {
-				envLogNameFound = true
-			}
-		}
-		if envHomeFound && envUserFound && envLogNameFound {
-			return nil
-		}
+		return nil
 	}
 
 	logs.Info("set user(linux or darwin): ", runUser)
