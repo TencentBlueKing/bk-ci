@@ -387,7 +387,7 @@ class PipelineBuildSummaryDao {
             }
             baseStep.orderBy(sortTypeField)
         }
-        return if (null != offset && null != limit && offset > 0 && limit > 0) {
+        return if (null != offset && null != limit && offset >= 0 && limit > 0) {
             baseStep.limit(limit).offset(offset).fetch()
         } else {
             baseStep.fetch()

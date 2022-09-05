@@ -34,4 +34,6 @@ class BkJobProperties {
     val url: String? = null
     @Value("\${job.nginx.linkUrl:#{null}}")
     val linkUrl: String? = null
+    @Value("\${job.apiToken:#{null}}")
+    val token: String? = null
 }

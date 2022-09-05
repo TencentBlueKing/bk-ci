@@ -88,6 +88,8 @@ object StoreMessageCode {
     const val USER_ATOM_COMPATIBLE_OUTPUT_FIELD_CONFIRM = "2120031"
     const val USER_ATOM_INPUT_NUM_IS_TOO_MANY = "2120032" // 研发商店：插件入参数量太多，系统规定的数量最大为：{0}
     const val USER_ATOM_OUTPUT_NUM_IS_TOO_MANY = "2120033" // 研发商店：插件出参数量太多，系统规定的数量最大为：{0}
+    // 研发商店：插件配置文件[task.json]{0}操作系统默认环境配置数量为{1}个，默认环境配置数量有且只能为1个
+    const val USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID = "2120034"
 
     // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试

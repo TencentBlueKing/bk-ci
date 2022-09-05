@@ -33,7 +33,5 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("store组件logo信息")
 data class StoreLogoInfo(
     @ApiModelProperty("logo地址", required = false)
-    val logoUrl: String?,
-    @ApiModelProperty("icon图标base64字符串", required = false)
-    val iconData: String?
+    val logoUrl: String?
 )

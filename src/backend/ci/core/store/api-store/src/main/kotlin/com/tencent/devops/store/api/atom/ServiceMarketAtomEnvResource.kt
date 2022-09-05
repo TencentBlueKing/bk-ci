@@ -28,14 +28,12 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.common.StoreVersion
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -58,19 +56,4 @@ interface ServiceMarketAtomEnvResource {
         @ApiParam("插件版本信息", required = true)
         atomVersions: Set<StoreVersion>
     ): Result<Map<String, AtomRunInfo>?>
-
-    @ApiOperation("根据插件代码和版本号查看插件执行环境信息")
-    @GET
-    @Path("/{projectCode}/{atomCode}/{version}")
-    fun getAtomEnv(
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("插件代码", required = true)
-        @PathParam("atomCode")
-        atomCode: String,
-        @ApiParam("版本号", required = true)
-        @PathParam("version")
-        version: String
-    ): Result<AtomEnv?>
 }

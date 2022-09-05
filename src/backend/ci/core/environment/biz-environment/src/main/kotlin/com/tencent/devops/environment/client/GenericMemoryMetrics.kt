@@ -39,16 +39,25 @@ import javax.annotation.PostConstruct
 @AgentMetrics(metricsType = UsageMetrics.MetricsType.MEMORY, osTypes = [OS.LINUX, OS.MACOS, OS.WINDOWS])
 class GenericMemoryMetrics @Autowired constructor(val influxdbClient: InfluxdbClient) : UsageMetrics {
 
+    companion object {
+        private const val k_used_percent = "used_percent"
+        private val emptyMemoryMetrics = mapOf(k_used_percent to listOf(mapOf("time" to "0")))
+    }
+
     @PostConstruct
     private fun init() {
         UsageMetrics.registerBean(this)
     }
 
     override fun loadQuery(agentHashId: String, timeRange: String): Map<String, List<Map<String, Any>>> {
-        val queryStr = "SELECT mean(\"used_percent\") FROM \"mem\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
+        val queryStr = "SELECT mean(\"$k_used_percent\") FROM \"mem\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
             " and ${getTimePart(timeRange)} fill(null)"
-        val queryResult = influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB))
-            ?: return mapOf("used_percent" to listOf(mapOf("time" to "0")))
+
+        val queryResult = try {
+            influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyMemoryMetrics
+        } catch (ignore: Exception) {
+            return emptyMemoryMetrics
+        }
         if (queryResult.hasError()) {
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_INFLUX_QUERY_MEM_INFO_FAIL,
@@ -57,7 +66,7 @@ class GenericMemoryMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
-        resultData["used_percent"] = loadSerialData(queryResult.results[0], "used_percent")
+        resultData[k_used_percent] = loadSerialData(queryResult.results[0], k_used_percent)
         return resultData
     }
 }

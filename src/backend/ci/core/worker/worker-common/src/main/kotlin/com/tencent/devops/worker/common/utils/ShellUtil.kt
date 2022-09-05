@@ -124,6 +124,7 @@ object ShellUtil {
         workspace: File = dir
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
+        val userScriptFile = Files.createTempFile("devops_script_user_", ".sh").toFile()
         file.deleteOnExit()
 
         val command = StringBuilder()
@@ -186,10 +187,11 @@ object ShellUtil {
             newValue = "\"${File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath}\""))
         command.append(setGateValue.replace(oldValue = "##gateValueFile##",
             newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""))
-        command.append(script)
-
+        command.append("source ${userScriptFile.absolutePath}")
+        userScriptFile.writeText(script)
         file.writeText(command.toString())
         executeUnixCommand(command = "chmod +x ${file.absolutePath}", sourceDir = dir)
+        executeUnixCommand(command = "chmod +x ${userScriptFile.absolutePath}", sourceDir = dir)
 
         return file
     }
@@ -218,7 +220,7 @@ object ShellUtil {
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"
-            LoggerService.addNormalLine("$errorInfo because of error(${ignored.message})")
+            LoggerService.addNormalLine("$errorInfo because exit code not equal 0")
             throw throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,

@@ -37,6 +37,9 @@ import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
+import com.tencent.devops.common.api.expression.ExpressionException
+import com.tencent.devops.common.api.expression.Lex
+import com.tencent.devops.common.api.expression.Word
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
@@ -73,10 +76,12 @@ import com.tencent.devops.process.yaml.v2.models.stage.Stage
 import com.tencent.devops.process.yaml.v2.models.stage.StageLabel
 import com.tencent.devops.process.yaml.v2.models.step.PreStep
 import com.tencent.devops.process.yaml.v2.models.step.Step
+import com.tencent.devops.process.yaml.v2.parameter.ParametersType
 import com.tencent.devops.process.yaml.v2.stageCheck.Flow
 import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.StageReviews
+import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
@@ -157,6 +162,7 @@ object ScriptYmlUtils {
     }
 
     fun parseVariableValue(value: String?, settingMap: Map<String, String?>): String? {
+
         if (value == null || value.isEmpty()) {
             return ""
         }
@@ -170,6 +176,103 @@ object ScriptYmlUtils {
         }
         logger.info("STREAM|parseVariableValue value :$value; settingMap: $settingMap;newValue: $newValue")
         return newValue
+    }
+
+    fun parseParameterValue(value: String?, settingMap: Map<String, Any?>, paramType: ParametersType): String {
+        if (value.isNullOrBlank()) {
+            return ""
+        }
+        var newValue = value
+        // ScriptUtils.formatYaml会将所有的带上 "" 但替换时数组不需要"" 所以数组单独匹配
+        val pattern = when (paramType) {
+            ParametersType.ARRAY -> {
+                Pattern.compile("\"\\$\\{\\{([^{}]+?)}}\"")
+            }
+            else -> {
+                Pattern.compile("\\$\\{\\{([^{}]+?)}}")
+            }
+        }
+        val matcher = pattern.matcher(value)
+        while (matcher.find()) {
+            if (settingMap.containsKey(matcher.group(1).trim())) {
+                val realValue = settingMap[matcher.group(1).trim()]
+                if (realValue is List<*>) {
+                    newValue = newValue!!.replace(matcher.group(), JsonUtil.toJson(realValue))
+                } else {
+                    newValue = newValue!!.replace(matcher.group(), StringEscapeUtils.escapeJava(realValue.toString()))
+                }
+            }
+        }
+        // 替换if中没有加括号的，只替换string
+        val resultValue = if (paramType == ParametersType.STRING) {
+            replaceIfParameters(newValue, settingMap)
+        } else {
+            newValue
+        }
+        return resultValue.toString()
+    }
+
+    @Suppress("NestedBlockDepth")
+    private fun replaceIfParameters(
+        newValue: String?,
+        settingMap: Map<String, Any?>
+    ): StringBuffer {
+        val newValueLines = BufferedReader(StringReader(newValue!!))
+        val resultValue = StringBuffer()
+        var line = newValueLines.readLine()
+        while (line != null) {
+            val startString = line.trim().replace("\\s".toRegex(), "")
+            if (startString.startsWith("if:") || startString.startsWith("-if:")) {
+                val ifPrefix = line.substring(0 until line.indexOfFirst { it == ':' } + 1)
+                val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
+                    .removeSuffix("\"")
+
+                logger.info("IF|CONDITION|$condition")
+
+                // 去掉花括号
+                val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()
+                val originItems: List<Word>
+                // 先语法分析
+                try {
+                    originItems = Lex(baldExpress.toList().toMutableList()).getToken()
+                } catch (e: Exception) {
+                    logger.info("expression=$baldExpress|reason=Grammar Invalid: ${e.message}")
+                    throw ExpressionException("expression=$baldExpress|reason=Grammar Invalid: ${e.message}")
+                }
+                // 替换变量
+                val items = mutableListOf<Word>()
+                originItems.forEach {
+                    if (it.symbol == "ident") {
+                        items.add(Word(replaceParameters(it, settingMap), it.symbol))
+                    } else {
+                        items.add(Word(it.str, it.symbol))
+                    }
+                }
+                val itemsStr = items.joinToString(" ") { it.str }
+                resultValue.append("$ifPrefix \"${itemsStr}\"").append("\n")
+            } else {
+                resultValue.append(line).append("\n")
+            }
+            line = newValueLines.readLine()
+        }
+        return resultValue
+    }
+
+    private fun replaceParameters(
+        it: Word,
+        settingMap: Map<String, Any?>
+    ) = if (it.str.startsWith("parameters.")) {
+        val realValue = settingMap[it.str] ?: it.str
+        if (realValue is List<*>) {
+            // ["test"]->[test]
+            JsonUtil.toJson(realValue).replace("\"", "")
+                .replace("[ ", "[")
+                .replace(" ]", "]")
+        } else {
+            StringEscapeUtils.escapeJava(realValue.toString())
+        }
+    } else {
+        it.str
     }
 
     private fun formatYamlCustom(yamlStr: String): String {
