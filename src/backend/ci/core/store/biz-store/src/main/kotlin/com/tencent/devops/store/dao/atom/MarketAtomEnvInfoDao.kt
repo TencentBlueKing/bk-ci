@@ -68,6 +68,7 @@ class MarketAtomEnvInfoDao {
                     OS_ARCH,
                     RUNTIME_VERSION,
                     DEFAULT_FLAG,
+                    FINISH_KILL_FLAG,
                     CREATOR,
                     MODIFIER
                 )
@@ -87,6 +88,7 @@ class MarketAtomEnvInfoDao {
                         atomEnvRequest.osArch,
                         atomEnvRequest.runtimeVersion,
                         atomEnvRequest.defaultFlag,
+                        atomEnvRequest.finishKillFlag,
                         atomEnvRequest.userId,
                         atomEnvRequest.userId
                     ).execute()
@@ -268,6 +270,7 @@ class MarketAtomEnvInfoDao {
                 baseStep.set(RUNTIME_VERSION, atomEnvRequest.runtimeVersion)
             }
             atomEnvRequest.defaultFlag?.let { baseStep.set(DEFAULT_FLAG, it) }
+            atomEnvRequest.finishKillFlag?.let { baseStep.set(FINISH_KILL_FLAG, it) }
             val atomPostInfo = atomEnvRequest.atomPostInfo
             baseStep.set(POST_ENTRY_PARAM, atomPostInfo?.postEntryParam)
             baseStep.set(POST_CONDITION, atomPostInfo?.postCondition)
