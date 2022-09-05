@@ -704,6 +704,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectDao.getProjectByName(dslContext, projectName)
     }
 
+    override fun updateProjectProperties(
+        userId: String,
+        projectCode: String,
+        properties: ProjectProperties
+    ): Boolean {
+        logger.info("[$projectCode]|updateProjectProperties|userId=$userId|properties=$properties")
+        return projectDao.updatePropertiesByCode(dslContext, projectCode, properties) == 1
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
