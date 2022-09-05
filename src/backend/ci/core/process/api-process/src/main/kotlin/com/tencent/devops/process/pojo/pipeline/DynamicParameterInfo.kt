@@ -1,6 +1,3 @@
-//go:build linux || darwin
-// +build linux darwin
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -28,45 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package command
+package com.tencent.devops.process.pojo.pipeline
 
-import (
-	"errors"
-	"fmt"
-	"os/exec"
-	"os/user"
-	"strconv"
-	"syscall"
+import io.swagger.annotations.ApiModel
+import com.fasterxml.jackson.annotation.JsonProperty
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+@ApiModel("DynamicParameter模型-ID")
+data class DynamicParameterInfo(
+    @JsonProperty("id")
+    val id: String, // 该行的唯一标识，必填
+    @JsonProperty("paramModels")
+    val paramModels: List<DynamicParameterInfoParam>
 )
 
-var envHome = "HOME"
-var envUser = "USER"
-var envLogName = "LOGNAME"
-
-func setUser(cmd *exec.Cmd, runUser string) error {
-
-	if len(runUser) == 0 || runUser == systemutil.GetCurrentUser().Username {
-		return nil
-	}
-
-	logs.Info("set user(linux or darwin): ", runUser)
-
-	rUser, err := user.Lookup(runUser)
-	if err != nil {
-		logs.Error("user lookup failed, user: -", runUser, "-, error: ", err.Error())
-		return errors.New("user lookup failed, user: " + runUser)
-	}
-	uid, _ := strconv.Atoi(rUser.Uid)
-	gid, _ := strconv.Atoi(rUser.Gid)
-	cmd.SysProcAttr = &syscall.SysProcAttr{}
-	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)}
-
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envHome, rUser.HomeDir))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envUser, runUser))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envLogName, runUser))
-
-	return nil
-}
+data class DynamicParameterInfoParam(
+    @JsonProperty("value")
+    val value: String? = null, // 值，可做为初始化的默认值
+    @JsonProperty("disabled")
+    val disabled: Boolean, // 控制是否可编辑
+    @JsonProperty("id")
+    val id: String, // 该模型的唯一标识，必填
+    @JsonProperty("isMultiple")
+    val isMultiple: Boolean? = null, // select是否多选
+    @JsonProperty("label")
+    val label: String? = null, // testLabel
+    @JsonProperty("list")
+    val list: List<StartUpInfo>? = null, // type是select起作用，需要有id和name字段
+    @JsonProperty("listType")
+    val listType: String? = null, // 获取列表方式，可以是url或者list
+    @JsonProperty("type")
+    val type: String, // 可以是input或者select
+    @JsonProperty("url")
+    val url: String? = null, // type是select且listType是url起作用
+    @JsonProperty("dataPath")
+    val dataPath: String? = null // 接口返回值，取数的路径，默认为 data.records
+)

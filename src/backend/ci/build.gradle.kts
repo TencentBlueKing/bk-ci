@@ -100,6 +100,9 @@ allprojects {
             }
             dependency("com.perforce:p4java:${Versions.p4}")
             dependency("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.JacksonDatatypeJsr}")
+            dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
+                entry("resilience4j-circuitbreaker")
+            }
         }
     }
 
@@ -113,6 +116,7 @@ allprojects {
         it.exclude("javax.ws.rs", "jsr311-api")
         it.exclude("dom4j", "dom4j")
         it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
+        it.exclude("com.zaxxer","HikariCP-java7")
     }
     // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656
     dependencies {

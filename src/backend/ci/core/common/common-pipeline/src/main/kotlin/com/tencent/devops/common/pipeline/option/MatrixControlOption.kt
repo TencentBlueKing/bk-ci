@@ -28,15 +28,17 @@
 package com.tencent.devops.common.pipeline.option
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.exception.ExecuteException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.KeyReplacement
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
+import java.util.regex.Pattern
 
 /**
  *  构建矩阵配置项
@@ -63,6 +65,7 @@ data class MatrixControlOption(
 ) {
 
     companion object {
+        private val MATRIX_JSON_KEY_PATTERN = Pattern.compile("^(fromJSON\\()([^(^)]+)[\\)]\$")
         private val logger = LoggerFactory.getLogger(MatrixControlOption::class.java)
         const val MATRIX_CASE_MAX_COUNT = 256
     }
@@ -78,12 +81,8 @@ data class MatrixControlOption(
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
             convertStrategyJson(buildContext)
         }
-        matrixConfig.include!!.addAll(
-            convertCase(EnvReplacementParser.parse(includeCaseStr, buildContext), buildContext)
-        )
-        matrixConfig.exclude!!.addAll(
-            convertCase(EnvReplacementParser.parse(excludeCaseStr, buildContext), buildContext)
-        )
+        matrixConfig.include!!.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext), buildContext))
+        matrixConfig.exclude!!.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext), buildContext))
         return matrixConfig
     }
 
@@ -103,8 +102,8 @@ data class MatrixControlOption(
                 if (this.size > 0) {
                     result["include"] = this
                 }
-            } catch (ignore: Throwable) {
-                logger.warn("this because of formJSON:${ignore.message}")
+            } catch (e: Exception) {
+                logger.warn("this because of formJSON:${e.message}")
                 result["include"] = includeCaseStr ?: return@with
             }
         }
@@ -114,8 +113,8 @@ data class MatrixControlOption(
                 if (this.size > 0) {
                     result["include"] = this
                 }
-            } catch (ignore: Throwable) {
-                logger.warn("this because of formJSON:${ignore.message}")
+            } catch (e: Exception) {
+                logger.warn("this because of formJSON:${e.message}")
                 result["exclude"] = excludeCaseStr ?: return@with
             }
         }
@@ -131,13 +130,30 @@ data class MatrixControlOption(
                 emptyMap(), mutableListOf(), mutableListOf()
             )
         }
-        val contextStr = EnvReplacementParser.parse(strategyStr, buildContext, true)
+        val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
         return MatrixConfig(
             strategy = JsonUtil.anyTo(
                 YamlUtil.to<Map<String, List<String>>>(contextStr),
                 object : TypeReference<Map<String, List<String>>?>() {}
             ),
             include = mutableListOf(), exclude = mutableListOf()
+        )
+    }
+
+    private fun replaceJsonPattern(command: String, buildContext: Map<String, String>): String {
+        return ReplacementUtils.replace(
+            command = command,
+            replacement = object : KeyReplacement {
+                // 内外源不一致，此处多传一个doubleCurlyBraces只为实现内部版接口
+                override fun getReplacement(key: String): String? {
+                    // 匹配fromJSON()
+                    val matcher = MATRIX_JSON_KEY_PATTERN.matcher(key)
+                    if (matcher.find()) {
+                        return buildContext[matcher.group(2)]
+                    }
+                    return buildContext[key]
+                }
+            }
         )
     }
 
@@ -152,7 +168,10 @@ data class MatrixControlOption(
             )
         }
         try {
-            val contextStr = EnvReplacementParser.parse(strategyStr, buildContext, true)
+            val contextStr = replaceJsonPattern(
+                command = strategyStr,
+                buildContext = buildContext
+            )
             // 适用于matrix中是包含了key的map类型JSON，这种情况必包含strategy，可能包含include和exclude
             val matrixMap = JsonUtil.to<Map<String, List<Any>?>>(contextStr)
             return MatrixConfig(
@@ -169,17 +188,20 @@ data class MatrixControlOption(
                     object : TypeReference<MutableList<Map<String, String>>?>() {}
                 ) ?: mutableListOf()
             )
-        } catch (ignore: Throwable) {
+        } catch (ignore: Exception) {
             // 适用于不包含key的list类型JSON,这种情况只会是strategy
             val str = YamlUtil.to<Map<String, Any>>(strategyStr)
             return MatrixConfig(
                 strategy = str.map {
                     it.key to when (it.value) {
                         is String -> JsonUtil.to<List<String>>(
-                            EnvReplacementParser.parse(it.value as String, buildContext, true)
+                            replaceJsonPattern(
+                                command = it.value as String,
+                                buildContext = buildContext
+                            )
                         )
                         is List<*> -> it.value as List<String>
-                        else -> throw ExecuteException("strategyStr must be fromJSON String or List")
+                        else -> throw Exception("strategyStr must be fromJSON String or List")
                     }
                 }.toMap(),
                 include = mutableListOf(),
@@ -197,12 +219,11 @@ data class MatrixControlOption(
         }
         val includeCaseList = try {
             YamlUtil.to<List<Map<String, Any>>>(caseStr)
-        } catch (ignore: Throwable) {
+        } catch (e: Exception) {
             // 这种情况应该只出现于fromJSON
-            val contextStr = EnvReplacementParser.parse(
-                obj = caseStr,
-                contextMap = buildContext ?: throw ExecuteException("empty buildContext"),
-                onlyExpression = true
+            val contextStr = replaceJsonPattern(
+                command = caseStr,
+                buildContext = buildContext ?: throw Exception("empty buildContext")
             )
             JsonUtil.to(contextStr)
         }
