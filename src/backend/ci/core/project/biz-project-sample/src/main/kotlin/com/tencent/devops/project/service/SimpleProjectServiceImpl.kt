@@ -46,6 +46,7 @@ import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
@@ -59,8 +60,8 @@ import java.io.File
 @Service
 class SimpleProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
-    dslContext: DSLContext,
-    projectDao: ProjectDao,
+    private val dslContext: DSLContext,
+    private val projectDao: ProjectDao,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
     client: Client,
@@ -156,6 +157,11 @@ class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
         return true
+    }
+
+    override fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean {
+        logger.info("[$projectCode]|updateProjectProperties|userId=$userId|properties=$properties")
+        return projectDao.updatePropertiesByCode(dslContext, projectCode, properties) == 1
     }
 
     companion object {
