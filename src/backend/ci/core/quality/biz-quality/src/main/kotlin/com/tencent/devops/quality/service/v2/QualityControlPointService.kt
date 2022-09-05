@@ -201,21 +201,40 @@ class QualityControlPointService @Autowired constructor(
 
     fun addHashId() {
         threadPoolExecutor.submit {
-            controlPointDao.getAllControlPoint(dslContext)?.map {
-                val id = it.value1()
-                val hashId = HashUtil.encodeLongId(it.value1())
-                controlPointDao.updateHashId(dslContext, id, hashId)
-            }
-            qualityRuleDao.getAllRule(dslContext)?.map {
-                val id = it.value1()
-                val hashId = HashUtil.encodeLongId(it.value1())
-                qualityRuleDao.updateHashId(dslContext, id, hashId)
-            }
-            qualityRuleBuildHisDao.getAllRuleBuildHis(dslContext)?.map {
-                val id = it.value1()
-                val hashId = HashUtil.encodeLongId(it.value1())
-                qualityRuleBuildHisDao.updateHashId(dslContext, id, hashId)
-            }
+            var offset = 0
+            val limit = 100
+            do {
+                val controlPointRecords = controlPointDao.getAllControlPoint(dslContext, limit, offset)
+                val controlPointSize = controlPointRecords?.size
+                controlPointRecords?.map {
+                    val id = it.value1()
+                    val hashId = HashUtil.encodeLongId(it.value1())
+                    controlPointDao.updateHashId(dslContext, id, hashId)
+                }
+                offset += limit
+            } while (controlPointSize == 100)
+            offset = 0
+            do {
+                val ruleRecords = qualityRuleDao.getAllRule(dslContext, limit, offset)
+                val ruleSize = ruleRecords?.size
+                ruleRecords?.map {
+                    val id = it.value1()
+                    val hashId = HashUtil.encodeLongId(it.value1())
+                    qualityRuleDao.updateHashId(dslContext, id, hashId)
+                }
+                offset += limit
+            } while (ruleSize == 100)
+            offset = 0
+            do {
+                val ruleBuildHisRecords = qualityRuleBuildHisDao.getAllRuleBuildHis(dslContext, limit, offset)
+                val ruleBuildHisSize = ruleBuildHisRecords?.size
+                ruleBuildHisRecords?.map {
+                    val id = it.value1()
+                    val hashId = HashUtil.encodeLongId(it.value1())
+                    qualityRuleBuildHisDao.updateHashId(dslContext, id, hashId)
+                }
+                offset += limit
+            } while (ruleBuildHisSize == 100)
         }
     }
 

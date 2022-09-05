@@ -339,9 +339,16 @@ class QualityRuleDao {
         }
     }
 
-    fun getAllRule(dslContext: DSLContext): Result<Record1<Long>>? {
+    fun getAllRule(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<Record1<Long>>? {
         with(TQualityRule.T_QUALITY_RULE) {
-            return dslContext.select(ID).from(this).fetch()
+            return dslContext.select(ID).from(this)
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 

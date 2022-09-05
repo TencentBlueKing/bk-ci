@@ -498,16 +498,29 @@ class NodeService @Autowired constructor(
 
     fun addHashId() {
         threadPoolExecutor.submit {
-            envDao.getAllEnv(dslContext)?.map {
-                val id = it.value1()
-                val hashId = HashUtil.encodeLongId(it.value1())
-                envDao.updateHashId(dslContext, id, hashId)
-            }
-            nodeDao.getAllNode(dslContext)?.map {
-                val id = it.value1()
-                val hashId = HashUtil.encodeLongId(it.value1())
-                nodeDao.updateHashId(dslContext, id, hashId)
-            }
+            var offset = 0
+            val limit = 100
+            do {
+                val envRecords = envDao.getAllEnv(dslContext, limit, offset)
+                val envSize = envRecords?.size
+                envRecords?.map {
+                    val id = it.value1()
+                    val hashId = HashUtil.encodeLongId(it.value1())
+                    envDao.updateHashId(dslContext, id, hashId)
+                }
+                offset += limit
+            } while (envSize == 100)
+            offset = 0
+            do {
+                val nodeRecords = nodeDao.getAllNode(dslContext, limit, offset)
+                val nodeSize = nodeRecords?.size
+                nodeRecords?.map {
+                    val id = it.value1()
+                    val hashId = HashUtil.encodeLongId(it.value1())
+                    nodeDao.updateHashId(dslContext, id, hashId)
+                }
+                offset += limit
+            } while (nodeSize == 100)
         }
     }
 }

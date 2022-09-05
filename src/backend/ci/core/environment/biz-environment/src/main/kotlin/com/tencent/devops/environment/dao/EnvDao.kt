@@ -287,9 +287,16 @@ class EnvDao {
         }
     }
 
-    fun getAllEnv(dslContext: DSLContext): Result<Record1<Long>>? {
+    fun getAllEnv(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<Record1<Long>>? {
         with(TEnv.T_ENV) {
-            return dslContext.select(ENV_ID).from(this).fetch()
+            return dslContext.select(ENV_ID).from(this)
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 

@@ -511,9 +511,16 @@ class NodeDao {
         }
     }
 
-    fun getAllNode(dslContext: DSLContext): Result<Record1<Long>>? {
+    fun getAllNode(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<Record1<Long>>? {
         with(TNode.T_NODE) {
-            return dslContext.select(NODE_ID).from(this).fetch()
+            return dslContext.select(NODE_ID).from(this)
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 

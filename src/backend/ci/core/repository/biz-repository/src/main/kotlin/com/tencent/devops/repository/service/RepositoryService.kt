@@ -1755,11 +1755,18 @@ class RepositoryService @Autowired constructor(
 
     fun addHashId() {
         threadPoolExecutor.submit {
-            repositoryDao.getAllRepo(dslContext)?.map {
-                val id = it.value1()
-                val hashId = HashUtil.encodeLongId(it.value1())
-                repositoryDao.updateHashId(dslContext, id, hashId)
-            }
+            var offset = 0
+            val limit = 100
+            do {
+                val repoRecords = repositoryDao.getAllRepo(dslContext, limit, offset)
+                val repoSize = repoRecords?.size
+                repoRecords?.map {
+                    val id = it.value1()
+                    val hashId = HashUtil.encodeLongId(it.value1())
+                    repositoryDao.updateHashId(dslContext, id, hashId)
+                }
+                offset += limit
+            } while (repoSize == 100)
         }
     }
 

@@ -202,9 +202,16 @@ class QualityRuleBuildHisDao @Autowired constructor(
         }
     }
 
-    fun getAllRuleBuildHis(dslContext: DSLContext): Result<Record1<Long>>? {
+    fun getAllRuleBuildHis(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<Record1<Long>>? {
         with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
-            return dslContext.select(ID).from(this).fetch()
+            return dslContext.select(ID).from(this)
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 

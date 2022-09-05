@@ -242,9 +242,16 @@ class QualityControlPointDao {
         }
     }
 
-    fun getAllControlPoint(dslContext: DSLContext): Result<Record1<Long>>? {
+    fun getAllControlPoint(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<Record1<Long>>? {
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
-            return dslContext.select(ID).from(this).fetch()
+            return dslContext.select(ID).from(this)
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 

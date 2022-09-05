@@ -332,9 +332,16 @@ class RepositoryDao {
         }
     }
 
-    fun getAllRepo(dslContext: DSLContext): Result<Record1<Long>>? {
+    fun getAllRepo(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<Record1<Long>>? {
         with(TRepository.T_REPOSITORY) {
-            return dslContext.select(REPOSITORY_ID).from(this).fetch()
+            return dslContext.select(REPOSITORY_ID).from(this)
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 
