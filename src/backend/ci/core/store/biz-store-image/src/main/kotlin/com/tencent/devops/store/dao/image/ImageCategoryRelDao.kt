@@ -97,6 +97,14 @@ class ImageCategoryRelDao {
         }
     }
 
+    fun batchDeleteByImageId(dslContext: DSLContext, imageIds: List<String>) {
+        with(TImageCategoryRel.T_IMAGE_CATEGORY_REL) {
+            dslContext.deleteFrom(this)
+                .where(IMAGE_ID.`in`(imageIds))
+                .execute()
+        }
+    }
+
     fun batchAdd(dslContext: DSLContext, userId: String, imageId: String, categoryIdList: List<String>) {
         with(TImageCategoryRel.T_IMAGE_CATEGORY_REL) {
             val addStep = categoryIdList.map {
