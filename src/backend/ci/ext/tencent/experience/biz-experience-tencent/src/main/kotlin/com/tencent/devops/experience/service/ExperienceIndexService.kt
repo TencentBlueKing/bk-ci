@@ -37,6 +37,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.experience.dao.ExperienceDao
+import com.tencent.devops.experience.dao.ExperienceExtendBannerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.HotCategoryParam
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
@@ -47,6 +48,7 @@ import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
@@ -56,8 +58,13 @@ class ExperienceIndexService @Autowired constructor(
     val experiencePublicDao: ExperiencePublicDao,
     val experienceDao: ExperienceDao,
     val dslContext: DSLContext,
-    val redisOperation: RedisOperation
+    val experienceExtendBannerDao: ExperienceExtendBannerDao
 ) {
+    @Value("\${minigame.projectid:#{null}}")
+    private var minigameProjectId: String? = null
+
+    @Value("\${minigame.picture:#{null}}")
+    private var minigamePicture: String? = null
     fun banners(userId: String, page: Int, pageSize: Int, platform: Int): Result<Pagination<IndexBannerVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
@@ -75,14 +82,6 @@ class ExperienceIndexService @Autowired constructor(
                 externalUrl = it.externalLink
             )
         }.toMutableList()
-        val extendBanners = experiencePublicDao.listWithExtendBanner(dslContext)?.map {
-            IndexBannerVO(
-                experienceHashId = "",
-                bannerUrl = UrlUtil.toOuterPhotoAddr(it.bannerUrl),
-                type = it.type,
-                externalUrl = it.link
-            )
-        }?.toMutableList()
         val hasNext = if (banners.size < pageSize) {
             false
         } else {
@@ -93,7 +92,14 @@ class ExperienceIndexService @Autowired constructor(
             ) > (offset + pageSize)
         }
         if (page == 1) {
-            extendBanners?.map { banners.add(it) }
+            experienceExtendBannerDao.listWithExtendBanner(dslContext)?.map {
+                IndexBannerVO(
+                    experienceHashId = "",
+                    bannerUrl = UrlUtil.toOuterPhotoAddr(it.bannerUrl),
+                    type = it.type,
+                    externalUrl = it.link
+                )
+            }?.toMutableList()?.map { banners.add(it) }
         }
         return Result(Pagination(hasNext, banners))
     }
@@ -263,14 +269,15 @@ class ExperienceIndexService @Autowired constructor(
         userId: String,
         platform: Int
     ): Result<List<IndexAppInfoVO>> {
-        val projectId = redisOperation.get(MINIGAME_PROJECT_ID_KEY)
-            ?: throw NotFoundException("MiniGame projectId not found")
+        if (minigameProjectId == null) {
+            throw NotFoundException("MiniGame projectId not found")
+        }
         val platformStr = PlatformEnum.of(platform)?.name
         val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val records = experiencePublicDao.listMiniGameExperience(
             dslContext = dslContext,
             platform = platformStr,
-            projectId = projectId
+            projectId = minigameProjectId!!
         ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
         return Result(records)
     }
@@ -321,8 +328,14 @@ class ExperienceIndexService @Autowired constructor(
         )
     }
 
+    fun showMiniGamePicture(): Result<String> {
+        if (minigamePicture == null) {
+            throw NotFoundException("MiniGame projectId not found")
+        }
+        return Result(minigamePicture!!)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceIndexService::class.java)
-        const private val MINIGAME_PROJECT_ID_KEY = "experience:minigame:projectid"
     }
 }

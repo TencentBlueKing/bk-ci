@@ -103,4 +103,8 @@ class AppExperienceIndexResourceImpl @Autowired constructor(
     ): Result<List<IndexAppInfoVO>> {
         return experienceIndexService.miniGameExperience(userId, platform)
     }
+
+    override fun miniGamePicture(userId: String): Result<String> {
+        return experienceIndexService.showMiniGamePicture();
+    }
 }

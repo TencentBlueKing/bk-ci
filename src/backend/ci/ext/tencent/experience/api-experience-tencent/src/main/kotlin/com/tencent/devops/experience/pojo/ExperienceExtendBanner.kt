@@ -25,36 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.resources.app
+package com.tencent.devops.experience.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.experience.api.app.AppExperienceSearchResource
-import com.tencent.devops.experience.filter.annotions.AllowOuter
-import com.tencent.devops.experience.pojo.search.SearchAppInfoVO
-import com.tencent.devops.experience.pojo.search.SearchRecommendVO
-import com.tencent.devops.experience.service.ExperienceSearchService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class AppExperienceSearchResourceImpl @Autowired constructor(
-    val experienceSearchService: ExperienceSearchService
-) : AppExperienceSearchResource {
-
-    @AllowOuter
-    override fun search(
-        userId: String,
-        platform: Int?,
-        organization: String?,
-        experienceName: String,
-        experiencePublic: Boolean,
-        minigame: Boolean?
-    ): Result<List<SearchAppInfoVO>> {
-        return experienceSearchService.search(userId, platform, experienceName, experiencePublic, organization, minigame)
-    }
-
-    @AllowOuter
-    override fun recommends(userId: String, platform: Int?): Result<List<SearchRecommendVO>> {
-        return experienceSearchService.recommends(userId, platform)
-    }
-}
+@ApiModel("扩展banner图")
+data class ExperienceExtendBanner(
+    @ApiModelProperty("配置的BannerURL", required = true)
+    val bannerUrl: String?,
+    @ApiModelProperty("banner类型", required = true)
+    val type: Int?,
+    @ApiModelProperty("跳转链接", required = true)
+    val link: String?,
+    @ApiModelProperty("是否上线", required = true)
+    val online: Boolean?,
+    @ApiModelProperty("过期时间", required = true)
+    val endTime: Long?
+)

@@ -40,8 +40,10 @@ import com.tencent.devops.experience.pojo.search.SearchAppInfoVO
 import com.tencent.devops.experience.pojo.search.SearchRecommendVO
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 
 @Service
 class ExperienceSearchService @Autowired constructor(
@@ -51,15 +53,31 @@ class ExperienceSearchService @Autowired constructor(
     val experienceSearchRecommendDao: ExperienceSearchRecommendDao,
     val dslContext: DSLContext
 ) {
+    @Value("\${minigame.projectid:#{null}}")
+    private var minigameProjectId: String? = null
     fun search(
         userId: String,
         platform: Int?,
         experienceName: String,
         experiencePublic: Boolean,
-        organization: String?
+        organization: String?,
+        minigame: Boolean?
     ): Result<List<SearchAppInfoVO>> {
         val record = if (experiencePublic) {
-            publicSearch(userId, experienceName, platform)
+            val projectId = if (minigame != null && minigame == true) {
+                if (minigameProjectId == null) {
+                    throw NotFoundException("MiniGame projectId not found")
+                }
+                minigameProjectId
+            } else {
+                null
+            }
+            publicSearch(
+                userId = userId,
+                experienceName = experienceName,
+                platform = platform,
+                projectId = projectId
+            )
         } else {
             privateSearch(userId, platform, experienceName, organization)
         }
@@ -98,7 +116,8 @@ class ExperienceSearchService @Autowired constructor(
     private fun publicSearch(
         userId: String,
         experienceName: String,
-        platform: Int?
+        platform: Int?,
+        projectId: String?
     ): List<SearchAppInfoVO> {
         val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val now = LocalDateTime.now()
@@ -106,7 +125,8 @@ class ExperienceSearchService @Autowired constructor(
         return experiencePublicDao.listLikeExperienceName(
             dslContext = dslContext,
             experienceName = experienceName.trim(),
-            platform = PlatformEnum.of(platform)?.name
+            platform = PlatformEnum.of(platform)?.name,
+            projectId = projectId
         ).map {
             SearchAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),

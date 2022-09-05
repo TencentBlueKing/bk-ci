@@ -35,11 +35,13 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.op.OpExperienceResource
 import com.tencent.devops.experience.constant.ExperiencePublicType
+import com.tencent.devops.experience.dao.ExperienceExtendBannerDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperienceSearchRecommendDao
+import com.tencent.devops.experience.pojo.ExperienceExtendBanner
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,7 +57,8 @@ class OpExperienceResourceImpl @Autowired constructor(
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceSearchRecommendDao: ExperienceSearchRecommendDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val experienceExtendBannerDao: ExperienceExtendBannerDao
 ) : OpExperienceResource {
     override fun switchNecessary(userId: String, id: Long): Result<String> {
         val record = experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException("找不到该记录")
@@ -146,5 +149,24 @@ class OpExperienceResourceImpl @Autowired constructor(
         )
 
         return Result("创建成功")
+    }
+
+    override fun addExtendBanner(userId: String, experienceExtendBanner: ExperienceExtendBanner): Result<Int> {
+        return Result(
+            experienceExtendBannerDao.create(
+                dslContext = dslContext,
+                experienceExtendBanner = experienceExtendBanner
+            )
+        )
+    }
+
+    override fun updateExtendBanner(userId: String, bannerId: Long, experienceExtendBanner: ExperienceExtendBanner): Result<Int> {
+        return Result(
+            experienceExtendBannerDao.update(
+                dslContext = dslContext,
+                bannerId = bannerId,
+                experienceExtendBanner = experienceExtendBanner
+            )
+        )
     }
 }

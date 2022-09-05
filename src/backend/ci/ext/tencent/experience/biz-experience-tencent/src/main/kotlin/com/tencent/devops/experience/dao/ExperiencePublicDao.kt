@@ -138,23 +138,11 @@ class ExperiencePublicDao {
         }
     }
 
-    fun listWithExtendBanner(
-        dslContext: DSLContext
-    ): Result<TExperienceExtendBannerRecord>? {
-        val now = LocalDateTime.now()
-        return with(TExperienceExtendBanner.T_EXPERIENCE_EXTEND_BANNER) {
-            dslContext.selectFrom(this)
-                .where(END_DATE.gt(now))
-                .and(ONLINE.eq(true))
-                .and(BANNER_URL.ne(StringUtils.EMPTY))
-                .fetch()
-        }
-    }
-
     fun listLikeExperienceName(
         dslContext: DSLContext,
         experienceName: String,
-        platform: String?
+        platform: String?,
+        projectId: String?
     ): Result<TExperiencePublicRecord> {
         val now = LocalDateTime.now()
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -164,6 +152,9 @@ class ExperiencePublicDao {
                 .and(EXPERIENCE_NAME.like("%$experienceName%"))
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .let {
+                    if (projectId == null) it else it.and(PROJECT_ID.eq(projectId))
                 }
                 .orderBy(UPDATE_TIME.desc())
                 .limit(100)
