@@ -69,9 +69,8 @@ object EnvReplacementParser {
         return if (onlyExpression == true) {
             try {
                 val (context, nameValues) = contextPair ?: getCustomExecutionContextByMap(contextMap)
-                parseExpression(
+                parseExpressionTwice(
                     value = obj,
-                    blocks = findExpressions(obj),
                     context = context,
                     nameValues = nameValues
                 )
@@ -111,6 +110,31 @@ object EnvReplacementParser {
         }
         ExpressionParser.fillContextByMap(variables, context, nameValue)
         return Pair(context, nameValue)
+    }
+
+    private fun parseExpressionTwice(
+        value: String,
+        nameValues: List<NamedValueInfo>,
+        context: ExecutionContext
+    ): String {
+        val onceResult = parseExpression(
+            value = value,
+            blocks = findExpressions(value),
+            context = context,
+            nameValues = nameValues
+        )
+        findExpressions(onceResult).let { blocks ->
+            if (blocks.isEmpty()) {
+                return onceResult
+            } else {
+                return parseExpression(
+                    value = onceResult,
+                    blocks = blocks,
+                    context = context,
+                    nameValues = nameValues
+                )
+            }
+        }
     }
 
     /**
