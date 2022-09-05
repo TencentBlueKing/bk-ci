@@ -111,7 +111,7 @@ class TGitNoteActionGit @Autowired constructor(
         )
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.objectAttributes.projectId.toString(),
-            scmType = ScmType.CODE_TGIT,
+            scmType = ScmType.CODE_GIT,
             branch = defaultBranch,
             commit = EventCommonDataCommit(
                 commitId = latestCommit?.commitId ?: "0",

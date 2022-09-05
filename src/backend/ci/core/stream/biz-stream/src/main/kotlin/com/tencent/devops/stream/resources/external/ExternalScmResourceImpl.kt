@@ -65,7 +65,7 @@ class ExternalScmResourceImpl @Autowired constructor(
             rabbitTemplate = rabbitTemplate,
             event = StreamRequestEvent(
                 eventType = eventType,
-                webHookType = ScmType.CODE_TGIT.name,
+                webHookType = ScmType.CODE_GIT.name,
                 event = body
             )
         )

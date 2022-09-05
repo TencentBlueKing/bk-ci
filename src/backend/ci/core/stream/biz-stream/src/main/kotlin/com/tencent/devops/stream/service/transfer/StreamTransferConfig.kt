@@ -46,7 +46,7 @@ class StreamTransferConfig {
     ) = StreamGithubTransferService(dslContext, client, streamBasicSettingDao)
 
     @Bean
-    @ConditionalOnProperty(prefix = "stream", value = ["scmType"], havingValue = "CODE_TGIT")
+    @ConditionalOnProperty(prefix = "stream", value = ["scmType"], havingValue = "CODE_GIT")
     fun streamTGitTransferService(
         dslContext: DSLContext,
         client: Client,

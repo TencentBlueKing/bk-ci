@@ -85,7 +85,7 @@ class TGitTagPushActionGit(
 
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.project_id.toString(),
-            scmType = ScmType.CODE_TGIT,
+            scmType = ScmType.CODE_GIT,
             branch = event.ref.removePrefix("refs/tags/"),
             commit = EventCommonDataCommit(
                 commitId = event.after,
