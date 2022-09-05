@@ -119,18 +119,18 @@ class QualityControlPointService @Autowired constructor(
         val recordList = controlPointDao.list(dslContext, elements)
         val controlPointList = serviceListFilter(recordList, projectId) ?: return listOf()
         return controlPointList.filter { it.elementType in elements }
-                .map {
-            QualityControlPoint(
-                hashId = HashUtil.encodeLongId(it.id),
-                type = it.elementType,
-                name = it.name,
-                stage = it.stage,
-                availablePos = it.availablePosition.split(",").map { name -> ControlPointPosition(name) },
-                defaultPos = ControlPointPosition(it.defaultPosition),
-                enable = it.enable,
-                atomVersion = it.atomVersion
-            )
-        }
+            .map {
+                QualityControlPoint(
+                    hashId = HashUtil.encodeLongId(it.id),
+                    type = it.elementType,
+                    name = it.name,
+                    stage = it.stage,
+                    availablePos = it.availablePosition.split(",").map { name -> ControlPointPosition(name) },
+                    defaultPos = ControlPointPosition(it.defaultPosition),
+                    enable = it.enable,
+                    atomVersion = it.atomVersion
+                )
+            }
     }
 
     fun listAllControlPoint(): List<TQualityControlPointRecord> {
@@ -217,7 +217,6 @@ class QualityControlPointService @Autowired constructor(
                 qualityRuleBuildHisDao.updateHashId(dslContext, id, hashId)
             }
         }
-
     }
 
     companion object {

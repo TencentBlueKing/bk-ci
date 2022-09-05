@@ -40,7 +40,6 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import org.jooq.impl.DSL
 
-
 @Repository
 @Suppress("ALL")
 class EnvDao {

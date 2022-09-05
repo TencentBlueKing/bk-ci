@@ -242,7 +242,6 @@ class QualityControlPointDao {
         }
     }
 
-
     fun getAllControlPoint(dslContext: DSLContext): Result<Record1<Long>>? {
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             return dslContext.select(ID).from(this).fetch()
