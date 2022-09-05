@@ -488,7 +488,4 @@ interface UserRepositoryResource {
 //            @PathParam("repositoryHashId")
 //            repositoryHashId: String
 //    ): Result<Boolean>
-    @POST
-    @Path("/addhashid")
-    fun addHashId()
 }
