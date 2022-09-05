@@ -29,7 +29,7 @@ BEGIN
                     AND COLUMN_NAME = 'ENV_HASH_ID') THEN
 
         ALTER TABLE `T_ENV`
-            ADD COLUMN `ENV_HASH_ID` varchar(64) DEFAULT NULL COMMENT '环境哈希ID'
+            ADD COLUMN `ENV_HASH_ID` varchar(64) DEFAULT NULL COMMENT '环境哈希ID';
     END IF;
 
     IF NOT EXISTS(SELECT 1
