@@ -27,6 +27,7 @@
 dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-event"))
+    api(project(":core:common:common-expression"))
     api("org.slf4j:slf4j-api")
     api("com.squareup.okhttp3:okhttp")
     api("com.cronutils:cron-utils")

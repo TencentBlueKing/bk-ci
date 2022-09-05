@@ -27,7 +27,9 @@
 
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
@@ -58,7 +60,8 @@ class PipelineSettingDao {
         isTemplate: Boolean = false,
         successNotifyTypes: String = "",
         failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
-        maxPipelineResNum: Int? = PIPELINE_RES_NUM_MIN
+        maxPipelineResNum: Int? = PIPELINE_RES_NUM_MIN,
+        pipelineAsCodeSettings: PipelineAsCodeSettings?
     ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.insertInto(
@@ -79,7 +82,8 @@ class PipelineSettingDao {
                 WAIT_QUEUE_TIME_SECOND,
                 MAX_QUEUE_SIZE,
                 IS_TEMPLATE,
-                MAX_PIPELINE_RES_NUM
+                MAX_PIPELINE_RES_NUM,
+                PIPELINE_AS_CODE_SETTINGS
             )
                 .values(
                     projectId,
@@ -98,7 +102,10 @@ class PipelineSettingDao {
                     DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
                     PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
                     isTemplate,
-                    maxPipelineResNum
+                    maxPipelineResNum,
+                    pipelineAsCodeSettings?.let { self ->
+                        JsonUtil.toJson(self, false)
+                    }
                 )
                 .execute()
         }
@@ -140,7 +147,8 @@ class PipelineSettingDao {
                     BUILD_NUM_RULE,
                     CONCURRENCY_GROUP,
                     CONCURRENCY_CANCEL_IN_PROGRESS,
-                    CLEAN_VARIABLES_WHEN_RETRY
+                    CLEAN_VARIABLES_WHEN_RETRY,
+                    PIPELINE_AS_CODE_SETTINGS
                 ).values(
                     setting.projectId,
                     setting.pipelineName,
@@ -171,7 +179,10 @@ class PipelineSettingDao {
                     setting.buildNumRule,
                     setting.concurrencyGroup,
                     setting.concurrencyCancelInProgress,
-                    setting.cleanVariablesWhenRetry
+                    setting.cleanVariablesWhenRetry,
+                    setting.pipelineAsCodeSettings?.let { self ->
+                        JsonUtil.toJson(self, false)
+                    }
                 ).execute()
             } else {
                 val updateSetMoreStep = dslContext.update(this)
@@ -201,6 +212,10 @@ class PipelineSettingDao {
                     .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
                     .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
                     .set(CLEAN_VARIABLES_WHEN_RETRY, setting.cleanVariablesWhenRetry)
+                // pipelineAsCodeSettings 默认传空不更新
+                setting.pipelineAsCodeSettings?.let { self ->
+                    updateSetMoreStep.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
+                }
                 // maxConRunningQueueSize 默认传空不更新
                 if (setting.maxConRunningQueueSize != null) {
                     updateSetMoreStep.set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
@@ -341,6 +356,23 @@ class PipelineSettingDao {
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, maxConRunningQueueSize)
                 .where(PIPELINE_ID.`in`(pipelineIdList))
                 .execute()
+        }
+    }
+
+    fun updatePipelineAsCodeSettings(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        pipelineAsCodeSettings: PipelineAsCodeSettings
+    ): Int {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val update = dslContext.update(this)
+                .set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(pipelineAsCodeSettings, false))
+                .where(PROJECT_ID.eq(projectId))
+            pipelineId?.let { self ->
+                update.and(PIPELINE_ID.eq(self))
+            }
+            return update.execute()
         }
     }
 }

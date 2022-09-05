@@ -63,3 +63,5 @@ class ExpressionParseException(
 }
 
 class InvalidOperationException(override val message: String) : ExpressionException()
+
+class ContextDataRuntimeException(override val message: String) : ExpressionException()

@@ -153,4 +153,14 @@ class ProjectPipelineCallbackDao {
             dslContext.deleteFrom(this).where(PROJECT_ID.eq(projectId)).execute()
         }
     }
+
+    fun disable(
+        dslContext: DSLContext,
+        projectId: String,
+        id: Long
+    ) {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            dslContext.update(this).set(ENABLE, false).where(ID.eq(id).and(PROJECT_ID.eq(projectId))).execute()
+        }
+    }
 }
