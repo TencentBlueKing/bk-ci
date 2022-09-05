@@ -134,7 +134,8 @@ class StreamYamlTrigger @Autowired constructor(
                     "Matcher is false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
                     "eventId: ${action.data.context.requestEventId}"
             )
-            throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH)
+            throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH,
+                reasonParams = listOf(triggerEvent.second.trigger.notTriggerReason ?: ""))
         }
 
         val yamlContent = action.getYamlContent(filePath)
