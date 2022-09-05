@@ -67,21 +67,12 @@ object EnvReplacementParser {
     ): String {
         if (obj.isNullOrBlank()) return ""
         return if (onlyExpression == true) {
-            try {
-                val (context, nameValues) = contextPair ?: getCustomExecutionContextByMap(contextMap)
-                parseExpressionTwice(
-                    value = obj,
-                    context = context,
-                    nameValues = nameValues
-                )
-            } catch (ignore: ExpressionParseException) {
-                logger.warn(
-                    "[$onlyExpression]|expression or named values invalid.|" +
-                        "expression=$obj|contextMap=$contextMap",
-                    ignore
-                )
-                obj
-            }
+            val (context, nameValues) = contextPair ?: getCustomExecutionContextByMap(contextMap)
+            parseExpressionTwice(
+                value = obj,
+                context = context,
+                nameValues = nameValues
+            )
         } else {
             ObjectReplaceEnvVarUtil.replaceEnvVar(
                 obj, contextMap,
@@ -146,17 +137,25 @@ object EnvReplacementParser {
         context: ExecutionContext
     ): String {
         var chars = value.toList()
-        blocks.forEachIndexed { blockLevel, blocksInLevel ->
-            blocksInLevel.forEachIndexed { blockI, block ->
+        blocks.forEachIndexed nextBlockLevel@{ blockLevel, blocksInLevel ->
+            blocksInLevel.forEachIndexed nextBlock@{ blockI, block ->
                 // 表达式因为含有 ${{ }} 所以起始向后推3位，末尾往前推两位
                 val expression = chars.joinToString("").substring(block.startIndex + 3, block.endIndex - 1)
 
-                var result = ExpressionParser.createTree(expression, null, nameValues, null)!!
-                    .evaluate(null, context, null).value.let {
-                        if (it is PipelineContextData) it.fetchValue() else it
-                    }?.let {
-                        JsonUtil.toJson(it, false)
-                    } ?: return value
+                var result = try {
+                    ExpressionParser.createTree(expression, null, nameValues, null)!!
+                        .evaluate(null, context, null).value.let {
+                            if (it is PipelineContextData) it.fetchValue() else it
+                        }?.let {
+                            JsonUtil.toJson(it, false)
+                        } ?: return@nextBlock
+                } catch (ignore: ExpressionParseException) {
+                    logger.warn(
+                        "Expression or named values invalid: $expression",
+                        ignore
+                    )
+                    return@nextBlock
+                }
 
                 if ((blockLevel + 1 < blocks.size) &&
                     !(
