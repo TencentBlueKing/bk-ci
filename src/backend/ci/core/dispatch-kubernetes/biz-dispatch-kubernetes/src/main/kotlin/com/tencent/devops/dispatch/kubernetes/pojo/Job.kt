@@ -66,8 +66,6 @@ data class PodNameSelector(
  */
 data class BuildAndPushImage(
     val name: String,
-    val image: String,
-    val registry: KubernetesDockerRegistry?,
     val resource: KubernetesResource,
     val podNameSelector: PodNameSelector,
     val activeDeadlineSeconds: Int? = 4800,

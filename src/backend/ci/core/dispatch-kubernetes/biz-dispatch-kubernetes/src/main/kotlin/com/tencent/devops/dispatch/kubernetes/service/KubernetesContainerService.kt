@@ -33,6 +33,7 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
+import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
 import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
 import com.tencent.devops.dispatch.kubernetes.common.ENV_JOB_BUILD_TYPE
@@ -44,12 +45,15 @@ import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
+import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
+import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImageInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
+import com.tencent.devops.dispatch.kubernetes.pojo.PodNameSelector
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.StartBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
@@ -83,7 +87,8 @@ import org.springframework.stereotype.Service
 class KubernetesContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
     private val kubernetesTaskClient: KubernetesTaskClient,
-    private val kubernetesBuilderClient: KubernetesBuilderClient
+    private val kubernetesBuilderClient: KubernetesBuilderClient,
+    private val kubernetesJobClient: KubernetesJobClient
 ) : ContainerService {
 
     companion object {
@@ -190,7 +195,7 @@ class KubernetesContainerService @Autowired constructor(
                 userId = userId,
                 builder = Builder(
                     name = builderName,
-                    image = "$name:$tag",
+                    image = "$host/$name:$tag",
                     registry = registry,
                     resource = KubernetesResource(
                         requestCPU = cpu.toString(),
@@ -372,11 +377,38 @@ class KubernetesContainerService @Autowired constructor(
                 JsonUtil.toJson(dispatchBuildImageReq)
         )
 
-        return DispatchTaskResp(
-            kubernetesBuilderClient.buildAndPushImage(
-                userId, dispatchBuildImageReq
+        val info = with(dispatchBuildImageReq) {
+            BuildAndPushImage(
+                name = getOnlyName(userId),
+                resource = KubernetesResource(
+                    requestCPU = cpu.toString(),
+                    requestDisk = "${disk}G",
+                    requestDiskIO = "1",
+                    requestMem = "${memory}Mi",
+                    limitCpu = cpu.toString(),
+                    limitDisk = "${disk}G",
+                    limitDiskIO = "1",
+                    limitMem = "${memory}Mi"
+                ),
+                podNameSelector = PodNameSelector(podName, true),
+                activeDeadlineSeconds = null,
+                info = BuildAndPushImageInfo(
+                    dockerFilePath = dockerFile,
+                    contextPath = workPath,
+                    destinations = imageName,
+                    buildArgs = buildArgs.map { it.key to it.value.toString() }.toMap(),
+                    registries = registry.map {
+                        KubernetesDockerRegistry(
+                            server = it.host,
+                            username = it.username,
+                            password = it.password
+                        )
+                    }
+                )
             )
-        )
+        }
+
+        return DispatchTaskResp(kubernetesJobClient.buildAndPushImage(userId, info))
     }
 
     private fun getOnlyName(userId: String): String {
@@ -386,6 +418,6 @@ class KubernetesContainerService @Autowired constructor(
             userId
         }
         return "${subUserId}${System.currentTimeMillis()}-" +
-                RandomStringUtils.randomAlphabetic(8).toLowerCase()
+            RandomStringUtils.randomAlphabetic(8).toLowerCase()
     }
 }

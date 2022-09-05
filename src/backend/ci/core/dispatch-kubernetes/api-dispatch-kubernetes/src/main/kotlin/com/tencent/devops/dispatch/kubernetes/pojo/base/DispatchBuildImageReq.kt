@@ -27,8 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo.base
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 data class DispatchBuildImageReq(
     val imageName: List<String>,
     val registry: List<Registry>,

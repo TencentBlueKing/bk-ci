@@ -43,7 +43,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.OperateBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StartBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskResp
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
 import okhttp3.MediaType
@@ -324,12 +323,5 @@ class KubernetesBuilderClient @Autowired constructor(
                 errorMessage = "获取登录调试链接接口超时, url: $url, ${e.message}"
             )
         }
-    }
-
-    fun buildAndPushImage(
-        userId: String,
-        buildImageReq: DispatchBuildImageReq
-    ): String {
-        return ""
     }
 }
