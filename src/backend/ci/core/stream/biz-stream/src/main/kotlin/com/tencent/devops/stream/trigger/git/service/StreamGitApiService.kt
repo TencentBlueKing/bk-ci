@@ -40,7 +40,6 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
 
 /**
  * Stream 需要用到的各平台的标准接口
