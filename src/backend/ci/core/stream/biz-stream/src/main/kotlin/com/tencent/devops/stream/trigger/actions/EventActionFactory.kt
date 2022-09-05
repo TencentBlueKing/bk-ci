@@ -177,6 +177,7 @@ class EventActionFactory @Autowired constructor(
         else -> TODO("对接其他Git平台时需要补充")
     }
 
+    @Suppress("ComplexMethod")
     private fun loadEvent(event: CodeWebhookEvent): BaseAction? {
         // 先根据git事件分为得到初始化的git action
         val gitAction = when (event) {

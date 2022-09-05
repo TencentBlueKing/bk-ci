@@ -175,6 +175,7 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
         return startParams
     }
 
+    @Suppress("ComplexMethod")
     private fun pullRequestStartParam(event: GithubPullRequestEvent, startParams: MutableMap<String, Any>) {
         with(event) {
             startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = pullRequest.base.repo.cloneUrl
