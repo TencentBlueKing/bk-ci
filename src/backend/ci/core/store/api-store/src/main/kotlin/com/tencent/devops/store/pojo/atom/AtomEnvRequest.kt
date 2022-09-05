@@ -59,5 +59,7 @@ data class AtomEnvRequest(
     @ApiModelProperty("插件运行时版本", required = false)
     val runtimeVersion: String? = null,
     @ApiModelProperty("是否为默认环境信息", required = false)
-    val defaultFlag: Boolean? = null
+    val defaultFlag: Boolean? = null,
+    @ApiModelProperty("插件运行结束后是否立即杀掉其进程", required = false)
+    val finishKillFlag: Boolean? = null
 )

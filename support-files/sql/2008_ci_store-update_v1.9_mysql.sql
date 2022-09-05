@@ -40,6 +40,14 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_ATOM_ENV_INFO'
+                    AND COLUMN_NAME = 'FINISH_KILL_FLAG') THEN
+        ALTER TABLE T_ATOM_ENV_INFO ADD `FINISH_KILL_FLAG` bit(1) COMMENT '插件运行结束后是否立即杀掉其进程';
+    END IF;
+
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_ENV_INFO'
                     AND COLUMN_NAME = 'OS_NAME') THEN
         ALTER TABLE T_ATOM_ENV_INFO ADD `OS_NAME` varchar(128) DEFAULT NULL COMMENT '支持的操作系统名称';
     END IF;
