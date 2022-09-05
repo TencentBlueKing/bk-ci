@@ -31,7 +31,6 @@ import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty

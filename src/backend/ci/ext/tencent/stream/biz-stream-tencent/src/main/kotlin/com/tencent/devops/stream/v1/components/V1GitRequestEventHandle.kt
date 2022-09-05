@@ -28,9 +28,9 @@
 package com.tencent.devops.stream.v1.components
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitIssueAction
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
-import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitReviewEventKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
