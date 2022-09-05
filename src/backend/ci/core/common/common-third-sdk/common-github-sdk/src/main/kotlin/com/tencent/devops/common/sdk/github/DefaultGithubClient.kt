@@ -31,9 +31,9 @@ import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.util.GithubJwtUtil
 import com.tencent.devops.common.sdk.util.SdkHttpUtil
 import com.tencent.devops.common.sdk.util.SdkRetryHelper
-import java.lang.IllegalArgumentException
 import okhttp3.Credentials
 import org.slf4j.LoggerFactory
+import java.lang.IllegalArgumentException
 
 class DefaultGithubClient(
     // github服务域名

@@ -95,7 +95,7 @@ class StreamGithubTransferService @Autowired constructor(
             request = GetRepositoryRequest(
                 repoName = gitProjectId
             ),
-            token = accessToken ?: getAndCheckOauthToken(userId!!).accessToken,
+            token = accessToken ?: getAndCheckOauthToken(userId!!).accessToken
         ).data?.let {
             StreamGitProjectBaseInfoCache(
                 gitProjectId = it.id.toString(),

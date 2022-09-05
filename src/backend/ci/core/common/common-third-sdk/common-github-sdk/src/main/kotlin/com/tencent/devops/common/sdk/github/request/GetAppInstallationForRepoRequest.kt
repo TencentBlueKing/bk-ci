@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils
 data class GetAppInstallationForRepoRequest(
     // id或owner/repo
     @JsonIgnorePath
-    val repoName: String,
+    val repoName: String
 ) : GithubRequest<GetAppInstallationResponse>() {
     override fun getHttpMethod() = HttpMethod.GET
 

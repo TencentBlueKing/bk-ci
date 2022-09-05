@@ -8,5 +8,5 @@ data class AppInstallationResult(
     @ApiModelProperty("状态")
     val status: Boolean,
     @ApiModelProperty("url地址")
-    val url: String = "",
+    val url: String = ""
 )
