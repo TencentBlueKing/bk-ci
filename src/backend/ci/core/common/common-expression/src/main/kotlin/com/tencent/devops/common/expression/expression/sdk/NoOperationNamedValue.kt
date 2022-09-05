@@ -36,7 +36,5 @@ class NoOperationNamedValue : NamedValue() {
         return NoOperationNamedValue()
     }
 
-    override fun subNameValueEvaluateCore(context: EvaluationContext): String {
-        return "''"
-    }
+    override fun subNameValueEvaluateCore(context: EvaluationContext) = Pair("''", true)
 }

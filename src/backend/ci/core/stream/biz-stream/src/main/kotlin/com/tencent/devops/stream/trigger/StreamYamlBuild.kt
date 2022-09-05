@@ -174,6 +174,7 @@ class StreamYamlBuild @Autowired constructor(
                 // 优先创建流水线为了绑定红线
                 if (realPipeline.pipelineId.isBlank()) {
                     streamYamlBaseBuild.savePipeline(
+                        action = action,
                         pipeline = realPipeline,
                         userId = action.data.getUserId(),
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
@@ -396,6 +397,7 @@ class StreamYamlBuild @Autowired constructor(
         ).use {
             it.lock()
             streamYamlBaseBuild.savePipeline(
+                action = action,
                 pipeline = pipeline,
                 userId = action.data.getUserId(),
                 gitProjectId = action.data.getGitProjectId().toLong(),

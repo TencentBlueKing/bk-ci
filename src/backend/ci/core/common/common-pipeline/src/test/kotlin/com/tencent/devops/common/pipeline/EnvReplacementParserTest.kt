@@ -94,7 +94,7 @@ internal class EnvReplacementParserTest {
         // 与EnvUtils的差异点：不支持传可空对象
 //        Assertions.assertEquals("", EnvReplacementParser.parse(null, data))
         Assertions.assertEquals("", EnvReplacementParser.parse("", data))
-        Assertions.assertNull(EnvReplacementParser.parse(null, data))
+        Assertions.assertEquals("", EnvReplacementParser.parse(null, data))
 
         Assertions.assertEquals(
             "hello variables.value world",
@@ -188,7 +188,7 @@ internal class EnvReplacementParserTest {
         val map = mutableMapOf<String, String>()
         map["age"] = ""
         map["name"] = "jacky"
-        val command = "{\"age\": \${age} , \"sex\": \"boy\", \"name\": \${name}}"
+        val command = "{\"age\": \${{age}} , \"sex\": \"boy\", \"name\": \${{name}}}"
         println("parseEnvTestData $command")
         Assertions.assertEquals(
             "{\"age\": ${map["age"]} , \"sex\": \"boy\", \"name\": ${map["name"]}}",
@@ -218,8 +218,8 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals("variables.valueworld", EnvReplacementParser.parse(command2, data, true))
         Assertions.assertEquals("hellovariables.value", EnvReplacementParser.parse(command3, data, true))
         Assertions.assertEquals("hello\${{variables.abc", EnvReplacementParser.parse(command4, data, true))
-        Assertions.assertEquals("hellojacky", EnvReplacementParser.parse(command5, data, true))
-        Assertions.assertEquals("hellovariables.value}", EnvReplacementParser.parse(command6, data, true))
+        Assertions.assertEquals("hello\${{variables.abc}", EnvReplacementParser.parse(command5, data, true))
+        Assertions.assertEquals("hello\${variables.abc}}", EnvReplacementParser.parse(command6, data, true))
         Assertions.assertEquals("hello\$variables.abc}}", EnvReplacementParser.parse(command7, data, true))
         Assertions.assertEquals("echo hahahahaha", EnvReplacementParser.parse(command8, data, true))
         Assertions.assertEquals(
