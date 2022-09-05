@@ -269,6 +269,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             defaultProjectId = projectCode,
             createExtInfo = projectCreateExtInfo
         )
+
         return getByEnglishName(projectCode)
     }
 
