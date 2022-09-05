@@ -64,6 +64,7 @@ import com.tencent.devops.store.pojo.common.KEY_DEFAULT
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_DEMANDS
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
+import com.tencent.devops.store.pojo.common.KEY_FINISH_KILL_FLAG
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_MINIMUM_VERSION
@@ -384,6 +385,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         }
         val atomEnvRequests = mutableListOf<AtomEnvRequest>()
         val osList = executionInfoMap[KEY_OS] as? List<Map<String, Any>>
+        val finishKillFlag = executionInfoMap[KEY_FINISH_KILL_FLAG] as? Boolean
         if (null != osList) {
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
@@ -426,7 +428,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     osName = osName,
                     osArch = osArch,
                     runtimeVersion = executionInfoMap[KEY_RUNTIME_VERSION] as? String,
-                    defaultFlag = defaultFlag
+                    defaultFlag = defaultFlag,
+                    finishKillFlag = finishKillFlag
                 )
                 atomEnvRequests.add(atomEnvRequest)
             }
@@ -460,7 +463,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 preCmd = JsonUtil.toJson(executionInfoMap[KEY_DEMANDS] ?: ""),
                 atomPostInfo = atomPostInfo,
                 runtimeVersion = executionInfoMap[KEY_RUNTIME_VERSION] as? String,
-                defaultFlag = true
+                defaultFlag = true,
+                finishKillFlag = finishKillFlag
             )
             atomEnvRequests.add(atomEnvRequest)
         }
