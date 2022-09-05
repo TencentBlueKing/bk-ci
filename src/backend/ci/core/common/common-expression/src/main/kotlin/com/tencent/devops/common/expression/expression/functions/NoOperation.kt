@@ -38,5 +38,5 @@ class NoOperation : Function() {
         return Pair(null, null)
     }
 
-    override fun subNameValueEvaluateCore(context: EvaluationContext) = "''"
+    override fun subNameValueEvaluateCore(context: EvaluationContext) = Pair("''", true)
 }

@@ -386,7 +386,7 @@ open class MarketAtomTask : ITask() {
         val atomParams = mutableMapOf<String, String>()
         try {
             if (asCodeEnabled) {
-                val customReplacement = EnvReplacementParser.getCustomReplacementByMap(
+                val customReplacement = EnvReplacementParser.getCustomExecutionContextByMap(
                     variables = variables,
                     extendNamedValueMap = listOf(
                         CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossInfo?.targetProjectId)
@@ -397,7 +397,7 @@ open class MarketAtomTask : ITask() {
                     atomParams[name] = EnvReplacementParser.parse(
                         obj = JsonUtil.toJson(value),
                         contextMap = variables,
-                        replacement = customReplacement
+                        contextPair = customReplacement
                     )
                 }
             } else {
