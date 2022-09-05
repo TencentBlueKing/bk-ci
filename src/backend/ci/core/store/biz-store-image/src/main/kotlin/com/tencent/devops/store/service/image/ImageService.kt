@@ -175,9 +175,6 @@ abstract class ImageService @Autowired constructor() {
     @Autowired
     lateinit var client: Client
 
-    @Value("\${store.baseImageDocsLink}")
-    private lateinit var baseImageDocsLink: String
-
     private val logger = LoggerFactory.getLogger(ImageService::class.java)
 
     fun getImageVersionListByCode(
@@ -446,7 +443,7 @@ abstract class ImageService @Autowired constructor() {
                     flag = it.flag,
                     publicFlag = it.publicFlag,
                     buildLessRunFlag = false,
-                    docsLink = baseImageDocsLink + it.code,
+                    docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, it.code),
                     modifier = it.modifier,
                     updateTime = DateTimeUtil.formatDate(Date(it.updateTime)),
                     recommendFlag = it.recommendFlag
@@ -911,7 +908,7 @@ abstract class ImageService @Autowired constructor() {
             logoUrl = imageRecord.logoUrl ?: "",
             icon = icon ?: "",
             summary = imageRecord.summary ?: "",
-            docsLink = baseImageDocsLink + imageCode,
+            docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, imageCode),
             projectCode = projectCode ?: "",
             score = storeStatistic.score ?: 0.0,
             downloads = storeStatistic.downloads,

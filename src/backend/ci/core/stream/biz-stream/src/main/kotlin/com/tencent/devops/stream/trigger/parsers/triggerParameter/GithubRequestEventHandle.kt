@@ -29,17 +29,9 @@ package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.common.webhook.enums.code.github.GithubPrEventAction
 import com.tencent.devops.common.webhook.enums.code.github.GithubPushOperationKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
-import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
-import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
-import com.tencent.devops.common.webhook.pojo.code.github.GithubCommit
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import org.joda.time.DateTime
 import java.text.SimpleDateFormat
@@ -139,7 +131,6 @@ object GithubRequestEventHandle {
         )
     }
 
-
     private fun getCommitTimeStamp(commitTimeStamp: String?): String {
         return if (commitTimeStamp.isNullOrBlank()) {
             val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -151,5 +142,3 @@ object GithubRequestEventHandle {
         }
     }
 }
-
-

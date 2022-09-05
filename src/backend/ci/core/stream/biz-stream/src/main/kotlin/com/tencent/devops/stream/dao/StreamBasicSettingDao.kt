@@ -302,7 +302,8 @@ class StreamBasicSettingDao {
                     enableMrComment = conf.enableMrComment,
                     triggerReviewSetting = JsonUtil.toOrNull(
                         conf.triggerReviewSetting,
-                        object : TypeReference<TriggerReviewSetting>() {}) ?: TriggerReviewSetting()
+                        object : TypeReference<TriggerReviewSetting>() {}
+                    ) ?: TriggerReviewSetting()
                 )
             }
         }
@@ -349,7 +350,8 @@ class StreamBasicSettingDao {
                     pathWithNamespace = conf.pathWithNameSpace,
                     triggerReviewSetting = JsonUtil.toOrNull(
                         conf.triggerReviewSetting,
-                        object : TypeReference<TriggerReviewSetting>() {}) ?: TriggerReviewSetting()
+                        object : TypeReference<TriggerReviewSetting>() {}
+                    ) ?: TriggerReviewSetting()
                 )
             }
         }

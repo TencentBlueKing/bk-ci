@@ -260,17 +260,22 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
      * 获取store组件详情页地址
      */
     override fun getStoreDetailUrl(storeType: StoreTypeEnum, storeCode: String): String {
-        logger.info("getStoreDetailUrl storeType is :$storeType, storeCode is :$storeCode")
-        val url = when (storeType) {
-            StoreTypeEnum.ATOM -> "${storeDetailUrlConfig.atomDetailBaseUrl}$storeCode"
-            StoreTypeEnum.TEMPLATE -> "${storeDetailUrlConfig.templateDetailBaseUrl}$storeCode"
-            StoreTypeEnum.IMAGE -> "${storeDetailUrlConfig.imageDetailBaseUrl}$storeCode"
-            StoreTypeEnum.IDE_ATOM -> "${storeDetailUrlConfig.ideAtomDetailBaseUrl}$storeCode"
-            StoreTypeEnum.SERVICE -> "${storeDetailUrlConfig.serviceDetailBaseUrl}$storeCode"
+        return when (storeType) {
+            StoreTypeEnum.ATOM -> getStoreDetailUrl(storeDetailUrlConfig.atomDetailBaseUrl, storeCode)
+            StoreTypeEnum.TEMPLATE -> getStoreDetailUrl(storeDetailUrlConfig.templateDetailBaseUrl, storeCode)
+            StoreTypeEnum.IMAGE -> getStoreDetailUrl(storeDetailUrlConfig.imageDetailBaseUrl, storeCode)
+            StoreTypeEnum.IDE_ATOM -> getStoreDetailUrl(storeDetailUrlConfig.ideAtomDetailBaseUrl, storeCode)
+            StoreTypeEnum.SERVICE -> getStoreDetailUrl(storeDetailUrlConfig.serviceDetailBaseUrl, storeCode)
             else -> ""
         }
-        logger.info("getStoreDetailUrl url is :$url")
-        return url
+    }
+
+    private fun getStoreDetailUrl(storeDetailUrlPrefix: String?, storeCode: String): String {
+        return if (!storeDetailUrlPrefix.isNullOrBlank()) {
+            "$storeDetailUrlPrefix$storeCode"
+        } else {
+            ""
+        }
     }
 
     override fun deleteStoreInfo(context: DSLContext, storeCode: String, storeType: Byte): Boolean {
