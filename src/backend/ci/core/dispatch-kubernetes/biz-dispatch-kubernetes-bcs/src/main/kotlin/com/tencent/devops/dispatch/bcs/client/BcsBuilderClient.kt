@@ -327,7 +327,7 @@ class BcsBuilderClient @Autowired constructor(
         userId: String,
         buildImageReq: DispatchBuildImageReq
     ): String {
-        val builderName = buildImageReq.builderName
+        val builderName = "" // TODO
         val url = "/api/v1/devops/builder/$builderName/images"
         logger.info("Build and push image, request url: $url, staffName: $userId")
 
