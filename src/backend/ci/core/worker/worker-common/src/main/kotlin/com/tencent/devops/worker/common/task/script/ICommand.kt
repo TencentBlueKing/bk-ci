@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.api.util.KeyReplacement
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
@@ -70,36 +71,34 @@ interface ICommand {
         val acrossTargetProjectId by lazy {
             TemplateAcrossInfoUtil.getAcrossInfo(variables, taskId)?.targetProjectId
         }
+        val contextMap = variables.plus(
+            mapOf(
+                WORKSPACE_CONTEXT to dir.absolutePath,
+                CI_TOKEN_CONTEXT to (variables[CI_TOKEN_CONTEXT] ?: ""),
+                JOB_OS_CONTEXT to AgentEnv.getOS().name
+            )
+        )
         return if (asCodeEnabled == true) {
             EnvReplacementParser.parse(
                 obj = command,
-                contextMap = variables,
-                replacement = EnvReplacementParser.getCustomReplacementByMap(
-                    variables = variables,
+                contextMap = contextMap,
+                contextPair = EnvReplacementParser.getCustomExecutionContextByMap(
+                    variables = contextMap,
                     extendNamedValueMap = listOf(
                         CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId)
                     )
                 )
             )
         } else {
-            // 逻辑与原来ReplacementUtils相同
-            EnvReplacementParser.parse(
-                obj = command,
-                contextMap = variables.plus(
-                    mapOf(
-                        WORKSPACE_CONTEXT to dir.absolutePath,
-                        CI_TOKEN_CONTEXT to (variables[CI_TOKEN_CONTEXT] ?: ""),
-                        JOB_OS_CONTEXT to AgentEnv.getOS().name
-                    )
-                ),
-                onlyExpression = false,
-                replacement = object : KeyReplacement {
+            ReplacementUtils.replace(
+                command,
+                object : KeyReplacement {
                     override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? =
-                        variables[key] ?: try {
+                        contextMap[key] ?: try {
                             CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
                         } catch (ignore: Exception) {
                             CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
-                        }
+                        } ?: if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
                 }
             )
         }

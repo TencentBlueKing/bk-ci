@@ -28,11 +28,11 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.expression.EvalExpress
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.expression.EvaluationResult
 import com.tencent.devops.common.expression.expression.ParseExceptionKind
-import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -107,7 +107,7 @@ object ControlUtils {
             message.append("[自定义变量全部满足时不运行](Don‘t run it when all the custom variables are matched) \n")
             for (names in additionalOptions!!.customVariables!!) {
                 val key = names.key
-                val value = EnvReplacementParser.parse(names.value, variables)
+                val value = EnvUtils.parseEnv(names.value, variables)
                 val existValue = variables[key]
                 if (value != existValue) {
                     message.append("key=$key, expect=$existValue, actual=$value, (expect != actual)=true, skip=false")
@@ -125,7 +125,7 @@ object ControlUtils {
             message.append("[自定义变量全部满足时运行](Run it when all the custom variables are matched) \n")
             for (names in additionalOptions!!.customVariables!!) {
                 val key = names.key
-                val value = EnvReplacementParser.parse(names.value, variables)
+                val value = EnvUtils.parseEnv(names.value, variables)
                 val existValue = variables[key]
                 if (value != existValue) {
                     message.append("key=$key, expect=$existValue, actual=$value, (expect != actual)=true, skip=true")
@@ -271,7 +271,7 @@ object ControlUtils {
             val key = names.key
             val value = names.value
             val existValue = variables[key]
-            val env = EnvReplacementParser.parse(value, variables)
+            val env = EnvUtils.parseEnv(value, variables)
             if (env != existValue) {
                 skip = !skip // 不满足则取反
                 logger.info("[$buildId]|JOB_CONDITION|$skip|$runCondition|key=$key|actual=$existValue|expect=$value")

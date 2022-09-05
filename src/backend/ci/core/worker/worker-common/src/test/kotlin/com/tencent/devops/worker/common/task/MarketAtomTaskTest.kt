@@ -2,9 +2,7 @@ package com.tencent.devops.worker.common.task
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.expression.ExecutionContext
-import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
@@ -57,24 +55,11 @@ internal class MarketAtomTaskTest {
         val context = ExecutionContext(DictionaryContextData())
         val nameValue = mutableListOf<NamedValueInfo>()
         ExpressionParser.fillContextByMap(variables, context, nameValue)
-        val replacement = object : KeyReplacement {
-            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                return try {
-                    ExpressionParser.evaluateByContext(key, context, nameValue, true)?.let {
-                        JsonUtil.toJson(it, false)
-                    }
-                } catch (ignore: ExpressionParseException) {
-                    println("Expression evaluation failed: ")
-                    ignore.printStackTrace()
-                    null
-                } ?: if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
-            }
-        }
         inputMap.forEach { (name, value) ->
             atomParams[name] = EnvReplacementParser.parse(
                 obj = JsonUtil.toJson(value),
                 contextMap = variables,
-                replacement = replacement
+                contextPair = Pair(context, nameValue)
             )
         }
         return atomParams

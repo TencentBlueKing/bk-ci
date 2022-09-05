@@ -46,6 +46,8 @@ class FromJson : Function() {
         return Pair(null, token.toPipelineContextData())
     }
 
-    override fun subNameValueEvaluateCore(context: EvaluationContext) =
-        "$name(${parameters[0].subNameValueEvaluate(context)})"
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
+        val left = parameters[0].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+        return Pair("$name($left)", false)
+    }
 }

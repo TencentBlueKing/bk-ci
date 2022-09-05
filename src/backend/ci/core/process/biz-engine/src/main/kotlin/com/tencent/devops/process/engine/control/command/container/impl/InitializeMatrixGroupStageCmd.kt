@@ -212,7 +212,7 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                matrixConfig = matrixOption.convertMatrixConfig(variables, asCodeEnabled)
                 contextCaseList = matrixConfig.getAllCombinations()
 
                 if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
@@ -223,8 +223,8 @@ class InitializeMatrixGroupStageCmd(
                 }
 
                 contextCaseList.forEach { contextCase ->
-                    val replacement = if (asCodeEnabled) {
-                        EnvReplacementParser.getCustomReplacementByMap(variables)
+                    val contextPair = if (asCodeEnabled) {
+                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
                     } else null
                     // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                     val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
@@ -246,9 +246,9 @@ class InitializeMatrixGroupStageCmd(
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
                             mutexGroupName = EnvReplacementParser.parse(
-                                self.mutexGroupName, allContext, asCodeEnabled, replacement
+                                self.mutexGroupName, allContext, asCodeEnabled, contextPair
                             ),
-                            linkTip = EnvReplacementParser.parse(self.linkTip, allContext, asCodeEnabled, replacement)
+                            linkTip = EnvReplacementParser.parse(self.linkTip, allContext, asCodeEnabled, contextPair)
                         )
                     }
                     val newSeq = context.containerSeq++
@@ -260,7 +260,7 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.elements, context.executeCount, postParentIdMap
                     )
                     val newContainer = VMBuildContainer(
-                        name = EnvReplacementParser.parse(modelContainer.name, allContext, asCodeEnabled, replacement),
+                        name = EnvReplacementParser.parse(modelContainer.name, allContext, asCodeEnabled, contextPair),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),
@@ -281,13 +281,13 @@ class InitializeMatrixGroupStageCmd(
                         dispatchType = customDispatchType ?: modelContainer.dispatchType,
                         buildEnv = customBuildEnv ?: modelContainer.buildEnv,
                         thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
-                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, replacement)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
                         },
                         thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId?.let { self ->
-                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, replacement)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
                         },
                         thirdPartyWorkspace = modelContainer.thirdPartyWorkspace?.let { self ->
-                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, replacement)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
                         }
                     )
 
@@ -328,7 +328,7 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                matrixConfig = matrixOption.convertMatrixConfig(variables, asCodeEnabled)
                 contextCaseList = matrixConfig.getAllCombinations()
 
                 contextCaseList.forEach { contextCase ->
@@ -343,7 +343,7 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.elements, context.executeCount, postParentIdMap
                     )
                     val replacement = if (asCodeEnabled) {
-                        EnvReplacementParser.getCustomReplacementByMap(variables)
+                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
                     } else null
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
@@ -351,7 +351,7 @@ class InitializeMatrixGroupStageCmd(
                                 obj = self.mutexGroupName,
                                 contextMap = contextCase,
                                 onlyExpression = asCodeEnabled,
-                                replacement = replacement
+                                contextPair = replacement
                             ),
                             linkTip = EnvReplacementParser.parse(self.linkTip, contextCase, asCodeEnabled, replacement)
                         )
