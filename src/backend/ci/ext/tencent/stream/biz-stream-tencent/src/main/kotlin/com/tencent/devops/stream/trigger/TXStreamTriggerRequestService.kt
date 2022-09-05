@@ -107,6 +107,6 @@ class TXStreamTriggerRequestService @Autowired constructor(
             txPreTrigger.enableAtomCi(eventObject)
         }
 
-        return start(eventObject, event, ScmType.CODE_TGIT)
+        return start(eventObject, event, ScmType.CODE_GIT)
     }
 }
