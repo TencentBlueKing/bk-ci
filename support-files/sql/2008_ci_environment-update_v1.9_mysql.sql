@@ -39,7 +39,7 @@ BEGIN
                     AND COLUMN_NAME = 'NODE_HASH_ID') THEN
 
         ALTER TABLE `T_NODE`
-            ADD COLUMN `NODE_HASH_ID` varchar(64) DEFAULT NULL COMMENT '节点哈希ID'
+            ADD COLUMN `NODE_HASH_ID` varchar(64) DEFAULT NULL COMMENT '节点哈希ID';
     END IF;
 
     COMMIT;
