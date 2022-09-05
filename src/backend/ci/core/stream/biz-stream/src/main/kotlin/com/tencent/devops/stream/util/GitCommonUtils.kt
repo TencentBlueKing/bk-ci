@@ -167,7 +167,7 @@ object GitCommonUtils {
 
     // 获取蓝盾项目名称
     fun getCiProjectId(gitProjectId: Any?, scmType: ScmType) = when (scmType) {
-        ScmType.CODE_TGIT -> "${tGitProjectPrefix}$gitProjectId"
+        ScmType.CODE_GIT -> "${tGitProjectPrefix}$gitProjectId"
         ScmType.GITHUB -> "${githubProjectPrefix}$gitProjectId"
         else -> throw IllegalArgumentException("Unknown scm type($scmType)")
     }

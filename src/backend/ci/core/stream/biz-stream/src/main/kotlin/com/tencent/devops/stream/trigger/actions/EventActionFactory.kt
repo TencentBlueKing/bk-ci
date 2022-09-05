@@ -163,7 +163,7 @@ class EventActionFactory @Autowired constructor(
     }
 
     fun loadEvent(event: String, scmType: ScmType, objectKind: String): CodeWebhookEvent = when (scmType) {
-        ScmType.CODE_TGIT -> {
+        ScmType.CODE_GIT -> {
             objectMapper.readValue<GitEvent>(event)
         }
         ScmType.GITHUB -> {

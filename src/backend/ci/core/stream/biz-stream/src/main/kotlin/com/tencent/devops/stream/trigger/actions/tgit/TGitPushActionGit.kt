@@ -113,7 +113,7 @@ class TGitPushActionGit(
         val lastCommit = getLatestCommit(event)
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.project_id.toString(),
-            scmType = ScmType.CODE_TGIT,
+            scmType = ScmType.CODE_GIT,
             branch = event.ref.removePrefix("refs/heads/"),
             commit = EventCommonDataCommit(
                 commitId = event.after,
