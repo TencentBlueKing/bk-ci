@@ -106,7 +106,6 @@ object EnvReplacementParser {
             logger.warn("EnvReplacementParser context invalid: $variables", ignore)
             return null
         }
-
     }
 
     private fun parseExpressionTwice(
