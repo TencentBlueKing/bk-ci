@@ -29,7 +29,6 @@ package com.tencent.devops.common.pipeline.pojo.element.atom
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
