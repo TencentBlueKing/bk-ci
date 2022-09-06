@@ -169,12 +169,16 @@ open class MarketAtomTask : ITask() {
         // 将Job传入的流水线变量先进行凭据替换
         // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 编译机环境参数
         val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
-        var variables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).map {
-            it.key to it.value.parseCredentialValue(
-                context = buildTask.buildVariable,
-                acrossProjectId = acrossInfo?.targetProjectId
-            )
-        }.toMap()
+        var variables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).let { vars ->
+            if (!asCodeEnabled) {
+                vars.map {
+                    it.key to it.value.parseCredentialValue(
+                        context = buildTask.buildVariable,
+                        acrossProjectId = acrossInfo?.targetProjectId
+                    )
+                }.toMap()
+            } else vars
+        }
 
         // 解析输入输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
@@ -395,7 +399,7 @@ open class MarketAtomTask : ITask() {
                 inputMap.forEach { (name, value) ->
                     logger.info("parseInputParams|name=$name|value=$value")
                     atomParams[name] = EnvReplacementParser.parse(
-                        obj = JsonUtil.toJson(value),
+                        value = JsonUtil.toJson(value),
                         contextMap = variables,
                         onlyExpression = true,
                         contextPair = customReplacement
