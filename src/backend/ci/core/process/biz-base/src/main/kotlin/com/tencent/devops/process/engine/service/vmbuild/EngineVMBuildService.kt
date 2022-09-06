@@ -214,7 +214,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             c.buildEnv?.forEach { env ->
                                 containerAppResource.getBuildEnv(
                                     name = env.key,
-                                    version = EnvReplacementParser.parse(env.value, contextMap, asCodeSettings?.enable, contextPair),
+                                    version = EnvReplacementParser.parse(
+                                        obj = env.value,
+                                        contextMap = contextMap,
+                                        onlyExpression = asCodeSettings?.enable,
+                                        contextPair = contextPair
+                                    ),
                                     os = c.baseOS.name.toLowerCase()
                                 ).data?.let { self -> envList.add(self) }
                             }
@@ -222,7 +227,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             // 设置Job环境变量customBuildEnv到variablesWithType和variables中
                             // TODO 此处应收敛到variablesWithType或variables的其中一个
                             c.customBuildEnv?.map { (t, u) ->
-                                val value = EnvReplacementParser.parse(u, contextMap, asCodeSettings?.enable, contextPair)
+                                val value = EnvReplacementParser.parse(
+                                    obj = u,
+                                    contextMap = contextMap,
+                                    onlyExpression = asCodeSettings?.enable,
+                                    contextPair = contextPair
+                                )
                                 contextMap[t] = value
                                 BuildParameters(
                                     key = t,
