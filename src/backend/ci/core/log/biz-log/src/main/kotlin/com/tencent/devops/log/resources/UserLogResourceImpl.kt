@@ -51,6 +51,10 @@ class UserLogResourceImpl @Autowired constructor(
     private val meterRegistry: MeterRegistry
 ) : UserLogResource {
 
+    companion object {
+        private const val defaultNum = 100
+    }
+
     @Value("\${spring.application.name:#{null}}")
     private val applicationName: String? = null
 
@@ -106,7 +110,7 @@ class UserLogResourceImpl @Autowired constructor(
             buildId = buildId,
             debug = debug,
             logType = logType,
-            num = num,
+            num = num ?: defaultNum,
             fromStart = fromStart,
             start = start,
             end = end,

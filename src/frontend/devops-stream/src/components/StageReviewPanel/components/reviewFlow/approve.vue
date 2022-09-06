@@ -1,8 +1,8 @@
 <template>
     <section>
         <span class="review-subtitle">
-            Approval Flow
-            <span class="review-clock" v-bk-tooltips="{ width: 500, content: 'Please approve before this time. If overdued, pipeline status will be set as Stage Success automatically.' }">
+            {{$t('pipeline.approveFlow')}}
+            <span class="review-clock" v-bk-tooltips="{ width: 500, content: $t('pipeline.approvalTimeTips') }">
                 <i class="bk-icon icon-clock"></i>
                 {{ computedTime }}
             </span>
@@ -18,20 +18,20 @@
         <bk-divider></bk-divider>
 
         <span class="review-subtitle mt12">
-            Current Status<span class="gray-color ml20">{{ computedStatusTxt }}</span>
+            {{$t('pipeline.currentStatus')}}<span class="gray-color ml20">{{ computedStatusTxt }}</span>
         </span>
         <bk-radio-group v-model="isCancel" class="review-result">
             <bk-radio :value="false" :disabled="disabled">
-                Approve <span class="gray-color">（Continue pipeline execution）</span>
+                {{$t('pipeline.approve')}} <span class="gray-color">（{{$t('pipeline.approveResult')}}）</span>
             </bk-radio>
             <bk-radio :value="true" :disabled="disabled" class="ml40">
-                Reject <span class="gray-color">（Reject, and set pipeline status as Stage Success）</span>
+                {{$t('pipeline.reject')}} <span class="gray-color">（{{$t('pipeline.rejectResult')}}）</span>
             </bk-radio>
         </bk-radio-group>
 
-        <span class="review-subtitle">Approval Opinion</span>
+        <span class="review-subtitle">{{$t('pipeline.approvalOpinion')}}</span>
         <bk-input
-            placeholder="Please enter review comments, required when rejected"
+            :placeholder="$t('pipeline.opinionPlaceholder')"
             type="textarea"
             :rows="3"
             :maxlength="200"
@@ -89,7 +89,7 @@
                     const hour2Ms = 60 * 60 * 1000
                     return convertTime(this.stage.startEpoch + this.timeout * hour2Ms)
                 } catch (e) {
-                    return 'unknow'
+                    return '--'
                 }
             },
 
@@ -97,9 +97,9 @@
                 const curExecIndex = this.reviewGroups.findIndex(x => x.status === undefined) + 1
                 const { reviewers, operator } = this.showReviewGroup
 
-                let statusTxt = `Approved. Approver: ${operator}`
-                if (curExecIndex < this.curStep) statusTxt = `Waiting for preivous approval. Approver: ${reviewers.join(', ')}`
-                if (curExecIndex === this.curStep) statusTxt = `Pending approval. Approver: ${reviewers.join(', ')}`
+                let statusTxt = this.$t('pipeline.approvedStatusDesc') + `: ${operator}`
+                if (curExecIndex < this.curStep) statusTxt = this.$t('pipeline.previousStatusDesc') + `: ${reviewers.join(', ')}`
+                if (curExecIndex === this.curStep) statusTxt = this.$t('pipeline.pendingArrStatusDesc') + `: ${reviewers.join(', ')}`
 
                 return statusTxt
             }
@@ -125,7 +125,7 @@
             getApproveData () {
                 return new Promise((resolve, reject) => {
                     if (this.isCancel && this.suggest === '') {
-                        this.errMessage = 'When reject is selected, approval opinion is required'
+                        this.errMessage = this.$t('pipeline.rejectOpinionTips')
                         reject(new Error(this.errMessage))
                     } else {
                         this.errMessage = ''

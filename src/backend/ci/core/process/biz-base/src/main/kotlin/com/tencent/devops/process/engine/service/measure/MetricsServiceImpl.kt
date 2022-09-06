@@ -28,13 +28,13 @@
 package com.tencent.devops.process.engine.service.measure
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.common.api.pojo.BuildEndContainerMetricsData
-import com.tencent.devops.common.api.pojo.BuildEndPipelineMetricsData
-import com.tencent.devops.common.api.pojo.BuildEndStageMetricsData
-import com.tencent.devops.common.api.pojo.BuildEndTaskMetricsData
+import com.tencent.devops.common.event.pojo.measure.BuildEndContainerMetricsData
+import com.tencent.devops.common.event.pojo.measure.BuildEndStageMetricsData
+import com.tencent.devops.common.event.pojo.measure.BuildEndTaskMetricsData
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
+import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage

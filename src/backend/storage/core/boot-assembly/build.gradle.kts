@@ -40,6 +40,8 @@ dependencies {
     implementation(project(":nuget:biz-nuget"))
     implementation(project(":pypi:biz-pypi"))
     implementation(project(":rpm:biz-rpm"))
+    implementation(project(":oci:biz-oci"))
+    implementation(project(":job:biz-job"))
 }
 
 configurations.all {

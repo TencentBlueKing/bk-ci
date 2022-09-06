@@ -51,6 +51,7 @@ import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
+import com.tencent.devops.process.yaml.v2.models.YmlName
 import com.tencent.devops.process.yaml.v2.models.YmlVersion
 import com.tencent.devops.process.yaml.v2.models.add
 import com.tencent.devops.process.yaml.v2.models.job.Container
@@ -60,6 +61,7 @@ import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.job.RunsOn
 import com.tencent.devops.process.yaml.v2.models.job.Service
 import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
+import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.models.on.IssueRule
 import com.tencent.devops.process.yaml.v2.models.on.MrRule
 import com.tencent.devops.process.yaml.v2.models.on.NoteRule
@@ -92,8 +94,6 @@ object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)
 
-    //    private const val dockerHubUrl = "https://index.docker.io/v1/"
-
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
     private const val jobNamespace = "job-"
@@ -102,8 +102,6 @@ object ScriptYmlUtils {
     // 用户编写的触发器语法和实际对象不一致
     private const val userTrigger = "on"
     private const val formatTrigger = "triggerOn"
-
-    private const val PARAMETERS_PREFIX = "parameters."
 
     /**
      * 1、解决锚点
@@ -118,7 +116,6 @@ object ScriptYmlUtils {
         val obj = yaml.load(yamlNormal) as Any
         return YamlUtil.toYaml(obj)
     }
-
     fun parseVersion(yamlStr: String?): YmlVersion? {
         if (yamlStr == null) {
             return null
@@ -130,6 +127,21 @@ object ScriptYmlUtils {
             YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         } catch (e: Exception) {
             logger.warn("Check yaml version failed. return null")
+            null
+        }
+    }
+
+    fun parseName(yamlStr: String?): YmlName? {
+        if (yamlStr.isNullOrBlank()) {
+            return null
+        }
+
+        return try {
+            val yaml = Yaml()
+            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            YamlUtil.getObjectMapper().readValue(obj, YmlName::class.java)
+        } catch (e: Exception) {
+            logger.warn("get yaml name failed. return null")
             null
         }
     }
@@ -214,6 +226,9 @@ object ScriptYmlUtils {
                 val ifPrefix = line.substring(0 until line.indexOfFirst { it == ':' } + 1)
                 val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
                     .removeSuffix("\"")
+
+                logger.info("IF|CONDITION|$condition")
+
                 // 去掉花括号
                 val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()
                 val originItems: List<Word>
@@ -246,7 +261,7 @@ object ScriptYmlUtils {
     private fun replaceParameters(
         it: Word,
         settingMap: Map<String, Any?>
-    ) = if (it.str.startsWith(PARAMETERS_PREFIX)) {
+    ) = if (it.str.startsWith("parameters.")) {
         val realValue = settingMap[it.str] ?: it.str
         if (realValue is List<*>) {
             // ["test"]->[test]
@@ -619,7 +634,9 @@ object ScriptYmlUtils {
                 issue = issueRule(repoPreTriggerOn),
                 review = reviewRule(repoPreTriggerOn),
                 note = noteRule(repoPreTriggerOn),
-                repoHook = repoHookRule(repositoryHook)
+                repoHook = repoHookRule(repositoryHook),
+                manual = manualRule(repoPreTriggerOn),
+                openapi = openapiRule(repoPreTriggerOn)
             )
         }
         logger.warn("repo hook has none effective TriggerOn in ($repositoryHookList)")
@@ -655,7 +672,9 @@ object ScriptYmlUtils {
             delete = deleteRule(preTriggerOn),
             issue = issueRule(preTriggerOn),
             review = reviewRule(preTriggerOn),
-            note = noteRule(preTriggerOn)
+            note = noteRule(preTriggerOn),
+            manual = manualRule(preTriggerOn),
+            openapi = openapiRule(preTriggerOn)
         )
     }
 
@@ -686,6 +705,34 @@ object ScriptYmlUtils {
                 )
             }
         }
+    }
+
+    private fun manualRule(
+        preTriggerOn: PreTriggerOn
+    ): String? {
+        if (preTriggerOn.manual == null) {
+            return null
+        }
+
+        if (preTriggerOn.manual != EnableType.TRUE.value && preTriggerOn.manual != EnableType.FALSE.value) {
+            throw YamlFormatException("not allow manual type ${preTriggerOn.manual}")
+        }
+
+        return preTriggerOn.manual
+    }
+
+    private fun openapiRule(
+        preTriggerOn: PreTriggerOn
+    ): String? {
+        if (preTriggerOn.openapi == null) {
+            return null
+        }
+
+        if (preTriggerOn.openapi != EnableType.TRUE.value || preTriggerOn.openapi != EnableType.FALSE.value) {
+            throw YamlFormatException("not allow openapi type ${preTriggerOn.openapi}")
+        }
+
+        return preTriggerOn.openapi
     }
 
     private fun noteRule(

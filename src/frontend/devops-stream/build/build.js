@@ -9,10 +9,7 @@ import webpack from 'webpack'
 import rm from 'rimraf'
 
 import config from './config'
-import checkVer from './check-versions'
 import webpackConf from './webpack.prod.conf'
-
-checkVer()
 
 const spinner = ora('building...')
 spinner.start()

@@ -27,8 +27,8 @@
 
 package com.tencent.devops.metrics.service.impl
 
-import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.ProjectInfoDao
@@ -47,11 +47,13 @@ class SyncPipelineRelateLabelDataServiceImpl @Autowired constructor(
     private val projectInfoDao: ProjectInfoDao,
     private val client: Client
 ) : SyncPipelineRelateLabelDataService {
+
     companion object {
         private fun metricsDataReportKey(projectId: String, pipelineId: String): String {
             return "SyncPipelineRelateLabel:$projectId::$pipelineId"
         }
     }
+
     override fun syncCreatePipelineRelateLabelData(
         projectId: String,
         pipelineId: String,

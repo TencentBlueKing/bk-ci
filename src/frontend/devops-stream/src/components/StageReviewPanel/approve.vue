@@ -22,8 +22,8 @@
             ></params-approve>
 
             <section class="approve-footer">
-                <bk-button theme="primary" class="approve-button" @click="confirmApprove" :loading="isApproving" :disabled="disabled">Confirm</bk-button>
-                <bk-button @click="cancelApprove" :disabled="isApproving">Cancel</bk-button>
+                <bk-button theme="primary" class="approve-button" @click="confirmApprove" :loading="isApproving" :disabled="disabled">{{$t('confirm')}}</bk-button>
+                <bk-button @click="cancelApprove" :disabled="isApproving">{{$t('cancel')}}</bk-button>
             </section>
         </template>
     </section>
@@ -101,7 +101,7 @@
                         id: flowData.id,
                         reviewParams
                     }).then(() => {
-                        const message = flowData.isCancel ? 'Successful Reject' : 'Successful Approve'
+                        const message = flowData.isCancel ? this.$t('pipeline.rejectSuc') : this.$t('pipeline.approveSuc')
                         this.$bkMessage({ theme: 'success', message })
                         this.cancelApprove()
                         this.$emit('approve')

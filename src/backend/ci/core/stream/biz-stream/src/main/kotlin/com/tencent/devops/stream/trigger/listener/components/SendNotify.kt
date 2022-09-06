@@ -128,7 +128,10 @@ class SendNotify @Autowired constructor(
         val chatIds = replaceVar(notice.chatId, noticeVariables)?.toMutableSet()
         val title = replaceVar(notice.title, noticeVariables)
         val content = replaceVar(notice.content, noticeVariables)
-        val projectName = GitCommonUtils.getRepoName(action.data.setting.gitHttpUrl, action.data.setting.name)
+        val projectName = action.data.eventCommon.gitProjectName ?: GitCommonUtils.getRepoName(
+            action.data.setting.gitHttpUrl,
+            action.data.setting.name
+        )
 
         val gitProjectInfoCache = action.data.eventCommon.sourceGitProjectId?.let {
             streamTriggerCache.getAndSaveRequestGitProjectInfo(
@@ -234,7 +237,7 @@ class SendNotify @Autowired constructor(
                 return true
             }
             else -> {
-                logger.error("buidld: $buildId , ifField: $ifField is error!")
+                logger.warn("SendNotify|checkStatus|buildId|$buildId|ifField|$ifField")
                 false
             }
         }
@@ -275,7 +278,7 @@ class SendNotify @Autowired constructor(
                 StreamNotifyType.RTX_GROUP
             }
             else -> {
-                logger.error("buidld: $buildId , type: $type is error!")
+                logger.warn("SendNotify|getNoticeType|buidld|$buildId|type|$type")
                 null
             }
         }

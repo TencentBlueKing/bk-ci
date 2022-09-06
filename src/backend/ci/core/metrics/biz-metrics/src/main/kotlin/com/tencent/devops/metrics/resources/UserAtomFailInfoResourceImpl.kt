@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.UserAtomFailInfoResource
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.checkDateInterval
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getEndDateTime
-import com.tencent.devops.metrics.constant.QueryParamCheckUtil.getStartDateTime
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.checkDateInterval
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getEndDateTime
+import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getStartDateTime
 import com.tencent.devops.metrics.service.AtomFailInfoManageService
 import com.tencent.devops.metrics.pojo.`do`.AtomErrorCodeStatisticsInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomFailDetailInfoDO

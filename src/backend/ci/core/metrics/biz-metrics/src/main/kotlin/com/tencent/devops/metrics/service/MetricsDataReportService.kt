@@ -27,7 +27,7 @@
 
 package com.tencent.devops.metrics.service
 
-import com.tencent.devops.common.api.pojo.BuildEndPipelineMetricsData
+import com.tencent.devops.common.event.pojo.measure.BuildEndPipelineMetricsData
 
 interface MetricsDataReportService {
 

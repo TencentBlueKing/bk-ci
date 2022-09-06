@@ -178,7 +178,7 @@ class PipelineBuildDetailService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
-            model = JsonUtil.getObjectMapper().writeValueAsString(model),
+            model = JsonUtil.toJson(model, formatted = false),
             buildStatus = BuildStatus.RUNNING
         )
         pipelineDetailChangeEvent(projectId, buildId)

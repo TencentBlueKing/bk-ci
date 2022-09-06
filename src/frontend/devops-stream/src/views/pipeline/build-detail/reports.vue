@@ -1,7 +1,7 @@
 <template>
     <article class="detail-report-home" v-bkloading="{ isLoading }">
         <bk-exception class="exception-wrap-item" type="403" scene="part" v-if="noPermission">
-            <span>No permission</span>
+            <span>{{$t('exception.noPermission')}}</span>
         </bk-exception>
         <template v-else>
             <template v-if="reportList.length">
@@ -30,7 +30,7 @@
             </template>
             <span class="bk-table-empty-text" v-if="!isLoading && reportList.length <= 0">
                 <i class="bk-table-empty-icon bk-icon icon-empty"></i>
-                <div>No reports yet</div>
+                <div>{{$t('pipeline.noReports')}}</div>
             </span>
         </template>
     </article>
@@ -87,7 +87,7 @@
                         }
                     })
                     this.reportList = innerReports
-                    if (thirdReports.length) this.reportList.push({ name: 'Third party report', thirdReports, type: 'THIRDPARTY' })
+                    if (thirdReports.length) this.reportList.push({ name: this.$t('pipeline.thirdReport'), thirdReports, type: 'THIRDPARTY' })
                     this.reportList = this.reportList.map((report, index) => ({
                         name: index,
                         label: report.name,

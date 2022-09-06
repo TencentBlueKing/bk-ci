@@ -31,27 +31,19 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
-import com.tencent.devops.metrics.pojo.message.QualityReportMessage
-import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportService
+import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportFacadeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class QualityReportDailyMessageListener @Autowired constructor(
-    private val thirdPlatformDataReportService: MetricsThirdPlatformDataReportService
+    private val metricsThirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
 ) : Listener<QualityReportEvent> {
 
     override fun execute(event: QualityReportEvent) {
         try {
-            thirdPlatformDataReportService.metricsQualityDataReport(
-                QualityReportMessage(
-                    projectId = event.projectId,
-                    statisticsTime = event.statisticsTime,
-                    qualityPipelineExecuteNum = event.totalCount,
-                    qualityPipelineInterceptionNum = event.interceptedCount
-                )
-            )
+            metricsThirdPlatformDataReportFacadeService.metricsQualityDataReport(event)
         } catch (ignored: Throwable) {
             logger.warn("Fail to insert the metrics QualityReport data", ignored)
             throw ErrorCodeException(

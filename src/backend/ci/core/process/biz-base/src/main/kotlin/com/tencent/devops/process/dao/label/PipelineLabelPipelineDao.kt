@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.dao.label
 
-import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.model.process.tables.TPipelineLabel
 import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
 import com.tencent.devops.model.process.tables.records.TPipelineLabelPipelineRecord

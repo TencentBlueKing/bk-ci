@@ -28,7 +28,7 @@ import { RouterLink, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { Button, Input, Loading, Select } from 'bkui-vue';
 
-import { useConfirm, useEmptyGuide, useRepoInfo, useRouteParams, useSearchArtifact, useToken } from '@/hooks';
+import { useConfirm, useEmptyGuide, useRepoInfo, useRouteParams, useSearchArtifact, useToken, useDomain } from '@/hooks';
 import CodeBox from '@/components/CodeBox';
 import Steps from '@/components/Steps';
 import TokenDialog from '@/components/TokenDialog';
@@ -36,20 +36,19 @@ import InfiniteScroll from '@/components/InfiniteScroll';
 import { Artifact } from '@/utils/vue-ts';
 import Icon from '@/components/Icon';
 import { SORT_PROPERTY } from '@/utils/conf';
-import store from '@/store';
 import { DELETE_PACKAGE } from '@/store/constants';
 import { asyncAction } from '@/utils';
 import RepoHeader from '@/components/RepoHeader';
 import PackageItem from '@/components/PackageItem';
+import { useStore } from '@/store';
 
 const { Option } = Select;
 export default defineComponent({
   setup() {
-    // const store = useStore();
+    const store = useStore();
     const router = useRouter();
     const { t } = useI18n();
     const routeParams = useRouteParams();
-    const emptyGuide = useEmptyGuide();
     const { renderConfirmDialog, showConfirm, onConfirm } = useConfirm();
     const { isAddTokenDialogShow, toggleAddTokenDialog } = useToken();
     const repoInfo = useRepoInfo();
@@ -63,51 +62,59 @@ export default defineComponent({
       toggleDirection,
       handleCurrentChange,
     } = useSearchArtifact();
-    const  objectSteps = computed(() => [
-      {
-        index: '01',
-        desc: 'step',
-        content: () => (
-          <>
-            <header class="empty-guide-item-title bold">{ t('token') }</header>
-            <div class="empty-guide-subtitle">
-              <Button
-                text
-                theme="primary"
-                onClick={toggleAddTokenDialog}
-              >
-                {t('createToken') }
-              </Button>
-              <span class="token-subtitle">{t('tokenSubTitle')}</span>
-              <RouterLink to={{ name: 'repoToken' }}>
-                <Button text theme='primary'>
-                <span>{t('token')}</span>
-                </Button>
-              </RouterLink>
-            </div>
-          </>
-        ),
-      },
-      ...(
-        emptyGuide.map((item: any, index: number) => ({
-          index: `0${index + 2}`,
-          desc: 'step',
-          content: () => (
+    const  objectSteps = computed(() => {
+      if (!isSearching.value && artifactList.value.length === 0) {
+        const emptyGuide = useEmptyGuide();
+        const domain = useDomain();
+        console.log(domain);
+        return [
+          {
+            index: '01',
+            desc: 'step',
+            content: () => (
             <>
-              <header class="empty-guide-item-title bold">{ t(item.title) }</header>
-              {
-                item.main.map((mainItem: any, index: number) => (
-                  <>
-                    <h3 class="empty-guide-subtitle">{`${index + 1}、${t(mainItem.subTitle)}`}</h3>
-                    <CodeBox codeList={mainItem.codeList}></CodeBox>
-                  </>
-                ))
-              }
+              <header class="empty-guide-item-title bold">{ t('token') }</header>
+              <div class="empty-guide-subtitle">
+                <Button
+                  text
+                  theme="primary"
+                  onClick={toggleAddTokenDialog}
+                >
+                  {t('createToken') }
+                </Button>
+                <span class="token-subtitle">{t('tokenSubTitle')}</span>
+                <RouterLink to={{ name: 'repoToken' }}>
+                  <Button text theme='primary'>
+                  <span>{t('token')}</span>
+                  </Button>
+                </RouterLink>
+              </div>
             </>
+            ),
+          },
+          ...(
+            emptyGuide.map((item: any, index: number) => ({
+              index: `0${index + 2}`,
+              desc: 'step',
+              content: () => (
+              <>
+                <header class="empty-guide-item-title bold">{ t(item.title) }</header>
+                {
+                  item.main.map((mainItem: any, index: number) => (
+                    <>
+                      <h3 class="empty-guide-subtitle">{`${index + 1}、${t(mainItem.subTitle)}`}</h3>
+                      <CodeBox codeList={mainItem.codeList}></CodeBox>
+                    </>
+                  ))
+                }
+              </>
+              ),
+            }))
           ),
-        }))
-      ),
-    ]);
+        ];
+      }
+      return [];
+    });
 
     async function loadMore(done: Function) {
       const nextCurrent = pagination.current + 1;
@@ -127,7 +134,6 @@ export default defineComponent({
       }, `${name}${t('deleteSuccess')}`));
     }
 
-    console.log(handleDelete);
     function goDetail(artifact: Artifact) {
       router.push({
         name: 'repoPackage',

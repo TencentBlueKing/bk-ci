@@ -47,6 +47,7 @@ import javax.ws.rs.core.MediaType
  *
  * Powered By Tencent
  */
+@Suppress("LongParameterList")
 @Api(tags = ["SERVICE_LOG_PRINT"], description = "服务-日志打印资源")
 @Path("/service/logs/print")
 @Produces(MediaType.APPLICATION_JSON)

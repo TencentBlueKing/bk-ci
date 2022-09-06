@@ -174,8 +174,9 @@ func DetectWorkerVersion() string {
 // DetectWorkerVersionByDir 检测指定目录下的Worker文件版本
 func DetectWorkerVersionByDir(workDir string) string {
 	jar := fmt.Sprintf("%s/%s", workDir, WorkAgentFile)
+	tmpDir, _ := systemutil.MkBuildTmpDir()
 	output, err := command.RunCommand(GetJava(),
-		[]string{"-Xmx256m", "-cp", jar, "com.tencent.devops.agent.AgentVersionKt"},
+		[]string{"-Djava.io.tmpdir=" + tmpDir, "-Xmx256m", "-cp", jar, "com.tencent.devops.agent.AgentVersionKt"},
 		workDir, nil)
 
 	if err != nil {

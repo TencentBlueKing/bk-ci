@@ -149,8 +149,8 @@ export default {
         return api.post(`${DISPATCH_STREAM_PERFIX}/user/docker/debug/start`, params)
     },
 
-    stopDebugDocker (projectId, pipelineId, vmSeqId) {
-        return api.post(`${DISPATCH_STREAM_PERFIX}/user/docker/debug/stop/projects/${projectId}/pipelines/${pipelineId}/vmseqs/${vmSeqId}`).then(res => {
+    stopDebugDocker (projectId, pipelineId, vmSeqId, dispatchType) {
+        return api.post(`${DISPATCH_STREAM_PERFIX}/user/docker/debug/stop/projects/${projectId}/pipelines/${pipelineId}/vmseqs/${vmSeqId}?dispatchType=${dispatchType}`).then(res => {
             return res
         })
     },
@@ -188,5 +188,9 @@ export default {
 
     getPipelineDirList (projectId, params) {
         return api.get(`${STREAM_PERFIX}/user/pipelines/${projectId}/dir_list`, { params })
+    },
+
+    getPipelineParamJson (projectId, pipelineId, params) {
+        return api.get(`${STREAM_PERFIX}/user/trigger/build/${projectId}/${pipelineId}/manual`, { params })
     }
 }

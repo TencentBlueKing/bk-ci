@@ -29,8 +29,8 @@ package com.tencent.devops.process.service.label
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.pojo.PipelineLabelChangeTypeEnum
-import com.tencent.devops.common.api.pojo.PipelineLabelRelateInfo
+import com.tencent.devops.common.event.enums.PipelineLabelChangeTypeEnum
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client

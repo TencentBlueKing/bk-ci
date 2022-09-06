@@ -24,8 +24,9 @@
 * IN THE SOFTWARE.
 */
 
+import { DOCKER_REPO, NPM_REPO } from '@/utils/conf';
 import { Artifact, OperationDialogProps, User, UserInfo } from '@/utils/vue-ts';
-import { State } from '.';
+import { DomainKey, State } from '.';
 import * as StoreConst from './constants';
 
 export default {
@@ -79,4 +80,15 @@ export default {
       filesCount: 0,
     });
   },
+  [StoreConst.SET_DOMAIN]: (state: State, { type, domain }: { type: DomainKey, domain: any }) => {
+    switch (type) {
+      case DOCKER_REPO:
+        state.domain[type] = domain;
+        break;
+      case NPM_REPO:
+        state.domain[type] = domain.domain ?? `${location.origin}/npm`;
+        break;
+    }
+  },
 };
+

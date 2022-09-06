@@ -50,7 +50,7 @@ export default defineComponent({
     });
 
     async function submitLogin() {
-      if (!loginable.value || locked.value) return
+      if (!loginable.value || locked.value) return;
       try {
         submiting.value = true;
         const result = await store.dispatch(LOGIN, {
