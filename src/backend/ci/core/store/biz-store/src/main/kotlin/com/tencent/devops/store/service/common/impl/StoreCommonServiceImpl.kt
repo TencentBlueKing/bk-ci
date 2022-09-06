@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -169,6 +170,11 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         val secondVersionPart = dbVersionParts[1]
         val thirdVersionPart = dbVersionParts[2]
         when (releaseType) {
+            ReleaseTypeEnum.NEW -> {
+                if (dbVersion == INIT_VERSION) {
+                    throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+                }
+            }
             ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE -> {
                 requireVersionList = listOf("${firstVersionPart.toInt() + 1}.0.0")
             }
