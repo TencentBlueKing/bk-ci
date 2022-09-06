@@ -42,10 +42,7 @@ public class ObjectReplaceEnvVarUtil {
      * @return 变量替换后的对象
      */
     @SuppressWarnings("all")
-    public static Object replaceEnvVar(
-        Object obj,
-        Map<String, String> envMap
-    ) {
+    public static Object replaceEnvVar(Object obj, Map<String, String> envMap) {
         if (obj instanceof Map) {
             // 递归替换map对象中的变量
             Set<Map.Entry<String, Object>> entrySet = ((Map) obj).entrySet();
@@ -93,15 +90,13 @@ public class ObjectReplaceEnvVarUtil {
                 obj = JsonUtil.INSTANCE.to(JsonUtil.INSTANCE.toJson(dataMap, true), obj.getClass());
             } catch (Throwable e) {
                 // 转换不了map的对象则进行直接替换
-                obj = ReplacementUtils.INSTANCE.replace(JsonUtil.INSTANCE.toJson(obj, true), null, envMap);
+                obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj, true), envMap, false, false);
             }
         }
         return obj;
     }
 
-    private static Object handleNormalEnvVar(
-        Object obj, Map<String, String> envMap
-    ) {
+    private static Object handleNormalEnvVar(Object obj, Map<String, String> envMap) {
         // 只有字符串参数才需要进行变量替换，其它基本类型参数无需进行变量替换
         if (obj instanceof String) {
             String objStr = ((String) obj).trim();
@@ -113,7 +108,7 @@ public class ObjectReplaceEnvVarUtil {
                     obj = JsonUtil.INSTANCE.toJson(dataObj, true);
                 } catch (Throwable e) {
                     // 转换不了map的字符串对象则直接替换
-                    obj = ReplacementUtils.INSTANCE.replace(JsonUtil.INSTANCE.toJson(obj, true), null, envMap);
+                    obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj, true), envMap, false, false);
                 }
             } else if (objStr.startsWith("[") && objStr.endsWith("]") && JsonSchemaUtil.INSTANCE.validateJson(objStr)) {
                 try {
@@ -123,11 +118,11 @@ public class ObjectReplaceEnvVarUtil {
                     obj = JsonUtil.INSTANCE.toJson(dataObj, true);
                 } catch (Throwable e1) {
                     // 转换不了list的字符串对象则直接替换
-                    obj = ReplacementUtils.INSTANCE.replace(JsonUtil.INSTANCE.toJson(obj, true), null, envMap);
+                    obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj, true), envMap, false, false);
                 }
             } else {
                 // 转换不了map或者list的字符串对象则直接替换
-                obj = ReplacementUtils.INSTANCE.replace(JsonUtil.INSTANCE.toJson(obj, true), null, envMap);
+                obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj, true), envMap, false, false);
             }
         }
         return obj;
