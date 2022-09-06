@@ -210,10 +210,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
                             fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
+                            val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(contextMap)
                             c.buildEnv?.forEach { env ->
                                 containerAppResource.getBuildEnv(
                                     name = env.key,
-                                    version = EnvReplacementParser.parse(env.value, contextMap, asCodeSettings?.enable),
+                                    version = EnvReplacementParser.parse(env.value, contextMap, asCodeSettings?.enable, contextPair),
                                     os = c.baseOS.name.toLowerCase()
                                 ).data?.let { self -> envList.add(self) }
                             }
@@ -221,7 +222,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             // 设置Job环境变量customBuildEnv到variablesWithType和variables中
                             // TODO 此处应收敛到variablesWithType或variables的其中一个
                             c.customBuildEnv?.map { (t, u) ->
-                                val value = EnvReplacementParser.parse(u, contextMap, asCodeSettings?.enable)
+                                val value = EnvReplacementParser.parse(u, contextMap, asCodeSettings?.enable, contextPair)
                                 contextMap[t] = value
                                 BuildParameters(
                                     key = t,
