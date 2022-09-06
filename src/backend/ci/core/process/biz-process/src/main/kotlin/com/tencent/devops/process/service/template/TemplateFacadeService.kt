@@ -2053,15 +2053,7 @@ class TemplateFacadeService @Autowired constructor(
                     isTemplate = true
                 )
                 if (pipelineSettingRecord.size > 0) {
-                    val srcTemplateId = templateDao.getSrcTemplateIdByName(
-                        dslContext = dslContext,
-                        projectId = it,
-                        templateName = templateName,
-                        versionName = versionName
-                    )
-                    if (srcTemplateId == templateCode) {
-                        return@forEach
-                    }
+                    return@forEach
                 }
                 val templateId = UUIDUtil.generate()
                 templateDao.createTemplate(
