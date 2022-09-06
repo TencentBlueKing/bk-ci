@@ -157,10 +157,10 @@
     "documentTitleExperience": "BK-CI | Tencent BlueKing | Experience",
     "documentTitleTurbo": "BK-CI | Tencent BlueKing | Turbo",
     "documentTitlePreci": "BK-CI | Tencent BlueKing | PreCI",
-    "documentTitleRepo": "BK-CI | Tencent BlueKing | Repo",
+    "documentTitleRepo": "Repo | Tencent BlueKing",
     "documentTitleStream": "BK-CI | Tencent BlueKing | Stream",
     "documentTitleWetest": "BK-CI | Tencent BlueKing | WeTest",
-    "documentTitleQuality": "BK-CI | Tencent BlueKing | Quality",
+    "documentTitleQuality": "BK-CI | Tencent BlueKing | Gate",
     "documentTitleXinghai": "BK-CI | Tencent BlueKing | Xinghai",
     "documentTitleBcs": "BK-CI | Tencent BlueKing | Bcs",
     "documentTitleJob": "BK-CI | Tencent BlueKing | Job",
@@ -172,7 +172,7 @@
     "documentTitleTicket": "BK-CI | Tencent BlueKing | Ticket",
     "documentTitleStore": "BK-CI | Tencent BlueKing | Store",
     "documentTitleMetrics": "BK-CI | Tencent BlueKing | Metrics",
-    "technicalSupport": "technical Support",
-    "communityForum": "Community Forum",
-    "ProductOfficialWebsite": "Product official website"
+    "technicalSupport": "Support",
+    "communityForum": "Forum",
+    "ProductOfficialWebsite": "Official "
 }
