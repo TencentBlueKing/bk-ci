@@ -357,6 +357,7 @@ open class MarketAtomTask : ITask() {
             error = e
         } finally {
             output(buildTask, atomTmpSpace, File(bkWorkspacePath), buildVariables, outputTemplate, namespace, atomCode)
+            atomData.finishKillFlag?.let { addFinishKillFlag(it) }
             if (error != null) {
                 val defaultMessage = StringBuilder("Market atom env load exit with StackTrace:\n")
                 defaultMessage.append(error.toString())

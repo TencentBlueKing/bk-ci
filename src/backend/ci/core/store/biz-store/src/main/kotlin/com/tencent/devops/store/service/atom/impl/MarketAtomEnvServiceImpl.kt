@@ -402,7 +402,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     atomPostInfo = atomPostInfo,
                     classifyCode = atom.classifyCode,
                     classifyName = atom.classifyName,
-                    runtimeVersion = atomEnvInfoRecord?.runtimeVersion
+                    runtimeVersion = atomEnvInfoRecord?.runtimeVersion,
+                    finishKillFlag = atomEnvInfoRecord?.finishKillFlag
                 )
             }
         )
