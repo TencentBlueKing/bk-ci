@@ -1,5 +1,10 @@
 package com.tencent.devops.common.pipeline
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.KeyReplacement
+import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
+import com.tencent.devops.common.expression.ExpressionParser
+import com.tencent.devops.common.expression.context.PipelineContextData
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -448,6 +453,30 @@ internal class EnvReplacementParserTest {
         )
         Assertions.assertEquals("echo \${{ ci.xyz == 'zzzz' }}", EnvReplacementParser.parse(command10, data, true))
         Assertions.assertEquals("echo true", EnvReplacementParser.parse(command11, data, true))
+    }
+
+    @Test
+    fun testParser() {
+        val buildVariable = mapOf(
+            "variables.TXT" to "txt",
+            "variables.TXT2" to "txt2"
+        )
+        val value = ObjectReplaceEnvVarUtil.replaceEnvVar(
+            "echo \"  \${{ ((\${{ variables.TXT2 }} == 'txt') && (variables.TXT2 == \${{ variables.TXT }})) }}  \"",
+            buildVariable,
+            object : KeyReplacement {
+                override fun getReplacement(key: String): String? {
+                    val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(buildVariable)
+                    return ExpressionParser.createTree(key, null, contextPair.second, null)!!
+                        .evaluate(null, contextPair.first, null).value.let {
+                            if (it is PipelineContextData) it.fetchValue() else it
+                        }?.let {
+                            JsonUtil.toJson(it, false)
+                        }
+                }
+            }
+        )
+        println(value)
     }
 
     private fun parseAndEquals(

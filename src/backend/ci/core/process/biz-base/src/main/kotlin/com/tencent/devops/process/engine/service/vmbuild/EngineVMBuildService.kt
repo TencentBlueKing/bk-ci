@@ -41,6 +41,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.expression.ExpressionParser
+import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -536,18 +538,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         expiredInSecond = transMinuteTimeoutToSec(task.additionalOptions?.timeout?.toInt())
                     )
                 }
-                val replacement = if (asCodeEnabled) {
-                    val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(buildVariable)
-                    object : KeyReplacement {
-                        override fun getReplacement(key: String) = EnvReplacementParser.parse(
-                            key, buildVariable, true, contextPair
-                        )
-                    }
-                } else {
-                    object : KeyReplacement {
-                        override fun getReplacement(key: String) = null
-                    }
-                }
                 BuildTask(
                     buildId = buildId,
                     vmSeqId = vmSeqId,
@@ -558,8 +548,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     stepId = task.stepId,
                     type = task.taskType,
                     params = task.taskParams.map {
-                        val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(
-                            it.value, buildVariable, replacement
+                        // 在pipeline as code模式下，此处直接保持原文传给worker
+                        val obj = if (asCodeEnabled) {
+                            it.value
+                        } else ObjectReplaceEnvVarUtil.replaceEnvVar(
+                            it.value, buildVariable
                         )
                         it.key to JsonUtil.toJson(obj, formatted = false)
                     }.filter {
