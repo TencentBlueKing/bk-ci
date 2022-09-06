@@ -74,13 +74,7 @@ object EnvReplacementParser {
                 nameValues = nameValues
             )
         } else {
-            ObjectReplaceEnvVarUtil.replaceEnvVar(
-                value, contextMap,
-                object : KeyReplacement {
-                    override fun getReplacement(key: String, doubleCurlyBraces: Boolean) =
-                        if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
-                }
-            ).let {
+            ObjectReplaceEnvVarUtil.replaceEnvVar(value, contextMap).let {
                 JsonUtil.toJson(it, false)
             }
         }

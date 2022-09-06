@@ -64,14 +64,7 @@ data class ManualReviewParam(
                 else -> variables[key]
             }
         } else {
-            ObjectReplaceEnvVarUtil.replaceEnvVar(
-                value,
-                variables,
-                object : KeyReplacement {
-                    override fun getReplacement(key: String, doubleCurlyBraces: Boolean) =
-                        if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
-                }
-            )
+            ObjectReplaceEnvVarUtil.replaceEnvVar(value, variables)
         }
         options = if (!variableOption.isNullOrBlank()) {
             EnvUtils.parseEnv(variableOption, variables).let {
