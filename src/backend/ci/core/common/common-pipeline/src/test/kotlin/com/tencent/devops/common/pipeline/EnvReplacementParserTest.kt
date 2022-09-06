@@ -120,7 +120,7 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals(
             "echo /data/landun/workspace",
             EnvReplacementParser.parse(
-                obj = command9,
+                value = command9,
                 contextMap = map.plus("ci.workspace" to "/data/landun/workspace")
             )
         )
@@ -165,7 +165,7 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals(
             "echo /data/landun/workspace || hahahahaha",
             EnvReplacementParser.parse(
-                obj = command9,
+                value = command9,
                 contextMap = data.plus("ci.workspace" to "/data/landun/workspace")
             )
         )
@@ -392,7 +392,7 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals(
             "echo /data/landun/workspace",
             EnvReplacementParser.parse(
-                obj = command9,
+                value = command9,
                 contextMap = map.plus("ci.workspace" to "/data/landun/workspace"),
                 onlyExpression = true
             )
@@ -441,7 +441,7 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals(
             "echo /data/landun/workspace || hahahahaha",
             EnvReplacementParser.parse(
-                obj = command9,
+                value = command9,
                 contextMap = data.plus("ci.workspace" to "/data/landun/workspace"),
                 onlyExpression = true
             )

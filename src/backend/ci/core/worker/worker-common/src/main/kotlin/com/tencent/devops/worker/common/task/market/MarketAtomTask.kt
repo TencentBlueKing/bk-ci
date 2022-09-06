@@ -399,7 +399,7 @@ open class MarketAtomTask : ITask() {
                 inputMap.forEach { (name, value) ->
                     logger.info("parseInputParams|name=$name|value=$value")
                     atomParams[name] = EnvReplacementParser.parse(
-                        obj = JsonUtil.toJson(value),
+                        value = JsonUtil.toJson(value),
                         contextMap = variables,
                         onlyExpression = true,
                         contextPair = customReplacement

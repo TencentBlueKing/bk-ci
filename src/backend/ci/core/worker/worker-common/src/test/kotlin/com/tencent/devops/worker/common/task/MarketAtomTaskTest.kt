@@ -78,7 +78,7 @@ internal class MarketAtomTaskTest {
         ExpressionParser.fillContextByMap(variables, context, nameValue)
         inputMap.forEach { (name, value) ->
             atomParams[name] = EnvReplacementParser.parse(
-                obj = JsonUtil.toJson(value),
+                value = JsonUtil.toJson(value),
                 contextMap = variables,
                 contextPair = Pair(context, nameValue)
             )

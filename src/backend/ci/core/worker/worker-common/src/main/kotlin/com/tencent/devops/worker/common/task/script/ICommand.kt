@@ -80,7 +80,7 @@ interface ICommand {
         )
         return if (asCodeEnabled == true) {
             EnvReplacementParser.parse(
-                obj = command,
+                value = command,
                 contextMap = contextMap,
                 onlyExpression = true,
                 contextPair = EnvReplacementParser.getCustomExecutionContextByMap(

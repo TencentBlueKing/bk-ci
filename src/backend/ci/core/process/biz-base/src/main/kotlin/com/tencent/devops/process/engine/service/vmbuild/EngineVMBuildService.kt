@@ -215,7 +215,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 containerAppResource.getBuildEnv(
                                     name = env.key,
                                     version = EnvReplacementParser.parse(
-                                        obj = env.value,
+                                        value = env.value,
                                         contextMap = contextMap,
                                         onlyExpression = asCodeSettings?.enable,
                                         contextPair = contextPair
@@ -228,7 +228,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             // TODO 此处应收敛到variablesWithType或variables的其中一个
                             c.customBuildEnv?.map { (t, u) ->
                                 val value = EnvReplacementParser.parse(
-                                    obj = u,
+                                    value = u,
                                     contextMap = contextMap,
                                     onlyExpression = asCodeSettings?.enable,
                                     contextPair = contextPair
@@ -440,13 +440,22 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             val task = allTasks.firstOrNull()
                 ?: return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
 
-            return claim(task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId)
+            return claim(
+                task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId,
+                asCodeEnabled = pipelineAsCodeService.asCodeEnabled(task.projectId, task.pipelineId) == true
+            )
         } finally {
             containerIdLock.unlock()
         }
     }
 
-    private fun claim(task: PipelineBuildTask, buildId: String, userId: String, vmSeqId: String): BuildTask {
+    private fun claim(
+        task: PipelineBuildTask,
+        buildId: String,
+        userId: String,
+        vmSeqId: String,
+        asCodeEnabled: Boolean
+    ): BuildTask {
         LOG.info("ENGINE|$buildId|BC_ING|${task.projectId}|j($vmSeqId)|[${task.taskId}-${task.taskName}]")
         return when {
             task.status == BuildStatus.QUEUE -> { // 初始化状态，表明任务还未准备好
@@ -527,6 +536,18 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         expiredInSecond = transMinuteTimeoutToSec(task.additionalOptions?.timeout?.toInt())
                     )
                 }
+                val replacement = if (asCodeEnabled) {
+                    val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(buildVariable)
+                    object : KeyReplacement {
+                        override fun getReplacement(key: String) = EnvReplacementParser.parse(
+                            key, buildVariable, true, contextPair
+                        )
+                    }
+                } else {
+                    object : KeyReplacement {
+                        override fun getReplacement(key: String) = null
+                    }
+                }
                 BuildTask(
                     buildId = buildId,
                     vmSeqId = vmSeqId,
@@ -538,10 +559,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     type = task.taskType,
                     params = task.taskParams.map {
                         val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(
-                            it.value, buildVariable,
-                            object : KeyReplacement {
-                                override fun getReplacement(key: String) = buildVariable[key]
-                            }
+                            it.value, buildVariable, replacement
                         )
                         it.key to JsonUtil.toJson(obj, formatted = false)
                     }.filter {
