@@ -368,8 +368,8 @@ abstract class ImageReleaseService {
         val dbVersion = imageRecord.version
         val imageStatus = imageRecord.imageStatus
         // 判断镜像首个版本对应的请求是否合法
-        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION
-            && imageStatus != ImageStatusEnum.INIT.status.toByte()) {
+        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
+            imageStatus != ImageStatusEnum.INIT.status.toByte()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
         }
         // 最近的版本处于上架中止状态，重新升级版本号不变

@@ -132,8 +132,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val dbVersion = atomRecord.version
         val atomStatus = atomRecord.atomStatus
         // 判断插件首个版本对应的请求是否合法
-        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION
-            && atomStatus != AtomStatusEnum.INIT.status.toByte()) {
+        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
+            atomStatus != AtomStatusEnum.INIT.status.toByte()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
         }
         val dbOsList = if (!atomRecord.os.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
