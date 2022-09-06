@@ -254,7 +254,8 @@ class QualityIndicatorService @Autowired constructor(
                 range = it.indicatorRange,
                 type = it.type,
                 tag = it.tag,
-                enable = it.enable
+                enable = it.enable,
+                logPrompt = it.logPrompt ?: ""
             )
         } ?: listOf()
     }
