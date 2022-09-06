@@ -48,7 +48,10 @@ internal class MarketAtomTaskTest {
         val r = EnvReplacementParser.getCustomExecutionContextByMap(
             variables, listOf(CredentialRuntimeNamedValue())
         )
-        println(EnvReplacementParser.parse("\${{ settings.a.password }}", variables, true, r))
+        Assertions.assertEquals(
+            "1234",
+            EnvReplacementParser.parse("\${{ settings.a.password }}", variables, true, r)
+        )
     }
 
     private fun originReplacement(

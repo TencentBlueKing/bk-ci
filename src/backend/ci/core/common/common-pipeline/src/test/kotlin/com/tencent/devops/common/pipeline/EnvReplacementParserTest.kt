@@ -132,7 +132,6 @@ internal class EnvReplacementParserTest {
         map["age"] = ""
         map["name"] = "jacky"
         val command = "{\"age\": \${age} , \"sex\": \"boy\", \"name\": \${name}}"
-        println("parseEnvTestData $command")
         Assertions.assertEquals(
             "{\"age\": ${map["age"]} , \"sex\": \"boy\", \"name\": ${map["name"]}}",
             EnvReplacementParser.parse(command, map)
@@ -213,6 +212,19 @@ internal class EnvReplacementParserTest {
                 "          echo \"  true  \"\n" +
                 "          echo \"  true  \"\n" +
                 "          echo \"  true  \"",
+            onlyExpression = true
+        )
+
+        parseAndEquals(
+            data = map,
+            template = "echo \" 这可是来自master的改动 \"\n" +
+                "echo \"  \${{ (\${{ variables.TXT2 }} == 'txt') }}  \"\n" +
+                "echo \"  \${{ (variables.TXT2 == \${{ variables.TXT }}) }}  \"\n" +
+                "echo \"  \${{ ((\${{ variables.TXT2 }} == 'txt') && (variables.TXT2 == \${{ variables.TXT }})) }}  \"",
+            expect = "echo \" 这可是来自master的改动 \"\n" +
+                "echo \"  false  \"\n" +
+                "echo \"  false  \"\n" +
+                "echo \"  false  \"",
             onlyExpression = true
         )
 
