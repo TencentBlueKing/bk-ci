@@ -141,7 +141,8 @@ class ExperienceSearchService @Autowired constructor(
                 appScheme = it.scheme,
                 type = it.type,
                 externalUrl = it.externalLink,
-                version = it.version
+                version = it.version,
+                downloadTime = it.downloadTime
             )
         }.toList()
     }

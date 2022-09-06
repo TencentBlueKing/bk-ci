@@ -57,5 +57,7 @@ data class SearchAppInfoVO(
     @ApiModelProperty("应用Scheme", required = false)
     val appScheme: String,
     @ApiModelProperty("外部链接", required = false)
-    val externalUrl: String? = null
+    val externalUrl: String? = null,
+    @ApiModelProperty("下载次数", required = false)
+    val downloadTime: Int? = null
 )
