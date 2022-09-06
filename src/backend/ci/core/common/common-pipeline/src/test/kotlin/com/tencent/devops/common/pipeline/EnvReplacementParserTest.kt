@@ -120,7 +120,7 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals(
             "echo /data/landun/workspace",
             EnvReplacementParser.parse(
-                obj = command9,
+                value = command9,
                 contextMap = map.plus("ci.workspace" to "/data/landun/workspace")
             )
         )
@@ -132,7 +132,6 @@ internal class EnvReplacementParserTest {
         map["age"] = ""
         map["name"] = "jacky"
         val command = "{\"age\": \${age} , \"sex\": \"boy\", \"name\": \${name}}"
-        println("parseEnvTestData $command")
         Assertions.assertEquals(
             "{\"age\": ${map["age"]} , \"sex\": \"boy\", \"name\": ${map["name"]}}",
             EnvReplacementParser.parse(command, map)
@@ -166,7 +165,7 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals(
             "echo /data/landun/workspace || hahahahaha",
             EnvReplacementParser.parse(
-                obj = command9,
+                value = command9,
                 contextMap = data.plus("ci.workspace" to "/data/landun/workspace")
             )
         )
@@ -213,6 +212,19 @@ internal class EnvReplacementParserTest {
                 "          echo \"  true  \"\n" +
                 "          echo \"  true  \"\n" +
                 "          echo \"  true  \"",
+            onlyExpression = true
+        )
+
+        parseAndEquals(
+            data = map,
+            template = "echo \" 这可是来自master的改动 \"\n" +
+                "echo \"  \${{ (\${{ variables.TXT2 }} == 'txt') }}  \"\n" +
+                "echo \"  \${{ (variables.TXT2 == \${{ variables.TXT }}) }}  \"\n" +
+                "echo \"  \${{ ((\${{ variables.TXT2 }} == 'txt') && (variables.TXT2 == \${{ variables.TXT }})) }}  \"",
+            expect = "echo \" 这可是来自master的改动 \"\n" +
+                "echo \"  false  \"\n" +
+                "echo \"  false  \"\n" +
+                "echo \"  false  \"",
             onlyExpression = true
         )
 
@@ -282,6 +294,44 @@ internal class EnvReplacementParserTest {
     }
 
     @Test
+    fun complexExpressionTest() {
+        val contextMap = HashMap<String, String>()
+        contextMap["envs.env_a"] = "a"
+        contextMap["envs.env_b"] = "b"
+        contextMap["envs.env_c"] = "c"
+        contextMap["envs.env_d"] = "d"
+        contextMap["envs.env_e"] = "e"
+        parseAndEquals(
+            data = contextMap,
+            template = "env\n" +
+                "echo 引用不存在的系统变量 \\\${bcz}=\${bcz}\n" +
+                "echo 引用不存在的蓝盾变量\\\\$\\{\\{bczd}}=\${{ bczd }}\n" +
+                "echo \${{ ci.workspace }}\n" +
+                "echo envs.env_a=\${{ envs.env_a }}, env_a=\$env_a\n" +
+                "echo envs.env_b=\${{ envs.env_b }}, env_b=\$env_b\n" +
+                "echo envs.env_c=\${{ envs.env_c }}, env_c=\$env_c\n" +
+                "echo envs.env_d=\${{ envs.env_d }}, env_d=\$env_d\n" +
+                "echo envs.env_e=\${{ envs.env_e }}, env_e=\$env_e\n" +
+                "echo envs.a=\${{ envs.a }}, a=\$a\n" +
+                "echo settings.sensitive.password=\${{ settings.sensitive.password }}\n" +
+                "echo ::set-output name=a::i am a at step_1",
+            expect = "env\n" +
+                "echo 引用不存在的系统变量 \\\${bcz}=\${bcz}\n" +
+                "echo 引用不存在的蓝盾变量\\\\\$\\{\\{bczd}}=\${{ bczd }}\n" +
+                "echo \${{ ci.workspace }}\n" +
+                "echo envs.env_a=a, env_a=\$env_a\n" +
+                "echo envs.env_b=b, env_b=\$env_b\n" +
+                "echo envs.env_c=c, env_c=\$env_c\n" +
+                "echo envs.env_d=d, env_d=\$env_d\n" +
+                "echo envs.env_e=e, env_e=\$env_e\n" +
+                "echo envs.a=\${{ envs.a }}, a=\$a\n" +
+                "echo settings.sensitive.password=\${{ settings.sensitive.password }}\n" +
+                "echo ::set-output name=a::i am a at step_1",
+            onlyExpression = true
+        )
+    }
+
+    @Test
     fun parseExpressionTestContextMap() {
         val map = mutableMapOf<String, String>()
         map["age"] = "1"
@@ -342,7 +392,7 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals(
             "echo /data/landun/workspace",
             EnvReplacementParser.parse(
-                obj = command9,
+                value = command9,
                 contextMap = map.plus("ci.workspace" to "/data/landun/workspace"),
                 onlyExpression = true
             )
@@ -391,7 +441,7 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals(
             "echo /data/landun/workspace || hahahahaha",
             EnvReplacementParser.parse(
-                obj = command9,
+                value = command9,
                 contextMap = data.plus("ci.workspace" to "/data/landun/workspace"),
                 onlyExpression = true
             )

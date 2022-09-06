@@ -210,16 +210,29 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
                             fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
+                            val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(contextMap)
                             c.buildEnv?.forEach { env ->
                                 containerAppResource.getBuildEnv(
-                                    name = env.key, version = env.value, os = c.baseOS.name.toLowerCase()
+                                    name = env.key,
+                                    version = EnvReplacementParser.parse(
+                                        value = env.value,
+                                        contextMap = contextMap,
+                                        onlyExpression = asCodeSettings?.enable,
+                                        contextPair = contextPair
+                                    ),
+                                    os = c.baseOS.name.toLowerCase()
                                 ).data?.let { self -> envList.add(self) }
                             }
 
                             // 设置Job环境变量customBuildEnv到variablesWithType和variables中
                             // TODO 此处应收敛到variablesWithType或variables的其中一个
                             c.customBuildEnv?.map { (t, u) ->
-                                val value = EnvReplacementParser.parse(u, contextMap, asCodeSettings?.enable)
+                                val value = EnvReplacementParser.parse(
+                                    value = u,
+                                    contextMap = contextMap,
+                                    onlyExpression = asCodeSettings?.enable,
+                                    contextPair = contextPair
+                                )
                                 contextMap[t] = value
                                 BuildParameters(
                                     key = t,
@@ -427,13 +440,22 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             val task = allTasks.firstOrNull()
                 ?: return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
 
-            return claim(task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId)
+            return claim(
+                task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId,
+                asCodeEnabled = pipelineAsCodeService.asCodeEnabled(task.projectId, task.pipelineId) == true
+            )
         } finally {
             containerIdLock.unlock()
         }
     }
 
-    private fun claim(task: PipelineBuildTask, buildId: String, userId: String, vmSeqId: String): BuildTask {
+    private fun claim(
+        task: PipelineBuildTask,
+        buildId: String,
+        userId: String,
+        vmSeqId: String,
+        asCodeEnabled: Boolean
+    ): BuildTask {
         LOG.info("ENGINE|$buildId|BC_ING|${task.projectId}|j($vmSeqId)|[${task.taskId}-${task.taskName}]")
         return when {
             task.status == BuildStatus.QUEUE -> { // 初始化状态，表明任务还未准备好
@@ -514,6 +536,18 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         expiredInSecond = transMinuteTimeoutToSec(task.additionalOptions?.timeout?.toInt())
                     )
                 }
+                val replacement = if (asCodeEnabled) {
+                    val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(buildVariable)
+                    object : KeyReplacement {
+                        override fun getReplacement(key: String, doubleCurlyBraces: Boolean) =
+                            EnvReplacementParser.parse(key, buildVariable, true, contextPair)
+                    }
+                } else {
+                    object : KeyReplacement {
+                        override fun getReplacement(key: String, doubleCurlyBraces: Boolean) =
+                            if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
+                    }
+                }
                 BuildTask(
                     buildId = buildId,
                     vmSeqId = vmSeqId,
@@ -525,11 +559,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     type = task.taskType,
                     params = task.taskParams.map {
                         val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(
-                            it.value, buildVariable,
-                            object : KeyReplacement {
-                                override fun getReplacement(key: String, doubleCurlyBraces: Boolean) =
-                                    if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
-                            }
+                            it.value, buildVariable, replacement
                         )
                         it.key to JsonUtil.toJson(obj, formatted = false)
                     }.filter {
@@ -833,15 +863,17 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         task?.run {
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
-                    (errorCode?.let {
-                        "\n${
+                    (
+                        errorCode?.let {
+                            "\n${
                             MessageCodeUtil.getCodeLanMessage(
                                 messageCode = errorCode.toString(),
                                 checkUrlDecoder = true
                             )
-                        }\n"
-                    }
-                        ?: "") +
+                            }\n"
+                        }
+                            ?: ""
+                        ) +
                     when (errorType) {
                         ErrorType.USER -> "Please check your input or service."
                         ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
