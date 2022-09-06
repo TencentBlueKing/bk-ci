@@ -25,46 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.api.manager
+package com.tencent.devops.auth.service.impl
 
-import com.tencent.devops.auth.pojo.enum.ApprovalType
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.auth.api.OPApprovalResource
+import com.tencent.devops.auth.service.AuthManagerApprovalService
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["AUTH_MANAGER_APPROVAL"], description = "权限续期审批接口")
-@Path("/auth/approval")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface AuthManagerApprovalResource {
-    @POST
-    @Path("/user/renewal")
-    @ApiOperation("用户续期权限")
-    fun userRenewalAuth(
-        @ApiParam(value = "审批单ID")
-        @QueryParam("approvalId")
-        approvalId: Int,
-        @ApiParam(value = "用户是否续期")
-        @QueryParam("approvalType")
-        approvalType: ApprovalType
-    ): Result<Boolean>
-
-    @POST
-    @Path("/manager")
-    @ApiOperation("审批人审批")
-    fun managerApproval(
-        @ApiParam(value = "审批单ID")
-        @QueryParam("approvalId")
-        approvalId: Int,
-        @ApiParam(value = "是否同意用户续期")
-        @QueryParam("approvalType")
-        approvalType: ApprovalType
-    ): Result<Boolean>
+@RestResource
+class OPApprovalResourceImpl @Autowired constructor(
+    val authManagerApprovalService: AuthManagerApprovalService
+) : OPApprovalResource {
+    override fun checkExpiringManager() {
+        authManagerApprovalService.checkExpiringManager()
+    }
 }
