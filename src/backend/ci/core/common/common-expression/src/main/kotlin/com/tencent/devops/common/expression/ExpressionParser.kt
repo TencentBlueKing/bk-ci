@@ -295,7 +295,6 @@ object ExpressionParser {
                 } else if (context.subNameValueEvaluateInfo?.enableSubNameValueEvaluate == true) {
                     node = ContextValueNode()
                     node.name = name ?: ""
-                    context.subNameValueEvaluateInfo.hasOtherNameValue = true
                 } else {
                     throw ExpressionParseException(
                         ParseExceptionKind.UnrecognizedNamedValue,

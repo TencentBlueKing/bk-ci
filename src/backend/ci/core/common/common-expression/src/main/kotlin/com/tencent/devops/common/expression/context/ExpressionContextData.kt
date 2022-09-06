@@ -27,26 +27,21 @@
 
 package com.tencent.devops.common.expression.context
 
-import com.tencent.devops.common.expression.ExecutionContext
-import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
-import com.tencent.devops.common.expression.expression.sdk.NamedValue
-import com.tencent.devops.common.expression.expression.sdk.ResultMemory
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.tencent.devops.common.expression.expression.sdk.IString
 
-class ContextValueNode : NamedValue() {
-    override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
-        return Pair(null, (context.state as ExecutionContext).expressionValues[name])
-    }
+/**
+ * 针对SubNameValue替换(目前只有模板替换时的变量)替换特供
+ * 目的是将 包含${{}}不替换为 '${{}}' 而是 ${{}}
+ */
+class ExpressionContextData(val value: String) : PipelineContextData(PipelineContextDataType.EXPRESSION), IString {
+    override fun getString(): String = value
 
-    override fun createNode(): NamedValue {
-        return ContextValueNode()
-    }
+    override fun clone(): PipelineContextData = ExpressionContextData(value)
 
-    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
-        val values = (context.state as ExecutionContext).expressionValues
-        return if (values[name] != null) {
-            Pair(values[name], true)
-        } else {
-            Pair(name, false)
-        }
-    }
+    override fun toJson(): JsonNode = TextNode(value)
+    override fun fetchValue() = getString()
+
+    override fun toString(): String = value
 }

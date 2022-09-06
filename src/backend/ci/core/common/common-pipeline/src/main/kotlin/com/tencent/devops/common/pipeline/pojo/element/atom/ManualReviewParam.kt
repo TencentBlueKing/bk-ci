@@ -29,7 +29,6 @@ package com.tencent.devops.common.pipeline.pojo.element.atom
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -64,14 +63,7 @@ data class ManualReviewParam(
                 else -> variables[key]
             }
         } else {
-            ObjectReplaceEnvVarUtil.replaceEnvVar(
-                value,
-                variables,
-                object : KeyReplacement {
-                    override fun getReplacement(key: String, doubleCurlyBraces: Boolean) =
-                        if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
-                }
-            )
+            ObjectReplaceEnvVarUtil.replaceEnvVar(value, variables)
         }
         options = if (!variableOption.isNullOrBlank()) {
             EnvUtils.parseEnv(variableOption, variables).let {

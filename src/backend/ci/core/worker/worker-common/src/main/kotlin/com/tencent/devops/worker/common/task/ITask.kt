@@ -48,6 +48,8 @@ abstract class ITask {
 
     private var platformErrorCode: Int? = null
 
+    private var finishKillFlag: Boolean? = null
+
     fun run(
         buildTask: BuildTask,
         buildVariables: BuildVariables,
@@ -65,7 +67,11 @@ abstract class ITask {
                     additionalOptions.customEnv!!.forEach {
                         if (!it.key.isNullOrBlank()) {
                             // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
-                            val value = EnvReplacementParser.parse(it.value ?: "", variablesBuild)
+                            val value = EnvReplacementParser.parse(
+                                value = it.value ?: "",
+                                contextMap = variablesBuild,
+                                onlyExpression = buildVariables.pipelineAsCodeSettings?.enable
+                            )
                             variablesBuild["envs.${it.key}"] = value
                             variables[it.key!!] = value
                         }
@@ -142,6 +148,14 @@ abstract class ITask {
 
     fun getPlatformErrorCode(): Int? {
         return platformErrorCode
+    }
+
+    protected fun addFinishKillFlag(taskFinishKillFlag: Boolean) {
+        finishKillFlag = taskFinishKillFlag
+    }
+
+    fun getFinishKillFlag(): Boolean? {
+        return finishKillFlag
     }
 
     protected fun isThirdAgent() = BuildEnv.getBuildType() == BuildType.AGENT
