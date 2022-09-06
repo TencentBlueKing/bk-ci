@@ -54,7 +54,7 @@ import java.net.URLDecoder
 /**
  * 构建脚本任务
  */
-@Suppress("LongMethod")
+@Suppress("LongMethod", "ComplexMethod")
 open class ScriptTask : ITask() {
 
     private val gatewayResourceApi = ApiFactory.create(QualityGatewaySDKApi::class)

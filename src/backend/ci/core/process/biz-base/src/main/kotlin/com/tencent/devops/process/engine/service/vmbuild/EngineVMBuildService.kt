@@ -212,7 +212,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
                             c.buildEnv?.forEach { env ->
                                 containerAppResource.getBuildEnv(
-                                    name = env.key, version = env.value, os = c.baseOS.name.toLowerCase()
+                                    name = env.key,
+                                    version = EnvReplacementParser.parse(env.value, contextMap, asCodeSettings?.enable),
+                                    os = c.baseOS.name.toLowerCase()
                                 ).data?.let { self -> envList.add(self) }
                             }
 
