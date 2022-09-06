@@ -58,7 +58,9 @@
                             @click="handleVersionClick(prop)"
                         >
                             <status :status="calcStatus(prop.atomStatus)"></status>
-                            <span :class="{ 'g-text-link': ['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'].includes(prop.atomStatus) }">{{ prop.version }}</span>
+                            <span
+                                :class="{ 'g-text-link': ['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING', 'CODECCING', 'CODECC_FAIL'].includes(prop.atomStatus) }"
+                            >{{ prop.version }}</span>
                         </span>
                     </template>
                 </bk-table-column>
@@ -666,7 +668,7 @@
 
         methods: {
             handleVersionClick (prop) {
-                if (['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'].includes(prop.atomStatus)) {
+                if (['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING', 'CODECCING', 'CODECC_FAIL'].includes(prop.atomStatus)) {
                     this.routerProgress(prop)
                 }
             },
