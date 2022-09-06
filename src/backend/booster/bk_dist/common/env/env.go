@@ -81,6 +81,9 @@ const (
 	KeyCustomSetting = "CUSTOM_SETTINGS"
 
 	CommonBKEnvSepKey = "!!|!!"
+
+	KeyRemoteEnvAppend    = "REMOTE_ENV_APPEND"
+	KeyRemoteEnvOverwrite = "REMOTE_ENV_OVERWRITE"
 )
 
 // GetEnvKey return env value by specified key

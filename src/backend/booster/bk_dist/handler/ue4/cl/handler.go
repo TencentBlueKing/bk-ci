@@ -39,6 +39,8 @@ const (
 	hookConfigPathCCCommon = "bk_cl_rules.json"
 
 	MaxWindowsCommandLength = 30000
+
+	appendEnvKey = "INCLUDE="
 )
 
 var (
@@ -339,10 +341,11 @@ func (cl *TaskCL) analyzeIncludes(f string, workdir string) ([]string, error) {
 		if !filepath.IsAbs(l) {
 			l, _ = filepath.Abs(filepath.Join(workdir, l))
 		}
-		if dcFile.Stat(l).Exist() {
+		fstat := dcFile.Stat(l)
+		if fstat.Exist() && !fstat.Basic().IsDir() {
 			includes = append(includes, l)
 		} else {
-			blog.Warnf("cl: failed to got include file: %s in file:%s", l, f)
+			blog.Infof("cl: do not deal include file: %s in file:%s for not existed or is dir", l, f)
 		}
 	}
 
@@ -350,7 +353,7 @@ func (cl *TaskCL) analyzeIncludes(f string, workdir string) ([]string, error) {
 }
 
 // search all include files for this compile command
-func (cl *TaskCL) Includes(args []string, workdir string, forcefresh bool) ([]string, error) {
+func (cl *TaskCL) Includes(responseFile string, args []string, workdir string, forcefresh bool) ([]string, error) {
 	pumpdir := dcPump.PumpCacheDir(cl.sandbox.Env)
 	if pumpdir == "" {
 		pumpdir = dcUtil.GetPumpCacheDir()
@@ -362,6 +365,7 @@ func (cl *TaskCL) Includes(args []string, workdir string, forcefresh bool) ([]st
 		}
 	}
 
+	// TOOD : maybe we should pass responseFile to calc md5, to ensure unique
 	outputFile, err := getPumpIncludeFile(pumpdir, "pump_heads", ".txt", args)
 	if err != nil {
 		blog.Errorf("cl: do includes get output file failed: %v", err)
@@ -386,8 +390,14 @@ func (cl *TaskCL) Includes(args []string, workdir string, forcefresh bool) ([]st
 	// do not delete to use when cache mode
 	// cl.addTmpFile(outputFile)
 
-	execArgs := []string{"-Xiwyu", "--verbose=0", "--driver-mode=cl"}
-	execArgs = append(execArgs, args[1:]...)
+	execArgs := []string{"-Xtbs", "--verbose=0", "--driver-mode=cl"}
+	if responseFile != "" {
+		execArgs = append(execArgs, "-Xtbs")
+		farg := fmt.Sprintf("--cmd_file=%s", responseFile)
+		execArgs = append(execArgs, farg)
+	} else {
+		execArgs = append(execArgs, args[1:]...)
+	}
 
 	// TODO : ensure all absolute file path
 	sandbox := cl.sandbox.Fork()
@@ -445,7 +455,7 @@ func (cl *TaskCL) trypump(command []string) (*dcSDK.BKDistCommand, error) {
 	cl.showinclude = showinclude
 	cl.pumpArgs = args
 
-	includes, err := cl.Includes(args, cl.sandbox.Dir, false)
+	includes, err := cl.Includes(responseFile, args, cl.sandbox.Dir, false)
 
 	tend = time.Now().Local()
 	blog.Debugf("cl: trypump time record: %s for Includes for rsp file:%s", tend.Sub(tstart), responseFile)
@@ -495,6 +505,19 @@ func (cl *TaskCL) trypump(command []string) (*dcSDK.BKDistCommand, error) {
 			results = append(results, sourcedependfile)
 		}
 
+		// set env which need append to remote
+		envs := []string{}
+		for _, v := range cl.sandbox.Env.Source() {
+			if strings.HasPrefix(v, appendEnvKey) {
+				envs = append(envs, v)
+				// set flag we hope append env, not overwrite
+				flag := fmt.Sprintf("%s=true", dcEnv.GetEnvKey(env.KeyRemoteEnvAppend))
+				envs = append(envs, flag)
+				break
+			}
+		}
+		blog.Infof("cl: env which ready sent to remote:[%v]", envs)
+
 		exeName := command[0]
 		params := command[1:]
 		blog.Infof("cl: parse command,server command:[%s %s],dir[%s]",
@@ -509,6 +532,7 @@ func (cl *TaskCL) trypump(command []string) (*dcSDK.BKDistCommand, error) {
 					Params:          params,
 					Inputfiles:      inputFiles,
 					ResultFiles:     results,
+					Env:             envs,
 				},
 			},
 			CustomSave: true,
@@ -749,7 +773,7 @@ ERROREND:
 	// if remote failed with pump mode, we need refresh the header list
 	if dcPump.SupportPump(cl.sandbox.Env) && dcPump.IsPumpCache(cl.sandbox.Env) {
 		blog.Infof("cl: ready to fresh pump header files for cmd: [%v]", cl.pumpArgs)
-		_, _ = cl.Includes(cl.pumpArgs, cl.sandbox.Dir, true)
+		_, _ = cl.Includes(cl.responseFile, cl.pumpArgs, cl.sandbox.Dir, true)
 	}
 
 	return fmt.Errorf("cl: failed to remote execute, retcode %d, error message:%s, output message:%s",

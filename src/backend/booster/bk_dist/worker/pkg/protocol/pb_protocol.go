@@ -399,7 +399,7 @@ func saveFile(
 
 	// compressed size < 0 means do not save, or may will overwrite existing files.
 	if size := rf.GetCompressedsize(); size < 0 {
-		blog.Warnf("get compressed size for [%s] < 0: %d", inputfile, size)
+		blog.Debugf("get compressed size for [%s] < 0: %d", inputfile, size)
 		return inputfile, nil
 	}
 

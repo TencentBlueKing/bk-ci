@@ -12,6 +12,7 @@ package remote
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -1352,7 +1353,8 @@ func (m *Mgr) sendFilesWithCorkSameHost(files []*corkFile) {
 	sandbox := files[0].sandbox
 	handler := files[0].handler
 
-	blog.Infof("remote: start send %d files with cork to server %s tick for work: %s", len(files), host.Server, m.work.ID())
+	blog.Infof("remote: start send cork %d files with size:%d to server %s for work: %s",
+		len(files), totalsize, host.Server, m.work.ID())
 
 	// in queue to limit total size of sending files, maybe we should deal if failed
 	// blog.Infof("remote: try to get memory lock with file size:%d", totalsize)
@@ -1374,8 +1376,14 @@ func (m *Mgr) sendFilesWithCorkSameHost(files []*corkFile) {
 		result, err = handler.ExecuteSendFile(host, req, sandbox)
 		if err == nil {
 			break
+		} else {
+			blog.Warnf("remote: failed to send cork %d files with size:%d to server:%s for the %dth times with error:%v",
+				len(files), totalsize, host.Server, i, err)
 		}
 	}
+
+	// free memory anyway after sent file
+	debug.FreeOSMemory()
 
 	status := types.FileSendSucceed
 	if err != nil {
