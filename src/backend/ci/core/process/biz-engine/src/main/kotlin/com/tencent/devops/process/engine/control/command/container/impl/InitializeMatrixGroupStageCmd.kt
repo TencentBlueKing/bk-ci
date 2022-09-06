@@ -348,7 +348,7 @@ class InitializeMatrixGroupStageCmd(
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
                             mutexGroupName = EnvReplacementParser.parse(
-                                obj = self.mutexGroupName,
+                                value = self.mutexGroupName,
                                 contextMap = contextCase,
                                 onlyExpression = asCodeEnabled,
                                 contextPair = replacement

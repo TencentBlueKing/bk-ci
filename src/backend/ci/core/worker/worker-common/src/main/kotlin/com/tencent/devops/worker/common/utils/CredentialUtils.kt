@@ -125,6 +125,10 @@ object CredentialUtils {
                     val credentialInfo = requestCredential(key, pair, targetProjectId).data!!
                     val credentialList = getDecodedCredentialList(credentialInfo, pair)
                     val keyMap = CredentialType.Companion.getKeyMap(credentialInfo.credentialType.name)
+                    logger.info(
+                        "[$key]|CredentialRuntimeNamedValue|credentialInfo=$credentialInfo|" +
+                            "credentialList=$credentialList|keyMap=$keyMap"
+                    )
                     credentialList.forEachIndexed { index, credential ->
                         val token = keyMap["v${index + 1}"] ?: return@forEachIndexed
                         add(token, StringContextData(credential))
