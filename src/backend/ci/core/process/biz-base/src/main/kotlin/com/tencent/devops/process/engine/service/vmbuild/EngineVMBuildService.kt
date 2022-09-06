@@ -209,15 +209,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
                             fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
-                            val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(contextMap)
                             c.buildEnv?.forEach { env ->
                                 containerAppResource.getBuildEnv(
                                     name = env.key,
                                     version = EnvReplacementParser.parse(
                                         value = env.value,
                                         contextMap = contextMap,
-                                        onlyExpression = asCodeSettings?.enable,
-                                        contextPair = contextPair
+                                        onlyExpression = asCodeSettings?.enable
                                     ),
                                     os = c.baseOS.name.toLowerCase()
                                 ).data?.let { self -> envList.add(self) }
@@ -229,8 +227,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 val value = EnvReplacementParser.parse(
                                     value = u,
                                     contextMap = contextMap,
-                                    onlyExpression = asCodeSettings?.enable,
-                                    contextPair = contextPair
+                                    onlyExpression = asCodeSettings?.enable
                                 )
                                 contextMap[t] = value
                                 BuildParameters(
