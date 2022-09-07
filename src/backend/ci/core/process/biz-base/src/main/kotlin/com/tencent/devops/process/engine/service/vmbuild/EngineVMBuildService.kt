@@ -209,14 +209,17 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
                             fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
-                            val contextPair = EnvReplacementParser.getCustomExecutionContextByMap(contextMap)
+                            val asCodeEnabled = asCodeSettings?.enable == true
+                            val contextPair = if (asCodeEnabled) {
+                                EnvReplacementParser.getCustomExecutionContextByMap(contextMap)
+                            } else null
                             c.buildEnv?.forEach { env ->
                                 containerAppResource.getBuildEnv(
                                     name = env.key,
                                     version = EnvReplacementParser.parse(
                                         value = env.value,
                                         contextMap = contextMap,
-                                        onlyExpression = asCodeSettings?.enable,
+                                        onlyExpression = asCodeEnabled,
                                         contextPair = contextPair
                                     ),
                                     os = c.baseOS.name.toLowerCase()
@@ -229,7 +232,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 val value = EnvReplacementParser.parse(
                                     value = u,
                                     contextMap = contextMap,
-                                    onlyExpression = asCodeSettings?.enable,
+                                    onlyExpression = asCodeEnabled,
                                     contextPair = contextPair
                                 )
                                 contextMap[t] = value
