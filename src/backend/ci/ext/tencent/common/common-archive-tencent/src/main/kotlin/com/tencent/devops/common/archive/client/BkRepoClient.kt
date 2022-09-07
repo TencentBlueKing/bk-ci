@@ -794,8 +794,11 @@ class BkRepoClient constructor(
                 " fileNames: $fileNames, metadata: $metadata, page: $page, pageSize: $pageSize"
         )
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
-        val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
-        val ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
+        val ruleList = mutableListOf<Rule>(projectRule, Rule.QueryRule("folder", false, OperationType.EQ))
+        if (repoNames.isNotEmpty()) {
+            val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
+            ruleList.add(repoRule)
+        }
         if (fileNames.isNotEmpty()) {
             val fileNameRule = Rule.NestedRule(fileNames.map {
                 Rule.QueryRule("name", it, OperationType.MATCH)
