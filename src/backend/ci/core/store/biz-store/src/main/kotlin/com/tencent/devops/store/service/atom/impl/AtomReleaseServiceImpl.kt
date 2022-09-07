@@ -441,15 +441,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
             }
             if (atomStatus == AtomStatusEnum.TESTING) {
-                // 插件error.json文件数据入库
-                syncAtomErrorCodeConfig(
-                    projectCode = projectCode,
-                    atomCode = atomCode,
-                    atomVersion = version,
-                    userId = userId,
-                    repositoryHashId = atomRecord.repositoryHashId,
-                    branch = branch
-                )
                 // 插件大版本内有测试版本则写入缓存
                 redisOperation.hset(
                     key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
@@ -533,17 +524,21 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
     }
 
-    private fun syncAtomErrorCodeConfig(
-        projectCode: String,
+    override fun syncAtomErrorCodeConfig(
         atomCode: String,
         atomVersion: String,
         userId: String,
-        repositoryHashId: String? = null,
-        branch: String? = null
+        repositoryHashId: String?,
+        branch: String?
     ) {
+        val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext,
+            atomCode,
+            StoreTypeEnum.ATOM.type.toByte()
+        )
         try {
             val errorJsonStr = getFileStr(
-                projectCode = projectCode,
+                projectCode = projectCode!!,
                 atomCode = atomCode,
                 atomVersion = atomVersion,
                 fileName = ERROR_JSON_NAME,
