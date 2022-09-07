@@ -47,7 +47,7 @@
 
         getDocumentTitle (model) {
             const titlesMap = {
-                undefined: this.$t('documentTitleHome'),
+                '': this.$t('documentTitleHome'),
                 pipeline: this.$t('documentTitlePipeline'),
                 codelib: this.$t('documentTitleCodelib'),
                 artifactory: this.$t('documentTitleArtifactory'),
