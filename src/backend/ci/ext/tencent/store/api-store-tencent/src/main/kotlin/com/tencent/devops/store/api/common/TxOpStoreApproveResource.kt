@@ -25,32 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.common
+package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.TxServiceStoreApproveResource
-import com.tencent.devops.store.service.common.TxStoreMoaApproveCallBackService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.FormParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class TxServiceStoreApproveResourceImpl @Autowired constructor(
-    private val txStoreMoaApproveCallBackService: TxStoreMoaApproveCallBackService
-) : TxServiceStoreApproveResource {
+@Api(tags = ["OPEN_MARKET_APPROVAL"], description = "open-store组件审批")
+@Path("/open/market/approval")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxOpStoreApproveResource {
 
-    override fun moaApproveCallBack(
+    @ApiOperation("moa审批回调")
+    @POST
+    @Path("/moa/callBack")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    fun moaApproveCallBack(
+        @ApiParam(value = "审批人", required = true)
+        @FormParam("verifier")
         verifier: String,
+        @ApiParam(value = "审批状态 0对应驳回，1对应通过", required = true)
+        @FormParam("result")
         result: Int,
+        @ApiParam(value = "任务ID", required = true)
+        @FormParam("taskid")
         taskId: String,
+        @ApiParam(value = "审批信息", required = true)
+        @FormParam("message")
         message: String,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
         token: String
-    ): Result<Boolean> {
-        return txStoreMoaApproveCallBackService.moaApproveCallBack(
-            verifier = verifier,
-            result = result,
-            taskId = taskId,
-            message = message,
-            token = token
-        )
-    }
+    ): Result<Boolean>
 }
