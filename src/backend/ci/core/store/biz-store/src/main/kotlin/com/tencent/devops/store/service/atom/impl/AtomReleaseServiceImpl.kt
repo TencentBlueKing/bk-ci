@@ -543,7 +543,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomVersion = atomVersion,
                 fileName = ERROR_JSON_NAME,
                 repositoryHashId = repositoryHashId,
-                branch = branch
+                branch = if (branch.isNullOrBlank()) "master" else branch
             )
             logger.info("syncAtomErrorCodeConfig errorJsonStr:$errorJsonStr | projectCode: $projectCode" +
                     "atomVersion:$atomVersion|branch:$branch|repositoryHashId:$repositoryHashId")
