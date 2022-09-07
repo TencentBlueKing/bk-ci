@@ -285,38 +285,38 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
     @Suppress("ComplexMethod", "LongMethod")
     private fun buildByEnvId(event: PipelineAgentStartupEvent, dispatchType: ThirdPartyAgentEnvDispatchType) {
+        val agentsResult = try {
+            when (dispatchType.agentType) {
+                AgentType.ID -> {
+                    client.get(ServiceThirdPartyAgentResource::class)
+                        .getAgentsByEnvId(
+                            event.projectId,
+                            dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
+                                ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName)
+                }
 
-        val agentsResult = when (dispatchType.agentType) {
-            AgentType.ID -> {
-                client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentsByEnvId(
-                        event.projectId,
-                        dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
-                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName)
-            }
-            AgentType.NAME -> {
-                try {
+                AgentType.NAME -> {
                     client.get(ServiceThirdPartyAgentResource::class)
                         .getAgentsByEnvName(
                             event.projectId,
                             dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
                                 ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName)
-                } catch (e: Exception) {
-                    onFailBuild(
-                        client = client,
-                        buildLogPrinter = buildLogPrinter,
-                        event = event,
-                        errorType = ErrorCodeEnum.GET_VM_ERROR.errorType,
-                        errorCode = ErrorCodeEnum.GET_VM_ERROR.errorCode,
-                        errorMsg = if (e is RemoteServiceException) {
-                            e.errorMessage
-                        } else {
-                            e.message ?: "${ErrorCodeEnum.GET_VM_ERROR.formatErrorMessage}(${dispatchType.envName})"
-                        }
-                    )
-                    Result(data = null)
                 }
             }
+        } catch (e: Exception) {
+            onFailBuild(
+                client = client,
+                buildLogPrinter = buildLogPrinter,
+                event = event,
+                errorType = ErrorCodeEnum.GET_VM_ERROR.errorType,
+                errorCode = ErrorCodeEnum.GET_VM_ERROR.errorCode,
+                errorMsg = if (e is RemoteServiceException) {
+                    e.errorMessage
+                } else {
+                    e.message ?: "${ErrorCodeEnum.GET_VM_ERROR.formatErrorMessage}(${dispatchType.envName})"
+                }
+            )
+            return
         }
 
         if (agentsResult.status == Response.Status.FORBIDDEN.statusCode) {
