@@ -545,8 +545,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 repositoryHashId = repositoryHashId,
                 branch = if (branch.isNullOrBlank()) "master" else branch
             )
-            logger.info("syncAtomErrorCodeConfig errorJsonStr:$errorJsonStr | projectCode: $projectCode" +
-                    "atomVersion:$atomVersion|branch:$branch|repositoryHashId:$repositoryHashId")
             if (!errorJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(errorJsonStr)) {
                 val storeErrorCodeInfo = StoreErrorCodeInfo(
                     storeCode = atomCode,
