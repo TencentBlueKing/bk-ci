@@ -91,8 +91,8 @@ class StoreApproveServiceImpl : StoreApproveService {
         val storeCode = storeApproveRecord.storeCode
         val storeType = storeApproveRecord.storeType
         val token = storeApproveRecord.token
-        if (!token.isNullOrBlank()) {
-            if (!token.equals(storeApproveRequest.token)) {
+        if (!storeApproveRequest.token.isNullOrBlank()) {
+            if (token != storeApproveRequest.token) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
             }
         }
