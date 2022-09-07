@@ -174,7 +174,7 @@ class SendNotify @Autowired constructor(
                     content = content,
                     ccs = ccs,
                     streamUrl = streamGitConfig.streamUrl!!,
-                    gitProjectId = action.data.eventCommon.gitProjectId
+                    gitProjectId = action.data.getGitProjectId()
                 )
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
@@ -201,7 +201,7 @@ class SendNotify @Autowired constructor(
                     gitUrl = streamGitConfig.gitUrl!!,
                     streamUrl = streamGitConfig.streamUrl!!,
                     content = content,
-                    gitProjectId = action.data.eventCommon.gitProjectId,
+                    gitProjectId = action.data.getGitProjectId(),
                     scmType = streamGitConfig.getScmType()
                 )
             }
