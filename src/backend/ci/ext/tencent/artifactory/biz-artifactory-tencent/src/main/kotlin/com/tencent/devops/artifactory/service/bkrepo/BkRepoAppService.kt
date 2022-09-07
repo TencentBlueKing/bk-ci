@@ -145,6 +145,8 @@ class BkRepoAppService @Autowired constructor(
                     "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限"
                 )
             }
+            // TODO #6302
+            else -> throw UnsupportedOperationException()
         }
         return normalizedPath
     }

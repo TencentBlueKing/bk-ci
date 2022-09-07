@@ -84,6 +84,8 @@ object JFrogUtil {
             ArtifactoryType.CUSTOM_DIR -> {
                 getCustomDirPath(projectId, path)
             }
+            // TODO #6302
+            else -> throw UnsupportedOperationException()
         }
     }
 

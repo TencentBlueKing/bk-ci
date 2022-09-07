@@ -102,6 +102,8 @@ class BkRepoService @Autowired constructor(
             ArtifactoryType.CUSTOM_DIR -> {
                 bkRepoCustomDirService.list(userId, projectId, path)
             }
+            // TODO #6302
+            else -> throw UnsupportedOperationException()
         }
     }
 

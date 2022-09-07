@@ -223,6 +223,8 @@ open class BkRepoDownloadService @Autowired constructor(
                     )
                 )
             }
+            // TODO #6302
+            else -> throw UnsupportedOperationException()
         }
         val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl)
         val fileDetail = bkRepoClient.getFileDetail(

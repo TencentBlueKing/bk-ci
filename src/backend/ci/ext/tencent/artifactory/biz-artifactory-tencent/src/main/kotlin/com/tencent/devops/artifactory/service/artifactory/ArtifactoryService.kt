@@ -118,6 +118,8 @@ class ArtifactoryService @Autowired constructor(
             ArtifactoryType.CUSTOM_DIR -> {
                 artifactoryCustomDirService.list(userId, projectId, path)
             }
+            // TODO #6302
+            else -> throw UnsupportedOperationException()
         }
     }
 
@@ -130,6 +132,8 @@ class ArtifactoryService @Autowired constructor(
             ArtifactoryType.CUSTOM_DIR -> {
                 artifactoryCustomDirService.show(userId, projectId, path)
             }
+            // TODO #6302
+            else -> throw UnsupportedOperationException()
         }
     }
 
