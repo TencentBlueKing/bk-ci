@@ -32,45 +32,57 @@ import com.dd.plist.NSDictionary
 import com.dd.plist.PropertyListParser
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
-import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.regex.Pattern
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
+import java.util.zip.ZipFile
 
 object IpaIconUtil {
     private val logger = LoggerFactory.getLogger(IpaIconUtil::class.java)
+    private const val basePattern = "Payload/[\\w\\u4e00-\\u9fa5.-]+\\.app"
 
     fun resolveIpaIcon(file: File): ByteArray? {
         try {
-            val plistPattern = Pattern.compile("Payload/[\\w.-]+\\.app/Info.plist")
+            val plistPattern = Pattern.compile("$basePattern/Info.plist")
             var iconName: String? = null
-            ZipInputStream(BufferedInputStream(file.inputStream())).use { inputSteam ->
-                var entry: ZipEntry? = null
-                while (inputSteam.nextEntry.also { entry = it } != null) {
-                    if (plistPattern.matcher(entry!!.name).matches()) {
-                        val buffer = ByteArrayOutputStream()
-                        IOUtils.copy(inputSteam, buffer)
-                        val rootDict = PropertyListParser.parse(buffer.toByteArray()) as NSDictionary
-                        val cfBundleIcons = rootDict.objectForKey("CFBundleIcons") as NSDictionary
-                        val cfBundlePrimaryIcon = cfBundleIcons.objectForKey("CFBundlePrimaryIcon") as NSDictionary
-                        val cfBundleIconFiles = cfBundlePrimaryIcon.objectForKey("CFBundleIconFiles") as NSArray
-                        iconName = cfBundleIconFiles.lastObject().toString()
+            val zipFile = ZipFile(file)
+            val plistEntry = zipFile.entries().toList().firstOrNull { plistPattern.matcher(it.name).matches() }
+            plistEntry?.let {
+                val buffer = ByteArrayOutputStream()
+                zipFile.getInputStream(plistEntry).use {
+                    IOUtils.copy(it, buffer)
+                }
+                val rootDict = PropertyListParser.parse(buffer.toByteArray()) as NSDictionary
+                val cfBundleIcons = rootDict.objectForKey("CFBundleIcons") as NSDictionary
+                val cfBundlePrimaryIcon = cfBundleIcons.objectForKey("CFBundlePrimaryIcon") as NSDictionary
+                val cfBundleIconFiles = cfBundlePrimaryIcon.objectForKey("CFBundleIconFiles") as NSArray
+                iconName = cfBundleIconFiles.lastObject().toString()
+            }
+
+            // 优先查找根目录
+            if (!iconName.isNullOrBlank()) {
+                val iconPattern = Pattern.compile("$basePattern/$iconName@\\dx.png")
+                val iconEntry = zipFile.entries().toList().firstOrNull { iconPattern.matcher(it.name).matches() }
+                iconEntry?.let {
+                    logger.debug("icon file name is : ${it.name}")
+                    val buffer = ByteArrayOutputStream()
+                    zipFile.getInputStream(it).use { inputStream ->
+                        IOUtils.copy(inputStream, buffer)
                     }
+                    return buffer.toByteArray()
                 }
             }
 
+            //再找其他目录
             if (!iconName.isNullOrBlank()) {
-                ZipInputStream(BufferedInputStream(file.inputStream())).use { inputSteam ->
-                    var entry: ZipEntry? = null
-                    while (inputSteam.nextEntry.also { entry = it } != null) {
-                        if (entry!!.name.contains(iconName!!)) {
-                            val buffer = ByteArrayOutputStream()
-                            IOUtils.copy(inputSteam, buffer)
-                            return buffer.toByteArray()
-                        }
+                val iconEntry = zipFile.entries().toList().firstOrNull { it.name.contains(iconName!!) }
+                iconEntry?.let {
+                    logger.debug("icon file name is : ${it.name}")
+                    val buffer = ByteArrayOutputStream()
+                    zipFile.getInputStream(it).use { inputStream ->
+                        IOUtils.copy(inputStream, buffer)
                     }
+                    return buffer.toByteArray()
                 }
             }
         } catch (e: Exception) {
