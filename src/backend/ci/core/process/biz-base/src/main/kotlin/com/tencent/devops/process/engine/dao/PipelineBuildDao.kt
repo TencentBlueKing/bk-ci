@@ -467,14 +467,20 @@ class PipelineBuildDao {
         projectId: String,
         buildId: String,
         oldBuildStatus: BuildStatus,
-        newBuildStatus: BuildStatus
+        newBuildStatus: BuildStatus,
+        startTime: LocalDateTime? = null,
     ): Boolean {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val update = dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
-                .where(BUILD_ID.eq(buildId)).and(PROJECT_ID.eq(projectId)).and(STATUS.eq(oldBuildStatus.ordinal))
-                .execute()
-        } == 1
+            startTime?.let {
+                update.set(START_TIME, startTime)
+            }
+            return update.where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(STATUS.eq(oldBuildStatus.ordinal))
+                .execute() == 1
+        }
     }
 
     fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {

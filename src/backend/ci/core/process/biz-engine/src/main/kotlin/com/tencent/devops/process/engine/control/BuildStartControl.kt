@@ -108,6 +108,7 @@ class BuildStartControl @Autowired constructor(
         private const val JOB_ID = "0"
         private const val DEFAULT_DELAY = 1000
     }
+
     @BkTimed
     fun handle(event: PipelineBuildStartEvent) {
         val watcher = Watcher(id = "ENGINE|BuildStart|${event.traceId}|${event.buildId}|${event.status}")
