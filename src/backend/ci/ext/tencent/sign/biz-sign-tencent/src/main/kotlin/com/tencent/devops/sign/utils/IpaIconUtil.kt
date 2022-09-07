@@ -73,7 +73,7 @@ object IpaIconUtil {
                 }
             }
 
-            //再找其他目录
+            // 再找其他目录
             if (!iconName.isNullOrBlank()) {
                 val iconEntry = zipFile.entries().toList().firstOrNull { it.name.contains(iconName!!) }
                 iconEntry?.let {
