@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
@@ -251,6 +252,7 @@ class PipelineStageService @Autowired constructor(
                 val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
                 pauseStageNotify(
                     userId = userId,
+                    triggerUserId = variables[PIPELINE_START_USER_NAME] ?: userId,
                     stage = buildStage,
                     pipelineName = variables[PIPELINE_NAME] ?: pipelineId,
                     buildNum = variables[PIPELINE_BUILD_NUM] ?: "1"
@@ -485,6 +487,7 @@ class PipelineStageService @Autowired constructor(
 
     fun pauseStageNotify(
         userId: String,
+        triggerUserId: String,
         stage: PipelineBuildStage,
         pipelineName: String,
         buildNum: String
@@ -506,7 +509,7 @@ class PipelineStageService @Autowired constructor(
                 source = "s(${stage.stageId}) waiting for REVIEW",
                 projectId = stage.projectId, pipelineId = stage.pipelineId,
                 userId = userId, buildId = stage.buildId,
-                receivers = group.reviewers,
+                receivers = group.reviewers.plus(triggerUserId),
                 titleParams = mutableMapOf(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
