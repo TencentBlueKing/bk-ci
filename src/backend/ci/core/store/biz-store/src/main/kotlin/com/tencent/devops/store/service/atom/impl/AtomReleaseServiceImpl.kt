@@ -543,7 +543,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomVersion = atomVersion,
                 fileName = ERROR_JSON_NAME,
                 repositoryHashId = repositoryHashId,
-                branch = if (branch.isNullOrBlank()) "master" else branch
+                branch = if (branch.isNullOrBlank()) MASTER else branch
             )
             if (!errorJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(errorJsonStr)) {
                 val storeErrorCodeInfo = StoreErrorCodeInfo(
