@@ -378,15 +378,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             repositoryHashId = atomRecord.repositoryHashId,
             branch = branch
         )
-        // 插件error.json文件数据入库
-        syncAtomErrorCodeConfig(
-            projectCode = projectCode,
-            atomCode = atomCode,
-            atomVersion = version,
-            userId = userId,
-            repositoryHashId = atomRecord.repositoryHashId,
-            branch = branch
-        )
         logger.info("update market atom, getAtomQualityResult: $getAtomQualityResult")
         if (getAtomQualityResult.errorCode == StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL) {
             logger.info("quality.json not found , skip...")
@@ -450,6 +441,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
             }
             if (atomStatus == AtomStatusEnum.TESTING) {
+                // 插件error.json文件数据入库
+                syncAtomErrorCodeConfig(
+                    projectCode = projectCode,
+                    atomCode = atomCode,
+                    atomVersion = version,
+                    userId = userId,
+                    repositoryHashId = atomRecord.repositoryHashId,
+                    branch = branch
+                )
                 // 插件大版本内有测试版本则写入缓存
                 redisOperation.hset(
                     key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
