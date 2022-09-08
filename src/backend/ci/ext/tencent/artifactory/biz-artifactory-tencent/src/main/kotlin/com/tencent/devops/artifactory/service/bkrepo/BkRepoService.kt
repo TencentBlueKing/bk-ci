@@ -42,7 +42,6 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoService
 import com.tencent.devops.artifactory.service.ShortUrlService
-import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
@@ -244,15 +243,15 @@ class BkRepoService @Autowired constructor(
 
         val resultList = mutableListOf<FileDetail>()
         pathArray.forEach { path ->
-            val absPath = "/${JFrogUtil.normalize(path).removePrefix("/")}"
+            val absPath = "/${PathUtils.normalize(path).removePrefix("/")}"
             val filePath = if (artifactoryType == ArtifactoryType.PIPELINE) {
                 "/$targetPipelineId/$targetBuildId/${
-                    JFrogUtil.getParentFolder(absPath).removePrefix("/")
+                    PathUtils.getParentFolder(absPath).removePrefix("/")
                 }" // /$projectId/$pipelineId/$buildId/path/
             } else {
-                "/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /path/
+                "/${PathUtils.getParentFolder(absPath).removePrefix("/")}" // /path/
             }
-            val fileName = JFrogUtil.getFileName(path) // *.txt
+            val fileName = PathUtils.getFileName(path) // *.txt
 
             bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
                 userId = lastModifyUser,
@@ -550,7 +549,7 @@ class BkRepoService @Autowired constructor(
         val pathNamePairs = mutableListOf<Pair<String, String>>()
         if (!condition.glob.isNullOrEmpty()) {
             condition.glob!!.split(",").map { globItem ->
-                val absPath = "/${JFrogUtil.normalize(globItem).removePrefix("/")}"
+                val absPath = "/${PathUtils.normalize(globItem).removePrefix("/")}"
                 if (absPath.endsWith("/")) {
                     pathNamePairs.add(Pair(absPath, "*"))
                 } else {

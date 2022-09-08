@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.util
 
+import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import java.net.URLEncoder
 import java.nio.file.Paths
@@ -59,5 +60,48 @@ object PathUtils {
                         "utf-8"
                     )
                 }"
+    }
+
+    fun isFolder(path: String): Boolean {
+        return path.endsWith("/")
+    }
+
+    fun getParentFolder(path: String): String {
+        return if (isFolder(path)) path.removeSuffix("${getFileName(path)}/")
+        else path.removeSuffix(getFileName(path))
+    }
+
+    fun getFileName(path: String): String {
+        return path.removeSuffix("/").split("/").last()
+    }
+
+    /**
+     * 文件排序
+     * 文件夹在文件之上
+     * asc = true 文件名短在文件名长之上
+     * asc = false 文件名短在文件名长之下
+     */
+    fun sort(fileInfoList: List<FileInfo>, asc: Boolean = true): List<FileInfo> {
+        val ascInt = if (asc) 1 else -1
+        return fileInfoList.sortedWith(Comparator { file1, file2 ->
+            when {
+                // 文件夹排在文件之上
+                file1.folder && !file2.folder -> -1
+                !file1.folder && file2.folder -> 1
+
+                // 文件名短在文件名长之上
+//                file1.name.length < file2.name.length -> -ascInt
+//                file1.name.length > file2.name.length -> ascInt
+
+                // 根据最后修改时间倒叙
+                file1.modifiedTime < file2.modifiedTime -> ascInt
+                file1.modifiedTime > file2.modifiedTime -> -ascInt
+
+                // 类型相同长度相同，字母序排列
+                else -> {
+                    file1.name.compareTo(file2.name) * ascInt
+                }
+            }
+        })
     }
 }

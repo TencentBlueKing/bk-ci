@@ -36,7 +36,6 @@ import com.tencent.devops.artifactory.service.RepoDownloadService
 import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
 import com.tencent.devops.artifactory.util.EmailUtil
-import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.artifactory.util.RepoUtils
@@ -342,15 +341,15 @@ open class BkRepoDownloadService @Autowired constructor(
         val pathArray = regex.split(argPath)
         val fileList = mutableListOf<FileDetail>()
         pathArray.forEach { path ->
-            val absPath = "/${JFrogUtil.normalize(path).removePrefix("/")}"
+            val absPath = "/${PathUtils.normalize(path).removePrefix("/")}"
             val filePath = if (artifactoryType == ArtifactoryType.PIPELINE) {
                 "/$targetPipelineId/$targetBuildId/${
-                    JFrogUtil.getParentFolder(absPath).removePrefix("/")
+                    PathUtils.getParentFolder(absPath).removePrefix("/")
                 }" // /$projectId/$pipelineId/$buildId/path/
             } else {
-                "/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /path/
+                "/${PathUtils.getParentFolder(absPath).removePrefix("/")}" // /path/
             }
-            val fileName = JFrogUtil.getFileName(path) // *.txt
+            val fileName = PathUtils.getFileName(path) // *.txt
 
             bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
                 userId = accessUserId,
