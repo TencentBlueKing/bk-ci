@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.constant.BUILD_QUEUE
 import com.tencent.devops.common.api.pojo.ErrorInfo
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -87,6 +88,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryReco
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
@@ -1092,7 +1094,13 @@ class PipelineRuntimeService @Autowired constructor(
         }
         // 如果不需要触发审核则直接开始发送开始事件
         if (startBuildStatus.isReadyToRun()) {
-            sendBuildStartEvent(buildId, pipelineInfo, context, startBuildStatus)
+            sendBuildStartEvent(
+                buildId = buildId,
+                pipelineId = pipelineInfo.pipelineId,
+                projectId = pipelineInfo.projectId,
+                context = context,
+                startBuildStatus = startBuildStatus
+            )
         }
         return buildId
     }
@@ -1100,10 +1108,9 @@ class PipelineRuntimeService @Autowired constructor(
     fun approveTriggerReview(
         userId: String,
         buildId: String,
-        pipelineInfo: PipelineInfo
+        pipelineId: String,
+        projectId: String
     ) {
-        val projectId = pipelineInfo.projectId
-        val pipelineId = pipelineInfo.pipelineId
         val newBuildStatus = BuildStatus.QUEUE
         logger.info("[$buildId|APPROVE_BUILD|userId($userId)|newBuildStatus=$newBuildStatus")
         dslContext.transaction { configuration ->
@@ -1124,33 +1131,72 @@ class PipelineRuntimeService @Autowired constructor(
                 buildStatus = newBuildStatus,
                 startTime = now
             )
-
+            val variables = buildVariableService.getAllVariable(projectId, projectId, buildId)
+            sendBuildStartEvent(
+                buildId = buildId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                context = StartBuildContext.init(projectId, pipelineId, buildId, variables),
+                startBuildStatus = newBuildStatus
+            )
         }
-//        sendBuildStartEvent(buildId, )
     }
 
     fun disapproveTriggerReview(
         userId: String,
         buildId: String,
-        pipelineInfo: PipelineInfo
+        pipelineId: String,
+        projectId: String
     ) {
-        val projectId = pipelineInfo.projectId
-        val pipelineId = pipelineInfo.pipelineId
+        val newBuildStatus = BuildStatus.FAILED
         logger.info("[$buildId|DISAPPROVE_BUILD|userId($userId)|pipelineId=$pipelineId")
-
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            val now = LocalDateTime.now()
+            pipelineBuildDao.updateStatus(
+                dslContext = transactionContext,
+                projectId = projectId,
+                buildId = buildId,
+                oldBuildStatus = BuildStatus.TRIGGER_REVIEWING,
+                newBuildStatus = newBuildStatus,
+                errorInfoList = listOf(
+                    ErrorInfo(
+                        taskId = "", taskName = "", atomCode = "",
+                        errorType = ErrorType.USER.num, errorMsg = "Rejected by $userId in trigger review.",
+                        errorCode = ProcessMessageCode.ERROR_TRIGGER_REVIEW_ABORT.toInt()
+                    )
+                )
+            )
+            buildDetailDao.updateStatus(
+                dslContext = transactionContext,
+                projectId = projectId,
+                buildId = buildId,
+                buildStatus = newBuildStatus,
+                startTime = now
+            )
+        }
     }
+
+    fun checkTriggerReviewer(
+        userId: String,
+        buildId: String,
+        pipelineId: String,
+        projectId: String
+    ) = pipelineTriggerReviewDao.getTriggerReviewers(dslContext, projectId, pipelineId, buildId)
+        ?.contains(userId) == true
 
     private fun sendBuildStartEvent(
         buildId: String,
-        pipelineInfo: PipelineInfo,
+        pipelineId: String,
+        projectId: String,
         context: StartBuildContext,
         startBuildStatus: BuildStatus
     ) {
         pipelineEventDispatcher.dispatch(
             PipelineBuildStartEvent(
                 source = "startBuild",
-                projectId = pipelineInfo.projectId,
-                pipelineId = pipelineInfo.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 userId = context.userId,
                 buildId = buildId,
                 taskId = context.firstTaskId,
@@ -1160,8 +1206,8 @@ class PipelineRuntimeService @Autowired constructor(
             ), // 监控事件
             PipelineBuildMonitorEvent(
                 source = "startBuild",
-                projectId = pipelineInfo.projectId,
-                pipelineId = pipelineInfo.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 userId = context.userId,
                 buildId = buildId,
                 buildStatus = startBuildStatus,
@@ -1169,8 +1215,8 @@ class PipelineRuntimeService @Autowired constructor(
             ), // #3400 点启动处于DETAIL界面，以操作人视角，没有刷历史列表的必要，在buildStart真正启动时也会有HISTORY，减少负载
             PipelineBuildWebSocketPushEvent(
                 source = "startBuild",
-                projectId = pipelineInfo.projectId,
-                pipelineId = pipelineInfo.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 userId = context.userId,
                 buildId = buildId,
                 // 刷新历史列表和详情页面
@@ -1178,8 +1224,8 @@ class PipelineRuntimeService @Autowired constructor(
             ), // 广播构建排队事件
             PipelineBuildQueueBroadCastEvent(
                 source = "startQueue",
-                projectId = pipelineInfo.projectId,
-                pipelineId = pipelineInfo.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 userId = context.userId,
                 buildId = buildId,
                 actionType = context.actionType,

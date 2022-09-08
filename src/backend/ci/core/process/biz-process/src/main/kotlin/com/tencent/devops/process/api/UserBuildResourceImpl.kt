@@ -173,6 +173,26 @@ class UserBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun buildTriggerReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        approve: Boolean,
+        channelCode: ChannelCode
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.buildTriggerReview(
+                userId, projectId, pipelineId, buildId, approve,
+                channelCode, ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
     override fun manualStartStage(
         userId: String,
         projectId: String,

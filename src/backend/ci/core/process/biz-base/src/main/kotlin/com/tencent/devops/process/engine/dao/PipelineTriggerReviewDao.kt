@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_TRIGGER_REVIEW
 import org.jooq.DSLContext
@@ -68,6 +69,24 @@ class PipelineTriggerReviewDao {
                     PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId)))
                 )
                 .execute()
+        }
+    }
+
+    fun getTriggerReviewers(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<String>? {
+        with(T_PIPELINE_TRIGGER_REVIEW) {
+            val record = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetchAny()
+            return record?.triggerReviewer?.let { self ->
+                JsonUtil.getObjectMapper().readValue(self) as List<String>
+            }
         }
     }
 }

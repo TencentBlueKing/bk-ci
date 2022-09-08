@@ -394,7 +394,9 @@ class PipelineBuildFacadeService(
 
             val paramMap = HashMap<String, BuildParameters>(100, 1F)
             // #2821 构建重试均要传递触发插件ID，否则当有多个事件触发插件时，rebuild后触发器的标记不对
-            buildVariableService.getVariable(projectId, pipelineId, buildId, PIPELINE_START_TASK_ID)?.let { startTaskId ->
+            buildVariableService.getVariable(
+                projectId, pipelineId, buildId, PIPELINE_START_TASK_ID
+            )?.let { startTaskId ->
                 paramMap[PIPELINE_START_TASK_ID] = BuildParameters(PIPELINE_START_TASK_ID, startTaskId)
             }
             val startType = StartType.toStartType(buildInfo.trigger)
@@ -847,6 +849,47 @@ class PipelineBuildFacadeService(
         if (params.status == ManualReviewAction.ABORT) {
             buildDetailService.updateBuildCancelUser(projectId, buildId, userId)
         }
+    }
+
+    fun buildTriggerReview(
+        userId: String,
+        buildId: String,
+        pipelineId: String,
+        projectId: String,
+        approve: Boolean,
+        channelCode: ChannelCode? = ChannelCode.BS,
+        checkPermission: Boolean = true
+    ): Boolean {
+        if (checkPermission) { // 不用校验查看权限，只校验执行权限
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EXECUTE,
+                message = "用户（$userId) 无权限启动流水线($pipelineId)"
+            )
+        }
+        pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "流水线不存在",
+                params = arrayOf(pipelineId)
+            )
+        if (!pipelineRuntimeService.checkTriggerReviewer(userId, buildId, pipelineId, projectId)) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
+                defaultMessage = "用户({0})不在审核人员名单中",
+                params = arrayOf(userId)
+            )
+        }
+        if (approve) {
+            pipelineRuntimeService.approveTriggerReview(userId, buildId, pipelineId, projectId)
+        } else {
+            pipelineRuntimeService.disapproveTriggerReview(userId, buildId, pipelineId, projectId)
+        }
+        return true
     }
 
     fun buildManualStartStage(

@@ -469,12 +469,16 @@ class PipelineBuildDao {
         oldBuildStatus: BuildStatus,
         newBuildStatus: BuildStatus,
         startTime: LocalDateTime? = null,
+        errorInfoList: List<ErrorInfo>? = null
     ): Boolean {
         with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
             startTime?.let {
-                update.set(START_TIME, startTime)
+                update.set(START_TIME, it)
+            }
+            errorInfoList?.let {
+                update.set(ERROR_INFO, JsonUtil.toJson(it, formatted = false))
             }
             return update.where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
