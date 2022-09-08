@@ -155,6 +155,7 @@ class PipelineCallBackConfiguration {
             waitDurationInOpenState?.let { builder.waitDurationInOpenState(Duration.ofSeconds(it)) }
             permittedNumberOfCallsInHalfOpenState?.let { builder.permittedNumberOfCallsInHalfOpenState(it) }
             slidingWindow?.let { builder.slidingWindowSize(it) }
+            minimumNumberOfCalls?.let { builder.minimumNumberOfCalls(it) }
         }
         return CircuitBreakerRegistry.of(builder.build())
     }

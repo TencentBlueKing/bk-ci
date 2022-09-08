@@ -74,7 +74,7 @@ class TXSendNotify @Autowired constructor(
         var realReceivers = replaceReceivers(receivers, build.buildParameters)
         // 接收人默认带触发人
         if (realReceivers.isEmpty()) {
-            realReceivers = mutableSetOf(build.userId)
+            realReceivers = mutableSetOf(action.data.eventCommon.userId)
         }
         val state = action.data.context.finishData!!.getGitCommitCheckState()
 
@@ -93,7 +93,7 @@ class TXSendNotify @Autowired constructor(
                     content = content,
                     ccs = ccs,
                     streamUrl = streamGitConfig.streamUrl!!,
-                    gitProjectId = action.data.eventCommon.gitProjectId
+                    gitProjectId = action.data.getGitProjectId()
                 )
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
@@ -126,7 +126,7 @@ class TXSendNotify @Autowired constructor(
                     gitUrl = config.gitUrl!!,
                     v2GitUrl = config.v2GitUrl!!,
                     content = content,
-                    gitProjectId = action.data.eventCommon.gitProjectId.toLong()
+                    gitProjectId = action.data.getGitProjectId().toLong()
                 )
             }
             else -> {
