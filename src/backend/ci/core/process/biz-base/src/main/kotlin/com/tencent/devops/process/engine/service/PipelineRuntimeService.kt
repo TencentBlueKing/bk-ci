@@ -722,7 +722,11 @@ class PipelineRuntimeService @Autowired constructor(
         } else {
             // #7565 如果是需要启动审核的则进入审核状态
             pipelineTriggerReviewDao.createReviewRecord(
-                dslContext, pipelineInfo.projectId, pipelineInfo.pipelineId, buildId, triggerReviewers
+                dslContext = dslContext,
+                buildId = buildId,
+                pipelineId = pipelineInfo.pipelineId,
+                projectId = pipelineInfo.projectId,
+                reviewers = triggerReviewers
             )
             BuildStatus.TRIGGER_REVIEWING
         }
