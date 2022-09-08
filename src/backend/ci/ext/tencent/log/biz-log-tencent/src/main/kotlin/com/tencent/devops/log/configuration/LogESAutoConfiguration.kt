@@ -119,7 +119,7 @@ class LogESAutoConfiguration {
     private val connectTimeout = 1000                           // 请求连接超时
     private val connectionRequestTimeout = 500                  // 获取连接的超时时间
     private val maxConnectNum = 1000                             // 最大连接数
-    private val maxConnectPerRoute = 100                        // 最大路由连接数
+    private val maxConnectPerRoute = 300                        // 最大单节点连接数
 
     fun client(): ESClient {
         if (e1IP.isNullOrBlank()) {
