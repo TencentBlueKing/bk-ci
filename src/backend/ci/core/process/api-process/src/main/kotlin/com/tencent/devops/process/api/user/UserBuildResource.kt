@@ -484,7 +484,7 @@ interface UserBuildResource {
         @ApiParam("是否通过审核", required = true)
         @QueryParam("approve")
         approve: Boolean,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>

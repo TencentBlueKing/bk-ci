@@ -861,15 +861,15 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         projectId: String,
         approve: Boolean,
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.BS,
         checkPermission: Boolean = true
     ): Boolean {
-        if (checkPermission) { // 不用校验查看权限，只校验执行权限
+        if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.EXECUTE,
+                permission = AuthPermission.VIEW,
                 message = "用户（$userId) 无权限启动流水线($pipelineId)"
             )
         }
