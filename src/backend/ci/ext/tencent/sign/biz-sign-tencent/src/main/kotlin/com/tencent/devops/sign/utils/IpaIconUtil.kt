@@ -41,6 +41,7 @@ object IpaIconUtil {
     private val logger = LoggerFactory.getLogger(IpaIconUtil::class.java)
     private const val basePattern = "Payload/[\\w\\u4e00-\\u9fa5.-]+\\.app"
 
+    @SuppressWarnings("NestedBlockDepth", "ReturnCount", "TooGenericExceptionCaught")
     fun resolveIpaIcon(file: File): ByteArray? {
         try {
             val plistPattern = Pattern.compile("$basePattern/Info.plist")
