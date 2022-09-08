@@ -25,18 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.common.archive.pojo
 
-import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.web.RestResource
-
-@RestResource
-class ServiceBkRepoResourceImpl(
-    private val bkRepoClient: BkRepoClient
-) : ServiceBkRepoResource {
-    override fun createProjectResource(userId: String, projectId: String): Result<Boolean> {
-        return Result(bkRepoClient.createBkRepoResource(userId, projectId))
-    }
-}
+data class ArtifactorySearchParam(
+    val userId: String,
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val regexPath: String,
+    val custom: Boolean,
+    val executeCount: Int = 1, // 打印日志用到
+    val elementId: String = "", // 打印日志用到
+    val containerId: String = "" // 打印日志用到
+)

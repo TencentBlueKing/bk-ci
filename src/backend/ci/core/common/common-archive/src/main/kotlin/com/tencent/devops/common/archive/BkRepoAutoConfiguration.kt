@@ -25,48 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo.bkrepo
+package com.tencent.devops.common.archive
 
-import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.artifactory.pojo.Property
-import com.tencent.devops.artifactory.util.BkRepoUtils
-import com.tencent.devops.common.api.util.timestamp
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.client.DirectBkRepoClient
+import com.tencent.devops.common.archive.config.BkRepoClientConfig
+import com.tencent.devops.common.service.config.CommonConfig
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+import org.springframework.core.Ordered
 
-data class QueryNodeInfo(
-    var createdBy: String,
-    var createdDate: String,
-    var lastModifiedBy: String,
-    var lastModifiedDate: String,
-    var folder: Boolean,
-    var path: String,
-    var name: String,
-    var fullPath: String,
-    var size: Long,
-    var sha256: String? = null,
-    var md5: String? = null,
-    var projectId: String,
-    var repoName: String,
-    var metadata: Map<String, String>? = mapOf()
-) {
-    fun toFileInfo(): FileInfo {
-        return FileInfo(
-            name = name,
-            fullName = name,
-            path = "$projectId/$repoName$fullPath",
-            fullPath = fullPath,
-            size = size,
-            folder = folder,
-            modifiedTime = LocalDateTime.parse(lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-            artifactoryType = BkRepoUtils.parseArtifactoryType(repoName),
-            properties = if (metadata == null) {
-                listOf()
-            } else {
-                metadata!!.map { Property(it.key, it.value) }
-            },
-            appVersion = "",
-            shortUrl = ""
-        )
-    }
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class BkRepoAutoConfiguration {
+
+    @Bean
+    fun bkRepoClientConfig() = BkRepoClientConfig()
+
+    @Bean
+    @Primary
+    fun bkRepoClient(
+        @Autowired objectMapper: ObjectMapper,
+        @Autowired commonConfig: CommonConfig,
+        @Autowired bkRepoClientConfig: BkRepoClientConfig
+    ) = BkRepoClient(objectMapper, commonConfig, bkRepoClientConfig)
+
+    @Bean
+    fun directBkRepoClient() = DirectBkRepoClient()
 }

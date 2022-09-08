@@ -25,15 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo.bkrepo
+package com.tencent.devops.common.archive.pojo
 
-data class ArtifactorySearchParam(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val regexPath: String,
-    val custom: Boolean,
-    val executeCount: Int = 1, // 打印日志用到
-    val elementId: String = "", // 打印日志用到
-    val containerId: String = "" // 打印日志用到
+data class BkRepoFile(
+    val fullPath: String,
+    var displayPath: String?,
+    val size: Long,
+    val folder: Boolean
 )
