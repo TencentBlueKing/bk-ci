@@ -25,18 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.common.archive.pojo
 
-import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.web.RestResource
-
-@RestResource
-class ServiceBkRepoResourceImpl(
-    private val bkRepoClient: BkRepoClient
-) : ServiceBkRepoResource {
-    override fun createProjectResource(userId: String, projectId: String): Result<Boolean> {
-        return Result(bkRepoClient.createBkRepoResource(userId, projectId))
-    }
-}
+data class QueryData(
+    var count: Int,
+    var page: Int,
+    var pageSize: Int,
+    var totalPages: Int,
+    var records: List<QueryNodeInfo>
+)

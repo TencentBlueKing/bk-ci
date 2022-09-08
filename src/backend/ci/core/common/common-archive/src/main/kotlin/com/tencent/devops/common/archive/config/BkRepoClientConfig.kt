@@ -25,12 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo.bkrepo
+package com.tencent.devops.common.archive.config
 
-data class QueryData(
-    var count: Int,
-    var page: Int,
-    var pageSize: Int,
-    var totalPages: Int,
-    var records: List<QueryNodeInfo>
-)
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+
+/**
+ * 仓库配置
+ */
+@Component
+class BkRepoClientConfig {
+
+    @Value("\${artifactory.realm:}")
+    lateinit var artifactoryRealm: String
+
+    @Value("\${artifactory.bkrepo.baseUrl:}")
+    lateinit var bkRepoBaseUrl: String
+
+    @Value("\${artifactory.bkrepo.authorization:}")
+    lateinit var bkRepoAuthorization: String
+
+    @Value("\${bkrepo.logRepoCredentialsKey:}")
+    lateinit var logRepoCredentialsKey: String
+}
