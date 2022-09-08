@@ -231,7 +231,6 @@ class DockerHostBuildService @Autowired constructor(
     private fun finishBuild(
         record: TDispatchPipelineDockerBuildRecord,
         success: Boolean,
-        buildLessFlag: Boolean = false,
         executeCount: Int? = null
     ) {
         LOG.info("Finish the docker build(${record.buildId}) with result($success)")
@@ -248,11 +247,6 @@ class DockerHostBuildService @Autowired constructor(
                 record.buildId,
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-
-            // 无编译环境清除redisAuth
-            if (buildLessFlag) {
-                redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
-            }
         } catch (e: Exception) {
             LOG.warn("Finish the docker build(${record.buildId}) error.", e)
         }

@@ -171,11 +171,11 @@ class PipelineAgentLessDispatchService @Autowired constructor(
                 record.buildId,
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-
-            // 无编译环境清除redisAuth
-            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
         } catch (e: Exception) {
             LOG.warn("Finish the docker buildless (${record.buildId}) error.", e)
+        } finally {
+            // 无编译环境清除redisAuth
+            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
         }
     }
 
