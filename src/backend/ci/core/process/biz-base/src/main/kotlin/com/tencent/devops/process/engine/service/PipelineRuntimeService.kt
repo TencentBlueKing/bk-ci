@@ -766,7 +766,11 @@ class PipelineRuntimeService @Autowired constructor(
                     stage.containers.forEach {
                         if (it is TriggerContainer) {
                             it.status = BuildStatus.RUNNING.name
-                            ContainerUtils.setQueuingWaitName(it)
+                            if (startBuildStatus == BuildStatus.TRIGGER_REVIEWING) {
+                                ContainerUtils.setReviewWaitName(it)
+                            } else {
+                                ContainerUtils.setQueuingWaitName(it)
+                            }
                         }
                     }
                 }

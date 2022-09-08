@@ -74,6 +74,7 @@ object ContainerUtils {
     }
 
     private const val queuePrefix = "排队中(Queuing)"
+    private const val reviewPrefix = "审核中(Pending)"
 
     fun clearQueueContainerName(container: Container) {
         if (container.name.startsWith(queuePrefix)) {
@@ -87,5 +88,18 @@ object ContainerUtils {
         }
 
         container.name = "$queuePrefix${container.name}"
+    }
+
+    fun clearReviewContainerName(container: Container) {
+        if (container.name.startsWith(reviewPrefix)) {
+            container.name = container.name.substring(reviewPrefix.length)
+        }
+    }
+
+    fun setReviewWaitName(container: Container) {
+        if (container.name.startsWith(reviewPrefix)) {
+            return
+        }
+        container.name = "$reviewPrefix${container.name}"
     }
 }
