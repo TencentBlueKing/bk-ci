@@ -90,9 +90,9 @@ object ContainerUtils {
             return
         }
         if (startBuildStatus == BuildStatus.TRIGGER_REVIEWING) {
-            container.name = "$queuePrefix${container.name}"
-        } else {
             container.name = "$reviewPrefix${container.name}"
+        } else {
+            container.name = "$queuePrefix${container.name}"
         }
     }
 }

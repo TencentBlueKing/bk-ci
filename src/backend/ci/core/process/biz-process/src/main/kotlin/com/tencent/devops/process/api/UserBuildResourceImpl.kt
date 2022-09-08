@@ -180,8 +180,7 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        approve: Boolean,
-        channelCode: ChannelCode
+        approve: Boolean
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -189,7 +188,7 @@ class UserBuildResourceImpl @Autowired constructor(
         }
         return Result(
             pipelineBuildFacadeService.buildTriggerReview(
-                userId, projectId, pipelineId, buildId, approve, channelCode
+                userId, projectId, pipelineId, buildId, approve
             )
         )
     }

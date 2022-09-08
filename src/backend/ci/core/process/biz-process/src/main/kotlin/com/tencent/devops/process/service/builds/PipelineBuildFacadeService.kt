@@ -863,12 +863,12 @@ class PipelineBuildFacadeService(
         approve: Boolean,
         channelCode: ChannelCode = ChannelCode.BS
     ): Boolean {
-        pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
+        pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在",
-                params = arrayOf(pipelineId)
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                defaultMessage = "构建任务${buildId}不存在",
+                params = arrayOf(buildId)
             )
         if (!pipelineRuntimeService.checkTriggerReviewer(userId, buildId, pipelineId, projectId)) {
             throw ErrorCodeException(
