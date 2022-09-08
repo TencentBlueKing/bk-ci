@@ -1,0 +1,24 @@
+version: "v2.0"
+name: "BK-CI GITHUB PR CHECK"
+
+on:
+  mr:
+    target-branches:  [ "master" ]
+
+stages:
+- name: "PR检查"
+  label:
+  - "Build"
+  jobs:
+    job_1:
+      name: "源代码规范性检查"
+      runs-on:
+        pool-name: "docker"
+        container:
+          image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
+        needs:
+          jdk: "1.8.0_161"
+      steps:
+        - name: "预合并 BK-CI代码"
+          checkout: self
+        
