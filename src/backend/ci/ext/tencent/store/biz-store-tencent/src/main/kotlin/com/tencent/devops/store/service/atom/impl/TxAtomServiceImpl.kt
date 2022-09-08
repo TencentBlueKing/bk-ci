@@ -63,8 +63,7 @@ class TxAtomServiceImpl : TxAtomService, AtomServiceImpl() {
         userId: String,
         repositoryHashId: String
     ): Result<Boolean> {
-        logger.info("updateRepoInfo visibilityLevel is:$visibilityLevel,dbVisibilityLevel is:$dbVisibilityLevel")
-        logger.info("updateRepoInfo userId is:$userId,repositoryHashId is:$repositoryHashId")
+        logger.info("updateRepoInfo params:[$visibilityLevel|$dbVisibilityLevel|$userId|$repositoryHashId]")
         if (null != visibilityLevel && visibilityLevel.level != dbVisibilityLevel) {
             // 更新git代码库可见范围
             val updateGitRepositoryResult: Result<Boolean>
@@ -78,8 +77,8 @@ class TxAtomServiceImpl : TxAtomService, AtomServiceImpl() {
                     ),
                     TokenTypeEnum.PRIVATE_KEY
                 )
-            } catch (e: Exception) {
-                logger.error("updateGitCodeRepository error  is :$e", e)
+            } catch (ignored: Throwable) {
+                logger.warn("updateGitCodeRepository fail!", ignored)
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
             logger.info("the updateGitRepositoryResult is :$updateGitRepositoryResult")

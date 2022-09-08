@@ -25,31 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service.impl
+package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-import com.tencent.devops.worker.common.service.AtomTargetHandleService
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStorePkgEnvInfoResource
+import com.tencent.devops.store.pojo.common.StorePkgRunEnvRequest
+import com.tencent.devops.store.service.common.StorePkgRunEnvInfoService
+import org.springframework.beans.factory.annotation.Autowired
 
-class GolangAtomTargetHandleServiceImpl : AtomTargetHandleService {
+@RestResource
+class OpStorePkgEnvInfoResourceImpl @Autowired constructor(
+    private val storePkgRunEnvInfoService: StorePkgRunEnvInfoService
+) : OpStorePkgEnvInfoResource {
 
-    private val logger = LoggerFactory.getLogger(GolangAtomTargetHandleServiceImpl::class.java)
+    override fun create(userId: String, storePkgRunEnvRequest: StorePkgRunEnvRequest): Result<Boolean> {
+        return Result(storePkgRunEnvInfoService.create(userId, storePkgRunEnvRequest))
+    }
 
-    override fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String {
-        var convertTarget = target
-        if (!postEntryParam.isNullOrBlank()) {
-            convertTarget = "$target --postAction=$postEntryParam"
-        }
-        logger.info("handleAtomTarget convertTarget:$convertTarget")
-        return convertTarget
+    override fun update(userId: String, id: String, storePkgRunEnvRequest: StorePkgRunEnvRequest): Result<Boolean> {
+        return Result(storePkgRunEnvInfoService.update(userId, id, storePkgRunEnvRequest))
+    }
+
+    override fun delete(userId: String, id: String, storePkgRunEnvRequest: StorePkgRunEnvRequest): Result<Boolean> {
+        return Result(storePkgRunEnvInfoService.delete(userId, id))
     }
 }

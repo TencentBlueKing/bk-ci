@@ -29,15 +29,26 @@ package com.tencent.devops.common.expression
 
 /**
  * @param enableSubNameValueEvaluate 开启部分计算功能，方便一些变量的替换
- * @param hasOtherNameValue 标记是否使用了不在部分计算外的变量进行了计算
- * @param distinguishTypes 在完全计算后，对区分的类型加单引号用来区分
  */
 data class SubNameValueEvaluateInfo(
-    val enableSubNameValueEvaluate: Boolean = true,
-    var hasOtherNameValue: Boolean = false,
-    val distinguishTypes: Set<DistinguishType>?
+    val enableSubNameValueEvaluate: Boolean = true
 )
 
-enum class DistinguishType {
-    ARRAY, BOOL, STRING, DICT, NUMBER
+/**
+ * SubNameValue计算返回
+ * @param value 计算值
+ * @param isComplete 是否完全计算完成
+ * @param type 返回值类型
+ */
+data class SubNameValueEvaluateResult(
+    val value: String,
+    val isComplete: Boolean,
+    val type: SubNameValueResultType
+)
+
+/**
+ * 返回值类型，用来区分
+ */
+enum class SubNameValueResultType {
+    ARRAY, BOOL, STRING, DICT, NUMBER, EXPRESSION
 }

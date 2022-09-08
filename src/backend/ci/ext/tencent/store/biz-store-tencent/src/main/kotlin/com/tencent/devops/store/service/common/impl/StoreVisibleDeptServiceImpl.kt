@@ -69,7 +69,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         deptStatus: DeptStatusEnum?
     ): Result<StoreVisibleDeptResp?> {
-        logger.info("the storeCode is :$storeCode,storeType is :$storeType,deptStatus is :$deptStatus")
+        logger.info("getVisibleDept storeCode is :$storeCode,storeType is :$storeType,deptStatus is :$deptStatus")
         val storeDeptRelRecords = storeDeptRelDao.getDeptInfosByStoreCode(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -178,7 +178,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
         deptIds: String,
         storeType: StoreTypeEnum
     ): Result<Boolean> {
-        logger.info("the userId is :$userId,storeCode is :$storeCode,deptIds is :$deptIds,storeType is :$storeType")
+        logger.info("deleteVisibleDept userId:$userId,storeCode:$storeCode,deptIds:$deptIds,storeType:$storeType")
         // 判断用户是否有权限删除可见范围
         if (!storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,

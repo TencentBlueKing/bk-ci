@@ -25,13 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.common.expression.context
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.tencent.devops.common.expression.expression.sdk.IString
 
-interface TxStoreGitResitoryService {
-    fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean>
+/**
+ * 针对SubNameValue替换(目前只有模板替换时的变量)替换特供
+ * 目的是将 包含${{}}不替换为 '${{}}' 而是 ${{}}
+ */
+class ExpressionContextData(val value: String) : PipelineContextData(PipelineContextDataType.EXPRESSION), IString {
+    override fun getString(): String = value
 
-    fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>
+    override fun clone(): PipelineContextData = ExpressionContextData(value)
+
+    override fun toJson(): JsonNode = TextNode(value)
+    override fun fetchValue() = getString()
+
+    override fun toString(): String = value
 }

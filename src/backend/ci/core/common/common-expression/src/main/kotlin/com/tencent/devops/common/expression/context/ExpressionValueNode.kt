@@ -25,23 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.common.expression.context
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
+import com.tencent.devops.common.expression.expression.sdk.ExpressionNode
 
-interface AtomTargetHandleService {
+class ExpressionValueNode(val value: String) : ExpressionNode() {
+    override val traceFullyRealized: Boolean
+        get() = false
 
-    /**
-     * 处理target入口命令逻辑
-     */
-    fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String
+    override fun convertToExpression() = value
+
+    override fun convertToRealizedExpression(context: EvaluationContext) = value
+
+    override fun evaluateCore(context: EvaluationContext) = Pair(null, value)
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) = Pair(value, true)
 }

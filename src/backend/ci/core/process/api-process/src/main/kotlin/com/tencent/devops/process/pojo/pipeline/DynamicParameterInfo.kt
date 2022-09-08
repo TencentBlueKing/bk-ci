@@ -25,44 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.atom
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.model.store.tables.TAppVersion
-import com.tencent.devops.model.store.tables.TApps
-import com.tencent.devops.model.store.tables.TAtomEnvInfo
-import com.tencent.devops.model.store.tables.TStoreBuildAppRel
-import com.tencent.devops.model.store.tables.TStoreBuildInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import io.swagger.annotations.ApiModel
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Repository
-class MarketAtomBuildAppRelDao {
+@ApiModel("DynamicParameter模型-ID")
+data class DynamicParameterInfo(
+    @JsonProperty("id")
+    val id: String, // 该行的唯一标识，必填
+    @JsonProperty("paramModels")
+    val paramModels: List<DynamicParameterInfoParam>
+)
 
-    /**
-     * 查询插件构建信息
-     */
-    fun getMarketAtomBuildAppInfo(dslContext: DSLContext, atomId: String): Result<out Record>? {
-        val a = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("a")
-        val b = TStoreBuildAppRel.T_STORE_BUILD_APP_REL.`as`("b")
-        val c = TAppVersion.T_APP_VERSION.`as`("c")
-        val d = TApps.T_APPS.`as`("d")
-        val e = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("e")
-        return dslContext.select(
-            d.NAME.`as`("appName"),
-            c.VERSION.`as`("appVersion")
-        ).from(a)
-            .join(b)
-            .on(a.ID.eq(b.BUILD_INFO_ID))
-            .join(c)
-            .on(b.APP_VERSION_ID.eq(c.ID))
-            .join(d)
-            .on(c.APP_ID.eq(d.ID))
-            .join(e)
-            .on(a.LANGUAGE.eq(e.LANGUAGE))
-            .where(e.ATOM_ID.eq(atomId).and(a.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte())))
-            .fetch()
-    }
-}
+data class DynamicParameterInfoParam(
+    @JsonProperty("value")
+    val value: String? = null, // 值，可做为初始化的默认值
+    @JsonProperty("disabled")
+    val disabled: Boolean, // 控制是否可编辑
+    @JsonProperty("id")
+    val id: String, // 该模型的唯一标识，必填
+    @JsonProperty("isMultiple")
+    val isMultiple: Boolean? = null, // select是否多选
+    @JsonProperty("label")
+    val label: String? = null, // testLabel
+    @JsonProperty("list")
+    val list: List<StartUpInfo>? = null, // type是select起作用，需要有id和name字段
+    @JsonProperty("listType")
+    val listType: String? = null, // 获取列表方式，可以是url或者list
+    @JsonProperty("type")
+    val type: String, // 可以是input或者select
+    @JsonProperty("url")
+    val url: String? = null, // type是select且listType是url起作用
+    @JsonProperty("dataPath")
+    val dataPath: String? = null // 接口返回值，取数的路径，默认为 data.records
+)

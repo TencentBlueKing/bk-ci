@@ -46,8 +46,8 @@ class TXDispatchReportServiceImpl @Autowired constructor(
         return try {
             influxdbClient.insert(dispatchStatus)
             true
-        } catch (e: Throwable) {
-            logger.error("reportDispatchStatus exception:", e)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|reportDispatchStatus|error=${ignored.message}", ignored)
             false
         }
     }

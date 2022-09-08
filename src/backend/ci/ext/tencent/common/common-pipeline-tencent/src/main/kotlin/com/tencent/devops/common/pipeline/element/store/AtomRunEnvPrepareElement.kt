@@ -25,21 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.job.api.pojo
+package com.tencent.devops.common.pipeline.element.store
 
-data class OpenStateFastPushFileRequest(
-    val userId: String,
-    val fileSources: List<FileSource>,
-    val fileTargetPath: String,
-    val envSet: EnvSet,
-    val account: String,
-    val timeout: Long,
-    val appId: Int,
-    val openState: String
-) {
-    data class FileSource(
-        val files: List<String>,
-        val envSet: EnvSet,
-        val account: String
-    )
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("插件运行环境准备", description = AtomRunEnvPrepareElement.classType)
+data class AtomRunEnvPrepareElement(
+    @ApiModelProperty("任务名称", required = true)
+    override val name: String = "插件运行环境准备",
+    @ApiModelProperty("id", required = false)
+    override var id: String? = null,
+    @ApiModelProperty("状态", required = false)
+    override var status: String? = null,
+    @ApiModelProperty("开发语言", required = true)
+    val language: String = "\${language}",
+    @ApiModelProperty("运行时环境版本", required = false)
+    val runtimeVersion: String? = "\${runtimeVersion}"
+) : Element(name, id, status) {
+
+    companion object {
+        const val classType = "atomRunEnvPrepare"
+    }
+
+    override fun getClassType() = classType
 }

@@ -353,7 +353,7 @@ class ExperienceService @Autowired constructor(
             client.get(ServiceArtifactoryResource::class).show(userId, projectId, artifactoryType, experience.path).data
 
         if (null == fileDetail) {
-            logger.error(
+            logger.warn(
                 "null file detail , projectId:$projectId , " +
                         "artifactoryType:$artifactoryType , path:${experience.path}"
             )

@@ -322,7 +322,7 @@
                 let repoName = row.artifactoryType
                 if (repoName === 'PIPELINE') repoName = 'pipeline'
                 if (repoName === 'CUSTOM_DIR') repoName = 'custom'
-                const url = `https://${WEB_URL_PREFIX}/repo/${this.projectId}/generic?repoName=${repoName}&path=${row.path}`
+                const url = `${WEB_URL_PREFIX}/repo/${this.projectId}/generic?repoName=${repoName}&path=${row.path}`
                 window.open(url, '_blank')
             },
             addClickListenr () {

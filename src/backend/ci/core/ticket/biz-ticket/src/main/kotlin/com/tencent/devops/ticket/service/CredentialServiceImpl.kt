@@ -690,6 +690,7 @@ class CredentialServiceImpl @Autowired constructor(
         }
         val templateId = client.get(ServiceVarResource::class).getBuildVar(
             projectId = projectId,
+            pipelineId = null,
             buildId = buildId,
             varName = TEMPLATE_ACROSS_INFO_ID
         ).data?.get(TEMPLATE_ACROSS_INFO_ID)

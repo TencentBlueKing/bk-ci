@@ -113,7 +113,11 @@ class ExtServiceCronService @Autowired constructor(
                         it.latestFlag = true
                         redisOperation.delete(bcsDeployRedisKey)
                         // 发送版本发布通知消息
-                        serviceNotifyService.sendServiceReleaseNotifyMessage(it.id, true, EXTENSION_RELEASE_SUCCESS_TEMPLATE)
+                        serviceNotifyService.sendServiceReleaseNotifyMessage(
+                            serviceId = it.id,
+                            sendAllAdminFlag = true,
+                            templateCode = EXTENSION_RELEASE_SUCCESS_TEMPLATE
+                        )
                     } else {
                         val bcsFirstDeployTime = redisOperation.get(bcsDeployRedisKey)
                         if (bcsFirstDeployTime != null) {
@@ -122,7 +126,11 @@ class ExtServiceCronService @Autowired constructor(
                                 it.serviceStatus = ExtServiceStatusEnum.RELEASE_DEPLOY_FAIL.status.toByte()
                                 redisOperation.delete(bcsDeployRedisKey)
                                 // 发送版本发布邮件
-                                serviceNotifyService.sendServiceReleaseNotifyMessage(it.id, false, EXTENSION_RELEASE_FAIL_TEMPLATE)
+                                serviceNotifyService.sendServiceReleaseNotifyMessage(
+                                    serviceId = it.id,
+                                    sendAllAdminFlag = false,
+                                    templateCode = EXTENSION_RELEASE_FAIL_TEMPLATE
+                                )
                             }
                         } else {
                             // 首次部署的时间存入redis
@@ -139,8 +147,8 @@ class ExtServiceCronService @Autowired constructor(
             } else {
                 logger.info("updateReleaseDeployStatus is running")
             }
-        } catch (e: Throwable) {
-            logger.error("updateReleaseDeployStatus error:", e)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|updateReleaseDeployStatus|error=${ignored.message}", ignored)
         } finally {
             redisLock.unlock()
         }
@@ -198,7 +206,7 @@ class ExtServiceCronService @Autowired constructor(
                         checkPermissionFlag = false,
                         grayFlag = true
                     )
-                    logger.info("$serviceCode bcsStopAppResult is :$bcsStopAppResult")
+                    logger.info("service[$serviceCode] bcsStopAppResult is :$bcsStopAppResult")
                     if (bcsStopAppResult.isOk()) {
                         // 灰度环境应用停止部署成功，则把灰度环境停止部署标志更新为null
                         it.killGrayAppFlag = null
@@ -209,8 +217,8 @@ class ExtServiceCronService @Autowired constructor(
             } else {
                 logger.info("killGrayApp is running")
             }
-        } catch (e: Throwable) {
-            logger.error("killGrayApp error:", e)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|killGrayApp|error=${ignored.message}", ignored)
         } finally {
             redisLock.unlock()
         }
