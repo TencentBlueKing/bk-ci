@@ -67,22 +67,22 @@ class AuthHttpClientService @Autowired constructor(
         val httpClient = builder.build()
         try {
             val response = httpClient.newCall(request).execute()
-            logger.warn(
+            logger.info(
                 "Request($request) with code ${response.code()}"
             )
             return response
         } catch (e: UnknownHostException) { // DNS问题导致请求未到达目标，可重试
-            logger.warn("UnknownHostException|request($request),error is :$e")
+            logger.error("UnknownHostException|request($request),error is :$e")
             throw e
         } catch (e: ConnectException) {
-            logger.warn("ConnectException|request($request),error is :$e")
+            logger.error("ConnectException|request($request),error is :$e")
             throw e
         } catch (e: Exception) {
             if (e is SocketTimeoutException && e.message == "timeout") { // 请求没到达服务器而超时，可重试
-                logger.warn("SocketTimeoutException(timeout)|request($request),error is :$e")
+                logger.error("SocketTimeoutException(timeout)|request($request),error is :$e")
                 throw e
             } else if (e is SocketTimeoutException && e.message == "connect timed out") {
-                logger.warn("SocketTimeoutException(connect timed out)|request($request),error is :$e")
+                logger.error("SocketTimeoutException(connect timed out)|request($request),error is :$e")
                 throw e
             } else {
                 logger.error("Fail to request($request),error is :$e", e)

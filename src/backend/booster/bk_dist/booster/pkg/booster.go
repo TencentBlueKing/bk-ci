@@ -251,6 +251,7 @@ func (b *Booster) getWorkersEnv() map[string]string {
 
 	if b.config.Works.HookMode {
 		requiredEnv[env.KeyExecutorHookPreloadLibraryLinux] = b.config.Works.HookPreloadLibPath
+		requiredEnv[env.KeyExecutorHookPreloadLibraryMacos] = b.config.Works.HookPreloadLibPath
 		requiredEnv[env.KeyExecutorHookConfigContent] = b.config.Works.PreloadContent
 		requiredEnv[env.KeyExecutorHookConfigContentRaw] = b.config.Works.PreloadContentRaw
 	}

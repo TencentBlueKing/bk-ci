@@ -81,17 +81,13 @@ class StoreApproveServiceImpl : StoreApproveService {
         approveId: String,
         storeApproveRequest: StoreApproveRequest
     ): Result<Boolean> {
-        logger.info("approveStoreInfo userId is :$userId,approveId is :$approveId")
-        logger.info("approveStoreInfo storeApproveRequest is :$storeApproveRequest")
+        logger.info("approveStoreInfo params:[$userId|$approveId|$storeApproveRequest]")
         val storeApproveRecord = storeApproveDao.getStoreApproveInfo(dslContext, approveId)
-        logger.info("approveStoreInfo storeApproveRecord is :$storeApproveRecord")
-        if (null == storeApproveRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(approveId),
                 data = false
             )
-        }
         val storeCode = storeApproveRecord.storeCode
         val storeType = storeApproveRecord.storeType
         // 判断是否是插件管理员在操作
@@ -149,7 +145,6 @@ class StoreApproveServiceImpl : StoreApproveService {
             approveType = approveType,
             approveStatus = approveStatus
         )
-        logger.info("the storeApproveInfoList is :$storeApproveInfoList, InfoCount is :$storeApproveInfoCount")
         val totalPages = PageUtil.calTotalPage(pageSize, storeApproveInfoCount)
         return Result(Page(
             count = storeApproveInfoCount,
@@ -166,7 +161,7 @@ class StoreApproveServiceImpl : StoreApproveService {
         storeCode: String,
         approveType: ApproveTypeEnum
     ): Result<StoreApproveInfo?> {
-        logger.info("getUserStoreApproveInfo userId is :$userId, storeType is :$storeType, storeCode is :$storeCode")
+        logger.info("getUserStoreApproveInfo params:[$userId|$storeType|$storeCode]")
         val storeApproveInfoRecord = storeApproveDao.getUserStoreApproveInfo(
             dslContext = dslContext,
             userId = userId,
@@ -174,7 +169,6 @@ class StoreApproveServiceImpl : StoreApproveService {
             storeCode = storeCode,
             approveType = approveType
         )
-        logger.info("getUserStoreApproveInfo storeApproveInfoRecord is :$storeApproveInfoRecord")
         return if (null != storeApproveInfoRecord) {
             Result(generateStoreApproveInfo(storeApproveInfoRecord))
         } else {
@@ -185,7 +179,6 @@ class StoreApproveServiceImpl : StoreApproveService {
     override fun getStoreApproveDetail(userId: String, approveId: String): Result<StoreApproveDetail?> {
         logger.info("getUserStoreApproveInfo userId is :$userId, approveId is :$approveId")
         val storeApproveRecord = storeApproveDao.getStoreApproveInfo(dslContext, approveId)
-        logger.info("getUserStoreApproveInfo storeApproveRecord is :$storeApproveRecord")
         if (null != storeApproveRecord) {
             // 判断查看用户是否是当前插件的成员
             val flag = storeMemberDao.isStoreMember(

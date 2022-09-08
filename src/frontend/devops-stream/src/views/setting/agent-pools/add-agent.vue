@@ -8,12 +8,12 @@
 
         <main class="add-agent-body">
             <h3 class="agent-tips">
-                <span>Adding a self-hosted agent requires that you download and install the agent.</span>
-                <bk-link theme="primary" :href="LINK_CONFIG.SELF_HOSTED_AGENT" target="_blank">Learn more about self-hosted agents</bk-link>
+                <span>{{$t('setting.agent.importAgentTips')}}</span>
+                <bk-link theme="primary" :href="LINK_CONFIG.SELF_HOSTED_AGENT" target="_blank">{{$t('setting.agent.linkTips')}}</bk-link>
             </h3>
 
             <section class="agent-filter">
-                <span class="filter-title">System</span>
+                <span class="filter-title">{{$t('setting.agent.system')}}</span>
                 <bk-select @change="getThirdAgentLink" v-model="machine.system" :loading="isLoading" :clearable="false" behavior="simplicity" class="filter-select">
                     <bk-option v-for="option in operateSystems"
                         :key="option.id"
@@ -21,7 +21,7 @@
                         :name="option.name">
                     </bk-option>
                 </bk-select>
-                <span class="filter-title">Architecture</span>
+                <span class="filter-title">{{$t('setting.agent.architecture')}}</span>
                 <bk-select v-model="machine.architecture" :clearable="false" behavior="simplicity" class="filter-select">
                     <bk-option v-for="option in architectures"
                         :key="option"
@@ -34,25 +34,25 @@
             <section class="agent-info use-tip">
                 <section v-html="computedHtml"></section>
 
-                <h3>Connected Agents</h3>
+                <h3>{{$t('setting.agent.connectedAgent')}}</h3>
                 <p v-bkloading="{ isLoading: isRefresh }" class="agent-status">
-                    <span class="agent-refresh" v-if="agentStatus.status === 'UN_IMPORT'">No connected Agents，<bk-button text @click="getAgentStatus">Refresh</bk-button></span>
+                    <span class="agent-refresh" v-if="agentStatus.status === 'UN_IMPORT'">{{$t('setting.agent.noConnected')}}，<bk-button text @click="getAgentStatus">{{$t('refresh')}}</bk-button></span>
                     <section v-else class="agent-status-info">
                         <span class="agent-title">{{ agentStatus.hostname }}</span>
                         <span class="agent-os">
-                            <span class="title">Agent Status :</span>
+                            <span class="title">{{$t('setting.agent.agentStatus')}}</span>
                             <span>{{ agentStatus.status === 'UN_IMPORT_OK' ? 'normal' : 'abnormal' }}</span>
-                            <span class="title">Operating System :</span>
+                            <span class="title">{{$t('setting.agent.operatingSystem')}} :</span>
                             <span>{{ agentStatus.os }}</span>
                         </span>
                     </section>
                 </p>
             </section>
 
-            <h3 class="self-hosted-agent">Using your self-hosted agent</h3>
+            <h3 class="self-hosted-agent">{{$t('setting.agent.useAgent')}}</h3>
             <section class="agent-info">
                 <p>
-                    <span class="gray"># Use this YAML in your piepline file for each job</span>
+                    <span class="gray">{{$t('setting.agent.useAgentTips')}}</span>
                     <span class="block">runs-on:</span>
                     <span class="block">&nbsp;&nbsp;self-hosted: true</span>
                     <span class="block">&nbsp;&nbsp;pool-name: {{$route.params.poolName}}</span>
@@ -60,8 +60,8 @@
             </section>
         </main>
 
-        <bk-button class="bottom-btn" theme="primary" @click="importNode" :loading="isAdding" :disabled="agentStatus.status === 'UN_IMPORT'">Import</bk-button>
-        <bk-button class="bottom-btn" @click="backToAgentList">Back to self-hosted agents listing</bk-button>
+        <bk-button class="bottom-btn" theme="primary" @click="importNode" :loading="isAdding" :disabled="agentStatus.status === 'UN_IMPORT'">{{$t('import')}}</bk-button>
+        <bk-button class="bottom-btn" @click="backToAgentList">{{$t('setting.agent.backToList')}}</bk-button>
     </article>
 </template>
 
@@ -79,9 +79,9 @@
                     { id: 'WINDOWS', name: 'Windows' }
                 ],
                 navList: [
-                    { link: { name: 'agentPools' }, title: 'Agent Pools' },
+                    { link: { name: 'agentPools' }, title: this.$t('setting.agent.agentPools') },
                     { link: { name: 'agentList' }, title: this.$route.params.poolName },
-                    { link: '', title: 'Add Agent' }
+                    { link: '', title: this.$t('setting.agent.addAgent') }
                 ],
                 architectures: ['x64'],
                 machine: {
@@ -109,7 +109,7 @@
 
             computedHtml () {
                 const unixHtml = `
-                    <h3>Download & Install</h3>
+                    <h3>${this.$t('setting.agent.downloadAndInstall')}</h3>
                     <p>
                         <span class="gray"># Create a folder</span>
                         <span class="mb10">$ mkdir /data/landun && cd  /data/landun</span>
@@ -118,13 +118,13 @@
                     </p>
                 `
                 const windowHtml = `
-                    <h3>Download & Install</h3>
+                    <h3>${this.$t('setting.agent.downloadAndInstall')}</h3>
                     <p>
                         <span class="mb10">1. Download the latest agent<a href="${this.machine.link}" target="_blank">Click here to download agent</a></span>
                         <span class="mb10">2. Create a folder, such as D:\\data\\landun</span>
                         <span class="mb10">3. Extract the installer to D:\\data\\landun</span>
                         <span class="mb10">4. Execute install.bat by administrator</span>
-                        <span class="mb10">5. In order to read user environment, please change the setup user from system to the login user, such as tencent\\zhangsan<a href="${LINK_CONFIG.WINDOWS_AGENT}" target="_blank">Learn more</a></span>
+                        <span class="mb10">5. In order to read user environment, please change the setup user from system to the login user, such as tencent\\zhangsan<a href="${this.LINK_CONFIG.WINDOWS_AGENT}" target="_blank">Learn more</a></span>
                     </p>
                 `
                 return this.machine.system === 'WINDOWS' ? windowHtml : unixHtml

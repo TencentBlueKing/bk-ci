@@ -72,7 +72,7 @@ class MergeConflictCheck @Autowired constructor(
         action: TGitMrActionGit,
         path2PipelineExists: Map<String, StreamTriggerPipeline>
     ): Boolean {
-        val projectId = action.data.getGitProjectId()
+        val projectId = action.data.eventCommon.gitProjectId
         val mrRequestId = action.event().object_attributes.id.toString()
 
         val mrInfo = action.api.getMrInfo(
@@ -110,7 +110,10 @@ class MergeConflictCheck @Autowired constructor(
                 return false
             }
             TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
-                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
+                logger.warn(
+                    "MergeConflictCheck|checkMrConflict|git ci mr request has conflict" +
+                        "|git project id|$projectId|mr request id|$mrRequestId"
+                )
                 throw StreamTriggerException(action, TriggerReason.CI_MERGE_CONFLICT)
             }
             // 没有冲突则触发流水线
@@ -129,7 +132,7 @@ class MergeConflictCheck @Autowired constructor(
     ): Pair<Boolean, Boolean> {
         var isFinish: Boolean
         var isTrigger: Boolean
-        val projectId = action.data.getGitProjectId()
+        val projectId = action.data.eventCommon.gitProjectId
         val mrRequestId = action.event().object_attributes.id.toString()
         val mrInfo = try {
             action.api.getMrInfo(
@@ -159,19 +162,20 @@ class MergeConflictCheck @Autowired constructor(
                 isTrigger = false
                 // 如果最后一次检查还未检查完就是检查超时
                 if (isEndCheck) {
-                    // 第一次之后已经在not build中有数据了，修改构建原因
-                    gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
+                    // 超时走正常触发流程，以兼容工蜂unchecked 状态异常
+                    gitRequestEventNotBuildDao.deleteNoBuildsById(
                         dslContext = dslContext,
-                        recordId = notBuildRecordId,
-                        reason = TriggerReason.CI_MERGE_CHECK_TIMEOUT.name,
-                        reasonDetail = TriggerReason.CI_MERGE_CHECK_TIMEOUT.detail
+                        recordId = notBuildRecordId
                     )
                     isFinish = true
-                    isTrigger = false
+                    isTrigger = true
                 }
             }
             TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
-                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
+                logger.warn(
+                    "MergeConflictCheck|checkMrConflictByListener|git ci mr request has conflict" +
+                        "|git project id|$projectId|mr request id|$mrRequestId"
+                )
                 gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
                     dslContext = dslContext,
                     recordId = notBuildRecordId,

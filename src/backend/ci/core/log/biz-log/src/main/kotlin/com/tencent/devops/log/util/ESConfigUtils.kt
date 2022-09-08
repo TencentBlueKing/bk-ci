@@ -42,9 +42,10 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
-import javax.net.ssl.SSLContext
 import java.security.SecureRandom
+import javax.net.ssl.SSLContext
 
+@Suppress("LongParameterList", "MagicNumber")
 object ESConfigUtils {
 
     fun getClientBuilder(
@@ -81,7 +82,8 @@ object ESConfigUtils {
             httpClientBuilder.setKeepAliveStrategy { response: HttpResponse, context: HttpContext? ->
                 try {
                     val headers: HeaderElementIterator = BasicHeaderElementIterator(
-                        response.headerIterator(HTTP.CONN_KEEP_ALIVE))
+                        response.headerIterator(HTTP.CONN_KEEP_ALIVE)
+                    )
                     while (headers.hasNext()) {
                         val headerElement = headers.nextElement()
                         val param = headerElement.name
@@ -90,8 +92,8 @@ object ESConfigUtils {
                             return@setKeepAliveStrategy value.toLong() * 1000
                         }
                     }
-                } catch (e: Exception) {
-                    logger.warn("Fetch cluster KeepAliveStrategy error, context: $context", e)
+                } catch (ignore: Exception) {
+                    logger.warn("Fetch cluster KeepAliveStrategy error, context: $context", ignore)
                 }
                 // 默认30秒刷新超时
                 tcpKeepAliveSeconds

@@ -49,11 +49,12 @@ import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.CommonVariables
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.pojo.ModelParametersData
 import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
 
 @Suppress("ComplexMethod")
 object ModelParameters {
-    private const val VARIABLE_PREFIX = "variables."
+    const val VARIABLE_PREFIX = "variables."
 
     fun createPipelineParams(
         action: BaseAction,
@@ -61,9 +62,7 @@ object ModelParameters {
         streamGitProjectInfo: StreamGitProjectCache,
         webhookParams: Map<String, String> = mapOf(),
         yamlTransferData: YamlTransferData? = null
-    ): MutableList<BuildFormProperty> {
-        val result = mutableListOf<BuildFormProperty>()
-
+    ): ModelParametersData {
         val event = action.data.eventCommon
         val startParams = mutableMapOf<String, String>()
         val parsedCommitMsg = EmojiUtil.removeAllEmoji(event.commit.commitMsg ?: "")
@@ -117,27 +116,7 @@ object ModelParameters {
             startParams = startParams
         )
 
-        startParams.forEach {
-            result.add(
-                BuildFormProperty(
-                    id = it.key,
-                    required = false,
-                    type = BuildFormPropertyType.STRING,
-                    defaultValue = it.value,
-                    options = null,
-                    desc = null,
-                    repoHashId = null,
-                    relativePath = null,
-                    scmType = null,
-                    containerType = null,
-                    glob = null,
-                    properties = null
-                )
-            )
-        }
-        result.addAll(buildFormProperties)
-
-        return result
+        return ModelParametersData(buildFormProperties, startParams)
     }
 
     private fun getBuildFormPropertyFromYmlVariable(
@@ -149,9 +128,14 @@ object ModelParameters {
         }
         val buildFormProperties = mutableListOf<BuildFormProperty>()
         variables.forEach { (key, variable) ->
+            val keyWithPrefix = if (key.startsWith(VARIABLE_PREFIX)) {
+                key
+            } else {
+                VARIABLE_PREFIX + key
+            }
             buildFormProperties.add(
                 BuildFormProperty(
-                    id = VARIABLE_PREFIX + key,
+                    id = keyWithPrefix,
                     required = false,
                     type = BuildFormPropertyType.STRING,
                     defaultValue = ModelCommon.formatVariablesValue(variable.value, startParams) ?: "",

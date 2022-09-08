@@ -1,6 +1,6 @@
 <template>
     <section>
-        <span class="review-subtitle">Approval Flow</span>
+        <span class="review-subtitle">{{$t('pipeline.approveFlow')}}</span>
         <bk-timeline :list="computedReviewGroups"></bk-timeline>
     </section>
 </template>
@@ -42,12 +42,12 @@
                             <section class="stage-review-content">
                                 <p class="review-title">
                                     <span class="content-subtitle">{item.name}</span>
-                                    <span class="review-normal"> Approved by {item.operator}: </span>
-                                    <span class="review-process"> Approve (Continue pipeline execution) </span>
+                                    <span class="review-normal"> {this.$t('pipeline.approvedBy', [item.operator])}: </span>
+                                    <span class="review-process"> {this.$t('pipeline.approveContinue')} </span>
                                 </p>
-                                <p v-show={paramStr}><span class="mr8 max-width">Edit variable:</span>{paramStr}</p>
-                                <p><span class="mr8 max-width">Approval opinion:</span>{item.suggest}</p>
-                                <p><span class="mr8 max-width">Approval time:</span>{convertTime(item.reviewTime)}</p>
+                                <p v-show={paramStr}><span class="mr8 max-width">{this.$t('pipeline.editVariables')}:</span>{paramStr}</p>
+                                <p><span class="mr8 max-width">{this.$t('pipeline.approvalOpinion')}:</span>{item.suggest}</p>
+                                <p><span class="mr8 max-width">{this.$t('pipeline.approvalTime')}:</span>{convertTime(item.reviewTime)}</p>
                             </section>
                         )
                         break
@@ -56,11 +56,11 @@
                             <section class="stage-review-content">
                                 <p class="review-title">
                                     <span class="content-subtitle">{item.name}</span>
-                                    <span class="review-normal"> Approved by {item.operator}: </span>
-                                    <span class="review-abort"> Reject (Set previous stage status as Stage Success) </span>
+                                    <span class="review-normal"> {this.$t('pipeline.approvedBy', [item.operator])}: </span>
+                                    <span class="review-abort"> {this.$t('pipeline.rejectStop')} </span>
                                 </p>
-                                <p><span class="mr8 max-width">Approval opinion:</span>{item.suggest}</p>
-                                <p><span class="mr8 max-width">Approval time:</span>{convertTime(item.reviewTime)}</p>
+                                <p><span class="mr8 max-width">{this.$t('pipeline.approvalOpinion')}:</span>{item.suggest}</p>
+                                <p><span class="mr8 max-width">{this.$t('pipeline.approvalTime')}:</span>{convertTime(item.reviewTime)}</p>
                             </section>
                         )
                         break
@@ -69,7 +69,7 @@
                             <section class="stage-review-content">
                                 <p class="review-title">
                                     <span class="content-subtitle">{item.name}</span>
-                                    <span class="review-normal"> Approver: {item.reviewers.join(',')}</span>
+                                    <span class="review-normal"> {this.$t('pipeline.approver')}: {item.reviewers.join(',')}</span>
                                 </p>
                             </section>
                         )

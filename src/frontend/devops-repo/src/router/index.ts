@@ -186,7 +186,6 @@ const routes = [
     },
   },
 ];
-console.log(process.env.VUE_APP_BASE_URL);
 const router = createRouter({
   history: createWebHistory(process.env.VUE_APP_BASE_URL),
   routes,

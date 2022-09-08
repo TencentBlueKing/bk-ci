@@ -11,6 +11,7 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
@@ -91,7 +92,7 @@ interface BaseAction {
      * 获取yaml文件具体内容
      * @param fileName 文件名称
      */
-    fun getYamlContent(fileName: String): String
+    fun getYamlContent(fileName: String): YamlContent
 
     /**
      * 获取本次触发变更的文件列表
@@ -143,8 +144,9 @@ interface BaseAction {
 
     fun needAddWebhookParams() = false
 
-    fun updateLastBranch(
+    fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
-        branch: String
+        branch: String?,
+        displayName: String?
     )
 }

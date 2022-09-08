@@ -121,7 +121,7 @@ class StreamQualityService @Autowired constructor(
             titleData.add(ruleName.joinToString("、"))
             return Pair(titleData, resultMap)
         } catch (ignore: Exception) {
-            logger.error("get quality result failed ${ignore.message}")
+            logger.warn("StreamQualityService|getQualityGitMrResult|failed=${ignore.message}")
         }
         return Pair(listOf(), mutableMapOf())
     }

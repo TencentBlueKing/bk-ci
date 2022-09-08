@@ -39,7 +39,7 @@ data class GetAtomConfigResult(
     @ApiModelProperty("插件json文件配置数据", required = false)
     val taskDataMap: Map<String, Any>,
     @ApiModelProperty("环境信息", required = false)
-    var atomEnvRequest: AtomEnvRequest?
+    var atomEnvRequests: List<AtomEnvRequest>?
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -50,7 +50,7 @@ data class GetAtomConfigResult(
         if (errorCode != other.errorCode) return false
         if (!errorParams.contentEquals(other.errorParams)) return false
         if (taskDataMap != other.taskDataMap) return false
-        if (atomEnvRequest != other.atomEnvRequest) return false
+        if (atomEnvRequests != other.atomEnvRequests) return false
 
         return true
     }
@@ -59,7 +59,7 @@ data class GetAtomConfigResult(
         var result = errorCode.hashCode()
         result = 31 * result + errorParams.contentHashCode()
         result = 31 * result + (taskDataMap.hashCode() ?: 0)
-        result = 31 * result + (atomEnvRequest?.hashCode() ?: 0)
+        result = 31 * result + (atomEnvRequests?.hashCode() ?: 0)
         return result
     }
 }

@@ -27,12 +27,10 @@
 
 package com.tencent.devops.stream.trigger.mq.streamTrigger
 
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.stream.trigger.StreamYamlTrigger
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -49,24 +47,13 @@ class StreamTriggerListener @Autowired constructor(
 
     fun listenStreamTriggerEvent(event: StreamTriggerEvent) {
         try {
-            val traceId = MDC.get(TraceTag.BIZID)
-            if (traceId.isNullOrEmpty()) {
-                if (!event.traceId.isNullOrEmpty()) {
-                    MDC.put(TraceTag.BIZID, event.traceId)
-                } else {
-                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-                }
-            }
             run(event)
         } catch (e: Throwable) {
-            logger.error("listenStreamTriggerEvent|error", e)
-        } finally {
-            MDC.remove(TraceTag.BIZID)
+            logger.error("BKSystemErrorMonitor|listenStreamTriggerEvent|error", e)
         }
     }
 
     private fun run(event: StreamTriggerEvent) {
-        val startTime = System.currentTimeMillis()
         val action = try {
             val action = actionFactory.loadByData(
                 eventStr = event.eventStr,
@@ -75,7 +62,7 @@ class StreamTriggerListener @Autowired constructor(
                 actionSetting = event.actionSetting
             )
             if (action == null) {
-                logger.error("trigger listener event not support: $event")
+                logger.warn("StreamTriggerListener|run|$event")
                 return
             }
             action
@@ -83,14 +70,14 @@ class StreamTriggerListener @Autowired constructor(
             logger.warn("StreamTriggerListener|load|action|error", e)
             return
         }
-        logger.info("|${action.data.context.requestEventId}|listenStreamTriggerEvent|action|${action.format()}")
+        logger.info(
+            "StreamTriggerListener|${action.data.context.requestEventId} " +
+                "|listenStreamTriggerEvent|action|${action.format()}"
+        )
 
         // 针对每个流水线处理异常
-        exceptionHandler.handle(action = action) { streamYamlTrigger.triggerBuild(action = action) }
-
-        logger.info(
-            "stream pipeline: ${action.data.context.pipeline?.pipelineId} " +
-                "from trigger to build time：${System.currentTimeMillis() - startTime}"
-        )
+        exceptionHandler.handle(action = action) {
+            streamYamlTrigger.checkAndTrigger(action = action, trigger = event.trigger)
+        }
     }
 }

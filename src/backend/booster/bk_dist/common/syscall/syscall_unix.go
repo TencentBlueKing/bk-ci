@@ -29,7 +29,8 @@ import (
 )
 
 const (
-	ExitErrorCode = 99
+	ExitErrorCode            = 99
+	DevOPSProcessTreeKillKey = "DEVOPS_DONT_KILL_PROCESS_TREE"
 )
 
 // RunServer run the detached server
@@ -42,6 +43,9 @@ func RunServer(command string) error {
 	)
 	cmd.SysProcAttr = GetSysProcAttr()
 	cmd.Dir = dcUtil.GetRuntimeDir()
+
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", DevOPSProcessTreeKillKey, "true"))
 
 	blog.Infof("syscall: ready to run cmd [%s]", cmd.String())
 
@@ -152,9 +156,14 @@ func (s *Sandbox) ExecCommand(name string, arg ...string) (int, error) {
 	}
 
 	var err error
+	var res string
+
 	// if not relative path find the command in PATH
 	if !strings.HasPrefix(name, ".") {
-		name, err = s.LookPath(name)
+		res, err = s.LookPath(name)
+		if err == nil {
+			name = res
+		}
 	}
 
 	var cmd *exec.Cmd
@@ -172,8 +181,8 @@ func (s *Sandbox) ExecCommand(name string, arg ...string) (int, error) {
 
 	// 错误等到stdout和stderr都初始化完, 再处理
 	if err != nil {
-		_, _ = s.Stderr.Write([]byte(fmt.Sprintf("run command failed: %v\n", err.Error())))
-		return -1, err
+		_, _ = s.Stderr.Write([]byte(fmt.Sprintf("run command failed: %v ,try relative path cmd\n", err.Error())))
+		//return -1, err
 	}
 
 	if err := cmd.Run(); err != nil {
@@ -184,7 +193,6 @@ func (s *Sandbox) ExecCommand(name string, arg ...string) (int, error) {
 		}
 		return ExitErrorCode, err
 	}
-
 	return 0, nil
 }
 
@@ -248,7 +256,7 @@ func (s *Sandbox) StartCommand(name string, arg ...string) (*exec.Cmd, error) {
 
 // LookPath 根据sandbox中的env-PATH, 来取得正确的command-name路径
 func (s *Sandbox) LookPath(file string) (string, error) {
-	if strings.Contains(file, "/") {
+	if filepath.IsAbs(file) {
 		err := findExecutable(file)
 		if err == nil {
 			return file, nil

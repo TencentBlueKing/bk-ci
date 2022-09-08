@@ -541,6 +541,14 @@ func (cl *TaskCL) preBuild(args []string) error {
 		}
 	}
 
+	if !scannedData.specifiedSourceType {
+		if filepath.Ext(cl.preprocessedFile) == ".ii" {
+			serverSideArgs = append(serverSideArgs, "/TP")
+		} else if filepath.Ext(cl.preprocessedFile) == ".i" {
+			serverSideArgs = append(serverSideArgs, "/TC")
+		}
+	}
+
 	// quota result file if it's path contains space
 	if runtime.GOOS == "windows" {
 		if hasSpace(cl.outputFile) && !strings.HasPrefix(cl.outputFile, "\"") {

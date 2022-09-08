@@ -25,8 +25,8 @@
         data () {
             return {
                 panels: [
-                    { label: 'Original YAML', name: 'originYaml' },
-                    { label: 'Parsed YAML', name: 'parsedYaml' }
+                    { label: this.$t('pipeline.originYaml'), name: 'originYaml' },
+                    { label: this.$t('pipeline.parsedYaml'), name: 'parsedYaml' }
                 ],
                 active: 'originYaml',
                 ymlObj: {},

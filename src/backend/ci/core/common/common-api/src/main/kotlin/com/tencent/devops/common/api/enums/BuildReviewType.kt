@@ -34,6 +34,8 @@ package com.tencent.devops.common.api.enums
 enum class BuildReviewType {
     TASK_REVIEW,
     STAGE_REVIEW,
+    QUALITY_TASK_REVIEW_PASS,
+    QUALITY_TASK_REVIEW_ABORT,
     QUALITY_CHECK_IN,
     QUALITY_CHECK_OUT
 }

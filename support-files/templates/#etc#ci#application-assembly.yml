@@ -182,7 +182,7 @@ image:
 log:
   storage:
     type: __BK_CI_LOG_STORAGE_TYPE__                # 日志存储方式 lucene/elasticsearch
-    closeInDay: __BK_CI_LOG_CLOSE_DAY__             # 索引自动关闭时间，留空则为永不关闭
+    closeInDay: __BK_CI_LOG_COLD_DAY__             # 索引自动关闭时间，留空则为永不关闭
     deleteInDay: __BK_CI_LOG_DELETE_DAY__           # 索引自动删除时间，留空则为永不删除
   # 通过本地文件系统进行存储的必要配置
   lucene:
@@ -398,12 +398,6 @@ pipeline:
     max_keep_num: 50
     spec_channels: "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
     spec_channel_max_keep_num: 2
-
-#### sign
-# 签名服务临时解压缩目录
-bkci:
-  sign:
-    tmpDir: "/tmp/enterprise_sign_tmp/"
 
 notify:
   weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  #发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)

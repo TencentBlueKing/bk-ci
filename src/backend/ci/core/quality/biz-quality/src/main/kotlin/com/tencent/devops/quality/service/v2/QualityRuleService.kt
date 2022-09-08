@@ -408,7 +408,7 @@ class QualityRuleService @Autowired constructor(
         // 查询rule map
         val ruleId = record.id
         val mapRecord = ruleMapDao.get(dslContext, ruleId)
-        logger.info("get rule data for ruleId($ruleId): $mapRecord")
+        logger.info("QUALITY|get rule data for ruleId($ruleId)")
 
         // 顺序遍历rule map生成每个指标实际的operation和threshold
         val indicatorIds = mapRecord.indicatorIds.split(",")
@@ -557,18 +557,18 @@ class QualityRuleService @Autowired constructor(
         val list = ruleRecordList?.map { rule ->
             // 获取所有流水线
             val ruleDetail = ruleDetailMap[rule.id]
-            logger.info("serviceList rule detail ids for project($projectId): $ruleDetail")
+            logger.info("serviceList rule detail ids for project($projectId): ${ruleDetail?.id}")
 
             val controlPoint = controlPointMap[rule.controlPoint]
             val ruleIndicators = if (ruleDetail == null || ruleDetail.indicatorIds.isNullOrBlank()) listOf()
             else ruleDetail.indicatorIds.split(",").map { it.toLong() }
 
             // get rule indicator map
-            var indicators = listOf<QualityIndicator>()
-            try {
-                indicators = ruleIndicators.map { indicatorsMap[it]!! }
-            } catch (e: Exception) {
-                logger.error("QUALITY|get rule indicator error", e)
+            var indicators = mutableListOf<QualityIndicator>()
+            ruleIndicators.forEach {
+                if (indicatorsMap.containsKey(it)) {
+                    indicators.add(indicatorsMap[it]!!)
+                }
             }
             logger.info("serviceList rule indicator ids for project($projectId): ${indicators.map { it.enName }}")
             val indicatorOperations = ruleDetail?.indicatorOperations?.split(",") ?: listOf()

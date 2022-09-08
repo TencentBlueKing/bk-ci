@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter

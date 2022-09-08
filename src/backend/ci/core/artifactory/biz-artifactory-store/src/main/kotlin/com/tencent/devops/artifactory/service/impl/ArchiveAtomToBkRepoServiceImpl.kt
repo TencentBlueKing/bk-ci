@@ -90,6 +90,10 @@ class ArchiveAtomToBkRepoServiceImpl(
         }
     }
 
+    override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
+        bkRepoClient.delete(userId, BKREPO_STORE_PROJECT_ID, REPO_NAME_PLUGIN, "$projectCode/$atomCode")
+    }
+
     override fun clearServerTmpFile(projectCode: String, atomCode: String, version: String) {
         val atomArchivePath = buildAtomArchivePath(projectCode, atomCode, version)
         val frontendDir = buildAtomFrontendPath(atomCode, version)

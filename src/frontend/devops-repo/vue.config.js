@@ -1,7 +1,7 @@
 const path = require('path')
 module.exports = {
-  publicPath: process.env.NODE_ENV === 'production' ? '/repo/' : '/',
-  outputDir: path.join(__dirname, '../frontend/repo'),
+  publicPath: process.env.NODE_ENV === 'production' ? process.env.VUE_APP_BASE_URL : '/',
+  // outputDir: path.join(__dirname, '../frontend/repo'),
   chainWebpack: config => {
     config
       .plugin('html')

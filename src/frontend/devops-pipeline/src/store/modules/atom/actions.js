@@ -229,7 +229,7 @@ export default {
             Object.assign(atomClassifyMap, {
                 all: {
                     classifyCode: 'all',
-                    classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('all')) || 'all'
+                    classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('All')) || 'All'
                 },
                 rdStore: {
                     classifyCode: 'rdStore',
@@ -525,8 +525,8 @@ export default {
     },
 
     // 获取项目下已安装的插件列表
-    getInstallAtomList ({ commit }, projectCode) {
-        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=2000`)
+    getInstallAtomList ({ commit }, { projectCode, page, pageSize, classifyCode }) {
+        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/installedAtoms/list?page=${page}&pageSize=${pageSize}&classifyCode=${classifyCode}`)
     },
 
     // 获取已安装的插件详情
@@ -593,11 +593,11 @@ export default {
     },
 
     getMacSysVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions`)
+        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
     },
 
     getMacXcodeVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions`)
+        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2`)
     },
     setImportedPipelineJson ({ commit }, importedJson) {
         commit(SET_IMPORTED_JSON, importedJson)

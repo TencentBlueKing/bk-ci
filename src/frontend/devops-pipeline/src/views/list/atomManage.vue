@@ -7,8 +7,7 @@
         <bk-tab :active.sync="active" class="atom-manage-main" @tab-change="tabChange">
             <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
                 <template slot="label">
-                    <span>{{panel.label}}</span>
-                    <i class="atom-panel-count">{{panel.count}}</i>
+                    <span>{{ panel.label }}</span>
                 </template>
                 <bk-table :data="atomList" size="large" :empty-text="$t('noData')" :show-header="false">
                     <bk-table-column prop="logoUrl" width="80">
@@ -116,7 +115,7 @@
             return {
                 panels: [],
                 active: 'all',
-                installAtomList: [],
+                atomList: [],
                 deleteObj: {
                     showDialog: false,
                     detail: {},
@@ -143,14 +142,6 @@
                 return this.$route.params.projectId
             },
 
-            atomList () {
-                const curTabAtomList = this.installAtomList.filter((atom) => (this.active === 'all' || atom.classifyCode === this.active)) || []
-                this.defaultPaging.count = curTabAtomList.length
-                const startIndex = this.defaultPaging.limit * (this.defaultPaging.current - 1)
-                const endIndex = this.defaultPaging.limit * this.defaultPaging.current
-                return curTabAtomList.slice(startIndex, endIndex)
-            },
-
             showOtherReason () {
                 const lastReason = this.deleteReasons.slice(-1)[0] || {}
                 const otherId = lastReason.id
@@ -166,23 +157,40 @@
         methods: {
             ...mapActions('atom', ['getInstallAtomList', 'getInstallAtomDetail', 'unInstallAtom', 'getDeleteReasons', 'getAtomClassify']),
 
-            initData () {
+            async initData () {
                 this.isLoading = true
-                Promise.all([this.getInstallAtomList(this.projectId), this.getAtomClassify(), this.getDeleteReasons()]).then(([{ data: atomList }, { data: classifyList }, { data: reasons }]) => {
-                    this.installAtomList = atomList.records || []
-                    this.deleteReasons = reasons || []
-                    this.panels = (classifyList || []).map((classify) => {
-                        const count = (this.installAtomList.filter((atom) => (atom.classifyCode === classify.classifyCode)) || []).length
-                        return { name: classify.classifyCode, label: classify.classifyName, count }
+                await this.fetchAtomList()
+                Promise.all([this.getAtomClassify(), this.getDeleteReasons()])
+                    .then(([{ data: classifyList }, { data: reasons }]) => {
+                        this.deleteReasons = reasons || []
+                        this.panels = (classifyList || []).map(item => {
+                            item.name = item.classifyCode
+                            item.label = item.classifyName
+                            return item
+                        })
+                        this.panels.unshift({ name: 'all', label: this.$t('atomManage.all') })
+                    }).catch(err => this.$bkMessage({ theme: 'error', message: err.message })).finally(() => {
+                        this.isLoading = false
                     })
-                    this.panels.unshift({ name: 'all', label: this.$t('atomManage.all'), count: this.installAtomList.length })
-                }).catch(err => this.$bkMessage({ theme: 'error', message: err.message })).finally(() => {
-                    this.isLoading = false
+            },
+
+            fetchAtomList () {
+                const classifyCode = this.active === 'all' ? '' : this.active
+                return this.getInstallAtomList({
+                    projectCode: this.projectId,
+                    page: this.defaultPaging.current,
+                    pageSize: this.defaultPaging.limit,
+                    classifyCode: classifyCode
+                }).then(res => {
+                    const data = res.data || {}
+                    this.atomList = data.records || []
+                    this.defaultPaging.count = data.count || 0
                 })
             },
 
             tabChange () {
                 this.defaultPaging.current = 1
+                this.fetchAtomList()
             },
 
             showDetail (row) {
@@ -226,6 +234,7 @@
 
             pageChange (page) {
                 if (page) this.defaultPaging.current = page
+                this.fetchAtomList()
             },
 
             limitChange (limit) {
@@ -233,6 +242,7 @@
 
                 this.defaultPaging.limit = limit
                 this.defaultPaging.current = 1
+                this.fetchAtomList()
             },
 
             clearReason () {

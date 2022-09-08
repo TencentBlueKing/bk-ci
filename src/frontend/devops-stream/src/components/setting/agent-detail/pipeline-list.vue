@@ -8,8 +8,8 @@
             :pagination="pagination"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
-            :empty-text="$t('environment.noData')">
-            <bk-table-column :label="$t('environment.pipeline')" prop="pipelineName" min-width="200">
+            :empty-text="$t('noData')">
+            <bk-table-column :label="$t('pipeline.pipeline')" prop="pipelineName" min-width="200">
                 <template slot-scope="props">
                     <a class="item-pipelinename" :title="props.row.pipelineName"
                         target="_blank"
@@ -17,31 +17,31 @@
                     </a>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.nodeInfo.buildNo')" prop="buildNumber">
+            <bk-table-column :label="$t('setting.nodeInfo.buildNo')" prop="buildNumber">
                 <template slot-scope="props">
                     <span>{{ props.row.buildNumber }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.nodeInfo.ownJob')" prop="taskName" min-width="160">
+            <bk-table-column :label="$t('setting.nodeInfo.ownJob')" prop="taskName" min-width="160">
                 <template slot-scope="props">
                     <span :title="props.row.taskName">{{ props.row.taskName }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.nodeInfo.status')" prop="status">
+            <bk-table-column :label="$t('status')" prop="status">
                 <template slot-scope="props">
                     <span :class="{
                         'is-success': props.row.status === 'DONE',
                         'is-fail': props.row.status === 'FAILURE'
                     }">{{ statusMap[props.row.status] || props.row.status }}</span>
-                    <span v-if="props.row.agentTask && props.row.agentTask.status === 'RUNNING'">{{`（${$t('environment.nodeInfo.agentTaskRunning')}）`}}</span>
+                    <span v-if="props.row.agentTask && props.row.agentTask.status === 'RUNNING'">{{`（${$t('setting.nodeInfo.agentTaskRunning')}）`}}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.envInfo.createTime')" prop="createdTime" min-width="160">
+            <bk-table-column :label="$t('createTime')" prop="createdTime" min-width="160">
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.createdTime) }}
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('environment.updateTime')" prop="updatedTime" min-width="160">
+            <bk-table-column :label="$t('updateTime')" prop="updatedTime" min-width="160">
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.updatedTime) }}
                 </template>
@@ -68,10 +68,10 @@
                     limit: 10
                 },
                 statusMap: {
-                    'QUEUE': this.$t('environment.nodeInfo.queuing'),
-                    'RUNNING': this.$t('environment.nodeInfo.running'),
-                    'DONE': this.$t('environment.nodeInfo.succeed'),
-                    'FAILURE': this.$t('environment.nodeInfo.fail')
+                    'QUEUE': this.$t('setting.nodeInfo.queuing'),
+                    'RUNNING': this.$t('setting.nodeInfo.running'),
+                    'DONE': this.$t('setting.nodeInfo.succeed'),
+                    'FAILURE': this.$t('setting.nodeInfo.fail')
                 }
             }
         },
@@ -157,11 +157,6 @@
              */
             localConvertTime (timestamp) {
                 return convertTime(timestamp * 1000)
-            },
-            $t (message) {
-                const arr = message.split('.')
-                const str = arr[arr.length - 1] || message
-                return str.replace(/^\S/, s => s.toUpperCase())
             }
         }
     }

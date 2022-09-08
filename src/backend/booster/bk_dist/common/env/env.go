@@ -24,6 +24,7 @@ const (
 
 	KeyExecutorLogLevel                = "LOG_LEVEL"
 	KeyExecutorHookPreloadLibraryLinux = "LD_PRELOAD"
+	KeyExecutorHookPreloadLibraryMacos = "DYLD_INSERT_LIBRARIES"
 	KeyExecutorHookConfigContent       = "HOOK_CONFIG_CONTENT"
 	KeyExecutorHookConfigContentRaw    = "HOOK_CONFIG_CONTENT_RAW"
 	KeyExecutorControllerScheme        = "CONTROLLER_SCHEME"
@@ -82,7 +83,8 @@ const (
 // GetEnvKey return env value by specified key
 func GetEnvKey(key string) string {
 	// preload env key is set for system, not need prefix.
-	if key == KeyExecutorHookPreloadLibraryLinux {
+	if key == KeyExecutorHookPreloadLibraryLinux ||
+		key == KeyExecutorHookPreloadLibraryMacos {
 		return key
 	}
 

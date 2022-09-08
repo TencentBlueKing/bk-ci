@@ -28,11 +28,14 @@
 package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -76,7 +79,10 @@ class StreamBasicSettingService @Autowired constructor(
                 pageSize = pageSize
             )
         if (agentBuilds.isNotOk()) {
-            logger.error("get agent builds list in devops failed, msg: ${agentBuilds.message}")
+            logger.warn(
+                "StreamBasicSettingService|listAgentBuilds|" +
+                    "errors=${agentBuilds.message}"
+            )
             throw RuntimeException("get agent builds list in devops failed, msg: ${agentBuilds.message}")
         }
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
@@ -104,7 +110,7 @@ class StreamBasicSettingService @Autowired constructor(
     ): Boolean {
         val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (setting == null) {
-            logger.info("git repo not exists.")
+            logger.info("StreamBasicSettingService|updateProjectSetting|git repo not exists")
             return false
         }
         streamBasicSettingDao.updateProjectSetting(
@@ -173,12 +179,12 @@ class StreamBasicSettingService @Autowired constructor(
                 )
             )
         }
-        logger.warn("init stream Conf: $gitProjectId  info: $projectInfo")
+        logger.warn("StreamBasicSettingService|initStreamConf|$gitProjectId|$projectInfo")
         throw RuntimeException("Create git ci project in devops failed, msg: get project info from git error")
     }
 
     fun saveStreamConf(userId: String, setting: StreamBasicSetting): Boolean {
-        logger.info("save git ci conf, repositoryConf: $setting")
+        logger.info("StreamBasicSettingService|saveStreamConf|$setting")
         val gitRepoConf = streamBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
         if (gitRepoConf?.projectCode == null) {
 
@@ -212,13 +218,15 @@ class StreamBasicSettingService @Autowired constructor(
                     centerId = 0L,
                     centerName = "",
                     secrecy = false,
-                    kind = 0
+                    kind = 0,
+                    properties = ProjectProperties(PipelineAsCodeSettings(true))
                 ),
                 needValidate = false,
                 needAuth = false,
                 channel = ProjectChannelCode.GITCI
             )
             if (projectResult.isNotOk()) {
+                logger.warn("StreamBasicSettingService|saveStreamConf|error=${projectResult.message}")
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")
             }
             val projectInfo = projectResult.data!!
@@ -257,15 +265,31 @@ class StreamBasicSettingService @Autowired constructor(
             nameWithNamespace = projectInfo.nameWithNamespace
         )
 
+        var newProjectName = projectInfo.nameWithNamespace
+        var needToUpdate = false
         if (oldData.name != projectInfo.name) {
+            needToUpdate = true
+        } else if (oldData.pathWithNamespace != projectInfo.pathWithNamespace) {
+            needToUpdate = true
+            newProjectName = projectInfo.pathWithNamespace.toString()
+        }
+
+        if (needToUpdate) {
+            if (newProjectName.length > StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+                newProjectName = newProjectName.substring(
+                    newProjectName.length -
+                        StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
+                    newProjectName.length
+                )
+            }
             try {
                 client.get(ServiceProjectResource::class).updateProjectName(
                     userId = userId,
                     projectCode = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId),
-                    projectName = projectInfo.name
+                    projectName = newProjectName
                 )
             } catch (e: Throwable) {
-                logger.error("update bkci project name error :${e.message}")
+                logger.warn("StreamBasicSettingService|updateProjectInfo|error", e)
                 return false
             }
         }
@@ -303,11 +327,20 @@ class StreamBasicSettingService @Autowired constructor(
         }
     }
 
+    fun getBasicSettingRecordList(
+        gitProjectIdList: List<Long>? = null
+    ): List<TGitBasicSettingRecord> {
+        return streamBasicSettingDao.getBasicSettingList(
+            dslContext = dslContext,
+            gitProjectIdList = gitProjectIdList
+        )
+    }
+
     protected fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {
         return try {
             streamGitTransferService.getGitProjectInfo(gitProjectId.toString(), null)
         } catch (e: Throwable) {
-            logger.error("requestGitProjectInfo, msg: ${e.message}")
+            logger.warn("StreamBasicSettingService|requestGitProjectInfo|error", e)
             return null
         }
     }
@@ -329,16 +362,18 @@ class StreamBasicSettingService @Autowired constructor(
         // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
         val projectId = GitCommonUtils.getGitProjectId(bkProjectResult.projectId)
         val gitProjectResult = requestGitProjectInfo(projectId)
+        logger.info("StreamBasicSettingService|checkSameGitProjectName|$gitProjectResult|$projectName")
         // 如果stream 存在该项目信息
         if (null != gitProjectResult) {
             // sp3:比对gitProjectinfo的project_name跟入参的gitProjectName对比是否同名，注意gitProjectName这里包含了group信息，拆解开。
+            // 可能存在用户：只改项目名称，不改路径；只改路径，不改项目名称。
             val projectNameFromGit = gitProjectResult.name
+            val pathWithNamespace = gitProjectResult.pathWithNamespace
             val projectNameFromPara = projectName.substring(projectName.lastIndexOf("/") + 1)
-
-            if (projectNameFromGit.isNotEmpty() && projectNameFromPara.isNotEmpty() &&
-                projectNameFromPara != projectNameFromGit
+            if (projectNameFromPara != projectNameFromGit ||
+                pathWithNamespace != projectName
             ) {
-                // 项目已修改名称，更新项目信息，包含setting + project表
+                // 项目已修改名称或修改路径，更新项目信息，包含setting + project表
                 refreshSetting(userId, projectId)
             }
             return
@@ -361,7 +396,10 @@ class StreamBasicSettingService @Autowired constructor(
                 projectName = deletedProjectName
             )
         } catch (e: Throwable) {
-            logger.error("update bkci project name error :${e.message}")
+            logger.warn(
+                "StreamBasicSettingService|checkSameGitProjectName " +
+                    "|update bkci project name error :${e.message}"
+            )
         }
     }
 }

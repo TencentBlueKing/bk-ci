@@ -57,8 +57,8 @@ export default defineComponent({
     const versionOperation = computed<Record<string, Operation[]>>(() => versionList.value.reduce((acc, v) => {
       const packageOperations = usePackageOperation(
         routeParams.value.repoType,
-          info.value?.name,
-          v,
+        info.value?.name,
+        v,
       );
       acc[v.name] = packageOperations;
       return acc;

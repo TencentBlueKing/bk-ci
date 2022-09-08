@@ -10,12 +10,12 @@
                 title: loading.title
             }">
             <div class="node-list-header">
-                <div class="title">Select agents to import
+                <div class="title">{{$t('setting.nodeInfo.selectNodeTip')}}
                     <span class="selected-node-prompt">
-                        total<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span>agents
+                        {{$t('total')}}<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span> {{$t('setting.agent.agents')}}
                     </span>
                     <span class="selected-node-prompt">
-                        <span class="node-count"> {{ selectHandlercConf.selectedNodeCount }} </span>have been selected
+                        <span class="node-count"> {{ selectHandlercConf.selectedNodeCount }} </span>{{$t('setting.agent.hasSelected')}}
                     </span>
                 </div>
                 <div class="search-input-row">
@@ -42,7 +42,7 @@
                                 <i class="bk-icon icon-search" @click="searchNode"></i>
                             </div>
                             <div class="ip-searcher-footer" v-if="isSearchFooter">
-                                <p>Search</p>
+                                <p>{{$t('search')}}</p>
                             </div>
                         </div>
                     </div>
@@ -57,12 +57,12 @@
                             v-model="selectHandlercConf.allNodeSelected"
                             @change="toggleAllSelect"
                         ></bk-checkbox>
-                        <div class="table-node-item node-item-ip">DisplayName</div>
-                        <div class="table-node-item node-item-name">HostName</div>
+                        <div class="table-node-item node-item-ip">{{$t('displayName')}}</div>
+                        <div class="table-node-item node-item-name">{{$t('setting.agent.hostName')}}</div>
                         <div class="table-node-item node-item-ip">IP</div>
                         <div class="table-node-item node-item-status">OS</div>
-                        <div class="table-node-item node-item-status">Creator</div>
-                        <div class="table-node-item node-item-status">Status</div>
+                        <div class="table-node-item node-item-status">{{$t('creator')}}</div>
+                        <div class="table-node-item node-item-status">{{$t('status')}}</div>
                     </div>
                     <div class="table-node-body">
                         <template v-for="(col, index) of rowList">
@@ -98,14 +98,14 @@
                     </div>
                 </div>
                 <div class="no-data-row" v-if="selectHandlercConf.searchEmpty || !rowList.length">
-                    <span>No agent</span>
+                    <span>{{$t('setting.agent.noAgent')}}</span>
                 </div>
             </div>
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" @click="confirmFn" :disabled="nodeSelectConf.unselected">Confirm</bk-button>
-                <bk-button theme="default" @click="cancelFn">Cancel</bk-button>
+                <bk-button theme="primary" @click="confirmFn" :disabled="nodeSelectConf.unselected">{{$t('confirm')}}</bk-button>
+                <bk-button theme="default" @click="cancelFn">{{$t('cancel')}}</bk-button>
             </div>
         </div>
     </bk-dialog>
@@ -469,7 +469,7 @@
             flex: 4;
             width: 200px;
         }
-        .node-item-agstatus {
+        .node-item-status {
             flex: 1;
             min-width: 82px;
         }

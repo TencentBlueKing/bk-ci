@@ -27,36 +27,27 @@
 
 package com.tencent.devops.process.engine.service.measure
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.KEY_CHANNEL
 import com.tencent.devops.common.api.constant.KEY_END_TIME
 import com.tencent.devops.common.api.constant.KEY_START_TIME
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.OrganizationDetailInfo
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
-import com.tencent.devops.common.event.pojo.measure.MeasureRequest
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.measure.pojo.ElementMeasureData
-import com.tencent.devops.measure.pojo.PipelineBuildData
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
-import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import com.tencent.devops.process.template.service.TemplateService
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -67,77 +58,13 @@ class MeasureServiceImpl constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
     private val templateService: TemplateService,
+    private val pipelineInfoService: PipelineInfoService,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val atomMonitorSwitch: String,
     private val maxMonitorDataSize: String = "1677216",
-    private val measureEventDispatcher: MeasureEventDispatcher,
-    private val atomMonitorEventDispatcher: AtomMonitorEventDispatcher
+    private val measureEventDispatcher: MeasureEventDispatcher
 ) : MeasureService {
-
-    override fun postPipelineData(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        startTime: Long,
-        startType: String,
-        username: String,
-        buildStatus: BuildStatus,
-        buildNum: Int,
-        model: Model?,
-        errorInfoList: String?
-    ) {
-        try {
-            if (model == null) {
-                return
-            }
-
-            val parentPipelineId = buildVariableService.getVariable(
-                projectId = projectId,
-                buildId = buildId,
-                varName = PIPELINE_START_PARENT_PIPELINE_ID
-            ) ?: ""
-            val parentBuildId = buildVariableService.getVariable(
-                projectId = projectId,
-                buildId = buildId,
-                varName = PIPELINE_START_PARENT_BUILD_ID
-            ) ?: ""
-            val metaInfo = mapOf(
-                "parentPipelineId" to parentPipelineId,
-                "parentBuildId" to parentBuildId
-            )
-
-            val data = PipelineBuildData(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                templateId = templateService.getTemplateIdByPipeline(projectId, pipelineId) ?: "",
-                buildId = buildId,
-                beginTime = startTime,
-                endTime = System.currentTimeMillis(),
-                startType = StartType.toStartType(startType),
-                buildUser = username,
-                isParallel = false,
-                buildResult = buildStatus,
-                pipeline = JsonUtil.getObjectMapper().writeValueAsString(model),
-                buildNum = buildNum,
-                metaInfo = metaInfo,
-                errorInfoList = errorInfoList
-            )
-
-            val requestBody = JsonUtil.toJson(data, formatted = false)
-            measureEventDispatcher.dispatch(
-                MeasureRequest(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    type = MeasureRequest.MeasureType.PIPELINE,
-                    request = requestBody
-                )
-            )
-        } catch (ignored: Throwable) {
-            logger.warn("MK_postPipelineData|$buildId|message: ${ignored.message}")
-        }
-    }
 
     override fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String) {
         try {
@@ -174,39 +101,10 @@ class MeasureServiceImpl constructor(
             val buildId = task.buildId
             val projectId = task.projectId
             val pipelineId = task.pipelineId
-            val name = task.taskName
             val userId = task.starter
             val vmSeqId = task.containerId
             val taskParams = task.taskParams
             val atomCode = task.atomCode ?: taskParams["atomCode"] as String? ?: task.taskType
-
-            val elementMeasureData = ElementMeasureData(
-                id = taskId,
-                name = name,
-                pipelineId = pipelineId,
-                projectId = projectId,
-                buildId = buildId,
-                atomCode = atomCode,
-                status = status,
-                beginTime = startTime,
-                endTime = System.currentTimeMillis(),
-                type = type,
-                errorCode = errorCode,
-                errorType = errorType,
-                errorMsg = errorMsg
-            )
-
-            val requestBody = ObjectMapper().writeValueAsString(elementMeasureData)
-
-            measureEventDispatcher.dispatch(
-                MeasureRequest(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    type = MeasureRequest.MeasureType.TASK,
-                    request = requestBody
-                )
-            )
 
             pipelineEventDispatcher.dispatch(
                 PipelineBuildTaskFinishBroadCastEvent(
@@ -277,7 +175,14 @@ class MeasureServiceImpl constructor(
                 ),
                 extData = extData
             )
-            atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))
+            measureEventDispatcher.dispatch(
+                AtomMonitorReportBroadCastEvent(
+                    pipelineId = pipelineId,
+                    projectId = projectId,
+                    buildId = buildId,
+                    monitorData = atomMonitorData
+                )
+            )
         } catch (ignored: Throwable) { // MK = Monitor Key
             logger.warn("MK_postTaskData|${task.buildId}|message: ${ignored.message}")
         }

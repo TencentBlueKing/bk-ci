@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.common.quality.pojo.request.QualityReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserQualityBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
@@ -47,7 +48,8 @@ class UserQualityBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         elementId: String,
-        action: ManualReviewAction
+        action: ManualReviewAction,
+        request: QualityReviewRequest?
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -63,7 +65,8 @@ class UserQualityBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             action = action,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            ruleIds = request?.ruleIds
         )
         return Result(true)
     }

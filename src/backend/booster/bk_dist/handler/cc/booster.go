@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
@@ -49,9 +50,27 @@ const (
 )
 
 var bazelActionConstOptions = map[string]bool{
-	env.KeyExecutorHookPreloadLibraryLinux:             true,
+	// env.KeyExecutorHookPreloadLibraryLinux:             true,
+	// env.KeyExecutorHookPreloadLibraryMacos:             true,
 	env.GetEnvKey(env.KeyExecutorHookConfigContent):    true,
 	env.GetEnvKey(env.KeyExecutorHookConfigContentRaw): true,
+	env.GetEnvKey(env.KeyExecutorTaskID):               true,
+	env.GetEnvKey(env.KeyExecutorControllerWorkID):     true,
+	env.GetEnvKey(env.BoosterType):                     true,
+	env.GetEnvKey(env.KeyExecutorIOTimeout):            true,
+}
+
+func appendPreload() error {
+	switch runtime.GOOS {
+	case "linux":
+		bazelActionConstOptions[env.KeyExecutorHookPreloadLibraryLinux] = true
+	case "darwin":
+		bazelActionConstOptions[env.KeyExecutorHookPreloadLibraryMacos] = true
+	default:
+		blog.Warnf("booster: What os is this?", runtime.GOOS)
+	}
+
+	return nil
 }
 
 // ProjectExtraData describe the extra data store in project
@@ -118,6 +137,8 @@ func (cc *TaskCC) RenderArgs(config dcType.BoosterConfig, originArgs string) str
 		originArgs += " " + strings.Join(additions, " ")
 		return originArgs
 	}
+
+	appendPreload()
 
 	if config.Works.BazelPlus || config.Works.Bazel4Plus {
 		additions := make([]string, 0, 10)

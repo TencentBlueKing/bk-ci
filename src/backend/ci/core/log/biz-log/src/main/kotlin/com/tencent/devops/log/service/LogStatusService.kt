@@ -35,6 +35,7 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("LongParameterList")
 @Service
 class LogStatusService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -67,14 +68,13 @@ class LogStatusService @Autowired constructor(
         executeCount: Int,
         propertyList: List<TaskBuildLogProperty>
     ) {
-        val modeList = propertyList.map {
-            it.elementId to it.logStorageMode
-        }.toMap()
         logStatusDao.updateStorageMode(
             dslContext = dslContext,
             buildId = buildId,
             executeCount = executeCount,
-            modeList = modeList
+            modeMap = propertyList.associate {
+                it.elementId to it.logStorageMode
+            }
         )
     }
 

@@ -30,16 +30,19 @@ import createI18n from '@/locale';
 import router from '@/router';
 import store, { key } from '@/store';
 import '@/styles/index.less';
-import RootView from './views/RootView';
+import Root from './views';
+import { IS_CI_MODE } from './utils';
 const { i18n } = createI18n();
 
 router.afterEach((to) => {
   console.log('sync');
-  // @ts-ignore
-  window.$syncUrl(to.fullPath);
+  if (IS_CI_MODE) {
+    // @ts-ignore
+    window.$syncUrl?.(to.fullPath);
+  }
 });
 
-createApp(RootView)
+createApp(Root)
   .use(router)
   .use(store, key)
   .use(i18n)
