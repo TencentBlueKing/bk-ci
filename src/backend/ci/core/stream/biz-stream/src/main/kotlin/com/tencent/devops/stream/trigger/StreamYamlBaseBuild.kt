@@ -364,6 +364,21 @@ class StreamYamlBaseBuild @Autowired constructor(
                 "StreamYamlBaseBuild|startBuild|success|gitProjectId|${action.data.getGitProjectId()}|" +
                     "pipelineId|${pipeline.pipelineId}|gitBuildId|$gitBuildId|buildId|$buildId"
             )
+        } catch (e: StreamTriggerException) {
+            errorStartBuild(
+                action = action,
+                pipeline = pipeline,
+                gitBuildId = gitBuildId,
+                ignore = Throwable(
+                    message = try {
+                        // format在遇到不可解析的问题可能会报错
+                        e.triggerReason.detail.format(e.reasonParams)
+                    } catch (ignore: Throwable) {
+                        e.triggerReason.detail
+                    }, e
+                ),
+                yamlTransferData = yamlTransferData
+            )
         } catch (ignore: Throwable) {
             errorStartBuild(
                 action = action,
