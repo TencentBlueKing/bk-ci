@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 import java.util.concurrent.Executors
 
 @Service
@@ -76,7 +77,7 @@ class TxAtomCooperationServiceImpl @Autowired constructor() : AtomCooperationSer
                     params = arrayOf(userId, atomRecord!!.name, applyReason)
                 ) ?: applyReason,
                 taskId = approveId,
-                backUrl = "$moaApproveCallBackUrl/token/$token"
+                backUrl = MessageFormat.format(moaApproveCallBackUrl, token)
             )
             val createMoaMessageApprovalResult = client.get(ServiceMessageApproveResource::class)
                 .createMoaMessageApproval(userId = userId, createMoaApproveRequest = createMoaApproveRequest)

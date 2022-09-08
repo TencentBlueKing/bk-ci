@@ -35,6 +35,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.FormParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -46,7 +47,7 @@ interface TxOpStoreApproveResource {
 
     @ApiOperation("moa审批回调")
     @POST
-    @Path("/moa/callBack/token/{token}")
+    @Path("/moa/tokens/{token}/callBack")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     fun moaApproveCallBack(
         @ApiParam(value = "审批人", required = true)
