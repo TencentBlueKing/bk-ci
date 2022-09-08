@@ -26,7 +26,6 @@
  */
 
 package com.tencent.devops.stream.trigger.actions.tgit
-
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
@@ -60,7 +59,6 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
@@ -114,7 +112,7 @@ class TGitPushActionGit(
         val lastCommit = getLatestCommit(event)
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.project_id.toString(),
-            scmType = ScmType.CODE_TGIT,
+            scmType = ScmType.CODE_GIT,
             branch = event.ref.removePrefix("refs/heads/"),
             commit = EventCommonDataCommit(
                 commitId = event.after,
@@ -367,21 +365,22 @@ class TGitPushActionGit(
         )
     }
 
-    override fun updateLastBranch(
+    override fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
-        branch: String
+        branch: String?,
+        displayName: String?
     ) {
         try {
-            gitPipelineResourceDao.updatePipelineLastBranch(
+            gitPipelineResourceDao.updatePipelineLastBranchAndDisplayName(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
-                branch = branch
+                branch = branch,
+                displayName = displayName
             )
         } catch (e: Exception) {
             logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
         }
     }
-
     // 判断是否注册定时任务来看是修改还是删除
     private fun isSchedulesMatch(
         triggerOn: TriggerOn,

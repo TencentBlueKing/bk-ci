@@ -51,10 +51,10 @@ import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerR
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 import java.nio.charset.Charset
-import org.junit.jupiter.api.BeforeEach
 
 class GitWebHookMatcherTest {
 

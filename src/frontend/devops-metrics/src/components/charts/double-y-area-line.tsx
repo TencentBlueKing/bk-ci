@@ -22,7 +22,7 @@ export default defineComponent({
     titles: Array,
   },
 
-  emits: ['point-click'],
+  emits: ['point-click', 'point-hover'],
 
   setup(props, { emit }) {
     const canvasRef = ref(null);
@@ -50,6 +50,13 @@ export default defineComponent({
             pointHoverRadius: 3,
             data: [...item.list],
             yAxisID: index === 0 ? 'y1' : 'y2',
+            datalabels: {
+              listeners: {
+                leave: function(context) {
+                  document.getElementsByClassName('double-line-canvas')[0]['style']['cursor'] = 'auto';
+                }
+              },
+            },
           })),
         },
         options: {
@@ -152,7 +159,12 @@ export default defineComponent({
             if (datasets.length > 0) {
               emit('point-click', datasets)
             }
-          }
+          },
+          onHover (_, datasets) {
+            if (datasets.length > 0) {
+              emit('point-hover', datasets)
+            }
+          },
         },
       });
     };
@@ -171,7 +183,7 @@ export default defineComponent({
 
     return () => (
         <div class="canvas-wrapper">
-          <canvas ref={canvasRef}></canvas>
+          <canvas ref={canvasRef} class="double-line-canvas"></canvas>
         </div>
     );
   },

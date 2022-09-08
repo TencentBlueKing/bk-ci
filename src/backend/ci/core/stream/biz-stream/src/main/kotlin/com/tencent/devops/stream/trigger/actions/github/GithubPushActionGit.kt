@@ -50,13 +50,13 @@ import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.actions.tgit.TGitPushActionGit
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
@@ -350,18 +350,20 @@ class GithubPushActionGit(
         )
     }
 
-    override fun updateLastBranch(
+    override fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
-        branch: String
+        branch: String?,
+        displayName: String?
     ) {
         try {
-            gitPipelineResourceDao.updatePipelineLastBranch(
+            gitPipelineResourceDao.updatePipelineLastBranchAndDisplayName(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
-                branch = branch
+                branch = branch,
+                displayName = displayName
             )
         } catch (e: Exception) {
-            logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
+            TGitPushActionGit.logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
         }
     }
 

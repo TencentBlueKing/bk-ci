@@ -32,6 +32,7 @@ import com.nhaarman.mockito_kotlin.whenever
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
@@ -49,17 +50,20 @@ class BuildVariableServiceTest {
     private val dslContext: DSLContext = mock()
     private val pipelineBuildVarDao: PipelineBuildVarDao = mock()
     private val redisOperation: RedisOperation = RedisOperation(mock())
+    private val pipelineAsCodeService: PipelineAsCodeService = mock()
 
     private val buildVariableService = BuildVariableService(
         commonDslContext = dslContext,
         pipelineBuildVarDao = pipelineBuildVarDao,
-        redisOperation = redisOperation
+        redisOperation = redisOperation,
+        pipelineAsCodeService = pipelineAsCodeService
     )
 
     @Test
     fun getAllVariable() {
         val projectId = "devops"
         val buildId = "b-1234567890"
+        val pipelineId = "p-1234567890"
 
         val mockVars = mutableMapOf(
             "pipeline.start.channel" to "BS",
@@ -73,7 +77,7 @@ class BuildVariableServiceTest {
         )
 
         whenever(pipelineBuildVarDao.getVars(dslContext, projectId, buildId)).thenReturn(mockVars)
-        val allVariable = buildVariableService.getAllVariable(projectId, buildId)
+        val allVariable = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
 
         Assertions.assertEquals(mockVars["pipeline.start.channel"], allVariable[PIPELINE_START_CHANNEL])
         Assertions.assertEquals(allVariable["pipeline.start.channel"], allVariable[PIPELINE_START_CHANNEL])

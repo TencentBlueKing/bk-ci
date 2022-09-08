@@ -1,7 +1,5 @@
 package com.tencent.devops.stream.trigger.parsers.triggerMatch
 
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchMatchUtils
-
 /**
  * 触发后的结果
  * @param trigger 触发结果

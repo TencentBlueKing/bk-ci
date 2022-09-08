@@ -50,7 +50,7 @@ class CreateOrUpdateFileContentsRequest(
     // The person that committed the file. Default: the authenticated user.
     val committer: GithubCommitUser? = null,
     // The author of the file. Default: The committer or the authenticated user if you omit committer.
-    val author: GithubCommitUser? = null,
+    val author: GithubCommitUser? = null
 ) : GithubRequest<CreateOrUpdateFileContentsResponse>() {
     override fun getHttpMethod(): HttpMethod {
         return HttpMethod.PUT

@@ -48,9 +48,6 @@ import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.TriggerCache
-import com.tencent.devops.stream.trigger.actions.data.isStreamMr
-import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
-import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerDispatch
@@ -91,7 +88,7 @@ class StreamTriggerRequestService @Autowired constructor(
     fun externalCodeGitBuild(eventType: String?, webHookType: String, event: String): Boolean? {
         logger.info("StreamTriggerRequestService|externalCodeGitBuild|event|$event|type|$eventType|$webHookType")
         when (ScmType.valueOf(webHookType)) {
-            ScmType.CODE_TGIT -> {
+            ScmType.CODE_GIT -> {
                 val eventObject = try {
                     objectMapper.readValue<GitEvent>(event)
                 } catch (ignore: Exception) {
@@ -103,7 +100,7 @@ class StreamTriggerRequestService @Autowired constructor(
                 }
                 // 处理不需要项目信息的，或不同软件源的预处理逻辑
 
-                return start(eventObject, event, ScmType.CODE_TGIT)
+                return start(eventObject, event, ScmType.CODE_GIT)
             }
             ScmType.GITHUB -> {
                 val eventObject: GithubEvent = when (eventType) {

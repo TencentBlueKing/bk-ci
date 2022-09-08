@@ -25,31 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service.impl
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-import com.tencent.devops.worker.common.service.AtomTargetHandleService
-import org.slf4j.LoggerFactory
+import io.swagger.annotations.ApiModel
+import com.fasterxml.jackson.annotation.JsonProperty
 
-class GolangAtomTargetHandleServiceImpl : AtomTargetHandleService {
+@ApiModel("DynamicParameter模型-ID")
+data class DynamicParameterInfo(
+    @JsonProperty("id")
+    val id: String, // 该行的唯一标识，必填
+    @JsonProperty("paramModels")
+    val paramModels: List<DynamicParameterInfoParam>
+)
 
-    private val logger = LoggerFactory.getLogger(GolangAtomTargetHandleServiceImpl::class.java)
-
-    override fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String {
-        var convertTarget = target
-        if (!postEntryParam.isNullOrBlank()) {
-            convertTarget = "$target --postAction=$postEntryParam"
-        }
-        logger.info("handleAtomTarget convertTarget:$convertTarget")
-        return convertTarget
-    }
-}
+data class DynamicParameterInfoParam(
+    @JsonProperty("value")
+    val value: String? = null, // 值，可做为初始化的默认值
+    @JsonProperty("disabled")
+    val disabled: Boolean, // 控制是否可编辑
+    @JsonProperty("id")
+    val id: String, // 该模型的唯一标识，必填
+    @JsonProperty("isMultiple")
+    val isMultiple: Boolean? = null, // select是否多选
+    @JsonProperty("label")
+    val label: String? = null, // testLabel
+    @JsonProperty("list")
+    val list: List<StartUpInfo>? = null, // type是select起作用，需要有id和name字段
+    @JsonProperty("listType")
+    val listType: String? = null, // 获取列表方式，可以是url或者list
+    @JsonProperty("type")
+    val type: String, // 可以是input或者select
+    @JsonProperty("url")
+    val url: String? = null, // type是select且listType是url起作用
+    @JsonProperty("dataPath")
+    val dataPath: String? = null // 接口返回值，取数的路径，默认为 data.records
+)

@@ -79,6 +79,13 @@ object JooqUtils {
         )
     }
 
+    fun <T> productSum(t1: Field<T>, t2: Field<T>): Field<BigDecimal> {
+        return DSL.field(
+            "sum(${t1.name} * ${t2.name})",
+            BigDecimal::class.java
+        )
+    }
+
     fun <T> count(data: Field<T>): Field<Int> {
         return DSL.field(
             "count(${data.name})",

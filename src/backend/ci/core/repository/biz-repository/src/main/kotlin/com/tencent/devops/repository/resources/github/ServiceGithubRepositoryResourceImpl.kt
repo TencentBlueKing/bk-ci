@@ -47,7 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGithubRepositoryResourceImpl @Autowired constructor(
-    val githubRepositoryService: GithubRepositoryService,
+    val githubRepositoryService: GithubRepositoryService
 ) : ServiceGithubRepositoryResource {
     override fun createOrUpdateFile(
         token: String,

@@ -72,8 +72,8 @@ import com.tencent.devops.stream.trigger.service.DeleteEventService
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
-import com.tencent.devops.stream.util.StreamPipelineUtils
 import com.tencent.devops.stream.util.GitCommonUtils
+import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -177,6 +177,7 @@ class StreamYamlBuild @Autowired constructor(
                 // 优先创建流水线为了绑定红线
                 if (realPipeline.pipelineId.isBlank()) {
                     streamYamlBaseBuild.savePipeline(
+                        action = action,
                         pipeline = realPipeline,
                         userId = action.data.getUserId(),
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
@@ -340,7 +341,8 @@ class StreamYamlBuild @Autowired constructor(
             modelName = pipeline.displayName,
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
-            pipelineParams = modelParams.userVariables
+            pipelineParams = modelParams.userVariables,
+            asCodeSettings = action.data.context.pipelineAsCodeSettings
         )
         // 判断是否更新最后修改人
         val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
@@ -379,7 +381,8 @@ class StreamYamlBuild @Autowired constructor(
             modelName = pipeline.displayName,
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
-            pipelineParams = modelParams.userVariables
+            pipelineParams = modelParams.userVariables,
+            asCodeSettings = action.data.context.pipelineAsCodeSettings
         )
         logger.info(
             "StreamYamlBuild|savePipeline" +
@@ -397,6 +400,7 @@ class StreamYamlBuild @Autowired constructor(
         ).use {
             it.lock()
             streamYamlBaseBuild.savePipeline(
+                action = action,
                 pipeline = pipeline,
                 userId = action.data.getUserId(),
                 gitProjectId = action.data.getGitProjectId().toLong(),

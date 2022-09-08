@@ -97,7 +97,7 @@ class GitRequestEventDao {
     fun get(
         dslContext: DSLContext,
         id: Long,
-        scmType: ScmType? = ScmType.CODE_TGIT,
+        scmType: ScmType? = ScmType.CODE_GIT,
         commitMsg: String? = null
     ): GitRequestEvent? {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
@@ -134,7 +134,7 @@ class GitRequestEventDao {
                     mrTitle = record.mrTitle,
                     gitEvent = try {
                         when (scmType) {
-                            ScmType.CODE_TGIT -> JsonUtil.to(record.event, GitEvent::class.java)
+                            ScmType.CODE_GIT -> JsonUtil.to(record.event, GitEvent::class.java)
                             ScmType.GITHUB -> {
                                 when (record.objectKind) {
                                     StreamObjectKind.PULL_REQUEST.value -> JsonUtil.to(

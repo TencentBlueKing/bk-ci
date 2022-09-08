@@ -51,6 +51,6 @@ interface ServiceGithubUserResource {
     fun getUser(
         @ApiParam("授权token", required = true)
         @QueryParam("token")
-        token: String,
+        token: String
     ): Result<GetUserResponse?>
 }

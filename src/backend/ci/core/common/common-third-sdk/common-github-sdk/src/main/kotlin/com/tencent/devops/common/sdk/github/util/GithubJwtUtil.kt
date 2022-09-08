@@ -40,8 +40,8 @@ object GithubJwtUtil {
     private fun getPrivateKeyFromString(key: String): PrivateKey? {
         if (key.contains(" RSA ")) {
             throw InvalidKeySpecException(
-                "Private key must be a PKCS#8 formatted string, to convert it from PKCS#1 use: "
-                    + "openssl pkcs8 -topk8 -inform PEM -outform PEM -in current-key.pem -out new-key.pem -nocrypt"
+                "Private key must be a PKCS#8 formatted string, to convert it from PKCS#1 use: " +
+                    "openssl pkcs8 -topk8 -inform PEM -outform PEM -in current-key.pem -out new-key.pem -nocrypt"
             )
         }
 

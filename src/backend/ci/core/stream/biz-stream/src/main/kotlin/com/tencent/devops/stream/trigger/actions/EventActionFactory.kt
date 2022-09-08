@@ -163,7 +163,7 @@ class EventActionFactory @Autowired constructor(
     }
 
     fun loadEvent(event: String, scmType: ScmType, objectKind: String): CodeWebhookEvent = when (scmType) {
-        ScmType.CODE_TGIT -> {
+        ScmType.CODE_GIT -> {
             objectMapper.readValue<GitEvent>(event)
         }
         ScmType.GITHUB -> {
@@ -177,6 +177,7 @@ class EventActionFactory @Autowired constructor(
         else -> TODO("对接其他Git平台时需要补充")
     }
 
+    @Suppress("ComplexMethod")
     private fun loadEvent(event: CodeWebhookEvent): BaseAction? {
         // 先根据git事件分为得到初始化的git action
         val gitAction = when (event) {

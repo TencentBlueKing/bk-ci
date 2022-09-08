@@ -28,7 +28,9 @@
 package com.tencent.devops.project.util
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
 
 @Suppress("ALL")
@@ -89,7 +91,10 @@ object ProjectUtils {
             enableExternal = tProjectRecord.enableExternal,
             pipelineLimit = tProjectRecord.pipelineLimit,
             routerTag = tProjectRecord.routerTag,
-            relationId = tProjectRecord.relationId
+            relationId = tProjectRecord.relationId,
+            properties = tProjectRecord.properties?.let { self ->
+                JsonUtil.to(self, ProjectProperties::class.java)
+            }
         )
     }
 }

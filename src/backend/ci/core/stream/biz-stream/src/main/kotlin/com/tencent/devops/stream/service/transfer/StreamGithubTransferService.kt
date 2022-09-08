@@ -63,14 +63,12 @@ import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamGitTransferService
-import java.util.Base64
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
+import java.util.Base64
 
-@Service
 class StreamGithubTransferService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
@@ -95,9 +93,9 @@ class StreamGithubTransferService @Autowired constructor(
     ): StreamGitProjectBaseInfoCache {
         return client.get(ServiceGithubRepositoryResource::class).getRepository(
             request = GetRepositoryRequest(
-               repoName = gitProjectId
+                repoName = gitProjectId
             ),
-            token = accessToken ?: getAndCheckOauthToken(userId!!).accessToken,
+            token = accessToken ?: getAndCheckOauthToken(userId!!).accessToken
         ).data?.let {
             StreamGitProjectBaseInfoCache(
                 gitProjectId = it.id.toString(),
@@ -274,7 +272,7 @@ class StreamGithubTransferService @Autowired constructor(
                 perPage = perPage ?: 30
             ),
             token = getAndCheckOauthToken(userId).accessToken
-        // todo commit 信息严重不足
+            // todo commit 信息严重不足
         ).data?.map { StreamCommitInfo(it) }
     }
 

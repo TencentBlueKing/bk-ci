@@ -59,7 +59,7 @@ object SdkHttpUtil {
     fun buildGet(url: String, headers: Map<String, String>? = null, params: Map<String, Any>? = null): Request {
         val targetUrl = if (!params.isNullOrEmpty()) {
             val urlParams = params.map { entry -> "${entry.key}=${entry.value}" }.joinToString("&")
-             if (url.contains("?")) {
+            if (url.contains("?")) {
                 "$url&$urlParams"
             } else {
                 "$url?$urlParams"

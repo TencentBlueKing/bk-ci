@@ -185,8 +185,8 @@ class TemplateInstanceCronService @Autowired constructor(
                     failurePipelines = failurePipelines
                 )
             }
-        } catch (t: Throwable) {
-            logger.warn("templateInstance failed", t)
+        } catch (ignored: Throwable) {
+            logger.warn("templateInstance failed", ignored)
         } finally {
             lock.unlock()
         }

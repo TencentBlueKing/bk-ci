@@ -26,7 +26,6 @@
  */
 
 package com.tencent.devops.stream.trigger.actions.tgit
-
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -54,8 +53,6 @@ import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.context.StreamMrInfo
-import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
-import com.tencent.devops.stream.trigger.actions.github.GithubPRActionGit
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -66,7 +63,6 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitFileInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
@@ -160,7 +156,7 @@ class TGitMrActionGit(
         val event = event()
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.object_attributes.target_project_id.toString(),
-            scmType = ScmType.CODE_TGIT,
+            scmType = ScmType.CODE_GIT,
             sourceGitProjectId = event.object_attributes.source_project_id.toString(),
             branch = if (event.object_attributes.action == TGitMergeActionKind.MERGE.value) {
                 event.object_attributes.target_branch

@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class GithubBranchService @Autowired constructor(
-    private val defaultGithubClient: DefaultGithubClient,
+    private val defaultGithubClient: DefaultGithubClient
 ) {
 
     fun listBranch(

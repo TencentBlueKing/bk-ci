@@ -27,16 +27,14 @@
 
 package com.tencent.devops.stream.trigger
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.process.yaml.v2.enums.needInput
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -45,13 +43,13 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
-import com.tencent.devops.stream.pojo.TriggerReviewSetting
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamManualAction
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamOpenApiAction
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandlerUtil
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
@@ -156,7 +154,10 @@ abstract class BaseManualTriggerService @Autowired constructor(
                 "(${TriggerReason.PIPELINE_RUN_ERROR.detail})"
         )
         return TriggerBuildResult(
-            projectId = action.data.eventCommon.gitProjectId.toLong(),
+            projectId = GitCommonUtils.getCiProjectId(
+                action.data.eventCommon.gitProjectId.toLong(),
+                streamGitConfig.getScmType()
+            ),
             branch = triggerBuildReq.branch,
             customCommitMsg = triggerBuildReq.customCommitMsg,
             description = triggerBuildReq.description,
@@ -229,7 +230,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
         triggerBuildReq: TriggerBuildReq
     ): BuildId? {
         val yamlReplaceResult = streamYamlTrigger.prepareCIBuildYaml(action)!!
-        val parsedYaml = if (action.metaData.streamObjectKind == StreamObjectKind.MANUAL) {
+        val parsedYaml = if (action.metaData.streamObjectKind.needInput()) {
             YamlCommonUtils.toYamlNotNull(
                 ManualPreScriptBuildYaml(yamlReplaceResult.preYaml, getInputParams(action, triggerBuildReq))
             )
@@ -238,8 +239,13 @@ abstract class BaseManualTriggerService @Autowired constructor(
         }
         val normalizedYaml = YamlUtil.toYaml(yamlReplaceResult.normalYaml)
 
-        if ((action is StreamManualAction) && (yamlReplaceResult.preYaml.triggerOn?.manual == EnableType.FALSE.value)) {
+        val triggerOn = yamlReplaceResult.preYaml.triggerOn
+        if ((action is StreamManualAction) && (triggerOn?.manual == EnableType.FALSE.value)) {
             throw CustomException(Response.Status.BAD_REQUEST, "manual trigger is disabled")
+        }
+
+        if ((action is StreamOpenApiAction) && (triggerOn?.openapi == EnableType.FALSE.value)) {
+            throw CustomException(Response.Status.BAD_REQUEST, "openapi trigger is disabled")
         }
 
         action.data.context.parsedYaml = parsedYaml

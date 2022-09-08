@@ -116,7 +116,9 @@ class OpenApiTriggerService @Autowired constructor(
         }
     }
 
-    override fun getInputParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>? = null
+    override fun getInputParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>? {
+        return triggerBuildReq.inputs
+    }
 
     private fun loadPayloadOpenApiAction(
         streamTriggerSetting: StreamTriggerSetting,
@@ -140,7 +142,8 @@ class OpenApiTriggerService @Autowired constructor(
         }
 
         val request =
-            action.buildRequestEvent(triggerBuildReq.payload!!)?.copy(objectKind = StreamGitObjectKind.OBJECT_KIND_OPENAPI)
+            action.buildRequestEvent(triggerBuildReq.payload!!)
+                ?.copy(objectKind = StreamGitObjectKind.OBJECT_KIND_OPENAPI)
                 ?: throw CustomException(
                     status = Response.Status.BAD_REQUEST,
                     message = "event invalid"
