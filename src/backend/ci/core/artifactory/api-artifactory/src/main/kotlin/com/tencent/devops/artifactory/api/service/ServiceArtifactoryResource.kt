@@ -306,34 +306,6 @@ interface ServiceArtifactoryResource {
         searchProps: List<Property>
     ): Result<FileInfoPage<FileInfo>>
 
-    @ApiOperation("根据projectId创建临时的Docker仓库用户名密码")
-    // @Path("/projects/{projectId}/createDockerUser")
-    @Path("/{projectId}/createDockerUser")
-    @GET
-    fun createDockerUser(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): Result<DockerUser>
-
-    @ApiOperation("设置镜像元数据")
-    // @Path("/projects/{projectId}/properties")
-    @Path("/{projectId}/properties")
-    @POST
-    fun setProperties(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("镜像名称", required = true)
-        @QueryParam("imageName")
-        imageName: String,
-        @ApiParam("TAG", required = true)
-        @QueryParam("tag")
-        tag: String,
-        @ApiParam("元数据", required = true)
-        properties: Map<String, String>
-    ): Result<Boolean>
-
     @ApiOperation("获取匹配到的自定义仓库文件")
     // @Path("/projects/{projectId}/searchCustomFiles")
     @Path("/{projectId}/searchCustomFiles")
@@ -348,55 +320,6 @@ interface ServiceArtifactoryResource {
         @ApiParam("查询条件", required = true)
         condition: CustomFileSearchCondition
     ): Result<List<String>>
-
-    @ApiOperation("获取时间段内的Jforg信息")
-    @Path("/Jforg/info/list")
-    @POST
-    fun getJforgInfoByteewTime(
-        @ApiParam("startTime", required = true)
-        @QueryParam("startTime")
-        startTime: Long,
-        @ApiParam("endTime", required = true)
-        @QueryParam("endTime")
-        endTime: Long,
-        @ApiParam("page", required = true)
-        @QueryParam("page")
-        page: Int,
-        @ApiParam("pageSize", required = true)
-        @QueryParam("pageSize")
-        pageSize: Int
-    ): Result<List<FileInfo>>
-
-    @ApiOperation("添加APK,IPA产物记录")
-    @Path("/create/artifactory/info")
-    @POST
-    fun createArtifactoryInfo(
-        @ApiParam("构建ID", required = true)
-        @QueryParam("buildId")
-        buildId: String,
-        @ApiParam("流水线ID", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @ApiParam("构建号", required = true)
-        @QueryParam("buildNum")
-        buildNum: Int,
-        @ApiParam("文件信息", required = true)
-        fileInfo: FileInfo,
-        @ApiParam("数据来源", required = true)
-        @QueryParam("dataFrom")
-        dataFrom: Int
-    ): Result<Long>
-
-    @ApiOperation("批量添加ArtifactoryInfo")
-    @Path("/batch/create/artifactoryInfo")
-    @POST
-    fun batchCreateArtifactoryInfo(
-        @ApiParam("infoList", required = true)
-        infoList: List<ArtifactoryCreateInfo>
-    ): Result<Int>
 
     @ApiOperation("获取自定义报告根目录Url")
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/tasks/{taskId}/report/root")

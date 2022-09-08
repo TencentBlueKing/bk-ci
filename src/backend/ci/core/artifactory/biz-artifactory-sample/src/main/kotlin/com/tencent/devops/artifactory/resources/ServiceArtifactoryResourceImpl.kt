@@ -171,48 +171,11 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun createDockerUser(projectId: String): Result<DockerUser> {
-        TODO("not implemented")
-    }
-
-    override fun setProperties(
-        projectId: String,
-        imageName: String,
-        tag: String,
-        properties: Map<String, String>
-    ): Result<Boolean> {
-        TODO("not implemented")
-    }
-
     override fun searchCustomFiles(
         userId: String,
         projectId: String,
         condition: CustomFileSearchCondition
     ): Result<List<String>> {
-        TODO("not implemented")
-    }
-
-    override fun getJforgInfoByteewTime(
-        startTime: Long,
-        endTime: Long,
-        page: Int,
-        pageSize: Int
-    ): Result<List<FileInfo>> {
-        TODO("not implemented")
-    }
-
-    override fun createArtifactoryInfo(
-        buildId: String,
-        pipelineId: String,
-        projectId: String,
-        buildNum: Int,
-        fileInfo: FileInfo,
-        dataFrom: Int
-    ): Result<Long> {
-        TODO("not implemented")
-    }
-
-    override fun batchCreateArtifactoryInfo(infoList: List<ArtifactoryCreateInfo>): Result<Int> {
         TODO("not implemented")
     }
 
