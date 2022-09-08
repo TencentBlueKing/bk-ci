@@ -36,17 +36,24 @@ import com.tencent.devops.quality.api.v2.pojo.op.ControlPointData
 import com.tencent.devops.quality.api.v2.pojo.op.ControlPointUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
 import com.tencent.devops.quality.dao.v2.QualityControlPointDao
+import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
+import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.util.ElementUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
 class QualityControlPointService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val controlPointDao: QualityControlPointDao
+    private val controlPointDao: QualityControlPointDao,
+    private val qualityRuleDao : QualityRuleDao,
+    private val qualityRuleBuildHisDao : QualityRuleBuildHisDao
 ) {
     fun userGetByType(projectId: String, elementType: String?): QualityControlPoint? {
         return serviceGetByType(projectId, elementType)
@@ -188,6 +195,50 @@ class QualityControlPointService @Autowired constructor(
 
     fun deleteControlPoint(id: Long): Int {
         return controlPointDao.deleteControlPoint(dslContext, id)
+    }
+
+    fun addHashId() {
+        val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
+        threadPoolExecutor.submit {
+            var offset = 0
+            val limit = 1000
+            try {
+                do {
+                    val controlPointRecords = controlPointDao.getAllControlPoint(dslContext, limit, offset)
+                    val controlPointSize = controlPointRecords?.size
+                    controlPointRecords?.map {
+                        val id = it.value1()
+                        val hashId = HashUtil.encodeLongId(it.value1())
+                        controlPointDao.updateHashId(dslContext, id, hashId)
+                    }
+                    offset += limit
+                } while (controlPointSize == 1000)
+                offset = 0
+                do {
+                    val ruleRecords = qualityRuleDao.getAllRule(dslContext, limit, offset)
+                    val ruleSize = ruleRecords?.size
+                    ruleRecords?.map {
+                        val id = it.value1()
+                        val hashId = HashUtil.encodeLongId(it.value1())
+                        qualityRuleDao.updateHashId(dslContext, id, hashId)
+                    }
+                    offset += limit
+                } while (ruleSize == 1000)
+                offset = 0
+                do {
+                    val ruleBuildHisRecords = qualityRuleBuildHisDao.getAllRuleBuildHis(dslContext, limit, offset)
+                    val ruleBuildHisSize = ruleBuildHisRecords?.size
+                    ruleBuildHisRecords?.map {
+                        val id = it.value1()
+                        val hashId = HashUtil.encodeLongId(it.value1())
+                        qualityRuleBuildHisDao.updateHashId(dslContext, id, hashId)
+                    }
+                    offset += limit
+                } while (ruleBuildHisSize == 1000)
+            } catch (e: Exception) {
+                logger.warn("QualityControlPointService：addHashId failed | $e ")
+            }
+        }
     }
 
     companion object {

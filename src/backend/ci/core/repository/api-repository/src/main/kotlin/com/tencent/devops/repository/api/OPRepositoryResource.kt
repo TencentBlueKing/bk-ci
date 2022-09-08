@@ -25,24 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources
+package com.tencent.devops.repository.api
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.OpEnvironmentResource
-import com.tencent.devops.environment.service.NodeService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class OpEnvironmentResourceImpl @Autowired constructor(
-    private val nodeService: NodeService
-) : OpEnvironmentResource {
-
-    override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
-        return Result(nodeService.refreshGateway(oldToNewMap))
-    }
-
-    override fun addHashId() {
-        nodeService.addHashId()
-    }
+@Path("/op/repo/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OPRepositoryResource {
+    @ApiOperation("用于对数据库表填充哈希值")
+    @POST
+    @Path("/addhashid")
+    fun addHashId()
 }

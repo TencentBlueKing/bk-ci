@@ -25,24 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources
+package com.tencent.devops.repository.resources
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.OpEnvironmentResource
-import com.tencent.devops.environment.service.NodeService
+import com.tencent.devops.repository.api.OPRepositoryResource
+import com.tencent.devops.repository.service.OPRepositoryService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpEnvironmentResourceImpl @Autowired constructor(
-    private val nodeService: NodeService
-) : OpEnvironmentResource {
-
-    override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
-        return Result(nodeService.refreshGateway(oldToNewMap))
-    }
-
+class OPRepositoryResourceImpl @Autowired constructor(
+    private val opRepositoryService: OPRepositoryService
+) : OPRepositoryResource {
     override fun addHashId() {
-        nodeService.addHashId()
+        opRepositoryService.addHashId()
     }
 }
