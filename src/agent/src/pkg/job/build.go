@@ -367,9 +367,7 @@ func checkAndDeleteBuildTmpFile() {
 		if f.IsDir() {
 			continue
 		}
-		if !strings.HasSuffix(f.Name(), errorMsgFileSuffix) {
-			continue
-		}
+		// build_tmp 目录下的文件超过7天都清除掉
 		removeFileThan7Days(dir, f)
 	}
 
