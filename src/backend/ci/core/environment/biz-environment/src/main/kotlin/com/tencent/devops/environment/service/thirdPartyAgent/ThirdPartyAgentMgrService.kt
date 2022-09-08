@@ -682,7 +682,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val envNameItems = envName.split("@")
         val thirdPartyAgentList = mutableListOf<ThirdPartyAgent>()
         // 因为环境名称有可能也含有@所以只有 仅包含一个@的才是绝对的共享环境
-        if (envNameItems.size != 2 || envNameItems[0].isBlank() || envNameItems[1].isBlank()) {
+        if (envNameItems.size == 2 && envNameItems[0].isNotBlank() && envNameItems[1].isNotBlank()) {
             thirdPartyAgentList.addAll(
                 getSharedThirdPartyAgentList(
                     projectId = projectId,
