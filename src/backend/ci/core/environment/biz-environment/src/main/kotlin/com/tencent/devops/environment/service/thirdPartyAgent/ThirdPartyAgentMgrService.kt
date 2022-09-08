@@ -684,26 +684,31 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
         // 因为环境名称有可能也含有@所以只有 仅包含一个@的才是绝对的共享环境
         // 共享环境也有情况是共享环境自己使用，这种情况则直接走下面的逻辑
-        if (envNameItems.size == 2 && envNameItems[0].isNotBlank() && envNameItems[1].isNotBlank() &&
-            projectId != envNameItems[0]
-        ) {
-            thirdPartyAgentList.addAll(
-                getSharedThirdPartyAgentList(
-                    projectId = projectId,
-                    sharedProjectId = envNameItems[0],
-                    sharedEnvName = envNameItems[1],
-                    sharedEnvId = null
+        var realEnvName = envName
+        run sharedEnv@{
+            if (envNameItems.size == 2 && envNameItems[0].isNotBlank() && envNameItems[1].isNotBlank()) {
+                if (projectId == envNameItems[0]) {
+                    realEnvName = envNameItems[1]
+                    return@sharedEnv
+                }
+                thirdPartyAgentList.addAll(
+                    getSharedThirdPartyAgentList(
+                        projectId = projectId,
+                        sharedProjectId = envNameItems[0],
+                        sharedEnvName = envNameItems[1],
+                        sharedEnvId = null
+                    )
                 )
-            )
-            return thirdPartyAgentList
+                return thirdPartyAgentList
+            }
         }
 
-        val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = envName)
+        val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = realEnvName)
         if (envRecord == null) {
-            logger.warn("[$projectId|$envName] The env is not exist")
+            logger.warn("[$projectId|$realEnvName] The env is not exist")
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                "第三方构建机环境不存在($projectId:$envName)"
+                "第三方构建机环境不存在($projectId:$realEnvName)"
             )
         }
         thirdPartyAgentList.addAll(
