@@ -52,8 +52,8 @@ import java.util.concurrent.TimeUnit
 class QualityControlPointService @Autowired constructor(
     private val dslContext: DSLContext,
     private val controlPointDao: QualityControlPointDao,
-    private val qualityRuleDao : QualityRuleDao,
-    private val qualityRuleBuildHisDao : QualityRuleBuildHisDao
+    private val qualityRuleDao: QualityRuleDao,
+    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao
 ) {
     fun userGetByType(projectId: String, elementType: String?): QualityControlPoint? {
         return serviceGetByType(projectId, elementType)
