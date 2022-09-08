@@ -13,8 +13,7 @@ jobs:
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - uses: actions/cache@v1
+      - uses: actions/cache@v3
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -67,18 +66,19 @@ jobs:
         with:
           java-version: 1.8
       - name: Cache Gradle
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Gradle Build Backend Service
         working-directory: src/backend/ci
         run: |
           ./gradlew clean test build :core:worker:worker-agent:shadowJar \
-          -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root
-
+          -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
       - name: Gradle Build Turbo Service
         working-directory: src/backend/turbo
         run: |
@@ -87,7 +87,6 @@ jobs:
           cp -vf release/boot-turbo.jar ${{ github.workspace }}/src/backend/ci/release/
           # copy turbo service config template to ci templates dir
           cp -vrf support-files/templates/* ${{ github.workspace }}/support-files/templates/
-
       - name: Create artifact - Step1:init
         run: |
           true  # 暂无init需求, 保留此步骤.
@@ -136,17 +135,19 @@ jobs:
         with:
           java-version: 1.8
       - name: Cache Gradle
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Gradle Build Backend Service -- CLOUD NATIVE
         working-directory: src/backend/ci
         run: |
           ./gradlew clean test build -x test :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=K8S \
-          -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root
+          -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
       - name: Get Agent - CLOUD NATIVE
         uses: actions/download-artifact@v1
         with:
