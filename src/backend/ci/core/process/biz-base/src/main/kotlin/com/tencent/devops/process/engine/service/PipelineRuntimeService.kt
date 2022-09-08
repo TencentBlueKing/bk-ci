@@ -192,6 +192,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuleService: PipelineRuleService,
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineUrlBean: PipelineUrlBean,
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation
@@ -1154,31 +1155,26 @@ class PipelineRuntimeService @Autowired constructor(
     ) {
         val newBuildStatus = BuildStatus.FAILED
         logger.info("[$buildId|DISAPPROVE_BUILD|userId($userId)|pipelineId=$pipelineId")
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            val now = LocalDateTime.now()
-            pipelineBuildDao.updateStatus(
-                dslContext = transactionContext,
-                projectId = projectId,
-                buildId = buildId,
-                oldBuildStatus = BuildStatus.TRIGGER_REVIEWING,
-                newBuildStatus = newBuildStatus,
-                errorInfoList = listOf(
-                    ErrorInfo(
-                        taskId = "", taskName = "", atomCode = "",
-                        errorType = ErrorType.USER.num, errorMsg = "Rejected by $userId in trigger review.",
-                        errorCode = ProcessMessageCode.ERROR_TRIGGER_REVIEW_ABORT.toInt()
-                    )
+        pipelineBuildDao.updateStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            oldBuildStatus = BuildStatus.TRIGGER_REVIEWING,
+            newBuildStatus = newBuildStatus,
+            errorInfoList = listOf(
+                ErrorInfo(
+                    taskId = "", taskName = "", atomCode = "",
+                    errorType = ErrorType.USER.num, errorMsg = "Rejected by $userId in trigger review.",
+                    errorCode = ProcessMessageCode.ERROR_TRIGGER_REVIEW_ABORT.toInt()
                 )
             )
-            buildDetailDao.updateStatus(
-                dslContext = transactionContext,
-                projectId = projectId,
-                buildId = buildId,
-                buildStatus = newBuildStatus,
-                startTime = now
-            )
-        }
+        )
+        pipelineBuildDetailService.buildEnd(
+            projectId = projectId,
+            buildId = buildId,
+            buildStatus = newBuildStatus,
+            errorMsg = "Rejected by $userId"
+        )
     }
 
     fun checkTriggerReviewer(
