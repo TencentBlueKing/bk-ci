@@ -356,7 +356,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 params = WebhookTriggerParams(
                     params = pipelineParams,
                     userParams = manualValues,
-                    startValues = mutableMapOf(PIPELINE_NAME to pipeline.displayName)
+                    startValues = mutableMapOf(PIPELINE_NAME to pipeline.displayName),
+                    triggerReviewers = emptyList() // TODO #7565 需要审核时传入审核人
                 ),
                 channelCode = channelCode,
                 startType = StartType.SERVICE

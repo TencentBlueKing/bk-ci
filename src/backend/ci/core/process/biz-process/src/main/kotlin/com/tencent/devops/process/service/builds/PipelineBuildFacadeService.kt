@@ -527,7 +527,8 @@ class PipelineBuildFacadeService(
         isMobile: Boolean = false,
         startByMessage: String? = null,
         buildNo: Int? = null,
-        frequencyLimit: Boolean = true
+        frequencyLimit: Boolean = true,
+        triggerReviewers: List<String>? = null
     ): String {
         logger.info("Manual build start with value [$values][$buildNo]")
         if (checkPermission) {
@@ -601,7 +602,8 @@ class PipelineBuildFacadeService(
                 model = model,
                 frequencyLimit = frequencyLimit,
                 buildNo = buildNo,
-                startValues = values
+                startValues = values,
+                triggerReviewers = triggerReviewers
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
@@ -668,7 +670,8 @@ class PipelineBuildFacadeService(
         checkPermission: Boolean = true,
         startType: StartType = StartType.WEB_HOOK,
         startValues: Map<String, String>? = null,
-        userParameters: List<BuildParameters>? = null
+        userParameters: List<BuildParameters>? = null,
+        triggerReviewers: List<String>? = null
     ): String? {
 
         if (checkPermission) {
@@ -718,7 +721,8 @@ class PipelineBuildFacadeService(
                 model = model,
                 signPipelineVersion = null,
                 frequencyLimit = false,
-                startValues = startValues
+                startValues = startValues,
+                triggerReviewers = triggerReviewers
             )
             if (buildId.isNotBlank()) {
                 webhookBuildParameterService.save(
