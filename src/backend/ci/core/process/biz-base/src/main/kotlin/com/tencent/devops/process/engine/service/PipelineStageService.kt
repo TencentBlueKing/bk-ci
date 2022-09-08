@@ -509,7 +509,7 @@ class PipelineStageService @Autowired constructor(
                 source = "s(${stage.stageId}) waiting for REVIEW",
                 projectId = stage.projectId, pipelineId = stage.pipelineId,
                 userId = userId, buildId = stage.buildId,
-                receivers = group.reviewers.plus(triggerUserId),
+                receivers = group.reviewers,
                 titleParams = mutableMapOf(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
@@ -520,6 +520,28 @@ class PipelineStageService @Autowired constructor(
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to (checkIn.reviewDesc ?: "")
+                ),
+                position = ControlPointPosition.BEFORE_POSITION,
+                stageId = stage.stageId
+            ),
+            PipelineBuildNotifyEvent(
+                notifyTemplateEnum = PipelineNotifyTemplateEnum
+                    .PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE.name,
+                source = "s(${stage.stageId}) waiting for REVIEW [triggerUser]",
+                projectId = stage.projectId, pipelineId = stage.pipelineId,
+                userId = userId, buildId = stage.buildId,
+                receivers = listOf(triggerUserId),
+                titleParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "buildNum" to buildNum
+                ),
+                bodyParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
+                    "reviewDesc" to (checkIn.reviewDesc ?: ""),
+                    "reviewers" to group.reviewers.joinToString(prefix = "(", postfix = ")")
                 ),
                 position = ControlPointPosition.BEFORE_POSITION,
                 stageId = stage.stageId
