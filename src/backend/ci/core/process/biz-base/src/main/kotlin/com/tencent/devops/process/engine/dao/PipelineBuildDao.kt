@@ -867,12 +867,14 @@ class PipelineBuildDao {
         buildId: String,
         stageStatus: List<BuildStageStatus>,
         oldBuildStatus: BuildStatus? = null,
-        newBuildStatus: BuildStatus? = null
+        newBuildStatus: BuildStatus? = null,
+        errorInfoList: List<ErrorInfo>? = null
     ): Int {
         with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
-            newBuildStatus?.let { update.set(STATUS, newBuildStatus.ordinal) }
+            newBuildStatus?.let { update.set(STATUS, it.ordinal) }
+            errorInfoList?.let { update.set(ERROR_INFO, JsonUtil.toJson(it, formatted = false)) }
             return if (oldBuildStatus == null) {
                 update.where(BUILD_ID.eq(buildId))
                     .and(PROJECT_ID.eq(projectId))

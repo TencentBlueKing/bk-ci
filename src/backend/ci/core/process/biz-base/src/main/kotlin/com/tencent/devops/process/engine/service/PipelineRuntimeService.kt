@@ -1155,10 +1155,17 @@ class PipelineRuntimeService @Autowired constructor(
     ) {
         val newBuildStatus = BuildStatus.FAILED
         logger.info("[$buildId|DISAPPROVE_BUILD|userId($userId)|pipelineId=$pipelineId")
-        pipelineBuildDao.updateStatus(
+        val (_, allStageStatus) = pipelineBuildDetailService.buildEnd(
+            projectId = projectId,
+            buildId = buildId,
+            buildStatus = newBuildStatus,
+            errorMsg = "Rejected by $userId"
+        )
+        pipelineBuildDao.updateBuildStageStatus(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
+            stageStatus = allStageStatus,
             oldBuildStatus = BuildStatus.TRIGGER_REVIEWING,
             newBuildStatus = newBuildStatus,
             errorInfoList = listOf(
@@ -1168,12 +1175,6 @@ class PipelineRuntimeService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_TRIGGER_REVIEW_ABORT.toInt()
                 )
             )
-        )
-        pipelineBuildDetailService.buildEnd(
-            projectId = projectId,
-            buildId = buildId,
-            buildStatus = newBuildStatus,
-            errorMsg = "Rejected by $userId"
         )
     }
 
