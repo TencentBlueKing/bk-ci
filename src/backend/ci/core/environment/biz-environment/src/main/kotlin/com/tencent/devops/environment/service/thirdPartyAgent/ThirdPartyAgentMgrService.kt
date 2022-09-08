@@ -678,33 +678,34 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
     fun getAgnetByEnvName(projectId: String, envName: String): List<ThirdPartyAgent> {
         logger.info("[$projectId|$envName] Get the agents by env name")
-        // get shared project first
-        val sharedThridPartyAgentList = run {
-            val sharedProjEnv = envName.split("@") // sharedProjId@poolName
-            if (sharedProjEnv.size != 2 || sharedProjEnv[0].isBlank() || sharedProjEnv[1].isBlank()) {
-                return@run emptyList()
-            }
-            getSharedThirdPartyAgentList(
-                projectId = projectId,
-                sharedProjectId = sharedProjEnv[0],
-                sharedEnvName = sharedProjEnv[1],
-                sharedEnvId = null
+        // 共享环境由 被共享的项目ID@环境名称 组成，这里通过@分隔出的数量来区分是否是共享环境
+        val envNameItems = envName.split("@")
+        val thirdPartyAgentList = mutableListOf<ThirdPartyAgent>()
+        // 因为环境名称有可能也含有@所以只有 仅包含一个@的才是绝对的共享环境
+        if (envNameItems.size != 2 || envNameItems[0].isBlank() || envNameItems[1].isBlank()) {
+            thirdPartyAgentList.addAll(
+                getSharedThirdPartyAgentList(
+                    projectId = projectId,
+                    sharedProjectId = envNameItems[0],
+                    sharedEnvName = envNameItems[1],
+                    sharedEnvId = null
+                )
             )
-        }
-        val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = envName)
-        if (envRecord == null && sharedThridPartyAgentList.isEmpty()) {
-            logger.warn("[$projectId|$envName] The env is not exist")
-            throw CustomException(
-                Response.Status.FORBIDDEN,
-                "第三方构建机环境不存在($projectId:$envName)"
+        } else {
+            val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = envName)
+            if (envRecord == null) {
+                logger.warn("[$projectId|$envName] The env is not exist")
+                throw CustomException(
+                    Response.Status.FORBIDDEN,
+                    "第三方构建机环境不存在($projectId:$envName)"
+                )
+            }
+            thirdPartyAgentList.addAll(
+                getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
             )
         }
 
-        return (if (envRecord != null) {
-            getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
-        } else {
-            emptyList()
-        }).plus(sharedThridPartyAgentList)
+        return thirdPartyAgentList
     }
 
     private fun getSharedThirdPartyAgentList(
