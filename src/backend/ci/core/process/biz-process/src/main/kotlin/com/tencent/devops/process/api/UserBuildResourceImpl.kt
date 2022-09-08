@@ -85,7 +85,8 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>,
-        buildNo: Int?
+        buildNo: Int?,
+        triggerReviewers: List<String>?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
         return Result(
@@ -97,7 +98,8 @@ class UserBuildResourceImpl @Autowired constructor(
                     pipelineId = pipelineId,
                     values = values,
                     channelCode = ChannelCode.BS,
-                    buildNo = buildNo
+                    buildNo = buildNo,
+                    triggerReviewers = triggerReviewers
                 )
             )
         )

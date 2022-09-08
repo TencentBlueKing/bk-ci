@@ -45,6 +45,7 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.Api
+import io.swagger.annotations.ApiModelProperty
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
@@ -119,7 +120,10 @@ interface UserBuildResource {
         values: Map<String, String>,
         @ApiParam("手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        @ApiParam("触发审核人列表", required = false)
+        @QueryParam("triggerReviewers")
+        triggerReviewers: List<String>? = null
     ): Result<BuildId>
 
     @ApiOperation("重试流水线-重试或者跳过失败插件")
