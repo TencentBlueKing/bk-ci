@@ -264,7 +264,13 @@ class ServiceBuildResourceImpl @Autowired constructor(
         }
         return Result(
             pipelineBuildFacadeService.buildTriggerReview(
-                userId, projectId, pipelineId, buildId, approve, channelCode
+                userId = userId,
+                buildId = buildId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                approve = approve,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
     }
