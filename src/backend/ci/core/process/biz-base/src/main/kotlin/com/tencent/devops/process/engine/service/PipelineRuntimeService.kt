@@ -766,11 +766,7 @@ class PipelineRuntimeService @Autowired constructor(
                     stage.containers.forEach {
                         if (it is TriggerContainer) {
                             it.status = BuildStatus.RUNNING.name
-                            if (startBuildStatus == BuildStatus.TRIGGER_REVIEWING) {
-                                ContainerUtils.setReviewWaitName(it)
-                            } else {
-                                ContainerUtils.setQueuingWaitName(it)
-                            }
+                            ContainerUtils.setQueuingWaitName(it, startBuildStatus)
                         }
                     }
                 }
@@ -781,7 +777,7 @@ class PipelineRuntimeService @Autowired constructor(
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
                 if (container is TriggerContainer) { // 寻找触发点
-                    pipelineContainerService.setUpTriggerContainer(container, context)
+                    pipelineContainerService.setUpTriggerContainer(container, context, startBuildStatus)
                     context.containerSeq++
                     return@nextContainer
                 } else if (container is NormalContainer) {

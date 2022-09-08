@@ -800,7 +800,11 @@ class PipelineContainerService @Autowired constructor(
         )
     }
 
-    fun setUpTriggerContainer(container: TriggerContainer, context: StartBuildContext) {
+    fun setUpTriggerContainer(
+        container: TriggerContainer,
+        context: StartBuildContext,
+        startBuildStatus: BuildStatus
+    ) {
         // #4518 Model中的container.containerId转移至container.containerHashId，进行新字段值补充
         container.containerHashId = container.containerHashId ?: container.containerId
         container.containerId = container.id
@@ -884,7 +888,7 @@ class PipelineContainerService @Autowired constructor(
             }
         }
 
-        ContainerUtils.setQueuingWaitName(container)
+        ContainerUtils.setQueuingWaitName(container, startBuildStatus)
         container.status = BuildStatus.RUNNING.name
         container.executeCount = context.executeCount
         container.elements.forEach { atomElement ->

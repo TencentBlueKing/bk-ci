@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.utils
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 
 object ContainerUtils {
 
@@ -79,27 +80,19 @@ object ContainerUtils {
     fun clearQueueContainerName(container: Container) {
         if (container.name.startsWith(queuePrefix)) {
             container.name = container.name.substring(queuePrefix.length)
-        }
-    }
-
-    fun setQueuingWaitName(container: Container) {
-        if (container.name.startsWith(queuePrefix)) {
-            return
-        }
-
-        container.name = "$queuePrefix${container.name}"
-    }
-
-    fun clearReviewContainerName(container: Container) {
-        if (container.name.startsWith(reviewPrefix)) {
+        } else if (container.name.startsWith(reviewPrefix)) {
             container.name = container.name.substring(reviewPrefix.length)
         }
     }
 
-    fun setReviewWaitName(container: Container) {
-        if (container.name.startsWith(reviewPrefix)) {
+    fun setQueuingWaitName(container: Container, startBuildStatus: BuildStatus) {
+        if (container.name.startsWith(queuePrefix) || container.name.startsWith(reviewPrefix)) {
             return
         }
-        container.name = "$reviewPrefix${container.name}"
+        if (startBuildStatus == BuildStatus.TRIGGER_REVIEWING) {
+            container.name = "$queuePrefix${container.name}"
+        } else {
+            container.name = "$reviewPrefix${container.name}"
+        }
     }
 }

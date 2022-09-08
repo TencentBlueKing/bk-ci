@@ -870,7 +870,7 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无权限启动流水线($pipelineId)"
+                message = "用户（$userId) 无法查看流水线($pipelineId)"
             )
         }
         pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
