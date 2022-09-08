@@ -681,8 +681,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         // 共享环境由 被共享的项目ID@环境名称 组成，这里通过@分隔出的数量来区分是否是共享环境
         val envNameItems = envName.split("@")
         val thirdPartyAgentList = mutableListOf<ThirdPartyAgent>()
+
         // 因为环境名称有可能也含有@所以只有 仅包含一个@的才是绝对的共享环境
-        if (envNameItems.size == 2 && envNameItems[0].isNotBlank() && envNameItems[1].isNotBlank()) {
+        // 共享环境也有情况是共享环境自己使用，这种情况则直接走下面的逻辑
+        if (envNameItems.size == 2 && envNameItems[0].isNotBlank() && envNameItems[1].isNotBlank() &&
+            projectId != envNameItems[0]
+        ) {
             thirdPartyAgentList.addAll(
                 getSharedThirdPartyAgentList(
                     projectId = projectId,
@@ -691,19 +695,20 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     sharedEnvId = null
                 )
             )
-        } else {
-            val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = envName)
-            if (envRecord == null) {
-                logger.warn("[$projectId|$envName] The env is not exist")
-                throw CustomException(
-                    Response.Status.FORBIDDEN,
-                    "第三方构建机环境不存在($projectId:$envName)"
-                )
-            }
-            thirdPartyAgentList.addAll(
-                getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
+            return thirdPartyAgentList
+        }
+
+        val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = envName)
+        if (envRecord == null) {
+            logger.warn("[$projectId|$envName] The env is not exist")
+            throw CustomException(
+                Response.Status.FORBIDDEN,
+                "第三方构建机环境不存在($projectId:$envName)"
             )
         }
+        thirdPartyAgentList.addAll(
+            getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
+        )
 
         return thirdPartyAgentList
     }
