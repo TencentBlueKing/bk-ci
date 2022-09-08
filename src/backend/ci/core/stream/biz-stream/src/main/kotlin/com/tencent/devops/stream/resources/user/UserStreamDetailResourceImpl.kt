@@ -64,6 +64,18 @@ class UserStreamDetailResourceImpl @Autowired constructor(
         }
     }
 
+    override fun buildTriggerReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        approve: Boolean
+    ): Result<Boolean> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        return Result(streamDetailService.buildTriggerReview(userId, gitProjectId, buildId, approve))
+    }
+
     override fun search(
         userId: String,
         projectId: String,

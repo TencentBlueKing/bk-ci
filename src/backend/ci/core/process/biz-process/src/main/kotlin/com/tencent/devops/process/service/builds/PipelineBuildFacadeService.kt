@@ -861,18 +861,8 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         projectId: String,
         approve: Boolean,
-        channelCode: ChannelCode = ChannelCode.BS,
-        checkPermission: Boolean = true
+        channelCode: ChannelCode = ChannelCode.BS
     ): Boolean {
-        if (checkPermission) {
-            pipelinePermissionService.validPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无法查看流水线($pipelineId)"
-            )
-        }
         pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,

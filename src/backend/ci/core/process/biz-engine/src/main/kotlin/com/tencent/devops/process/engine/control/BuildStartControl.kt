@@ -371,7 +371,6 @@ class BuildStartControl @Autowired constructor(
         val container = stage.containers[0]
         run lit@{
             ContainerUtils.clearQueueContainerName(container)
-            ContainerUtils.clearReviewContainerName(container)
             container.elements.forEach {
                 if (it.id == taskId) {
                     pipelineContainerService.updateContainerStatus(
