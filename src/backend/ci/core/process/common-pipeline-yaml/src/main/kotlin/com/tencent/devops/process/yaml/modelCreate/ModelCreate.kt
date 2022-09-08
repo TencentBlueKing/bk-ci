@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -65,7 +66,8 @@ class ModelCreate @Autowired constructor(
         modelName: String,
         event: ModelCreateEvent,
         yaml: ScriptBuildYaml,
-        pipelineParams: List<BuildFormProperty>
+        pipelineParams: List<BuildFormProperty>,
+        asCodeSettings: PipelineAsCodeSettings?
     ): PipelineModelAndSetting {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, yaml)
@@ -158,7 +160,8 @@ class ModelCreate @Autowired constructor(
                 // #6090 stream重试时均需要清理变量表
                 cleanVariablesWhenRetry = true,
                 maxQueueSize = 1,
-                labels = labelList
+                labels = labelList,
+                pipelineAsCodeSettings = asCodeSettings
             )
         )
     }

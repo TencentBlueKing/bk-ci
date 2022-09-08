@@ -297,7 +297,8 @@ class StartActionTaskContainerCmd(
                 containerFinalStatus = containerContext.buildStatus,
                 variables = containerContext.variables.plus(contextMap),
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                message = message
+                message = message,
+                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
             )
             Pair(checkResult, null)
         } catch (e: ExpressionParseException) {

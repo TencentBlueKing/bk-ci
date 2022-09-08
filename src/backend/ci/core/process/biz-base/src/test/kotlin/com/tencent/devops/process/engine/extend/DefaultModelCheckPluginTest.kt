@@ -105,7 +105,6 @@ class DefaultModelCheckPluginTest : TestBase() {
         projectCode = "",
         initProjectCode = "projectCode",
         labelList = null,
-        pkgName = null,
         userCommentInfo = StoreUserCommentInfo(true, ""),
         visibilityLevel = VisibilityLevelEnum.LOGIN_PUBLIC.name,
         privateReason = "privateReason",
