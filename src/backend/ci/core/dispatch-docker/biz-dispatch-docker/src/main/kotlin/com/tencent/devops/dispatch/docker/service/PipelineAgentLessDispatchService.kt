@@ -172,8 +172,6 @@ class PipelineAgentLessDispatchService @Autowired constructor(
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
 
-            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString(), executeCount)
-
             // 无编译环境清除redisAuth
             redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
         } catch (e: Exception) {

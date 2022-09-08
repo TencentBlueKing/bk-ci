@@ -248,7 +248,6 @@ class DockerHostBuildService @Autowired constructor(
                 record.buildId,
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString(), executeCount)
 
             // 无编译环境清除redisAuth
             if (buildLessFlag) {
