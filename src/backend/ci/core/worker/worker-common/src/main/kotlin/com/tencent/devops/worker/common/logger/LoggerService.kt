@@ -418,7 +418,7 @@ object LoggerService {
             }
 
             // 通过上报的结果感知是否需要调整模式
-            val result = logResourceApi.addLogMultiLine(logMessages)
+            val result = logResourceApi.addLogMultiLine(buildVariables?.buildId ?: "", logMessages)
             when {
                 // 当log服务返回拒绝请求或者并发量超限制时，自动切换模式为本地保存并归档
                 result.status == 503 || result.status == 509 -> {
