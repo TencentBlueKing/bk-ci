@@ -92,6 +92,7 @@ class ExperienceIndexService @Autowired constructor(
             ) > (offset + pageSize)
         }
         if (page == 1) {
+            var index = 0
             experienceExtendBannerDao.listWithExtendBanner(dslContext)?.map {
                 IndexBannerVO(
                     experienceHashId = "",
@@ -99,7 +100,7 @@ class ExperienceIndexService @Autowired constructor(
                     type = it.type,
                     externalUrl = it.link
                 )
-            }?.toMutableList()?.map { banners.add(it) }
+            }?.toMutableList()?.map { banners.add(index++, it) }
         }
         return Result(Pagination(hasNext, banners))
     }
@@ -289,9 +290,9 @@ class ExperienceIndexService @Autowired constructor(
     ): IndexAppInfoVO {
         val externalUrl = if (it.externalLink.isNotBlank()) {
             HomeHostUtil.outerApiServerHost() +
-                    "/experience/api/open/experiences/appstore/redirect?id=" +
-                    HashUtil.encodeLongId(it.id) +
-                    "&userId=" + userId
+                "/experience/api/open/experiences/appstore/redirect?id=" +
+                HashUtil.encodeLongId(it.id) +
+                "&userId=" + userId
         } else ""
 
         // 同步版本号
