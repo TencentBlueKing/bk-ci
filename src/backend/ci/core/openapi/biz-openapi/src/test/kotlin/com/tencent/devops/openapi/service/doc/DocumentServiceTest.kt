@@ -175,11 +175,13 @@ class DocumentServiceTest @Autowired constructor(
         return res
     }
 
+    @Suppress("ComplexCondition")
     private fun checkDefaultValue(v: String): String? {
         if (v.startsWith("Mock") || v.isBlank() || v == "[]" || v == "{=}" || v == "{}") return null
         return v
     }
 
+    @Suppress("ComplexMethod")
     private fun makeStandardArgument(type: KType, debug: KFunction<*>): Any? {
         if (type.isMarkedNullable) return null
         return when (type.classifier) {
