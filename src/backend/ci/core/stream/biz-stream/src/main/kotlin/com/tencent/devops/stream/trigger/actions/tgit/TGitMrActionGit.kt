@@ -26,6 +26,7 @@
  */
 
 package com.tencent.devops.stream.trigger.actions.tgit
+
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -58,6 +59,7 @@ import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitFileInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
@@ -132,6 +134,31 @@ class TGitMrActionGit(
             checkProjectInWhiteList
     }
 
+    override fun forkMrNeedReviewers(): List<String> {
+        return if (!checkMrForkReview()) {
+            logger.warn(
+                "check mr fork review false, need review, gitProjectId: ${this.data.getGitProjectId()}, " +
+                    "eventId: ${this.data.context.requestEventId}"
+            )
+            var page = 1
+            val reviewers = mutableListOf<String>()
+            while (true) {
+                val res = api.getProjectMember(
+                    (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as GithubCred,
+                    gitProjectId = this.data.eventCommon.gitProjectId,
+                    page = page,
+                    pageSize = 500
+                )
+                reviewers.addAll(res.filter { it.accessLevel >= 40 }.map { it.userId })
+                if (res.size != 500) {
+                    break
+                }
+                page += 1
+            }
+            return reviewers
+        } else emptyList()
+    }
+
     override fun getMrId() = event().object_attributes.id
 
     override val api: TGitApiService
@@ -191,18 +218,6 @@ class TGitMrActionGit(
     }
 
     override fun skipStream(): Boolean {
-        // fork触发进行权限校验
-        if (!this.checkMrForkReview()) {
-            logger.warn(
-                "check mr fork review false, return, gitProjectId: ${this.data.getGitProjectId()}, " +
-                    "eventId: ${this.data.context.requestEventId}"
-            )
-            throw StreamTriggerException(
-                this,
-                TriggerReason.TRIGGER_NOT_MATCH,
-                reasonParams = listOf("current trigger user(${this.data.eventCommon.userId}) not in whitelist")
-            )
-        }
         return false
     }
 

@@ -52,7 +52,7 @@ enum class GithubAccessLevelEnum(val level: Int) {
             }
         }
 
-        fun getGithubAccessLevel(permission: String): GithubAccessLevelEnum {
+        fun getGithubAccessLevel(permission: String?): GithubAccessLevelEnum {
             return when (permission) {
                 "read" -> READ
                 "triage" -> TRIAGE

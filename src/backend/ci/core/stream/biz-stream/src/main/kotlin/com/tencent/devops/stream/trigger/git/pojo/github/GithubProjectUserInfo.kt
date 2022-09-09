@@ -27,12 +27,10 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.tencent.devops.common.sdk.github.pojo.RepositoryPermissions
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectUserInfo
 
 data class GithubProjectUserInfo(
     // tgit的权限等级 GUEST = 10 FOLLOWER = 15 REPORTER = 20 DEVELOPER = 30 MASTER = 40 OWNER = 50
-    override val accessLevel: Int
-) : StreamGitProjectUserInfo {
-    constructor(repositoryPermissions: RepositoryPermissions) : this(0)
-}
+    override val accessLevel: Int,
+    val userId: String
+) : StreamGitProjectUserInfo
