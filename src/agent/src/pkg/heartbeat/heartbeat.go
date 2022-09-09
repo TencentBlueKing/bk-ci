@@ -86,12 +86,14 @@ func agentHeartbeat() error {
 		configChanged = true
 	}
 
-	if heartbeatResponse.Props.KeepLogsHours > 0 {
+	if heartbeatResponse.Props.KeepLogsHours > 0 &&
+		config.GAgentConfig.LogsKeepHours != heartbeatResponse.Props.KeepLogsHours {
 		config.GAgentConfig.LogsKeepHours = heartbeatResponse.Props.KeepLogsHours
 		configChanged = true
 	}
 
-	if len(heartbeatResponse.Props.IgnoreLocalIps) > 0 {
+	if heartbeatResponse.Props.IgnoreLocalIps != "" &&
+		config.GAgentConfig.IgnoreLocalIps != heartbeatResponse.Props.IgnoreLocalIps {
 		config.GAgentConfig.IgnoreLocalIps = heartbeatResponse.Props.IgnoreLocalIps
 		configChanged = true
 	}

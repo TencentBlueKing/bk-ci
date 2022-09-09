@@ -31,13 +31,17 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.format
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -64,13 +68,16 @@ import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("LongParameterList", "LongMethod")
 class StreamYamlTrigger @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val triggerMatcher: TriggerMatcher,
     private val yamlSchemaCheck: YamlSchemaCheck,
@@ -86,7 +93,7 @@ class StreamYamlTrigger @Autowired constructor(
         const val ymlVersion = "v2.0"
 
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
-        private const val STREAM_TEMPLATE_ROOT_FILE = "STREAM_TEMPLATE_ROOT_FILE"
+        const val STREAM_TEMPLATE_ROOT_FILE = "STREAM_TEMPLATE_ROOT_FILE"
     }
 
     fun checkAndTrigger(
@@ -197,12 +204,30 @@ class StreamYamlTrigger @Autowired constructor(
             )
             // 新建流水线放
             action.data.context.pipeline = pipeline
-        } else if (needUpdateLastBuildBranch(action)) {
-            action.updateLastBranch(
+        } else {
+            action.updatePipelineLastBranchAndDisplayName(
                 pipelineId = pipeline.pipelineId,
-                branch = action.data.eventCommon.branch
+                branch = if (needUpdateLastBuildBranch(action)) action.data.eventCommon.branch else null,
+                displayName = if (needChangePipelineDisplayName(action)) getDisplayName(action) else null
             )
         }
+
+        // 获取蓝盾流水线的pipelineAsCodeSetting
+        val pipelineSettings = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+            projectId = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong()),
+            pipelineId = pipeline.pipelineId,
+            channelCode = ChannelCode.GIT
+        ).data ?: throw StreamTriggerException(
+            action = action,
+            triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
+            reasonParams = listOf("Pipeline settings not found"),
+            commitCheck = CommitCheck(
+                block = false,
+                state = StreamCommitCheckState.FAILURE
+            )
+        )
+        action.data.context.pipelineAsCodeSettings = pipelineSettings.pipelineAsCodeSettings
+
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
@@ -278,7 +303,8 @@ class StreamYamlTrigger @Autowired constructor(
                 gitBuildId = null,
                 // 没有触发只有特殊任务的需要保存一下蓝盾流水线
                 onlySavePipeline = !isTrigger,
-                yamlTransferData = yamlReplaceResult.yamlTransferData
+                yamlTransferData = yamlReplaceResult.yamlTransferData,
+                manualInputs = null
             )
         }
 
@@ -296,7 +322,8 @@ class StreamYamlTrigger @Autowired constructor(
                 gitBuildId = null,
                 // 没有触发只有特殊任务的不需要保存蓝盾流水线
                 onlySavePipeline = false,
-                yamlTransferData = yamlReplaceResult.yamlTransferData
+                yamlTransferData = yamlReplaceResult.yamlTransferData,
+                manualInputs = null
             )
         }
 
@@ -328,7 +355,8 @@ class StreamYamlTrigger @Autowired constructor(
                 yaml = yamlObject,
                 gitBuildId = gitBuildId,
                 onlySavePipeline = false,
-                yamlTransferData = yamlReplaceResult.yamlTransferData
+                yamlTransferData = yamlReplaceResult.yamlTransferData,
+                manualInputs = null
             )
         }
         return true
@@ -386,7 +414,10 @@ class StreamYamlTrigger @Autowired constructor(
                 getTemplateMethod = yamlTemplateService::getTemplate,
                 nowRepo = null,
                 repo = null,
-                resourcePoolMapExt = resourcePoolExt
+                resourcePoolMapExt = resourcePoolExt,
+                conf = YamlTemplateConf(
+                    useOldParametersExpression = action.data.context.pipelineAsCodeSettings?.enable != true
+                )
             ).replace()
 
             val newPreYamlObject = preYamlObject.copy(
@@ -450,6 +481,6 @@ class StreamYamlTrigger @Autowired constructor(
     private fun needChangePipelineDisplayName(
         action: BaseAction
     ): Boolean {
-        return action.data.context.pipeline!!.pipelineId.isBlank() || action is GitBaseAction
+        return action is GitBaseAction && action.data.context.pipeline!!.displayName != getDisplayName(action)
     }
 }

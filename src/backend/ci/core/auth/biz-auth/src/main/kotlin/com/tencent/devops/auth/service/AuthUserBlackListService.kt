@@ -46,7 +46,7 @@ class AuthUserBlackListService @Autowired constructor(
         userId: String,
         remark: String?
     ): Boolean {
-        logger.info("create $userId blackList with $remark")
+        logger.info("create blackList : userId = $userId | remark = $remark")
         if (authUserBlackListDao.get(dslContext, userId) != null) {
             logger.warn("user $userId is blackList user")
             return true

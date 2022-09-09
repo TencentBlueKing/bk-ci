@@ -128,7 +128,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
      * 查看store组件成员信息
      */
     override fun viewMemberInfo(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<StoreMemberItem?> {
-        logger.info("viewMemberInfo userId is:$userId,storeCode is:$storeCode,storeType is:$storeType")
+        logger.info("viewMemberInfo params:[$userId|$storeCode|$storeType]")
         val memberRecord = storeMemberDao.getMemberInfo(
             dslContext = dslContext,
             userId = userId,
@@ -258,7 +258,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         storeType: StoreTypeEnum,
         checkPermissionFlag: Boolean
     ): Result<Boolean> {
-        logger.info("deleteMember userId is:$userId,id is:$id,storeCode is:$storeCode,storeType is:$storeType")
+        logger.info("deleteMember params:[$userId|$id|$storeCode|$storeType|$checkPermissionFlag")
         if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,
                 userId = userId,
@@ -336,8 +336,8 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                 projectCode = projectCode,
                 userId = storeMember
             ).data
-        } catch (e: Exception) {
-            logger.warn("verifyUserProjectPermission error is :$e", e)
+        } catch (ignored: Throwable) {
+            logger.warn("verifyUserProjectPermission error, params[$storeMember|$projectCode]", ignored)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         }
         if (null == validateFlag || !validateFlag) {

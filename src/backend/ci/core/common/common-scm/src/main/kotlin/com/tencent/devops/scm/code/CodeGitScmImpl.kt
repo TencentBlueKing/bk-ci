@@ -179,6 +179,7 @@ class CodeGitScmImpl constructor(
         try {
             gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
         } catch (ignored: Throwable) {
+            logger.warn("Fail to add webhook of git", ignored)
             throw ScmException(
                 ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_GIT.name
@@ -213,6 +214,7 @@ class CodeGitScmImpl constructor(
                 block = block
             )
         } catch (ignored: Throwable) {
+            logger.warn("Fail to add commit check of git", ignored)
             throw ScmException(
                 ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_GIT.name

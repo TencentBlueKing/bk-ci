@@ -88,7 +88,7 @@ class CheckPauseReviewStageCmd(
                 // #3742 进入暂停状态则刷新完状态后直接返回，等待手动触发
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
 
-                stage.checkIn?.parseReviewVariables(commandContext.variables)
+                stage.checkIn?.parseReviewVariables(commandContext.variables, commandContext.pipelineAsCodeEnabled)
                 pipelineStageService.pauseStageNotify(
                     userId = event.userId,
                     stage = stage,

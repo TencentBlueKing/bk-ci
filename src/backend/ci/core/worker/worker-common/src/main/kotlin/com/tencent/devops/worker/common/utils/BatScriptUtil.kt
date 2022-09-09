@@ -142,14 +142,18 @@ object BatScriptUtil {
             .append("\r\n")
             .append("exit")
             .append("\r\n")
-            .append(setEnv.replace(
-                oldValue = "##resultFile##",
-                newValue = File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath
-            ))
-            .append(setGateValue.replace(
-                oldValue = "##gateValueFile##",
-                newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
-            ))
+            .append(
+                setEnv.replace(
+                    oldValue = "##resultFile##",
+                    newValue = File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath
+                )
+            )
+            .append(
+                setGateValue.replace(
+                    oldValue = "##gateValueFile##",
+                    newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
+                )
+            )
 
         // #4601 没有指定编码字符集时采用获取系统的默认字符集
         val charset = when (charsetType?.let { CharsetType.valueOf(it) }) {

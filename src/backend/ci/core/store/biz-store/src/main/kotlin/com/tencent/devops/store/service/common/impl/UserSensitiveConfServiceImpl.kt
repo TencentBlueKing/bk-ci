@@ -78,7 +78,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         storeCode: String,
         sensitiveConfReq: SensitiveConfReq
     ): Result<Boolean> {
-        logger.info("create: $userId | $storeType | $storeCode | $sensitiveConfReq")
+        logger.info("createSensitiveConf params: [$userId | $storeType | $storeCode | $sensitiveConfReq]")
         checkUserAuthority(userId, storeCode, storeType)
         val fieldName = sensitiveConfReq.fieldName
         if (fieldName.isEmpty()) {
@@ -97,8 +97,13 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             )
         }
         // 判断同名
-        val isNameExist = sensitiveConfDao.check(dslContext, storeCode, storeType.type.toByte(), fieldName, null)
-        logger.info("fieldName: $fieldName, isNameExist: $isNameExist")
+        val isNameExist = sensitiveConfDao.check(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            fieldName = fieldName,
+            id = null
+        )
         if (isNameExist) {
             return MessageCodeUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
@@ -137,7 +142,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         id: String,
         sensitiveConfReq: SensitiveConfReq
     ): Result<Boolean> {
-        logger.info("update: $storeType | $storeCode | $id | $sensitiveConfReq")
+        logger.info("updateSensitiveConf params: [$storeType | $storeCode | $id | $sensitiveConfReq]")
         checkUserAuthority(userId, storeCode, storeType)
         val sensitiveConfRecord = sensitiveConfDao.getById(dslContext, id)
             ?: return MessageCodeUtil.generateResponseDataObject(
@@ -199,7 +204,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         storeCode: String,
         ids: String
     ): Result<Boolean> {
-        logger.info("delete: $userId | $storeType | $storeCode | $ids")
+        logger.info("deleteSensitiveConf params: [$userId | $storeType | $storeCode | $ids]")
         checkUserAuthority(userId, storeCode, storeType)
         sensitiveConfDao.batchDelete(dslContext = dslContext,
             storeType = storeType.type.toByte(),
