@@ -91,7 +91,7 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY)
         }
         val approveId = UUIDUtil.generate()
-        val token = UUID.randomUUID().toString().replace(StringPool.DASH, StringPool.EMPTY).toLowerCase()
+        val token = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             atomApproveRelDao.add(
