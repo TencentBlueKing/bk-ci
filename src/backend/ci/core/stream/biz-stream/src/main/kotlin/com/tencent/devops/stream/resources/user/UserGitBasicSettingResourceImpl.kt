@@ -37,14 +37,16 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
+import com.tencent.devops.repository.pojo.AppInstallationResult
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
-import com.tencent.devops.stream.constant.StreamConstant.DEVOPS_PROJECT_PREFIX
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamUpdateSetting
+import com.tencent.devops.stream.pojo.TriggerReviewSetting
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamGitTransferService
 import com.tencent.devops.stream.util.GitCommonUtils
@@ -55,7 +57,8 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val permissionService: StreamPermissionService,
     private val streamGitTransferService: StreamGitTransferService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val streamGitConfig: StreamGitConfig
 ) : UserGitBasicSettingResource {
 
     @BkTimed
@@ -64,7 +67,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         enabled: Boolean,
         projectInfo: StreamGitProjectInfoWithProject
     ): Result<Boolean> {
-        val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
+        val projectId = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId, streamGitConfig.getScmType())
         val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
         permissionService.checkCommonUser(userId)
@@ -115,14 +118,37 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkStreamPermission(userId = userId, projectId = projectId)
-        permissionService.checkEnableStream(gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(
+            userId = userId,
+            projectId = projectId,
+            gitProjectId = gitProjectId
+        )
         return Result(
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 buildPushedPullRequest = streamUpdateSetting.buildPushedPullRequest,
                 buildPushedBranches = streamUpdateSetting.buildPushedBranches,
                 enableMrBlock = streamUpdateSetting.enableMrBlock
+            )
+        )
+    }
+
+    override fun saveStreamReviewSetting(
+        userId: String,
+        projectId: String,
+        triggerReviewSetting: TriggerReviewSetting
+    ): Result<Boolean> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        permissionService.checkStreamAndOAuthAndEnable(
+            userId = userId,
+            projectId = projectId,
+            gitProjectId = gitProjectId
+        )
+        return Result(
+            streamBasicSettingService.updateProjectReviewSetting(
+                gitProjectId = gitProjectId,
+                triggerReviewSetting = triggerReviewSetting
             )
         )
     }
@@ -173,6 +199,10 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
         return Result(streamBasicSettingService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
+    }
+
+    override fun isInstallApp(userId: String, gitProjectId: Long): Result<AppInstallationResult> {
+        return Result(streamGitTransferService.isInstallApp(userId = userId, gitProjectId = gitProjectId))
     }
 
     private fun checkNodeId(nodeHashId: String) {

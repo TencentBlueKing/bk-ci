@@ -38,8 +38,6 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 @Suppress("LongParameterList", "ReturnCount")
 object StreamPipelineUtils {
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
     fun genStreamV2BuildUrl(
         homePage: String,
         gitProjectId: String,

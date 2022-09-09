@@ -28,11 +28,12 @@
 package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.form.FormBuilder
 import com.tencent.devops.common.web.form.data.CheckboxPropData
 import com.tencent.devops.common.web.form.data.CompanyStaffPropData
@@ -49,7 +50,6 @@ import com.tencent.devops.common.web.form.data.TipPropData
 import com.tencent.devops.common.web.form.models.Form
 import com.tencent.devops.common.web.form.models.ui.DataSourceItem
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfo
 import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfoParam
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
@@ -551,7 +551,8 @@ class ManualTriggerService @Autowired constructor(
                                         StartUpInfo(
                                             id = "true",
                                             name = "true"
-                                        ), StartUpInfo(
+                                        ),
+                                        StartUpInfo(
                                             id = "false",
                                             name = "false"
                                         )

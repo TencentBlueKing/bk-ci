@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.actions
 
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.scm.pojo.WebhookCommit
 
@@ -43,6 +44,8 @@ interface GitBaseAction : BaseAction {
      * 通过common webhook 获取启动参数
      */
     fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String>
+
+    fun event(): CodeWebhookEvent
 
     override fun needAddWebhookParams() = true
 

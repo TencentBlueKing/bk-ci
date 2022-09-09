@@ -38,7 +38,7 @@ internal class EventActionFactoryTest {
 
     private val factory = EventActionFactory(
         mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(),
-        mock()
+        mock(), mock(), mock()
     )
 
     private val objectMapper = JsonUtil.getObjectMapper()

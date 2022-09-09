@@ -17,7 +17,7 @@ class PushKindFilter(
         // isMonitorCreate 为true时 监听创建分支的push事件
         logger.info(
             "$pipelineId|actionList:$actionList|" +
-                    "checkCreateAndUpdate:$checkCreateAndUpdate|push kind filter"
+                "checkCreateAndUpdate:$checkCreateAndUpdate|push kind filter"
         )
         if (actionList.isEmpty()) {
             return true

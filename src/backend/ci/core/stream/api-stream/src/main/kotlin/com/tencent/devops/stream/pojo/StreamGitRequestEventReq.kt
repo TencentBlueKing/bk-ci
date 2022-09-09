@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.StreamGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
@@ -36,6 +36,8 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -166,9 +168,40 @@ data class StreamGitRequestEventReq(
                 buildTitle = commitMsg
                 buildSource = "[$mergeRequestId]"
             }
+            is GithubPullRequestEvent -> {
+                val event = gitRequestEvent.gitEvent as GithubPullRequestEvent
+                jumpUrl = event.pullRequest.htmlUrl
+                buildTitle = mrTitle
+                buildSource = "[!$mergeRequestId]"
+            }
+            is GithubPushEvent -> {
+                val event = gitRequestEvent.gitEvent as GithubPushEvent
+                when {
+                    event.ref.startsWith("refs/heads/") -> {
+                        if (deleteBranch) {
+                            buildTitle = "Branch $branch deleted by $userId"
+                        } else {
+                            jumpUrl = event.headCommit?.url
+                            buildTitle = commitMsg
+                            buildSource = commitId.take(9)
+                        }
+                    }
+                    event.ref.startsWith("refs/tags/") -> {
+                        if (deleteTag) {
+                            buildTitle = "Tag $branch deleted by $userId"
+                        } else {
+                            jumpUrl = event.repository.url + "/releases/tag/" + branch
+                            buildTitle = commitMsg
+                            buildSource = branch
+                        }
+                    }
+                }
+            }
             else -> {
                 when (objectKind) {
-                    TGitObjectKind.SCHEDULE.value, TGitObjectKind.OPENAPI.value, TGitObjectKind.MANUAL.value -> {
+                    StreamGitObjectKind.SCHEDULE.value,
+                    StreamGitObjectKind.OPENAPI.value,
+                    StreamGitObjectKind.MANUAL.value -> {
                         buildSource = commitId.take(8)
                         jumpUrl = homepage + "/commit/" + gitRequestEvent.commitId
                     }
@@ -178,10 +211,10 @@ data class StreamGitRequestEventReq(
                 // 兼容给list接口有title数据。list接口并没有生成大对象，减少负担
                 when (operationKind) {
                     TGitPushOperationKind.DELETE.value -> {
-                        if (objectKind == TGitObjectKind.PUSH.value) {
+                        if (objectKind == StreamGitObjectKind.PUSH.value) {
                             buildTitle = "Branch $branch deleted by $userId"
                         }
-                        if (objectKind == TGitObjectKind.TAG_PUSH.value) {
+                        if (objectKind == StreamGitObjectKind.TAG_PUSH.value) {
                             buildTitle = "Tag $branch deleted by $userId"
                         }
                     }
