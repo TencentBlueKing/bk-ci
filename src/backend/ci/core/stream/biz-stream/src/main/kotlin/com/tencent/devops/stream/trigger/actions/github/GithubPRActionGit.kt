@@ -132,14 +132,15 @@ class GithubPRActionGit(
 
     override fun forkMrNeedReviewers(): List<String> {
         return if (!checkMrForkReview()) {
-            logger.warn(
-                "check pr fork review false, need review, gitProjectId: ${this.data.getGitProjectId()}, " +
-                    "eventId: ${this.data.context.requestEventId}"
-            )
-            api.getProjectMember(
+            val reviewers = api.getProjectMember(
                 (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as GithubCred,
                 gitProjectId = this.data.eventCommon.gitProjectId
-            ).filter { it.accessLevel >= 40 }.map { it.userId }
+            ).filter { it.accessLevel >= 40 }.map { it.userId }.ifEmpty { listOf(data.setting.enableUser) }
+            logger.warn(
+                "check pr fork review false, need review, gitProjectId: ${this.data.getGitProjectId()}|" +
+                    "eventId: ${this.data.context.requestEventId}| reviewers: $reviewers"
+            )
+            reviewers
         } else emptyList()
     }
 

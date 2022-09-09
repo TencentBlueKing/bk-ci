@@ -136,10 +136,6 @@ class TGitMrActionGit(
 
     override fun forkMrNeedReviewers(): List<String> {
         return if (!checkMrForkReview()) {
-            logger.warn(
-                "check mr fork review false, need review, gitProjectId: ${this.data.getGitProjectId()}, " +
-                    "eventId: ${this.data.context.requestEventId}"
-            )
             var page = 1
             val reviewers = mutableListOf<String>()
             while (true) {
@@ -155,7 +151,14 @@ class TGitMrActionGit(
                 }
                 page += 1
             }
-            return reviewers
+            logger.warn(
+                "check mr fork review false, need review, gitProjectId: ${this.data.getGitProjectId()}|" +
+                    "eventId: ${this.data.context.requestEventId}| " +
+                    "reviewers: ${reviewers.ifEmpty { data.setting.enableUser }}"
+            )
+            if (reviewers.isEmpty()) {
+                listOf(data.setting.enableUser)
+            } else reviewers
         } else emptyList()
     }
 
