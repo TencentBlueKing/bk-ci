@@ -16,6 +16,10 @@ stages:
         needs:
           jdk: "1.8.0_161"
       steps:
-        - name: "预合并 BK-CI代码"
-          checkout: self
+        - checkout: self
+          name: "预合并 BK-CI代码"
+          with:
+            usernameConfig: mingshewhe
+            userEmailConfig: mingshewhe@tencent.com
+          
         
