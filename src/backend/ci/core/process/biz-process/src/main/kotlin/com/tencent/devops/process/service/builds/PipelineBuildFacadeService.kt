@@ -394,7 +394,9 @@ class PipelineBuildFacadeService(
 
             val paramMap = HashMap<String, BuildParameters>(100, 1F)
             // #2821 构建重试均要传递触发插件ID，否则当有多个事件触发插件时，rebuild后触发器的标记不对
-            buildVariableService.getVariable(projectId, pipelineId, buildId, PIPELINE_START_TASK_ID)?.let { startTaskId ->
+            buildVariableService.getVariable(
+                projectId, pipelineId, buildId, PIPELINE_START_TASK_ID
+            )?.let { startTaskId ->
                 paramMap[PIPELINE_START_TASK_ID] = BuildParameters(PIPELINE_START_TASK_ID, startTaskId)
             }
             val startType = StartType.toStartType(buildInfo.trigger)
@@ -525,7 +527,8 @@ class PipelineBuildFacadeService(
         isMobile: Boolean = false,
         startByMessage: String? = null,
         buildNo: Int? = null,
-        frequencyLimit: Boolean = true
+        frequencyLimit: Boolean = true,
+        triggerReviewers: List<String>? = null
     ): String {
         logger.info("Manual build start with value [$values][$buildNo]")
         if (checkPermission) {
@@ -599,7 +602,8 @@ class PipelineBuildFacadeService(
                 model = model,
                 frequencyLimit = frequencyLimit,
                 buildNo = buildNo,
-                startValues = values
+                startValues = values,
+                triggerReviewers = triggerReviewers
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
@@ -666,7 +670,8 @@ class PipelineBuildFacadeService(
         checkPermission: Boolean = true,
         startType: StartType = StartType.WEB_HOOK,
         startValues: Map<String, String>? = null,
-        userParameters: List<BuildParameters>? = null
+        userParameters: List<BuildParameters>? = null,
+        triggerReviewers: List<String>? = null
     ): String? {
 
         if (checkPermission) {
@@ -716,7 +721,8 @@ class PipelineBuildFacadeService(
                 model = model,
                 signPipelineVersion = null,
                 frequencyLimit = false,
-                startValues = startValues
+                startValues = startValues,
+                triggerReviewers = triggerReviewers
             )
             if (buildId.isNotBlank()) {
                 webhookBuildParameterService.save(
@@ -847,6 +853,55 @@ class PipelineBuildFacadeService(
         if (params.status == ManualReviewAction.ABORT) {
             buildDetailService.updateBuildCancelUser(projectId, buildId, userId)
         }
+    }
+
+    fun buildTriggerReview(
+        userId: String,
+        buildId: String,
+        pipelineId: String,
+        projectId: String,
+        approve: Boolean,
+        channelCode: ChannelCode = ChannelCode.BS,
+        checkPermission: Boolean = true
+    ): Boolean {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EXECUTE,
+                message = "用户（$userId) 没有流水线($pipelineId)的执行权限"
+            )
+        }
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                defaultMessage = "构建任务${buildId}不存在",
+                params = arrayOf(buildId)
+            )
+        if (!buildInfo.isTriggerReviewing()) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ProcessMessageCode.ERROR_TRIGGER_NOT_UNDER_REVIEW,
+                defaultMessage = "构建任务${buildId}不在审核状态中",
+                params = arrayOf(buildId)
+            )
+        }
+        if (!pipelineRuntimeService.checkTriggerReviewer(userId, buildId, pipelineId, projectId)) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
+                defaultMessage = "用户({0})不在审核人员名单中",
+                params = arrayOf(userId)
+            )
+        }
+        if (approve) {
+            pipelineRuntimeService.approveTriggerReview(userId, buildId, pipelineId, projectId)
+        } else {
+            pipelineRuntimeService.disapproveTriggerReview(userId, buildId, pipelineId, projectId)
+        }
+        return true
     }
 
     fun buildManualStartStage(

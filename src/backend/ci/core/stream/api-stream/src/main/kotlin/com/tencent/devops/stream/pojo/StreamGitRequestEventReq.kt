@@ -93,7 +93,9 @@ data class StreamGitRequestEventReq(
     @ApiModelProperty("构建标题")
     var buildTitle: String?,
     @ApiModelProperty("构建跳转显示信息")
-    var buildSource: String?
+    var buildSource: String?,
+    @ApiModelProperty("变更的yaml文件")
+    var changeYamlList: List<String> = emptyList()
 ) {
     constructor(gitRequestEvent: GitRequestEvent, homepage: String) : this(
         id = gitRequestEvent.id,
@@ -119,7 +121,8 @@ data class StreamGitRequestEventReq(
         noteId = null,
         jumpUrl = null,
         buildTitle = null,
-        buildSource = null
+        buildSource = null,
+        changeYamlList = gitRequestEvent.changeYamlList
     ) {
         // 组装信息：用于传给前端页面使用
         when (gitRequestEvent.gitEvent) {

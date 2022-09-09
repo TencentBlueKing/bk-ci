@@ -217,8 +217,8 @@ class GithubPrTriggerHandler : GitHookTriggerHandler<GithubPullRequestEvent> {
             startParams[PIPELINE_GIT_HEAD_REF] = pullRequest.base.ref
             startParams[PIPELINE_GIT_BASE_REF] = pullRequest.head.ref
             startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = CodeEventType.PULL_REQUEST.name
-            startParams[PIPELINE_WEBHOOK_SOURCE_URL] = pullRequest.head.repo.url
-            startParams[PIPELINE_WEBHOOK_TARGET_URL] = pullRequest.base.repo.url
+            startParams[PIPELINE_WEBHOOK_SOURCE_URL] = pullRequest.head.repo.cloneUrl
+            startParams[PIPELINE_WEBHOOK_TARGET_URL] = pullRequest.base.repo.cloneUrl
             startParams[PIPELINE_GIT_MR_ID] = pullRequest.id.toString()
             startParams[PIPELINE_GIT_MR_IID] = pullRequest.number.toString()
             startParams[PIPELINE_GIT_COMMIT_AUTHOR] = pullRequest.head.user.login

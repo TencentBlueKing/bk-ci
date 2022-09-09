@@ -234,10 +234,6 @@ data class GithubRepository(
 //    val labelsUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/labels{/name}
     @JsonProperty("language")
     val language: String?, // null
-//    @JsonProperty("languages_url")
-//    val languagesUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/languages
-    @JsonProperty("license")
-    val license: String?, // null
     @JsonProperty("master_branch")
     val masterBranch: String?, // main
 //    @JsonProperty("merges_url")
