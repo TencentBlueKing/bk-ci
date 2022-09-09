@@ -104,4 +104,11 @@ object PathUtils {
             }
         })
     }
+
+    fun getImageNameAndVersion(manifestPath: String): Pair<String, String> {
+        val fullPathList = manifestPath.split("/")
+        val imageName = fullPathList[1]
+        val version = fullPathList[3]
+        return Pair(imageName, version)
+    }
 }

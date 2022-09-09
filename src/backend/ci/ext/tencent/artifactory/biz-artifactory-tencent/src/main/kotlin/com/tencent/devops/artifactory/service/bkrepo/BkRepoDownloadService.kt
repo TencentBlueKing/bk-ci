@@ -40,6 +40,8 @@ import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
@@ -222,8 +224,11 @@ open class BkRepoDownloadService @Autowired constructor(
                     )
                 )
             }
-            // TODO #6302
-            else -> throw UnsupportedOperationException()
+            // 镜像不支持下载
+            ArtifactoryType.IMAGE -> throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(ArtifactoryType.IMAGE.name)
+            )
         }
         val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl)
         val fileDetail = bkRepoClient.getFileDetail(

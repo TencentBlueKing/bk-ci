@@ -60,11 +60,4 @@ interface RepoSearchService {
         searchProps: List<Property>,
         customized: Boolean? = null
     ): Pair<Long, List<FileInfo>>
-
-    fun getJforgInfoByteewTime(
-        page: Int,
-        pageSize: Int,
-        startTime: Long,
-        endTime: Long
-    ): List<FileInfo>
 }

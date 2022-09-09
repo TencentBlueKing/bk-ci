@@ -35,7 +35,9 @@ import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.artifactory.util.UrlUtil
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
@@ -145,8 +147,11 @@ class BkRepoAppService @Autowired constructor(
                     "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限"
                 )
             }
-            // TODO #6302
-            else -> throw UnsupportedOperationException()
+            // 镜像不支持下载
+            ArtifactoryType.IMAGE -> throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(ArtifactoryType.IMAGE.name)
+            )
         }
         return normalizedPath
     }

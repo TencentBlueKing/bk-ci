@@ -29,11 +29,13 @@ package com.tencent.devops.artifactory.util
 
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
+import com.tencent.bkrepo.repository.pojo.packages.PackageVersion
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -68,6 +70,10 @@ object RepoUtils {
 
     fun isPipelineFile(nodeInfo: QueryNodeInfo): Boolean {
         return nodeInfo.repoName == PIPELINE_REPO
+    }
+
+    fun isImageFile(nodeInfo: QueryNodeInfo): Boolean {
+        return nodeInfo.repoName == IMAGE_REPO
     }
 
     fun toFileInfo(fileInfo: NodeInfo): FileInfo {
@@ -130,6 +136,22 @@ object RepoUtils {
             ),
             meta = nodeInfo.metadata ?: mapOf()
         )
+    }
+
+    fun toFileDetail(imageName: String, packageVersionInfo: PackageVersionInfo): FileDetail {
+        with(packageVersionInfo) {
+            return FileDetail(
+                name = imageName,
+                fullName = "$imageName:${basic.version}",
+                path = basic.fullPath,
+                fullPath = basic.fullPath,
+                size = basic.size,
+                createdTime = LocalDateTime.parse(basic.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                modifiedTime = LocalDateTime.parse(basic.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                checksums = FileChecksums(basic.sha256, "", ""),
+                meta = metadata.associate { it["key"].toString() to it["value"].toString() }
+            )
+        }
     }
 
     private fun refineFullPath(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): String {
