@@ -167,7 +167,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
                     httpStatus = it.code(),
                     responseContent = responseBody,
                     errorMessage = "send wework robot message failed：" +
-                        "errMsg = ${sendMessageResp.errMsg?.substring(0, 150)}" +
+                        "errMsg = ${sendMessageResp.errMsg?.substring(0, 100)}" +
                         "|chatid = ${weworkMessage.chatid} ;",
                     errorCode = sendMessageResp.errCode
                 )
