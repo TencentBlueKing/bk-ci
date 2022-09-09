@@ -49,7 +49,7 @@ class OPRepositoryService @Autowired constructor(
             1,
             0,
             TimeUnit.SECONDS,
-            LinkedBlockingQueue(0),
+            LinkedBlockingQueue(1),
             Executors.defaultThreadFactory(),
             ThreadPoolExecutor.AbortPolicy()
         )
@@ -69,6 +69,8 @@ class OPRepositoryService @Autowired constructor(
                 } while (repoSize == 1000)
             } catch (e: Exception) {
                 logger.warn("OpRepositoryService：addHashId failed | $e ")
+            } finally {
+                threadPoolExecutor.shutdown()
             }
         }
     }

@@ -204,7 +204,7 @@ class QualityControlPointService @Autowired constructor(
             1,
             0,
             TimeUnit.SECONDS,
-            LinkedBlockingQueue(0),
+            LinkedBlockingQueue(1),
             Executors.defaultThreadFactory(),
             ThreadPoolExecutor.AbortPolicy()
         )
@@ -246,6 +246,8 @@ class QualityControlPointService @Autowired constructor(
                 } while (ruleBuildHisSize == 1000)
             } catch (e: Exception) {
                 logger.warn("QualityControlPointService：addHashId failed | $e ")
+            } finally {
+                threadPoolExecutor.shutdown()
             }
         }
     }

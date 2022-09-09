@@ -504,7 +504,7 @@ class NodeService @Autowired constructor(
             1,
             0,
             TimeUnit.SECONDS,
-            LinkedBlockingQueue(0),
+            LinkedBlockingQueue(1),
             Executors.defaultThreadFactory(),
             ThreadPoolExecutor.AbortPolicy()
         )
@@ -535,6 +535,8 @@ class NodeService @Autowired constructor(
                 } while (nodeSize == 1000)
             } catch (e: Exception) {
                 logger.warn("NodeService：addHashId failed | $e ")
+            } finally {
+                threadPoolExecutor.shutdown()
             }
         }
     }
