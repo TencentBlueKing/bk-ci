@@ -29,11 +29,17 @@ package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
+import org.slf4j.LoggerFactory
 
 /**
  * 需要各Git端统一提供的一些mr参数
  */
 interface StreamMrAction : BaseAction {
+
+    companion object {
+        val logger = LoggerFactory.getLogger(StreamMrAction::class.java)
+    }
+
     // 负责跳转的某个git下的mr的一个Id
     val mrIId: String
 
@@ -58,4 +64,32 @@ interface StreamMrAction : BaseAction {
      * 获取 mr/pr 页面上的id
      */
     fun getMrId(): Long
+
+    override fun forkMrNeedReviewers(): List<String> {
+        return if (!checkMrForkReview()) {
+            var page = 1
+            val reviewers = mutableListOf<String>()
+            while (true) {
+                val res = api.getProjectMember(
+                    cred = this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred(),
+                    gitProjectId = this.data.eventCommon.gitProjectId,
+                    page = page,
+                    pageSize = 100
+                )
+                reviewers.addAll(res.filter { it.accessLevel >= 40 }.map { it.userId })
+                if (res.size != 100) {
+                    break
+                }
+                page += 1
+            }
+            logger.warn(
+                "check mr fork review false, need review, gitProjectId: ${this.data.getGitProjectId()}|" +
+                    "eventId: ${this.data.context.requestEventId}| " +
+                    "reviewers: ${reviewers.ifEmpty { data.setting.enableUser }}"
+            )
+            if (reviewers.isEmpty()) {
+                listOf(data.setting.enableUser)
+            } else reviewers
+        } else emptyList()
+    }
 }

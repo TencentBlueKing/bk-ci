@@ -134,34 +134,6 @@ class TGitMrActionGit(
             checkProjectInWhiteList
     }
 
-    override fun forkMrNeedReviewers(): List<String> {
-        return if (!checkMrForkReview()) {
-            var page = 1
-            val reviewers = mutableListOf<String>()
-            while (true) {
-                val res = api.getProjectMember(
-                    (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()) as GithubCred,
-                    gitProjectId = this.data.eventCommon.gitProjectId,
-                    page = page,
-                    pageSize = 500
-                )
-                reviewers.addAll(res.filter { it.accessLevel >= 40 }.map { it.userId })
-                if (res.size != 500) {
-                    break
-                }
-                page += 1
-            }
-            logger.warn(
-                "check mr fork review false, need review, gitProjectId: ${this.data.getGitProjectId()}|" +
-                    "eventId: ${this.data.context.requestEventId}| " +
-                    "reviewers: ${reviewers.ifEmpty { data.setting.enableUser }}"
-            )
-            if (reviewers.isEmpty()) {
-                listOf(data.setting.enableUser)
-            } else reviewers
-        } else emptyList()
-    }
-
     override fun getMrId() = event().object_attributes.id
 
     override val api: TGitApiService

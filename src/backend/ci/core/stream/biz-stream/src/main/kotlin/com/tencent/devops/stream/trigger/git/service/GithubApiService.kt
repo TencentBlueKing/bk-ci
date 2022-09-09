@@ -159,7 +159,9 @@ class GithubApiService @Autowired constructor(
         } else {
             client.get(ServiceGithubRepositoryResource::class).listRepositoryCollaborators(
                 request = ListRepositoryCollaboratorsRequest(
-                    repoName = gitProjectId
+                    repoName = gitProjectId,
+                    page = page ?: 1,
+                    perPage = pageSize ?: 30
                 ),
                 token = cred.toToken()
             ).data?.map {
