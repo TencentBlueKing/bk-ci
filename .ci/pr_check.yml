@@ -29,7 +29,7 @@ stages:
             wget http://mirrors.tencent.com/repository/generic/public/ktlint -O ktlint
             java -jar ktlint "**/src/**/*.kt" --reporter=plain,output=report/ktlint-report.txt
         
-        - uses: ReportArctifactoryNew@1.*
+        - uses: uploadReport@1.*
           name: 归档报告
           with:
             fileDir: src/backend/ci/report
