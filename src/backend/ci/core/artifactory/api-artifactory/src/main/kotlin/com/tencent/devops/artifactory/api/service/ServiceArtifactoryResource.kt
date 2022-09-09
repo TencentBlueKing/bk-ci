@@ -27,10 +27,8 @@
 
 package com.tencent.devops.artifactory.api.service
 
-import com.tencent.devops.artifactory.pojo.ArtifactoryCreateInfo
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
-import com.tencent.devops.artifactory.pojo.DockerUser
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage

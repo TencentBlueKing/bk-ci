@@ -66,6 +66,7 @@ import com.tencent.devops.common.archive.constant.REPO_PIPELINE
 import com.tencent.devops.common.archive.constant.REPO_REPORT
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoFile
+import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.PathUtil
@@ -1023,6 +1024,20 @@ class BkRepoClient constructor(
             )
             .build()
         doRequest(request)
+    }
+
+    fun getPackageVersionInfo(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageKey: String,
+        version: String? = null,
+        metadata: Map<String, String>? = null
+    ): PackageVersionInfo {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/docker/ext/version/detail/${projectId}/${repoName}" +
+            "?packageKey=$packageKey&version=$version"
+        val request = Request.Builder().url(url).header(BK_REPO_UID, userId).get().build()
+        return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
     }
 
     private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): List<QueryNodeInfo> {
