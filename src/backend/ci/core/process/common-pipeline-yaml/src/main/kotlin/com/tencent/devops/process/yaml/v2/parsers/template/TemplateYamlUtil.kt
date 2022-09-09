@@ -122,14 +122,10 @@ object TemplateYamlUtil {
                 if (parameters != null) {
                     val valueName = param.name
 
-                    if (param.name.contains(".")) {
-                        logger.info("PARAMETERS|NAME|WARNING|${param.name}")
-                    }
-
                     val newValue = parameters[param.name]
                     if (parameters.keys.contains(valueName)) {
                         if (!param.values.isNullOrEmpty() && !param.values!!.contains(newValue)) {
-                            kotlin.error(
+                            throw error(
                                 Constants.VALUE_NOT_IN_ENUM.format(
                                     fromPath,
                                     valueName,
