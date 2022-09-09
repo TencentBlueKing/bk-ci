@@ -49,5 +49,8 @@ enum class TokenKind {
     Function,
     NamedValue,
 
+    // subNameValue特供
+    Expression,
+
     Unexpected,
 }

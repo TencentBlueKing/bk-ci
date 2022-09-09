@@ -155,7 +155,7 @@ class SendNotify @Autowired constructor(
         var realReceivers = replaceReceivers(receivers, build.buildParameters)
         // 接收人默认带触发人
         if (realReceivers.isEmpty()) {
-            realReceivers = mutableSetOf(build.userId)
+            realReceivers = mutableSetOf(action.data.eventCommon.userId)
         }
         val state = action.data.context.finishData!!.getGitCommitCheckState()
 
@@ -174,7 +174,7 @@ class SendNotify @Autowired constructor(
                     content = content,
                     ccs = ccs,
                     streamUrl = streamGitConfig.streamUrl!!,
-                    gitProjectId = action.data.eventCommon.gitProjectId
+                    gitProjectId = action.data.getGitProjectId()
                 )
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
@@ -201,7 +201,7 @@ class SendNotify @Autowired constructor(
                     gitUrl = streamGitConfig.gitUrl!!,
                     streamUrl = streamGitConfig.streamUrl!!,
                     content = content,
-                    gitProjectId = action.data.eventCommon.gitProjectId,
+                    gitProjectId = action.data.getGitProjectId(),
                     scmType = streamGitConfig.getScmType()
                 )
             }
@@ -221,14 +221,14 @@ class SendNotify @Autowired constructor(
         if (ifField.isNullOrBlank()) {
             return true
         }
-        // stage审核的状态专门判断为成功
-        val success = finishData.isSuccess()
+
         return when (ifField) {
             IfType.SUCCESS.name -> {
-                return success
+                // stage审核的状态专门判断为成功
+                return finishData.isSuccess()
             }
             IfType.FAILURE.name -> {
-                return !success
+                return finishData.getBuildStatus().isFailure()
             }
             IfType.CANCELLED.name, IfType.CANCELED.name -> {
                 return finishData.getBuildStatus().isCancel()

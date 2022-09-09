@@ -1,5 +1,5 @@
 plugins {
-	id("com.tencent.devops.boot") version "0.0.6-SNAPSHOT"
+	id("com.tencent.devops.boot") version "0.0.6"
 	id("org.owasp.dependencycheck") version "7.1.0.1"
 }
 

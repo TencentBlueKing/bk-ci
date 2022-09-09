@@ -113,7 +113,6 @@ object StreamDispatchUtils {
         val workspace = EnvUtils.parseEnv(job.runsOn.workspace, context ?: mapOf())
 
         // 第三方构建机
-        logger.info("DEBUG|STREAM|RESOURCE: $resources")
         if (job.runsOn.selfHosted == true) {
             return ThirdPartyAgentEnvDispatchType(
                 envProjectId = null,
@@ -241,22 +240,25 @@ object StreamDispatchUtils {
             encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.error(
-                "Fail to get the credential($credentialId) of project($projectId) " +
+            throw RuntimeException(
+                "Fail to get the credential($credentialId) of project($projectId), " +
                     "because of ${credentialResult.message}"
             )
-            throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 
         val credential = credentialResult.data!!
         if (type != credential.credentialType) {
-            logger.error("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
-            throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
+            throw ParamBlankException(
+                "Fail to get the credential($credentialId) of project($projectId), " +
+                    "expect:${type.name}, but real:${credential.credentialType.name}"
+            )
         }
 
         if (acrossProject && !credential.allowAcrossProject) {
-            logger.warn("project $projectId credential $credentialId not allow across project use")
-            throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
+            throw RuntimeException(
+                "Fail to get the credential($credentialId) of project($projectId), " +
+                    "not allow across project use"
+            )
         }
 
         val ticketMap = mutableMapOf<String, String>()

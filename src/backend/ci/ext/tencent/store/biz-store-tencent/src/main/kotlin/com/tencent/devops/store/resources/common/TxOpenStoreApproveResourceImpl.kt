@@ -25,22 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package job
+package com.tencent.devops.store.resources.common
 
-import (
-	"os"
-	"testing"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.TxOpenStoreApproveResource
+import com.tencent.devops.store.service.common.TxStoreMoaApproveCallBackService
+import org.springframework.beans.factory.annotation.Autowired
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-)
+@RestResource
+class TxOpenStoreApproveResourceImpl @Autowired constructor(
+    private val txStoreMoaApproveCallBackService: TxStoreMoaApproveCallBackService
+) : TxOpenStoreApproveResource {
 
-func Test_writeStartBuildAgentScript_01(t *testing.T) {
-	buildInfo := &api.ThirdPartyBuildInfo{ProjectId: "pid", BuildId: "bid", VmSeqId: "1"}
-	dir, _ := os.Getwd()
-	file, err := writeStartBuildAgentScript(buildInfo, dir)
-	if err != nil {
-		t.Error("error: ", err.Error())
-	}
-	t.Log("workDir: ", dir)
-	t.Log("fileName: ", file)
+    override fun moaApproveCallBack(
+        verifier: String,
+        result: Int,
+        taskId: String,
+        message: String,
+        token: String
+    ): Result<Boolean> {
+        return txStoreMoaApproveCallBackService.moaApproveCallBack(
+            verifier = verifier,
+            result = result,
+            taskId = taskId,
+            message = message,
+            token = token
+        )
+    }
 }

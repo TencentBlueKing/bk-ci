@@ -25,20 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package job
+package com.tencent.devops.common.expression.context
 
-import (
-	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"testing"
-	"time"
-)
+import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
+import com.tencent.devops.common.expression.expression.sdk.ExpressionNode
 
-func Test_BuildManager_01(t *testing.T) {
-	fmt.Println("start")
-	GBuildManager.AddBuild(6124, &api.ThirdPartyBuildInfo{})
-	for {
-		time.Sleep(5 * time.Second)
-		fmt.Println("instanceCount: ", GBuildManager.GetInstanceCount())
-	}
+class ExpressionValueNode(val value: String) : ExpressionNode() {
+    override val traceFullyRealized: Boolean
+        get() = false
+
+    override fun convertToExpression() = value
+
+    override fun convertToRealizedExpression(context: EvaluationContext) = value
+
+    override fun evaluateCore(context: EvaluationContext) = Pair(null, value)
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) = Pair(value, true)
 }
