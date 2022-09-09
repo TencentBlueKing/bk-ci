@@ -34,7 +34,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
@@ -368,11 +367,26 @@ class StreamYamlBaseBuild @Autowired constructor(
                     triggerReviewers = action.forkMrNeedReviewers()
                 ),
                 channelCode = channelCode,
-                startType = StartType.SERVICE
+                startType = action.getStartType()
             ).data!!
             logger.info(
                 "StreamYamlBaseBuild|startBuild|success|gitProjectId|${action.data.getGitProjectId()}|" +
                     "pipelineId|${pipeline.pipelineId}|gitBuildId|$gitBuildId|buildId|$buildId"
+            )
+        } catch (e: StreamTriggerException) {
+            errorStartBuild(
+                action = action,
+                pipeline = pipeline,
+                gitBuildId = gitBuildId,
+                ignore = Throwable(
+                    message = try {
+                        // format在遇到不可解析的问题可能会报错
+                        e.triggerReason.detail.format(e.reasonParams)
+                    } catch (ignore: Throwable) {
+                        e.triggerReason.detail
+                    }, e
+                ),
+                yamlTransferData = yamlTransferData
             )
         } catch (ignore: Throwable) {
             errorStartBuild(

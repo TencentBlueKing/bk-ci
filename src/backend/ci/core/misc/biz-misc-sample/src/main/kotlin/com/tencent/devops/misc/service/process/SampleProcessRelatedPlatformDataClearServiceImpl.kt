@@ -25,22 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package job
+package com.tencent.devops.misc.service.process
 
-import (
-	"os"
-	"testing"
+import org.springframework.stereotype.Service
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-)
-
-func Test_writeStartBuildAgentScript_01(t *testing.T) {
-	buildInfo := &api.ThirdPartyBuildInfo{ProjectId: "pid", BuildId: "bid", VmSeqId: "1"}
-	dir, _ := os.Getwd()
-	file, err := writeStartBuildAgentScript(buildInfo, dir)
-	if err != nil {
-		t.Error("error: ", err.Error())
-	}
-	t.Log("workDir: ", dir)
-	t.Log("fileName: ", file)
+@Service
+class SampleProcessRelatedPlatformDataClearServiceImpl : ProcessRelatedPlatformDataClearService {
+    override fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>) {
+        // 开源版无需额外清理数据
+    }
 }

@@ -1,6 +1,7 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
@@ -148,6 +149,8 @@ class StreamRepoTriggerAction(
             reasonParams = listOf("First level group[$firstGroupName] does not exist")
         )
     }
+
+    override fun getStartType() = StartType.WEB_HOOK
 
     /**
      * 判断是否可以注册跨项目构建事件

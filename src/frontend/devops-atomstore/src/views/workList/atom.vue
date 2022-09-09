@@ -437,7 +437,6 @@
                 switch (status) {
                     case 'COMMITTING':
                     case 'BUILDING':
-                    case 'BUILD_FAIL':
                     case 'TESTING':
                     case 'AUDITING':
                     case 'UNDERCARRIAGING':
@@ -449,6 +448,7 @@
                         break
                     case 'GROUNDING_SUSPENSION':
                     case 'CODECC_FAIL':
+                    case 'BUILD_FAIL':
                         icon = 'fail'
                         break
                     case 'AUDIT_REJECT':

@@ -189,7 +189,7 @@ class BuildStartControl @Autowired constructor(
                 message = "Illegal build #${buildInfo.buildNum} [${buildInfo.status}]",
                 buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
             )
-            return true
+            return false
         }
         val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
         try {

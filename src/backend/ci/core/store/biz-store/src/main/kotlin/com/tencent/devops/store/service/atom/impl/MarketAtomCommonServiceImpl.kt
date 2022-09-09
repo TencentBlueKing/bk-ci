@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.COMPONENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
@@ -130,6 +131,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         version: String
     ): Result<Boolean> {
         val dbVersion = atomRecord.version
+        val atomStatus = atomRecord.atomStatus
+        // 判断插件首个版本对应的请求是否合法
+        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
+            atomStatus != AtomStatusEnum.INIT.status.toByte()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
+        }
         val dbOsList = if (!atomRecord.os.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
             atomRecord.os,
             List::class.java
@@ -139,7 +146,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             if (null != dbOsList && !osList.containsAll(dbOsList)) {
                 ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE // 最近的版本处于上架中止状态，重新升级版本号不变
             } else releaseType
-        val cancelFlag = atomRecord.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
+        val cancelFlag = atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val requireVersionList =
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                 listOf(dbVersion)
@@ -174,7 +181,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
                 AtomStatusEnum.UNDERCARRIAGED.status.toByte()
             )
-            if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
+            if (!atomFinalStatusList.contains(atomStatus)) {
                 return MessageCodeUtil.generateResponseDataObject(
                     StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
                     arrayOf(atomRecord.name, atomRecord.version)

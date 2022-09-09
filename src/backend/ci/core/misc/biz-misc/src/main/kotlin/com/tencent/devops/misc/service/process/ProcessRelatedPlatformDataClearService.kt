@@ -25,20 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package job
+package com.tencent.devops.misc.service.process
 
-import (
-	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"testing"
-	"time"
-)
+interface ProcessRelatedPlatformDataClearService {
 
-func Test_BuildManager_01(t *testing.T) {
-	fmt.Println("start")
-	GBuildManager.AddBuild(6124, &api.ThirdPartyBuildInfo{})
-	for {
-		time.Sleep(5 * time.Second)
-		fmt.Println("instanceCount: ", GBuildManager.GetInstanceCount())
-	}
+    /**
+     * 清除构建相关平台数据
+     */
+    fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>)
 }
