@@ -21,5 +21,6 @@ stages:
           with:
             usernameConfig: mingshewhe
             userEmailConfig: mingshewhe@tencent.com
+            enableGitLfs: false
           
         
