@@ -156,7 +156,8 @@ object ProcessMessageCode {
     const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101106" // 构建中Stage[{0}]不存在
     const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待把关状态
     const val ERROR_CONDITION_EXPRESSION_PARSE = "2101109" // 执行条件表达式解析失败
-    const val ERROR_TRIGGER_REVIEW_ABORT = "2101110" // 执行条件表达式解析失败
+    const val ERROR_TRIGGER_REVIEW_ABORT = "2101110" // 触发审核未通过
+    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101111" // 触发不在审核状态中
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}

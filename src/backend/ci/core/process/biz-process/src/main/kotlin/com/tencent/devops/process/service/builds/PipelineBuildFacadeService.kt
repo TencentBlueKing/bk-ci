@@ -873,13 +873,21 @@ class PipelineBuildFacadeService(
                 message = "用户（$userId) 没有流水线($pipelineId)的执行权限"
             )
         }
-        pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在",
-                params = arrayOf(pipelineId)
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                defaultMessage = "构建任务${buildId}不存在",
+                params = arrayOf(buildId)
             )
+        if (!buildInfo.isTriggerReviewing()) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ProcessMessageCode.ERROR_TRIGGER_NOT_UNDER_REVIEW,
+                defaultMessage = "构建任务${buildId}不在审核状态中",
+                params = arrayOf(buildId)
+            )
+        }
         if (!pipelineRuntimeService.checkTriggerReviewer(userId, buildId, pipelineId, projectId)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
