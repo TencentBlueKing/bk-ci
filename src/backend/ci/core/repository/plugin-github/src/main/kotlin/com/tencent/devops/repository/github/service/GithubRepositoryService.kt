@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.github.service
 
+import com.tencent.devops.common.sdk.exception.SdkNotFoundException
 import com.tencent.devops.common.sdk.github.DefaultGithubClient
 import com.tencent.devops.common.sdk.github.pojo.GithubRepo
 import com.tencent.devops.common.sdk.github.pojo.GithubUser
@@ -60,11 +61,15 @@ class GithubRepositoryService @Autowired constructor(
     fun getRepositoryContent(
         request: GetRepositoryContentRequest,
         token: String
-    ): RepositoryContent {
-        return defaultGithubClient.execute(
-            request = request,
-            oauthToken = token
-        )
+    ): RepositoryContent? {
+        return try {
+            defaultGithubClient.execute(
+                request = request,
+                oauthToken = token
+            )
+        } catch (ignore: SdkNotFoundException) {
+            null
+        }
     }
 
     fun getRepositoryPermissions(
