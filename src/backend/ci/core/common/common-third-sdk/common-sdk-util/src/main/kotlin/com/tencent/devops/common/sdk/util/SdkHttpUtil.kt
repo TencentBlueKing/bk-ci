@@ -30,7 +30,9 @@ package com.tencent.devops.common.sdk.util
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.sdk.SdkRequest
 import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.sdk.enums.HttpStatus
 import com.tencent.devops.common.sdk.exception.SdkException
+import com.tencent.devops.common.sdk.exception.SdkNotFoundException
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -103,6 +105,9 @@ object SdkHttpUtil {
                     "Fail to request(${request.url()})" +
                         " with code ${resp.code()} message ${resp.message()} and response $responseContent"
                 )
+                if (resp.code() == HttpStatus.NOT_FOUND.statusCode) {
+                    throw SdkNotFoundException(errMsg = responseContent)
+                }
                 throw SdkException(errCode = resp.code(), errMsg = responseContent)
             }
             responseContent

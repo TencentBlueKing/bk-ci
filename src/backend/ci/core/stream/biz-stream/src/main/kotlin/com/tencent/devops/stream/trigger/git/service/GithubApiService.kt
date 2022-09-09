@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.git.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.sdk.exception.SdkNotFoundException
 import com.tencent.devops.common.sdk.github.request.CompareTwoCommitsRequest
 import com.tencent.devops.common.sdk.github.request.CreateCheckRunRequest
 import com.tencent.devops.common.sdk.github.request.CreateIssueCommentRequest
@@ -247,15 +248,20 @@ class GithubApiService @Autowired constructor(
             log = "$gitProjectId get $path file tree error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
         ) {
-            client.get(ServiceGithubDatabaseResource::class).getTree(
-                token = cred.toToken(),
-                request = GetTreeRequest(
-                    repoName = gitProjectId,
-                    treeSha = "${ref!!}:$path",
-                    recursive = recursive.toString()
-                )
-            )
-        }.data?.tree?.map { GithubTreeFileInfo(it) } ?: emptyList()
+            try {
+                client.get(ServiceGithubDatabaseResource::class).getTree(
+                    token = cred.toToken(),
+                    request = GetTreeRequest(
+                        repoName = gitProjectId,
+                        treeSha = "${ref!!}:$path",
+                        recursive = recursive.toString()
+                    )
+                ).data?.tree?.map { GithubTreeFileInfo(it) } ?: emptyList()
+            } catch (ignore: SdkNotFoundException) {
+                logger.warn("failed to get file tree", ignore)
+                emptyList()
+            }
+        }
     }
 
     override fun getFileContent(
