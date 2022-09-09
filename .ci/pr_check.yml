@@ -13,9 +13,6 @@ stages:
     job_1:
       name: "源代码规范性检查"
       runs-on:
-        pool-name: "docker"
-        container:
-          image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         needs:
           jdk: "1.8.0_161"
       steps:
