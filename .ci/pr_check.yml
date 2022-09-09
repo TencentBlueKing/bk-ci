@@ -26,7 +26,7 @@ stages:
         - name: "kotlin代码规范检查"
           run: |
             cd src/backend/ci
-            wget http://mirrors.tencent.com/repository/generic/public/ktlint -O ktlint
+            wget https://github.com/pinterest/ktlint/releases/download/0.29.0/ktlint -O ktlint
             java -jar ktlint "**/src/**/*.kt" --reporter=plain,output=report/ktlint-report.txt
         
         - uses: uploadReport@1.*
