@@ -160,7 +160,12 @@ class GitRequestEventDao {
                         null
                     },
                     commitAuthorName = null,
-                    gitProjectName = null
+                    gitProjectName = null,
+                    changeYamlList = try {
+                        JsonUtil.to(record.changeYamlList)
+                    } catch (ignore: Throwable) {
+                        emptyList()
+                    }
                 )
             }
         }
@@ -255,6 +260,19 @@ class GitRequestEventDao {
                 )
             }
             return result
+        }
+    }
+
+    fun updateChangeYamlList(
+        dslContext: DSLContext,
+        id: Long,
+        changeYamlList: List<String>
+    ) {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            dslContext.update(this)
+                .set(CHANGE_YAML_LIST, JsonUtil.toJson(changeYamlList, false))
+                .where(ID.eq(id))
+                .execute()
         }
     }
 

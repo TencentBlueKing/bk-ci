@@ -209,7 +209,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             val envList = mutableListOf<BuildEnv>()
                             val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
-                            fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext)
+                            fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
                             c.buildEnv?.forEach { env ->
                                 containerAppResource.getBuildEnv(
                                     name = env.key, version = env.value, os = c.baseOS.name.toLowerCase()
@@ -219,7 +219,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             // 设置Job环境变量customBuildEnv到variablesWithType和variables中
                             // TODO 此处应收敛到variablesWithType或variables的其中一个
                             c.customBuildEnv?.map { (t, u) ->
-                                val value = EnvReplacementParser.parse(u, contextMap)
+                                val value = EnvReplacementParser.parse(u, contextMap, asCodeSettings?.enable)
                                 contextMap[t] = value
                                 BuildParameters(
                                     key = t,
@@ -234,7 +234,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         is NormalContainer -> {
                             val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
-                            fillContainerContext(contextMap, null, c.matrixContext)
+                            fillContainerContext(contextMap, null, c.matrixContext, asCodeSettings?.enable)
                             Triple(mutableListOf(), contextMap, timeoutMills)
                         }
                         else -> throw OperationException("vmName($vmName) is an illegal container type: $c")
@@ -283,12 +283,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private fun fillContainerContext(
         context: MutableMap<String, String>,
         customBuildEnv: Map<String, String>?,
-        matrixContext: Map<String, String>?
+        matrixContext: Map<String, String>?,
+        asCodeEnabled: Boolean?
     ) {
         customBuildEnv?.let {
             context.putAll(
                 customBuildEnv.map {
-                    "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvReplacementParser.parse(it.value, context)
+                    "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvReplacementParser.parse(it.value, context, asCodeEnabled)
                 }.toMap()
             )
         }

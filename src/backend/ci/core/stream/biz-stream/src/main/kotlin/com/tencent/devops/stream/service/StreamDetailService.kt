@@ -140,6 +140,24 @@ class StreamDetailService @Autowired constructor(
         )
     }
 
+    fun buildTriggerReview(
+        userId: String,
+        gitProjectId: Long,
+        buildId: String,
+        approve: Boolean
+    ): Boolean {
+        val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
+        val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return false
+        return client.get(ServiceBuildResource::class).buildTriggerReview(
+            userId = userId,
+            projectId = conf.projectCode!!,
+            pipelineId = eventBuildRecord.pipelineId,
+            buildId = buildId,
+            approve = approve,
+            channelCode = channelCode
+        ).data!!
+    }
+
     fun search(
         userId: String,
         gitProjectId: Long,

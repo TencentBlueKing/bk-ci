@@ -124,21 +124,27 @@ object GitActionCommon {
             ref = ref?.let { getTriggerBranch(it) },
             recursive = true,
             retry = ApiRequestRetryInfo(true)
-        ).filter { checkStreamYamlFile(it) }
+        ).filter { (it.type == "blob") && checkStreamPipelineFile(it.name) && !checkStreamTemplateFile(it.name) }
         return ciFileList.map {
             Pair(Constansts.ciFileDirectoryName + File.separator + it.name, getBlobId(it))
         }.toList()
     }
 
-    private fun checkStreamYamlFile(gitFileInfo: StreamGitTreeFileInfo): Boolean =
+    private fun checkStreamPipelineFile(fileName: String): Boolean =
         (
-            gitFileInfo.name.endsWith(Constansts.ciFileExtensionYml) ||
-                gitFileInfo.name.endsWith(Constansts.ciFileExtensionYaml)
+            fileName.endsWith(Constansts.ciFileExtensionYml) ||
+                fileName.endsWith(Constansts.ciFileExtensionYaml)
             ) &&
-            (gitFileInfo.type == "blob") &&
-            !gitFileInfo.name.startsWith("templates/") &&
             // 加以限制：最多仅限一级子目录
-            (gitFileInfo.name.count { it == '/' } <= 1)
+            (fileName.count { it == '/' } <= 1)
+
+    private fun checkStreamTemplateFile(fileName: String): Boolean = fileName.startsWith("templates/")
+
+    fun checkStreamPipelineAndTemplateFile(fullPath: String): Boolean =
+        if (fullPath.startsWith(Constansts.ciFileDirectoryName)) {
+            val removePrefix = fullPath.removePrefix(Constansts.ciFileDirectoryName + "/")
+            checkStreamPipelineFile(removePrefix) || checkStreamTemplateFile(removePrefix)
+        } else false
 
     private fun getBlobId(f: StreamGitTreeFileInfo?): String? {
         return if (f != null && f.type == StreamGitTreeFileInfoType.BLOB.value && !f.id.isNullOrBlank()) {

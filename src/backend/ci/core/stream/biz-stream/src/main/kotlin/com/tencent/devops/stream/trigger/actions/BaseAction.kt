@@ -156,4 +156,9 @@ interface BaseAction {
         branch: String?,
         displayName: String?
     )
+    /**
+     *  fork 库触发需要审核，提供审核人
+     *  返回空表示不属于fork库触发或是有权限触发
+     */
+    fun forkMrNeedReviewers() = emptyList<String>()
 }

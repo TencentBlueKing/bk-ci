@@ -233,7 +233,7 @@ object ExpressionUtility {
         return Double.NaN
     }
 
-    private fun stringEscape(value: String): String {
+    fun stringEscape(value: String): String {
         return if (value.isBlank()) {
             ""
         } else {
