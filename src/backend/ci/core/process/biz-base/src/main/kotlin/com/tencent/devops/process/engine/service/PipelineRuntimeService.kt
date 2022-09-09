@@ -192,6 +192,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuleService: PipelineRuleService,
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineUrlBean: PipelineUrlBean,
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation
@@ -199,6 +200,8 @@ class PipelineRuntimeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
         private const val STATUS_STAGE = "stage-1"
+        private const val TAG = "startVM-0"
+        private const val JOB_ID = "0"
     }
 
     fun deletePipelineBuilds(projectId: String, pipelineId: String) {
@@ -1105,6 +1108,11 @@ class PipelineRuntimeService @Autowired constructor(
                 context = context,
                 startBuildStatus = startBuildStatus
             )
+        } else {
+            buildLogPrinter.addYellowLine(
+                buildId = buildId, message = "Waiting for the review of $triggerReviewers",
+                tag = TAG, jobId = JOB_ID, executeCount = 1
+            )
         }
         return buildId
     }
@@ -1136,6 +1144,10 @@ class PipelineRuntimeService @Autowired constructor(
                 startTime = now
             )
             val variables = buildVariableService.getAllVariable(projectId, projectId, buildId)
+            buildLogPrinter.addYellowLine(
+                buildId = buildId, message = "Approved by user($userId)",
+                tag = TAG, jobId = JOB_ID, executeCount = 1
+            )
             sendBuildStartEvent(
                 buildId = buildId,
                 pipelineId = pipelineId,
@@ -1154,31 +1166,31 @@ class PipelineRuntimeService @Autowired constructor(
     ) {
         val newBuildStatus = BuildStatus.FAILED
         logger.info("[$buildId|DISAPPROVE_BUILD|userId($userId)|pipelineId=$pipelineId")
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            val now = LocalDateTime.now()
-            pipelineBuildDao.updateStatus(
-                dslContext = transactionContext,
-                projectId = projectId,
-                buildId = buildId,
-                oldBuildStatus = BuildStatus.TRIGGER_REVIEWING,
-                newBuildStatus = newBuildStatus,
-                errorInfoList = listOf(
-                    ErrorInfo(
-                        taskId = "", taskName = "", atomCode = "",
-                        errorType = ErrorType.USER.num, errorMsg = "Rejected by $userId in trigger review.",
-                        errorCode = ProcessMessageCode.ERROR_TRIGGER_REVIEW_ABORT.toInt()
-                    )
+        val (_, allStageStatus) = pipelineBuildDetailService.buildEnd(
+            projectId = projectId,
+            buildId = buildId,
+            buildStatus = newBuildStatus,
+            errorMsg = "Rejected by $userId"
+        )
+        pipelineBuildDao.updateBuildStageStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            stageStatus = allStageStatus,
+            oldBuildStatus = BuildStatus.TRIGGER_REVIEWING,
+            newBuildStatus = newBuildStatus,
+            errorInfoList = listOf(
+                ErrorInfo(
+                    taskId = "", taskName = "", atomCode = "",
+                    errorType = ErrorType.USER.num, errorMsg = "Rejected by $userId in trigger review.",
+                    errorCode = ProcessMessageCode.ERROR_TRIGGER_REVIEW_ABORT.toInt()
                 )
             )
-            buildDetailDao.updateStatus(
-                dslContext = transactionContext,
-                projectId = projectId,
-                buildId = buildId,
-                buildStatus = newBuildStatus,
-                startTime = now
-            )
-        }
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = buildId, message = "Disapproved by user($userId)",
+            tag = TAG, jobId = JOB_ID, executeCount = 1
+        )
     }
 
     fun checkTriggerReviewer(

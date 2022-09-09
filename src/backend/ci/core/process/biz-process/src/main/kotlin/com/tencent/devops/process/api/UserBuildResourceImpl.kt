@@ -188,7 +188,11 @@ class UserBuildResourceImpl @Autowired constructor(
         }
         return Result(
             pipelineBuildFacadeService.buildTriggerReview(
-                userId, projectId, pipelineId, buildId, approve
+                userId = userId,
+                buildId = buildId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                approve = approve
             )
         )
     }
