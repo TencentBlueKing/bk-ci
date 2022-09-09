@@ -126,7 +126,6 @@ object ScriptYmlUtils {
             val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
             YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         } catch (e: Exception) {
-            logger.warn("Check yaml version failed. return null")
             null
         }
     }
@@ -141,7 +140,6 @@ object ScriptYmlUtils {
             val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
             YamlUtil.getObjectMapper().readValue(obj, YmlName::class.java)
         } catch (e: Exception) {
-            logger.warn("get yaml name failed. return null")
             null
         }
     }
@@ -156,7 +154,6 @@ object ScriptYmlUtils {
             val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
             version != null && version.version == "v2.0"
         } catch (e: Exception) {
-            logger.error("Check yaml version failed. Set default v2.0")
             true
         }
     }
@@ -174,7 +171,7 @@ object ScriptYmlUtils {
             val realValue = settingMap[matcher.group(1).trim()] ?: continue
             newValue = newValue!!.replace(matcher.group(), realValue)
         }
-        logger.info("STREAM|parseVariableValue value :$value; settingMap: $settingMap;newValue: $newValue")
+
         return newValue
     }
 
@@ -227,8 +224,6 @@ object ScriptYmlUtils {
                 val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
                     .removeSuffix("\"")
 
-                logger.info("IF|CONDITION|$condition")
-
                 // 去掉花括号
                 val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()
                 val originItems: List<Word>
@@ -236,7 +231,6 @@ object ScriptYmlUtils {
                 try {
                     originItems = Lex(baldExpress.toList().toMutableList()).getToken()
                 } catch (e: Exception) {
-                    logger.info("expression=$baldExpress|reason=Grammar Invalid: ${e.message}")
                     throw ExpressionException("expression=$baldExpress|reason=Grammar Invalid: ${e.message}")
                 }
                 // 替换变量
@@ -582,7 +576,6 @@ object ScriptYmlUtils {
 
     fun formatRepoHookTriggerOn(preTriggerOn: PreTriggerOn?, name: String?): TriggerOn? {
         if (preTriggerOn?.repoHook == null) {
-            logger.info("流水线已不存在远程触发配置，不做处理，返回null进行相关检查")
             return null
         }
 
@@ -592,7 +585,6 @@ object ScriptYmlUtils {
                 object : TypeReference<List<PreRepositoryHook>>() {}
             )
         } catch (e: MismatchedInputException) {
-            logger.error("Format triggerOn repoHook failed.", e)
             return null
         }
         repositoryHookList.find { it.name == name }?.let { repositoryHook ->
@@ -621,7 +613,6 @@ object ScriptYmlUtils {
                     PreTriggerOn::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn repoHook events failed.", e)
                 return null
             }
 
@@ -746,7 +737,6 @@ object ScriptYmlUtils {
                     NoteRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn noteRule failed.", e)
                 null
             }
         }
@@ -764,7 +754,6 @@ object ScriptYmlUtils {
                     ReviewRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn reviewRule failed.", e)
                 null
             }
         }
@@ -782,7 +771,6 @@ object ScriptYmlUtils {
                     IssueRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn issueRule failed.", e)
                 null
             }
         }
@@ -800,7 +788,6 @@ object ScriptYmlUtils {
                     DeleteRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn schedulesRule failed.", e)
                 null
             }
         }
@@ -818,7 +805,6 @@ object ScriptYmlUtils {
                     SchedulesRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn schedulesRule failed.", e)
                 null
             }
         }
@@ -851,7 +837,6 @@ object ScriptYmlUtils {
                         usersIgnore = null
                     )
                 } catch (e: Exception) {
-                    logger.error("Format triggerOn mrRule failed.", e)
                     null
                 }
             }
@@ -884,7 +869,6 @@ object ScriptYmlUtils {
                         usersIgnore = null
                     )
                 } catch (e: Exception) {
-                    logger.error("Format triggerOn tagRule failed.", e)
                     null
                 }
             }
@@ -918,7 +902,6 @@ object ScriptYmlUtils {
                         usersIgnore = null
                     )
                 } catch (e: Exception) {
-                    logger.error("Format triggerOn pushRule failed.", e)
                     null
                 }
             }
@@ -987,8 +970,7 @@ object ScriptYmlUtils {
         } catch (e: MismatchedInputException) {
             listOf(value.toString())
         } catch (e: Exception) {
-            logger.error("Format label  failed.", e)
-            listOf<String>()
+            emptyList()
         }
     }
 
