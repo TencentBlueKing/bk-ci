@@ -159,10 +159,14 @@ class WeworkRobotServiceImpl @Autowired constructor(
             )
             val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<WeworkSendMessageResp>())
             if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
+                logger.warn(
+                    "sendRobotMessage failed : chatid = ${weworkMessage.chatid} | " +
+                        "errMsg = ${sendMessageResp.errMsg}"
+                )
                 throw RemoteServiceException(
                     httpStatus = it.code(),
                     responseContent = responseBody,
-                    errorMessage = "send wework robot message failed：errMsg = ${sendMessageResp.errMsg}" +
+                    errorMessage = "send wework robot message failed：errMsg = ${sendMessageResp.errMsg?.substring(0,150)}" +
                         "|chatid = ${weworkMessage.chatid} ;",
                     errorCode = sendMessageResp.errCode
                 )
