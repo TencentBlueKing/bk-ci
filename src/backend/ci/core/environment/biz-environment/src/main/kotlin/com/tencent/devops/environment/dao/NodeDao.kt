@@ -530,7 +530,10 @@ class NodeDao {
         hashId: String
     ) {
         with(TNode.T_NODE) {
-            dslContext.update(this).set(NODE_HASH_ID, hashId).where(NODE_ID.eq(id))
+            dslContext.update(this)
+                .set(NODE_HASH_ID, hashId)
+                .where(NODE_ID.eq(id))
+                .and(NODE_HASH_ID.ne(hashId))
                 .execute()
         }
     }

@@ -221,7 +221,10 @@ class QualityRuleBuildHisDao @Autowired constructor(
         hashId: String
     ) {
         with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
-            dslContext.update(this).set(QUALITY_RULE_HIS_HASH_ID, hashId).where(ID.eq(id))
+            dslContext.update(this)
+                .set(QUALITY_RULE_HIS_HASH_ID, hashId)
+                .where(ID.eq(id))
+                .and(QUALITY_RULE_HIS_HASH_ID.ne(hashId))
                 .execute()
         }
     }

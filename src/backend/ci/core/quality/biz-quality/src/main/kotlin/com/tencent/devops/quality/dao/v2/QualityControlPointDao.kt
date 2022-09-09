@@ -261,7 +261,10 @@ class QualityControlPointDao {
         hashId: String
     ) {
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
-            dslContext.update(this).set(CONTROL_POINT_HASH_ID, hashId).where(ID.eq(id))
+            dslContext.update(this)
+                .set(CONTROL_POINT_HASH_ID, hashId)
+                .where(ID.eq(id))
+                .and(CONTROL_POINT_HASH_ID.ne(hashId))
                 .execute()
         }
     }

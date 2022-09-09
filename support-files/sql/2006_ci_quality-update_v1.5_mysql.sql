@@ -117,34 +117,6 @@ BEGIN
                         AND COLUMN_NAME = 'TASK_STEPS') THEN
         ALTER TABLE T_QUALITY_RULE_BUILD_HIS ADD COLUMN `TASK_STEPS` text COMMENT '红线指定的任务节点';
     END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_QUALITY_RULE'
-                    AND COLUMN_NAME = 'QUALITY_RULE_HASH_ID') THEN
-    ALTER TABLE `T_QUALITY_RULE`
-        ADD COLUMN `QUALITY_RULE_HASH_ID` varchar(64) DEFAULT NULL COMMENT '质量规则哈希ID';
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_QUALITY_RULE_BUILD_HIS'
-                    AND COLUMN_NAME = 'QUALITY_RULE_HIS_HASH_ID') THEN
-    ALTER TABLE `T_QUALITY_RULE_BUILD_HIS`
-        ADD COLUMN `QUALITY_RULE_HIS_HASH_ID` varchar(64) DEFAULT NULL COMMENT '质量规则构建历史哈希ID';
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_QUALITY_CONTROL_POINT'
-                    AND COLUMN_NAME = 'CONTROL_POINT_HASH_ID') THEN
-    ALTER TABLE `T_QUALITY_CONTROL_POINT`
-        ADD COLUMN `CONTROL_POINT_HASH_ID` varchar(64) DEFAULT NULL COMMENT '哈希ID';
-    END IF;
-
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -351,7 +351,10 @@ class RepositoryDao {
         hashId: String
     ) {
         with(TRepository.T_REPOSITORY) {
-            dslContext.update(this).set(REPOSITORY_HASH_ID, hashId).where(REPOSITORY_ID.eq(id))
+            dslContext.update(this)
+                .set(REPOSITORY_HASH_ID, hashId)
+                .where(REPOSITORY_ID.eq(id))
+                .and(REPOSITORY_HASH_ID.ne(hashId))
                 .execute()
         }
     }

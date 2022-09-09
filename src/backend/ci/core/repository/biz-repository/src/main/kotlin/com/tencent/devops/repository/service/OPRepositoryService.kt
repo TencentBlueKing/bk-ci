@@ -33,6 +33,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -43,7 +44,15 @@ class OPRepositoryService @Autowired constructor(
     private val dslContext: DSLContext
 ) {
     fun addHashId() {
-        val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
+        val threadPoolExecutor = ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            TimeUnit.SECONDS,
+            LinkedBlockingQueue(0),
+            Executors.defaultThreadFactory(),
+            ThreadPoolExecutor.AbortPolicy()
+        )
         threadPoolExecutor.submit {
             var offset = 0
             val limit = 1000

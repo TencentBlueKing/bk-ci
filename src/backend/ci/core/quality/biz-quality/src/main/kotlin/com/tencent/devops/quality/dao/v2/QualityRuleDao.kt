@@ -358,7 +358,10 @@ class QualityRuleDao {
         hashId: String
     ) {
         with(TQualityRule.T_QUALITY_RULE) {
-            dslContext.update(this).set(QUALITY_RULE_HASH_ID, hashId).where(ID.eq(id))
+            dslContext.update(this)
+                .set(QUALITY_RULE_HASH_ID, hashId)
+                .where(ID.eq(id))
+                .and(QUALITY_RULE_HASH_ID.ne(hashId))
                 .execute()
         }
     }
