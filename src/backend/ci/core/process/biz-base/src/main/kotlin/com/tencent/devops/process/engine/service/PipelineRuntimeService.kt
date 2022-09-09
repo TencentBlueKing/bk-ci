@@ -200,6 +200,8 @@ class PipelineRuntimeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
         private const val STATUS_STAGE = "stage-1"
+        private const val TAG = "startVM-0"
+        private const val JOB_ID = "0"
     }
 
     fun deletePipelineBuilds(projectId: String, pipelineId: String) {
@@ -1106,6 +1108,11 @@ class PipelineRuntimeService @Autowired constructor(
                 context = context,
                 startBuildStatus = startBuildStatus
             )
+        } else {
+            buildLogPrinter.addYellowLine(
+                buildId = buildId, message = "Waiting for the review of $triggerReviewers",
+                tag = TAG, jobId = JOB_ID, executeCount = 1
+            )
         }
         return buildId
     }
@@ -1137,6 +1144,10 @@ class PipelineRuntimeService @Autowired constructor(
                 startTime = now
             )
             val variables = buildVariableService.getAllVariable(projectId, projectId, buildId)
+            buildLogPrinter.addYellowLine(
+                buildId = buildId, message = "Approved by user($userId)",
+                tag = TAG, jobId = JOB_ID, executeCount = 1
+            )
             sendBuildStartEvent(
                 buildId = buildId,
                 pipelineId = pipelineId,
@@ -1175,6 +1186,10 @@ class PipelineRuntimeService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_TRIGGER_REVIEW_ABORT.toInt()
                 )
             )
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = buildId, message = "Disapproved by user($userId)",
+            tag = TAG, jobId = JOB_ID, executeCount = 1
         )
     }
 
