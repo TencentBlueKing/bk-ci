@@ -935,6 +935,9 @@ class PipelineBuildFacadeService(
             val success = if (isCancel) {
                 pipelineStageService.cancelStage(
                     userId = userId,
+                    triggerUserId = buildInfo.triggerUser,
+                    pipelineName = pipelineInfo.pipelineName,
+                    buildNum = buildInfo.buildNum,
                     buildStage = buildStage,
                     reviewRequest = reviewRequest
                 )
