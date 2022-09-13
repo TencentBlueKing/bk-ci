@@ -1371,14 +1371,17 @@ func (m *Mgr) sendFilesWithCorkSameHost(files []*corkFile) {
 
 	// add retry here
 	var result *dcSDK.BKSendFileResult
+	waitsecs := 5
 	var err error
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 4; i++ {
 		result, err = handler.ExecuteSendFile(host, req, sandbox)
 		if err == nil {
 			break
 		} else {
 			blog.Warnf("remote: failed to send cork %d files with size:%d to server:%s for the %dth times with error:%v",
 				len(files), totalsize, host.Server, i, err)
+			time.Sleep(time.Duration(waitsecs) * time.Second)
+			waitsecs = waitsecs * 2
 		}
 	}
 
