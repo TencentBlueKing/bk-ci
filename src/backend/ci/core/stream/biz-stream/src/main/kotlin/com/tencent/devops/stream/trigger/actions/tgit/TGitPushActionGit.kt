@@ -26,7 +26,6 @@
  */
 
 package com.tencent.devops.stream.trigger.actions.tgit
-
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
@@ -364,21 +363,22 @@ class TGitPushActionGit(
         )
     }
 
-    override fun updateLastBranch(
+    override fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
-        branch: String
+        branch: String?,
+        displayName: String?
     ) {
         try {
-            gitPipelineResourceDao.updatePipelineLastBranch(
+            gitPipelineResourceDao.updatePipelineLastBranchAndDisplayName(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
-                branch = branch
+                branch = branch,
+                displayName = displayName
             )
         } catch (e: Exception) {
             logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
         }
     }
-
     // 判断是否注册定时任务来看是修改还是删除
     private fun isSchedulesMatch(
         triggerOn: TriggerOn,

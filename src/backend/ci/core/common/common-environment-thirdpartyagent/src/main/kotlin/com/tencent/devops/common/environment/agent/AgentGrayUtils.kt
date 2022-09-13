@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.environment.agent
 
+import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
@@ -42,10 +44,27 @@ class AgentGrayUtils constructor(
 
         private const val CURRENT_AGENT_VERSION = "environment.thirdparty.agent.verison"
 
+        private const val CURRENT_AGENT_WINDOWS_386_JDK_VERSION = "environment.thirdparty.agent.win_386_jdk.verison"
+        private const val CURRENT_AGENT_MACOS_AMD64_JDK_VERSION = "environment.thirdparty.agent.mac_amd64_jdk.verison"
+        private const val CURRENT_AGENT_MACOS_ARM64_JDK_VERSION = "environment.thirdparty.agent.mac_arm64_jdk.verison"
+        private const val CURRENT_AGENT_LINUX_AMD64_JDK_VERSION = "environment.thirdparty.agent.linux_amd64_jdk.verison"
+        private const val CURRENT_AGENT_LINUX_ARM64_JDK_VERSION = "environment.thirdparty.agent.linux_arm64_jdk.verison"
+        private const val CURRENT_AGENT_LINUX_MIPS64_JDK_VERSION =
+            "environment.thirdparty.agent.linux_mips64_jdk.verison"
+
         private const val CAN_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:can_upgrade"
 
         private const val LOCK_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:lock_upgrade"
+
+        private const val LOCK_UPGRADE_AGENT_WORKER_SET_KEY = "environment:thirdparty:worker:lock_upgrade"
+        private const val LOCK_UPGRADE_AGENT_GO_SET_KEY = "environment:thirdparty:goagent:lock_upgrade"
+        private const val LOCK_UPGRADE_AGENT_JDK_SET_KEY = "environment:thirdparty:jdk:lock_upgrade"
+
         private const val FORCE_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:force_upgrade"
+
+        private const val FORCE_UPGRADE_AGENT_WORKER_SET_KEY = "environment:thirdparty:worker:force_upgrade"
+        private const val FORCE_UPGRADE_AGENT_GO_SET_KEY = "environment:thirdparty:goagent:force_upgrade"
+        private const val FORCE_UPGRADE_AGENT_JDK_SET_KEY = "environment:thirdparty:jdk:force_upgrade"
 
         private const val DEFAULT_GATEWAY_KEY = "environment:thirdparty:default_gateway"
         private const val DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:default_file_gateway"
@@ -55,62 +74,84 @@ class AgentGrayUtils constructor(
         private const val DEFAULT_PARALLEL_UPGRADE_COUNT = 50
     }
 
-    fun checkForceUpgrade(agentHashId: String): Boolean {
+    fun checkForceUpgrade(agentHashId: String, type: AgentUpgradeType?): Boolean {
         val agentId = HashUtil.decodeIdToLong(agentHashId)
-        return (redisOperation.getSetMembers(FORCE_UPGRADE_AGENT_SET_KEY) ?: setOf()).contains(agentId.toString())
+        return (redisOperation.getSetMembers(getForceKeyByType(type)) ?: setOf()).contains(agentId.toString())
     }
 
-    fun setForceUpgradeAgents(agentIds: List<Long>) {
+    fun setForceUpgradeAgents(agentIds: List<Long>, type: AgentUpgradeType?) {
         agentIds.forEach {
-            redisOperation.addSetValue(FORCE_UPGRADE_AGENT_SET_KEY, it.toString())
+            redisOperation.addSetValue(getForceKeyByType(type), it.toString())
         }
     }
 
-    fun unsetForceUpgradeAgents(agentIds: List<Long>) {
+    fun unsetForceUpgradeAgents(agentIds: List<Long>, type: AgentUpgradeType?) {
         agentIds.forEach {
-            redisOperation.removeSetMember(FORCE_UPGRADE_AGENT_SET_KEY, it.toString())
+            redisOperation.removeSetMember(getForceKeyByType(type), it.toString())
         }
     }
 
-    fun getAllForceUpgradeAgents(): List<Long> {
-        return (redisOperation.getSetMembers(FORCE_UPGRADE_AGENT_SET_KEY)
+    fun getAllForceUpgradeAgents(type: AgentUpgradeType?): List<Long> {
+        return (redisOperation.getSetMembers(getForceKeyByType(type))
             ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
     }
 
-    fun cleanAllForceUpgradeAgents() {
-        val allIds = redisOperation.getSetMembers(FORCE_UPGRADE_AGENT_SET_KEY) ?: return
+    fun cleanAllForceUpgradeAgents(type: AgentUpgradeType?) {
+        val allIds = redisOperation.getSetMembers(getForceKeyByType(type)) ?: return
         allIds.forEach {
-            redisOperation.removeSetMember(FORCE_UPGRADE_AGENT_SET_KEY, it)
+            redisOperation.removeSetMember(getForceKeyByType(type), it)
         }
     }
 
-    fun checkLockUpgrade(agentHashId: String): Boolean {
+    private fun getForceKeyByType(type: AgentUpgradeType?): String {
+        if (type == null) {
+            return FORCE_UPGRADE_AGENT_SET_KEY
+        }
+        return when (type) {
+            AgentUpgradeType.WORKER -> FORCE_UPGRADE_AGENT_WORKER_SET_KEY
+            AgentUpgradeType.GO_AGENT -> FORCE_UPGRADE_AGENT_GO_SET_KEY
+            AgentUpgradeType.JDK -> FORCE_UPGRADE_AGENT_JDK_SET_KEY
+        }
+    }
+
+    fun checkLockUpgrade(agentHashId: String, type: AgentUpgradeType?): Boolean {
         val agentId = HashUtil.decodeIdToLong(agentHashId)
-        return (redisOperation.getSetMembers(LOCK_UPGRADE_AGENT_SET_KEY)
+        return (redisOperation.getSetMembers(getLockKeyByType(type))
             ?: setOf()).filter { it.isNotBlank() }.contains(agentId.toString())
     }
 
-    fun setLockUpgradeAgents(agentIds: List<Long>) {
+    fun setLockUpgradeAgents(agentIds: List<Long>, type: AgentUpgradeType?) {
         agentIds.forEach {
-            redisOperation.addSetValue(LOCK_UPGRADE_AGENT_SET_KEY, it.toString())
+            redisOperation.addSetValue(getLockKeyByType(type), it.toString())
         }
     }
 
-    fun unsetLockUpgradeAgents(agentIds: List<Long>) {
+    fun unsetLockUpgradeAgents(agentIds: List<Long>, type: AgentUpgradeType?) {
         agentIds.forEach {
-            redisOperation.removeSetMember(LOCK_UPGRADE_AGENT_SET_KEY, it.toString())
+            redisOperation.removeSetMember(getLockKeyByType(type), it.toString())
         }
     }
 
-    fun getAllLockUpgradeAgents(): List<Long> {
-        return (redisOperation.getSetMembers(LOCK_UPGRADE_AGENT_SET_KEY)
+    fun getAllLockUpgradeAgents(type: AgentUpgradeType?): List<Long> {
+        return (redisOperation.getSetMembers(getLockKeyByType(type))
             ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
     }
 
-    fun cleanAllLockUpgradeAgents() {
-        val allIds = redisOperation.getSetMembers(LOCK_UPGRADE_AGENT_SET_KEY) ?: return
+    fun cleanAllLockUpgradeAgents(type: AgentUpgradeType?) {
+        val allIds = redisOperation.getSetMembers(getLockKeyByType(type)) ?: return
         allIds.forEach {
-            redisOperation.removeSetMember(LOCK_UPGRADE_AGENT_SET_KEY, it)
+            redisOperation.removeSetMember(getLockKeyByType(type), it)
+        }
+    }
+
+    private fun getLockKeyByType(type: AgentUpgradeType?): String {
+        if (type == null) {
+            return LOCK_UPGRADE_AGENT_SET_KEY
+        }
+        return when (type) {
+            AgentUpgradeType.WORKER -> LOCK_UPGRADE_AGENT_WORKER_SET_KEY
+            AgentUpgradeType.GO_AGENT -> LOCK_UPGRADE_AGENT_GO_SET_KEY
+            AgentUpgradeType.JDK -> LOCK_UPGRADE_AGENT_JDK_SET_KEY
         }
     }
 
@@ -146,25 +187,40 @@ class AgentGrayUtils constructor(
         }
     }
 
+    private fun getCanUpgradeAgentSetKey(): String {
+        return CAN_UPGRADE_AGENT_SET_KEY
+    }
+
     fun getCanUpgradeAgents(): List<Long> {
-        return (
-            redisOperation.getSetMembers(
-                key = getCanUpgradeAgentSetKey(),
-                isDistinguishCluster = true
-            )
-                ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
+        return (redisOperation.getSetMembers(
+            key = getCanUpgradeAgentSetKey(),
+            isDistinguishCluster = true
+        ) ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
     }
 
     fun getAgentMasterVersionKey(): String {
         return CURRENT_AGENT_MASTER_VERSION
     }
 
-    private fun getCanUpgradeAgentSetKey(): String {
-        return CAN_UPGRADE_AGENT_SET_KEY
-    }
-
     fun getAgentVersionKey(): String {
         return CURRENT_AGENT_VERSION
+    }
+
+    fun getJdkVersionKey(os: OS, arch: AgentArchType): String {
+        return when (os) {
+            OS.WINDOWS -> CURRENT_AGENT_WINDOWS_386_JDK_VERSION
+            OS.MACOS -> if (arch == AgentArchType.ARM64) {
+                CURRENT_AGENT_MACOS_ARM64_JDK_VERSION
+            } else {
+                CURRENT_AGENT_MACOS_AMD64_JDK_VERSION
+            }
+
+            OS.LINUX -> when (arch) {
+                AgentArchType.ARM64 -> CURRENT_AGENT_LINUX_ARM64_JDK_VERSION
+                AgentArchType.MIPS64 -> CURRENT_AGENT_LINUX_MIPS64_JDK_VERSION
+                AgentArchType.AMD64 -> CURRENT_AGENT_LINUX_AMD64_JDK_VERSION
+            }
+        }
     }
 
     fun getDefaultGateway(): String? {

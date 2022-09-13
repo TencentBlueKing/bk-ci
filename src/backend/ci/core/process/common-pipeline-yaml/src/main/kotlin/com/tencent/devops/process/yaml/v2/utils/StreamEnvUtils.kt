@@ -32,8 +32,8 @@ import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 object StreamEnvUtils {
     fun checkEnv(env: Map<String, Any?>?, fileName: String? = null): Boolean {
         if (env != null) {
-            if (env.size > 20) {
-                throw YamlFormatException("${fileName ?: ""}配置Env数量超过20限制!")
+            if (env.size > 100) {
+                throw YamlFormatException("${fileName ?: ""}配置Env数量超过100限制!")
             }
 
             env.forEach { (t, u) ->

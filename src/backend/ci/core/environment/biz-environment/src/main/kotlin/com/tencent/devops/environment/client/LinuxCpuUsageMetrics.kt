@@ -44,6 +44,18 @@ class LinuxCpuUsageMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
         private const val usage_iowait_idx = 1
         private const val usage_user_idx = 2
         private const val usage_system_idx = 3
+
+        private const val k_usage_idle = "usage_idle"
+        private const val k_usage_iowait = "usage_iowait"
+        private const val k_usage_user = "usage_user"
+        private const val k_usage_system = "usage_system"
+
+        private val emptyCpuMetrics = mapOf(
+            k_usage_idle to UsageMetrics.emptyMetrics,
+            k_usage_iowait to UsageMetrics.emptyMetrics,
+            k_usage_user to UsageMetrics.emptyMetrics,
+            k_usage_system to UsageMetrics.emptyMetrics
+        )
     }
 
     @PostConstruct
@@ -54,22 +66,20 @@ class LinuxCpuUsageMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
     override fun loadQuery(agentHashId: String, timeRange: String): Map<String, List<Map<String, Any>>> {
         val timePart = getTimePart(timeRange)
         val queryStr =
-            "SELECT mean(\"usage_idle\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
+            "SELECT mean(\"$k_usage_idle\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
                 " AND $timePart fill(null); " +
-                "SELECT mean(\"usage_iowait\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                "SELECT mean(\"$k_usage_iowait\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
                 "AND $timePart fill(null); " +
-                "SELECT mean(\"usage_user\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                "SELECT mean(\"$k_usage_user\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
                 "AND $timePart fill(null); " +
-                "SELECT mean(\"usage_system\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
+                "SELECT mean(\"$k_usage_system\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
                 " AND $timePart fill(null)"
 
-        val queryResult = influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB))
-            ?: return mapOf(
-                "usage_idle" to UsageMetrics.emptyMetrics,
-                "usage_iowait" to UsageMetrics.emptyMetrics,
-                "usage_user" to UsageMetrics.emptyMetrics,
-                "usage_system" to UsageMetrics.emptyMetrics
-            )
+        val queryResult = try {
+            influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyCpuMetrics
+        } catch (ignore: Exception) {
+            return emptyCpuMetrics
+        }
 
         if (queryResult.hasError()) {
             throw ErrorCodeException(
@@ -79,10 +89,10 @@ class LinuxCpuUsageMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
-        resultData["usage_idle"] = loadSerialData(queryResult.results[usage_idle_idx], "usage_idle")
-        resultData["usage_iowait"] = loadSerialData(queryResult.results[usage_iowait_idx], "usage_iowait")
-        resultData["usage_user"] = loadSerialData(queryResult.results[usage_user_idx], "usage_user")
-        resultData["usage_system"] = loadSerialData(queryResult.results[usage_system_idx], "usage_system")
+        resultData[k_usage_idle] = loadSerialData(queryResult.results[usage_idle_idx], k_usage_idle)
+        resultData[k_usage_iowait] = loadSerialData(queryResult.results[usage_iowait_idx], k_usage_iowait)
+        resultData[k_usage_user] = loadSerialData(queryResult.results[usage_user_idx], k_usage_user)
+        resultData[k_usage_system] = loadSerialData(queryResult.results[usage_system_idx], k_usage_system)
         return resultData
     }
 }

@@ -8,11 +8,11 @@ set service_name=devops_agent_%agent_id%
 
 echo work_dir %work_dir%
 
-IF EXIST jre (
-    echo "jre already exists, skip unzip"
+IF EXIST jdk (
+    echo "jdk already exists, skip unzip"
 ) else (
-    echo "unzip jre"
-    Call :UnZipFile "%~dp0jre\" "%~dp0jre.zip"
+    echo "unzip jdk"
+    Call :UnZipFile "%~dp0jdk\" "%~dp0jre.zip"
 )
 
 mkdir logs

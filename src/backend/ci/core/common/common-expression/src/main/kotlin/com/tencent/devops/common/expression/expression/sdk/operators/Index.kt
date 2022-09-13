@@ -107,34 +107,33 @@ class Index : Container() {
 
     // 对于索引的部分计算，如果最左的参数是已有的nameValued就进行计算，不存在的nameValue为空
     // 如果最左参数不是，就拼接回原本的表达式
-    override fun subNameValueEvaluateCore(context: EvaluationContext): Any? {
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
         var left = parameters[0]
         while (left is Index) {
             left = left.parameters[0]
         }
 
         if (left !is ContextValueNode) {
-            return if (parameters[1] is Literal &&
-                (parameters[1] as Literal).value is String &&
+            val leftV = parameters[0].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+            val value = if (parameters[1] is Literal && (parameters[1] as Literal).value is String &&
                 ExpressionUtility.isLegalKeyword((parameters[1] as Literal).value as String)
             ) {
-                "${parameters[0].subNameValueEvaluate(context)}.${(parameters[1] as Literal).value as String}"
+                "$leftV.${(parameters[1] as Literal).value as String}"
             } else {
-                "${parameters[0].subNameValueEvaluate(context)}[${parameters[1].subNameValueEvaluate(context)}]"
+                val rightV = parameters[1].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+                "$leftV[$rightV]"
             }
+            return Pair(value, false)
         }
 
         if ((context.state as ExecutionContext).expressionValues[left.name] == null) {
-            return convertToExpression()
+            return Pair(convertToExpression(), false)
         }
 
         val result = evaluate(context).value
 
-        return if (result is String) {
-            "'$result'"
-        } else {
-            result
-        }
+        // 对于表达式出来的替换不带有''
+        return Pair(result, true)
     }
 
     private fun handleFilteredArray(

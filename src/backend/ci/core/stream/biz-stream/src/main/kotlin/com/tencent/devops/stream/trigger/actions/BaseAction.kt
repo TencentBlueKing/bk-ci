@@ -1,5 +1,6 @@
 package com.tencent.devops.stream.trigger.actions
 
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
@@ -144,8 +145,14 @@ interface BaseAction {
 
     fun needAddWebhookParams() = false
 
-    fun updateLastBranch(
+    fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
-        branch: String
+        branch: String?,
+        displayName: String?
     )
+
+    /**
+     * 启动类型
+     */
+    fun getStartType(): StartType
 }

@@ -27,11 +27,12 @@
 
 package com.tencent.devops.common.expression.expression.tokens
 
+import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
 import com.tencent.devops.common.expression.expression.ExpressionConstants
 import com.tencent.devops.common.expression.expression.sdk.ExpressionUtility
 
 @Suppress("ComplexCondition", "ComplexMethod", "LongMethod")
-class LexicalAnalyzer(private val expression: String) {
+class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateInfo: SubNameValueEvaluateInfo? = null) {
     private val mUnclosedTokens = ArrayDeque<Token?>()
     val unclosedTokens: Iterable<Token?>
         get() = mUnclosedTokens
@@ -94,6 +95,7 @@ class LexicalAnalyzer(private val expression: String) {
             ExpressionConstants.WILDCARD -> {
                 rToken = createToken(TokenKind.Wildcard, c, mIndex++)
             }
+
             '\'' -> {
                 rToken = readStringToken()
             }
@@ -101,6 +103,7 @@ class LexicalAnalyzer(private val expression: String) {
             '!', '>', '<', '=', '&', '|' -> {
                 rToken = readOperator()
             }
+
             else -> {
                 if (c == '.') {
                     // Number
@@ -120,6 +123,9 @@ class LexicalAnalyzer(private val expression: String) {
                     }
                 } else if (c == '-' || c == '+' || (c in '0'..'9')) {
                     rToken = readNumberToken()
+                } else if (c == '$' && subNameValueEvaluateInfo?.enableSubNameValueEvaluate == true) {
+                    // 针对部分替换提供"$"
+                    rToken = readSubValueExpressionToken()
                 } else {
                     rToken = readKeywordToken()
                 }
@@ -219,8 +225,44 @@ class LexicalAnalyzer(private val expression: String) {
         val length = mIndex - startIndex
         val rawValue = expression.substring(startIndex, startIndex + length)
         if (closed) {
-            val t = createToken(TokenKind.String, rawValue, startIndex, str.toString())
-            return t
+            return createToken(TokenKind.String, rawValue, startIndex, str.toString())
+        }
+
+        return createToken(TokenKind.Unexpected, rawValue, startIndex)
+    }
+
+    /**
+     * 针对subNameValue部分替换提供
+     * 用于支持在表达式中支持部分替换为另一个表达式如 ${{ ${{ }}  }}
+     */
+    private fun readSubValueExpressionToken(): Token {
+        val startIndex = mIndex
+        var c: Char
+        var closed = false
+        val str = StringBuilder()
+        mIndex++ // Skip the leading single-quote.
+        while (mIndex < expression.length) {
+            // 校验${{
+            if ((mIndex == startIndex + 1 && expression[mIndex] != '{') ||
+                (mIndex == startIndex + 2 && expression[mIndex] != '{')
+            ) {
+                return createToken(TokenKind.Unexpected, expression.substring(startIndex, mIndex), startIndex)
+            }
+
+            c = expression[mIndex++]
+
+            str.append(c)
+
+            if (str.endsWith("}}")) {
+                closed = true
+                break
+            }
+        }
+
+        val length = mIndex - startIndex
+        val rawValue = expression.substring(startIndex, startIndex + length)
+        if (closed) {
+            return createToken(TokenKind.Expression, rawValue, startIndex, str.toString())
         }
 
         return createToken(TokenKind.Unexpected, rawValue, startIndex)
@@ -411,6 +453,7 @@ class LexicalAnalyzer(private val expression: String) {
                             TokenKind.LogicalOperator
                         )
                     }
+
                     else -> {
                         // Follows ")", "]", "*", a literal, a property name, or a named-value
                         legal = checkLastToken(
@@ -428,6 +471,7 @@ class LexicalAnalyzer(private val expression: String) {
                     }
                 }
             }
+
             TokenKind.Null, TokenKind.Boolean, TokenKind.Number, TokenKind.String -> {
                 // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
                 legal = checkLastToken(
@@ -439,10 +483,17 @@ class LexicalAnalyzer(private val expression: String) {
                     TokenKind.LogicalOperator
                 )
             }
+
+            // 针对subNameValue特供，在expression后都是合法的
+            TokenKind.Expression -> {
+                legal = true
+            }
+
             TokenKind.PropertyName -> {
                 // Follows "."
                 legal = checkLastToken(TokenKind.Dereference)
             }
+
             TokenKind.Function -> {
                 // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
                 legal = checkLastToken(
@@ -454,6 +505,7 @@ class LexicalAnalyzer(private val expression: String) {
                     TokenKind.LogicalOperator
                 )
             }
+
             TokenKind.NamedValue -> {
                 // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
                 legal = checkLastToken(
@@ -522,10 +574,16 @@ class LexicalAnalyzer(private val expression: String) {
     }
 
     /**
-     * 检查 lastToken kind 是否在允许种类的数组中。
+     * 检查上一个 lastToken kind 是否在允许种类的数组中。
      */
     private fun checkLastToken(vararg allowed: TokenKind?): Boolean {
         val lastKind = mLastToken?.kind
+
+        // 针对subNameValue特供，表达式token可以插入到任何地方
+        if (lastKind == TokenKind.Expression) {
+            return true
+        }
+
         allowed.forEach { kind ->
             if (kind == lastKind) {
                 return true
@@ -551,6 +609,7 @@ class LexicalAnalyzer(private val expression: String) {
                 '&', // "&&"
                 '|' // "||"
                 -> return true
+
                 else -> return c.isWhitespace()
             }
         }

@@ -74,4 +74,17 @@ class CustomScheduleJobService @Autowired constructor(
         }
         return true
     }
+
+    /**
+     * 触发job立即执行
+     */
+    fun trigger(jobName: String): String? {
+        return try {
+            val jobKey = JobKey.jobKey(jobName, jobGroup)
+            scheduler.triggerJob(jobKey)
+            "trigger job [] successfully"
+        } catch (e: Exception) {
+            e.message
+        }
+    }
 }
