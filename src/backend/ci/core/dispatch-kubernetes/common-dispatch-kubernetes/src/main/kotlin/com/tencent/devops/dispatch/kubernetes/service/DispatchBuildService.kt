@@ -98,7 +98,10 @@ class DispatchBuildService @Autowired constructor(
         logger.info("On start up - ($dispatchMessage)")
 
         val dockerRoutingType = DockerRoutingType.valueOf(dispatchMessage.dockerRoutingType!!)
-        logsPrinter.printLogs(dispatchMessage, containerServiceFactory.load(dispatchMessage.projectId).log.readyStartLog)
+        logsPrinter.printLogs(
+            dispatchMessage = dispatchMessage,
+            message = containerServiceFactory.load(dispatchMessage.projectId).log.readyStartLog
+        )
 
         val buildBuilderPoolNo = builderPoolNoDao.getBaseBuildLastPoolNo(
             dslContext = dslContext,
@@ -144,7 +147,12 @@ class DispatchBuildService @Autowired constructor(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create new " +
                         "builder, poolNo: $poolNo"
                 )
-                dispatchMessage.createAndStartNewBuilder(dockerRoutingType, containerPool, poolNo, dispatchMessage.projectId)
+                dispatchMessage.createAndStartNewBuilder(
+                    dockerRoutingType = dockerRoutingType,
+                    containerPool = containerPool,
+                    poolNo = poolNo,
+                    projectId = dispatchMessage.projectId
+                )
             } else {
                 logger.info(
                     "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} start idle " +
@@ -387,7 +395,8 @@ class DispatchBuildService @Autowired constructor(
             "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start builder, " +
                 "taskId:($taskId)"
         )
-        logsPrinter.printLogs(this, "下发启动构建机请求成功，builderName: $builderName 等待机器启动...")
+        logsPrinter.printLogs(this, "下发启动构建机请求成功，" +
+            "builderName: $builderName 等待机器启动...")
         builderPoolNoDao.setBaseBuildLastBuilder(
             dslContext = dslContext,
             dispatchType = dockerRoutingType.name,
