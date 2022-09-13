@@ -30,8 +30,10 @@ package com.tencent.devops.common.sdk.github
 
 import com.tencent.devops.common.sdk.github.request.GetPullRequestRequest
 import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
+@Disabled
 class GithubPRTest : GithubApiTest() {
 
     @Test
