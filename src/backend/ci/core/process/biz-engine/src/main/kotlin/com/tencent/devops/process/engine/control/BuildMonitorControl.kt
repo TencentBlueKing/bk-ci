@@ -314,7 +314,7 @@ class BuildMonitorControl @Autowired constructor(
                     reviewRequest = StageReviewRequest(
                         reviewParams = listOf(),
                         id = pauseCheck.groupToReview()?.id,
-                        suggest = null
+                        suggest = "TIMEOUT"
                     ),
                     timeout = true
                 )

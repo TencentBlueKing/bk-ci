@@ -422,7 +422,9 @@ class PipelineStageService @Autowired constructor(
                         "projectName" to "need to add in notifyListener",
                         "pipelineName" to (pipelineName ?: pipelineId),
                         "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
-                        "reviewDesc" to (checkIn?.reviewDesc ?: "")
+                        "reviewDesc" to (checkIn?.reviewDesc ?: ""),
+                        "suggest" to (reviewRequest?.suggest ?: ""),
+                        "rejectUserId" to userId
                     ),
                     position = ControlPointPosition.BEFORE_POSITION,
                     stageId = stageId
