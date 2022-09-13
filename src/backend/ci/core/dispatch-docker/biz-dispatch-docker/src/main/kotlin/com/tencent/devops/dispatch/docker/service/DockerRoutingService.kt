@@ -27,32 +27,22 @@
 
 package com.tencent.devops.dispatch.docker.service
 
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.DOCKER_ROUTING_KEY_PREFIX
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.docker.common.Constants
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class DockerRoutingService constructor(
     private val redisOperation: RedisOperation
 ) {
-    // 默认docker构建集群调度
-    @Value("\${dispatch.defaultDockerRoutingType:VM}")
-    val defaultDockerRoutingType: String? = DockerRoutingType.VM.name
-
     fun addDockerRoutingType(userId: String, projectId: String, dockerRoutingType: DockerRoutingType): Boolean {
-        redisOperation.hset(Constants.DOCKER_ROUTING_KEY_PREFIX, projectId, dockerRoutingType.name)
+        redisOperation.hset(DOCKER_ROUTING_KEY_PREFIX, projectId, dockerRoutingType.name)
         return true
     }
 
     fun deleteDockerRoutingType(userId: String, projectId: String): Boolean {
-        redisOperation.hdelete(Constants.DOCKER_ROUTING_KEY_PREFIX, projectId)
+        redisOperation.hdelete(DOCKER_ROUTING_KEY_PREFIX, projectId)
         return true
-    }
-
-    fun getDockerRoutingType(projectId: String): DockerRoutingType {
-        val routingTypeStr = redisOperation.hget(Constants.DOCKER_ROUTING_KEY_PREFIX, projectId)
-        return DockerRoutingType.valueOf(routingTypeStr ?: defaultDockerRoutingType!!)
     }
 }

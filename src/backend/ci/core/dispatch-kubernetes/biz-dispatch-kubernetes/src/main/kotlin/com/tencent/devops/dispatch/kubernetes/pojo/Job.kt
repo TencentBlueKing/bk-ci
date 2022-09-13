@@ -27,29 +27,63 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 /**
  * 创建job需要的类型
  * @param name job名称
  * @param image 镜像（镜像名:版本)
  * @param registry 镜像仓库信息
- * @param cpu 构建机cpu核数
- * @param memory 构建机内存大小， 256的倍数，比如512M， 1024M， 以M为单位
- * @param disk 构建机磁盘大小，10的倍数，比如50G，60G，以G为单位
+ * @param resource kubernetes 需要的资源
  * @param env 构建机环境变量
  * @param command 构建机启动命令
+ * @param podNameSelector 节点选择调度配置
+ * @param activeDeadlineSeconds 当前Job最长存活时间
+ * @param nfs Nfs相关配置
  */
 data class Job(
     val name: String,
     val image: String,
-    val registry: DockerRegistry,
-    val cpu: Double,
-    val memory: Int,
-    val disk: Int,
+    val registry: KubernetesDockerRegistry?,
+    val resource: KubernetesResource,
     val env: Map<String, String>?,
     val command: List<String>?,
-    val podNameSelector: String,
+    val podNameSelector: PodNameSelector?,
     val activeDeadlineSeconds: Int? = 4800,
     val nfs: List<NfsConfig>? = null
+)
+
+/**
+ * 节点名称选择相关配置
+ * @param selector podName
+ * @param usePodData 是否和当前节点共享数据盘
+ */
+data class PodNameSelector(
+    val selector: String,
+    val usePodData: Boolean?
+)
+
+/**
+ * 构建并推送镜像Job相关配置，因为本质是个Job所以放在一起
+ */
+data class BuildAndPushImage(
+    val name: String,
+    val resource: KubernetesResource,
+    val podNameSelector: PodNameSelector,
+    val activeDeadlineSeconds: Int? = 4800,
+    val info: BuildAndPushImageInfo
+)
+
+/**
+ * 需要被构建并推送的镜像 相关信息
+ * @param dockerFilePath dockerfile路径
+ * @param contextPath 存放需要构建镜像的代码的上下文
+ * @param destinations 推送镜像完整目标包含仓库地址和tag，例如 xxxx/xxx-hub:v1
+ * @param buildArgs 构建参数
+ * @param registries 推送镜像需要的凭据
+ */
+data class BuildAndPushImageInfo(
+    val dockerFilePath: String,
+    val contextPath: String,
+    val destinations: List<String>,
+    val buildArgs: Map<String, String>,
+    val registries: List<KubernetesDockerRegistry>
 )

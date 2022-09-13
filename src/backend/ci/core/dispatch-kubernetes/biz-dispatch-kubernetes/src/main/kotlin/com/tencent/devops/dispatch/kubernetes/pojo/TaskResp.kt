@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.kubernetes.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * 创建task类的接口返回

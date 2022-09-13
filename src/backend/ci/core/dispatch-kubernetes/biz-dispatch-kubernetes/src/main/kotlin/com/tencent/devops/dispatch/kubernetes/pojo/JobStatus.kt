@@ -28,7 +28,7 @@
 package com.tencent.devops.dispatch.kubernetes.pojo
 
 /**
- * Bcs job 状态信息
+ * job 状态信息
  */
 data class JobStatus(
     val state: String,
@@ -40,14 +40,15 @@ enum class JobStatusEnum(val realName: String, val message: String) {
     PENDING("pending", "job正在创建"),
     RUNNING("running", "job正在运行"),
     FAILED("failed", "job失败"),
-    SUCCEEDED("succeeded", "job成功");
+    SUCCEEDED("succeeded", "job成功"),
+    UNKNOWN("unknown", "状态位置");
 
     companion object {
-        fun realNameOf(realName: String?): TaskStatusEnum? {
+        fun realNameOf(realName: String?): JobStatusEnum? {
             if (realName.isNullOrBlank()) {
                 return null
             }
-            return TaskStatusEnum.values().firstOrNull { it.realName == realName }
+            return JobStatusEnum.values().firstOrNull { it.realName == realName }
         }
     }
 }
@@ -55,3 +56,5 @@ enum class JobStatusEnum(val realName: String, val message: String) {
 fun JobStatusEnum.isRunning() = this == JobStatusEnum.RUNNING || this == JobStatusEnum.PENDING
 
 fun JobStatusEnum.isSucceeded() = this == JobStatusEnum.SUCCEEDED
+
+fun JobStatusEnum.isFailed() = this == JobStatusEnum.FAILED || this == JobStatusEnum.UNKNOWN

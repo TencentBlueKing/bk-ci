@@ -25,27 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.utils
+package com.tencent.devops.common.dispatch.sdk.service
 
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.DOCKER_ROUTING_KEY_PREFIX
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.springframework.beans.factory.annotation.Value
 
-@Component
-class JobRedisUtils @Autowired constructor(
+class DockerRoutingSdkService constructor(
     private val redisOperation: RedisOperation
 ) {
-    fun setJobCount(dispatchType: DockerRoutingType, buildId: String, builderName: String) {
-        redisOperation.increment("${dispatchType.name}:$buildId-$builderName", 1)
-    }
+    // 默认docker构建集群调度
+    @Value("\${dispatch.defaultDockerRoutingType:VM}")
+    val defaultDockerRoutingType: String? = DockerRoutingType.VM.name
 
-    fun getJobCount(dispatchType: DockerRoutingType, buildId: String, builderName: String): Int {
-        val jobCount = redisOperation.get("${dispatchType.name}:$buildId-$builderName")
-        return jobCount?.toInt() ?: 0
-    }
-
-    fun deleteJobCount(dispatchType: DockerRoutingType, buildId: String, builderName: String) {
-        redisOperation.delete("${dispatchType.name}:$buildId-$builderName")
+    fun getDockerRoutingType(projectId: String): DockerRoutingType {
+        val routingTypeStr = redisOperation.hget(DOCKER_ROUTING_KEY_PREFIX, projectId)
+        return DockerRoutingType.valueOf(routingTypeStr ?: defaultDockerRoutingType!!)
     }
 }

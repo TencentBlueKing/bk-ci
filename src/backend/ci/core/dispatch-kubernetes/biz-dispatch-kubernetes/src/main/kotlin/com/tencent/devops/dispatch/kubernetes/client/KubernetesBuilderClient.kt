@@ -30,7 +30,6 @@ package com.tencent.devops.dispatch.kubernetes.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
@@ -39,7 +38,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
 import com.tencent.devops.dispatch.kubernetes.pojo.OperateBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StartBuilderParams
@@ -127,22 +125,25 @@ class KubernetesBuilderClient @Autowired constructor(
         val (request, action) = when (param) {
             is DeleteBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, url)
-                    .delete(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+                    .delete(RequestBody.create(null, ""))
                     .build(),
-                "delete"
+                ""
             )
+
             is StopBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, "$url/stop")
-                    .post(RequestBody.create(null, ""))
+                    .put(RequestBody.create(null, ""))
                     .build(),
                 "stop"
             )
+
             is StartBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, "$url/start")
-                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+                    .put(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
                     .build(),
                 "start"
             )
+
             else -> return ""
         }
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
@@ -188,10 +189,10 @@ class KubernetesBuilderClient @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         userId: String,
-        bcsBuilder: Builder
+        builder: Builder
     ): String {
         val url = "/api/builders"
-        val body = ObjectMapper().writeValueAsString(bcsBuilder)
+        val body = ObjectMapper().writeValueAsString(builder)
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         logger.info("[$buildId]|[$vmSeqId] request body: $body")
         val request = clientCommon.baseRequest(userId, url)
@@ -251,7 +252,7 @@ class KubernetesBuilderClient @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("dev cloud container start timeout")
-                return KubernetesBuilderStatusEnum.ERROR
+                return KubernetesBuilderStatusEnum.FAILED
             }
             Thread.sleep(1 * 1000)
 
@@ -272,8 +273,9 @@ class KubernetesBuilderClient @Autowired constructor(
                 !isFinish -> continue@loop
                 !success -> {
                     logger.error("execute job failed, msg: $statusResponse")
-                    KubernetesBuilderStatusEnum.ERROR
+                    KubernetesBuilderStatusEnum.FAILED
                 }
+
                 else -> KubernetesBuilderStatusEnum.RUNNING
             }
         }
@@ -305,12 +307,12 @@ class KubernetesBuilderClient @Autowired constructor(
                         "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code()}"
                     )
                 }
-                val bcsResult: KubernetesResult<String> = objectMapper.readValue(responseContent)
-                if (bcsResult.isNotOk()) {
-                    throw RuntimeException(bcsResult.message)
+                val result: KubernetesResult<String> = objectMapper.readValue(responseContent)
+                if (result.isNotOk()) {
+                    throw RuntimeException(result.message)
                 }
 
-                return bcsResult
+                return result
             }
         } catch (e: Exception) {
             logger.error("[$projectId]|[$pipelineId] builderName: $builderName getWebsocketUrl failed.", e)
@@ -321,12 +323,5 @@ class KubernetesBuilderClient @Autowired constructor(
                 errorMessage = "获取登录调试链接接口超时, url: $url, ${e.message}"
             )
         }
-    }
-
-    fun buildAndPushImage(
-        userId: String,
-        buildImageReq: DispatchBuildImageReq
-    ): String {
-        return ""
     }
 }

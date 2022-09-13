@@ -34,7 +34,7 @@ enum class TaskStatusEnum(val realName: String, val message: String) {
     SUCCEEDED("succeeded", "任务执行成功"),
     UNKNOWN("unknown", "未知状态"),
 
-    // 下面的为自定义状态，非bcs返回
+    // 下面的为自定义状态，非返回
     TIME_OUT("time_out", "超时");
 
     companion object {

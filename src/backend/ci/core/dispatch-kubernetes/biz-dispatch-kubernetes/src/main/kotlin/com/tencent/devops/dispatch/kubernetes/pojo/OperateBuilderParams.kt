@@ -27,14 +27,9 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 interface OperateBuilderParams
 
-class DeleteBuilderParams(
-    @JsonProperty("ProjectID")
-    val projectId: String = "landun"
-) : OperateBuilderParams
+class DeleteBuilderParams : OperateBuilderParams
 
 class StopBuilderParams : OperateBuilderParams
 

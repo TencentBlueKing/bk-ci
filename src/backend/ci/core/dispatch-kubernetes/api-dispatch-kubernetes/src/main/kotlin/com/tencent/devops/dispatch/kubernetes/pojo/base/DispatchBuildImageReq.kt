@@ -27,38 +27,18 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo.base
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 data class DispatchBuildImageReq(
-    @JsonProperty("image_name")
-    val imageName: String,
-    @JsonProperty("image_version")
-    val imageVersion: String,
-    val model: String = "commit",
-    val registry: Registry,
-    val auths: List<Auth>,
-    @JsonProperty("build_args")
+    val imageName: List<String>,
+    val registry: List<Registry>,
+    val fromRegistry: List<Registry>,
     val buildArgs: Map<String, Any>,
-    val labels: Map<String, String>,
-    @JsonProperty("work_path")
     val workPath: String,
-    @JsonProperty("docker_file")
     val dockerFile: String,
-    @JsonProperty("pod_name")
-    val podName: String,
-    @JsonProperty("container_name")
-    val containerName: String,
-    @JsonProperty("builder_name")
-    val builderName: String
+    val podName: String
 )
 
 data class Registry(
     val host: String,
     val username: String,
     val password: String
-)
-
-data class Auth(
-    val host: String,
-    val token: String
 )

@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("Bcs数据返回包装模型")
+@ApiModel("Kubernetes数据返回包装模型")
 data class KubernetesResult<out T>(
     @ApiModelProperty("错误码", required = true)
     val status: Int,

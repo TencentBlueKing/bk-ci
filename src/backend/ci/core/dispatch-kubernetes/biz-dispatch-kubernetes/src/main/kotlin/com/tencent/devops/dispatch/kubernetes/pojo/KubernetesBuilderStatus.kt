@@ -28,10 +28,9 @@
 package com.tencent.devops.dispatch.kubernetes.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
- * Bcs构建机状态信息
+ * Kubernetes构建机状态信息
  * @param status 构建机状态
  * @param message 状态信息
  */
@@ -42,22 +41,13 @@ data class KubernetesBuilderStatus(
 )
 
 enum class KubernetesBuilderStatusEnum(val realName: String, val message: String) {
-    INIT("init", "构建机初始化状态，等待创建"),
-    CREATING("creating", "构建机创建中"),
-    ERROR("error", "构建机创建失败，一般意味着输入的描述文件有错误"),
-    CREATE_FAILED("createFailed", "构建机创建失败，比如资源不够等"),
-    START_FAILED("startFailed", "构建机启动失败"),
-    READY_TO_RUN("readyToRun", "构建机创建成功，具备了启动条件"),
-    STARTING("starting", "构建机启动中"),
-    RUNNING("running", "构建机运行中"),
-    STOPPING("stopping", "构建机停止中"),
-    STOP_FAILED("stopFailed", "构建机停止失败，比如资源释放失败"),
-    DELETING("deleting", "构建机删除中"),
-    DELETED("deleted", "构建机删除成功"),
-    DELETE_FAILED("deleteFailed", "构建机删除失败，比如资源释放失败"),
-    ABNORMAL_AFTER_READY("abnormalAfterReady", "构建机创建成功后，进入异常状态，一般意味着相关资源状态异常"),
-    ABNORMAL_AFTER_RUNNING("abnormalAfterRunning", "构建机运行时，进入异常状态，一般意味着相关资源状态异常"),
-    UNKNOWN("unknown", "构建机状态未知"),
+    READY_TO_RUN("readyToRun", "构建机初始化状态，等待创建"),
+    NOT_EXIST("notExist", "构建机不存在，可能已被删除或者未创建"),
+    PENDING("pending", "等待运行中"),
+    RUNNING("running", "运行中"),
+    SUCCEEDED("succeeded", "容器运行成功退出"),
+    FAILED("failed", "运行失败，容器以非0退出"),
+    UNKNOWN("unknown", "构建机状态未知")
 }
 
 fun KubernetesBuilderStatus.readyToStart(): Boolean {
@@ -66,23 +56,16 @@ fun KubernetesBuilderStatus.readyToStart(): Boolean {
 
 fun KubernetesBuilderStatus.hasException(): Boolean {
     return when (status) {
-        KubernetesBuilderStatusEnum.ERROR.realName,
-        KubernetesBuilderStatusEnum.CREATE_FAILED.realName,
-        KubernetesBuilderStatusEnum.START_FAILED.realName,
-        KubernetesBuilderStatusEnum.STOP_FAILED.realName,
-        KubernetesBuilderStatusEnum.DELETE_FAILED.realName,
-        KubernetesBuilderStatusEnum.ABNORMAL_AFTER_READY.realName,
-        KubernetesBuilderStatusEnum.ABNORMAL_AFTER_RUNNING.realName,
+        KubernetesBuilderStatusEnum.FAILED.realName,
         KubernetesBuilderStatusEnum.UNKNOWN.realName -> true
+
         else -> false
     }
 }
 
 fun KubernetesBuilderStatus.canReStart(): Boolean {
     return when (status) {
-        KubernetesBuilderStatusEnum.READY_TO_RUN.realName,
-        KubernetesBuilderStatusEnum.STOP_FAILED.realName
-        -> true
+        KubernetesBuilderStatusEnum.READY_TO_RUN.realName, KubernetesBuilderStatusEnum.SUCCEEDED.realName -> true
         else -> false
     }
 }
@@ -96,13 +79,7 @@ fun KubernetesBuilderStatus.isRunning(): Boolean {
 
 fun KubernetesBuilderStatus.isStarting(): Boolean {
     return when (status) {
-        KubernetesBuilderStatusEnum.STARTING.realName -> true
+        KubernetesBuilderStatusEnum.PENDING.realName -> true
         else -> false
     }
-}
-
-enum class BcsBuilderContainerStatusEnum(val realName: String, val message: String) {
-    WAITING("Waiting", "容器拉起中"),
-    RUNNING("Running", "容器运行中"),
-    TERMINATED("Terminated", "容器已经执行完"),
 }

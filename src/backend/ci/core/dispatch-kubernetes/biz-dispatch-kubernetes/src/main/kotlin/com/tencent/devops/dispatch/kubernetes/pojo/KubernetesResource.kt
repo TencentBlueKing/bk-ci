@@ -25,9 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.pojo.base
+package com.tencent.devops.dispatch.kubernetes.pojo
 
-data class DispatchDebugResponse(
-    val websocketUrl: String,
-    val containerName: String
+/**
+ * Kubernetes 资源要求
+ * limit代表最大需求，request代表最小需求
+ */
+data class KubernetesResource(
+    val limitCpu: String,
+    val limitDisk: String,
+    val limitDiskIO: String,
+    val limitMem: String,
+    val requestCPU: String,
+    val requestDisk: String,
+    val requestDiskIO: String,
+    val requestMem: String
 )

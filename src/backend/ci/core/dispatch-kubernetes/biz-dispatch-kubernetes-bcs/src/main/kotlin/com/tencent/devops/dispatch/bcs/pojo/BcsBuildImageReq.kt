@@ -25,48 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.client
+package com.tencent.devops.dispatch.bcs.pojo
 
-import com.tencent.devops.common.service.config.CommonConfig
-import okhttp3.Headers
-import okhttp3.Request
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
-import java.net.URLEncoder
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Component
-class KubernetesClientCommon @Autowired constructor(
-    private val commonConfig: CommonConfig
-) {
+data class DispatchBuildImageReq(
+    @JsonProperty("image_name")
+    val imageName: String,
+    @JsonProperty("image_version")
+    val imageVersion: String,
+    val model: String = "commit",
+    val registry: Registry,
+    val auths: List<Auth>,
+    @JsonProperty("build_args")
+    val buildArgs: Map<String, Any>,
+    val labels: Map<String, String>,
+    @JsonProperty("work_path")
+    val workPath: String,
+    @JsonProperty("docker_file")
+    val dockerFile: String,
+    @JsonProperty("pod_name")
+    val podName: String,
+    @JsonProperty("container_name")
+    val containerName: String,
+    @JsonProperty("builder_name")
+    val builderName: String
+)
 
-    companion object {
-        private const val TOKEN_KEY = "Devops-Token"
-    }
+data class Registry(
+    val host: String,
+    val username: String,
+    val password: String
+)
 
-    @Value("\${kubernetes.token}")
-    val kubernetesToken: String = ""
-
-    @Value("\${kubernetes.apiUrl}")
-    val kubernetesApiUrl: String = ""
-
-    fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {
-        return Request.Builder().url(url(kubernetesApiUrl + url)).headers(headers(headers))
-    }
-
-    fun url(realUrl: String) = "${commonConfig.devopsIdcProxyGateway}/proxy-devnet?" +
-        "url=${URLEncoder.encode(realUrl, "UTF-8")}"
-
-    fun headers(otherHeaders: Map<String, String>? = null): Headers {
-        val result = mutableMapOf<String, String>()
-
-        val headers = mapOf(TOKEN_KEY to kubernetesToken)
-        result.putAll(headers)
-
-        if (!otherHeaders.isNullOrEmpty()) {
-            result.putAll(otherHeaders)
-        }
-
-        return Headers.of(result)
-    }
-}
+data class Auth(
+    val host: String,
+    val token: String
+)

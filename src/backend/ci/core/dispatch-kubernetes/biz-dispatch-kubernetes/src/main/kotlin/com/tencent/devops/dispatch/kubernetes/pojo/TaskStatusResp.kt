@@ -30,9 +30,9 @@ package com.tencent.devops.dispatch.kubernetes.pojo
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 /**
- * bcs任务状态
+ * 任务状态
  * @param status 任务状态
- * @param message 请求成功但是结果失败时的错误信息
+ * @param detail 请求成功但是结果失败时的错误信息
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TaskStatusResp(

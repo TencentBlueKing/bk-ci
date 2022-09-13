@@ -27,10 +27,11 @@
 
 package com.tencent.devops.dispatch.kubernetes.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchDebugResponse
+import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
 import com.tencent.devops.dispatch.kubernetes.pojo.base.StartDebugReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.StopDebugReq
 import io.swagger.annotations.Api
@@ -45,6 +46,7 @@ import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_DISPATCH_BASE_DEBUG"], description = "SERVICE_DISPATCH_BASE_DEBUG")
 @Path("/service/debug")
+@ServiceInterface("dispatch-kubernetes") // 指明接入到哪个微服务
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceBaseDebugResource {
@@ -58,7 +60,7 @@ interface ServiceBaseDebugResource {
         userId: String,
         @ApiParam("debug请求体", required = true)
         startDebugReq: StartDebugReq
-    ): Result<DispatchDebugResponse>
+    ): Result<DebugResponse>
 
     @POST
     @Path("/stop")

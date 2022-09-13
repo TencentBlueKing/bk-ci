@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
 import com.tencent.devops.dispatch.kubernetes.pojo.Job
 import com.tencent.devops.dispatch.kubernetes.pojo.JobStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
@@ -58,7 +59,7 @@ class KubernetesJobClient @Autowired constructor(
         userId: String,
         job: Job
     ): KubernetesResult<TaskResp> {
-        val url = "/api/v1/devops/job/${job.name}"
+        val url = "/api/jobs"
         val body = JsonUtil.toJson(job)
         logger.info("createJob request url: $url, body: $body")
         val request = clientCommon.baseRequest(userId, url).post(
@@ -91,10 +92,10 @@ class KubernetesJobClient @Autowired constructor(
         }
     }
 
-    fun getJobLogs(userId: String, jobName: String, sinceTime: Int?): KubernetesResult<List<String>> {
-        val url = "/api/jobs/$jobName/logs".also {
+    fun getJobLogs(userId: String, jobName: String, sinceTime: Int?): KubernetesResult<String> {
+        val url = "/api/jobs/$jobName/log".also {
             if (sinceTime != null) {
-                it.plus("?since_time=$sinceTime")
+                it.plus("?sinceTime=$sinceTime")
             }
         }
         val request = clientCommon.baseRequest(userId, url).get().build()
@@ -112,6 +113,57 @@ class KubernetesJobClient @Autowired constructor(
                 )
             }
             return objectMapper.readValue(responseContent)
+        }
+    }
+
+    fun buildAndPushImage(
+        userId: String,
+        buildImageInfo: BuildAndPushImage
+    ): String {
+        val url = "/api/jobs/buildAndPushImage"
+        logger.info("Build and push image, request url: $url, staffName: $userId")
+
+        val request = clientCommon.baseRequest(userId, url)
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(buildImageInfo)
+                )
+            )
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body()!!.string()
+                logger.info("$userId build and push image response: $responseContent")
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
+                        "构建并推送接口异常（Fail to build image, http response code: ${response.code()}"
+                    )
+                }
+                val responseData: KubernetesResult<TaskResp> = objectMapper.readValue(responseContent)
+
+                if (responseData.isOk()) {
+                    return responseData.data!!.taskId
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
+                        "${ConstantsMessage.TROUBLE_SHOOTING} 构建并镜像接口返回失败: ${responseData.message}"
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("$userId build and push image failed.", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
+                errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                errorMessage = "构建并推送接口超时, url: $url"
+            )
         }
     }
 }

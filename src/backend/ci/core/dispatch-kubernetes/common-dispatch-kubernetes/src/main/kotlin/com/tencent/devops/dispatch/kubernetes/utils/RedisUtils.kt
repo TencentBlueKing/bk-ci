@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.utils
 
-import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -37,14 +36,13 @@ class RedisUtils @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
     fun setDebugBuilderName(
-        dockerRoutingType: DockerRoutingType,
         userId: String,
         pipelineId: String,
         vmSeqId: String,
         builderName: String
     ) {
         redisOperation.set(
-            debugContainerNameKey(dockerRoutingType, userId, pipelineId, vmSeqId),
+            debugContainerNameKey(userId, pipelineId, vmSeqId),
             builderName,
             3600 * 6,
             true
@@ -52,20 +50,18 @@ class RedisUtils @Autowired constructor(
     }
 
     fun getDebugBuilderName(
-        dockerRoutingType: DockerRoutingType,
         userId: String,
         pipelineId: String,
         vmSeqId: String
     ): String? {
-        return redisOperation.get(debugContainerNameKey(dockerRoutingType, userId, pipelineId, vmSeqId))
+        return redisOperation.get(debugContainerNameKey(userId, pipelineId, vmSeqId))
     }
 
     private fun debugContainerNameKey(
-        dockerRoutingType: DockerRoutingType,
         userId: String,
         pipelineId: String,
         vmSeqId: String
     ): String {
-        return "dispatch:${dockerRoutingType.name}:debug:$userId-$pipelineId-$vmSeqId"
+        return "dispatchkubernetes:debug:$userId-$pipelineId-$vmSeqId"
     }
 }

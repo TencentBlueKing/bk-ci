@@ -51,14 +51,14 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_DISPATCH_BASE_JOB"], description = "构建-DISPATCH-BASE JOB资源操作")
-@Path("/build/base")
+@Path("/build")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildBaseJobResource {
 
     @ApiOperation("启动job")
     @POST
-    @Path("/{dispatchType}/job")
+    @Path("/job/create")
     fun createJob(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -69,23 +69,23 @@ interface BuildBaseJobResource {
         @ApiParam("构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @ApiParam("Dispatch类型", required = true)
-        @PathParam("dispatchType")
-        dispatchType: String,
         @ApiParam("Job结构", required = true)
         jobReq: DispatchJobReq
     ): Result<DispatchTaskResp>
 
     @ApiOperation("获取job状态")
     @GET
-    @Path("/{dispatchType}/job/{jobName}/status")
+    @Path("/job/{jobName}/status")
     fun getJobStatus(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("Dispatch类型", required = true)
-        @PathParam("dispatchType")
-        dispatchType: String,
+        @ApiParam("projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam("构建id", required = true)
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
+        buildId: String,
         @ApiParam("jobName", required = true)
         @PathParam("jobName")
         jobName: String
@@ -93,14 +93,17 @@ interface BuildBaseJobResource {
 
     @ApiOperation("获取job日志")
     @GET
-    @Path("/{dispatchType}/job/{jobName}/logs")
+    @Path("/job/{jobName}/logs")
     fun getJobLogs(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("Dispatch类型", required = true)
-        @PathParam("dispatchType")
-        dispatchType: String,
+        @ApiParam("projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam("构建id", required = true)
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
+        buildId: String,
         @ApiParam("jobName", required = true)
         @PathParam("jobName")
         jobName: String,
@@ -111,7 +114,7 @@ interface BuildBaseJobResource {
 
     @ApiOperation("构建并推送镜像接口")
     @POST
-    @Path("/{dispatchType}/image/buildPush")
+    @Path("/image/buildPush")
     fun buildAndPushImage(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -122,9 +125,6 @@ interface BuildBaseJobResource {
         @ApiParam("构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @ApiParam("Dispatch类型", required = true)
-        @PathParam("dispatchType")
-        dispatchType: String,
         @ApiParam("构建结构", required = true)
         buildImageReq: DispatchBuildImageReq
     ): Result<DispatchTaskResp>
