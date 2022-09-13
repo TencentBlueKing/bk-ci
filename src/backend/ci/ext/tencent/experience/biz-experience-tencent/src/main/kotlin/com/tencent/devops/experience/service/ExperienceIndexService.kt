@@ -331,7 +331,7 @@ class ExperienceIndexService @Autowired constructor(
 
     fun showMiniGamePicture(): Result<String> {
         if (minigamePicture == null) {
-            throw NotFoundException("MiniGame projectId not found")
+            throw NotFoundException("MiniGame Picture not found")
         }
         return Result(minigamePicture!!)
     }
