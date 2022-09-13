@@ -333,7 +333,7 @@ class ExperienceIndexService @Autowired constructor(
         if (minigamePicture == null) {
             throw NotFoundException("MiniGame Picture not found")
         }
-        return Result(minigamePicture!!)
+        return Result(UrlUtil.toOuterPhotoAddr(minigamePicture!!))
     }
 
     companion object {
