@@ -28,47 +28,70 @@
 package util
 
 import (
-	"encoding/json"
-	"strings"
-	"time"
+	"reflect"
+	"testing"
 )
 
-func ParseJsonToData(jsonData interface{}, targetData interface{}) error {
-	dataStr, err := json.Marshal(jsonData)
-	if err != nil {
-		return err
+func TestSplitAndTrimSpace(t *testing.T) {
+	type args struct {
+		s   string
+		sep string
 	}
-
-	err = json.Unmarshal([]byte(dataStr), targetData)
-	if err != nil {
-		return err
-	} else {
-		return nil
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "测试分隔字符串并去除空格",
+			args: args{
+				s:   "aaa,bbb , ccc, ddd ",
+				sep: ",",
+			},
+			want: []string{"aaa", "bbb", "ccc", "ddd"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := SplitAndTrimSpace(tt.args.s, tt.args.sep); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SplitAndTrimSpace() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
-func FormatTime(t time.Time) string {
-	return t.Format("2006-01-02 15:04:05")
-}
-
-func SplitAndTrimSpace(s string, sep string) []string {
-	split := strings.Split(s, sep)
-	result := make([]string, len(split))
-	for i, sub := range split {
-		result[i] = strings.TrimSpace(sub)
+func TestContains(t *testing.T) {
+	type args struct {
+		s    []string
+		subs string
 	}
-	return result
-}
-
-func Contains(s []string, subs string) bool {
-	if len(s) <= 0 {
-		return false
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "测试寻找列表中字符串",
+			args: args{
+				s:    []string{"aaa", "bbb", "ccc"},
+				subs: "aaa",
+			},
+			want: true,
+		},
+		{
+			name: "测试寻找列表中字符串-未找到",
+			args: args{
+				s:    []string{"aaa", "bbb", "ccc"},
+				subs: " aaa",
+			},
+			want: false,
+		},
 	}
-
-	for _, a := range s {
-		if a == subs {
-			return true
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Contains(tt.args.s, tt.args.subs); got != tt.want {
+				t.Errorf("Contains() = %v, want %v", got, tt.want)
+			}
+		})
 	}
-	return false
 }
