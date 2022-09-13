@@ -12,7 +12,7 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
-import com.tencent.devops.stream.trigger.pojo.ChangeYamlList
+import com.tencent.devops.stream.pojo.ChangeYamlList
 import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState

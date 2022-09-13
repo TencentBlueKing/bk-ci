@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.pojo
+package com.tencent.devops.stream.pojo
 
 data class ChangeYamlList(
     val path: String,

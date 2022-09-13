@@ -62,7 +62,7 @@ import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
-import com.tencent.devops.stream.trigger.pojo.ChangeYamlList
+import com.tencent.devops.stream.pojo.ChangeYamlList
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
