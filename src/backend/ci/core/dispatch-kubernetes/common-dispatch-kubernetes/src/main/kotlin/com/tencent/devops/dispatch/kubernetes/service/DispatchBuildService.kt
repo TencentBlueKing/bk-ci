@@ -321,7 +321,7 @@ class DispatchBuildService @Autowired constructor(
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.formatErrorMessage,
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.formatErrorMessage,
+                ErrorCodeEnum.NO_IDLE_VM_ERROR.formatErrorMessage
             )
         } finally {
             lock.unlock()
