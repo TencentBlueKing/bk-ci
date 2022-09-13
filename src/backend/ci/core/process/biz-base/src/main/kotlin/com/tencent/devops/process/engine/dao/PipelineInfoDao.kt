@@ -291,7 +291,9 @@ class PipelineInfoDao {
     fun listDeletePipelineIdByProject(
         dslContext: DSLContext,
         projectId: String,
-        days: Long?
+        days: Long?,
+        offset: Int? = null,
+        limit: Int? = null
     ): Result<TPipelineInfoRecord>? {
         with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -300,8 +302,30 @@ class PipelineInfoDao {
             if (days != null) {
                 conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
             }
-            return dslContext.selectFrom(this)
-                .where(conditions).fetch()
+            return dslContext
+                .selectFrom(this)
+                .where(conditions)
+                .let { if (offset != null && limit != null) it.limit(offset, limit) else it }
+                .fetch()
+        }
+    }
+
+    fun countDeletePipeline(
+        dslContext: DSLContext,
+        projectId: String,
+        days: Long?,
+    ): Int {
+        with(T_PIPELINE_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(DELETE.eq(true))
+            if (days != null) {
+                conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
+            }
+            return dslContext
+                .selectCount().from(this)
+                .where(conditions)
+                .fetchOne()?.value1() ?: 0
         }
     }
 

@@ -263,12 +263,12 @@ class PipelineRepositoryService constructor(
             )
         }
         val c = (
-            stage.containers.getOrNull(0)
-                ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-                    defaultMessage = "第一阶段的环境不能为空"
-                )
-            ) as TriggerContainer
+                stage.containers.getOrNull(0)
+                    ?: throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
+                        defaultMessage = "第一阶段的环境不能为空"
+                    )
+                ) as TriggerContainer
 
         // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
@@ -368,9 +368,11 @@ class PipelineRepositoryService constructor(
                     c.matrixGroupFlag != true -> {
                         // c.matrixGroupFlag 不为 true 时 不需要做yaml检查
                     }
+
                     c is NormalContainer -> {
                         matrixYamlCheck(c.matrixControlOption)
                     }
+
                     c is VMBuildContainer -> {
                         matrixYamlCheck(c.matrixControlOption)
                     }
@@ -441,8 +443,8 @@ class PipelineRepositoryService constructor(
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
                 "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
-                    "matrix maxConcurrency(${option.maxConcurrency}) " +
-                    "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
+                        "matrix maxConcurrency(${option.maxConcurrency}) " +
+                        "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
         MatrixContextUtils.schemaCheck(
@@ -1085,8 +1087,13 @@ class PipelineRepositoryService constructor(
     /**
      * 列出已经删除的流水线
      */
-    fun listDeletePipelineIdByProject(projectId: String, days: Long?): List<PipelineInfo> {
-        val result = pipelineInfoDao.listDeletePipelineIdByProject(dslContext, projectId, days)
+    fun listDeletePipelineIdByProject(
+        projectId: String,
+        days: Long?,
+        offset: Int? = null,
+        limit: Int? = null
+    ): List<PipelineInfo> {
+        val result = pipelineInfoDao.listDeletePipelineIdByProject(dslContext, projectId, days, offset, limit)
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
             if (it != null) {

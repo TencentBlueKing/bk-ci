@@ -1412,17 +1412,14 @@ class PipelineListFacadeService @Autowired constructor(
 
         val offset = slqLimit?.offset ?: 0
         val limit = slqLimit?.limit ?: -1
-        // 数据量不多，直接全拉
-        val pipelines =
-            pipelineRepositoryService.listDeletePipelineIdByProject(projectId, deletedPipelineStoreDays.toLong())
-        val list: List<PipelineInfo> = when {
-            offset >= pipelines.size -> emptyList()
-            limit < 0 -> pipelines.subList(offset, pipelines.size)
-            else -> {
-                val toIndex = if (pipelines.size <= (offset + limit)) pipelines.size else offset + limit
-                pipelines.subList(offset, toIndex)
-            }
-        }
+        // 获取列表和数目
+        val list = pipelineRepositoryService.listDeletePipelineIdByProject(
+            projectId = projectId,
+            days = deletedPipelineStoreDays.toLong(),
+            offset = offset,
+            limit = limit
+        )
+        val count = pipelineInfoDao.countDeletePipeline(dslContext, projectId, deletedPipelineStoreDays.toLong())
         // 加上流水线组
         val pipelineViewNameMap =
             pipelineViewGroupService.getViewNameMap(projectId, list.map { it.pipelineId }.toMutableSet())
@@ -1430,7 +1427,7 @@ class PipelineListFacadeService @Autowired constructor(
         return PipelineViewPipelinePage(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
-            count = pipelines.size + 0L,
+            count = count.toLong(),
             records = list
         )
     }
