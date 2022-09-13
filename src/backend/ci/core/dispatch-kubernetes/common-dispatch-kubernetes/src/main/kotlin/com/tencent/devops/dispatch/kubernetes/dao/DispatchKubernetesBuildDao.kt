@@ -278,8 +278,10 @@ class DispatchKubernetesBuildDao {
         with(TDispatchKubernetesBuild.T_DISPATCH_KUBERNETES_BUILD) {
             return dslContext.selectFrom(this)
                 .where(DISPATCH_TYPE.eq(dispatchType))
-                .and(timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java))
-                         .greaterOrEqual(7))
+                .and(
+                    timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java))
+                        .greaterOrEqual(7)
+                )
                 .and(STATUS.eq(1))
                 .limit(1000)
                 .fetch()
@@ -290,8 +292,10 @@ class DispatchKubernetesBuildDao {
         with(TDispatchKubernetesBuild.T_DISPATCH_KUBERNETES_BUILD) {
             return dslContext.selectFrom(this)
                 .where(DISPATCH_TYPE.eq(dispatchType))
-                .and(timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java))
-                         .greaterOrEqual(7))
+                .and(
+                    timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java))
+                        .greaterOrEqual(7)
+                )
                 .and(STATUS.eq(0))
                 .fetch()
         }
@@ -306,8 +310,10 @@ class DispatchKubernetesBuildDao {
                 .where(DISPATCH_TYPE.eq(dispatchType))
                 .and(STATUS.eq(0))
                 .and(DEBUG_STATUS.eq(true))
-                .and(timestampDiff(DatePart.HOUR, DEBUG_TIME.cast(java.sql.Timestamp::class.java))
-                         .greaterOrEqual(1))
+                .and(
+                    timestampDiff(DatePart.HOUR, DEBUG_TIME.cast(java.sql.Timestamp::class.java))
+                        .greaterOrEqual(1)
+                )
                 .fetch()
         }
     }
