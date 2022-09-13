@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -37,6 +38,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.ChangeYamlList
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -162,7 +164,7 @@ class GitRequestEventDao {
                     commitAuthorName = null,
                     gitProjectName = null,
                     changeYamlList = try {
-                        JsonUtil.to(record.changeYamlList)
+                        JsonUtil.to(record.changeYamlList, object : TypeReference<List<ChangeYamlList>>() {})
                     } catch (ignore: Throwable) {
                         emptyList()
                     }
@@ -266,7 +268,7 @@ class GitRequestEventDao {
     fun updateChangeYamlList(
         dslContext: DSLContext,
         id: Long,
-        changeYamlList: List<String>
+        changeYamlList: List<ChangeYamlList>
     ) {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             dslContext.update(this)

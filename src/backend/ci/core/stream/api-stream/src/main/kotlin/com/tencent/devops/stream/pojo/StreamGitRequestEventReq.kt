@@ -95,7 +95,7 @@ data class StreamGitRequestEventReq(
     @ApiModelProperty("构建跳转显示信息")
     var buildSource: String?,
     @ApiModelProperty("变更的yaml文件")
-    var changeYamlList: List<String> = emptyList()
+    var changeYamlList: List<ChangeYamlList> = emptyList()
 ) {
     constructor(gitRequestEvent: GitRequestEvent, homepage: String) : this(
         id = gitRequestEvent.id,
