@@ -57,7 +57,8 @@ class PipelineBuildCommitService @Autowired constructor(
                         eventType = it.eventType,
                         commitTime = it.commitTime,
                         mrId = it.mrId ?: "",
-                        channel = ChannelCode.BS.name
+                        channel = ChannelCode.BS.name,
+                        action = it.action ?: ""
                     )
                 }
                 if (webhookCommitList.size < size) break
@@ -94,7 +95,8 @@ class PipelineBuildCommitService @Autowired constructor(
                     eventType = eventType,
                     commitTime = commitTime,
                     mrId = mrId ?: "",
-                    channel = channel
+                    channel = channel,
+                    action = action ?: ""
                 )
             }
         }
