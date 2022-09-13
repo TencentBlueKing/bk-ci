@@ -65,10 +65,18 @@ interface StreamMrAction : BaseAction {
      */
     fun getMrId(): Long
 
+    /**
+     * 获取当前 mr/pr 上所配置的 reviewers
+     */
+    fun getMrReviewers(): List<String>
+
     override fun forkMrNeedReviewers(): List<String> {
         return if (!checkMrForkReview()) {
             var page = 1
             val reviewers = mutableListOf<String>()
+            // 首先添加reviewer为审核人
+            reviewers.addAll(getMrReviewers())
+            // 再添加master、owner权限的为审核人
             while (true) {
                 val res = api.getProjectMember(
                     cred = this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred(),
@@ -88,6 +96,7 @@ interface StreamMrAction : BaseAction {
                     "reviewers: ${reviewers.ifEmpty { data.setting.enableUser }}"
             )
             if (reviewers.isEmpty()) {
+                // 兜底用ci开启人做审核人
                 listOf(data.setting.enableUser)
             } else reviewers
         } else emptyList()

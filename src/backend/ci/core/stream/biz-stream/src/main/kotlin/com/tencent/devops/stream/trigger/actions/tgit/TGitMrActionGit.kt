@@ -67,6 +67,7 @@ import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
+import com.tencent.devops.stream.trigger.pojo.ChangeYamlList
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
@@ -134,6 +135,29 @@ class TGitMrActionGit(
     }
 
     override fun getMrId() = event().object_attributes.id
+
+    override fun getMrReviewers(): List<String> {
+        return try {
+            api.getMrReview(
+                cred = getGitCred(),
+                gitProjectId = event().object_attributes.target_project_id.toString(),
+                mrId = event().object_attributes.id.toString(),
+                retry = ApiRequestRetryInfo(true)
+            )?.reviewers?.map { it.username } ?: emptyList()
+        } catch (e: Throwable) {
+            logger.error("tGit get mr reviewers error: ${e.message}", e)
+            emptyList()
+        }
+    }
+
+    override fun forkMrYamlList(): List<ChangeYamlList> {
+        return getChangeSet()?.filter { GitActionCommon.checkStreamPipelineAndTemplateFile(it) }?.map {
+            ChangeYamlList(
+                path = it,
+                url = "/diff/$it"
+            )
+        } ?: emptyList()
+    }
 
     override val api: TGitApiService
         get() = apiService

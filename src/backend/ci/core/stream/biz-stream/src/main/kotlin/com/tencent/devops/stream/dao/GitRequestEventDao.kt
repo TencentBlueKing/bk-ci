@@ -37,6 +37,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.trigger.pojo.ChangeYamlList
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -266,7 +267,7 @@ class GitRequestEventDao {
     fun updateChangeYamlList(
         dslContext: DSLContext,
         id: Long,
-        changeYamlList: List<String>
+        changeYamlList: List<ChangeYamlList>
     ) {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             dslContext.update(this)

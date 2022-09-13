@@ -329,8 +329,9 @@ class StreamYamlBaseBuild @Autowired constructor(
             yamlTransferData = yamlTransferData
         )
         // 更新yaml变更列表到db
-        action.getChangeSet()?.filter { GitActionCommon.checkStreamPipelineAndTemplateFile(it) }?.let {
-            gitRequestEventDao.updateChangeYamlList(dslContext, action.data.context.requestEventId!!, it)
+        val forkMrYamlList = action.forkMrYamlList()
+        if (forkMrYamlList.isNotEmpty()){
+            gitRequestEventDao.updateChangeYamlList(dslContext, action.data.context.requestEventId!!, forkMrYamlList)
         }
 
         // 修改流水线并启动构建，需要加锁保证事务性

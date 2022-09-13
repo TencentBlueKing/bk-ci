@@ -12,6 +12,7 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
+import com.tencent.devops.stream.trigger.pojo.ChangeYamlList
 import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -162,9 +163,15 @@ interface BaseAction {
      * 启动类型
      */
     fun getStartType(): StartType
+
     /**
      *  fork 库触发需要审核，提供审核人
      *  返回空表示不属于fork库触发或是有权限触发
      */
     fun forkMrNeedReviewers() = emptyList<String>()
+
+    /**
+     *  fork 库触发审核时，提供yaml文件跳转链接
+     */
+    fun forkMrYamlList() = emptyList<ChangeYamlList>()
 }

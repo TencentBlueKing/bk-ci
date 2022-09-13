@@ -62,6 +62,7 @@ import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
+import com.tencent.devops.stream.trigger.pojo.ChangeYamlList
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
@@ -131,6 +132,19 @@ class GithubPRActionGit(
     }
 
     override fun getMrId() = event().pullRequest.number.toLong()
+
+    override fun getMrReviewers(): List<String> {
+        return event().pullRequest.requestedReviewers.map { it.login }
+    }
+
+    override fun forkMrYamlList(): List<ChangeYamlList> {
+        return getChangeSet()?.filter { GitActionCommon.checkStreamPipelineAndTemplateFile(it) }?.map {
+            ChangeYamlList(
+                path = it,
+                url = "/files"
+            )
+        } ?: emptyList()
+    }
 
     override val api: GithubApiService
         get() = apiService
