@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
@@ -44,7 +45,10 @@ import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
 @Suppress("ALL")
-class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
+class StreamOpenApiAction(
+    private val action: BaseAction,
+    private val checkPipelineTrigger: Boolean
+) : BaseAction {
     override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.OPENAPI)
     override var data: ActionData = action.data
     override val api: StreamGitApiService = action.api
@@ -115,7 +119,9 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     }
 
     override fun needAddWebhookParams() = action is GitBaseAction
-    override fun updateLastBranch(pipelineId: String, branch: String) {
-        action.updateLastBranch(pipelineId, branch)
-    }
+
+    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) =
+        Unit
+
+    override fun getStartType() = if (checkPipelineTrigger) StartType.PIPELINE else StartType.SERVICE
 }

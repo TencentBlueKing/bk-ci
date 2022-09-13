@@ -25,31 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service.impl
+package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-import com.tencent.devops.worker.common.service.AtomTargetHandleService
-import org.slf4j.LoggerFactory
+import com.tencent.devops.store.service.atom.AtomBusHandleService
 
-class PythonAtomTargetHandleServiceImpl : AtomTargetHandleService {
+class NodeJsAtomBusHandleHandleServiceImpl : AtomBusHandleService {
 
-    private val logger = LoggerFactory.getLogger(PythonAtomTargetHandleServiceImpl::class.java)
-
-    override fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String {
-        var convertTarget = target
-        if (!postEntryParam.isNullOrBlank()) {
-            convertTarget = "$target --post_action=$postEntryParam"
+    override fun handleOsName(osName: String): String {
+        return when (osName.toUpperCase()) {
+            OSType.MAC_OS.name -> {
+                "darwin"
+            }
+            OSType.WINDOWS.name -> {
+                "win"
+            }
+            else -> {
+                osName.toLowerCase()
+            }
         }
-        logger.info("handleAtomTarget convertTarget:$convertTarget")
-        return convertTarget
+    }
+
+    override fun handleOsArch(osName: String, osArch: String): String {
+        return when (OSType.valueOf(osName.toUpperCase())) {
+            OSType.LINUX, OSType.MAC_OS -> {
+                if (osArch.contains("arm")) {
+                    "arm64"
+                } else {
+                    "x64"
+                }
+            }
+            OSType.WINDOWS -> {
+                "x64"
+            }
+            else -> {
+                "x64"
+            }
+        }
     }
 }

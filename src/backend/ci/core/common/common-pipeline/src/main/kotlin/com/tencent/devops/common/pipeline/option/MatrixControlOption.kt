@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.option
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
@@ -43,6 +44,7 @@ import java.util.regex.Pattern
  *  构建矩阵配置项
  */
 @ApiModel("构建矩阵配置项模型")
+@Suppress("ReturnCount")
 data class MatrixControlOption(
     @ApiModelProperty("分裂策略（支持变量、Json、参数映射表）", required = true)
     val strategyStr: String? = null, // Map<String, List<String>>
@@ -71,7 +73,7 @@ data class MatrixControlOption(
     /**
      * 根据[strategyStr], [includeCaseStr], [excludeCaseStr]计算后得到的矩阵配置
      */
-    fun convertMatrixConfig(buildContext: Map<String, String>): MatrixConfig {
+    fun convertMatrixConfig(buildContext: Map<String, String>, asCodeEnabled: Boolean? = false): MatrixConfig {
         val matrixConfig = try {
             // 由于yaml和json结构不同，就不放在同一函数进行解析了
             convertStrategyYaml(buildContext)
@@ -141,7 +143,8 @@ data class MatrixControlOption(
     private fun replaceJsonPattern(command: String, buildContext: Map<String, String>): String {
         return ReplacementUtils.replace(
             command = command,
-            replacement = object : ReplacementUtils.KeyReplacement {
+            replacement = object : KeyReplacement {
+                // 内外源不一致，此处多传一个doubleCurlyBraces只为实现内部版接口
                 override fun getReplacement(key: String): String? {
                     // 匹配fromJSON()
                     val matcher = MATRIX_JSON_KEY_PATTERN.matcher(key)

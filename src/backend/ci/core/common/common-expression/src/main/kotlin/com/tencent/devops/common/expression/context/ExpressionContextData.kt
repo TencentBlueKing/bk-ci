@@ -25,22 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package job
+package com.tencent.devops.common.expression.context
 
-import (
-	"os"
-	"testing"
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.tencent.devops.common.expression.expression.sdk.IString
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-)
+/**
+ * 针对SubNameValue替换(目前只有模板替换时的变量)替换特供
+ * 目的是将 包含${{}}不替换为 '${{}}' 而是 ${{}}
+ */
+class ExpressionContextData(val value: String) : PipelineContextData(PipelineContextDataType.EXPRESSION), IString {
+    override fun getString(): String = value
 
-func Test_writeStartBuildAgentScript_01(t *testing.T) {
-	buildInfo := &api.ThirdPartyBuildInfo{ProjectId: "pid", BuildId: "bid", VmSeqId: "1"}
-	dir, _ := os.Getwd()
-	file, err := writeStartBuildAgentScript(buildInfo, dir)
-	if err != nil {
-		t.Error("error: ", err.Error())
-	}
-	t.Log("workDir: ", dir)
-	t.Log("fileName: ", file)
+    override fun clone(): PipelineContextData = ExpressionContextData(value)
+
+    override fun toJson(): JsonNode = TextNode(value)
+    override fun fetchValue() = getString()
+
+    override fun toString(): String = value
 }

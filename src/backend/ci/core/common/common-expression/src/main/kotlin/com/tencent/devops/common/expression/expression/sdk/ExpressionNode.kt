@@ -27,12 +27,14 @@
 
 package com.tencent.devops.common.expression.expression.sdk
 
-import com.tencent.devops.common.expression.DistinguishType
 import com.tencent.devops.common.expression.NotSupportedException
 import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
+import com.tencent.devops.common.expression.SubNameValueEvaluateResult
+import com.tencent.devops.common.expression.SubNameValueResultType
 import com.tencent.devops.common.expression.context.ArrayContextData
 import com.tencent.devops.common.expression.context.BooleanContextData
 import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.ExpressionContextData
 import com.tencent.devops.common.expression.context.NumberContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.StringContextData
@@ -134,76 +136,135 @@ abstract class ExpressionNode : IExpressionNode {
         state: Any?,
         options: EvaluationOptions?,
         subInfo: SubNameValueEvaluateInfo
-    ): Pair<String, Boolean> {
-        if (subInfo.hasOtherNameValue) {
-            // 目前部分计算不涉及内存计算，未来启用内存计算时需要修改此处
-            if (container != null) {
-                throw NotSupportedException("Expected IExpressionNode.Evaluate to be called on root node only.")
-            }
-            val eTrace = EvaluationTraceWriter(trace)
-            val context = EvaluationContext(eTrace, state, options, this)
-
-            return Pair(subNameValueEvaluate(context), false)
+    ): SubNameValueEvaluateResult {
+        // 目前部分计算不涉及内存计算，未来启用内存计算时需要修改此处
+        if (container != null) {
+            throw NotSupportedException("Expected IExpressionNode.Evaluate to be called on root node only.")
         }
+        val eTrace = EvaluationTraceWriter(trace)
+        val context = EvaluationContext(eTrace, state, options, this)
 
-        val re = evaluate(null, state, null).value
+        return subNameValueEvaluate(context)
+    }
+
+    fun subNameValueEvaluate(context: EvaluationContext): SubNameValueEvaluateResult {
+        val (result, isComplete) = subNameValueEvaluateCore(context)
+        if (result == null) {
+            return SubNameValueEvaluateResult("", true, SubNameValueResultType.STRING)
+        }
         // 计算结果是流水线上下文
-        if (re is PipelineContextData) {
-            val res = when (re) {
-                is StringContextData -> DistinguishType.STRING.distinguishByType(
-                    re.getString(), subInfo.distinguishTypes
-                )
-                is BooleanContextData -> DistinguishType.BOOL.distinguishByType(
-                    re.getBoolean().toString(), subInfo.distinguishTypes
-                )
-                is NumberContextData -> DistinguishType.NUMBER.distinguishByType(
-                    numberToString(re.value), subInfo.distinguishTypes
-                )
-                is ArrayContextData -> DistinguishType.ARRAY.distinguishByType(
-                    ExpressionJsonUtil.getObjectMapper().writeValueAsString(re.toJson()), subInfo.distinguishTypes
-                )
-                is DictionaryContextData -> DistinguishType.DICT.distinguishByType(
-                    ExpressionJsonUtil.getObjectMapper().writeValueAsString(re.toJson()), subInfo.distinguishTypes
-                )
-                else -> ExpressionJsonUtil.getObjectMapper().writeValueAsString(re.toJson())
-            }
-            return Pair(res, true)
-        }
-        val res = when (re) {
-            is Char, is String -> DistinguishType.STRING.distinguishByType(re.toString(), subInfo.distinguishTypes)
-            is Number -> DistinguishType.NUMBER.distinguishByType(numberToString(re), subInfo.distinguishTypes)
-            is Boolean -> DistinguishType.BOOL.distinguishByType(re.toString(), subInfo.distinguishTypes)
-            else -> re?.toString() ?: ""
-        }
-        return Pair(res, true)
-    }
-
-    private fun DistinguishType.distinguishByType(
-        value: String,
-        distinguishTypes: Set<DistinguishType>?
-    ): String {
-        if (distinguishTypes == null) {
-            return value
-        }
-        if (this in distinguishTypes) {
-            return "'$value'"
-        }
-        return value
-    }
-
-    fun subNameValueEvaluate(context: EvaluationContext): String {
-        val result = subNameValueEvaluateCore(context) ?: return "''"
-        // 在subNameValue的情况下只有指定的nameValued才可能返回这个
         if (result is PipelineContextData) {
-            if (result is BooleanContextData || result is NumberContextData) {
-                return ExpressionJsonUtil.getObjectMapper().writeValueAsString(result.toJson())
+            return when (result) {
+                is ExpressionContextData -> SubNameValueEvaluateResult(
+                    value = result.getString(),
+                    isComplete = isComplete,
+                    type = SubNameValueResultType.EXPRESSION
+                )
+
+                is StringContextData -> SubNameValueEvaluateResult(
+                    value = result.getString(),
+                    isComplete = isComplete,
+                    type = SubNameValueResultType.STRING
+                )
+
+                is BooleanContextData -> SubNameValueEvaluateResult(
+                    value = result.getBoolean().toString(),
+                    isComplete = isComplete,
+                    type = SubNameValueResultType.BOOL
+                )
+
+                is NumberContextData -> SubNameValueEvaluateResult(
+                    value = numberToString(result.value),
+                    isComplete = isComplete,
+                    type = SubNameValueResultType.NUMBER
+                )
+
+                // 对于array和dic因为subNameValue不涉及计算，所以将 " 转义为 \" 方便后续字符串转换
+                is ArrayContextData -> SubNameValueEvaluateResult(
+                    value = ExpressionJsonUtil.getObjectMapper().writeValueAsString(result.toJson())
+                        .replace("\"", "\\\""),
+                    isComplete = isComplete,
+                    type = SubNameValueResultType.ARRAY
+                )
+
+                is DictionaryContextData -> SubNameValueEvaluateResult(
+                    value = ExpressionJsonUtil.getObjectMapper().writeValueAsString(result.toJson())
+                        .replace("\"", "\\\""),
+                    isComplete = isComplete,
+                    type = SubNameValueResultType.DICT
+                )
+
+                else -> SubNameValueEvaluateResult(
+                    value = ExpressionJsonUtil.getObjectMapper().writeValueAsString(result.toJson()),
+                    isComplete = isComplete,
+                    type = SubNameValueResultType.STRING
+                )
             }
-            return "'${ExpressionJsonUtil.getObjectMapper().writeValueAsString(result.toJson())}'"
         }
-        return result.toString()
+        return when (result) {
+            is Char, is String -> {
+                // 区分出表达式类型
+                val res = result.toString()
+                if (res.trim().startsWith("\${{") && res.endsWith("}}")) {
+                    SubNameValueEvaluateResult(
+                        value = res,
+                        isComplete = isComplete,
+                        type = SubNameValueResultType.EXPRESSION
+                    )
+                } else {
+                    SubNameValueEvaluateResult(
+                        value = res,
+                        isComplete = isComplete,
+                        type = SubNameValueResultType.STRING
+                    )
+                }
+            }
+
+            is Number -> SubNameValueEvaluateResult(
+                value = numberToString(result),
+                isComplete = isComplete,
+                type = SubNameValueResultType.NUMBER
+            )
+
+            is Boolean -> SubNameValueEvaluateResult(
+                value = result.toString(),
+                isComplete = isComplete,
+                type = SubNameValueResultType.BOOL
+            )
+
+            else -> SubNameValueEvaluateResult(
+                value = result.toString(),
+                isComplete = isComplete,
+                type = SubNameValueResultType.STRING
+            )
+        }
     }
 
-    protected abstract fun subNameValueEvaluateCore(context: EvaluationContext): Any?
+    /**
+     * 方便表达式节点使用
+     * 对于完全替换出的结果，如果是 字符串，列表JSON，数组JSON 都需要加单引号，方便后续使用
+     * 其余结果直接返回
+     */
+    fun SubNameValueEvaluateResult.parseSubNameValueEvaluateResult(): String {
+        if (!this.isComplete) {
+            return this.value
+        }
+        return when (this.type) {
+            SubNameValueResultType.STRING, SubNameValueResultType.DICT, SubNameValueResultType.ARRAY -> {
+                "'$value'"
+            }
+
+            else -> value
+        }
+    }
+
+    /**
+     * subNameValue计算接口
+     * 只要涉及到函数，运算符等一定是不完全计算，保留算式原文。
+     * 单独的变量替换或者数值替换则是完全计算
+     * @return <值，是否完全计算>
+     */
+    protected abstract fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean>
 
     private fun traceTreeResult(
         context: EvaluationContext,

@@ -46,7 +46,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 @Component
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 class MutexControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,

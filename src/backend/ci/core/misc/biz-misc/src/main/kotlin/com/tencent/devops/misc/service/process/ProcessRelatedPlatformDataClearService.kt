@@ -25,23 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.misc.service.process
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-
-interface AtomTargetHandleService {
+interface ProcessRelatedPlatformDataClearService {
 
     /**
-     * 处理target入口命令逻辑
+     * 清除构建相关平台数据
      */
-    fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String
+    fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>)
 }
