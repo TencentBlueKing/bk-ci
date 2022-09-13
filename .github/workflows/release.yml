@@ -82,7 +82,7 @@ jobs:
       - name: Gradle Build Turbo Service
         working-directory: src/backend/turbo
         run: |
-          ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+          ./gradlew clean copyToRelease
           # copy jar to ci release dir
           cp -vf release/boot-turbo.jar ${{ github.workspace }}/src/backend/ci/release/
           # copy turbo service config template to ci templates dir
@@ -212,7 +212,7 @@ jobs:
         working-directory: src/backend/codecc
         run: |
           chmod +x gradlew
-          ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+          ./gradlew clean copyToRelease
       - name: frontend
         id: codecc-frontend
         run: |
