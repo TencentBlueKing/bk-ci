@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.api.github
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.pojo.GithubRepo
 import com.tencent.devops.common.sdk.github.pojo.GithubUser
@@ -44,10 +45,10 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_REPOSITORY_GITHUB"], description = "服务-github-repository")
@@ -60,7 +61,7 @@ interface ServiceGithubRepositoryResource {
     @Path("/createOrUpdateFile")
     fun createOrUpdateFile(
         @ApiParam("授权token", required = true)
-        @QueryParam("token")
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: CreateOrUpdateFileContentsRequest
     ): Result<CreateOrUpdateFileContentsResponse>
@@ -70,7 +71,7 @@ interface ServiceGithubRepositoryResource {
     @Path("/getRepositoryContent")
     fun getRepositoryContent(
         @ApiParam("授权token", required = true)
-        @QueryParam("token")
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: GetRepositoryContentRequest
     ): Result<RepositoryContent?>
@@ -80,7 +81,7 @@ interface ServiceGithubRepositoryResource {
     @Path("/getRepositoryPermissions")
     fun getRepositoryPermissions(
         @ApiParam("授权token", required = true)
-        @QueryParam("token")
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: GetRepositoryPermissionsRequest
     ): Result<RepositoryPermissions?>
@@ -90,7 +91,7 @@ interface ServiceGithubRepositoryResource {
     @Path("/getRepository")
     fun getRepository(
         @ApiParam("授权token", required = true)
-        @QueryParam("token")
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: GetRepositoryRequest
     ): Result<GithubRepo?>
@@ -100,7 +101,7 @@ interface ServiceGithubRepositoryResource {
     @Path("/listRepositories")
     fun listRepositories(
         @ApiParam("授权token", required = true)
-        @QueryParam("token")
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: ListRepositoriesRequest
     ): Result<List<GithubRepo>>
@@ -110,7 +111,7 @@ interface ServiceGithubRepositoryResource {
     @Path("/listRepositoryCollaborators")
     fun listRepositoryCollaborators(
         @ApiParam("授权token", required = true)
-        @QueryParam("token")
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: ListRepositoryCollaboratorsRequest
     ): Result<List<GithubUser>>
@@ -120,7 +121,7 @@ interface ServiceGithubRepositoryResource {
     @Path("/searchRepositories")
     fun searchRepositories(
         @ApiParam("授权token", required = true)
-        @QueryParam("token")
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: SearchRepositoriesRequest
     ): Result<List<GithubRepo>>

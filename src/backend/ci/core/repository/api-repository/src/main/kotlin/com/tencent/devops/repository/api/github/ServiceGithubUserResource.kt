@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.api.github
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.response.GetUserResponse
 import io.swagger.annotations.Api
@@ -34,9 +35,9 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_USER_GITHUB"], description = "服务-github-user")
@@ -50,7 +51,7 @@ interface ServiceGithubUserResource {
     @Path("/getUser")
     fun getUser(
         @ApiParam("授权token", required = true)
-        @QueryParam("token")
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String
     ): Result<GetUserResponse?>
 }

@@ -1,5 +1,6 @@
 package com.tencent.devops.repository.api.github
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.request.GetAppInstallationForOrgRequest
 import com.tencent.devops.common.sdk.github.request.GetAppInstallationForRepoRequest
@@ -9,6 +10,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -36,7 +38,7 @@ interface ServiceGithubAppResource {
     @Path("/isInstallApp")
     fun isInstallApp(
         @ApiParam("授权token", required = true)
-        @QueryParam("token")
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         @ApiParam(value = "仓库Id")
         @QueryParam("repoName")

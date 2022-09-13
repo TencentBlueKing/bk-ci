@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.api.github
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.sdk.github.pojo.Organization
 import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
@@ -34,10 +35,10 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_ORGANIZATION_GITHUB"], description = "服务-github-organization")
@@ -51,7 +52,7 @@ interface ServiceGithubOrganizationResource {
     @Path("/listOrganizations")
     fun listOrganizations(
         @ApiParam("授权token", required = true)
-        @QueryParam("token")
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: ListOrganizationsRequest
     ): Result<List<Organization>>
