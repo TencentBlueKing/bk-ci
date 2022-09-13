@@ -285,11 +285,22 @@ class SendNotify @Autowired constructor(
     }
 
     // 使用启动参数替换接收人
+    // #7592 支持通过 , 分隔来一次填写多个接收人
     protected fun replaceReceivers(receivers: Set<String>?, startParams: List<BuildParameters>?): MutableSet<String> {
-        if (receivers == null || receivers.isEmpty()) {
+        if (receivers.isNullOrEmpty()) {
             return mutableSetOf()
         }
-        if (startParams == null || startParams.isEmpty()) {
+
+        val parseReceivers = mutableSetOf<String>()
+        receivers.forEach { re ->
+            if (!re.contains(',')) {
+                parseReceivers.add(re)
+                return@forEach
+            }
+            parseReceivers.addAll(re.split(",").asSequence().filter { it.isNotBlank() }.map { it.trim() }.toSet())
+        }
+
+        if (startParams.isNullOrEmpty()) {
             return receivers.toMutableSet()
         }
         val paramMap = startParams.associate {
