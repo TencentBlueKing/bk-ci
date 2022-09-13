@@ -35,11 +35,11 @@ import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpart
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.UpdateSetMoreStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
-import org.jooq.UpdateSetMoreStep
 
 @Repository
 @Suppress("ALL")
@@ -377,15 +377,6 @@ class ThirdPartyAgentDao {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.update(this)
                 .set(AGENT_ENVS, envStr)
-                .where(ID.eq(agentId))
-                .execute()
-        }
-    }
-
-    fun saveAgentProps(dslContext: DSLContext, agentId: Long, propsJsonStr: String) {
-        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            dslContext.update(this)
-                .set(AGENT_PROPS, propsJsonStr)
                 .where(ID.eq(agentId))
                 .execute()
         }
