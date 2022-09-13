@@ -72,7 +72,7 @@ BEGIN
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_PIPELINE_BUILD_COMMITS'
-                        AND COLUMN_NAME = 'PIPELINE_AS_CODE_SETTINGS') THEN
+                        AND COLUMN_NAME = 'ACTION') THEN
         alter table T_PIPELINE_BUILD_COMMITS add column `ACTION` varchar(64) DEFAULT NULL;
     END IF;
 
