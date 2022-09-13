@@ -84,6 +84,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.code.WebhookInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.template.TemplatePipelineInfo
@@ -635,19 +636,29 @@ class PipelineListFacadeService @Autowired constructor(
             }
             watcher.stop()
 
-            val pipelineViewPipelinePage = PipelineViewPipelinePage(
+            return PipelineViewPipelinePage(
                 page = page ?: 1,
                 pageSize = pageSize ?: totalSize.toInt(),
                 count = totalSize,
                 records = pipelineList
             )
-            pipelineViewPipelinePage.myCreatedCount = authPipelines.size
-            pipelineViewPipelinePage.myFavoriteCount = favorPipelines.size
-            return pipelineViewPipelinePage
         } finally {
             LogUtils.printCostTimeWE(watcher = watcher)
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watcher.totalTimeMillis)
         }
+    }
+
+    fun getCount(userId: String, projectId: String): PipelineCount {
+        val myPipelineCount = pipelinePermissionService.getResourceByPermission(
+            userId = userId, projectId = projectId, permission = AuthPermission.LIST
+        ).size
+        val myFavoriteCount = pipelineFavorDao.countByUserId(dslContext, projectId, userId)
+        val totalCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = ChannelCode.BS
+        ).toInt()
+        return PipelineCount(totalCount, myFavoriteCount, myPipelineCount)
     }
 
     private fun handlePipelineQueryList(

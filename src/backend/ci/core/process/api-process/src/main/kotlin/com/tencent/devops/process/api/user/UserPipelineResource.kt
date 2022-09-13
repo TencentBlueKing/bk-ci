@@ -47,6 +47,7 @@ import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
+import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
@@ -587,4 +588,16 @@ interface UserPipelineResource {
         @ApiParam("yaml内容", required = true)
         yaml: MatrixPipelineInfo
     ): Result<MatrixPipelineInfo>
+
+    @ApiOperation("获取列表页列表相关的数目")
+    @GET
+    @Path("/projects/{projectId}/getCount")
+    fun getCount(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<PipelineCount>
 }

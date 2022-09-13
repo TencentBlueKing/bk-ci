@@ -60,6 +60,7 @@ import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
+import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -459,6 +460,11 @@ class UserPipelineResourceImpl @Autowired constructor(
             delete = true
         )
         return Result(true)
+    }
+
+    override fun getCount(userId: String, projectId: String): Result<PipelineCount> {
+        checkParam(userId, projectId)
+        return Result(pipelineListFacadeService.getCount(userId,projectId))
     }
 
     override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
