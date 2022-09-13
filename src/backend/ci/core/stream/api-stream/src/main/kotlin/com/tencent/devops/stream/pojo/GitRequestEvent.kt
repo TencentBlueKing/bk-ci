@@ -84,7 +84,7 @@ data class GitRequestEvent(
     @ApiModelProperty("远程仓库触发时得到的主库流水线列表")
     var repoTriggerPipelineList: List<StreamRepoHookEvent>? = null,
     @ApiModelProperty("变更的yaml文件")
-    var changeYamlList: List<String> = emptyList()
+    var changeYamlList: List<ChangeYamlList> = emptyList()
 ) {
     companion object {
         // 对应client下删除分支的场景，after=0000000000000000000000000000000000000000，表示删除分支。

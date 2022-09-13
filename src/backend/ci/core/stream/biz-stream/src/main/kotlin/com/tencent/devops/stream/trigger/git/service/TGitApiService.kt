@@ -35,6 +35,7 @@ import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
@@ -209,6 +210,27 @@ class TGitApiService @Autowired constructor(
                 mergeStatus = it.mergeStatus,
                 baseCommit = it.baseCommit
             )
+        }
+    }
+
+    fun getMrReview(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        mrId: String,
+        retry: ApiRequestRetryInfo
+    ): GitMrReviewInfo? {
+        return doRetryFun(
+            logger = logger,
+            retry = retry,
+            log = "$gitProjectId get mr $mrId info error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO
+        ) {
+            client.get(ServiceGitResource::class).getMergeRequestReviewersInfo(
+                token = cred.toToken(),
+                tokenType = cred.toTokenType(),
+                repoName = gitProjectId,
+                mrId = mrId.toLong()
+            ).data
         }
     }
 
