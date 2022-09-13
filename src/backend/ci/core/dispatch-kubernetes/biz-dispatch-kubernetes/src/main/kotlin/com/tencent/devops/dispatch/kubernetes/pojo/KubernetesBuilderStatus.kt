@@ -65,9 +65,7 @@ fun KubernetesBuilderStatus.hasException(): Boolean {
 
 fun KubernetesBuilderStatus.canReStart(): Boolean {
     return when (status) {
-        KubernetesBuilderStatusEnum.READY_TO_RUN.realName,
-        KubernetesBuilderStatusEnum.SUCCEEDED.realName,
-        -> true
+        KubernetesBuilderStatusEnum.READY_TO_RUN.realName, KubernetesBuilderStatusEnum.SUCCEEDED.realName -> true
         else -> false
     }
 }
