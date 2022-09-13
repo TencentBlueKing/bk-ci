@@ -52,7 +52,8 @@ class PipelineBuildNotifyListener @Autowired constructor(
         when (notifyTemplateEnumType) {
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
-            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE
+            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE,
+            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE
             -> {
                 if (event.notifyCompleteCheck) {
                     event.completeReviewNotify()
