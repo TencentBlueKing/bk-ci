@@ -1407,17 +1407,14 @@ class PipelineListFacadeService @Autowired constructor(
     ): PipelineViewPipelinePage<PipelineInfo> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
-        var slqLimit: SQLLimit? = null
-        if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val slqLimit: SQLLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
 
-        val offset = slqLimit?.offset ?: 0
-        val limit = slqLimit?.limit ?: -1
         // 获取列表和数目
         val list = pipelineRepositoryService.listDeletePipelineIdByProject(
             projectId = projectId,
             days = deletedPipelineStoreDays.toLong(),
-            offset = offset,
-            limit = limit
+            offset = slqLimit.offset,
+            limit = slqLimit.limit
         )
         val count = pipelineInfoDao.countDeletePipeline(dslContext, projectId, deletedPipelineStoreDays.toLong())
         // 加上流水线组
