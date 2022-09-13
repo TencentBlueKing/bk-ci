@@ -322,7 +322,7 @@ class ModelStage @Autowired(required = false) constructor(
                         notifyUserList = if (notify.receivers.isNullOrEmpty()) {
                             listOf(event.userId)
                         } else {
-                            notify.receivers.toList()
+                            ModelCommon.parseReceivers(notify.receivers).toList()
                         },
                         notifyGroupList = null,
                         auditUserList = null,
