@@ -25,16 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package installer
+package com.tencent.devops.common.api.pojo.agent
 
-import (
-	"testing"
-)
-
-func Test_DoInstallAgent_01(t *testing.T) {
-	err := DoInstallAgent()
-	if err != nil {
-		t.Error("err: ", err.Error())
-	}
-	t.Log("done")
+enum class AgentArchType(val arch: String) {
+    ARM64("arm64"),
+    MIPS64("mips64"),
+    AMD64("amd64")
 }
