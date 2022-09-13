@@ -28,13 +28,15 @@
 package com.tencent.devops.project.util
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
 
 @Suppress("ALL")
 object ProjectUtils {
 
-    fun packagingBean(tProjectRecord: TProjectRecord, grayProjectSet: Set<String>): ProjectVO {
+    fun packagingBean(tProjectRecord: TProjectRecord): ProjectVO {
         return ProjectVO(
             /* 已经投产旧插件的使用字段兼容 */
             project_id = tProjectRecord.projectId,
@@ -84,12 +86,15 @@ object ProjectUtils {
             },
             useBk = tProjectRecord.useBk,
             enabled = tProjectRecord.enabled ?: true,
-            gray = grayProjectSet.contains(tProjectRecord.englishName),
+            gray = tProjectRecord.routerTag == "gray",
             hybridCcAppId = tProjectRecord.hybridCcAppId,
             enableExternal = tProjectRecord.enableExternal,
             pipelineLimit = tProjectRecord.pipelineLimit,
             routerTag = tProjectRecord.routerTag,
-            relationId = tProjectRecord.relationId
+            relationId = tProjectRecord.relationId,
+            properties = tProjectRecord.properties?.let { self ->
+                JsonUtil.to(self, ProjectProperties::class.java)
+            }
         )
     }
 }

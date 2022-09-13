@@ -30,16 +30,14 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.MacOSGray
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -53,17 +51,13 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     private val projectDao: ProjectDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val projectDispatcher: ProjectDispatcher,
-    private val redisOperation: RedisOperation,
-    gray: Gray,
-    macosGray: MacOSGray
+    private val redisOperation: RedisOperation
 ) : AbsOpProjectServiceImpl(
-    dslContext,
-    projectDao,
-    projectLabelRelDao,
-    redisOperation,
-    gray,
-    macosGray,
-    projectDispatcher
+    dslContext = dslContext,
+    projectDao = projectDao,
+    projectLabelRelDao = projectLabelRelDao,
+    redisOperation = redisOperation,
+    projectDispatcher = projectDispatcher
 ) {
 
     override fun updateProjectFromOp(
@@ -81,7 +75,8 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
         // 判断项目是不是审核的情况
         var flag = false
         if (1 == dbProjectRecord.approvalStatus &&
-            (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
+            (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)
+        ) {
             flag = true
             projectInfoRequest.approver = projectInfoRequest.approver
             projectInfoRequest.approvalTime = System.currentTimeMillis()
@@ -156,7 +151,8 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
         return Result(emptyList())
     }
 
-    override fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums) {
-        return
+    override fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean {
+        logger.info("[updateProjectProperties]| properties=$properties| do nothing")
+        return false
     }
 }

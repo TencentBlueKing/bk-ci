@@ -43,6 +43,16 @@ class WindowsCpuUsageMetrics @Autowired constructor(val influxdbClient: Influxdb
         private const val usage_privileged_idx = 0
         private const val usage_user_idx = 1
         private const val usage_interrupt_idx = 2
+
+        private const val k_usage_privileged = "usage_privileged"
+        private const val k_usage_user = "usage_user"
+        private const val k_usage_interrupt = "usage_interrupt"
+
+        private val emptyCpuMetrics = mapOf(
+            k_usage_privileged to UsageMetrics.emptyMetrics,
+            k_usage_user to UsageMetrics.emptyMetrics,
+            k_usage_interrupt to UsageMetrics.emptyMetrics
+        )
     }
 
     @PostConstruct
@@ -60,12 +70,11 @@ class WindowsCpuUsageMetrics @Autowired constructor(val influxdbClient: Influxdb
                 "SELECT mean(\"Percent_Interrupt_Time\") FROM \"win_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
                 "AND $timePart fill(null)"
 
-        val queryResult = influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB))
-            ?: return mapOf(
-                "usage_privileged" to UsageMetrics.emptyMetrics,
-                "usage_user" to UsageMetrics.emptyMetrics,
-                "usage_interrupt" to UsageMetrics.emptyMetrics
-            )
+        val queryResult = try {
+            influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyCpuMetrics
+        } catch (ignore: Exception) {
+            return emptyCpuMetrics
+        }
 
         if (queryResult.hasError()) {
             throw ErrorCodeException(
@@ -75,9 +84,9 @@ class WindowsCpuUsageMetrics @Autowired constructor(val influxdbClient: Influxdb
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
-        resultData["usage_privileged"] = loadSerialData(queryResult.results[usage_privileged_idx], "usage_privileged")
-        resultData["usage_user"] = loadSerialData(queryResult.results[usage_user_idx], "usage_user")
-        resultData["usage_interrupt"] = loadSerialData(queryResult.results[usage_interrupt_idx], "usage_interrupt")
+        resultData[k_usage_privileged] = loadSerialData(queryResult.results[usage_privileged_idx], k_usage_privileged)
+        resultData[k_usage_user] = loadSerialData(queryResult.results[usage_user_idx], k_usage_user)
+        resultData[k_usage_interrupt] = loadSerialData(queryResult.results[usage_interrupt_idx], k_usage_interrupt)
         return resultData
     }
 }

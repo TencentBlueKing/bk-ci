@@ -193,6 +193,8 @@ const val PIPELINE_RES_NUM_MIN = 50
 
 const val KEY_PIPELINE_ID = "pipelineId"
 
+const val KEY_PIPELINE_NAME = "pipelineName"
+
 const val KEY_PROJECT_ID = "projectId"
 
 const val KEY_TEMPLATE_ID = "templateId"

@@ -60,7 +60,6 @@ class StreamTriggerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StreamTriggerService::class.java)
         private const val ymlVersion = "v2.0"
         const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
-        const val VARIABLE_PREFIX = "variables."
     }
 
     fun retry(
@@ -71,7 +70,7 @@ class StreamTriggerService @Autowired constructor(
         taskId: String?,
         failedContainer: Boolean? = false
     ): BuildId {
-        logger.info("retry pipeline, gitProjectId: $gitProjectId, pipelineId: $pipelineId, buildId: $buildId")
+        logger.info("StreamTriggerService|retry|gitProjectId|$gitProjectId|pipelineId|$pipelineId|buildId|$buildId")
         val pipeline =
             gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
                 Response.Status.FORBIDDEN,
@@ -97,7 +96,10 @@ class StreamTriggerService @Autowired constructor(
     }
 
     fun manualShutdown(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Boolean {
-        logger.info("manualShutdown, gitProjectId: $gitProjectId, pipelineId: $pipelineId, buildId: $buildId")
+        logger.info(
+            "StreamTriggerService|manualShutdown" +
+                "|gitProjectId|$gitProjectId|pipelineId|$pipelineId|buildId|$buildId"
+        )
         val pipeline =
             gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
                 Response.Status.FORBIDDEN,

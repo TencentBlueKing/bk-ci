@@ -1,6 +1,7 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
@@ -18,6 +19,7 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.pojo.CheckType
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.util.CommonCredentialUtils
@@ -65,17 +67,20 @@ class StreamRepoTriggerAction(
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
+        val changeSet = getChangeSet()
         return TGitActionCommon.getYamlPathList(
             action = baseAction,
             gitProjectId = data.getGitProjectId(),
             ref = data.context.repoTrigger!!.branch
-        ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
+        ).map { (name, blobId) ->
+            YamlPathListEntry(name, CheckType.NO_NEED_CHECK, data.context.repoTrigger!!.branch, blobId)
+        }
     }
 
-    override fun getYamlContent(fileName: String): Pair<String, String> {
-        return Pair(
-            data.context.repoTrigger!!.branch,
-            api.getFileContent(
+    override fun getYamlContent(fileName: String): YamlContent {
+        return YamlContent(
+            ref = data.context.repoTrigger!!.branch,
+            content = api.getFileContent(
                 cred = baseAction.getGitCred(),
                 gitProjectId = data.getGitProjectId(),
                 fileName = fileName,
@@ -123,9 +128,7 @@ class StreamRepoTriggerAction(
         }
     }
 
-    override fun updateLastBranch(pipelineId: String, branch: String) {
-        baseAction.updateLastBranch(pipelineId, branch)
-    }
+    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) {}
 
     private fun checkHaveGroupName(
         name: String,
@@ -142,6 +145,8 @@ class StreamRepoTriggerAction(
             reasonParams = listOf("First level group[$firstGroupName] does not exist")
         )
     }
+
+    override fun getStartType() = StartType.WEB_HOOK
 
     /**
      * 判断是否可以注册跨项目构建事件
@@ -164,7 +169,10 @@ class StreamRepoTriggerAction(
         }
         // 增加远程仓库时所使用权限的userId
         this.data.context.repoTrigger?.buildUserID = repoTriggerUserId
-        logger.info("after check repoTrigger credentials |repoTrigger=${this.data.context.repoTrigger}")
+        logger.info(
+            "StreamRepoTriggerActionafter|triggerCheckRepoTriggerCredentials" +
+                "|check repoTrigger credentials|repoTrigger|${this.data.context.repoTrigger}"
+        )
         return repoTriggerUserId
     }
 
@@ -210,11 +218,19 @@ class StreamRepoTriggerAction(
                 reasonParams = listOf("401 Unauthorized. Repo:(${repoHook.name})")
             )
         }
-        val check = this.api.getProjectUserInfo(
-            cred = this.data.context.repoTrigger?.repoTriggerCred as TGitCred,
-            userId = userInfo.id,
-            gitProjectId = this.data.eventCommon.gitProjectId
-        ).accessLevel >= 40
+        val check = try {
+            this.api.getProjectUserInfo(
+                cred = this.data.context.repoTrigger?.repoTriggerCred as TGitCred,
+                userId = userInfo.id,
+                gitProjectId = this.data.eventCommon.gitProjectId
+            ).accessLevel >= 40
+        } catch (e: Throwable) {
+            throw StreamTriggerException(
+                action = this,
+                triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
+                reasonParams = listOf("401 Unauthorized. Repo:(${repoHook.name}).user:(${userInfo.username})")
+            )
+        }
         return Pair(check, userInfo.username)
     }
 }

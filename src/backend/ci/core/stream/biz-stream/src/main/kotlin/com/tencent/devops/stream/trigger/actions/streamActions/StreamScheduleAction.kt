@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.bk.sdk.iam.util.JsonUtil
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
@@ -49,6 +50,7 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
@@ -126,10 +128,10 @@ class StreamScheduleAction(
         return emptyList()
     }
 
-    override fun getYamlContent(fileName: String): Pair<String, String> {
-        return Pair(
-            data.eventCommon.branch,
-            api.getFileContent(
+    override fun getYamlContent(fileName: String): YamlContent {
+        return YamlContent(
+            ref = data.eventCommon.branch,
+            content = api.getFileContent(
                 cred = this.getGitCred(),
                 gitProjectId = data.getGitProjectId(),
                 fileName = fileName,
@@ -190,5 +192,8 @@ class StreamScheduleAction(
     }
 
     override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {}
-    override fun updateLastBranch(pipelineId: String, branch: String) {}
+
+    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) {}
+
+    override fun getStartType() = StartType.TIME_TRIGGER
 }

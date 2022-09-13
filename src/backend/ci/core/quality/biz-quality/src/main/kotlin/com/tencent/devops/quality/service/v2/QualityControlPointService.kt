@@ -145,7 +145,8 @@ class QualityControlPointService @Autowired constructor(
     }
 
     fun opUpdate(userId: String, id: Long, controlPointUpdate: ControlPointUpdate): Boolean {
-        logger.info("user($userId) update control point($id): $controlPointUpdate")
+        logger.info("user($userId) update control point($id): ${controlPointUpdate.elementType}, " +
+                "stage: ${controlPointUpdate.stage}")
         if (controlPointDao.update(userId, id, controlPointUpdate, dslContext) > 0) {
             return true
         }

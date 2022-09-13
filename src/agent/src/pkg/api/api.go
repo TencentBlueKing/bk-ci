@@ -29,6 +29,7 @@ package api
 
 import (
 	"fmt"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -45,7 +46,7 @@ func buildUrl(url string) string {
 	}
 }
 
-func Heartbeat(buildInfos []ThirdPartyBuildInfo) (*httputil.DevopsResult, error) {
+func Heartbeat(buildInfos []ThirdPartyBuildInfo, jdkVersion []string) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/newHeartbeat")
 
 	agentHeartbeatInfo := &AgentHeartbeatInfo{
@@ -57,14 +58,25 @@ func Heartbeat(buildInfos []ThirdPartyBuildInfo) (*httputil.DevopsResult, error)
 		AgentInstallPath:  systemutil.GetExecutableDir(),
 		StartedUser:       systemutil.GetCurrentUser().Username,
 		TaskList:          buildInfos,
+		Props: AgentPropsInfo{
+			Arch:       runtime.GOARCH,
+			JdkVersion: jdkVersion,
+		},
 	}
 
 	return httputil.NewHttpClient().Post(url).Body(agentHeartbeatInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
-func CheckUpgrade() (*httputil.AgentResult, error) {
-	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/upgrade?version=" + config.GAgentEnv.SlaveVersion + "&masterVersion=" + config.AgentVersion)
-	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
+func CheckUpgrade(jdkVersion []string) (*httputil.AgentResult, error) {
+	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/upgradeNew")
+
+	info := &UpgradeInfo{
+		WorkerVersion:  config.GAgentEnv.SlaveVersion,
+		GoAgentVersion: config.AgentVersion,
+		JdkVersion:     jdkVersion,
+	}
+
+	return httputil.NewHttpClient().Post(url).Body(info).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
 }
 
 func FinishUpgrade(success bool) (*httputil.AgentResult, error) {

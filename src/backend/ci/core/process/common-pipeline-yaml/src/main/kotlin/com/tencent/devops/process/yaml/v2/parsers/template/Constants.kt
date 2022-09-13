@@ -70,7 +70,9 @@ object Constants {
 //            "The %s template can only contain parameters, resources and %s keywords"
 //        const val EXTENDS_TEMPLATE_EXTENDS_ERROR = "[%s]The extends keyword cannot be nested"
 //        const val EXTENDS_TEMPLATE_ON_ERROR = "[%s]Triggers are not supported in the template"
-    const val VALUE_NOT_IN_ENUM = "[%s][%s=%s]Parameter error, the expected value is [%s]"
+    const val VALUE_NOT_IN_ENUM = "[%s to %s][%s=%s]Parameter error, the expected value is [%s]"
+    const val PARAMETER_FORMAT_ERROR = "[%s]Parameter format error [%s]"
+    const val EXPRESSION_EVALUATE_ERROR = "[%s]Expression [%s] evaluate error [%s]"
 
     //        const val FINALLY_FORMAT_ERROR = "final stage not support stage's template"
     const val STAGE_CHECK_GATE_NUMB_BEYOND =

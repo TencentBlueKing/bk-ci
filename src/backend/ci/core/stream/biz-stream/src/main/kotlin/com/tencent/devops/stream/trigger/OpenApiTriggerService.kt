@@ -114,6 +114,10 @@ class OpenApiTriggerService @Autowired constructor(
         }
     }
 
+    override fun getInputParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>? {
+        return triggerBuildReq.inputs
+    }
+
     private fun loadPayloadOpenApiAction(
         streamTriggerSetting: StreamTriggerSetting,
         triggerBuildReq: TriggerBuildReq
@@ -124,7 +128,8 @@ class OpenApiTriggerService @Autowired constructor(
             actionFactory.load(event) ?: throw CustomException(
                 status = Response.Status.BAD_REQUEST,
                 message = "can not load action"
-            )
+            ),
+            triggerBuildReq.checkPipelineTrigger
         )
 
         // 仅支持当前仓库下的 event
@@ -162,7 +167,10 @@ class OpenApiTriggerService @Autowired constructor(
             ScmType.CODE_GIT -> try {
                 objectMapper.readValue<GitEvent>(triggerBuildReq.payload!!)
             } catch (ignore: Exception) {
-                logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
+                logger.warn(
+                    "OpenApiTriggerService|mockWebhookTrigger" +
+                        "|Fail to parse the git web hook commit event|errMsg|${ignore.message}"
+                )
                 throw CustomException(
                     status = Response.Status.BAD_REQUEST,
                     message = "Fail to parse the git web hook commit event, errMsg: ${ignore.message}"
@@ -188,7 +196,8 @@ class OpenApiTriggerService @Autowired constructor(
                     gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId).toString(),
                     triggerBuildReq = triggerBuildReq
                 )
-            )
+            ),
+            triggerBuildReq.checkPipelineTrigger
         )
         val request = action.buildRequestEvent("")?.copy(objectKind = TGitObjectKind.OBJECT_KIND_OPENAPI)
             ?: throw CustomException(

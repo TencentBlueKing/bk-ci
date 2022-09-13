@@ -28,6 +28,36 @@ const columns = [
   {
     label: t('Pipeline'),
     field: 'pipelineName',
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          style: {
+            cursor: 'pointer',
+            color: '#3a84ff',
+          },
+          onClick () {
+            const projectId = row.projectId
+            const pipelineId = row.pipelineId
+            const buildId = row.buildId
+            http.getPipelineType({
+              projectId,
+              pipelineId
+            }).then(res => {
+              if (res.channelCode === 'BS') {
+                window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}`, '_blank')
+              }
+              window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}`, '_blank')
+            })
+          },
+        },
+        [
+          cell,
+          ' #',
+          row.buildNum
+        ]
+      );
+    },
   },
   {
     label: t('Branch'),
@@ -52,6 +82,18 @@ const columns = [
   {
     label: t('Error Message'),
     field: 'errorMsg',
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          title: row.errorMsg, 
+        },
+        [
+          cell,
+          row.errorMsg
+        ]
+      );
+    },
   },
 ];
 const tableData = ref([]);
@@ -69,21 +111,6 @@ const handlePageChange = (current) => {
   pagination.value.current = current;
   getData();
 };
-
-const handleRowClick = (e, row) => {
-  const projectId = row.projectId
-  const pipelineId = row.pipelineId
-  const buildId = row.buildId
-  http.getPipelineType({
-    projectId,
-    pipelineId
-  }).then(res => {
-    if (res.channelCode === 'BS') {
-      window.open(`https://${row.domain}/console/pipeline/${projectId}/${pipelineId}/detail/${buildId}`, '_blank')
-    }
-    window.open(`https://${row.domain}/pipeline/${pipelineId}/detail/${buildId}/?page=1#${projectId.split('_')[1]}`, '_blank')
-  })
-}
 
 const handlePageLimitChange = (limit) => {
   pagination.value.limit = limit;
@@ -129,10 +156,10 @@ onMounted(getData);
       :columns="columns"
       :data="tableData"
       remote-pagination
+      settings
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange"
-      @row-click="handleRowClick"
     >
     </bk-table>
   </bk-loading>
@@ -142,8 +169,13 @@ onMounted(getData);
 .error-table {
   margin-top: .15rem;
   margin-bottom: .08rem;
-  ::v-deep .bk-table-body > .bk-table-body-content > table > tbody > tr {
-    cursor: pointer;
-  }
+}
+::v-deep(.bk-table .bk-table-body table td .cell) {
+  font-size: 12px;
+}
+::v-deep(.bk-table .bk-table-head table th .cell) {
+  font-size: 12px;
+  color: #313238;
+
 }
 </style>

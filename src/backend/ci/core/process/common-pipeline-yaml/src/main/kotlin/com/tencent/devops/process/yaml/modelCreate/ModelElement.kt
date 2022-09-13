@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElemen
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
+import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.utils.PathMatchUtils
 import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.job.Job
@@ -69,22 +70,29 @@ class ModelElement @Autowired(required = false) constructor(
         job.steps!!.forEach { step ->
             val additionalOptions = ElementAdditionalOptions(
                 continueWhenFailed = step.continueOnError ?: false,
-                timeout = step.timeoutMinutes?.toLong(),
+                timeout = step.timeoutMinutes?.toLong() ?: 480,
                 retryWhenFailed = step.retryTimes != null,
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
                 customEnv = getElementEnv(step.env),
                 runCondition = when {
                     step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
-                    IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifFiled ?: "") ->
+                    IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifFiled) ->
                         RunCondition.PRE_TASK_FAILED_BUT_CANCEL
-                    IfType.ALWAYS.name == (step.ifFiled ?: "") ->
+
+                    IfType.ALWAYS.name == (step.ifFiled) ->
                         RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
-                    IfType.FAILURE.name == (step.ifFiled ?: "") ->
+
+                    IfType.FAILURE.name == (step.ifFiled) ->
                         RunCondition.PRE_TASK_FAILED_ONLY
+
                     else -> RunCondition.CUSTOM_CONDITION_MATCH
                 },
-                customCondition = step.ifFiled,
+                customCondition = if (step.ifFiled.isNullOrBlank()) {
+                    step.ifFiled
+                } else {
+                    ModelCreateUtil.removeIfBrackets(step.ifFiled)
+                },
                 manualRetry = false
             )
 
@@ -94,9 +102,11 @@ class ModelElement @Autowired(required = false) constructor(
                 step.run != null -> {
                     makeRunElement(step, job, additionalOptions)
                 }
+
                 step.checkout != null -> {
                     inner!!.makeCheckoutElement(step, event, additionalOptions)
                 }
+
                 else -> {
                     inner!!.makeMarketBuildAtomElement(job, step, event, additionalOptions)
                 }
@@ -108,7 +118,6 @@ class ModelElement @Autowired(required = false) constructor(
                 elementList.add(element)
 
                 if (element is MarketBuildAtomElement) {
-                    logger.info("install market atom: ${element.getAtomCode()}")
                     ModelCommon.installMarketAtom(client, event.projectCode, event.userId, element.getAtomCode())
                 }
             }
@@ -150,7 +159,7 @@ class ModelElement @Autowired(required = false) constructor(
             if (job.runsOn.agentSelector.isNullOrEmpty()) {
                 linux
             } else {
-                when (job.runsOn.agentSelector!!.first()) {
+                when (job.runsOn.agentSelector.first()) {
                     "linux" -> linux
                     "macos" -> linux
                     "windows" -> WindowsScriptElement(
@@ -158,7 +167,7 @@ class ModelElement @Autowired(required = false) constructor(
                         name = step.name ?: "run",
                         stepId = step.id,
                         scriptType = BuildScriptType.BAT,
-                        script = step.run!!
+                        script = step.run
                     )
                     else -> linux
                 }

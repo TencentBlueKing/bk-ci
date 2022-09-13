@@ -44,6 +44,7 @@ enum class TriggerReason(val summary: String, val detail: String) {
     ),
     CI_YAML_CONTENT_NULL("The YAML file is null", "The YAML file is null: %s"),
     CI_YAML_INVALID("YAML is invalid", "YAML is invalid: %s"),
+    CI_TRIGGER_FORMAT_ERROR("Trigger format is error", "Trigger format is error: %s"),
     CI_YAML_NEED_MERGE_OR_REBASE(
         "The YAML is modified. " +
             "Please execute either REBASE or MERGE to update your YAML from remote target branch.",
@@ -81,6 +82,10 @@ enum class TriggerReason(val summary: String, val detail: String) {
     REPO_TRIGGER_FAILED(
         "repo trigger failed",
         "repo trigger failed: %s"
+    ),
+    SAVE_PIPELINE_FAILED(
+        "save pipeline failed",
+        "save pipeline failed: %s"
     ),
     UNKNOWN_ERROR(
         "Unknown error, please contact DevOps-helper",

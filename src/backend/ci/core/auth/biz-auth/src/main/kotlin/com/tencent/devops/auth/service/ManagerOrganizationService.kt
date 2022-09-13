@@ -112,7 +112,7 @@ class ManagerOrganizationService @Autowired constructor(
     fun deleteManagerOrganization(userId: String, managerId: Int): Boolean {
         logger.info("deleteManagerOrganization $userId $managerId")
         managerOrganizationDao.delete(dslContext, managerId, userId)
-        logger.info("deleteManagerOrganization send update to mq： $userId | $managerId ")
+        logger.info("deleteManagerOrganization send update to mq: $userId | $managerId ")
         refreshDispatch.dispatch(
             ManagerOrganizationChangeEvent(
                 refreshType = "deleteManagerOrganization",

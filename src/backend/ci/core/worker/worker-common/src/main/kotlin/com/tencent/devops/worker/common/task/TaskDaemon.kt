@@ -101,8 +101,10 @@ class TaskDaemon(
         if (allEnv.isNotEmpty()) {
             allEnv.forEach { (key, value) ->
                 if (value.length > PARAM_MAX_LENGTH) {
-                    LoggerService.addWarnLine("Warning, assignment to variable [$key] failed, " +
-                        "more than $PARAM_MAX_LENGTH characters(len=${value.length})")
+                    LoggerService.addWarnLine(
+                        "Warning, assignment to variable [$key] failed, " +
+                            "more than $PARAM_MAX_LENGTH characters(len=${value.length})"
+                    )
                     return@forEach
                 }
                 if (SensitiveValueService.matchSensitiveValue(value)) {

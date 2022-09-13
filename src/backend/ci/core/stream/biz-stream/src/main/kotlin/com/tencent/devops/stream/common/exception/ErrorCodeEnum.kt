@@ -107,6 +107,16 @@ enum class ErrorCodeEnum(
         errorCode = 2129025,
         formatErrorMessage = "公共账号[%s]未注册，请先联系 DevOps-helper 注册"
     ),
+    MANUAL_TRIGGER_YAML_NULL(
+        errorType = ErrorType.USER,
+        errorCode = 2129028,
+        formatErrorMessage = "分支上没有此流水线，或者流水线未允许手动触发"
+    ),
+    MANUAL_TRIGGER_YAML_INVALID(
+        errorType = ErrorType.USER,
+        errorCode = 2129029,
+        formatErrorMessage = "手动触发YAML SCHEMA校验错误"
+    ),
     ;
 
     companion object {

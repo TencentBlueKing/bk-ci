@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -48,6 +49,7 @@ import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -206,6 +208,30 @@ class ThirdPartyAgentService @Autowired constructor(
         } catch (t: Throwable) {
             logger.warn("Fail to check if agent can upgrade", t)
             AgentResult(AgentStatus.IMPORT_EXCEPTION, false)
+        }
+    }
+
+    fun checkIfCanUpgradeByVersionNew(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        info: ThirdPartyAgentUpgradeByVersionInfo
+    ): AgentResult<UpgradeItem> {
+        // logger.info("Start to check if the agent($agentId) of version $version of project($projectId) can upgrade")
+        return try {
+            val agentUpgradeResult = client.get(ServiceThirdPartyAgentResource::class)
+                .upgradeByVersionNew(projectId, agentId, secretKey, info)
+            return if (!agentUpgradeResult.data!!.agent && !agentUpgradeResult.data!!.worker &&
+                !agentUpgradeResult.data!!.jdk
+            ) {
+                agentUpgradeResult
+            } else {
+                thirdPartyAgentBuildRedisUtils.setThirdPartyAgentUpgrading(projectId, agentId)
+                agentUpgradeResult
+            }
+        } catch (t: Throwable) {
+            logger.warn("Fail to check if agent can upgrade", t)
+            AgentResult(AgentStatus.IMPORT_EXCEPTION, UpgradeItem(false, false, false))
         }
     }
 

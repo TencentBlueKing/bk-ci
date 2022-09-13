@@ -63,7 +63,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
 
     override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(LogOriginEvent(buildId, listOf(logMessage)))
@@ -72,7 +72,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
 
     override fun addRedLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
@@ -90,7 +90,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
 
     override fun addYellowLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
@@ -109,7 +109,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
     @Timed
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(LogOriginEvent(buildId, logMessages))
@@ -126,7 +126,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         logMode: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         // #7168 通过一次获取创建记录以及缓存
@@ -156,7 +156,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         logMode: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
@@ -179,7 +179,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         propertyList: List<TaskBuildLogProperty>
     ): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         logStatusService.updateStorageMode(

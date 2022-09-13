@@ -48,6 +48,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_STORE_LOGO"], description = "OP-STORE-LOGO")
@@ -67,6 +68,9 @@ interface OpStoreLogoResource {
         @ApiParam("contentLength", required = true)
         @HeaderParam("content-length")
         contentLength: Long,
+        @ApiParam("是否限制图片尺寸范围", required = false)
+        @QueryParam("sizeLimitFlag")
+        sizeLimitFlag: Boolean? = null,
         @ApiParam("logo", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,

@@ -59,6 +59,10 @@
                 type: String,
                 default: 'id'
             },
+            showSelectAll: {
+                type: Boolean,
+                default: false
+            },
             searchUrl: String,
             replaceKey: String,
             dataPath: String
@@ -95,7 +99,8 @@
                     'enable-virtual-scroll': this.list.length > 3000,
                     list: this.listData,
                     'id-key': this.settingKey,
-                    'display-key': this.displayKey
+                    'display-key': this.displayKey,
+                    'show-select-all': this.showSelectAll
                 }
                 if (this.searchUrl) props['remote-method'] = this.remoteMethod
                 return props

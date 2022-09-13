@@ -105,7 +105,6 @@ class DefaultModelCheckPluginTest : TestBase() {
         projectCode = "",
         initProjectCode = "projectCode",
         labelList = null,
-        pkgName = null,
         userCommentInfo = StoreUserCommentInfo(true, ""),
         visibilityLevel = VisibilityLevelEnum.LOGIN_PUBLIC.name,
         privateReason = "privateReason",
@@ -229,7 +228,7 @@ class DefaultModelCheckPluginTest : TestBase() {
         checkPlugin.checkJob(linux, projectId, pipelineId, userId, false)
     }
 
-    fun checkModelIntegrityEmptyElement() {
+    private fun checkModelIntegrityEmptyElement() {
         val model = genModel(stageSize = 4, jobSize = 2, elementSize = 0)
         Assertions.assertThrows(ErrorCodeException::class.java) { checkPlugin.checkModelIntegrity(model, projectId) }
     }
@@ -241,10 +240,15 @@ class DefaultModelCheckPluginTest : TestBase() {
         } catch (actual: ErrorCodeException) {
             Assertions.assertEquals(ProcessMessageCode.ERROR_EMPTY_JOB, actual.errorCode)
         }
+    }
 
+    @Test
+    fun `checkModelJob&ElementSize`() {
         val fulModel = genModel(stageSize = 3, jobSize = 2, elementSize = 2)
+        val expect = 2 /* TriggerStage */ + (3 /* stageSize */ * (2 /* JobSize */ * 2 /* element */ + 2 /* Job */))
         try {
-            checkPlugin.checkModelIntegrity(fulModel, projectId)
+            val actualSize = checkPlugin.checkModelIntegrity(fulModel, projectId)
+            Assertions.assertEquals(expect, actualSize)
         } catch (actual: ErrorCodeException) {
             Assertions.assertEquals(ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID, actual.errorCode)
         }

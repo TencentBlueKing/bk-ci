@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
+import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
 import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.Resources
@@ -132,7 +133,7 @@ class ModelContainer @Autowired(required = false) constructor(
                 } else {
                     null
                 }
-                val json = matrix as MutableMap<String, Any>
+                val json = matrix
                 json.remove("include")
                 json.remove("exclude")
 
@@ -196,7 +197,7 @@ class ModelContainer @Autowired(required = false) constructor(
         return if (!job.ifField.isNullOrBlank()) {
             if (finalStage) {
                 JobControlOption(
-                    timeout = job.timeoutMinutes,
+                    timeout = job.timeoutMinutes ?: 480,
                     runCondition = when (job.ifField) {
                         IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
                         IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
@@ -211,9 +212,9 @@ class ModelContainer @Autowired(required = false) constructor(
             } else {
                 JobControlOption(
                     enable = jobEnable,
-                    timeout = job.timeoutMinutes,
+                    timeout = job.timeoutMinutes ?: 480,
                     runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
-                    customCondition = job.ifField.toString(),
+                    customCondition = ModelCreateUtil.removeIfBrackets(job.ifField),
                     dependOnType = DependOnType.ID,
                     dependOnId = job.dependOn,
                     prepareTimeout = job.runsOn.queueTimeoutMinutes,
@@ -223,7 +224,7 @@ class ModelContainer @Autowired(required = false) constructor(
         } else {
             JobControlOption(
                 enable = jobEnable,
-                timeout = job.timeoutMinutes,
+                timeout = job.timeoutMinutes ?: 480,
                 dependOnType = DependOnType.ID,
                 dependOnId = job.dependOn,
                 prepareTimeout = job.runsOn.queueTimeoutMinutes,

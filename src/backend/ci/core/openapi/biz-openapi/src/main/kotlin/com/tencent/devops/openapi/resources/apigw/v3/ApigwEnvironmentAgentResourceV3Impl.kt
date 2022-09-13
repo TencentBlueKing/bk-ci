@@ -51,7 +51,7 @@ class ApigwEnvironmentAgentResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String
     ): Result<List<NodeBaseInfo>> {
-        logger.info("thirdPartAgentList userId $userId, project $projectId")
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V3|$userId|third part agent list|$projectId")
         return client.get(ServiceNodeResource::class).listNodeByNodeType(projectId, NodeType.THIRDPARTY)
     }
 
@@ -62,7 +62,7 @@ class ApigwEnvironmentAgentResourceV3Impl @Autowired constructor(
         projectId: String,
         nodeHashId: String
     ): Result<NodeWithPermission?> {
-        logger.info("getNodeStatus userId:$userId, projectId: $projectId, nodeHashId: $nodeHashId")
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V3|$userId|get node status|$projectId|$nodeHashId")
         val nodeList = client.get(ServiceNodeResource::class).listByHashIds(
             userId = userId,
             projectId = projectId,
