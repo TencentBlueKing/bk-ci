@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
@@ -410,6 +411,30 @@ interface ApigwBuildResourceV4 {
         @BkField(required = true)
         buildId: String
     ): Result<String>
+
+    @ApiOperation("修改某次构建的备注", tags = ["v4_app_update_remark", "v4_user_update_remark"])
+    @POST
+    @Path("update_remark")
+    fun updateRemark(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = false)
+        @QueryParam("pipelineId")
+        @BkField(required = false)
+        pipelineId: String?,
+        @ApiParam("构建ID", required = true)
+        @QueryParam("buildId")
+        @BkField(required = true)
+        buildId: String,
+        @ApiParam("备注信息", required = true)
+        remark: BuildHistoryRemark?
+    ): Result<Boolean>
 
     @ApiOperation("人工审核插件进行审核", tags = ["v4_app_manual_review", "v4_user_manual_review"])
     @POST
