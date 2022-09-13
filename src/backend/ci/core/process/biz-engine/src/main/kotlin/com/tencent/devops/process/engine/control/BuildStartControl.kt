@@ -108,6 +108,7 @@ class BuildStartControl @Autowired constructor(
         private const val JOB_ID = "0"
         private const val DEFAULT_DELAY = 1000
     }
+
     @BkTimed
     fun handle(event: PipelineBuildStartEvent) {
         val watcher = Watcher(id = "ENGINE|BuildStart|${event.traceId}|${event.buildId}|${event.status}")
@@ -188,7 +189,7 @@ class BuildStartControl @Autowired constructor(
                 message = "Illegal build #${buildInfo.buildNum} [${buildInfo.status}]",
                 buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
             )
-            return true
+            return false
         }
         val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
         try {

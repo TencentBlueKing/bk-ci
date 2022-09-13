@@ -34,5 +34,7 @@ data class GithubUser(
     val receivedEventsUrl: String,
     val type: String,
     @JsonProperty("site_admin")
-    val siteAdmin: Boolean
+    val siteAdmin: Boolean,
+    @JsonProperty("role_name")
+    val roleName: String?
 )

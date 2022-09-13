@@ -45,6 +45,16 @@ IF NOT EXISTS(SELECT 1
                     AND COLUMN_NAME = 'TRIGGER_REVIEW_SETTING') THEN
 ALTER TABLE `T_GIT_BASIC_SETTING`
     ADD COLUMN `TRIGGER_REVIEW_SETTING` text not null COMMENT 'pr、mr触发时的权限校验(存储为json字符串)';
+	
+END IF;
+
+IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_GIT_REQUEST_EVENT'
+                    AND COLUMN_NAME = 'CHANGE_YAML_LIST') THEN
+ALTER TABLE `T_GIT_REQUEST_EVENT`
+    ADD COLUMN `CHANGE_YAML_LIST` text COMMENT 'yaml变更文件列表';
 
 END IF;
 

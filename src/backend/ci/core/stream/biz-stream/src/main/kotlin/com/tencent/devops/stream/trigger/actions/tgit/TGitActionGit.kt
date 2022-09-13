@@ -99,7 +99,9 @@ abstract class TGitActionGit(
             addCommitCheck = api::addCommitCheck
         )
     }
-
-    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) =
-        Unit
+    override fun updatePipelineLastBranchAndDisplayName(
+        pipelineId: String,
+        branch: String?,
+        displayName: String?
+    ) = Unit
 }

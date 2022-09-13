@@ -213,18 +213,6 @@ class GithubPRActionGit(
     }
 
     override fun skipStream(): Boolean {
-        // fork触发进行权限校验
-        if (!this.checkMrForkReview()) {
-            logger.warn(
-                "check mr fork review false, return, gitProjectId: ${this.data.getGitProjectId()}, " +
-                    "eventId: ${this.data.context.requestEventId}"
-            )
-            throw StreamTriggerException(
-                this,
-                TriggerReason.TRIGGER_NOT_MATCH,
-                reasonParams = listOf("current trigger user(${this.data.eventCommon.userId}) not in whitelist")
-            )
-        }
         // 目前先把不支持的action全部过滤不触发
         return GithubPrEventAction.get(event()) == GithubPrEventAction.STREAM_NOT_SUPPORT
     }

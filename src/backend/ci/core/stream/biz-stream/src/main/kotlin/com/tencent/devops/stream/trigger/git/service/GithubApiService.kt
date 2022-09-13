@@ -39,6 +39,7 @@ import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequ
 import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.sdk.github.request.GetTreeRequest
 import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
+import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.github.ServiceGithubCheckResource
 import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
@@ -153,7 +154,20 @@ class GithubApiService @Autowired constructor(
         pageSize: Int?,
         search: String?
     ): List<GithubProjectUserInfo> {
-        TODO("Not yet implemented")
+        return if (!search.isNullOrBlank()) {
+            listOf(getProjectUserInfo(cred, search, gitProjectId))
+        } else {
+            client.get(ServiceGithubRepositoryResource::class).listRepositoryCollaborators(
+                request = ListRepositoryCollaboratorsRequest(
+                    repoName = gitProjectId,
+                    page = page ?: 1,
+                    perPage = pageSize ?: 30
+                ),
+                token = cred.toToken()
+            ).data?.map {
+                GithubProjectUserInfo(GithubAccessLevelEnum.getGithubAccessLevel(it.roleName).level, it.login)
+            } ?: emptyList()
+        }
     }
 
     override fun getUserInfoByToken(cred: StreamGitCred): GithubUserInfo? {
@@ -174,8 +188,8 @@ class GithubApiService @Autowired constructor(
             ),
             token = cred.toToken()
         ).data?.let {
-            GithubProjectUserInfo(GithubAccessLevelEnum.getGithubAccessLevel(it.permission).level)
-        } ?: GithubProjectUserInfo(GithubAccessLevelEnum.GUEST.level)
+            GithubProjectUserInfo(GithubAccessLevelEnum.getGithubAccessLevel(it.permission).level, it.user.login)
+        } ?: GithubProjectUserInfo(GithubAccessLevelEnum.GUEST.level, "no_user")
     }
 
     override fun getMrInfo(

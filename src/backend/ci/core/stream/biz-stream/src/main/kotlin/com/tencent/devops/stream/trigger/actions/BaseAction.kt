@@ -1,5 +1,6 @@
 package com.tencent.devops.stream.trigger.actions
 
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
@@ -156,4 +157,14 @@ interface BaseAction {
         branch: String?,
         displayName: String?
     )
+
+    /**
+     * 启动类型
+     */
+    fun getStartType(): StartType
+    /**
+     *  fork 库触发需要审核，提供审核人
+     *  返回空表示不属于fork库触发或是有权限触发
+     */
+    fun forkMrNeedReviewers() = emptyList<String>()
 }

@@ -25,22 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package job
+package com.tencent.devops.common.expression.context
 
-import (
-	"os"
-	"testing"
+import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
+import com.tencent.devops.common.expression.expression.sdk.ExpressionNode
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-)
+class ExpressionValueNode(val value: String) : ExpressionNode() {
+    override val traceFullyRealized: Boolean
+        get() = false
 
-func Test_writeStartBuildAgentScript_01(t *testing.T) {
-	buildInfo := &api.ThirdPartyBuildInfo{ProjectId: "pid", BuildId: "bid", VmSeqId: "1"}
-	dir, _ := os.Getwd()
-	file, err := writeStartBuildAgentScript(buildInfo, dir)
-	if err != nil {
-		t.Error("error: ", err.Error())
-	}
-	t.Log("workDir: ", dir)
-	t.Log("fileName: ", file)
+    override fun convertToExpression() = value
+
+    override fun convertToRealizedExpression(context: EvaluationContext) = value
+
+    override fun evaluateCore(context: EvaluationContext) = Pair(null, value)
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) = Pair(value, true)
 }
