@@ -91,7 +91,7 @@
             <!-- windows公共构建机类型 -->
             <template v-if="buildResourceType === 'WINDOWS'">
                 <form-field :label="$t('editPage.winSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
-                    <vuex-input :handle-change="changeBuildResourceWithoutEnv" :value="systemVersion" :disabled="!editable" class="bk-image" v-validate.initial="'required'" name="systemVersion" />
+                    <vuex-input :handle-change="changeWindowSystem" :value="systemVersion" :disabled="!editable" class="bk-image" v-validate.initial="'required'" name="systemVersion" />
                 </form-field>
             </template>
 
@@ -629,6 +629,13 @@
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     [name]: value
+                }))
+            },
+            changeWindowSystem (name, value) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    [name]: value,
+                    value
                 }))
             },
             handleContainerChange (name, value) {
