@@ -53,6 +53,7 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
     override fun paginationGetIdAndName(
         userId: String,
         projectId: String,
+        channelCodes: String,
         keyword: String?,
         page: Int,
         pageSize: Int
@@ -63,7 +64,7 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
             keyword = keyword,
             page = page,
             pageSize = pageSize,
-            channelCodes = listOf(ChannelCode.BS, ChannelCode.GIT)
+            channelCodes = channelCodes.split(",").map { ChannelCode.getChannel(it)!! }
         )
         return Result(result)
     }
