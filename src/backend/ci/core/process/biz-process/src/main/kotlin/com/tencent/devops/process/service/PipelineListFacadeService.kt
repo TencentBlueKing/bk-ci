@@ -649,14 +649,36 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     fun getCount(userId: String, projectId: String): PipelineCount {
-        val myPipelineCount = pipelinePermissionService.getResourceByPermission(
+        val authPipelines = pipelinePermissionService.getResourceByPermission(
             userId = userId, projectId = projectId, permission = AuthPermission.LIST
-        ).size
-        val myFavoriteCount = pipelineFavorDao.countByUserId(dslContext, projectId, userId)
+        )
+        val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
         val totalCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
             dslContext = dslContext,
             projectId = projectId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            authPipelines = authPipelines,
+            favorPipelines = favorPipelines,
+            viewId = PIPELINE_VIEW_ALL_PIPELINES,
+            includeDelete = false
+        ).toInt()
+        val myFavoriteCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            authPipelines = authPipelines,
+            favorPipelines = favorPipelines,
+            viewId = PIPELINE_VIEW_FAVORITE_PIPELINES,
+            includeDelete = false
+        ).toInt()
+        val myPipelineCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            authPipelines = authPipelines,
+            favorPipelines = favorPipelines,
+            viewId = PIPELINE_VIEW_MY_PIPELINES,
+            includeDelete = false
         ).toInt()
         return PipelineCount(totalCount, myFavoriteCount, myPipelineCount)
     }
