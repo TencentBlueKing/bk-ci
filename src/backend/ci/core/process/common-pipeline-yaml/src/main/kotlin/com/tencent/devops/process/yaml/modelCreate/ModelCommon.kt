@@ -76,7 +76,7 @@ object ModelCommon {
                 installAtomReq = InstallAtomReq(projectCodes, atomCode)
             )
         } catch (e: Throwable) {
-            logger.warn("install atom($atomCode) failed, exception:", e)
+            logger.warn("$projectCode $userId install atom($atomCode) failed, exception:", e)
             // 可能之前安装过，继续执行不退出
         }
     }

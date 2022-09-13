@@ -61,10 +61,11 @@ class AtomStatisticsDao {
     fun queryAtomTrendInfo(
         dslContext: DSLContext,
         queryCondition: QueryAtomStatisticsQO
-    ): Result<Record5<String, String, BigDecimal, Long, LocalDateTime>> {
+    ): Result<Record5<String, String, BigDecimal, Long, LocalDateTime>>? {
         val atomCodes = if (!queryCondition.errorTypes.isNullOrEmpty()) {
             getAtomCodesByErrorType(dslContext, queryCondition)
         } else queryCondition.atomCodes
+        if (atomCodes.isNullOrEmpty()) return null
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryCondition, tProjectPipelineLabelInfo, atomCodes)
@@ -110,7 +111,7 @@ class AtomStatisticsDao {
         return conditions
     }
 
-    fun getAtomCodesByErrorType(dslContext: DSLContext, queryCondition: QueryAtomStatisticsQO): List<String> {
+    fun getAtomCodesByErrorType(dslContext: DSLContext, queryCondition: QueryAtomStatisticsQO): List<String>? {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
             val conditions = mutableListOf<Condition>()
             val pipelineIds = queryCondition.baseQueryReq.pipelineIds
@@ -135,19 +136,20 @@ class AtomStatisticsDao {
             if (fetch.isNotEmpty) {
                 return fetch.map { it.value1() }
             }
-            return listOf("")
+            return null
         }
     }
 
     fun queryAtomExecuteStatisticsInfo(
         dslContext: DSLContext,
         queryCondition: QueryAtomStatisticsQO
-    ): Result<Record6<String, String, String, BigDecimal, BigDecimal, BigDecimal>> {
+    ): Result<Record6<String, String, String, BigDecimal, BigDecimal, BigDecimal>>? {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val atomCodes = if (!queryCondition.errorTypes.isNullOrEmpty()) {
                 getAtomCodesByErrorType(dslContext, queryCondition)
             } else queryCondition.atomCodes
+            if (atomCodes.isNullOrEmpty()) return null
             val conditions = getConditions(queryCondition, tProjectPipelineLabelInfo, atomCodes)
             val totalCostTimeSum = productSum(AVG_COST_TIME, TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_COST_TIME_SUM)
             val step = dslContext.select(
@@ -199,6 +201,7 @@ class AtomStatisticsDao {
             val atomCodes = if (!queryCondition.errorTypes.isNullOrEmpty()) {
                 getAtomCodesByErrorType(dslContext, queryCondition)
             } else queryCondition.atomCodes
+            if (atomCodes.isNullOrEmpty()) return 0L
             val tProjectPipelineLabelInfo = TProjectPipelineLabelInfo.T_PROJECT_PIPELINE_LABEL_INFO
             val conditions = getConditions(queryCondition, tProjectPipelineLabelInfo, atomCodes)
             val step = dslContext.selectCount().from(this)

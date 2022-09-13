@@ -146,6 +146,7 @@ class CodeGitlabScmImpl constructor(
             logger.info("[HOOK_API]|$apiUrl")
             gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
         } catch (ignored: Throwable) {
+            logger.warn("Fail to add webhook of git", ignored)
             throw ScmException(
                 ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),
                 ScmType.CODE_GITLAB.name

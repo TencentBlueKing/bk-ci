@@ -59,6 +59,10 @@ class Or(override val traceFullyRealized: Boolean = false) : Container() {
         return Pair(null, result?.value)
     }
 
-    override fun subNameValueEvaluateCore(context: EvaluationContext) =
-        "(${parameters.joinToString(" || ") { it.subNameValueEvaluate(context) }})"
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
+        val left = parameters.joinToString(" || ") {
+            it.subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+        }
+        return Pair("($left)", false)
+    }
 }
