@@ -70,6 +70,9 @@ class Contains : Function() {
         return Pair(null, false)
     }
 
-    override fun subNameValueEvaluateCore(context: EvaluationContext) =
-        "$name(${parameters[0].subNameValueEvaluate(context)}, ${parameters[1].subNameValueEvaluate(context)})"
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
+        val left = parameters[0].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+        val right = parameters[1].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+        return Pair("$name($left, $right)", false)
+    }
 }

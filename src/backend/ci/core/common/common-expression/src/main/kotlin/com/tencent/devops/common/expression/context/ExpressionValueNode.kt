@@ -25,28 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package upgrade
+package com.tencent.devops.common.expression.context
 
-import (
-	"testing"
+import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
+import com.tencent.devops.common.expression.expression.sdk.ExpressionNode
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-)
+class ExpressionValueNode(val value: String) : ExpressionNode() {
+    override val traceFullyRealized: Boolean
+        get() = false
 
-func Test_startUpgrader_01(t *testing.T) {
-	err := runUpgrader(config.ActionUpgrade)
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("success")
-}
+    override fun convertToExpression() = value
 
-func Test_startUpgrader_02(t *testing.T) {
-	err := runUpgrader(config.ActionUninstall)
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("success")
+    override fun convertToRealizedExpression(context: EvaluationContext) = value
+
+    override fun evaluateCore(context: EvaluationContext) = Pair(null, value)
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext) = Pair(value, true)
 }

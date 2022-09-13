@@ -25,31 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package command
+package com.tencent.devops.common.expression.context
 
-import (
-	"testing"
-)
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.tencent.devops.common.expression.expression.sdk.IString
 
-func Test_RunCommand_01(t *testing.T) {
-	output, err := RunCommand("ipconfig", []string{"/all"}, "", nil)
-	if err != nil {
-		t.Error("err: ", err.Error())
-	}
-	t.Log("output: ", string(output))
-}
+/**
+ * 针对SubNameValue替换(目前只有模板替换时的变量)替换特供
+ * 目的是将 包含${{}}不替换为 '${{}}' 而是 ${{}}
+ */
+class ExpressionContextData(val value: String) : PipelineContextData(PipelineContextDataType.EXPRESSION), IString {
+    override fun getString(): String = value
 
-func Test_RunCommand_02(t *testing.T) {
-	output, err := RunCommand("bash", []string{"/Users/huangou/workspace/agent/test/devops_pipeline_oamyqvmd_COMMAND.sh"}, "/Users/huangou/workspace/agent/test", nil)
-	if err != nil {
-		t.Error("err: ", err.Error())
-	}
-	t.Log("output: ", string(output))
-}
+    override fun clone(): PipelineContextData = ExpressionContextData(value)
 
-func Test_StartProcess_01(t *testing.T) {
-	_, err := StartProcess("/a/tme.exe", nil, "", nil, "")
-	if err != nil {
-		t.Error("err: ", err.Error())
-	}
+    override fun toJson(): JsonNode = TextNode(value)
+    override fun fetchValue() = getString()
+
+    override fun toString(): String = value
 }

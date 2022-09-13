@@ -25,16 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package installer
+package com.tencent.devops.misc.service.process
 
-import (
-	"testing"
-)
+interface ProcessRelatedPlatformDataClearService {
 
-func Test_DoInstallAgent_01(t *testing.T) {
-	err := DoInstallAgent()
-	if err != nil {
-		t.Error("err: ", err.Error())
-	}
-	t.Log("done")
+    /**
+     * 清除构建相关平台数据
+     */
+    fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>)
 }

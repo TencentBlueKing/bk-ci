@@ -27,11 +27,11 @@
 
 package com.tencent.devops.common.expression.expression
 
-import com.tencent.devops.common.expression.DistinguishType
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
+import com.tencent.devops.common.expression.SubNameValueResultType
 import com.tencent.devops.common.expression.context.ArrayContextData
 import com.tencent.devops.common.expression.context.BooleanContextData
 import com.tencent.devops.common.expression.context.ContextValueNode
@@ -39,6 +39,7 @@ import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.NumberContextData
 import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
+import com.tencent.devops.common.expression.utils.ExpressionJsonUtil
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -231,6 +232,7 @@ class ExpressionParserTest {
     @ParameterizedTest
     @ValueSource(
         strings = [
+            "false == '' => true",
             "null == 0 => true",
             "true == 1 => true",
             "false == 0 => true",
@@ -422,55 +424,33 @@ class ExpressionParserTest {
         strings = [
             "parameters => {\"int\":123,\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"str\":\"12138\"}}}",
             "parameters.arry => [12312.12,false,\"12138\",[\"12138\"]]",
-            "fromJSON(parameters['arry']) == variables.arry => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]') == variables.arry) => false",
-            "fromJSON(parameters['arry'])[0] == variables.arry[0] => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]')[0] == variables.arry[0]) => true",
+            "fromJSON(parameters['arry']) == variables.arry => (fromJSON('[12312.12,false,\\\"12138\\\",[\\\"12138\\\"]]') == variables.arry) => false",
+            "fromJSON(parameters['arry'])[0] == variables.arry[0] => (fromJSON('[12312.12,false,\\\"12138\\\",[\\\"12138\\\"]]')[0] == variables.arry[0]) => true",
             "parameters.doub => 12312.12",
             "parameters.int => 123",
             "parameters.bool => false",
             "parameters.str => 12138",
-            "startsWith(parameters.str, '121') => true"
+            "startsWith(parameters.str, '121') => startsWith('12138', '121')",
+            "'123' == test => ('123' == test)",
+            "join(fromJSON('[\"12138\"]')) => join(fromJSON('[\"12138\"]'))"
         ]
     )
     fun subNameValueEvaluateTestDistinguishString(subDistinguish: String) {
         val items = subDistinguish.split(" => ")
         val exp = items[0]
         val result = items[1]
-        val subInfo = SubNameValueEvaluateInfo(distinguishTypes = null)
+        val subInfo = SubNameValueEvaluateInfo()
         val tree = ExpressionParser.createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, subInfo)!!
-        val res = tree.subNameValueEvaluate(null, parametersEv, null, subInfo).first
-        Assertions.assertEquals(result, res)
-
-        if (items.size == 3) {
-            valuesTest(res + " => " + items[2])
+        var (res, isComplete, type) = tree.subNameValueEvaluate(null, parametersEv, null, subInfo)
+        if (isComplete && (type == SubNameValueResultType.ARRAY || type == SubNameValueResultType.DICT)) {
+            res = res.replace("\\\"", "\"")
         }
-    }
-
-    @DisplayName("部分参数替换测试(区分逻辑)")
-    @ParameterizedTest
-    @ValueSource(
-        strings = [
-            "parameters => '{\"int\":123,\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"doub\":12312.12,\"bool\":false,\"str\":\"12138\",\"arry\":[12312.12,false,\"12138\",[\"12138\"]],\"dic\":{\"str\":\"12138\"}}}'",
-            "parameters.arry => '[12312.12,false,\"12138\",[\"12138\"]]'",
-            "fromJSON(parameters['arry']) == variables.arry => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]') == variables.arry) => false",
-            "fromJSON(parameters['arry'])[0] == variables.arry[0] => (fromJSON('[12312.12,false,\"12138\",[\"12138\"]]')[0] == variables.arry[0]) => true",
-            "parameters.doub => '12312.12'",
-            "parameters.int => '123'",
-            "parameters.bool => 'false'",
-            "parameters.str => '12138'",
-            "startsWith(parameters.str, '121') => 'true'"
-        ]
-    )
-    fun subNameValueEvaluateTest(sub: String) {
-        val items = sub.split(" => ")
-        val exp = items[0]
-        val result = items[1]
-        val subInfo = SubNameValueEvaluateInfo(distinguishTypes = DistinguishType.values().toSet())
-        val tree = ExpressionParser.createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, subInfo)!!
-        val res = tree.subNameValueEvaluate(null, parametersEv, null, subInfo).first
         Assertions.assertEquals(result, res)
 
+        // yaml解析出的结果默认会带"" 这里模拟的是从yaml转为字符串再计算
         if (items.size == 3) {
-            valuesTest(res + " => " + items[2])
+            val trans = ExpressionJsonUtil.getObjectMapper().readValue("\"$res\"", String::class.java)
+            valuesTest(trans + " => " + items[2])
         }
     }
 

@@ -140,7 +140,7 @@ class ClearTimeoutCron(
                 }
             }
         }
-        LogUtils.costTime("websocket cron", nowTime)
+        LogUtils.costTime("websocket cron", nowTime, warnThreshold = 60000, errorThreshold = 5 * 60000)
     }
 
     fun clearSessionByMq(userId: String, sessionId: String) {

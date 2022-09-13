@@ -25,20 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package job
+package com.tencent.devops.process.yaml.modelCreate
 
-import (
-	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"testing"
-	"time"
-)
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
-func Test_BuildManager_01(t *testing.T) {
-	fmt.Println("start")
-	GBuildManager.AddBuild(6124, &api.ThirdPartyBuildInfo{})
-	for {
-		time.Sleep(5 * time.Second)
-		fmt.Println("instanceCount: ", GBuildManager.GetInstanceCount())
-	}
+internal class ModelCommonTest {
+
+    @Test
+    fun parseReceivers() {
+        val testData = listOf("\${{ci.actor}},royalhuang", "ruotiantang")
+        val expectData = setOf("\${{ci.actor}}", "ruotiantang", "royalhuang")
+        Assertions.assertEquals(expectData, ModelCommon.parseReceivers(testData))
+    }
 }
