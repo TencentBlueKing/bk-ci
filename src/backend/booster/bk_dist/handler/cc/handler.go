@@ -203,7 +203,6 @@ func (cc *TaskCC) preExecute(command []string) (*dcSDK.BKDistCommand, error) {
 
 	// if there is a pch file, add it into the inputFiles, it should be also sent to remote
 	if cc.pchFileDesc != nil {
-		cc.sendFiles = append(cc.sendFiles, *cc.pchFileDesc)
 		blog.Infof("kkk: pch file not nil (%s)", cc.pchFileDesc.FilePath)
 	}
 
