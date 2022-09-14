@@ -29,21 +29,28 @@ package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.TxServiceStoreApproveResource
+import com.tencent.devops.store.api.common.TxOpenStoreApproveResource
 import com.tencent.devops.store.service.common.TxStoreMoaApproveCallBackService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class TxServiceStoreApproveResourceImpl @Autowired constructor(
+class TxOpenStoreApproveResourceImpl @Autowired constructor(
     private val txStoreMoaApproveCallBackService: TxStoreMoaApproveCallBackService
-) : TxServiceStoreApproveResource {
+) : TxOpenStoreApproveResource {
 
     override fun moaApproveCallBack(
         verifier: String,
         result: Int,
         taskId: String,
-        message: String
+        message: String,
+        token: String
     ): Result<Boolean> {
-        return txStoreMoaApproveCallBackService.moaApproveCallBack(verifier, result, taskId, message)
+        return txStoreMoaApproveCallBackService.moaApproveCallBack(
+            verifier = verifier,
+            result = result,
+            taskId = taskId,
+            message = message,
+            token = token
+        )
     }
 }

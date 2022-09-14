@@ -25,8 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:log:biz-log-tencent"))
-    api(project(":core:log:biz-log-sample"))
-    api(project(":core:common:common-auth:common-auth-mock"))
-}
+package com.tencent.devops.misc.pojo
+
+data class BasicAuthConfig(
+    val index: Int, // 序号
+    val biz: String, // 业务类型
+    val url: String, // 数据源url
+    val username: String, // 用户名
+    val password: String // 密码
+)

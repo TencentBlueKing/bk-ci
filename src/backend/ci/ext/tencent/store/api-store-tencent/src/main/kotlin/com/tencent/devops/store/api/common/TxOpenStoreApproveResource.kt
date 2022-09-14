@@ -35,18 +35,19 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.FormParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MARKET_APPROVAL"], description = "store组件审批")
-@Path("/service/market/approval")
+@Api(tags = ["OPEN_MARKET_APPROVAL"], description = "open-store组件审批")
+@Path("/open/market/approval")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface TxServiceStoreApproveResource {
+interface TxOpenStoreApproveResource {
 
     @ApiOperation("moa审批回调")
     @POST
-    @Path("/moa/callBack")
+    @Path("/moa/tokens/{token}/callBack")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     fun moaApproveCallBack(
         @ApiParam(value = "审批人", required = true)
@@ -60,6 +61,9 @@ interface TxServiceStoreApproveResource {
         taskId: String,
         @ApiParam(value = "审批信息", required = true)
         @FormParam("message")
-        message: String
+        message: String,
+        @ApiParam(value = "token", required = true)
+        @PathParam("token")
+        token: String
     ): Result<Boolean>
 }

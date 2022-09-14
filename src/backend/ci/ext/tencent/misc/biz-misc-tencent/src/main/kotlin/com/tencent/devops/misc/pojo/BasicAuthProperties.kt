@@ -25,8 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:log:biz-log-tencent"))
-    api(project(":core:log:biz-log-sample"))
-    api(project(":core:common:common-auth:common-auth-mock"))
-}
+package com.tencent.devops.misc.pojo
+
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
+
+@ConstructorBinding
+@ConfigurationProperties(prefix = "build.data.clear")
+data class BasicAuthProperties(
+    val basicAuths: List<BasicAuthConfig> // 流水线构建相关平台配置
+)
