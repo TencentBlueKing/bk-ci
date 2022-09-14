@@ -189,7 +189,7 @@ export default {
                 })
 
                 this.$router.push({
-                    name: 'pipelineList'
+                    name: 'PipelineManageList'
                 })
 
                 message = this.$t('deleteSuc')

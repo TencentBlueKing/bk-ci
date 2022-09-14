@@ -31,9 +31,9 @@
                     message: error.message,
                     theme: 'error'
                 })
-                if ((error.code === 404 || error.httpStatus === 404) && this.$route.name !== 'pipelineList') {
+                if ((error.code === 404 || error.httpStatus === 404) && this.$route.name !== 'PipelineManageList') {
                     this.$router.push({
-                        name: 'pipelineList'
+                        name: 'PipelineManageList'
                     })
                 }
             }
@@ -69,7 +69,7 @@
             goHome (projectId) {
                 const params = projectId ? { projectId } : {}
                 this.$router.replace({
-                    name: 'pipelineList',
+                    name: 'PipelineManageList',
                     params
                 })
             },

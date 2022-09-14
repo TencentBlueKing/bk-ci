@@ -11,11 +11,11 @@
             <bk-breadcrumb slot="title" separator-class="devops-icon icon-angle-right">
                 <bk-breadcrumb-item
                     class="pipeline-breadcrumb-item"
-                    :to="`/pipeline/${projectId}/`"
+                    :to="{ name: 'PipelineManageList' }"
                 >
                     {{$t('pipeline')}}
                 </bk-breadcrumb-item>
-                <bk-breadcrumb-item
+                <!-- <bk-breadcrumb-item
                     v-if="$route.meta.breadcrumbs"
                     class="pipeline-breadcrumb-item"
                     v-for="(item, index) in $route.meta.breadcrumbs"
@@ -27,10 +27,10 @@
                 <bk-breadcrumb-item
                 >
                     {{$t($route.name)}}
-                </bk-breadcrumb-item>
+                </bk-breadcrumb-item> -->
             </bk-breadcrumb>
 
-            <bk-dropdown-menu class="default-link-list" slot="right" trigger="click">
+            <bk-dropdown-menu slot="right" class="default-link-list" trigger="click">
                 <div slot="dropdown-trigger">
                     <span
                         class="pipeline-dropdown-trigger"
@@ -42,7 +42,7 @@
                         }]"></i>
                     </span>
                 </div>
-                <ul class="dropdown-list" slot="dropdown-content">
+                <ul class="bk-dropdown-list" slot="dropdown-content">
                     <li
                         v-for="menu in dropdownMenus"
                         :class="{
@@ -51,14 +51,15 @@
                         :key="menu.label"
                         @click="go(menu.routeName)"
                     >
-                        {{$t(menu.label)}}
+                        <a href="javascript:;">
+                            {{$t(menu.label)}}
+                        </a>
                     </li>
 
                 </ul>
 
             </bk-dropdown-menu>
         </pipeline-header>
-
         <router-view></router-view>
     </article>
 
@@ -111,16 +112,23 @@
                         routeName: 'atomManage'
                     },
                     {
-                        label: 'restore.recycleBin',
-                        routeName: 'pipelinesRestore'
-                    },
-                    {
                         label: 'operatorAudit',
                         routeName: 'pipelinesAudit'
                     }
                 ]
             }
 
+        },
+        created () {
+            if (!this.$route.params.viewId) {
+                this.$router.replace({
+                    ...this.$route,
+                    params: {
+                        ...this.$route.params,
+                        viewId: 'allPipeline'
+                    }
+                })
+            }
         },
         methods: {
             go (name) {
@@ -160,29 +168,6 @@
             &.active {
                 color: $primaryColor;
             }
-        }
-        .dropdown-list {
-            background: #fff;
-            padding: 0;
-            margin: 0;
-            border-radius: 2px;
-            border: 1px solid #c3cdd7;
-            transition: all .3s ease;
-            > li {
-                display: block;
-                line-height: 41px;
-                padding: 0 15px;
-                color: #63656E;
-                font-size: 14px;
-                text-decoration: none;
-                white-space: nowrap;
-                &.active,
-                &:hover {
-                    background-color: #ebf4ff;
-                    color: $primaryColor;
-                }
-            }
-
         }
     }
 </style>

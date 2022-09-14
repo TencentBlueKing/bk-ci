@@ -45,7 +45,7 @@
                     icon: 'pipeline',
                     selectedValue: this.$t('pipeline'),
                     to: {
-                        name: 'pipelineList'
+                        name: 'PipelineManageList'
                     }
                 }, ...(this.pipeline
                     ? [{
@@ -59,7 +59,7 @@
         created () {
             if (!this.importedPipelineJson) {
                 this.$router.push({
-                    name: 'pipelineList'
+                    name: 'PipelineManageList'
                 })
             }
         },

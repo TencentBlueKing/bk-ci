@@ -20,9 +20,7 @@
             </slot>
         </div>
         <div class="sub-header-right">
-            <slot name="right">
-
-            </slot>
+            <slot name="right"></slot>
         </div>
     </section>
 </template>

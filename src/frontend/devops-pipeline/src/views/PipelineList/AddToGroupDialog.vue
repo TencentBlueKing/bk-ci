@@ -5,15 +5,16 @@
         :value="addToDialogShow"
         :close-icon="false"
         :draggable="false"
+        @confirm="handleSubmit"
         @cancel="handleClose"
     >
-        <main v-if="addToDialogShow" class="add-group-main">
+        <main v-if="addToDialogShow" class="add-group-main" v-bkloadin="{ isLoading }">
             <aside class="add-group-left">
                 <header>
-                    {{ $t('addTo') }}
+                    {{ title }}
                 </header>
                 <p>
-                    {{ $t('addToGroupTitle', [pipeline.pipelineName]) }}
+                    {{ groupTitle }}
                 </p>
                 <bk-input :placeholder="$t('searchPipelineGroup')" v-model="filterKeyword" right-icon="bk-icon icon-search" />
                 <ul class="add-to-pipeline-group-list">
@@ -34,7 +35,7 @@
                 </header>
                 <p>
                     <span>{{$t('selectedGroup', [selectedGroups.length])}}</span>
-                    <bk-button v-if="selectedGroups.length > 0" text @click="emptySelectedGroups">{{$t('newlist.reset')}}</bk-button>
+                    <bk-button size="small" v-if="selectedGroups.length > 0" text @click="emptySelectedGroups">{{$t('newlist.reset')}}</bk-button>
                 </p>
                 <ul class="add-group-result-preview-list">
                     <li v-for="(group, index) in selectedGroups" :key="group.id">
@@ -49,18 +50,26 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
     export default {
-
         props: {
             pipeline: {
                 type: Object,
                 default: () => ({})
             },
+            pipelineList: {
+                type: Object,
+                default: () => []
+            },
+            isPatch: {
+                type: Boolean,
+                default: false
+            },
             addToDialogShow: Boolean
         },
         data () {
             return {
+                isLoading: false,
                 selectedGroups: [],
                 filterKeyword: ''
             }
@@ -69,6 +78,12 @@
             ...mapState('pipelines', [
                 'allPipelineGroup'
             ]),
+            title () {
+                return this.$t(this.isPatch ? 'patchAddTo' : 'addTo')
+            },
+            groupTitle () {
+                return this.isPatch ? this.$t('patchAddToGroupTitle', [this.pipelineList.length]) : this.$t('addToGroupTitle', [this.pipeline.pipelineName])
+            },
             pipelineGroups () {
                 return this.allPipelineGroup.filter(group => group.viewType === 2 && group.name.indexOf(this.filterKeyword) > -1)
                     .map(group => ({
@@ -92,16 +107,23 @@
         watch: {
             pipeline: {
                 handler: function (pipeline) {
-                    this.selectedGroups = pipeline?.viewNames.map(name => ({
-                        id: this.groupIdMap[name],
-                        name
-                    })) ?? []
+                    if (!this.isPatch) {
+                        this.selectedGroups = pipeline?.viewNames.map(name => ({
+                            id: this.groupIdMap[name],
+                            name
+                        })) ?? []
+                    }
                 },
                 immediate: true
             }
         },
         methods: {
+            ...mapActions('pipelines', [
+                'addPipelineToGroup'
+            ]),
             handleClose () {
+                this.selectedGroups = []
+                this.filterKeyword = ''
                 this.$emit('close')
             },
             handleChecked (checked, { id, name }) {
@@ -117,6 +139,32 @@
             },
             remove (index) {
                 this.selectedGroups.splice(index, 1)
+            },
+            async handleSubmit () {
+                if (this.isLoading) return
+                this.isLoading = true
+                let message = this.$t(this.isPatch ? 'patchAddToSuc' : 'addToSuc')
+                let theme = 'success'
+                try {
+                    await this.addPipelineToGroup({
+                        projectId: this.$route.params.projectId,
+                        pipelineIds: this.pipelineList.map(pipeline => pipeline.pipelineId),
+                        viewIds: this.selectedGroups.map(group => group.id)
+                    })
+
+                    this.handleClose()
+                    this.$emit('done')
+                } catch (e) {
+                    console.log(e)
+                    message = e?.message ?? e
+                    theme = 'error'
+                } finally {
+                    this.$showTips({
+                        message,
+                        theme
+                    })
+                    this.isLoading = false
+                }
             }
         }
     }
@@ -182,6 +230,7 @@
                     margin: 16px 0;
                     > span {
                         padding-right: 10px;
+                        font-size: 12px;
                     }
                 }
                 .add-group-result-preview-list {

@@ -23,6 +23,7 @@ import {
     MY_PIPELINE_VIEW_ID,
     COLLECT_VIEW_ID,
     ALL_PIPELINE_VIEW_ID,
+    DELETED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
 
@@ -31,43 +32,59 @@ const groupPrefix = `/${PROCESS_API_URL_PREFIX}/user/pipelineGroups`
 const SET_ALL_PIPELINE_GROUP = 'SET_ALL_PIPELINE_GROUP'
 const SET_LABEL_LIST = 'SET_LABEL_LIST'
 
-export const hardViews = [
-    {
-        id: COLLECT_VIEW_ID,
-        name: 'myCollect',
-        icon: 'star-shape',
-        hideMore: true
-    },
-    {
-        id: MY_PIPELINE_VIEW_ID,
-        name: MY_PIPELINE_VIEW_ID,
-        icon: 'user-shape',
-        hideMore: true
-    }
-]
 const state = {
     allPipelineGroup: [],
-    tagGroupList: []
+    tagGroupList: [],
+    sumViews: [
+        {
+            id: ALL_PIPELINE_VIEW_ID,
+            name: ALL_PIPELINE_VIEW_ID,
+            icon: 'group',
+            hideMore: true
+        },
+        {
+            id: DELETED_VIEW_ID,
+            name: 'restore.recycleBin',
+            icon: 'delete',
+            hideMore: true
+        }
+    ],
+    hardViews: [
+        {
+            id: COLLECT_VIEW_ID,
+            name: 'myCollect',
+            icon: 'star-shape',
+            hideMore: true
+        },
+        {
+            id: MY_PIPELINE_VIEW_ID,
+            name: MY_PIPELINE_VIEW_ID,
+            icon: 'user-shape',
+            hideMore: true
+        }
+    ]
 }
 
 const getters = {
     hideActionGroups: state => [
-        ...hardViews.map(item => item.id),
+        ...state.hardViews.map(item => item.id),
         UNCLASSIFIED_PIPELINE_VIEW_ID
     ],
-    pipelineGroupDict: state => state.allPipelineGroup.reduce((acc, item) => {
-        if (item.projected) {
-            acc.projectViewList.push(item)
-        } else {
-            acc.personalViewList.push(item)
-        }
-        return acc
-    }, {
-        personalViewList: [
-            ...hardViews
-        ],
-        projectViewList: []
-    }),
+    pipelineGroupDict: state => {
+        return state.allPipelineGroup.reduce((acc, item) => {
+            if (item.projected) {
+                acc.projectViewList.push(item)
+            } else {
+                acc.personalViewList.push(item)
+            }
+            return acc
+        }, {
+            personalViewList: [
+                ...state.hardViews
+            ],
+            projectViewList: []
+        })
+    },
     groupMap: state => state.allPipelineGroup.reduce((acc, item) => {
         acc[item.id] = item
         return acc
@@ -86,6 +103,7 @@ const getters = {
 }
 
 const mutations = {
+
     [SET_ALL_PIPELINE_GROUP]: (state, allPipelineGroup) => {
         state.allPipelineGroup = allPipelineGroup
     },
@@ -122,18 +140,34 @@ const mutations = {
     modifyTag (state, { groupIndex, tagIndex, name }) {
         const tag = state.tagGroupList[groupIndex].labels[tagIndex]
         tag.name = name
+    },
+    addCollectViewPipelineCount (state, count) {
+        state.hardViews[0].pipelineCount += count
+        state.hardViews = [
+            state.hardViews[0],
+            ...state.hardViews.slice(1)
+        ]
     }
 }
 
 const actions = {
+    requestPipelineCount (_, { projectId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectId}/getCount`)
+    },
     /**
      * 获取所有流水线分组
     */
-    async requestGetGroupLists ({ commit, state, dispatch }, { projectId }) {
+    async requestGetGroupLists ({ commit, dispatch }, { projectId }) {
         try {
-            const { data } = await ajax.get(`${prefix}/${projectId}/list`)
-            console.log('data', data)
-            commit(SET_ALL_PIPELINE_GROUP, data)
+            const [pipelineGroups, groupCounts] = await Promise.all([
+                ajax.get(`${prefix}/${projectId}/list`),
+                dispatch('requestPipelineCount', { projectId })
+            ])
+            console.log(groupCounts.data)
+            state.sumViews[0].pipelineCount = groupCounts.data.totalCount
+            state.hardViews[0].pipelineCount = groupCounts.data.myFavoriteCount
+            state.hardViews[1].pipelineCount = groupCounts.data.myPipelineCount
+            commit(SET_ALL_PIPELINE_GROUP, pipelineGroups.data)
         } catch (error) {
             console.error(error)
         }

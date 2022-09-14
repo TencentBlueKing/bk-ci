@@ -403,7 +403,7 @@
                     this.$showTips({ message: this.$t('pipelineNameTips'), theme: 'error' })
                     return false
                 }
-                
+
                 const { icon, ...pipeline } = this.activeTemp
                 Object.assign(pipeline, { name: this.newPipelineName })
 

@@ -38,7 +38,7 @@
 
 <script>
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
-    import { mapState } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
     export default {
         mixins: [piplineActionMixin],
         props: {
@@ -48,6 +48,10 @@
                 default: 'remove'
             },
             groupName: {
+                type: String,
+                required: true
+            },
+            groupId: {
                 type: String,
                 required: true
             },
@@ -69,13 +73,29 @@
         },
 
         methods: {
+            ...mapActions('pipelines', [
+                'removePipelineFromGroup',
+                'patchDeletePipelines'
+            ]),
             async handleSubmit () {
-                if (this.isRemoveType) {
-                    //
-                } else {
-                    await Promise.all(this.pipelineList.map(pipeline => this.delete(pipeline)))
+                const params = {
+                    projectId: this.$route.params.projectId,
+                    pipelineIds: this.pipelineList.map(pipeline => pipeline.pipelineId)
+
                 }
-                this.$emit('submit')
+                if (this.isRemoveType) {
+                    await this.removePipelineFromGroup({
+                        ...params,
+                        viewId: this.groupId
+                    })
+                } else {
+                    await this.patchDeletePipelines(params)
+                }
+                this.$showTips({
+                    message: this.$t(this.isRemoveType ? '移除成功' : '删除成功'),
+                    theme: 'success'
+                })
+                this.$emit('done')
             },
             handleClose () {
                 this.$emit('close')
@@ -121,12 +141,14 @@
                 display: flex;
                 align-items: center;
                 overflow: hidden;
+                text-align: left;
                 > span {
-                    flex: 1;
+                    flex: 2;
                     @include ellipsis();
                 }
                 .belongs-pipeline-group {
-                    flex: 3;
+                    flex: 5;
+
                 }
             }
         }

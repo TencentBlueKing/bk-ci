@@ -358,9 +358,9 @@
                             message: err.message || err,
                             theme: 'error'
                         })
-                        if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelineList') {
+                        if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'PipelineManageList') {
                             this.$router.push({
-                                name: 'pipelineList'
+                                name: 'PipelineManageList'
                             })
                         }
                     }
@@ -387,9 +387,9 @@
                             message: err.message || err,
                             theme: 'error'
                         })
-                        if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelineList') {
+                        if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'PipelineManageList') {
                             this.$router.push({
-                                name: 'pipelineList'
+                                name: 'PipelineManageList'
                             })
                         }
                     }

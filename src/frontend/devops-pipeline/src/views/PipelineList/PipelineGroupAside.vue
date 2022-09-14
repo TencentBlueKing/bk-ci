@@ -1,23 +1,15 @@
 <template>
     <aside class="pipeline-group-aside">
         <header class="pipeline-group-aside-header">
-            <div :class="{
+            <div v-for="item in sumViews" :key="item.id" :class="{
                 'pipeline-group-item': true,
-                active: $route.params.viewId === ALL_PIPELINE_VIEW_ID
-            }" @click="switchViewId(ALL_PIPELINE_VIEW_ID)">
-                <logo class="pipeline-group-item-icon" size="12" name="group" />
+                active: $route.params.viewId === item.id
+            }" @click="switchViewId(item.id)">
+                <logo class="pipeline-group-item-icon" size="12" :name="item.icon" />
                 <span class="pipeline-group-item-name">
-                    {{$t(ALL_PIPELINE_VIEW_ID)}}
+                    {{$t(item.name)}}
                 </span>
-            </div>
-            <div :class="{
-                'pipeline-group-item': true,
-                active: $route.params.viewId === DELETED_VIEW_ID
-            }" @click="switchViewId(DELETED_VIEW_ID)">
-                <logo class="pipeline-group-item-icon" size="12" name="delete" />
-                <span class="pipeline-group-item-name">
-                    {{$t('restore.recycleBin')}}
-                </span>
+                <span v-if="item.pipelineCount" class="pipeline-group-item-sum">{{item.pipelineCount}}</span>
             </div>
         </header>
         <article class="pipeline-group-container">
@@ -82,13 +74,13 @@
             </bk-form>
 
         </bk-dialog>
-        <pipeline-group-edit-dialog @close="handleCloseEditCount" :group="activeGroup" />
+        <pipeline-group-edit-dialog @close="handleCloseEditCount" :group="activeGroup" @done="refreshPipelineGroup" />
     </aside>
 
 </template>
 
 <script>
-    import { mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import {
         PROCESS_API_URL_PREFIX,
         ALL_PIPELINE_VIEW_ID,
@@ -119,7 +111,6 @@
                     personalViewList: true,
                     projectViewList: true
                 },
-
                 isAdding: false,
                 isAddPipelineGroupDialogShow: false,
                 newPipelineGroup: {
@@ -132,6 +123,9 @@
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'sumViews'
+            ]),
             ...mapGetters('pipelines', [
                 'pipelineGroupDict',
                 'groupMap',
@@ -158,7 +152,7 @@
             }
         },
         created () {
-            this.requestGetGroupLists(this.$route.params)
+            this.refreshPipelineGroup()
         },
 
         methods: {
@@ -169,6 +163,9 @@
                 'deletePipelineGroup',
                 'toggleStickyTop'
             ]),
+            refreshPipelineGroup () {
+                return this.requestGetGroupLists(this.$route.params)
+            },
             pipelineGroupActions (group) {
                 if (this.hideActionGroups.includes(group.id)) return []
                 return [
@@ -267,6 +264,7 @@
                         enabled: !view.top
                     })
                     message = this.$t(`${message}Success`, [view.name])
+                    this.refreshPipelineGroup()
                 } catch (error) {
                     message = error.message || error
                     theme = 'danger'
@@ -280,7 +278,7 @@
             },
             async deleteGroup (view) {
                 if (this.isDeleting) return
-                let message = 'deleteSuc'
+                let message = this.$t('deleteSuc')
                 let theme = 'success'
                 try {
                     this.isDeleting = true
@@ -288,6 +286,7 @@
                         projectId: this.$route.params.projectId,
                         ...view
                     })
+                    this.refreshPipelineGroup()
                 } catch (error) {
                     message = error.message || error
                     theme = 'danger'
@@ -374,7 +373,7 @@
             margin-right: 10px;
         }
         .pipeline-group-aside-header {
-            padding: 0 16px 16px 0;
+            padding: 0 0 16px 0;
             border-bottom: 1px solid #DCDEE5;
             box-sizing: content-box;
         }

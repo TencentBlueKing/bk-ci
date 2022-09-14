@@ -43,7 +43,16 @@ const state = {
     allPipelineList: [],
     hasCreatePermission: false,
     pipelineSetting: {},
-    pipelineAuthority: {}
+    pipelineAuthority: {},
+    pipelineActionState: {
+        activePipeline: null,
+        isConfirmShow: false,
+        confirmType: '',
+        activePipelineList: [],
+        isSaveAsTemplateShow: false,
+        isCopyDialogShow: false,
+        addToDialogShow: false
+    }
 }
 
 const getters = {
@@ -195,6 +204,10 @@ const mutations = {
      */
     updateCurAtomPrams (state, res) {
         state.curPipelineAtomParams = res
+    },
+    updatePipelineActionState (state, params) {
+        console.log(params)
+        Object.assign(state.pipelineActionState, params)
     }
 }
 
@@ -344,7 +357,6 @@ const actions = {
         const { data } = await ajax.get(url, {
             params: query
         })
-        commit('pipelines/updateAllPipelineList', data)
         return data
     },
     /**
@@ -377,6 +389,11 @@ const actions = {
     deletePipeline ({ commit, state, dispatch }, { projectId, pipelineId }) {
         return ajax.delete(`${prefix}${projectId}/${pipelineId}`).then(response => {
             return response.data
+        })
+    },
+    patchDeletePipelines (_ctx, body) {
+        return ajax.delete(`${prefix}batchDelete`, {
+            data: body
         })
     },
     /**

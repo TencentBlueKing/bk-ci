@@ -28,6 +28,8 @@ export const CREATOR_FILTER_TYPE = 'filterByCreator'
 export const FILTER_BY_LABEL = 'filterByLabel'
 export const FILTER_BY_VIEW_ID = 'filterByViewIds'
 
+export const FILTER_BY_DELETER = 'filterByViewIds'
+
 export const PIPELINE_FILTER_PIPELINENAME = 'filterByPipelineName'
 export const PIPELINE_FILTER_CREATOR = 'filterByCreator'
 export const PIPELINE_FILTER_VIEWIDS = 'filterByViewIds'

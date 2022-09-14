@@ -247,7 +247,7 @@
     "restoreSuc": "恢复成功",
     "emptyTitle": "暂无可恢复的流水线",
     "emptyDesc": "30天内被删除的流水线可在此页面恢复",
-    "restoreSearchTips": "请输入流水线名称搜索"
+    "restoreSearchTips": "流水线名称/删除人"
   },
   "atomManage": {
     "installedAtom": "已安装插件",
@@ -1027,6 +1027,7 @@
   "resultPreview": "结果预览",
   "selectedGroup": "已选{0}个流水线组",
   "addToGroupTitle": "将该流水线 {0} 添加至下方所选流水线组",
+  "patchAddToGroupTitle": "将{0}个流水线添加至下方所选流水线组",
   "searchPipelineGroup": "搜索流水线组",
   "removeConfirmTips": "确定将以下流水线移出{0}吗？",
   "deleteTips": "流水线删除后，可在回收站中找回。",
@@ -1035,5 +1036,23 @@
   "filterChanged": "分组条件已更新",
   "refreshPreview": "刷新预览",
   "deletePipelineConfirm": "确定删除以下流水线吗？",
-  "deletePipelineConfirmDesc": "流水线删除后，可在回收站中找回"
+  "deletePipelineConfirmDesc": "流水线删除后，可在回收站中找回",
+  "patchAddTo": "批量添加至",
+  "patchDelete": "批量删除",
+  "exitPatch": "退出管理",
+  "patchSearchInputPlaceholder": "流水线名称/创建人/流水线组/自定义属性",
+  "labelGroupNameSuc": "标签组名称保存成功",
+  "labelGroupNameErr": "标签组名称保存成功",
+  "labelDeleteConfirm": "确认删除该标签",
+  "labelGroupDeleteConfirm": "确认删除该标签组",
+  "labelDeleteSuc": "删除标签组成功。",
+  "labelNameSuc": "标签名称保存成功。",
+  "deleteLabelSuc": "删除标签成功。",
+  "addLabelSuc": "新增标签成功。",
+  "addLabelGroupSuc": "新增标签组成功。",
+  "patchAddToSuc": "批量添加流水线组成功",
+  "addToSuc": "流水线添加成功",
+  "restorePipelineConfirm": "确定恢复该流水线",
+  "removeqFrom": "移出分组",
+  "alreadyDeleted": "流水线已删除"
 }

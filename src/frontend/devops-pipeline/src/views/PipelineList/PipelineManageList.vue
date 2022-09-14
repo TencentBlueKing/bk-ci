@@ -1,0 +1,310 @@
+<template>
+    <main class="pipeline-list-main">
+        <div class="recycle-bin-header" v-if="isDeleteView">
+            <h5>{{$t('restore.recycleBin')}}</h5>
+            <bk-input :placeholder="$t('restore.restoreSearchTips')" />
+        </div>
+        <template v-else>
+            <h5 class="current-pipeline-group-name">{{currentViewName}}</h5>
+            <header class="pipeline-list-main-header">
+                <div class="pipeline-list-main-header-left-area">
+                    <bk-dropdown-menu trigger="click">
+                        <bk-button theme="primary" icon="plus" slot="dropdown-trigger">
+                            {{$t('newlist.addPipeline')}}
+                        </bk-button>
+                        <ul class="bk-dropdown-list" slot="dropdown-content">
+                            <li v-for="(item, index) of newPipelineDropdown" :key="index">
+                                <a href="javascript:;" @click="item.action">{{ item.text }}</a>
+                            </li>
+                        </ul>
+                    </bk-dropdown-menu>
+                    <bk-button @click="goPatchManage">{{$t('patchManage')}}</bk-button>
+                </div>
+                <div class="pipeline-list-main-header-right-area">
+                    <pipeline-searcher
+                        v-model="filters"
+                        @search="filterPipelines"
+                    />
+                    <bk-dropdown-menu class="pipeline-sort-dropdown-menu" align="right">
+                        <template slot="dropdown-trigger">
+                            <bk-button class="icon-button">
+                                <logo name="sort" size="12" />
+                            </bk-button>
+                        </template>
+                        <ul class="bk-dropdown-list" slot="dropdown-content">
+                            <li v-for="item in sortList" :key="item.id" @click="changeSortType(item.id)">
+                                <a href="javascript:;">{{ item.name }}</a>
+                            </li>
+                        </ul>
+                    </bk-dropdown-menu>
+                    <div class="bk-button-group">
+                        <bk-button
+                            :class="{
+                                'icon-button': true,
+                                'is-selected': isTableLayout
+                            }"
+                            @click="switchLayout('table')"
+                        >
+                            <logo name="list" size="14" />
+                        </bk-button>
+                        <bk-button
+                            :class="{
+                                'icon-button': true,
+                                'is-selected': isCardLayout
+                            }"
+                            @click="switchLayout('card')"
+                        >
+                            <logo name="card" size="14" />
+                        </bk-button>
+                    </div>
+                </div>
+            </header>
+        </template>
+        <div class="pipeline-list-box">
+            <pipelines-card-view
+                v-if="isCardLayout"
+                :filter-params="filters"
+                :sort-type="sortType"
+            />
+            <pipeline-table-view
+                v-else-if="isTableLayout"
+                :filter-params="filters"
+                :sort-type="sortType"
+            />
+        </div>
+        <add-to-group-dialog
+            :add-to-dialog-show="pipelineActionState.addToDialogShow"
+            :pipeline="pipelineActionState.activePipeline"
+            @close="resetActivePipeline"
+        />
+        <remove-confirm-dialog
+            :type="pipelineActionState.confirmType"
+            :is-show="pipelineActionState.isConfirmShow"
+            :group-name="currentViewName"
+            :group-id="$route.params.viewId"
+            :pipeline-list="pipelineActionState.activePipelineList"
+            @close="handleCancelRemove"
+        />
+        <copy-pipeline-dialog
+            :is-copy-dialog-show="pipelineActionState.isCopyDialogShow"
+            :pipeline="pipelineActionState.activePipeline"
+            @cancel="resetActivePipeline"
+        />
+        <save-as-template-dialog
+            :is-save-as-template-show="pipelineActionState.isSaveAsTemplateShow"
+            :pipeline="pipelineActionState.activePipeline"
+            @cancel="resetActivePipeline"
+        />
+        <pipeline-template-popup
+            :toggle-popup="toggleTemplatePopup"
+            :is-show.sync="templatePopupShow"
+        />
+        <import-pipeline-popup
+            :is-show.sync="importPipelinePopupShow"
+        />
+    </main>
+</template>
+<script>
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
+    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import CopyPipelineDialog from '@/views/PipelineList/CopyPipelineDialog'
+    import SaveAsTemplateDialog from '@/views/PipelineList/SaveAsTemplateDialog'
+    import PipelineSearcher from './PipelineSearcher'
+    import PipelineTableView from '@/components/pipelineList/PipelineTableView'
+    import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
+    import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
+    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
+    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import Logo from '@/components/Logo'
+
+    const TABLE_LAYOUT = 'table'
+    const CARD_LAYOUT = 'card'
+    export default {
+        components: {
+            Logo,
+            AddToGroupDialog,
+            RemoveConfirmDialog,
+            CopyPipelineDialog,
+            SaveAsTemplateDialog,
+            PipelinesCardView,
+            PipelineTableView,
+            PipelineSearcher,
+            PipelineTemplatePopup,
+            ImportPipelinePopup
+        },
+        mixins: [piplineActionMixin],
+        data () {
+            return {
+                layout: this.getLs('pipelineLayout') || TABLE_LAYOUT,
+                hasCreatePermission: false,
+                sortType: this.getLs('pipelineSortType') || 'CREATE_TIME',
+                filters: this.$route.query,
+                templatePopupShow: false,
+                importPipelinePopupShow: false,
+                newPipelineDropdown: [{
+                    text: this.$t('newPipelineFromTemplateLabel'),
+                    action: this.toggleTemplatePopup
+                }, {
+                    text: this.$t('newPipelineFromJSONLabel'),
+                    action: this.toggleImportPipelinePopup
+                }]
+            }
+        },
+        computed: {
+            ...mapState('pipelines', [
+                'pipelineActionState'
+            ]),
+            ...mapGetters('pipelines', [
+                'groupMap'
+            ]),
+            isTableLayout () {
+                return this.layout === TABLE_LAYOUT
+            },
+            isCardLayout () {
+                return this.layout === CARD_LAYOUT
+            },
+            currentViewName () {
+                return this.$t(this.groupMap?.[this.$route.params.viewId]?.name ?? '')
+            },
+            sortList () {
+                return [
+                    {
+                        id: 'NAME',
+                        name: this.$t('newlist.orderByAlpha')
+                    }, {
+                        id: 'CREATE_TIME',
+                        name: this.$t('newlist.orderByCreateTime')
+                    }, {
+                        id: 'UPDATE_TIME',
+                        name: this.$t('newlist.orderByUpdateTime')
+                    }, {
+                        id: 'LAST_EXEC_TIME',
+                        name: this.$t('newlist.orderByExecuteTime')
+                    }
+                ]
+            }
+
+        },
+        created () {
+            if (!this.$route.params.viewId) {
+                this.$router.replace({
+                    ...this.$route,
+                    params: {
+                        ...this.$route.params,
+                        viewId: 'allPipeline'
+                    }
+                })
+            }
+            this.checkHasCreatePermission()
+        },
+
+        mounted () {
+            webSocketMessage.installWsMessage(this.updatePipelineStatus)
+        },
+
+        beforeDestroy () {
+            webSocketMessage.unInstallWsMessage()
+        },
+
+        methods: {
+            ...mapActions('pipelines', [
+                'requestHasCreatePermission'
+            ]),
+            goPatchManage () {
+                this.$router.push({
+                    name: 'patchManageList'
+                })
+            },
+            getLs (key) {
+                return localStorage.getItem(key) || null
+            },
+            switchLayout (layout) {
+                this.layout = layout
+                localStorage.setItem('pipelineLayout', layout)
+            },
+            changeSortType (sortType) {
+                this.sortType = sortType
+            },
+
+            async checkHasCreatePermission () {
+                const res = await this.requestHasCreatePermission(this.$route.params)
+                this.hasCreatePermission = res
+            },
+            toggleTemplatePopup () {
+                if (!this.hasCreatePermission) {
+                    this.toggleCreatePermission()
+                } else {
+                    this.templatePopupShow = !this.templatePopupShow
+                }
+            },
+
+            toggleImportPipelinePopup () {
+                this.importPipelinePopupShow = !this.importPipelinePopupShow
+            },
+
+            toggleCreatePermission () {
+                this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.create)
+            }
+        }
+    }
+
+</script>
+
+<style lang="scss">
+    @import '@/scss/mixins/ellipsis';
+    @import '@/scss/conf';
+    .recycle-bin-header {
+        display: grid;
+        grid-template-columns: 1fr 6fr;
+        align-items: center;
+        > h5 {
+            color: #313238;
+        }
+    }
+    .pipeline-sort-dropdown-menu {
+        margin: 0 8px;
+    }
+    // TODO: hack
+    .icon-button {
+        min-width: auto;
+        width: 32px;
+        padding: 0;
+        > div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            > span {
+                display: flex;
+            }
+        }
+    }
+
+    .more-action-menu-list {
+        .more-action-menu-item {
+            line-height: 32px;
+            cursor: pointer;
+            &:hover {
+                background: #E1ECFF;
+            }
+        }
+    }
+    .pipeline-group-visible-range-group {
+        > :first-child {
+            margin-right: 48px;
+        }
+    }
+    .pipeline-group-box-cell {
+        display: flex;
+        .group-name-tag {
+            @include ellipsis();
+            max-width: 100px;
+        }
+    }
+    .pipeline-list-box {
+        // height: 100%;
+        flex: 1;
+        overflow: auto;
+    }
+</style>

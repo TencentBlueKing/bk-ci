@@ -442,6 +442,7 @@
                         pipelineIds: Array.from(this.model.pipelineIds)
                     })
                     this.handleClose()
+                    this.$emit('done')
                 } catch (error) {
                     message = error.message || error
                     theme = 'danger'

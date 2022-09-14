@@ -1,21 +1,25 @@
 <template>
     <infinite-scroll
         ref="infiniteScroll"
-        :data-fetcher="getPipelines"
+        :data-fetcher="fetchList"
         :page-size="defaultPageSize"
-        scroll-box-class-name="pipeline-list"
+        scroll-box-class-name="pipeline-list-box"
         v-slot="slotProps"
     >
         <ul class="pipelines-card-view-list">
             <li v-for="pipeline of slotProps.list" :key="pipeline.pipelineId">
-                <pipeline-card :pipeline="pipeline"></pipeline-card>
+                <pipeline-card
+                    :pipeline="pipeline"
+                    :remove-handler="removeHandler"
+                >
+                </pipeline-card>
             </li>
         </ul>
     </infinite-scroll>
 </template>
 
 <script>
-    // import { mapActions, mapGetters } from 'vuex'
+    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import PipelineCard from '@/components/pipelineList/PipelineCard'
     import InfiniteScroll from '@/components/InfiniteScroll'
 
@@ -24,6 +28,7 @@
             PipelineCard,
             InfiniteScroll
         },
+        mixins: [piplineActionMixin],
         props: {
             filterParams: {
                 type: Object,
@@ -32,41 +37,38 @@
             sortType: {
                 type: String,
                 default: 'CREATE_TIME'
-            },
-            fetchPipelines: {
-                type: Function,
-                required: true
             }
         },
         data () {
             return {
                 isLoading: false,
                 isPatchOperate: false,
-                defaultPageSize: 60,
+                defaultPageSize: 16,
                 activePipeline: null
             }
         },
         watch: {
             '$route.params.viewId': function () {
-                this.$nextTick(this.getPipelines)
+                this.$refs.infiniteScroll.updateList()
             },
             sortType: function () {
-                this.$nextTick(this.getPipelines)
+                this.$refs.infiniteScroll.updateList()
             },
             filterParams: function () {
-                this.$nextTick(this.getPipelines)
+                this.$refs.infiniteScroll.updateList()
             }
         },
-
         methods: {
-            getPipelines (page = 1, pageSize = this.defaultPageSize) {
-                return this.fetchPipelines({
+            async fetchList (page = 1, pageSize = this.defaultPageSize) {
+                const res = await this.getPipelines({
                     page,
                     pageSize,
                     sortType: this.sortType,
                     viewId: this.$route.params.viewId,
                     ...this.filterParams
                 })
+                console.log(res)
+                return res
             }
         }
     }
@@ -79,7 +81,7 @@
 
     .pipelines-card-view-list {
         display: grid;
-        grid-template-columns: repeat(auto-fill, 300px);
+        grid-template-columns: repeat(auto-fill, 408px);
         grid-gap: 24px;
     }
 </style>

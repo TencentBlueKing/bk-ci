@@ -28,6 +28,7 @@ export const statusIconMap = {
     QUALITY_CHECK_WAIT: 'circle-2-1', // 26 质量红线等待把关
     UNKNOWN: 'placeholder' // 99
 }
+
 export const statusAlias = {
     SUCCEED: 'SUCCEED', // 0 成功（最终态）
     FAILED: 'FAILED', // 1 失败（最终态）
@@ -57,4 +58,35 @@ export const statusAlias = {
     QUALITY_CHECK_PASS: 'QUALITY_CHECK_PASS', // 25 质量红线检查通过
     QUALITY_CHECK_WAIT: 'QUALITY_CHECK_WAIT', // 26 质量红线等待把关
     UNKNOWN: 'UNKNOWN' // 99
+}
+
+export const statusColorMap = {
+    SUCCEED: '#2DCB56', // 0 成功（最终态）
+    FAILED: '#EA3636', // 1 失败（最终态）
+    CANCELED: '#FF9C01', // 2 取消（最终态）
+    RUNNING: '#699DF4', // 3 运行中（中间状态）
+    TERMINATE: '#FF9C01', // 4 终止（Task最终态）待作废
+    REVIEWING: '#699DF4', // 5 审核中（Task中间状态）
+    REVIEW_ABORT: '#FF9C01', // 6 审核驳回（Task最终态）
+    REVIEW_PROCESSED: '#699DF4', // 7 审核通过（Task最终态）
+    HEARTBEAT_TIMEOUT: '#FF9C01', // 8 心跳超时（最终态）
+    PREPARE_ENV: '#699DF4', // 9 准备环境中（中间状态）
+    UNEXEC: '#DCDEE5', // 10 从未执行（最终态）
+    SKIP: '#DCDEE5', // 11 跳过（最终态）
+    QUALITY_CHECK_FAIL: '#EA3636', // 12 质量红线检查失败（最终态）
+    QUEUE: '#699DF4', // 13 排队（初始状态）
+    LOOP_WAITING: '#699DF4', // 14 轮循等待中 互斥组抢锁轮循 （中间状态）
+    CALL_WAITING: '#699DF4', // 15 等待回调 用于启动构建环境插件等待构建机回调启动结果（中间状态）
+    TRY_FINALLY: '#699DF4', // 16 不可见的后台状态（未使用）
+    QUEUE_TIMEOUT: '#FF9C01', // 17 排队超时（最终态）
+    EXEC_TIMEOUT: '#FF9C01', // 18 执行超时（最终态）
+    QUEUE_CACHE: '#699DF4', // 19 队列待处理，瞬态。只在启动和取消过程中存在（中间状态）
+    RETRY: '#EA3636', // 20 重试（中间状态）
+    PAUSE: '#FF9C01', // 21 暂停执行，等待事件 （Stage/Job/Task中间态）
+    STAGE_SUCCESS: '#2DCB56', // 22 当Stage人工审核取消运行时，成功（Stage/Pipeline最终态）
+    QUOTA_FAILED: '#EA3636', // 23 失败 (未使用）
+    DEPENDENT_WAITING: '#699DF4', // 24 依赖等待 等待依赖的job完成才会进入准备环境（Job中间态）
+    QUALITY_CHECK_PASS: '#699DF4', // 25 质量红线检查通过
+    QUALITY_CHECK_WAIT: '#699DF4', // 26 质量红线等待把关
+    UNKNOWN: '#699DF4' // 99
 }

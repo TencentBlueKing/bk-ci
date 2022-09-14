@@ -175,7 +175,7 @@
             changePageType (type) {
                 this.updateCurrentViewId(type)
                 this.$router.push({
-                    name: 'pipelineList',
+                    name: 'PipelineManageList',
                     params: {
                         type
                     }

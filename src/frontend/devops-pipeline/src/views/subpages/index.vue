@@ -231,7 +231,7 @@
                     icon: 'pipeline',
                     selectedValue: this.$t('pipeline'),
                     to: {
-                        name: 'pipelineList'
+                        name: 'pipelineListEntry'
                     }
                 }, {
                     paramId: 'pipelineId',

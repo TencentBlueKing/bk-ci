@@ -5,7 +5,6 @@
         :show-condition="false"
         :filter="true"
         :data="dropList"
-        :filter-menu-method="uniqueMenu"
         :placeholder="$t('searchPipelinePlaceholder')"
         :value="value"
         :values="initValues"
@@ -107,6 +106,11 @@
                 ]
             }
         },
+        watch: {
+            dropList () {
+                this.initValues = this.parseQuery(this.value)
+            }
+        },
         mounted () {
             this.init()
         },
@@ -116,16 +120,16 @@
             ]),
             async init () {
                 await this.requestLabelLists(this.$route.params)
-                this.initValues = this.parseQuery(this.value)
-                console.log(this.value, this.initValues)
             },
             getFilterLabelValues (keyName, ids) {
                 const tagGroupIdMap = ids.reduce((acc, id) => {
                     const label = this.labelMap[id]
-                    acc[label.groupId] = [
-                        ...(acc[label.groupId] ?? []),
-                        label
-                    ]
+                    if (label) {
+                        acc[label.groupId] = [
+                            ...(acc[label.groupId] ?? []),
+                            label
+                        ]
+                    }
                     return acc
                 }, {})
 
@@ -188,7 +192,6 @@
                         formatVal[key] = undefined
                     }
                 })
-                console.log(value, formatVal, '1')
                 this.$emit('input', formatVal)
                 this.$emit('update:value', formatVal)
             }

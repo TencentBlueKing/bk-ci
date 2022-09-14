@@ -335,7 +335,7 @@
                 const { $store } = this
                 let res
                 try {
-                    res = await $store.dispatch('pipelines/requestGetGroupLists', {
+                    res = await $store.dispatch('pipelines/requestLabelLists', {
                         projectId: this.projectId
                     })
                     $store.commit('pipelines/updateGroupLists', res)

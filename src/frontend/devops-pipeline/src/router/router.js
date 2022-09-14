@@ -17,16 +17,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import {
-    ALL_PIPELINE_VIEW_ID
-} from '@/store/constants'
-
 const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
-const RouteView = () => import(/* webpackChunkName: "pipelines" */'../views/entry')
 
-// const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/list/newlist')
 const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
-const pipelineListAuth = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/Auth')
+const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PipelineManageList')
+const PatchManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PatchManageList')
 const AddPipeline = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/AddPipeline')
 
 const pipelineListEntry = () => import(/* webpackChunkName: "pipelineListEntry" */'../views/PipelineList')
@@ -65,11 +60,9 @@ const routes = [
             {
                 path: '',
                 component: pipelineListEntry,
+                name: 'pipelineListEntry',
                 redirect: {
-                    name: 'pipelineList',
-                    params: {
-                        viewId: ALL_PIPELINE_VIEW_ID
-                    }
+                    name: 'PipelineManageList'
                 },
                 children: [
                     {
@@ -99,35 +92,31 @@ const routes = [
                         component: pipelinesAudit
                     },
                     {
+                        path: 'new',
+                        name: 'addPipeline',
+                        component: AddPipeline
+                    },
+                    {
                         path: ':viewId',
-                        component: RouteView,
+                        component: pipelinesNewList,
                         children: [
                             {
                                 path: '',
-                                name: 'pipelineList',
-                                component: pipelinesNewList,
+                                name: 'PipelineManageList',
+                                component: PipelineManageList,
                                 meta: {
                                     webSocket: true
                                 }
                             },
                             {
-                                path: 'auth',
-                                name: 'pipelineListAuth',
-                                component: pipelineListAuth,
-                                meta: {
-                                    breadcrumbs: ['{viewName}']
-                                }
-                            },
-                            {
-                                path: 'new',
-                                name: 'addPipeline',
-                                component: AddPipeline
+                                path: 'patch',
+                                name: 'patchManageList',
+                                component: PatchManageList
                             }
                         ]
                     }
                 ]
             },
-
             {
                 path: 'template/:templateId',
                 component: templateEntry,
@@ -178,7 +167,7 @@ const routes = [
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
-                            to: 'pipelineList'
+                            to: 'PipelineManageList'
                         },
                         component: pipelinesEdit
                     }
@@ -203,7 +192,7 @@ const routes = [
                             title: 'pipeline',
                             header: 'pipeline',
                             icon: 'pipeline',
-                            to: 'pipelineList'
+                            to: 'PipelineManageList'
                         }
                     },
                     {
@@ -221,7 +210,7 @@ const routes = [
                             title: 'pipeline',
                             header: 'pipeline',
                             icon: 'pipeline',
-                            to: 'pipelineList'
+                            to: 'PipelineManageList'
                         }
                     },
                     {
@@ -232,7 +221,7 @@ const routes = [
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
-                            to: 'pipelineList'
+                            to: 'PipelineManageList'
                         },
                         component: pipelinesEdit
                     },
@@ -244,7 +233,7 @@ const routes = [
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
-                            to: 'pipelineList'
+                            to: 'PipelineManageList'
                         },
                         component: pipelinesPreview
                     }
