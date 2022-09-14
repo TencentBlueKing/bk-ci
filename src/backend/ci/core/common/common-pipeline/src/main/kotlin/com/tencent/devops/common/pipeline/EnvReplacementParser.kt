@@ -66,12 +66,19 @@ object EnvReplacementParser {
     ): String {
         if (value.isNullOrBlank()) return ""
         return if (onlyExpression == true) {
-            val (context, nameValues) = contextPair ?: getCustomExecutionContextByMap(contextMap)
-            parseExpressionTwice(
-                value = value,
-                context = context,
-                nameValues = nameValues
-            )
+            try {
+                val (context, nameValues) = contextPair
+                    ?: getCustomExecutionContextByMap(contextMap)
+                    ?: return value
+                parseExpressionTwice(
+                    value = value,
+                    context = context,
+                    nameValues = nameValues
+                )
+            } catch (ignore: Throwable) {
+                logger.warn("[$value]|EnvReplacementParser expression invalid: ", ignore)
+                value
+            }
         } else {
             ObjectReplaceEnvVarUtil.replaceEnvVar(value, contextMap).let {
                 JsonUtil.toJson(it, false)
@@ -82,18 +89,23 @@ object EnvReplacementParser {
     fun getCustomExecutionContextByMap(
         variables: Map<String, String>,
         extendNamedValueMap: List<RuntimeNamedValue>? = null
-    ): Pair<ExecutionContext, List<NamedValueInfo>> {
-        val context = ExecutionContext(DictionaryContextData())
-        val nameValue = mutableListOf<NamedValueInfo>()
-        extendNamedValueMap?.forEach { namedValue ->
-            nameValue.add(NamedValueInfo(namedValue.key, ContextValueNode()))
-            context.expressionValues.add(
-                namedValue.key,
-                RuntimeDictionaryContextData(namedValue)
-            )
+    ): Pair<ExecutionContext, List<NamedValueInfo>>? {
+        try {
+            val context = ExecutionContext(DictionaryContextData())
+            val nameValue = mutableListOf<NamedValueInfo>()
+            extendNamedValueMap?.forEach { namedValue ->
+                nameValue.add(NamedValueInfo(namedValue.key, ContextValueNode()))
+                context.expressionValues.add(
+                    namedValue.key,
+                    RuntimeDictionaryContextData(namedValue)
+                )
+            }
+            ExpressionParser.fillContextByMap(variables, context, nameValue)
+            return Pair(context, nameValue)
+        } catch (ignore: Throwable) {
+            logger.warn("EnvReplacementParser context invalid: $variables", ignore)
+            return null
         }
-        ExpressionParser.fillContextByMap(variables, context, nameValue)
-        return Pair(context, nameValue)
     }
 
     private fun parseExpressionTwice(

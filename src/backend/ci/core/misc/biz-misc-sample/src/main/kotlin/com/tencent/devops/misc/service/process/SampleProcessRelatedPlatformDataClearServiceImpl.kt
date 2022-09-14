@@ -25,42 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package fileutil
+package com.tencent.devops.misc.service.process
 
-import (
-	"testing"
+import org.springframework.stereotype.Service
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-)
-
-func Test_CopyFile_01(t *testing.T) {
-	if _, err := fileutil.CopyFile("d:\\a.conf", "d:\\b.conf", true); err != nil {
-		t.Error("failed", err)
-	}
-}
-
-func Test_Md5_01(t *testing.T) {
-	md5, err := fileutil.GetFileMd5("d:\\time.exe")
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("md5: " + md5)
-}
-
-func Test_SetExecutable_01(t *testing.T) {
-	md5, err := fileutil.GetFileMd5("d:\\time.exe")
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("md5: " + md5)
-}
-
-func Test_unzip(t *testing.T) {
-	err := fileutil.Unzip("/Users/xxx/Downloads/1/agent.zip", "/Users/xxx/Downloads/1/")
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
+@Service
+class SampleProcessRelatedPlatformDataClearServiceImpl : ProcessRelatedPlatformDataClearService {
+    override fun cleanBuildData(projectId: String, pipelineId: String, buildIds: List<String>) {
+        // 开源版无需额外清理数据
+    }
 }

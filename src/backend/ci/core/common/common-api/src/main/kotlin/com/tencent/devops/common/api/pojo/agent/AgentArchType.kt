@@ -25,28 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package upgrade
+package com.tencent.devops.common.api.pojo.agent
 
-import (
-	"testing"
-
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-)
-
-func Test_startUpgrader_01(t *testing.T) {
-	err := runUpgrader(config.ActionUpgrade)
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("success")
-}
-
-func Test_startUpgrader_02(t *testing.T) {
-	err := runUpgrader(config.ActionUninstall)
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("success")
+enum class AgentArchType(val arch: String) {
+    ARM64("arm64"),
+    MIPS64("mips64"),
+    AMD64("amd64")
 }
