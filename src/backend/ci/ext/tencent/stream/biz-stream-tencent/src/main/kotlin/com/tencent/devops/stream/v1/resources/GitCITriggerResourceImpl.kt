@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.api.service.v1.GitCITriggerResource
 import com.tencent.devops.stream.pojo.V1TriggerBuildReq
 import com.tencent.devops.stream.trigger.TXManualTriggerService
-import com.tencent.devops.stream.api.service.v1.GitCITriggerResource
 import com.tencent.devops.stream.v1.pojo.V1GitYamlString
 import com.tencent.devops.stream.v1.service.V1StreamYamlService
 import org.slf4j.LoggerFactory
@@ -55,7 +55,7 @@ class GitCITriggerResourceImpl @Autowired constructor(
         v1TriggerBuildReq: V1TriggerBuildReq
     ): Result<Boolean> {
         checkParam(userId)
-        val result = txManualTriggerService.triggerBuild(userId, pipelineId, v1TriggerBuildReq)
+        val result = txManualTriggerService.triggerBuild(userId, pipelineId, v1TriggerBuildReq, null)
         logger.info("STREAM|$userId|$pipelineId|v1TriggerBuildReq=$v1TriggerBuildReq|result=$result")
         return Result(true)
     }

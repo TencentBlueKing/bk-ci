@@ -28,12 +28,14 @@
 package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -216,7 +218,8 @@ class StreamBasicSettingService @Autowired constructor(
                     centerId = 0L,
                     centerName = "",
                     secrecy = false,
-                    kind = 0
+                    kind = 0,
+                    properties = ProjectProperties(PipelineAsCodeSettings(true))
                 ),
                 needValidate = false,
                 needAuth = false,
@@ -368,7 +371,8 @@ class StreamBasicSettingService @Autowired constructor(
             val pathWithNamespace = gitProjectResult.pathWithNamespace
             val projectNameFromPara = projectName.substring(projectName.lastIndexOf("/") + 1)
             if (projectNameFromPara != projectNameFromGit ||
-                pathWithNamespace != projectName) {
+                pathWithNamespace != projectName
+            ) {
                 // 项目已修改名称或修改路径，更新项目信息，包含setting + project表
                 refreshSetting(userId, projectId)
             }

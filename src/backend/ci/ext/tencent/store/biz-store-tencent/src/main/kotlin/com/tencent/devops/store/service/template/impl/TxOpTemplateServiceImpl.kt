@@ -53,10 +53,15 @@ class TxOpTemplateServiceImpl @Autowired constructor(
     /**
      * 审核可见范围
      */
-    override fun approveVisibleDept(userId: String, storeCode: String, visibleApproveReq: VisibleApproveReq): Result<Boolean> {
+    override fun approveVisibleDept(
+        userId: String,
+        storeCode: String,
+        visibleApproveReq:
+        VisibleApproveReq
+    ): Result<Boolean> {
         val deptIdIntList = visibleApproveReq.deptIdList
         val storeType = StoreTypeEnum.TEMPLATE.type.toByte()
-        logger.info("approveVisibleDept, the userId is :$userId,storeCode is :$storeCode,deptIds is :$deptIdIntList,storeType is :$storeType")
+        logger.info("approveVisibleDept params:[$userId|$storeCode|$deptIdIntList|$storeType]")
         val status =
             if (visibleApproveReq.result == PASS) {
                 DeptStatusEnum.APPROVED.status.toByte()
@@ -66,7 +71,13 @@ class TxOpTemplateServiceImpl @Autowired constructor(
 
         if (status == DeptStatusEnum.APPROVED.status.toByte()) {
             val deptInfos = mutableListOf<DeptInfo>()
-            val records = storeDeptRelDao.getDeptInfosByStoreCode(dslContext, storeCode, storeType, null, deptIdIntList)
+            val records = storeDeptRelDao.getDeptInfosByStoreCode(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType,
+                deptStatus = null,
+                deptIdList = deptIdIntList
+            )
             records?.forEach {
                 deptInfos.add(DeptInfo(it.deptId, it.deptName, DeptStatusEnum.getStatus(it.status.toInt()), it.comment))
             }
@@ -77,9 +88,15 @@ class TxOpTemplateServiceImpl @Autowired constructor(
                 }
             }
         }
-
-        storeDeptRelDao.batchUpdate(dslContext, userId, storeCode, deptIdIntList, status, visibleApproveReq.message, storeType)
-
+        storeDeptRelDao.batchUpdate(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            deptIdList = deptIdIntList,
+            status = status,
+            comment = visibleApproveReq.message,
+            storeType = storeType
+        )
         return Result(true)
     }
 }

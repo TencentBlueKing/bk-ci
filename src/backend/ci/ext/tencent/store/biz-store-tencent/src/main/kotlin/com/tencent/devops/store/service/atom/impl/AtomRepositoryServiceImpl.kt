@@ -66,14 +66,19 @@ class AtomRepositoryServiceImpl : AtomRepositoryService {
     override fun updateAtomRepositoryUserInfo(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
         logger.info("updateAtomRepositoryUserInfo userId is:$userId,projectCode is:$projectCode,atomCode is:$atomCode")
         // 判断用户是否是插件管理员，移交代码库只能针对插件管理员
-        if (! storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
+        if (!storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte())
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
-        logger.info("updateAtomRepositoryUserInfo atomRecord is:$atomRecord")
-        if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode)
+            )
         val updateAtomRepositoryUserInfoResult = client.get(ServiceGitRepositoryResource::class)
             .updateRepositoryUserInfo(userId, projectCode, atomRecord.repositoryHashId)
         logger.info("updateAtomRepositoryUserInfoResult is:$updateAtomRepositoryUserInfoResult")

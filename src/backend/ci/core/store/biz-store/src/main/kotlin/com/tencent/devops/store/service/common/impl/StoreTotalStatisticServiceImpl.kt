@@ -200,7 +200,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         startTime: String,
         endTime: String
     ): StoreStatisticTrendData {
-        logger.info("getStatisticTrendDataByCode $userId,$storeCode,$storeType,$startTime,$endTime")
+        logger.info("getStatisticTrendDataByCode params:[$userId,$storeCode,$storeType,$startTime,$endTime]")
         // 判断当前用户是否是该组件的成员
         if (!storeMemberDao.isStoreMember(
                 dslContext = dslContext,

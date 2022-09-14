@@ -57,10 +57,10 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val serviceId = storeBuildResultRequest.storeId
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
-        logger.info("handleStoreBuildResult serviceRecord is:$serviceRecord")
-        if (null == serviceRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceId))
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceId)
+            )
         // 防止重复的mq消息造成的状态异常
         if (serviceRecord.serviceStatus != ExtServiceStatusEnum.BUILDING.status.toByte()) {
             // 如果在构建中就取消发布，异步启动的构建流水线可能会成功部署应用至灰度环境，需停掉灰度空间的应用
@@ -75,7 +75,7 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
                     checkPermissionFlag = false,
                     grayFlag = true
                 )
-                logger.info("$serviceCode bcsStopAppResult is :$bcsStopAppResult")
+                logger.info("service[$serviceCode] bcsStopAppResult is :$bcsStopAppResult")
                 if (bcsStopAppResult.isNotOk()) {
                     return bcsStopAppResult
                 }

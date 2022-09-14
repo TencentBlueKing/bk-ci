@@ -84,25 +84,30 @@ class TaskBuildDetailService(
         taskId: String,
         buildStatus: BuildStatus
     ) {
-        update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
-            var update = false
+        update(
+            projectId = projectId, buildId = buildId,
+            modelInterface = object : ModelInterface {
+                var update = false
 
-            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
-                if (c.id.equals(containerId)) {
-                    if (e.id.equals(taskId)) {
-                        logger.info("ENGINE|$buildId|pauseTask|$stageId|j($containerId)|t($taskId)|${buildStatus.name}")
-                        update = true
-                        e.status = buildStatus.name
-                        return Traverse.BREAK
+                override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
+                    if (c.id.equals(containerId)) {
+                        if (e.id.equals(taskId)) {
+                            logger.info(
+                                "ENGINE|$buildId|pauseTask|$stageId|j($containerId)|" +
+                                    "t($taskId)|${buildStatus.name}"
+                            )
+                            update = true
+                            e.status = buildStatus.name
+                            return Traverse.BREAK
+                        }
                     }
+                    return Traverse.CONTINUE
                 }
-                return Traverse.CONTINUE
-            }
 
-            override fun needUpdate(): Boolean {
-                return update
-            }
-        },
+                override fun needUpdate(): Boolean {
+                    return update
+                }
+            },
             buildStatus = BuildStatus.RUNNING,
             operation = "taskPause#$taskId"
         )
@@ -153,24 +158,30 @@ class TaskBuildDetailService(
                             // Replace the review user with environment
                             val list = mutableListOf<String>()
                             e.reviewUsers.forEach { reviewUser ->
-                                list.addAll(buildVariableService.replaceTemplate(projectId, buildId, reviewUser)
-                                    .split(delimiters))
+                                list.addAll(
+                                    buildVariableService.replaceTemplate(projectId, buildId, reviewUser)
+                                        .split(delimiters)
+                                )
                             }
                             e.reviewUsers.clear()
                             e.reviewUsers.addAll(list)
                         } else if (e is MatrixStatusElement &&
-                            e.originClassType == ManualReviewUserTaskElement.classType) {
+                            e.originClassType == ManualReviewUserTaskElement.classType
+                        ) {
                             e.status = BuildStatus.REVIEWING.name
                             // Replace the review user with environment
                             val list = mutableListOf<String>()
                             e.reviewUsers?.forEach { reviewUser ->
-                                list.addAll(buildVariableService.replaceTemplate(projectId, buildId, reviewUser)
-                                    .split(delimiters))
+                                list.addAll(
+                                    buildVariableService.replaceTemplate(projectId, buildId, reviewUser)
+                                        .split(delimiters)
+                                )
                             }
                             e.reviewUsers = list
                         } else if (e is QualityGateInElement || e is QualityGateOutElement ||
                             e.getTaskAtom() == QualityGateInElement.classType ||
-                            e.getTaskAtom() == QualityGateOutElement.classType) {
+                            e.getTaskAtom() == QualityGateOutElement.classType
+                        ) {
                             e.status = BuildStatus.REVIEWING.name
                             c.status = BuildStatus.REVIEWING.name
                         } else {
@@ -241,74 +252,76 @@ class TaskBuildDetailService(
         val atomVersion = taskBuildEndParam.atomVersion
         val errorType = taskBuildEndParam.errorType
         val updateTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
-        update(projectId, buildId, object : ModelInterface {
+        update(
+            projectId, buildId,
+            object : ModelInterface {
 
-            var update = false
-            override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
-                if (e.id == taskId) {
-                    // 判断取消的task任务对应的container是否包含post任务
-                    val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && c.containPostTaskFlag == true
-                    e.status = buildStatus.name
-                    if (e.startEpoch == null) {
-                        e.elapsed = 0
-                    } else {
-                        e.elapsed = System.currentTimeMillis() - e.startEpoch!!
-                    }
-                    if (errorType != null) {
-                        e.errorType = errorType.name
-                        e.errorCode = taskBuildEndParam.errorCode
-                        e.errorMsg = taskBuildEndParam.errorMsg
-                    }
-                    if (atomVersion != null) {
-                        when (e) {
-                            is MarketBuildAtomElement -> {
-                                e.version = atomVersion
-                            }
-                            is MarketBuildLessAtomElement -> {
-                                e.version = atomVersion
-                            }
-                            else -> {
-                                e.version = INIT_VERSION
+                var update = false
+                override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
+                    if (e.id == taskId) {
+                        // 判断取消的task任务对应的container是否包含post任务
+                        val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && c.containPostTaskFlag == true
+                        e.status = buildStatus.name
+                        if (e.startEpoch == null) {
+                            e.elapsed = 0
+                        } else {
+                            e.elapsed = System.currentTimeMillis() - e.startEpoch!!
+                        }
+                        if (errorType != null) {
+                            e.errorType = errorType.name
+                            e.errorCode = taskBuildEndParam.errorCode
+                            e.errorMsg = taskBuildEndParam.errorMsg
+                        }
+                        if (atomVersion != null) {
+                            when (e) {
+                                is MarketBuildAtomElement -> {
+                                    e.version = atomVersion
+                                }
+                                is MarketBuildLessAtomElement -> {
+                                    e.version = atomVersion
+                                }
+                                else -> {
+                                    e.version = INIT_VERSION
+                                }
                             }
                         }
-                    }
-                    val atomClassify = getAtomClassify(e.getAtomCode())
-                    e.atomName = atomClassify?.atomName
-                    e.classifyCode = atomClassify?.classifyCode
-                    e.classifyName = atomClassify?.classifyName
-                    var elementElapsed = 0L
-                    run lit@{
-                        val elements = c.elements
-                        elements.forEachIndexed { tmpIndex, it ->
-                            val elapsed = it.elapsed
-                            if (elapsed != null) {
-                                elementElapsed += elapsed
+                        val atomClassify = getAtomClassify(e.getAtomCode())
+                        e.atomName = atomClassify?.atomName
+                        e.classifyCode = atomClassify?.classifyCode
+                        e.classifyName = atomClassify?.classifyName
+                        var elementElapsed = 0L
+                        run lit@{
+                            val elements = c.elements
+                            elements.forEachIndexed { tmpIndex, it ->
+                                val elapsed = it.elapsed
+                                if (elapsed != null) {
+                                    elementElapsed += elapsed
+                                }
+                                if (handleUpdateTaskStatusInfos(
+                                        containerId = c.containerId ?: "",
+                                        buildStatus = buildStatus,
+                                        cancelTaskPostFlag = cancelTaskPostFlag,
+                                        tmpElement = it,
+                                        tmpElementIndex = tmpIndex,
+                                        elements = elements,
+                                        endElementIndex = index,
+                                        updateTaskStatusInfos = updateTaskStatusInfos,
+                                        endElement = e
+                                    )
+                                ) return@lit
                             }
-                            if (handleUpdateTaskStatusInfos(
-                                    containerId = c.containerId ?: "",
-                                    buildStatus = buildStatus,
-                                    cancelTaskPostFlag = cancelTaskPostFlag,
-                                    tmpElement = it,
-                                    tmpElementIndex = tmpIndex,
-                                    elements = elements,
-                                    endElementIndex = index,
-                                    updateTaskStatusInfos = updateTaskStatusInfos,
-                                    endElement = e
-                                )
-                            ) return@lit
                         }
+                        c.elementElapsed = elementElapsed
+                        update = true
+                        return Traverse.BREAK
                     }
-                    c.elementElapsed = elementElapsed
-                    update = true
-                    return Traverse.BREAK
+                    return Traverse.CONTINUE
                 }
-                return Traverse.CONTINUE
-            }
 
-            override fun needUpdate(): Boolean {
-                return update
-            }
-        },
+                override fun needUpdate(): Boolean {
+                    return update
+                }
+            },
             buildStatus = BuildStatus.RUNNING,
             operation = "taskEnd#$taskId"
         )

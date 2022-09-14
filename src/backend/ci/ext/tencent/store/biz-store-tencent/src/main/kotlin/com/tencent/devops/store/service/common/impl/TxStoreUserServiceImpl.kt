@@ -66,7 +66,6 @@ class TxStoreUserServiceImpl : StoreUserService {
      */
     override fun getUserDeptList(userId: String): List<Int> {
         val userInfo = client.get(ServiceTxUserResource::class).get(userId).data
-        logger.info("the userInfo is:$userInfo")
         return if (userInfo == null) {
             listOf(0, 0, 0, 0)
         } else {
@@ -82,11 +81,11 @@ class TxStoreUserServiceImpl : StoreUserService {
         try {
             // 获取用户的机构信息
             userDeptInfo = client.get(ServiceTxUserResource::class).get(userId).data
-        } catch (e: Exception) {
-            logger.error("getUserDeptDetailFromCache error  is :$e", e)
+        } catch (ignored: Throwable) {
+            logger.warn("getUserDeptDetailFromCache fail!", ignored)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         }
-        logger.info("the userDeptInfo is:$userDeptInfo")
+        logger.info("$userId userDeptInfo is:$userDeptInfo")
         return if (null != userDeptInfo) {
             val commenterDept = StringBuilder(userDeptInfo.bgName) // 组装评论者的机构信息
             if (userDeptInfo.deptName.isNotEmpty()) commenterDept.append("/").append(userDeptInfo.deptName)
@@ -107,14 +106,20 @@ class TxStoreUserServiceImpl : StoreUserService {
         storeCode: String,
         storeType: StoreTypeEnum
     ): Boolean {
-        logger.info("isCanInstallStoreComponent userId is :$userId,defaultFlag is :$defaultFlag")
-        logger.info("isCanInstallStoreComponent storeCode is :$storeCode,storeType is :$storeType")
-        return if (defaultFlag || storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
+        return if (defaultFlag || storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte())
+        ) {
             true
         } else {
             // 获取用户组织架构
             val userDeptList = getUserDeptList(userId)
-            val storeDept = storeVisibleDeptService.batchGetVisibleDept(listOf(storeCode), storeType).data?.get(storeCode)
+            val storeDept = storeVisibleDeptService.batchGetVisibleDept(
+                storeCodeList = listOf(storeCode),
+                storeType = storeType
+            ).data?.get(storeCode)
             storeDept != null && (storeDept.contains(0) || storeDept.intersect(userDeptList).count() > 0)
         }
     }

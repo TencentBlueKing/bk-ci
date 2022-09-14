@@ -1,13 +1,38 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.common.expression.expression.tokens
 
+import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
 import com.tencent.devops.common.expression.expression.ExpressionConstants
-import com.tencent.devops.common.expression.expression.Stack.Companion.peek
-import com.tencent.devops.common.expression.expression.Stack.Companion.pop
-import com.tencent.devops.common.expression.expression.Stack.Companion.push
 import com.tencent.devops.common.expression.expression.sdk.ExpressionUtility
 
-@Suppress("ComplexCondition", "ComplexMethod")
-class LexicalAnalyzer(private val expression: String) {
+@Suppress("ComplexCondition", "ComplexMethod", "LongMethod")
+class LexicalAnalyzer(private val expression: String, val subNameValueEvaluateInfo: SubNameValueEvaluateInfo? = null) {
     private val mUnclosedTokens = ArrayDeque<Token?>()
     val unclosedTokens: Iterable<Token?>
         get() = mUnclosedTokens
@@ -70,6 +95,7 @@ class LexicalAnalyzer(private val expression: String) {
             ExpressionConstants.WILDCARD -> {
                 rToken = createToken(TokenKind.Wildcard, c, mIndex++)
             }
+
             '\'' -> {
                 rToken = readStringToken()
             }
@@ -77,6 +103,7 @@ class LexicalAnalyzer(private val expression: String) {
             '!', '>', '<', '=', '&', '|' -> {
                 rToken = readOperator()
             }
+
             else -> {
                 if (c == '.') {
                     // Number
@@ -96,6 +123,9 @@ class LexicalAnalyzer(private val expression: String) {
                     }
                 } else if (c == '-' || c == '+' || (c in '0'..'9')) {
                     rToken = readNumberToken()
+                } else if (c == '$' && subNameValueEvaluateInfo?.enableSubNameValueEvaluate == true) {
+                    // 针对部分替换提供"$"
+                    rToken = readSubValueExpressionToken()
                 } else {
                     rToken = readKeywordToken()
                 }
@@ -195,8 +225,44 @@ class LexicalAnalyzer(private val expression: String) {
         val length = mIndex - startIndex
         val rawValue = expression.substring(startIndex, startIndex + length)
         if (closed) {
-            val t = createToken(TokenKind.String, rawValue, startIndex, str.toString())
-            return t
+            return createToken(TokenKind.String, rawValue, startIndex, str.toString())
+        }
+
+        return createToken(TokenKind.Unexpected, rawValue, startIndex)
+    }
+
+    /**
+     * 针对subNameValue部分替换提供
+     * 用于支持在表达式中支持部分替换为另一个表达式如 ${{ ${{ }}  }}
+     */
+    private fun readSubValueExpressionToken(): Token {
+        val startIndex = mIndex
+        var c: Char
+        var closed = false
+        val str = StringBuilder()
+        mIndex++ // Skip the leading single-quote.
+        while (mIndex < expression.length) {
+            // 校验${{
+            if ((mIndex == startIndex + 1 && expression[mIndex] != '{') ||
+                (mIndex == startIndex + 2 && expression[mIndex] != '{')
+            ) {
+                return createToken(TokenKind.Unexpected, expression.substring(startIndex, mIndex), startIndex)
+            }
+
+            c = expression[mIndex++]
+
+            str.append(c)
+
+            if (str.endsWith("}}")) {
+                closed = true
+                break
+            }
+        }
+
+        val length = mIndex - startIndex
+        val rawValue = expression.substring(startIndex, startIndex + length)
+        if (closed) {
+            return createToken(TokenKind.Expression, rawValue, startIndex, str.toString())
         }
 
         return createToken(TokenKind.Unexpected, rawValue, startIndex)
@@ -387,6 +453,7 @@ class LexicalAnalyzer(private val expression: String) {
                             TokenKind.LogicalOperator
                         )
                     }
+
                     else -> {
                         // Follows ")", "]", "*", a literal, a property name, or a named-value
                         legal = checkLastToken(
@@ -404,6 +471,7 @@ class LexicalAnalyzer(private val expression: String) {
                     }
                 }
             }
+
             TokenKind.Null, TokenKind.Boolean, TokenKind.Number, TokenKind.String -> {
                 // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
                 legal = checkLastToken(
@@ -415,10 +483,17 @@ class LexicalAnalyzer(private val expression: String) {
                     TokenKind.LogicalOperator
                 )
             }
+
+            // 针对subNameValue特供，在expression后都是合法的
+            TokenKind.Expression -> {
+                legal = true
+            }
+
             TokenKind.PropertyName -> {
                 // Follows "."
                 legal = checkLastToken(TokenKind.Dereference)
             }
+
             TokenKind.Function -> {
                 // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
                 legal = checkLastToken(
@@ -430,6 +505,7 @@ class LexicalAnalyzer(private val expression: String) {
                     TokenKind.LogicalOperator
                 )
             }
+
             TokenKind.NamedValue -> {
                 // Is first or follows "," or "[" or "(" or a logical operator (e.g. "!" or "==" etc)
                 legal = checkLastToken(
@@ -498,10 +574,16 @@ class LexicalAnalyzer(private val expression: String) {
     }
 
     /**
-     * 检查 lastToken kind 是否在允许种类的数组中。
+     * 检查上一个 lastToken kind 是否在允许种类的数组中。
      */
     private fun checkLastToken(vararg allowed: TokenKind?): Boolean {
         val lastKind = mLastToken?.kind
+
+        // 针对subNameValue特供，表达式token可以插入到任何地方
+        if (lastKind == TokenKind.Expression) {
+            return true
+        }
+
         allowed.forEach { kind ->
             if (kind == lastKind) {
                 return true
@@ -527,6 +609,7 @@ class LexicalAnalyzer(private val expression: String) {
                 '&', // "&&"
                 '|' // "||"
                 -> return true
+
                 else -> return c.isWhitespace()
             }
         }

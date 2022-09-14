@@ -457,7 +457,7 @@ class PipelineRuntimeService @Autowired constructor(
                 materialObjList.addAll(JsonUtil.getObjectMapper().readValue(it.material) as List<PipelineBuildMaterial>)
             }
         }
-        val aliasNames = if (null == aliasList || aliasList.isEmpty()) {
+        val aliasNames = if (aliasList.isNullOrEmpty()) {
             materialObjList.map { it.aliasName }
         } else {
             aliasList
@@ -492,7 +492,6 @@ class PipelineRuntimeService @Autowired constructor(
                 stageStatus = stageStatus?.let { self ->
                     JsonUtil.to(self, object : TypeReference<List<BuildStageStatus>>() {})
                 },
-                deleteReason = "",
                 currentTimestamp = currentTimestamp,
                 material =
                 material?.let { self ->
@@ -1372,7 +1371,7 @@ class PipelineRuntimeService @Autowired constructor(
                 null
             }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
-            val remark = buildVariableService.getVariable(projectId, buildId, PIPELINE_BUILD_REMARK)
+            val remark = buildVariableService.getVariable(projectId, pipelineId, buildId, PIPELINE_BUILD_REMARK)
             pipelineBuildDao.finishBuild(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -1426,7 +1425,7 @@ class PipelineRuntimeService @Autowired constructor(
     fun getBuildParametersFromStartup(projectId: String, buildId: String): List<BuildParameters> {
         return try {
             val buildParameters = pipelineBuildDao.getBuildParameters(dslContext, projectId, buildId)
-            return if (buildParameters == null || buildParameters.isEmpty()) {
+            return if (buildParameters.isNullOrEmpty()) {
                 emptyList()
             } else {
                 (JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>)

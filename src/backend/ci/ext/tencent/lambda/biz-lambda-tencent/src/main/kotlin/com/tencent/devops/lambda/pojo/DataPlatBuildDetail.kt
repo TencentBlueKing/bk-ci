@@ -50,6 +50,8 @@ data class DataPlatBuildDetail(
     val pipelineId: String,
     @ApiModelProperty("构建号", required = false)
     val buildNum: Int?,
+    @ApiModelProperty("是否保密项目", required = false)
+    val isSecrecy: Boolean?,
     @ApiModelProperty("构建详情", required = true)
     val model: String,
     @ApiModelProperty("构建触发人", required = false)

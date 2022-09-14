@@ -47,17 +47,18 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.service.image.ImageReleaseService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class TxImageReleaseService @Autowired constructor() : ImageReleaseService() {
 
-    private val logger = LoggerFactory.getLogger(TxImageReleaseService::class.java)
-
     override fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
-        return if (isNormalUpgrade) ImageStatusEnum.RELEASED.status.toByte() else ImageStatusEnum.AUDITING.status.toByte()
+        return if (isNormalUpgrade) {
+            ImageStatusEnum.RELEASED.status.toByte()
+        } else {
+            ImageStatusEnum.AUDITING.status.toByte()
+        }
     }
 
     override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {

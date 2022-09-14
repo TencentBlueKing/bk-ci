@@ -56,6 +56,7 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -71,6 +72,7 @@ class ContainerControl @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineAsCodeService: PipelineAsCodeService,
     private val mutexControl: MutexControl
 ) {
 
@@ -132,7 +134,7 @@ class ContainerControl @Autowired constructor(
     private fun PipelineBuildContainer.execute(watcher: Watcher, event: PipelineBuildContainerEvent) {
 
         watcher.start("init_context")
-        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         val mutexGroup = mutexControl.decorateMutexGroup(controlOption?.mutexGroup, variables)
 
         // 当build的状态是结束的时候，直接返回
@@ -155,7 +157,7 @@ class ContainerControl @Autowired constructor(
 
         // 已按任务序号递增排序，如未排序要注意
         val containerTasks = pipelineTaskService.listContainerBuildTasks(projectId, buildId, containerId)
-        val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
+        val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
         val stageMatrixCount = pipelineContainerService.countStageContainers(
             transactionContext = null,
             projectId = projectId,
@@ -163,6 +165,7 @@ class ContainerControl @Autowired constructor(
             stageId = stageId,
             onlyMatrixGroup = true
         )
+        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId)
 
         val context = ContainerContext(
             buildStatus = this.status, // 初始状态为容器状态，中间流转会切换状态，并最终赋值给该容器状态
@@ -174,6 +177,7 @@ class ContainerControl @Autowired constructor(
             watcher = watcher,
             containerTasks = containerTasks,
             variables = variables,
+            pipelineAsCodeEnabled = pipelineAsCodeEnabled,
             executeCount = executeCount
         )
         watcher.stop()

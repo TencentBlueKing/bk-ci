@@ -24,6 +24,7 @@ class TxArchiveAtomServiceImpl(
         userId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
+        atomId: String,
         archiveAtomRequest: ArchiveAtomRequest
     ): Result<ArchiveAtomResponse?> {
         throw UnsupportedOperationException()

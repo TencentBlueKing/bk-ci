@@ -612,7 +612,7 @@ class ProjectLocalService @Autowired constructor(
         if (checkManager!!) {
             // 操作人必须为项目的管理员
             if (!authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)) {
-                logger.error("$userId is not manager for project[$projectId]")
+                logger.warn("$userId is not manager for project[$projectId]")
                 throw OperationException(
                     (MessageCodeUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.NOT_MANAGER,
@@ -629,7 +629,7 @@ class ProjectLocalService @Autowired constructor(
                     projectCode = projectId,
                     userId = userId
                 )) {
-                logger.error("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
+                logger.warn("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
                 throw OperationException(
                     (MessageCodeUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,

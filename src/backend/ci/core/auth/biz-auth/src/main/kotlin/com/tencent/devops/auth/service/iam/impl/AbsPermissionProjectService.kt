@@ -64,17 +64,20 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         val iamProjectId = getProjectId(projectCode)
         // 2. 获取项目下的所有用户组
         val roleInfos = permissionRoleService.getPermissionRole(iamProjectId)
-        logger.info("[IAM] $projectCode $iamProjectId roleInfos: $roleInfos")
+        logger.info(
+            "[IAM] getProjectGroupAndUserList: projectCode = $projectCode |" +
+                " iamProjectId = $iamProjectId | roleInfos: $roleInfos"
+        )
         val result = mutableListOf<BkAuthGroupAndUserList>()
         // 3. 获取用户组下的所有用户
         roleInfos.forEach {
             val groupMemberInfos = permissionRoleMemberService.getRoleMember(iamProjectId, it.id, 0, 1000).results
-            logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| users $groupMemberInfos")
+            logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id} | users $groupMemberInfos")
             val members = mutableListOf<String>()
             groupMemberInfos.forEach { memberInfo ->
                 // 如果为组织需要获取组织对应的用户
                 if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
-                    logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| dept ${memberInfo.id}")
+                    logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id} | dept ${memberInfo.id}")
                     val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null)
                     if (deptUsers != null) {
                         members.addAll(deptUsers)
@@ -107,7 +110,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         actionDTOs.add(viewActionDto)
         actionDTOs.add(managerActionDto)
         val actionPolicyDTOs = policyService.batchGetPolicyByActionList(userId, actionDTOs, null) ?: return emptyList()
-        logger.info("[IAM] getUserProjects actionPolicyDTOs $actionPolicyDTOs")
+        logger.info("[IAM] getUserProjects: actionPolicyDTOs = $actionPolicyDTOs")
         val projectCodes = mutableSetOf<String>()
         actionPolicyDTOs.forEach {
             projectCodes.addAll(AuthUtils.getProjects(it.condition))
@@ -169,7 +172,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
 
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
         val roleInfos = permissionRoleService.getPermissionRole(projectId.toInt())
-        logger.info("[IAM] getProjectRole $roleInfos")
+        logger.info("[IAM] getProjectRoles : roleInfos = $roleInfos")
         val roleList = mutableListOf<BKAuthProjectRolesResources>()
         roleInfos.forEach {
             val role = BKAuthProjectRolesResources(

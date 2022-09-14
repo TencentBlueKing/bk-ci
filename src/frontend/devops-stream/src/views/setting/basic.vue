@@ -27,7 +27,7 @@
             </section>
         </section>
 
-        <h3 class="setting-basic-head">{{$t('setting.mrRunPerm')}}</h3>
+        <!-- <h3 class="setting-basic-head">{{$t('setting.mrRunPerm')}}</h3>
         <section class="basic-main">
             <section class="form-item">
                 <bk-checkbox v-model="triggerSetting.memberNoNeedApproving" class="basic-item">{{$t('setting.mrNoApproval')}}</bk-checkbox>
@@ -47,7 +47,7 @@
             <section class="main-checkbox">
                 <bk-button theme="primary" :loading="isSavingTrigginSetting" @click="saveTriggerSetting">{{ $t('save') }}</bk-button>
             </section>
-        </section>
+        </section> -->
     </article>
 </template>
 
@@ -188,6 +188,7 @@
             }
             .desc {
                 color: #979BA5;
+                font-size: 12px;
             }
             .desc-padding {
                 padding-left: 22px;
