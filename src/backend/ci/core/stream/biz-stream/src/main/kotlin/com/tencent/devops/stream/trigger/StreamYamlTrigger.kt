@@ -44,6 +44,7 @@ import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
@@ -213,11 +214,17 @@ class StreamYamlTrigger @Autowired constructor(
         }
 
         // 获取蓝盾流水线的pipelineAsCodeSetting
-        val pipelineSettings = client.get(ServicePipelineSettingResource::class).getPipelineSetting(
-            projectId = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong()),
-            pipelineId = pipeline.pipelineId,
-            channelCode = ChannelCode.GIT
-        ).data ?: throw StreamTriggerException(
+        val projectCode = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong())
+        val pipelineAsCodeSettings = if (pipeline.pipelineId.isNotBlank()) {
+            client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+                projectId = projectCode,
+                pipelineId = pipeline.pipelineId,
+                channelCode = ChannelCode.GIT
+            ).data?.pipelineAsCodeSettings
+        } else {
+            client.get(ServiceProjectResource::class).get(projectCode)
+                .data?.properties?.pipelineAsCodeSettings
+        } ?: throw StreamTriggerException(
             action = action,
             triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
             reasonParams = listOf("Pipeline settings not found"),
@@ -226,7 +233,7 @@ class StreamYamlTrigger @Autowired constructor(
                 state = StreamCommitCheckState.FAILURE
             )
         )
-        action.data.context.pipelineAsCodeSettings = pipelineSettings.pipelineAsCodeSettings
+        action.data.context.pipelineAsCodeSettings = pipelineAsCodeSettings
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         val gitProjectInfo = action.api.getGitProjectInfo(
