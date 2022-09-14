@@ -187,7 +187,7 @@ object ShellUtil {
             newValue = "\"${File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath}\""))
         command.append(setGateValue.replace(oldValue = "##gateValueFile##",
             newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""))
-        command.append("source ${userScriptFile.absolutePath}")
+        command.append(". ${userScriptFile.absolutePath}")
         userScriptFile.writeText(script)
         file.writeText(command.toString())
         executeUnixCommand(command = "chmod +x ${file.absolutePath}", sourceDir = dir)
