@@ -25,19 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.annotation
+package com.tencent.devops.common.stream.pojo
 
-import org.springframework.context.annotation.Bean
-
-/**
- * Stream消费者注解
- * @param streamEvent 目标绑定接受的事件
- * @param group 指定订阅组，如果是广播事件则需要指定，否则为非广播默认订阅组
- */
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-@Bean
-annotation class StreamConsumer(
-    val streamEvent: StreamEvent,
-    val group: String = ""
+import com.tencent.devops.common.stream.annotation.StreamEvent
+@StreamEvent("a.b.c")
+data class SampleEvent(
+    val buildId: String,
+    var retryTime: Int = 2,
+    var delayMills: Int = 0
 )

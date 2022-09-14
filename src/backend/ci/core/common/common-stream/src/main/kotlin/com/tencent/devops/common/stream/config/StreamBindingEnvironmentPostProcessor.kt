@@ -29,6 +29,10 @@ package com.tencent.devops.common.stream.config
 
 import com.tencent.devops.common.stream.annotation.StreamConsumer
 import com.tencent.devops.common.stream.annotation.StreamEvent
+import org.reflections.Reflections
+import org.reflections.scanners.Scanners
+import org.reflections.util.ClasspathHelper
+import org.reflections.util.ConfigurationBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringApplication
@@ -36,12 +40,11 @@ import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcesso
 import org.springframework.boot.env.EnvironmentPostProcessor
 import org.springframework.core.Ordered
 import org.springframework.core.env.ConfigurableEnvironment
-import org.springframework.core.env.MapPropertySource
 import org.springframework.core.env.PropertiesPropertySource
 import java.util.Properties
 
 // TODO #7443
-class StreamBindingEnvironmentPostProcessor: EnvironmentPostProcessor, Ordered {
+class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered {
 
     @Value("\${spring.cloud.stream.default-binder:#{null}}")
     private val defaultBinder: String? = null
@@ -60,45 +63,53 @@ class StreamBindingEnvironmentPostProcessor: EnvironmentPostProcessor, Ordered {
         with(Properties()) {
             // 如果未配置服务使用的binder类型，则使用全局默认binder类型
             // 如果均未配置则不进行注解的反射解析
-            val binder = serviceBinder ?: defaultBinder ?: return
-            val ref = Reflections()
-            val propertySources = applicationContext.environment.propertySources
-            ref.getTypesAnnotatedWith(StreamEvent::class.java).forEach { clazz ->
+            val binder = serviceBinder ?: defaultBinder ?: return PropertiesPropertySource(STREAM_SOURCE_NAME, this)
+            val eventClasses = Reflections(
+                ConfigurationBuilder()
+                    .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
+                    .setExpandSuperTypes(true)
+            ).getTypesAnnotatedWith(StreamEvent::class.java)
+            eventClasses.forEach { clazz ->
                 val streamEvent = clazz.getAnnotation(StreamEvent::class.java)
-                logger.info("Found StreamEvent class: ${clazz.name}, " +
-                                "with destination[${streamEvent.destination}]")
-                propertySources.addLast(
-                    MapPropertySource(streamEvent.destination, mapOf(
-                        "destination" to streamEvent.destination,
-                        "binder" to binder
-                    ))
+                logger.info(
+                    "Found StreamEvent class: ${clazz.name}, " +
+                        "with destination[${streamEvent.destination}]"
                 )
+                setProperty("spring.cloud.stream.bindings.${clazz.simpleName}.destination", streamEvent.destination)
+                setProperty("spring.cloud.stream.bindings.${clazz.simpleName}.destination", binder)
             }
-            ref.getTypesAnnotatedWith(StreamConsumer::class.java).forEach { clazz ->
-                val streamConsumer = clazz.getAnnotation(StreamConsumer::class.java)
-                println("Found StreamConsumer class: ${clazz.name}, " +
-                            "with destination[${streamConsumer.destination}] group[${streamConsumer.group}]")
+            val consumerBeans = Reflections(
+                ConfigurationBuilder()
+                    .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
+                    .setExpandSuperTypes(true)
+                    .setScanners(Scanners.MethodsAnnotated)
+            ).getTypesAnnotatedWith(StreamConsumer::class.java)
+            consumerBeans.forEach { method ->
+                val streamConsumer = method.getAnnotation(StreamConsumer::class.java)
+                println(
+                    "Found StreamConsumer class: ${method.name}, " +
+                        "with destination[${streamConsumer.streamEvent}] group[${streamConsumer.group}]"
+                )
                 // 如果注解中指定了订阅组，则直接设置
                 // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
                 val subscriptionGroup = streamConsumer.group.ifBlank {
-                    serviceName?.let { "$it-service" } ?: "default"
+                    serviceName ?: "default"
                 }
-                propertySources.addLast(
-                    MapPropertySource(clazz.simpleName, mapOf(
-                        "destination" to streamConsumer.destination,
-                        "group" to subscriptionGroup,
-                        "binder" to binder
-                    ))
+                setProperty(
+                    "spring.cloud.stream.bindings.${method.name}-in-0",
+                    streamConsumer.streamEvent.destination
+                )
+                setProperty(
+                    "spring.cloud.stream.bindings.bindings.${method.name}-in-0",
+                    subscriptionGroup
                 )
             }
-            setProperty("spring.cloud.consul.config.name", "")
-            setProperty("spring.cloud.consul.config.name", "")
             return PropertiesPropertySource(STREAM_SOURCE_NAME, this)
         }
     }
 
     override fun getOrder(): Int {
-        return  ConfigDataEnvironmentPostProcessor.ORDER - 1
+        return ConfigDataEnvironmentPostProcessor.ORDER - 1
     }
 
     companion object {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.log.configuration
 
+import com.tencent.devops.common.stream.annotation.StreamConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
@@ -57,7 +58,7 @@ class LogMQConfiguration @Autowired constructor() {
         logServiceConfig: LogServiceConfig
     ) = BuildLogPrintService(streamBridge, logPrintBean, storageProperties, logServiceConfig)
 
-    @Bean(StreamBinding.BINDING_LOG_ORIGIN_EVENT_IN)
+    @StreamConsumer(StreamBinding.BINDING_LOG_ORIGIN_EVENT_IN)
     fun logOriginEventIn(
         listenerService: BuildLogListenerService
     ): Consumer<Message<LogOriginEvent>> {
@@ -66,7 +67,7 @@ class LogMQConfiguration @Autowired constructor() {
         }
     }
 
-    @Bean(StreamBinding.BINDING_LOG_STORAGE_EVENT_IN)
+    @StreamConsumer(StreamBinding.BINDING_LOG_STORAGE_EVENT_IN)
     fun logStorageEventIn(
         listenerService: BuildLogListenerService
     ): Consumer<Message<LogStorageEvent>> {
@@ -75,7 +76,7 @@ class LogMQConfiguration @Autowired constructor() {
         }
     }
 
-    @Bean(StreamBinding.BINDING_LOG_STATUS_EVENT_IN)
+    @StreamConsumer(StreamBinding.BINDING_LOG_STATUS_EVENT_IN)
     fun logStatusEventIn(
         listenerService: BuildLogListenerService
     ): Consumer<Message<LogStatusEvent>> {

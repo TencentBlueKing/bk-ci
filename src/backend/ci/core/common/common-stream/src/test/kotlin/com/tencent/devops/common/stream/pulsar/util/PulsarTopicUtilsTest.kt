@@ -33,12 +33,19 @@ internal class PulsarTopicUtilsTest {
 
     @Test
     fun testReflections() {
-        val config = ConfigurationBuilder()
-        config.addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
-        config.setExpandSuperTypes(true)
-        config.setScanners(Scanners.Resources)
-        val reflections = Reflections(config)
+        val reflections = Reflections(
+            ConfigurationBuilder()
+                .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
+                .setExpandSuperTypes(true)
+        )
         val re = reflections.getTypesAnnotatedWith(StreamEvent::class.java)
         println(re)
+        re.forEach { clazz ->
+            val streamEvent = clazz.getAnnotation(StreamEvent::class.java)
+            println(
+                "Found StreamEvent class: ${clazz.canonicalName}, " +
+                    "with destination[${streamEvent.destination}]"
+            )
+        }
     }
 }
