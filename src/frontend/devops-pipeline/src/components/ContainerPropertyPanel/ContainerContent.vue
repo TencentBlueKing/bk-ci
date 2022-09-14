@@ -91,7 +91,14 @@
             <!-- windows公共构建机类型 -->
             <template v-if="buildResourceType === 'WINDOWS'">
                 <form-field :label="$t('editPage.winSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
-                    <vuex-input :handle-change="changeWindowSystem" :value="systemVersion" :disabled="!editable" class="bk-image" v-validate.initial="'required'" name="systemVersion" />
+                    <bk-select @change="changeWindowSystem" :disabled="!editable" :value="systemVersion" searchable :loading="isLoadingWin" name="systemVersion" v-validate.initial="'required'">
+                        <bk-option v-for="item in windowsVersionList"
+                            :key="item.name"
+                            :id="item.name"
+                            :name="item.systemVersion"
+                        >
+                        </bk-option>
+                    </bk-select>
                 </form-field>
             </template>
 
@@ -289,6 +296,8 @@
                 isLoadingMac: false,
                 xcodeVersionList: [],
                 systemVersionList: [],
+                isLoadingWin: false,
+                windowsVersionList: [],
                 isShowPerformance: false
             }
         },
@@ -485,12 +494,14 @@
                 this.getVersionList(this.container.dispatchType.imageCode)
             }
             if (this.buildResourceType === 'MACOS') this.getMacOsData()
+            if (this.buildResourceType === 'WINDOWS') this.getWinData()
         },
         methods: {
             ...mapActions('atom', [
                 'updateContainer',
                 'getMacSysVersion',
-                'getMacXcodeVersion'
+                'getMacXcodeVersion',
+                'getWinVersion'
             ]),
             ...mapActions('pipelines', [
                 'requestImageVersionlist'
@@ -512,6 +523,7 @@
                     [name]: val
                 }))
                 if (val === 'MACOS') this.getMacOsData()
+                if (val === 'WINDOWS') this.getWinData()
                 if (this.container.dispatchType && this.container.dispatchType.imageCode) this.getVersionList(this.container.dispatchType.imageCode)
             },
 
@@ -631,12 +643,17 @@
                     [name]: value
                 }))
             },
-            changeWindowSystem (name, value) {
+            changeWindowSystem (value) {
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
-                    [name]: value,
+                    systemVersion: value,
                     value
                 }))
+            },
+            async getWinData () {
+                this.isLoadingWin = true
+                this.windowsVersionList = await this.getWinVersion()
+                this.isLoadingWin = false
             },
             handleContainerChange (name, value) {
                 this.updateContainer({
