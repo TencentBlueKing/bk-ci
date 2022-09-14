@@ -1267,7 +1267,6 @@ class PipelineListFacadeService @Autowired constructor(
             it.version = templateInfo?.version
             it.versionName = templateInfo?.versionName
             it.groupLabel = pipelineGroupLabel[pipelineId]
-            it.delete = it.delete
             val pipelineBuildSummaryRecord = pipelineBuildSummaryMap[pipelineId]
             if (pipelineBuildSummaryRecord != null) {
                 val finishCount = pipelineBuildSummaryRecord.finishCount ?: 0
@@ -1337,7 +1336,8 @@ class PipelineListFacadeService @Autowired constructor(
                     hasPermission = authPipelines.contains(pipelineId),
                     hasCollect = favorPipelines.contains(pipelineId),
                     updater = it.lastModifyUser,
-                    creator = it.creator
+                    creator = it.creator,
+                    delete = it.delete
                 )
             )
         }
