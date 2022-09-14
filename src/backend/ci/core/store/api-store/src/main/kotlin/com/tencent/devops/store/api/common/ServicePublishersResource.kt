@@ -40,6 +40,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PUBLISHER"], description = "service-publisher")
@@ -122,8 +123,10 @@ interface ServicePublishersResource {
         @ApiParam("用户ID", required = true)
         userId: String,
         @ApiParam("平台代码", required = true)
+        @QueryParam("platformCode")
         platformCode: String,
         @ApiParam("logoUrl", required = true)
+        @QueryParam("logoUrl")
         logoUrl: String
     )
 }
