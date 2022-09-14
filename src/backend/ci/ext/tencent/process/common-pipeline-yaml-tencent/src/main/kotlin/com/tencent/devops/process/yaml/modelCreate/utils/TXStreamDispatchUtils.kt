@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcTy
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
+import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
 import com.tencent.devops.process.yaml.v2.models.Resources
@@ -135,6 +136,14 @@ object TXStreamDispatchUtils {
                 macOSEvn = "Catalina10.15.4:12.2",
                 systemVersion = "Catalina10.15.4",
                 xcodeVersion = "12.2"
+            )
+        }
+
+        // windows公共构建机
+        if (poolName.startsWith("windows")) {
+            return WindowsDispatchType(
+                env = "",
+                systemVersion = poolName
             )
         }
 
