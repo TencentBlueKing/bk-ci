@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.bk.sdk.iam.util.JsonUtil
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
@@ -183,5 +184,8 @@ class StreamManualAction(
     }
 
     override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {}
-    override fun updateLastBranch(pipelineId: String, branch: String) {}
+
+    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) {}
+
+    override fun getStartType() = StartType.MANUAL
 }

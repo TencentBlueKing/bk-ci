@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
 import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.process.pojo.setting.JobCommonSetting
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -162,7 +163,8 @@ class PipelineSettingFacadeService @Autowired constructor(
                 runLockType = PipelineRunLockType.MULTIPLE,
                 successSubscription = Subscription(),
                 failSubscription = Subscription(),
-                labels = labels
+                labels = labels,
+                pipelineAsCodeSettings = PipelineAsCodeSettings()
             )
         } else {
             settingInfo.labels = labels
@@ -270,7 +272,8 @@ class PipelineSettingFacadeService @Autowired constructor(
             hasPermission = oldSetting.hasPermission,
             labels = oldSetting.labels,
             runLockType = oldSetting.runLockType,
-            waitQueueTimeMinute = oldSetting.waitQueueTimeMinute
+            waitQueueTimeMinute = oldSetting.waitQueueTimeMinute,
+            pipelineAsCodeSettings = oldSetting.pipelineAsCodeSettings
         )
     }
 

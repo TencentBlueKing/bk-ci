@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
-import com.tencent.devops.environment.model.AgentArchType
+import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord

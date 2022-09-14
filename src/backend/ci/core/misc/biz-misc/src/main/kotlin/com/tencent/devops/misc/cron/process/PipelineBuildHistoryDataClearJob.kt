@@ -36,6 +36,7 @@ import com.tencent.devops.misc.service.dispatch.DispatchDataClearService
 import com.tencent.devops.misc.service.plugin.PluginDataClearService
 import com.tencent.devops.misc.service.process.ProcessDataClearService
 import com.tencent.devops.misc.service.process.ProcessMiscService
+import com.tencent.devops.misc.service.process.ProcessRelatedPlatformDataClearService
 import com.tencent.devops.misc.service.project.ProjectDataClearConfigFactory
 import com.tencent.devops.misc.service.project.ProjectDataClearConfigService
 import com.tencent.devops.misc.service.project.ProjectMiscService
@@ -67,7 +68,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
     private val dispatchDataClearService: DispatchDataClearService,
     private val pluginDataClearService: PluginDataClearService,
     private val qualityDataClearService: QualityDataClearService,
-    private val artifactoryDataClearService: ArtifactoryDataClearService
+    private val artifactoryDataClearService: ArtifactoryDataClearService,
+    private val processRelatedPlatformDataClearService: ProcessRelatedPlatformDataClearService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildHistoryDataClearJob::class.java)
@@ -159,8 +161,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     )
                 }
             }
-        } catch (t: Throwable) {
-            logger.warn("pipelineBuildHistoryDataClear failed", t)
+        } catch (ignored: Throwable) {
+            logger.warn("pipelineBuildHistoryDataClear failed", ignored)
         } finally {
             lock.unlock()
         }
@@ -226,8 +228,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     expired = false,
                     isDistinguishCluster = true
                 )
-            } catch (ignore: Exception) {
-                logger.warn("pipelineBuildHistoryDataClear doClearBus failed", ignore)
+            } catch (ignored: Throwable) {
+                logger.warn("pipelineBuildHistoryDataClear doClearBus failed", ignored)
             } finally {
                 // 释放redis集合中的线程编号
                 redisOperation.sremove(key = PIPELINE_BUILD_HISTORY_DATA_CLEAR_THREAD_SET_KEY,
@@ -331,6 +333,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         logger.info("pipelineBuildHistoryDataClear|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
         var totalHandleNum = processMiscService.getMinPipelineBuildNum(projectId, pipelineId).toInt()
         while (totalHandleNum < totalBuildCount) {
+            val cleanBuilds = mutableListOf<String>()
             val pipelineHistoryBuildIdList = processMiscService.getHistoryBuildIdList(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -351,9 +354,13 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     qualityDataClearService.clearBuildData(buildId)
                     artifactoryDataClearService.clearBuildData(buildId)
                     processDataClearService.clearOtherBuildData(projectId, pipelineId, buildId)
+                    cleanBuilds.add(buildId)
                 }
             }
             totalHandleNum += DEFAULT_PAGE_SIZE
+            if (!cleanBuilds.isNullOrEmpty()) {
+                processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId, cleanBuilds)
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
@@ -66,6 +67,7 @@ class StreamRepoTriggerAction(
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
+        val changeSet = getChangeSet()
         return TGitActionCommon.getYamlPathList(
             action = baseAction,
             gitProjectId = data.getGitProjectId(),
@@ -126,9 +128,7 @@ class StreamRepoTriggerAction(
         }
     }
 
-    override fun updateLastBranch(pipelineId: String, branch: String) {
-        baseAction.updateLastBranch(pipelineId, branch)
-    }
+    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) {}
 
     private fun checkHaveGroupName(
         name: String,
@@ -145,6 +145,8 @@ class StreamRepoTriggerAction(
             reasonParams = listOf("First level group[$firstGroupName] does not exist")
         )
     }
+
+    override fun getStartType() = StartType.WEB_HOOK
 
     /**
      * 判断是否可以注册跨项目构建事件

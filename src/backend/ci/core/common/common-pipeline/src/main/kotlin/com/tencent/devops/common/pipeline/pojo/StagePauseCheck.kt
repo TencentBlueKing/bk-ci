@@ -27,9 +27,9 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.option.StageControlOption
@@ -175,16 +175,16 @@ data class StagePauseCheck(
     /**
      *  进入审核流程前完成所有审核人变量替换
      */
-    fun parseReviewVariables(variables: Map<String, String>) {
+    fun parseReviewVariables(variables: Map<String, String>, asCodeEnabled: Boolean?) {
         reviewGroups?.forEach { group ->
             if (group.status == null) {
                 val reviewers = group.reviewers.joinToString(",")
-                val realReviewers = EnvUtils.parseEnv(reviewers, variables)
+                val realReviewers = EnvReplacementParser.parse(reviewers, variables, asCodeEnabled)
                     .split(",").toList()
                 group.reviewers = realReviewers
             }
         }
-        reviewDesc = EnvUtils.parseEnv(reviewDesc, variables)
+        reviewDesc = EnvReplacementParser.parse(reviewDesc, variables, asCodeEnabled)
         reviewParams?.forEach { it.parseValueWithType(variables) }
     }
 

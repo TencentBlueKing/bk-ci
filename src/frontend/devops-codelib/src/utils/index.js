@@ -41,7 +41,7 @@ export function parsePathAlias (type, path, authType, svnType) {
             msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
             break
         case isSvn(type) && svnType === 'http':
-            reg = /^http\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
+            reg = /^(http|svn)\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
             break
         case isGitLab(type) && authType === 'HTTP':

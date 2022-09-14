@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.metrics.api.ServiceMetricsDataReportResource
+import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.pojo.dto.CodeccDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.QualityDataReportDTO
 import com.tencent.devops.metrics.pojo.dto.TurboDataReportDTO
@@ -47,7 +48,8 @@ import org.springframework.stereotype.Service
 class MetricsThirdPlatformDataReportFacadeServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val client: Client,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val metricsConfig: MetricsConfig
 ) : MetricsThirdPlatformDataReportFacadeService {
 
     private val logger = LoggerFactory.getLogger(MetricsThirdPlatformDataReportFacadeService::class.java)
@@ -55,6 +57,11 @@ class MetricsThirdPlatformDataReportFacadeServiceImpl @Autowired constructor(
     override fun metricsCodeCheckDataReport(codeCheckReportEvent: CodeCheckReportEvent): Boolean {
         val projectId = codeCheckReportEvent.projectId
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
+        // 判断该项目是否需要上报度量数据
+        val unReportClusterTags = metricsConfig.unReportClusterTags.split(",")
+        if (unReportClusterTags.contains(projectConsulTag)) {
+            return true
+        }
         return bkTag.invokeByTag(projectConsulTag) {
             val bkFinalTag = bkTag.getFinalTag()
             logger.info("start call ServiceMetricsDataReportResource api $projectId|$projectConsulTag|$bkFinalTag")
@@ -72,6 +79,11 @@ class MetricsThirdPlatformDataReportFacadeServiceImpl @Autowired constructor(
     override fun metricsTurboDataReport(turboReportEvent: TurboReportEvent): Boolean {
         val projectId = turboReportEvent.projectId
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
+        // 判断该项目是否需要上报度量数据
+        val unReportClusterTags = metricsConfig.unReportClusterTags.split(",")
+        if (unReportClusterTags.contains(projectConsulTag)) {
+            return true
+        }
         return bkTag.invokeByTag(projectConsulTag) {
             val bkFinalTag = bkTag.getFinalTag()
             logger.info("start call ServiceMetricsDataReportResource api $projectId|$projectConsulTag|$bkFinalTag")
@@ -88,6 +100,11 @@ class MetricsThirdPlatformDataReportFacadeServiceImpl @Autowired constructor(
     override fun metricsQualityDataReport(qualityReportEvent: QualityReportEvent): Boolean {
         val projectId = qualityReportEvent.projectId
         val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
+        // 判断该项目是否需要上报度量数据
+        val unReportClusterTags = metricsConfig.unReportClusterTags.split(",")
+        if (unReportClusterTags.contains(projectConsulTag)) {
+            return true
+        }
         return bkTag.invokeByTag(projectConsulTag) {
             val bkFinalTag = bkTag.getFinalTag()
             logger.info("start call ServiceMetricsDataReportResource api $projectId|$projectConsulTag|$bkFinalTag")

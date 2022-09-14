@@ -28,6 +28,7 @@
 package com.tencent.devops.common.expression.expression.tokens
 
 import com.tencent.devops.common.expression.NotSupportedException
+import com.tencent.devops.common.expression.context.ExpressionValueNode
 import com.tencent.devops.common.expression.expression.ExpressionConstants
 import com.tencent.devops.common.expression.expression.sdk.ExpressionNode
 import com.tencent.devops.common.expression.expression.sdk.Literal
@@ -185,6 +186,8 @@ class Token(
             TokenKind.PropertyName -> return Literal(rawValue)
             // "*"
             TokenKind.Wildcard -> return Wildcard()
+
+            TokenKind.Expression -> return ExpressionValueNode(rawValue)
         }
 
         throw NotSupportedException("Unexpected kind '$kind' when creating node")

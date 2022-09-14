@@ -35,5 +35,5 @@ data class PipelineErrorTypeInfoDO(
     @ApiModelProperty("错误类型")
     val errorType: Int,
     @ApiModelProperty("错误名称")
-    val errorName: String
+    var errorName: String
 )
