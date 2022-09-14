@@ -250,6 +250,12 @@ class PublishersDataServiceImpl @Autowired constructor(
         return Result(publishersInfos)
     }
 
+    override fun updatePlatformsLogoInfo(userId: String, platformCode: String, logoUrl: String) {
+        storeDockingPlatformDao.getStoreDockingPlatformByCode(dslContext, platformCode)?.let {
+            storeDockingPlatformDao.updateStoreDockingPlatformLogoUrl(dslContext, it.id, logoUrl)
+        }
+    }
+
     private fun analysisDept(userId: String, organization: String): List<DeptInfo> {
         //  根据解析组织名称获取组织ID
         val deptNames = organization.split("/")

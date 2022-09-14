@@ -215,6 +215,23 @@ class StoreDockingPlatformDao {
         }
     }
 
+    fun getStoreDockingPlatformByCode(dslContext: DSLContext, platformCode: String): TStoreDockingPlatformRecord? {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.selectFrom(this)
+                .where(PLATFORM_CODE.eq(platformCode))
+                .fetchOne()
+        }
+    }
+
+    fun updateStoreDockingPlatformLogoUrl(dslContext: DSLContext, id: String, logoUrl: String): Int {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.update(this)
+                .set(LOGO_URL, logoUrl)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
     fun getStoreDockingPlatforms(
         dslContext: DSLContext,
         platformName: String?,
