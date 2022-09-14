@@ -96,7 +96,6 @@ type AgentEnv struct {
 
 var GAgentEnv *AgentEnv
 var GAgentConfig *AgentConfig
-var GIsAgentUpgrading = false
 var GEnvVars map[string]string
 var UseCert bool
 

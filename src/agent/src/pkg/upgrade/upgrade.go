@@ -68,7 +68,6 @@ func agentUpgrade() {
 	success := false
 	defer func() {
 		if ack {
-			config.GIsAgentUpgrading = false
 			_, _ = api.FinishUpgrade(success)
 			logs.Info("[agentUpgrade]|report upgrade finish: ", success)
 		}
@@ -123,6 +122,10 @@ func syncJdkVersion() ([]string, error) {
 	// 获取jdk文件状态以及时间
 	stat, err := os.Stat(config.GetJavaDir())
 	if err != nil {
+		if os.IsNotExist(err) {
+			logs.Error("syncJdkVersion no jdk dir find")
+			return nil, nil
+		}
 		return nil, errors.Wrap(err, "agent check jdk dir error")
 	}
 	nowModTime := stat.ModTime()

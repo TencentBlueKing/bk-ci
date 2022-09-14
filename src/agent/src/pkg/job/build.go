@@ -95,29 +95,33 @@ func DoPollAndBuild() {
 			continue
 		}
 
-		if config.GAgentConfig.ParallelTaskCount != 0 &&
-			GBuildManager.GetInstanceCount() >= config.GAgentConfig.ParallelTaskCount {
+		instanceCount := GBuildManager.GetInstanceCount()
+		if config.GAgentConfig.ParallelTaskCount != 0 && instanceCount >= config.GAgentConfig.ParallelTaskCount {
 			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, "+
 				"ParallelTaskCount config: %d, instance count: %d",
-				config.GAgentConfig.ParallelTaskCount, GBuildManager.GetInstanceCount()))
+				config.GAgentConfig.ParallelTaskCount, instanceCount))
 			continue
 		}
 
-		if config.GIsAgentUpgrading {
-			logs.Info("agent is upgrading, skip")
-			continue
-		}
+		// 在接取任务先获取锁，防止与其他任务产生干扰
+		GBuildManager.Lock.Lock()
 
 		buildInfo, err := getBuild()
 		if err != nil {
 			logs.Error("get build failed, retry, err", err.Error())
+			GBuildManager.Lock.Unlock()
 			continue
 		}
 
 		if buildInfo == nil {
 			logs.Info("no build to run, skip")
+			GBuildManager.Lock.Unlock()
 			continue
 		}
+
+		// 接取任务之后解锁
+		GBuildManager.AddPreInstance(buildInfo.BuildId)
+		GBuildManager.Lock.Unlock()
 
 		err = runBuild(buildInfo)
 		if err != nil {
