@@ -25,31 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package command
+package com.tencent.devops.store.resources.common
 
-import (
-	"testing"
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.TxOpenStoreApproveResource
+import com.tencent.devops.store.service.common.TxStoreMoaApproveCallBackService
+import org.springframework.beans.factory.annotation.Autowired
 
-func Test_RunCommand_01(t *testing.T) {
-	output, err := RunCommand("ipconfig", []string{"/all"}, "", nil)
-	if err != nil {
-		t.Error("err: ", err.Error())
-	}
-	t.Log("output: ", string(output))
-}
+@RestResource
+class TxOpenStoreApproveResourceImpl @Autowired constructor(
+    private val txStoreMoaApproveCallBackService: TxStoreMoaApproveCallBackService
+) : TxOpenStoreApproveResource {
 
-func Test_RunCommand_02(t *testing.T) {
-	output, err := RunCommand("bash", []string{"/Users/huangou/workspace/agent/test/devops_pipeline_oamyqvmd_COMMAND.sh"}, "/Users/huangou/workspace/agent/test", nil)
-	if err != nil {
-		t.Error("err: ", err.Error())
-	}
-	t.Log("output: ", string(output))
-}
-
-func Test_StartProcess_01(t *testing.T) {
-	_, err := StartProcess("/a/tme.exe", nil, "", nil, "")
-	if err != nil {
-		t.Error("err: ", err.Error())
-	}
+    override fun moaApproveCallBack(
+        verifier: String,
+        result: Int,
+        taskId: String,
+        message: String,
+        token: String
+    ): Result<Boolean> {
+        return txStoreMoaApproveCallBackService.moaApproveCallBack(
+            verifier = verifier,
+            result = result,
+            taskId = taskId,
+            message = message,
+            token = token
+        )
+    }
 }

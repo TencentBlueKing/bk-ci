@@ -25,25 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.common
+package com.tencent.devops.process.yaml.modelCreate
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.TxServiceStoreApproveResource
-import com.tencent.devops.store.service.common.TxStoreMoaApproveCallBackService
-import org.springframework.beans.factory.annotation.Autowired
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
-@RestResource
-class TxServiceStoreApproveResourceImpl @Autowired constructor(
-    private val txStoreMoaApproveCallBackService: TxStoreMoaApproveCallBackService
-) : TxServiceStoreApproveResource {
+internal class ModelCommonTest {
 
-    override fun moaApproveCallBack(
-        verifier: String,
-        result: Int,
-        taskId: String,
-        message: String
-    ): Result<Boolean> {
-        return txStoreMoaApproveCallBackService.moaApproveCallBack(verifier, result, taskId, message)
+    @Test
+    fun parseReceivers() {
+        val testData = listOf("\${{ci.actor}},royalhuang", "ruotiantang")
+        val expectData = setOf("\${{ci.actor}}", "ruotiantang", "royalhuang")
+        Assertions.assertEquals(expectData, ModelCommon.parseReceivers(testData))
     }
 }

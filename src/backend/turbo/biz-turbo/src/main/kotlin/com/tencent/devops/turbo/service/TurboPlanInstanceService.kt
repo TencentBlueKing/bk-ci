@@ -49,7 +49,8 @@ class TurboPlanInstanceService @Autowired constructor(
         projectId: String,
         clientIp: String
     ): Pair<TTurboPlanInstanceEntity?, Boolean> {
-        var turboPlanInstanceEntity = turboPlanInstanceRepository.findByTurboPlanIdAndClientIp(turboPlanId, clientIp)
+        var turboPlanInstanceEntity =
+            turboPlanInstanceRepository.findFirstByTurboPlanIdAndClientIp(turboPlanId, clientIp)
         return if (null != turboPlanInstanceEntity && !turboPlanInstanceEntity.id.isNullOrBlank()) {
             Pair(turboPlanInstanceEntity, false)
         } else {

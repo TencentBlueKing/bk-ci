@@ -25,20 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package job
+package com.tencent.devops.misc.pojo
 
-import (
-	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"testing"
-	"time"
+data class BasicAuthConfig(
+    val index: Int, // 序号
+    val biz: String, // 业务类型
+    val url: String, // 数据源url
+    val username: String, // 用户名
+    val password: String // 密码
 )
-
-func Test_BuildManager_01(t *testing.T) {
-	fmt.Println("start")
-	GBuildManager.AddBuild(6124, &api.ThirdPartyBuildInfo{})
-	for {
-		time.Sleep(5 * time.Second)
-		fmt.Println("instanceCount: ", GBuildManager.GetInstanceCount())
-	}
-}

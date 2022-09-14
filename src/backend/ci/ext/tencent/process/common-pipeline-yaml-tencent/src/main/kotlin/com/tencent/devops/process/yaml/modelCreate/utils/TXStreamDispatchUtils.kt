@@ -334,15 +334,14 @@ object TXStreamDispatchUtils {
                     val gitProjectInfo =
                         client.getScm(ServiceGitCiResource::class).getGitCodeProjectInfo(repoNameAndPool[0]).data
                     val result = "git_${gitProjectInfo!!.id}@${repoNameAndPool[1]}"
-                    logger.info("Get envName from Resource.pools success. envName: $result")
                     return result
                 } catch (e: Exception) {
-                    logger.error("Get projectInfo from git failed, envName: $poolName. exception:", e)
+                    logger.warn("Get projectInfo from git failed, pools: $pools envName: $poolName. exception:", e)
                     return poolName
                 }
             }
         }
-        logger.info("Get envName from Resource.pools no match. envName: $poolName")
+        logger.info("Get envName from Resource.pools no match.pools: $pools envName: $poolName")
         return poolName
     }
 }
