@@ -77,6 +77,7 @@ const (
 	KeyWorkerCacheDir      = "CACHE_DIR"
 	KeyWorkerCachePoolSize = "CACHE_POOL_SIZE"
 	KeyWorkerCacheMinSize  = "CACHE_MIN_SIZE"
+	KeyWorkerMemPerJob     = "MEM_PER_JOB_4_WORKER" // memory per job
 
 	KeyCustomSetting = "CUSTOM_SETTINGS"
 
