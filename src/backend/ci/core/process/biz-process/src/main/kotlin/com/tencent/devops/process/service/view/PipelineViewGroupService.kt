@@ -267,15 +267,6 @@ class PipelineViewGroupService @Autowired constructor(
         }
     }
 
-    fun updateGroupAfterPipelineDelete(projectId: String, pipelineId: String) {
-        PipelineViewGroupLock(redisOperation, projectId).lockAround {
-            logger.info("updateGroupAfterPipelineDelete, projectId:$projectId, pipelineId:$pipelineId")
-            pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId).forEach {
-                pipelineViewGroupDao.remove(dslContext, it.projectId, it.viewId, it.pipelineId)
-            }
-        }
-    }
-
     fun updateGroupAfterPipelineUpdate(projectId: String, pipelineId: String, userId: String) {
         PipelineViewGroupLock(redisOperation, projectId).lockAround {
             logger.info("updateGroupAfterPipelineUpdate, projectId:$projectId, pipelineId:$pipelineId , userId:$userId")

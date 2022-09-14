@@ -99,10 +99,6 @@ class MQPipelineDeleteListener @Autowired constructor(
             callBackControl.pipelineDeleteEvent(projectId = event.projectId, pipelineId = event.pipelineId)
         }
 
-        watcher.safeAround("updateViewGroup") {
-            pipelineViewGroupService.updateGroupAfterPipelineDelete(projectId, pipelineId)
-        }
-
         LogUtils.printCostTimeWE(watcher = watcher)
     }
 }
