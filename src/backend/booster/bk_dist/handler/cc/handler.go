@@ -204,6 +204,7 @@ func (cc *TaskCC) preExecute(command []string) (*dcSDK.BKDistCommand, error) {
 	// if there is a pch file, add it into the inputFiles, it should be also sent to remote
 	if cc.pchFileDesc != nil {
 		cc.sendFiles = append(cc.sendFiles, *cc.pchFileDesc)
+		blog.Infof("kkk: pch file not nil (%s)", cc.pchFileDesc.FilePath)
 	}
 
 	// debugRecordFileName(fmt.Sprintf("cc: success done pre execute for: %v", command))
@@ -647,10 +648,17 @@ func (cc *TaskCC) scanPchFile(args []string) []string {
 	filename := fmt.Sprintf("%s.gch", cc.firstIncludeFile)
 
 	existed, fileSize, modifyTime, fileMode := dcFile.Stat(filename).Batch()
+
 	if !existed {
 		blog.Debugf("cc: [%s] try to get pch file for %s but %s is not exist",
 			cc.tag, cc.firstIncludeFile, filename)
-		return args
+
+		filename = cc.sandbox.GetAbsPath(filename)
+		existed, fileSize, modifyTime, _ = dcFile.Stat(filename).Batch()
+		if !existed {
+			return args
+		}
+		blog.Infof("cc: find gch file in relative path(%s), filesize(%v), modifytime:(%v)", filename, fileSize, modifyTime)
 	}
 	cc.pchFile = filename
 
