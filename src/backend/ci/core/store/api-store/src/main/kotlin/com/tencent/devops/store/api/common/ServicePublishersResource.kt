@@ -113,17 +113,4 @@ interface ServicePublishersResource {
         @ApiParam("store组件对接平台请求", required = true)
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int>
-
-    @ApiOperation("同步更新工具平台信息")
-    @POST
-    @Path("/platforms/update")
-    fun synUpdatePlatformsLogoInfo(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("用户ID", required = true)
-        userId: String,
-        @ApiParam("平台代码", required = true)
-        platformCode: String,
-        @ApiParam("logoUrl", required = true)
-        logoUrl: String
-    )
 }
