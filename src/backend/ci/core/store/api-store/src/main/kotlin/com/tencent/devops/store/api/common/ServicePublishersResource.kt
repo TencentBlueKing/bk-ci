@@ -116,7 +116,7 @@ interface ServicePublishersResource {
 
     @ApiOperation("同步更新工具平台信息")
     @POST
-    @Path("/platforms/logo/update")
+    @Path("/platforms/update")
     fun synUpdatePlatformsLogoInfo(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
