@@ -55,6 +55,7 @@
     "group": "项目组",
     "failToGetData": "获取数据失败",
     "noPermToView": "没有查看权限",
+    "pleaseLogin": "请登录",
     "header": {
         "pipelines": "流水线",
         "metrics": "数据分析",
@@ -282,7 +283,8 @@
             "token": "Token",
             "tokenPlaceholder": "请输入Token",
             "passwordToken": "用户密码+私人Token",
-            "passwordTokenDesc": "用于通过 http 链接 Git 类型的代码仓库"
+            "passwordTokenDesc": "用于通过 http 链接 Git 类型的代码仓库",
+            "privateKey": "私钥"
         },
         "userGroup": {
             "createGroup": "新增体验组",

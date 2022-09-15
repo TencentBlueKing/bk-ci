@@ -55,6 +55,7 @@
     "group": "group",
     "failToGetData": "get data failed",
     "noPermToView": "no view permission",
+    "pleaseLogin": "Please login",
     "header": {
         "pipelines": "Pipelines",
         "metrics": "Metrics",
@@ -282,7 +283,8 @@
             "token": "Token",
             "tokenPlaceholder": "Please enter token",
             "passwordToken": "User password+private token",
-            "passwordTokenDesc": "Used for linking Git-typed code repo through http"
+            "passwordTokenDesc": "Used for linking Git-typed code repo through http",
+            "privateKey": "PrivateKey"
         },
         "userGroup": {
             "createGroup": "New Group",

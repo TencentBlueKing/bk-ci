@@ -29,7 +29,9 @@
 <script>
     import {
         defineComponent,
-        computed
+        computed,
+        watch,
+        getCurrentInstance
     } from '@vue/composition-api'
     import {
         common
@@ -45,6 +47,8 @@
             dashboardHeader
         },
         setup () {
+            const instance = getCurrentInstance()
+
             const isShowDialog = computed(() => {
                 return store.state.showLoginDialog
             })
@@ -59,6 +63,18 @@
                         messageError(err.message || err)
                     })
             }
+
+            watch(
+                () => isShowDialog,
+                (val) => {
+                    if (val) {
+                        document.title = instance.proxy.$t('pleaseLogin')
+                    }
+                },
+                {
+                    immediate: true
+                }
+            )
 
             return {
                 isShowDialog,
