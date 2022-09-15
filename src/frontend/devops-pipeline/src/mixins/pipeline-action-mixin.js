@@ -21,7 +21,8 @@ import { mapActions, mapMutations } from 'vuex'
 import moment from 'moment'
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
-import { navConfirm } from '@/utils/util'
+import { navConfirm, convertMStoStringByRule } from '@/utils/util'
+import { bus } from '@/utils/bus'
 
 import {
     ALL_PIPELINE_VIEW_ID,
@@ -88,6 +89,7 @@ export default {
                     })
                     const pipelineList = records.map((item, index) => Object.assign(item, {
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
+                        duration: this.calcDuration(item),
                         progress: this.calcProgress(item),
                         pipelineActions: this.getPipelineActions(item, index),
                         trigger: triggerType[item.trigger]
@@ -115,9 +117,13 @@ export default {
         getLatestBuildFromNow (latestBuildStartTime) {
             return latestBuildStartTime ? moment(latestBuildStartTime).fromNow() : '--'
         },
-        calcProgress ({ latestBuildStatus, lastBuildFinishCount, lastBuildTotalCount }) {
+        calcDuration ({ latestBuildEndTime, latestBuildStartTime }) {
+            const duration = convertMStoStringByRule(latestBuildEndTime - latestBuildStartTime)
+            return `${this.$t('history.tableMap.totalTime')}${duration}`
+        },
+        calcProgress ({ latestBuildStatus, lastBuildFinishCount, lastBuildTotalCount, currentTimestamp, latestBuildStartTime }) {
             if (latestBuildStatus === statusAlias.RUNNING) {
-                return Math.floor((lastBuildFinishCount / lastBuildTotalCount) * 100)
+                return `${this.$t('execedTimes')}${convertMStoStringByRule(currentTimestamp - latestBuildStartTime)}(${Math.floor((lastBuildFinishCount / lastBuildTotalCount) * 100)}%)`
             }
             return ''
         },
@@ -356,11 +362,11 @@ export default {
         /** *
          * 恢复流水线
          */
-        async restore ({ projectId, pipelineId }) {
+        async restore ({ projectId, pipelineId, pipelineName }) {
             let message = this.$t('restore.restoreSuc')
             let theme = 'success'
             await navConfirm({
-                content: this.$t('restorePipelineConfirm')
+                content: this.$t('restorePipelineConfirm', [pipelineName])
             })
             try {
                 await this.restorePipeline({
@@ -376,6 +382,18 @@ export default {
                     theme
                 })
             }
+        },
+        applyPermission ({ pipelineName, pipelineId }) {
+            bus.$emit(
+                'set-permission',
+                this.$permissionResourceMap.pipeline,
+                this.$permissionActionMap.view,
+                [{
+                    id: pipelineId,
+                    name: pipelineName
+                }],
+                this.$route.params.projectId
+            )
         }
     }
 }

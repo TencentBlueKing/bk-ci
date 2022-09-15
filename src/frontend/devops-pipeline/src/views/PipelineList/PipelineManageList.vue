@@ -65,17 +65,20 @@
                 v-if="isCardLayout"
                 :filter-params="filters"
                 :sort-type="sortType"
+                ref="pipelineBox"
             />
             <pipeline-table-view
                 v-else-if="isTableLayout"
                 :filter-params="filters"
                 :sort-type="sortType"
+                ref="pipelineBox"
             />
         </div>
         <add-to-group-dialog
             :add-to-dialog-show="pipelineActionState.addToDialogShow"
             :pipeline="pipelineActionState.activePipeline"
             @close="resetActivePipeline"
+            @done="refresh"
         />
         <remove-confirm-dialog
             :type="pipelineActionState.confirmType"
@@ -84,16 +87,19 @@
             :group-id="$route.params.viewId"
             :pipeline-list="pipelineActionState.activePipelineList"
             @close="handleCancelRemove"
+            @done="refresh"
         />
         <copy-pipeline-dialog
             :is-copy-dialog-show="pipelineActionState.isCopyDialogShow"
             :pipeline="pipelineActionState.activePipeline"
             @cancel="resetActivePipeline"
+            @done="refresh"
         />
         <save-as-template-dialog
             :is-save-as-template-show="pipelineActionState.isSaveAsTemplateShow"
             :pipeline="pipelineActionState.activePipeline"
             @cancel="resetActivePipeline"
+            @done="refresh"
         />
         <pipeline-template-popup
             :toggle-popup="toggleTemplatePopup"
@@ -246,6 +252,9 @@
 
             toggleCreatePermission () {
                 this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.create)
+            },
+            refresh () {
+                this.$refs.pipelineBox?.refresh?.()
             }
         }
     }

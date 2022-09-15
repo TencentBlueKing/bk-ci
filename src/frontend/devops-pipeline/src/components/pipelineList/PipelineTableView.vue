@@ -8,6 +8,7 @@
         :pagination="pagination"
         @page-change="handlePageChange"
         @page-limit-change="handlePageLimitChange"
+        :row-class-name="setRowCls"
         v-on="$listeners"
     >
         <bk-table-column v-if="isPatchView" type="selection" width="60"></bk-table-column>
@@ -16,7 +17,7 @@
                 <span @click="goHistory(props.row.pipelineId)">{{props.row.pipelineName}}</span>
             </template>
         </bk-table-column>
-        <bk-table-column v-if="isAllPipelineView || isPatchView" width="250" :label="$t('ownGroupName')" prop="viewNames">
+        <bk-table-column v-if="isAllPipelineView || isPatchView || isDeleteView" width="250" :label="$t('ownGroupName')" prop="viewNames">
             <div class="pipeline-group-box-cell" slot-scope="props">
                 <div class="group-name-tag-box">
                     <bk-tag v-bk-tooltips="viewName" ext-cls="group-name-tag" v-for="viewName in props.row.viewNames" :key="viewName">
@@ -25,12 +26,22 @@
                 </div>
             </div>
         </bk-table-column>
-        <bk-table-column :label="$t('latestExec')">
-            <template slot-scope="props">
-                <span v-if="isPatchView">
-                    <b>#{{ props.row.latestBuildNum }}</b>
-                </span>
-                <div v-else class="pipeline-latest-exec-cell">
+        <template v-if="isPatchView">
+            <bk-table-column width="250" sortable :label="$t('latestExec')" prop="latestBuildNum">
+                <span slot-scope="props">{{ props.row.latestBuildNum ? `#${props.row.latestBuildNum}` : '--' }}</span>
+            </bk-table-column>
+            <bk-table-column width="150" :label="$t('lastExecTime')" prop="latestBuildStartDate"></bk-table-column>
+            <bk-table-column width="250" sortable :label="$t('restore.createTime')" prop="createTime"></bk-table-column>
+            <bk-table-column width="250" sortable :label="$t('creator')" prop="creator"></bk-table-column>
+        </template>
+        <template v-else-if="isDeleteView">
+            <bk-table-column :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime"></bk-table-column>
+            <bk-table-column :label="$t('restore.deleteTime')" prop="updateTime" :formatter="formatTime"></bk-table-column>
+            <bk-table-column :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
+        </template>
+        <template v-else>
+            <bk-table-column :label="$t('latestExec')">
+                <div slot-scope="props" class="pipeline-latest-exec-cell">
                     <pipeline-status-icon :status="props.row.latestBuildStatus" />
                     <div class="pipeline-exec-msg">
                         <template v-if="props.row.latestBuildNum">
@@ -53,17 +64,14 @@
                         <p v-else class="desc">{{$t('unexecute')}}</p>
                     </div>
                 </div>
-            </template>
-        </bk-table-column>
-        <bk-table-column width="150" :label="$t('lastExecTime')" prop="latestBuildStartDate">
-            <template slot-scope="props">
-                <p>{{ props.row.latestBuildStartDate }}</p>
-                <p>{{ props.row.progress }}</p>
-            </template>
-        </bk-table-column>
-        <template v-if="isPatchView">
-            <bk-table-column width="250" sortable :label="$t('restore.createTime')" prop="createTime"></bk-table-column>
-            <bk-table-column width="250" sortable :label="$t('creator')" prop="creator"></bk-table-column>
+            </bk-table-column>
+            <bk-table-column width="150" :label="$t('lastExecTime')" prop="latestBuildStartDate">
+                <template slot-scope="props">
+                    <p>{{ props.row.latestBuildStartDate }}</p>
+                    <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
+                    <p v-else class="desc">{{props.row.duration}}</p>
+                </template>
+            </bk-table-column>
         </template>
         <bk-table-column v-if="!isPatchView" width="150" :label="$t('operate')">
             <div class="pipeline-operation-cell" slot-scope="props">
@@ -76,15 +84,34 @@
                     {{ $t('restore.restore') }}
                 </bk-button>
                 <bk-button
-                    v-else
+                    v-else-if="props.row.delete"
                     text
                     theme="primary"
                     class="pipeline-exec-btn"
-                    :disabled="props.row.lock || !props.row.canManualStartup"
-                    @click="execPipeline(props.row)">
-                    {{ $t(props.row.lock ? 'disabled' : 'exec') }}
+                    @click="removeHandler(props.row)">
+                    {{ $t('removeFromGroup') }}
                 </bk-button>
-                <ext-menu v-if="!isDeleteView" :data="props.row" :config="props.row.pipelineActions"></ext-menu>
+                <bk-button
+                    v-else-if="!props.row.hasPermission"
+                    text
+                    theme="primary"
+                    class="pipeline-exec-btn"
+                    @click="applyPermission(props.row)">
+                    {{ $t('applyPermission') }}
+                </bk-button>
+                <template
+                    v-else
+                >
+                    <bk-button
+                        text
+                        theme="primary"
+                        class="pipeline-exec-btn"
+                        :disabled="props.row.lock || !props.row.canManualStartup"
+                        @click="execPipeline(props.row)">
+                        {{ $t(props.row.lock ? 'disabled' : 'exec') }}
+                    </bk-button>
+                    <ext-menu :data="props.row" :config="props.row.pipelineActions"></ext-menu>
+                </template>
             </div>
         </bk-table-column>
     </bk-table>
@@ -98,6 +125,7 @@
     import {
         ALL_PIPELINE_VIEW_ID
     } from '@/store/constants'
+    import { convertTime } from '@/utils/util'
 
     export default {
         components: {
@@ -153,6 +181,13 @@
             this.requestList()
         },
         methods: {
+            setRowCls ({ row }) {
+                const clsObj = {
+                    'has-delete': row.delete,
+                    'no-permission': !row.hasPermission
+                }
+                return Object.keys(clsObj).filter(key => clsObj[key]).join(' ')
+            },
             clearSelection () {
                 console.log(this.$refs.pipelineTable)
                 this.$refs.pipelineTable?.clearSelection?.()
@@ -185,8 +220,27 @@
             },
             refresh () {
                 this.requestList()
+            },
+            formatTime (row, cell, value) {
+                return convertTime(value)
             }
         }
     }
 
 </script>
+
+<style lang="scss">
+    @import '@/scss/conf.scss';
+    .primary {
+        color: $primaryColor;
+    }
+    .desc {
+        color: #979BA5;
+    }
+    tr.no-permission {
+        background-color: #F5F7FA;
+    }
+    tr.has-delete {
+        color: #C4C6CC;
+    }
+</style>

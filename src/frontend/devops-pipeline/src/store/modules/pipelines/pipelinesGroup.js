@@ -178,10 +178,6 @@ const actions = {
     async requestGroupListsDict ({ commit, state, dispatch }, { projectId }) {
         try {
             const { data } = await ajax.get(`${prefix}/${projectId}/dict`)
-            console.log('data', data, [
-                ...data.personalViewList,
-                ...data.projectViewList
-            ])
             const pipelineGroupMap = [
                 ...data.personalViewList,
                 ...data.projectViewList
@@ -241,6 +237,7 @@ const actions = {
     */
     async updatePipelineGroup ({ commit, getters, dispatch }, { id, projectId, ...body }) {
         await ajax.put(`${prefix}/${projectId}/views/${id}`, body)
+
         Object.assign(getters.groupMap[id], body)
     },
     /**

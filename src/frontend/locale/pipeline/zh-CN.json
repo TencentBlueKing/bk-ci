@@ -1052,7 +1052,10 @@
   "addLabelGroupSuc": "新增标签组成功。",
   "patchAddToSuc": "批量添加流水线组成功",
   "addToSuc": "流水线添加成功",
-  "restorePipelineConfirm": "确定恢复该流水线",
-  "removeqFrom": "移出分组",
-  "alreadyDeleted": "流水线已删除"
+  "restorePipelineConfirm": "确定恢复流水线【{0}】",
+  "removeFromGroup": "移出分组",
+  "alreadyDeleted": "流水线已删除",
+  "execedTimes": "已运行",
+  "removeSuc": "移除成功",
+  "addPipelineGroupSuc": "创建流水线组成功"
 }

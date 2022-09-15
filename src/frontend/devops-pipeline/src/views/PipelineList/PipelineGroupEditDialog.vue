@@ -261,7 +261,6 @@
                         case NAME_FILTER_TYPE:
                         case CREATOR_FILTER_TYPE:
                             id = item['@type']
-
                             break
                         default:
                             id = item.groupId
@@ -278,7 +277,6 @@
                 }, {})
             },
             preAddedPipelineList () {
-                console.log(this.groupMap)
                 return [
                     ...(this.showRemovedPipeline
                         ? this.preview.removedPipelineInfos.map(pipeline => ({
@@ -364,7 +362,7 @@
                 this.pipelineGroupMap = pipelineGroupMap
                 this.preview.reservePipelineInfos = groupDetail.pipelineIds.map(id => ({
                     pipelineId: id,
-                    pipelineName: this.pipelineGroupMap[id].pipelineName,
+                    pipelineName: this.pipelineGroupMap[id]?.pipelineName,
                     groups: (this.pipelineGroupMap[id]?.groupIds.map(groupId => this.groupMap[groupId]?.name) ?? []).join(';')
                 }))
                 this.isLoading = false
@@ -434,13 +432,15 @@
                 let theme = 'success'
                 try {
                     this.isSubmiting = true
-
+                    const pipelineIds = Array.from(this.model.pipelineIds)
                     await this.updatePipelineGroup({
                         projectId: this.$route.params.projectId,
                         ...this.group,
                         ...this.model,
-                        pipelineIds: Array.from(this.model.pipelineIds)
+                        pipelineCount: pipelineIds.length,
+                        pipelineIds: pipelineIds
                     })
+
                     this.handleClose()
                     this.$emit('done')
                 } catch (error) {

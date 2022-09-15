@@ -148,10 +148,9 @@
                 try {
                     await this.addPipelineToGroup({
                         projectId: this.$route.params.projectId,
-                        pipelineIds: this.pipelineList.map(pipeline => pipeline.pipelineId),
+                        pipelineIds: this.isPatch ? this.pipelineList.map(pipeline => pipeline.pipelineId) : [this.pipeline.pipelineId],
                         viewIds: this.selectedGroups.map(group => group.id)
                     })
-
                     this.handleClose()
                     this.$emit('done')
                 } catch (e) {

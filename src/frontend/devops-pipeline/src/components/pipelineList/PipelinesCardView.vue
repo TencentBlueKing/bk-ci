@@ -7,10 +7,13 @@
         v-slot="slotProps"
     >
         <ul class="pipelines-card-view-list">
-            <li v-for="pipeline of slotProps.list" :key="pipeline.pipelineId">
+            <li v-for="pipeline of slotProps.list" :key="pipeline.pipelineId" @click="goHistory(pipeline.pipelineId)">
                 <pipeline-card
                     :pipeline="pipeline"
                     :remove-handler="removeHandler"
+                    :exec-pipeline="execPipeline"
+                    :apply-permission="applyPermission"
+
                 >
                 </pipeline-card>
             </li>
@@ -49,13 +52,13 @@
         },
         watch: {
             '$route.params.viewId': function () {
-                this.$refs.infiniteScroll.updateList()
+                this.$refs.infiniteScroll?.updateList?.()
             },
             sortType: function () {
-                this.$refs.infiniteScroll.updateList()
+                this.$refs.infiniteScroll?.updateList?.()
             },
             filterParams: function () {
-                this.$refs.infiniteScroll.updateList()
+                this.$refs.infiniteScroll?.updateList?.()
             }
         },
         methods: {
@@ -69,6 +72,9 @@
                 })
                 console.log(res)
                 return res
+            },
+            refresh () {
+                this.$refs.infiniteScroll?.updateList?.()
             }
         }
     }
@@ -83,5 +89,8 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, 408px);
         grid-gap: 24px;
+        > li {
+            cursor: pointer;
+        }
     }
 </style>

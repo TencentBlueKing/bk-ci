@@ -5,17 +5,33 @@
                 <h3>{{ pipeline.pipelineName }}</h3>
                 <p class="bk-pipeline-card-summary">
                     <span>
-                        <logo size="12" name="placeholder" />
+                        <logo size="12" name="complement" />
                         {{pipeline.buildCount}}次
                     </span>
                     <span v-if="pipeline.viewNames" class="pipeline-group-names-span">
-                        <logo size="12" name="placeholder" />
+                        <logo size="12" name="pipeline-group" />
                         {{pipeline.viewNames.join(';')}}
                     </span>
                 </p>
             </aside>
             <aside class="bk-pipeline-card-header-right-aside">
-                <logo class="bk-pipeline-card-trigger-btn" name="pause"></logo>
+                <span
+                    :class="{
+                        'bk-pipeline-card-trigger-btn': true,
+                        'disabled': disabled
+                    }"
+                    v-bk-tooltips="{
+                        content: disabledTips,
+                        disabled: !disabled
+                    }"
+                    @click.stop="exec"
+                >
+                    <logo v-if="pipeline.lock" name="minus-circle"></logo>
+                    <logo
+                        v-else
+                        name="play"
+                    />
+                </span>
                 <ext-menu :data="pipeline" class="bk-pipeline-card-more" :config="pipeline.pipelineActions" />
             </aside>
         </header>
@@ -26,9 +42,9 @@
                 <div class="bk-pipeline-card-info-row build-result-row">
                     <span class="bk-pipeline-card-info-build-result" :style="`color: ${statusColor}`">
                         <pipeline-status-icon :status="pipeline.latestBuildStatus" />
-                        构建成功
+                        {{ $t(`details.statusMap.${pipeline.latestBuildStatus}`) }}
                     </span>
-                    <bk-tag>{{ pipeline.latestBuildStartDate }}</bk-tag>
+                    <bk-tag>{{ timeTag }}</bk-tag>
                 </div>
                 <p class="bk-pipeline-card-info-row">
                     <b>{{latestBuildNum}}</b>
@@ -58,7 +74,7 @@
                 theme="primary"
                 @click="removeHandler(pipeline)"
             >
-                {{$t('removeqFrom')}}
+                {{$t('removeFromGroup')}}
             </bk-button>
         </div>
         <div v-else-if="!pipeline.hasPermission" class="pipeline-card-apply-mask">
@@ -74,7 +90,6 @@
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import Logo from '@/components/Logo'
     import { statusColorMap } from '@/utils/pipelineStatus'
-    import { bus } from '@/utils/bus'
 
     export default {
         components: {
@@ -90,6 +105,14 @@
             removeHandler: {
                 type: Function,
                 default: () => () => ({})
+            },
+            execPipeline: {
+                type: Function,
+                default: () => () => ({})
+            },
+            applyPermission: {
+                type: Function,
+                default: () => () => ({})
             }
         },
         computed: {
@@ -98,20 +121,22 @@
             },
             statusColor () {
                 return statusColorMap[this.pipeline.latestBuildStatus]
+            },
+            timeTag () {
+                return this.pipeline.progress || `${this.pipeline.latestBuildStartDate}(${this.pipeline.duration})`
+            },
+            disabled () {
+                return !this.pipeline.canManualStartup || this.pipeline.lock
+            },
+            disabledTips () {
+                if (!this.disabled) return ''
+                return this.$t(this.pipeline.lock ? '流水线已禁用执行；可前往基础设置中恢复' : '该流水线未配置手动触发')
             }
         },
         methods: {
-            applyPermission ({ pipelineName, pipelineId }) {
-                bus.$emit(
-                    'set-permission',
-                    this.$permissionResourceMap.pipeline,
-                    this.$permissionActionMap.view,
-                    [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }],
-                    this.$route.params.projectId
-                )
+            exec () {
+                if (this.disabled) return
+                this.execPipeline(this.pipeline)
             }
         }
     }
@@ -156,10 +181,14 @@
                     > span {
                         display: flex;
                         align-items: center;
+                        >:first-child {
+                            margin: 0 4px;
+                        }
                     }
                     .pipeline-group-names-span {
                         flex: 1;
                         @include ellipsis();
+                        display: flex;
                     }
                 }
             }
@@ -168,6 +197,13 @@
                 align-items: center;
                 .bk-pipeline-card-trigger-btn {
                     margin: 0 8px;
+                    &.disabled {
+                        color: #DCDEE5;
+                        cursor: not-allowed;
+                    }
+                    &:not(.disabled):hover {
+                        color: $primaryColor;
+                    }
                 }
                 .bk-pipeline-card-more {
                     display: flex;

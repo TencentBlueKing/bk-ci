@@ -74,7 +74,7 @@
             </bk-form>
 
         </bk-dialog>
-        <pipeline-group-edit-dialog @close="handleCloseEditCount" :group="activeGroup" @done="refreshPipelineGroup" />
+        <pipeline-group-edit-dialog @close="handleCloseEditCount" :group="activeGroup" />
     </aside>
 
 </template>
@@ -286,7 +286,6 @@
                         projectId: this.$route.params.projectId,
                         ...view
                     })
-                    this.refreshPipelineGroup()
                 } catch (error) {
                     message = error.message || error
                     theme = 'danger'
@@ -327,7 +326,7 @@
             },
             async submitPipelineAdd () {
                 if (this.isAdding) return
-                let message = this.$t('创建流水线组成功')
+                let message = this.$t('addPipelineGroupSuc')
                 let theme = 'success'
                 try {
                     this.isAdding = true

@@ -206,7 +206,6 @@ const mutations = {
         state.curPipelineAtomParams = res
     },
     updatePipelineActionState (state, params) {
-        console.log(params)
         Object.assign(state.pipelineActionState, params)
     }
 }

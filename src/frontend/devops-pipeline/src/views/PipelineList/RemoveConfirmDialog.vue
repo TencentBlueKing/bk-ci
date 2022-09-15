@@ -92,7 +92,7 @@
                     await this.patchDeletePipelines(params)
                 }
                 this.$showTips({
-                    message: this.$t(this.isRemoveType ? '移除成功' : '删除成功'),
+                    message: this.$t(this.isRemoveType ? 'removeSuc' : 'deleteSuc'),
                     theme: 'success'
                 })
                 this.$emit('done')
