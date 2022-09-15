@@ -592,7 +592,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                             url = action.data.setting.gitHttpUrl,
                             eventType = it.eventType,
                             mrId = it.mrId,
-                            channel = ChannelCode.GIT.name
+                            channel = ChannelCode.GIT.name,
+                            action = it.action
                         )
                     }
                 )

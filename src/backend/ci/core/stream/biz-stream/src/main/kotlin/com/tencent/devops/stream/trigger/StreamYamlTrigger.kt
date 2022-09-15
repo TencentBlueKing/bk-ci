@@ -215,25 +215,21 @@ class StreamYamlTrigger @Autowired constructor(
 
         // 获取蓝盾流水线的pipelineAsCodeSetting
         val projectCode = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong())
-        val pipelineAsCodeSettings = if (pipeline.pipelineId.isNotBlank()) {
-            client.get(ServicePipelineSettingResource::class).getPipelineSetting(
-                projectId = projectCode,
-                pipelineId = pipeline.pipelineId,
-                channelCode = ChannelCode.GIT
-            ).data?.pipelineAsCodeSettings
-        } else {
-            client.get(ServiceProjectResource::class).get(projectCode)
-                .data?.properties?.pipelineAsCodeSettings
-        } ?: throw StreamTriggerException(
-            action = action,
-            triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
-            reasonParams = listOf("Pipeline settings not found"),
-            commitCheck = CommitCheck(
-                block = false,
-                state = StreamCommitCheckState.FAILURE
-            )
-        )
-        action.data.context.pipelineAsCodeSettings = pipelineAsCodeSettings
+        action.data.context.pipelineAsCodeSettings = try {
+            if (pipeline.pipelineId.isNotBlank()) {
+                client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+                    projectId = projectCode,
+                    pipelineId = pipeline.pipelineId,
+                    channelCode = ChannelCode.GIT
+                ).data?.pipelineAsCodeSettings
+            } else {
+                client.get(ServiceProjectResource::class).get(projectCode)
+                    .data?.properties?.pipelineAsCodeSettings
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("StreamYamlTrigger get project[$projectCode] as code settings error.", ignore)
+            null
+        }
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         val gitProjectInfo = action.api.getGitProjectInfo(
