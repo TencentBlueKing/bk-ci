@@ -23,8 +23,7 @@
         },
         data () {
             return {
-                isLoading: false,
-                aaa: '输入参数非法1234\n输入参数非法1234\n输入参数非法1234\n输入参数非法1234\n输入参数非法1234\n输入参数非法1234\n'
+                isLoading: false
             }
         },
         watch: {
