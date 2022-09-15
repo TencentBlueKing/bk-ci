@@ -111,7 +111,7 @@
         "thirdReport": "Third party report",
         "noReports": "No reports yet",
         "reviewInfo": "Review information",
-        "reviewTitle": "This pipeline is awaiting approval from a maintainer in this build",
+        "reviewTitle": "This pipeline is awaiting approval from a maintainer.",
         "noYmlFiles": "No yml file change",
         "reviewTips": "This run will use the credentials, build machines or other resources under the project. Please check if it can be run.",
         "approveAndRun": "Approve and run",
