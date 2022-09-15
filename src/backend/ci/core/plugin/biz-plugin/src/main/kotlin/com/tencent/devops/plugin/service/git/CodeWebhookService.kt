@@ -69,6 +69,7 @@ import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_SUCCESS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -258,6 +259,11 @@ class CodeWebhookService @Autowired constructor(
             val variables = buildInfo.variables
             if (variables.isEmpty()) {
                 logger.warn("Process instance($buildId) variables is empty")
+                return
+            }
+
+            if (variables[PIPELINE_START_CHANNEL] != ChannelCode.BS.name) {
+                logger.warn("Process instance($buildId) is not bs channel")
                 return
             }
 
