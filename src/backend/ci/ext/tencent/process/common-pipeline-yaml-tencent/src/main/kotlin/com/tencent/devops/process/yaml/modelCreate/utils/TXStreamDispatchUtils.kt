@@ -140,7 +140,7 @@ object TXStreamDispatchUtils {
         }
 
         // windows公共构建机
-        logger.info("poolName is ${poolName},job is ${job}")
+        logger.info("TXStreamDispatchUtils|poolName|${poolName}|job| $job")
         if (poolName.startsWith("windows")) {
             return WindowsDispatchType(
                 env = "",
