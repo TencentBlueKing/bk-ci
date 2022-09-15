@@ -91,7 +91,7 @@ class SensitiveApiPermissionAspect constructor(
                 throw ErrorCodeException(
                     statusCode = 401,
                     errorCode = CommonMessageCode.ERROR_SENSITIVE_API_NO_AUTH,
-                    params = arrayOf(apiName, atomCode),
+                    params = arrayOf(atomCode, apiName),
                     defaultMessage = "Unauthorized: sensitive api $apiName cannot be used by $atomCode"
                 )
             }

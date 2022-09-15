@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -47,9 +48,12 @@ import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.V1TriggerBuildReq
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.service.StreamPipelineService
+import com.tencent.devops.stream.service.StreamYamlService
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.v1.components.V1GitRequestEventHandle
@@ -76,16 +80,21 @@ class TXManualTriggerService @Autowired constructor(
     streamYamlTrigger: StreamYamlTrigger,
     streamBasicSettingDao: StreamBasicSettingDao,
     streamYamlBuild: StreamYamlBuild,
+    yamlTemplateService: YamlTemplateService,
     private val dslContext: DSLContext,
+    private val client: Client,
     private val gitRequestEventHandle: V1GitRequestEventHandle,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCIEventService: V1GitCIEventService,
     private val yamlBuild: V1YamlBuild,
-    private val streamYamlService: V1StreamYamlService
+    private val streamYamlService: V1StreamYamlService,
+    private val streamPipelineService: StreamPipelineService,
+    private val streamYamlServiceV2: StreamYamlService
 ) : ManualTriggerService(
     dslContext = dslContext,
+    client = client,
     actionFactory = actionFactory,
     streamGitConfig = streamGitConfig,
     streamEventService = streamEventService,
@@ -95,7 +104,10 @@ class TXManualTriggerService @Autowired constructor(
     gitRequestEventDao = gitRequestEventDao,
     gitPipelineResourceDao = gitPipelineResourceDao,
     gitRequestEventBuildDao = gitRequestEventBuildDao,
-    streamYamlBuild = streamYamlBuild
+    streamYamlBuild = streamYamlBuild,
+    yamlTemplateService = yamlTemplateService,
+    streamPipelineService = streamPipelineService,
+    streamYamlService = streamYamlServiceV2
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -125,7 +137,8 @@ class TXManualTriggerService @Autowired constructor(
                 yaml = triggerBuildReq.yaml,
                 description = triggerBuildReq.description,
                 commitId = triggerBuildReq.commitId
-            )
+            ),
+            inputs = triggerBuildReq.inputs
         )
     }
 
@@ -135,7 +148,8 @@ class TXManualTriggerService @Autowired constructor(
     fun triggerBuild(
         userId: String,
         pipelineId: String,
-        v1TriggerBuildReq: V1TriggerBuildReq
+        v1TriggerBuildReq: V1TriggerBuildReq,
+        inputs: Map<String, String>?
     ): TriggerBuildResult {
         logger.info(
             "TXManualTriggerService|triggerBuild" +
@@ -171,7 +185,8 @@ class TXManualTriggerService @Autowired constructor(
                     description = v1TriggerBuildReq.description,
                     commitId = v1TriggerBuildReq.commitId,
                     payload = v1TriggerBuildReq.payload,
-                    eventType = v1TriggerBuildReq.eventType
+                    eventType = v1TriggerBuildReq.eventType,
+                    inputs = inputs
                 )
             )
         }
@@ -282,7 +297,7 @@ class TXManualTriggerService @Autowired constructor(
                 "(${TriggerReason.PIPELINE_RUN_ERROR.detail})"
         )
         return TriggerBuildResult(
-            projectId = v1TriggerBuildReq.gitProjectId,
+            projectId = GitCommonUtils.getCiProjectId(v1TriggerBuildReq.gitProjectId),
             branch = v1TriggerBuildReq.branch,
             customCommitMsg = v1TriggerBuildReq.customCommitMsg,
             description = v1TriggerBuildReq.description,

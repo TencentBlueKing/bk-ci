@@ -394,7 +394,7 @@ class PipelineBuildFacadeService(
 
             val paramMap = HashMap<String, BuildParameters>(100, 1F)
             // #2821 构建重试均要传递触发插件ID，否则当有多个事件触发插件时，rebuild后触发器的标记不对
-            buildVariableService.getVariable(projectId, buildId, PIPELINE_START_TASK_ID)?.let { startTaskId ->
+            buildVariableService.getVariable(projectId, pipelineId, buildId, PIPELINE_START_TASK_ID)?.let { startTaskId ->
                 paramMap[PIPELINE_START_TASK_ID] = BuildParameters(PIPELINE_START_TASK_ID, startTaskId)
             }
             val startType = StartType.toStartType(buildInfo.trigger)
@@ -663,7 +663,10 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         parameters: Map<String, Any> = emptyMap(),
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        startType: StartType = StartType.WEB_HOOK,
+        startValues: Map<String, String>? = null,
+        userParameters: List<BuildParameters>? = null
     ): String? {
 
         if (checkPermission) {
@@ -691,6 +694,12 @@ class PipelineBuildFacadeService(
             parameters.forEach { (key, value) ->
                 pipelineParamMap[key] = BuildParameters(key, value)
             }
+
+            // 添加用户自定义参数
+            userParameters?.forEach { param ->
+                pipelineParamMap[param.key] = param
+            }
+
             triggerContainer.params.forEach {
                 if (pipelineParamMap.contains(it.id)) {
                     return@forEach
@@ -700,13 +709,14 @@ class PipelineBuildFacadeService(
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = readyToBuildPipelineInfo,
-                startType = StartType.WEB_HOOK,
+                startType = startType,
                 pipelineParamMap = pipelineParamMap,
                 channelCode = readyToBuildPipelineInfo.channelCode,
                 isMobile = false,
                 model = model,
                 signPipelineVersion = null,
-                frequencyLimit = false
+                frequencyLimit = false,
+                startValues = startValues
             )
             if (buildId.isNotBlank()) {
                 webhookBuildParameterService.save(
@@ -1262,7 +1272,7 @@ class PipelineBuildFacadeService(
                 params = arrayOf(buildId)
             )
 
-        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         return BuildHistoryWithVars(
             id = buildHistory.id,
             userId = buildHistory.userId,
@@ -1317,7 +1327,7 @@ class PipelineBuildFacadeService(
                 arrayOf(buildId)
             )
 
-        val allVariable = buildVariableService.getAllVariable(projectId, buildId)
+        val allVariable = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
 
         return Result(
             BuildHistoryVariables(
@@ -1353,7 +1363,7 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val allVariable = buildVariableService.getAllVariable(projectId, buildId)
+        val allVariable = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
 
         val varMap = HashMap<String, String>()
         variableNames.forEach {

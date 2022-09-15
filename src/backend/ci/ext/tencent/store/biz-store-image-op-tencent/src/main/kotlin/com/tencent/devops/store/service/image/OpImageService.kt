@@ -114,10 +114,9 @@ class OpImageService @Autowired constructor(
         sendCheckResultNotify: Boolean = true,
         runCheckPipeline: Boolean = true
     ): Result<String> {
-        logger.info("addImage accessToken is :$accessToken, userId is :$userId, imageCreateRequest is :$imageCreateRequest")
+        logger.info("addImage params:[$userId|$imageCreateRequest|$checkLatest|$needAuth|$sendCheckResultNotify")
         val imageCode = imageCreateRequest.imageCode
         val imageRecords = marketImageDao.getImagesByImageCode(dslContext, imageCode)
-        logger.info("the imageRecords is :$imageRecords")
         val imageName = imageCreateRequest.imageName
         val imageSourceType = imageCreateRequest.imageSourceType
         val ticketId = imageCreateRequest.ticketId

@@ -219,7 +219,7 @@ export default {
                 id: `e-${hashID(32)}`,
                 '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
                 atomCode,
-                name: atomModal.name,
+                name: isChangeAtom ? atomModal.name : preVerEle.name,
                 version,
                 data: {
                     input: {
@@ -242,7 +242,7 @@ export default {
                 '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
                 atomCode,
                 version,
-                name: atomModal.name,
+                name: isChangeAtom ? atomModal.name : preVerEle.name,
                 ...getAtomDefaultValue(atomModal.props),
                 ...diffRes.atomValue
             }
@@ -257,7 +257,8 @@ export default {
             ...atom,
             os: atomModal.os,
             buildLessRunFlag: atomModal.buildLessRunFlag,
-            logoUrl: atomModal.logoUrl
+            logoUrl: atomModal.logoUrl,
+            additionalOptions: isChangeAtom ? {} : { ...preVerEle.additionalOptions }
         })
     },
     [UPDATE_ATOM]: (state, { atom, newParam }) => {

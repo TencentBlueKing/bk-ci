@@ -26,7 +26,6 @@
  */
 
 package com.tencent.devops.stream.trigger.actions.tgit
-
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
@@ -64,15 +63,16 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.DeleteEventService
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.util.StreamCommonUtils
-import java.util.Date
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import java.util.Date
 
 @Suppress("ALL")
 class TGitPushActionGit(
@@ -217,17 +217,28 @@ class TGitPushActionGit(
     }
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
+        val changeSet = getChangeSet()
         return TGitActionCommon.getYamlPathList(
             action = this,
             gitProjectId = this.data.getGitProjectId(),
             ref = this.data.eventCommon.branch
-        ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
+        ).map { (name, blobId) ->
+            YamlPathListEntry(
+                yamlPath = name,
+                checkType = if (changeSet?.contains(name) == true) {
+                    CheckType.NEED_CHECK
+                } else {
+                    CheckType.NO_NEED_CHECK
+                },
+                ref = this.data.eventCommon.branch, blobId = blobId
+            )
+        }
     }
 
-    override fun getYamlContent(fileName: String): Pair<String, String> {
-        return Pair(
-            data.eventCommon.branch,
-            api.getFileContent(
+    override fun getYamlContent(fileName: String): YamlContent {
+        return YamlContent(
+            ref = data.eventCommon.branch,
+            content = api.getFileContent(
                 cred = this.getGitCred(),
                 gitProjectId = data.getGitProjectId(),
                 fileName = fileName,
@@ -352,21 +363,22 @@ class TGitPushActionGit(
         )
     }
 
-    override fun updateLastBranch(
+    override fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
-        branch: String
+        branch: String?,
+        displayName: String?
     ) {
         try {
-            gitPipelineResourceDao.updatePipelineLastBranch(
+            gitPipelineResourceDao.updatePipelineLastBranchAndDisplayName(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
-                branch = branch
+                branch = branch,
+                displayName = displayName
             )
         } catch (e: Exception) {
             logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
         }
     }
-
     // 判断是否注册定时任务来看是修改还是删除
     private fun isSchedulesMatch(
         triggerOn: TriggerOn,

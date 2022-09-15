@@ -24,6 +24,7 @@ const clearStatus = () => {
     endTime: '',
   });
 };
+const disableDate = (time) => time && time.getTime() > Date.now()
 </script>
 
 <template>
@@ -51,6 +52,7 @@ const clearStatus = () => {
     <bk-date-picker
       class="mr16 w240"
       type="daterange"
+      :disable-date="disableDate"
       :model-value="[status.startTime, status.endTime]"
       @change="handleTimeChange"
     />

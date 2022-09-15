@@ -1371,7 +1371,7 @@ class PipelineRuntimeService @Autowired constructor(
                 null
             }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
-            val remark = buildVariableService.getVariable(projectId, buildId, PIPELINE_BUILD_REMARK)
+            val remark = buildVariableService.getVariable(projectId, pipelineId, buildId, PIPELINE_BUILD_REMARK)
             pipelineBuildDao.finishBuild(
                 dslContext = dslContext,
                 projectId = projectId,

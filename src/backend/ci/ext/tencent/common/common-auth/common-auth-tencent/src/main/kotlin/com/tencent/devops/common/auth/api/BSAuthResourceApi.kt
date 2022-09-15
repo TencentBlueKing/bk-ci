@@ -225,8 +225,8 @@ class BSAuthResourceApi @Autowired constructor(
             val responseContent = response.body()!!.string()
             logger.info("Auth modify resource response: $responseContent")
             if (!response.isSuccessful) {
-                logger.error("Fail to modify auth resource. $responseContent")
-                throw RemoteServiceException("Fail to modify auth resource")
+                logger.warn("Fail to modify auth resource. $responseContent")
+                // throw RemoteServiceException("Fail to modify auth resource")
             }
 
             val responseObject = objectMapper.readValue<BkAuthResponse<String>>(responseContent)
@@ -234,8 +234,8 @@ class BSAuthResourceApi @Autowired constructor(
                 if (responseObject.code == HTTP_403) {
                     bsAuthTokenApi.refreshAccessToken(serviceCode)
                 }
-                logger.error("Fail to modify auth resource. $responseContent")
-                throw RemoteServiceException("Fail to modify auth resource")
+                logger.warn("Fail to modify auth resource. $responseContent")
+                // throw RemoteServiceException("Fail to modify auth resource")
             }
         }
     }

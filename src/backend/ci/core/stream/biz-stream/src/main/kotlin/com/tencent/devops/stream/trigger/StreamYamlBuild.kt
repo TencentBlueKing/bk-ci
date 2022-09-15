@@ -31,19 +31,13 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
-import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.yaml.modelCreate.ModelCreate
 import com.tencent.devops.process.yaml.modelCreate.QualityRulesException
 import com.tencent.devops.process.yaml.modelCreate.inner.GitData
@@ -53,6 +47,7 @@ import com.tencent.devops.process.yaml.modelCreate.inner.StreamData
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
@@ -68,6 +63,7 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelParameters
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
+import com.tencent.devops.stream.trigger.pojo.ModelParametersData
 import com.tencent.devops.stream.trigger.pojo.StreamBuildLock
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -75,6 +71,7 @@ import com.tencent.devops.stream.trigger.service.DeleteEventService
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
+import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -97,6 +94,46 @@ class StreamYamlBuild @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamYamlBuild::class.java)
         private val channelCode = ChannelCode.GIT
+
+        // 手动触发参数获取，用来修改用户参数变量
+        fun getInputParams(
+            userVariables: Map<String, Variable>?,
+            inputsData: Map<String, String>?
+        ): List<BuildParameters>? {
+            if (userVariables.isNullOrEmpty() || inputsData.isNullOrEmpty()) {
+                return null
+            }
+
+            val result = mutableListOf<BuildParameters>()
+            userVariables.forEach manualEach@{ (key, value) ->
+                if (!inputsData.containsKey(key)) {
+                    return@manualEach
+                }
+
+                // inputs包含，但是配置不允许改，直接报错
+                if (value.allowModifyAtStartup != true) {
+                    throw RuntimeException("variable $key not allow modify at startup")
+                }
+
+                // stream的用户变量会被默认填入 variables.
+                val realKey = if (key.startsWith(ModelParameters.VARIABLE_PREFIX)) {
+                    key
+                } else {
+                    ModelParameters.VARIABLE_PREFIX.plus(key)
+                }
+
+                result.add(
+                    BuildParameters(
+                        key = realKey,
+                        value = inputsData[key]!!,
+                        valueType = BuildFormPropertyType.STRING,
+                        readOnly = value.readonly
+                    )
+                )
+            }
+
+            return result.ifEmpty { null }
+        }
     }
 
     @Throws(StreamTriggerBaseException::class, ErrorCodeException::class)
@@ -107,7 +144,8 @@ class StreamYamlBuild @Autowired constructor(
         yaml: ScriptBuildYaml,
         gitBuildId: Long?,
         onlySavePipeline: Boolean,
-        yamlTransferData: YamlTransferData?
+        yamlTransferData: YamlTransferData?,
+        manualInputs: Map<String, String>?
     ): BuildId? {
         logger.info(
             "StreamYamlBuild|gitStartBuild" +
@@ -136,11 +174,12 @@ class StreamYamlBuild @Autowired constructor(
                 // 优先创建流水线为了绑定红线
                 if (realPipeline.pipelineId.isBlank()) {
                     streamYamlBaseBuild.savePipeline(
+                        action = action,
                         pipeline = realPipeline,
                         userId = action.data.getUserId(),
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
                         projectCode = action.getProjectCode(),
-                        modelAndSetting = createTriggerModel(realPipeline.displayName),
+                        modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(realPipeline.displayName),
                         updateLastModifyUser = true
                     )
                 }
@@ -165,7 +204,8 @@ class StreamYamlBuild @Autowired constructor(
                     yaml = yaml,
                     gitBuildId = gitBuildId,
                     params = triggerResult.startParams,
-                    yamlTransferData = yamlTransferData
+                    yamlTransferData = yamlTransferData,
+                    manualInputs = manualInputs
                 )
             } else if (onlySavePipeline) {
                 savePipeline(
@@ -262,39 +302,14 @@ class StreamYamlBuild @Autowired constructor(
         }
     }
 
-    private fun createTriggerModel(displayName: String) = PipelineModelAndSetting(
-        model = Model(
-            name = displayName,
-            desc = "",
-            stages = listOf(
-                Stage(
-                    id = VMUtils.genStageId(1),
-                    name = VMUtils.genStageId(1),
-                    containers = listOf(
-                        TriggerContainer(
-                            id = "0",
-                            name = "构建触发",
-                            elements = listOf(
-                                ManualTriggerElement(
-                                    name = "手动触发",
-                                    id = "T-1-1-1"
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        ),
-        setting = PipelineSetting(cleanVariablesWhenRetry = true)
-    )
-
     @SuppressWarnings("LongParameterList")
     private fun startBuildPipeline(
         action: BaseAction,
         yaml: ScriptBuildYaml,
         gitBuildId: Long,
         params: Map<String, String> = mapOf(),
-        yamlTransferData: YamlTransferData?
+        yamlTransferData: YamlTransferData?,
+        manualInputs: Map<String, String>?
     ): BuildId? {
         logger.info(
             "StreamYamlBuild|startBuildPipeline" +
@@ -315,12 +330,16 @@ class StreamYamlBuild @Autowired constructor(
             yamlTransferData = yamlTransferData
         )
 
+        // 获取并校验手动触发参数
+        val manualValues = getInputParams(yaml.variables, manualInputs)
+
         // create or refresh pipeline
         val modelAndSetting = modelCreate.createPipelineModel(
             modelName = pipeline.displayName,
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
-            pipelineParams = modelParams
+            pipelineParams = modelParams.userVariables,
+            asCodeSettings = action.data.context.pipelineAsCodeSettings
         )
         // 判断是否更新最后修改人
         val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
@@ -333,7 +352,9 @@ class StreamYamlBuild @Autowired constructor(
             modelAndSetting = modelAndSetting,
             gitBuildId = gitBuildId,
             yamlTransferData = yamlTransferData,
-            updateLastModifyUser = updateLastModifyUser
+            updateLastModifyUser = updateLastModifyUser,
+            modelParameters = modelParams,
+            manualValues = manualValues
         )
     }
 
@@ -357,7 +378,8 @@ class StreamYamlBuild @Autowired constructor(
             modelName = pipeline.displayName,
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
-            pipelineParams = modelParams
+            pipelineParams = modelParams.userVariables,
+            asCodeSettings = action.data.context.pipelineAsCodeSettings
         )
         logger.info(
             "StreamYamlBuild|savePipeline" +
@@ -375,6 +397,7 @@ class StreamYamlBuild @Autowired constructor(
         ).use {
             it.lock()
             streamYamlBaseBuild.savePipeline(
+                action = action,
                 pipeline = pipeline,
                 userId = action.data.getUserId(),
                 gitProjectId = action.data.getGitProjectId().toLong(),
@@ -390,7 +413,7 @@ class StreamYamlBuild @Autowired constructor(
         yaml: ScriptBuildYaml,
         webhookParams: Map<String, String>,
         yamlTransferData: YamlTransferData?
-    ): Pair<ModelCreateEvent, List<BuildFormProperty>> {
+    ): Pair<ModelCreateEvent, ModelParametersData> {
         val streamGitProjectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
             gitProjectKey = action.data.eventCommon.gitProjectId,
             action = action,

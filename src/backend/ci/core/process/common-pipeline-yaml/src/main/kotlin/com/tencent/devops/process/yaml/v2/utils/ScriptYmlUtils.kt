@@ -61,6 +61,7 @@ import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.job.RunsOn
 import com.tencent.devops.process.yaml.v2.models.job.Service
 import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
+import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.models.on.IssueRule
 import com.tencent.devops.process.yaml.v2.models.on.MrRule
 import com.tencent.devops.process.yaml.v2.models.on.NoteRule
@@ -93,8 +94,6 @@ object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)
 
-    //    private const val dockerHubUrl = "https://index.docker.io/v1/"
-
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
     private const val jobNamespace = "job-"
@@ -103,8 +102,6 @@ object ScriptYmlUtils {
     // 用户编写的触发器语法和实际对象不一致
     private const val userTrigger = "on"
     private const val formatTrigger = "triggerOn"
-
-    private const val PARAMETERS_PREFIX = "parameters."
 
     /**
      * 1、解决锚点
@@ -264,7 +261,7 @@ object ScriptYmlUtils {
     private fun replaceParameters(
         it: Word,
         settingMap: Map<String, Any?>
-    ) = if (it.str.startsWith(PARAMETERS_PREFIX)) {
+    ) = if (it.str.startsWith("parameters.")) {
         val realValue = settingMap[it.str] ?: it.str
         if (realValue is List<*>) {
             // ["test"]->[test]
@@ -637,7 +634,9 @@ object ScriptYmlUtils {
                 issue = issueRule(repoPreTriggerOn),
                 review = reviewRule(repoPreTriggerOn),
                 note = noteRule(repoPreTriggerOn),
-                repoHook = repoHookRule(repositoryHook)
+                repoHook = repoHookRule(repositoryHook),
+                manual = manualRule(repoPreTriggerOn),
+                openapi = openapiRule(repoPreTriggerOn)
             )
         }
         logger.warn("repo hook has none effective TriggerOn in ($repositoryHookList)")
@@ -673,7 +672,9 @@ object ScriptYmlUtils {
             delete = deleteRule(preTriggerOn),
             issue = issueRule(preTriggerOn),
             review = reviewRule(preTriggerOn),
-            note = noteRule(preTriggerOn)
+            note = noteRule(preTriggerOn),
+            manual = manualRule(preTriggerOn),
+            openapi = openapiRule(preTriggerOn)
         )
     }
 
@@ -704,6 +705,34 @@ object ScriptYmlUtils {
                 )
             }
         }
+    }
+
+    private fun manualRule(
+        preTriggerOn: PreTriggerOn
+    ): String? {
+        if (preTriggerOn.manual == null) {
+            return null
+        }
+
+        if (preTriggerOn.manual != EnableType.TRUE.value && preTriggerOn.manual != EnableType.FALSE.value) {
+            throw YamlFormatException("not allow manual type ${preTriggerOn.manual}")
+        }
+
+        return preTriggerOn.manual
+    }
+
+    private fun openapiRule(
+        preTriggerOn: PreTriggerOn
+    ): String? {
+        if (preTriggerOn.openapi == null) {
+            return null
+        }
+
+        if (preTriggerOn.openapi != EnableType.TRUE.value || preTriggerOn.openapi != EnableType.FALSE.value) {
+            throw YamlFormatException("not allow openapi type ${preTriggerOn.openapi}")
+        }
+
+        return preTriggerOn.openapi
     }
 
     private fun noteRule(

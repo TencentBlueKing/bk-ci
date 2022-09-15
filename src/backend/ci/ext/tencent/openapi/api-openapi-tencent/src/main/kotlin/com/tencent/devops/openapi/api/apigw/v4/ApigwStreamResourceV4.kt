@@ -11,6 +11,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import com.tencent.devops.stream.pojo.ManualTriggerInfo
+import com.tencent.devops.stream.pojo.OpenapiTriggerReq
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
@@ -58,7 +60,7 @@ interface ApigwStreamResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "工蜂项目ID", required = true)
+        @ApiParam(value = "git项目ID(纯数字)", required = true)
         @PathParam("gitProjectId")
         gitProjectId: String,
         @ApiParam(value = "流水线ID", required = true)
@@ -66,6 +68,56 @@ interface ApigwStreamResourceV4 {
         pipelineId: String,
         @ApiParam("TriggerBuild请求", required = true)
         streamTriggerBuildReq: StreamTriggerBuildReq
+    ): Result<TriggerBuildResult>
+
+    @ApiOperation(
+        "人工TriggerBuild拿启动信息",
+        tags = ["v4_stream_app_pipelines_manualTriggerInfo", "v4_stream_user_pipelines_manualTriggerInfo"]
+    )
+    @GET
+    @Path("/gitProjects/{projectId}/manual")
+    fun getManualTriggerInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("分支名称", required = false)
+        @QueryParam("branchName")
+        branchName: String,
+        @ApiParam("COMMIT_ID", required = false)
+        @QueryParam("commitId")
+        commitId: String?
+    ): Result<ManualTriggerInfo>
+
+    @ApiOperation(
+        "openapi 触发",
+        tags = ["v4_stream_app_openapi_trigger", "v4_stream_user_openapi_trigger"]
+    )
+    @POST
+    @Path("/gitProjects/{projectId}/openapi_trigger")
+    fun openapiTrigger(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID(带前缀 如git_xxx)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("TriggerBuild请求", required = true)
+        triggerBuildReq: OpenapiTriggerReq
     ): Result<TriggerBuildResult>
 
     @ApiOperation(

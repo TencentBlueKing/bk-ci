@@ -214,8 +214,8 @@ class MonitorNotifyJob @Autowired constructor(
             } else {
                 logger.info("SLA Daily Email is running")
             }
-        } catch (e: Throwable) {
-            logger.error("SLA Daily Email error:", e)
+        } catch (ignored: Throwable) {
+            logger.warn("send SLA Daily Email fail!", ignored)
         }
     }
 
@@ -377,8 +377,8 @@ class MonitorNotifyJob @Autowired constructor(
                 "https://techmap.woa.com/oteam/8524/operation/coverage",
                 "比例"
             )
-        } catch (e: Exception) {
-            logger.warn("get oteamCoverage error", e)
+        } catch (ignored: Throwable) {
+            logger.warn("get oteamCoverage fail!", ignored)
             return EmailModuleData(
                 "Oteam",
                 emptyList(),
@@ -426,7 +426,7 @@ class MonitorNotifyJob @Autowired constructor(
             if (null != queryResult && !queryResult.hasError()) {
                 putCommitCheckRowList(queryResult, rowList, startTime, endTime)
             } else {
-                logger.error("commitCheck , get map error , errorMsg:${queryResult?.error}")
+                logger.warn("commitCheck , get map error , errorMsg:${queryResult?.error}")
             }
 
             if (rowList.size > 0) {
@@ -434,8 +434,8 @@ class MonitorNotifyJob @Autowired constructor(
             }
 
             return EmailModuleData("工蜂回写统计", rowList, getObservableUrl(startTime, endTime, Module.COMMIT_CHECK))
-        } catch (e: Throwable) {
-            logger.error("commitCheck", e)
+        } catch (ignored: Throwable) {
+            logger.warn("commitCheck fail!", ignored)
             return EmailModuleData("工蜂回写统计", emptyList(), getObservableUrl(startTime, endTime, Module.COMMIT_CHECK))
         }
     }
@@ -493,8 +493,8 @@ class MonitorNotifyJob @Autowired constructor(
                 rowList.asSequence().sortedBy { it.second }.toList(),
                 getObservableUrl(startTime, endTime, Module.GATEWAY)
             )
-        } catch (e: Throwable) {
-            logger.error("gatewayStatus", e)
+        } catch (ignored: Throwable) {
+            logger.warn("gatewayStatus fail!", ignored)
             return EmailModuleData(
                 "网关统计",
                 emptyList(),
@@ -549,8 +549,8 @@ class MonitorNotifyJob @Autowired constructor(
                 )
             )
             logger.info("oteam status , id:{} , resp:{}", timestamp, response.body()!!.string())
-        } catch (e: Exception) {
-            logger.error("error , ", e)
+        } catch (ignored: Throwable) {
+            logger.warn("oteam data report fail!", ignored)
         }
     }
 
@@ -565,12 +565,12 @@ class MonitorNotifyJob @Autowired constructor(
             if (null != queryResult && !queryResult.hasError()) {
                 putUserStatusRowList(queryResult, rowList, startTime, endTime)
             } else {
-                logger.error("userStatus , get map error , errorMsg:${queryResult?.error}")
+                logger.warn("getUserStatus|error=${queryResult?.error}")
             }
 
             return EmailModuleData("用户登录统计", rowList, getObservableUrl(startTime, endTime, Module.USER_STATUS))
-        } catch (e: Throwable) {
-            logger.error("userStatus", e)
+        } catch (ignored: Throwable) {
+            logger.warn("getUserStatus fail!", ignored)
             return EmailModuleData("用户登录统计", emptyList(), getObservableUrl(startTime, endTime, Module.USER_STATUS))
         }
     }
@@ -640,8 +640,8 @@ class MonitorNotifyJob @Autowired constructor(
                 rowList.asSequence().sortedBy { it.second }.toList(),
                 getObservableUrl(startTime, endTime, Module.DISPATCH)
             )
-        } catch (e: Throwable) {
-            logger.error("dispatchStatus", e)
+        } catch (ignored: Throwable) {
+            logger.warn("getDispatchStatus fail!", ignored)
             return EmailModuleData(
                 "公共构建机统计",
                 emptyList(),
@@ -728,8 +728,8 @@ class MonitorNotifyJob @Autowired constructor(
                 rowList.asSequence().sortedBy { it.second }.toList(),
                 getObservableUrl(startTime, endTime, Module.ATOM)
             )
-        } catch (e: Throwable) {
-            logger.error("atomMonitor", e)
+        } catch (ignored: Throwable) {
+            logger.warn("getAtomMonitorData fail!", ignored)
             return EmailModuleData(
                 "核心插件统计",
                 emptyList(),
@@ -773,8 +773,8 @@ class MonitorNotifyJob @Autowired constructor(
                 }.toList()
 
             return EmailModuleData("CodeCC工具统计", rowList, getObservableUrl(startTime, endTime, Module.CODECC))
-        } catch (e: Throwable) {
-            logger.error("codecc", e)
+        } catch (ignored: Throwable) {
+            logger.warn("getCodeccMonitorData fail!", ignored)
             return EmailModuleData("CodeCC工具统计", emptyList(), getObservableUrl(startTime, endTime, Module.CODECC))
         }
     }
@@ -796,7 +796,7 @@ class MonitorNotifyJob @Autowired constructor(
                 }
             }
         } else {
-            logger.error("codecc , get map error , errorMsg:${queryResult?.error}")
+            logger.warn("codecc , get map error , errorMsg:${queryResult?.error}")
         }
         return codeCCMap
     }

@@ -130,6 +130,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             )
         }
 
+        getOtherNotifyMessageTemplate(subTemplateList, templateId)
+
         return Result(
             // 最多三条内容
             Page(
@@ -140,6 +142,12 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 records = subTemplateList
             )
         )
+    }
+
+    fun getOtherNotifyMessageTemplate(
+        subTemplateList: MutableList<SubNotifyMessageTemplate>,
+        templateId: String
+    ) {
     }
 
     /**

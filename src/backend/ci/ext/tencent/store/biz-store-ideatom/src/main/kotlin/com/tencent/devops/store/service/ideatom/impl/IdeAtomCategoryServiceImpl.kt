@@ -33,7 +33,6 @@ import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.service.common.CategoryService
 import com.tencent.devops.store.service.ideatom.IdeAtomCategoryService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,13 +43,10 @@ class IdeAtomCategoryServiceImpl @Autowired constructor(
     private val categoryService: CategoryService
 ) : IdeAtomCategoryService {
 
-    private val logger = LoggerFactory.getLogger(IdeAtomCategoryServiceImpl::class.java)
-
     /**
      * 查找IDE插件范畴
      */
     override fun getCategorysByAtomId(atomId: String): Result<List<Category>?> {
-        logger.info("getCategorysByAtomCode atomId is :$atomId")
         val ideAtomCategoryList = mutableListOf<Category>()
         val ideAtomCategoryRecords = ideAtomCategoryRelDao.getCategorysByIdeAtomId(dslContext, atomId) // 查询IDE插件范畴信息
         ideAtomCategoryRecords?.forEach {

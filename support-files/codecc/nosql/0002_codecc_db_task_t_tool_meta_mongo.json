@@ -1457,3 +1457,110 @@
     "updated_date" : 1640161640009,
     "updated_by" : "admin"
 }
+
+{
+  "_id": {
+    "$oid": "6232a42e0b66974a4a9205dd"
+  },
+  "name": "LUACHECK",
+  "pattern": "LINT",
+  "display_name": "LuaCheck",
+  "type": "STANDARD",
+  "lang": 256,
+  "brief_introduction": "一个用于检测和静态分析Lua代码的工具。",
+  "logo": "",
+  "privated": true,
+  "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+  "docker_image_url": "bkcodecc/luacheck_scan",
+  "docker_image_version": "latest",
+  "docker_image_account": "",
+  "docker_image_passwd": "",
+  "debug_pipeline_id": "p-b47c0146bf8142de9b2068d42f6d2a2d",
+  "tool_scan_command": "",
+  "tool_versions": [
+    {
+      "version_type": "P",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1656573842167,
+      "created_by": "admin",
+      "updated_date": 1656643417501,
+      "updated_by": "admin"
+    },
+    {
+      "version_type": "T",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1656573842167,
+      "created_by": "admin",
+      "updated_date": 1656573842167,
+      "updated_by": "admin"
+    },
+    {
+      "version_type": "G",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1656573842167,
+      "created_by": "admin",
+      "updated_date": 1656578850243,
+      "updated_by": "admin"
+    },
+    {
+      "version_type": "PRE_PROD",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1656573842167,
+      "created_by": "admin",
+      "updated_date": 1656643393132,
+      "updated_by": "admin"
+    }
+  ],
+  "last_tool_versions": [
+    {
+      "version_type": "P",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1648112062606,
+      "created_by": "admin",
+      "updated_date": 1656643417501,
+      "updated_by": "admin"
+    },
+    {
+      "version_type": "G",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1648112062606,
+      "created_by": "admin",
+      "updated_date": 1656578850243,
+      "updated_by": "admin"
+    },
+    {
+      "version_type": "PRE_PROD",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1648112062606,
+      "created_by": "admin",
+      "updated_date": 1656643393132,
+      "updated_by": "admin"
+    }
+  ],
+  "create_date": 1647485991951,
+  "created_by": "admin",
+  "updated_date": 1656573842162,
+  "updated_by": "admin",
+  "_class": "com.tencent.bk.codecc.task.model.ToolMetaEntity"
+}

@@ -54,5 +54,5 @@ stages:
         - template: steps/ifArrayTest.yml
           parameters:
             iftest:
-              - JAVA
+              - ${{ variables.xxx }}
               - JS
