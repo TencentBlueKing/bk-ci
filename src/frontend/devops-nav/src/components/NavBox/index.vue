@@ -83,6 +83,9 @@
         @Prop()
         toggleCollect
 
+        @Prop()
+        getDocumentTitle
+
         @Prop({ default: 207 })
         columnWidth: string
 
@@ -101,6 +104,7 @@
                return
            }
            this.$router.push(destUrl)
+           document.title = this.getDocumentTitle(linkNew)
        }
 
        addConsole (link: string): string {
