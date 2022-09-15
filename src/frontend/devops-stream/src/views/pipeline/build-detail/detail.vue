@@ -4,22 +4,22 @@
             <div class="review-title">{{$t('pipeline.reviewInfo')}}</div>
             <div class="review-content">
                 <div class="sub-title">
-                    <!-- This pipeline is <span class="bold">awaiting approval</span> from a maintainer in <span class="primary">#{{buildDetail.buildNum}}</span> -->
                     <span>{{$t("pipeline.reviewTitle")}}</span>
+                    <span class="link-info primary" @click="goToLink(buildDetail.jumpUrl)">{{buildDetail.buildSource}}</span>
                     <span class="branch-info"><icon name="source-branch" size="12"></icon>{{buildDetail.branch || '--'}}</span>
                     <span><i class="bk-icon icon-arrows-right"></i></span>
                     <span class="branch-info"><icon name="source-branch" size="12"></icon>{{buildDetail.targetBranch || '--'}}</span>
                 </div>
                 <div class="file-list">
-                    <p v-for="item in (buildDetail.changeYamlList || [])" :key="item.url" @click="goToLink(buildDetail.jumpUrl + item.url)">
+                    <p class="link-info" v-for="item in (buildDetail.changeYamlList || [])" :key="item.url" @click="goToLink(buildDetail.jumpUrl + item.url)">
                         {{item.path}}
                     </p>
                     <p v-if="(buildDetail.changeYamlList || []).length === 0">{{$t('pipeline.noYmlFiles')}}</p>
                 </div>
-                <!-- <div class="help-tips">
+                <div class="help-tips">
                     {{$t('pipeline.reviewTips')}}
-                    <span class="link-tips">{{$t('exception.learnMore')}}</span>
-                </div> -->
+                    <!-- <span class="link-tips">{{$t('exception.learnMore')}}</span> -->
+                </div>
                 <div>
                     <bk-button theme="primary" :disabled="!isTriggerReviewUser" @click="reviewTrigger(true)" style="margin-right: 10px">{{$t('pipeline.approveAndRun')}}</bk-button>
                     <bk-button theme="danger" :disabled="!isTriggerReviewUser" @click="reviewTrigger(false)">{{$t('pipeline.refuse')}}</bk-button>
@@ -305,7 +305,7 @@
                 }
                 .primary {
                     color: #3a84ff;
-                    margin-right: 10px;
+                    margin: 0 6px;
                 }
                 .branch-info {
                     background: #F0F3FA;
@@ -317,6 +317,12 @@
                     color: #63656E;
                 }
             }
+            .link-info {
+                cursor: pointer;
+                &:hover {
+                    color: #3a84ff;
+                }
+            }
             .file-list {
                 margin: 10px 0;
                 background: #FAFBFD;
@@ -326,10 +332,6 @@
                 max-height: 400px;
                 p {
                     margin-bottom: 6px;
-                    cursor: pointer;
-                    &:hover {
-                        color: #3a84ff;
-                    }
                 }
             }
             .help-tips {
