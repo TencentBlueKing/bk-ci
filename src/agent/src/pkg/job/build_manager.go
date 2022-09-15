@@ -65,7 +65,7 @@ func (b *buildManager) GetInstanceCount() int {
 
 func (b *buildManager) GetInstances() []api.ThirdPartyBuildInfo {
 	result := make([]api.ThirdPartyBuildInfo, 0)
-	b.instances.Range(func(key, value  interface{}) bool {
+	b.instances.Range(func(key, value interface{}) bool {
 		result = append(result, *value.(*api.ThirdPartyBuildInfo))
 		return true
 	})
@@ -103,11 +103,11 @@ func (b *buildManager) waitProcessDone(processId int) {
 		return
 	}
 
-	_, err = process.Wait()
+	state, err := process.Wait()
 	// #5806 从b-xxxx_build_msg.log 读取错误信息，此信息可由worker-agent.jar写入，用于当异常时能够将信息上报给服务器
 	msgFile := getWorkerErrorMsgFile(info.BuildId, info.VmSeqId)
 	msg, _ := fileutil.GetString(msgFile)
-	logs.Info(fmt.Sprintf("build[%s] pid[%d] finish,  err=%s, msg=%s", info.BuildId, processId, err, msg))
+	logs.Info(fmt.Sprintf("build[%s] pid[%d] finish, state=%v err=%v, msg=%s", info.BuildId, processId, state, err, msg))
 
 	if err != nil {
 		if len(msg) == 0 {
@@ -128,7 +128,7 @@ func (b *buildManager) waitProcessDone(processId int) {
 
 func (b *buildManager) GetPreInstancesCount() int {
 	var i = 0
-	b.preInstances.Range(func(key, value  interface{}) bool {
+	b.preInstances.Range(func(key, value interface{}) bool {
 		i++
 		return true
 	})

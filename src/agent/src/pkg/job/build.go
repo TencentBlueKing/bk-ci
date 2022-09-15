@@ -311,11 +311,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 	if err != nil {
 		return "", err
 	} else {
-		newLines := []string{
-			"#!" + getCurrentShell(),
-			"exec " + getCurrentShell() + " -l " + scriptFile,
-		}
-		prepareScriptContent := strings.Join(newLines, "\n")
+		prepareScriptContent := strings.Join(getShellLines(scriptFile), "\n")
 		err := ioutil.WriteFile(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
 		if err != nil {
 			return "", err
@@ -323,6 +319,24 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 			return prepareScriptFile, nil
 		}
 	}
+}
+
+// getShellLines 根据不同的shell的参数要求，这里可能需要不同的参数或者参数顺序
+func getShellLines(scriptFile string) (newLines []string) {
+	shell := getCurrentShell()
+	switch shell {
+	case "/bin/tcsh":
+		newLines = []string{
+			"#!" + shell,
+			"exec " + shell + " " + scriptFile + " -l",
+		}
+	default:
+		newLines = []string{
+			"#!" + shell,
+			"exec " + shell + " -l " + scriptFile,
+		}
+	}
+	return newLines
 }
 
 func workerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
