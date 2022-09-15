@@ -88,7 +88,7 @@ class BuildVariableService @Autowired constructor(
     }
 
     fun getVariable(projectId: String, pipelineId: String, buildId: String, varName: String): String? {
-        val vars = getAllVariable(projectId, buildId, pipelineId)
+        val vars = getAllVariable(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
         return if (vars.isNotEmpty()) vars[varName] else null
     }
 
