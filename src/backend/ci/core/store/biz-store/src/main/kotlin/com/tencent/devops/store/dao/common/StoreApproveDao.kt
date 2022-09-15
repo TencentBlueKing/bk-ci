@@ -115,7 +115,8 @@ class StoreApproveDao {
         approveType: ApproveTypeEnum,
         approveStatus: ApproveStatusEnum,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        token: String
     ) {
         with(TStoreApprove.T_STORE_APPROVE) {
             dslContext.insertInto(
@@ -128,7 +129,8 @@ class StoreApproveDao {
                 STORE_CODE,
                 STORE_TYPE,
                 CREATOR,
-                MODIFIER
+                MODIFIER,
+                TOKEN
             ).values(
                 approveId,
                 content,
@@ -138,7 +140,8 @@ class StoreApproveDao {
                 storeCode,
                 storeType.type.toByte(),
                 userId,
-                userId
+                userId,
+                token
             ).execute()
         }
     }

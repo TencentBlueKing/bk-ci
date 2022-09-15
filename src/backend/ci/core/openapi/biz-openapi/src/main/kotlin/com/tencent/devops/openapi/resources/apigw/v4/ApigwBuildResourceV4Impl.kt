@@ -42,6 +42,7 @@ import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
@@ -318,6 +319,23 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId
+        )
+    }
+
+    override fun updateRemark(
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String,
+        remark: BuildHistoryRemark?
+    ): Result<Boolean> {
+        logger.info("OPENAPI_BUILD_V4|$userId|update remark|$projectId|$pipelineId|$buildId")
+        return client.get(ServiceBuildResource::class).updateRemark(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
+            buildId = buildId,
+            remark = remark
         )
     }
 

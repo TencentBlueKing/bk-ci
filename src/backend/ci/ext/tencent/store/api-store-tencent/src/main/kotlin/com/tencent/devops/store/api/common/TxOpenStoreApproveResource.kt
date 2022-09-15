@@ -25,42 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package fileutil
+package com.tencent.devops.store.api.common
 
-import (
-	"testing"
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.FormParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-)
+@Api(tags = ["OPEN_MARKET_APPROVAL"], description = "open-store组件审批")
+@Path("/open/market/approval")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxOpenStoreApproveResource {
 
-func Test_CopyFile_01(t *testing.T) {
-	if _, err := fileutil.CopyFile("d:\\a.conf", "d:\\b.conf", true); err != nil {
-		t.Error("failed", err)
-	}
-}
-
-func Test_Md5_01(t *testing.T) {
-	md5, err := fileutil.GetFileMd5("d:\\time.exe")
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("md5: " + md5)
-}
-
-func Test_SetExecutable_01(t *testing.T) {
-	md5, err := fileutil.GetFileMd5("d:\\time.exe")
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("md5: " + md5)
-}
-
-func Test_unzip(t *testing.T) {
-	err := fileutil.Unzip("/Users/xxx/Downloads/1/agent.zip", "/Users/xxx/Downloads/1/")
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
+    @ApiOperation("moa审批回调")
+    @POST
+    @Path("/moa/tokens/{token}/callBack")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    fun moaApproveCallBack(
+        @ApiParam(value = "审批人", required = true)
+        @FormParam("verifier")
+        verifier: String,
+        @ApiParam(value = "审批状态 0对应驳回，1对应通过", required = true)
+        @FormParam("result")
+        result: Int,
+        @ApiParam(value = "任务ID", required = true)
+        @FormParam("taskid")
+        taskId: String,
+        @ApiParam(value = "审批信息", required = true)
+        @FormParam("message")
+        message: String,
+        @ApiParam(value = "token", required = true)
+        @PathParam("token")
+        token: String
+    ): Result<Boolean>
 }

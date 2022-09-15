@@ -728,6 +728,7 @@ CREATE TABLE IF NOT EXISTS `T_STORE_APPROVE`
     `MODIFIER`    varchar(50) NOT NULL DEFAULT 'system' COMMENT '最近修改人',
     `CREATE_TIME` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    `TOKEN` varchar(64) DEFAULT NULL,
     PRIMARY KEY (`ID`),
     KEY `inx_tsa_applicant` (`APPLICANT`),
     KEY `inx_tsa_type` (`TYPE`),
