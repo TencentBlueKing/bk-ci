@@ -60,7 +60,7 @@ class ServiceNotifyResourceImpl @Autowired constructor(
         MessageCheckUtil.checkRtxMessage(message)
         val wechatNotifyMessage = WeworkNotifyMessageWithOperation()
         wechatNotifyMessage.addAllReceivers(message.getReceivers())
-        message.body = "${message.title}\n\n${message.body}"
+        wechatNotifyMessage.body = "${message.title}\n\n${message.body}"
         weworkService.sendMqMsg(wechatNotifyMessage)
         return Result(true)
     }
