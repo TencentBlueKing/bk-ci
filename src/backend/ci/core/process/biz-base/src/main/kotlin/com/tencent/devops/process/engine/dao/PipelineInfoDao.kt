@@ -222,7 +222,7 @@ class PipelineInfoDao {
         projectId: String? = null,
         limit: Int,
         offset: Int,
-        deleteFlag: Boolean = false,
+        deleteFlag: Boolean? = false,
         timeDescFlag: Boolean = true
     ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
@@ -230,7 +230,9 @@ class PipelineInfoDao {
             if (projectId != null) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
-            conditions.add(DELETE.eq(deleteFlag))
+            if (null != deleteFlag) {
+                conditions.add(DELETE.eq(deleteFlag))
+            }
             val baseQuery = dslContext.selectFrom(this).where(conditions)
             if (timeDescFlag) {
                 baseQuery.orderBy(CREATE_TIME.desc(), PIPELINE_ID)
