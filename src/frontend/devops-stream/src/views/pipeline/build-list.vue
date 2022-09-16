@@ -561,7 +561,10 @@
 
             showTriggleBuild () {
                 if (!this.curPipeline.enabled || !this.permission) return
-                this.formData.branch = this.defaultBranch
+                if (this.defaultBranch) {
+                    this.formData.branch = this.defaultBranch
+                    this.branchList.push(this.defaultBranch)
+                }
                 this.showTriggle = true
             },
 
