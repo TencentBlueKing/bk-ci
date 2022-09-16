@@ -467,14 +467,24 @@ class PipelineBuildDao {
         projectId: String,
         buildId: String,
         oldBuildStatus: BuildStatus,
-        newBuildStatus: BuildStatus
+        newBuildStatus: BuildStatus,
+        startTime: LocalDateTime? = null,
+        errorInfoList: List<ErrorInfo>? = null
     ): Boolean {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val update = dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
-                .where(BUILD_ID.eq(buildId)).and(PROJECT_ID.eq(projectId)).and(STATUS.eq(oldBuildStatus.ordinal))
-                .execute()
-        } == 1
+            startTime?.let {
+                update.set(START_TIME, it)
+            }
+            errorInfoList?.let {
+                update.set(ERROR_INFO, JsonUtil.toJson(it, formatted = false))
+            }
+            return update.where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(STATUS.eq(oldBuildStatus.ordinal))
+                .execute() == 1
+        }
     }
 
     fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
@@ -857,12 +867,14 @@ class PipelineBuildDao {
         buildId: String,
         stageStatus: List<BuildStageStatus>,
         oldBuildStatus: BuildStatus? = null,
-        newBuildStatus: BuildStatus? = null
+        newBuildStatus: BuildStatus? = null,
+        errorInfoList: List<ErrorInfo>? = null
     ): Int {
         with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
-            newBuildStatus?.let { update.set(STATUS, newBuildStatus.ordinal) }
+            newBuildStatus?.let { update.set(STATUS, it.ordinal) }
+            errorInfoList?.let { update.set(ERROR_INFO, JsonUtil.toJson(it, formatted = false)) }
             return if (oldBuildStatus == null) {
                 update.where(BUILD_ID.eq(buildId))
                     .and(PROJECT_ID.eq(projectId))
