@@ -30,5 +30,3 @@ dependencies {
     api(project(":core:log:biz-log-sample"))
     api(project(":core:common:common-auth:common-auth-mock"))
 }
-
-

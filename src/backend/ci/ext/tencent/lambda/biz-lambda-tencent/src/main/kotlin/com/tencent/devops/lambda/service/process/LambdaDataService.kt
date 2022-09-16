@@ -265,6 +265,7 @@ class LambdaDataService @Autowired constructor(
                 }
             } else {
                 val taskParams = if (
+                    // @type 为buildType
                     taskParamMap["@type"] != "marketBuild" &&
                     taskParamMap["@type"] != "marketBuildLess"
                 ) {
@@ -305,7 +306,6 @@ class LambdaDataService @Autowired constructor(
                 } else {
                     JSONObject(JsonUtil.toMap(task.taskParams))
                 }
-
                 val dataPlatTaskDetail = DataPlatTaskDetail(
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,
@@ -642,6 +642,7 @@ class LambdaDataService @Autowired constructor(
                 channel = channel,
                 labels = labelList,
                 isSecrecy = isSecrecy,
+                buildMsg = buildMsg,
                 bgId = projectInfo.bgId,
                 deptId = projectInfo.deptId,
                 centerId = projectInfo.centerId

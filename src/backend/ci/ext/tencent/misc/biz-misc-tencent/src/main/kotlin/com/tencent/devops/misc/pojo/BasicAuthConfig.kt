@@ -25,30 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package upgrader
+package com.tencent.devops.misc.pojo
 
-import (
-	"testing"
-
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+data class BasicAuthConfig(
+    val index: Int, // 序号
+    val biz: String, // 业务类型
+    val url: String, // 数据源url
+    val username: String, // 用户名
+    val password: String // 密码
 )
-
-func init() {
-	config.Init()
-}
-
-func Test_DoUpgradeAgent_01(t *testing.T) {
-	err := DoUpgradeAgent()
-	if err != nil {
-		t.Error("err: ", err.Error())
-	}
-	t.Log("done")
-}
-
-func Test_DoUninstallAgent_01(t *testing.T) {
-	err := DoUninstallAgent()
-	if err != nil {
-		t.Error("err: ", err.Error())
-	}
-	t.Log("done")
-}

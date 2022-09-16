@@ -25,28 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package upgrade
+package com.tencent.devops.repository.resources
 
-import (
-	"testing"
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.OPRepositoryResource
+import com.tencent.devops.repository.service.OPRepositoryService
+import org.springframework.beans.factory.annotation.Autowired
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-)
-
-func Test_startUpgrader_01(t *testing.T) {
-	err := runUpgrader(config.ActionUpgrade)
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("success")
-}
-
-func Test_startUpgrader_02(t *testing.T) {
-	err := runUpgrader(config.ActionUninstall)
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("success")
+@RestResource
+class OPRepositoryResourceImpl @Autowired constructor(
+    private val opRepositoryService: OPRepositoryService
+) : OPRepositoryResource {
+    override fun addHashId() {
+        opRepositoryService.addHashId()
+    }
 }

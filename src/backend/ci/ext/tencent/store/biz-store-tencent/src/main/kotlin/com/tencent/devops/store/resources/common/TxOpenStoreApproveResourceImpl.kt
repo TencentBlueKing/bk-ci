@@ -25,19 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package com.tencent.devops.store.resources.common
 
-import (
-	"testing"
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.TxOpenStoreApproveResource
+import com.tencent.devops.store.service.common.TxStoreMoaApproveCallBackService
+import org.springframework.beans.factory.annotation.Autowired
 
-func Test_DetectSlaveVersion_01(t *testing.T) {
-	t.Log("DetectSlaveVersion: ", DetectWorkerVersion())
-}
+@RestResource
+class TxOpenStoreApproveResourceImpl @Autowired constructor(
+    private val txStoreMoaApproveCallBackService: TxStoreMoaApproveCallBackService
+) : TxOpenStoreApproveResource {
 
-func Test_parseWorkerVersion(t *testing.T) {
-	t.Log("DetectSlaveVersion: ", parseWorkerVersion(" 11.6 \nPicked up _JAVA_OPTIONS: -Xmx2048m -Xms256m -Xss8m"))
-	t.Log("DetectSlaveVersion: ", parseWorkerVersion("version: Picked up _JAVA_OPTIONS: -Xmx2048m -Djava.awt.headless=true\r\n11.6"))
-	t.Log("DetectSlaveVersion: ", parseWorkerVersion("11.7"))
-	t.Log("DetectSlaveVersion: ", parseWorkerVersion("\n1234567890--------20--------30--------40--------50--------60--64----70"))
+    override fun moaApproveCallBack(
+        verifier: String,
+        result: Int,
+        taskId: String,
+        message: String,
+        token: String
+    ): Result<Boolean> {
+        return txStoreMoaApproveCallBackService.moaApproveCallBack(
+            verifier = verifier,
+            result = result,
+            taskId = taskId,
+            message = message,
+            token = token
+        )
+    }
 }

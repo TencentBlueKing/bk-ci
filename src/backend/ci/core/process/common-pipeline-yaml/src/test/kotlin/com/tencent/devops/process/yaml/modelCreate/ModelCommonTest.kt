@@ -25,61 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package api
+package com.tencent.devops.process.yaml.modelCreate
 
-import (
-	"testing"
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-)
+internal class ModelCommonTest {
 
-func loadConfig() {
-	config.LoadAgentConfig()
-	config.LoadAgentEnv()
-}
-
-func Test_buildUrl_01(t *testing.T) {
-	loadConfig()
-	url := buildUrl("/abc")
-	t.Log("url: ", url)
-}
-
-func Test_CheckUpgrade_01(t *testing.T) {
-	loadConfig()
-	data, err := CheckUpgrade()
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("data: ", data)
-}
-
-func Test_AgentStartup_01(t *testing.T) {
-	loadConfig()
-	data, err := AgentStartup()
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("data: ", data)
-}
-
-func Test_GetAgentStatus_01(t *testing.T) {
-	loadConfig()
-	data, err := GetAgentStatus()
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("data: ", data)
-}
-
-func Test_GetBuild_01(t *testing.T) {
-	loadConfig()
-	data, err := GetBuild()
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("data: ", data)
+    @Test
+    fun parseReceivers() {
+        val testData = listOf("\${{ci.actor}},royalhuang", "ruotiantang")
+        val expectData = setOf("\${{ci.actor}}", "ruotiantang", "royalhuang")
+        Assertions.assertEquals(expectData, ModelCommon.parseReceivers(testData))
+    }
 }

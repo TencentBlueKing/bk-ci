@@ -126,6 +126,7 @@ object ShellUtil {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         val userScriptFile = Files.createTempFile("devops_script_user_", ".sh").toFile()
         file.deleteOnExit()
+        userScriptFile.deleteOnExit()
 
         val command = StringBuilder()
         val bashStr = script.split("\n")[0]
