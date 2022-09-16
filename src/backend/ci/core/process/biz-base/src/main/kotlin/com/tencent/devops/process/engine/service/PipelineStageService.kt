@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
@@ -56,6 +57,7 @@ import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
@@ -81,6 +83,7 @@ class PipelineStageService @Autowired constructor(
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildVariableService: BuildVariableService,
     private val stageBuildDetailService: StageBuildDetailService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client
 ) {
     companion object {
@@ -251,6 +254,7 @@ class PipelineStageService @Autowired constructor(
                 val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
                 pauseStageNotify(
                     userId = userId,
+                    triggerUserId = variables[PIPELINE_START_USER_NAME] ?: userId,
                     stage = buildStage,
                     pipelineName = variables[PIPELINE_NAME] ?: pipelineId,
                     buildNum = variables[PIPELINE_BUILD_NUM] ?: "1"
@@ -300,6 +304,7 @@ class PipelineStageService @Autowired constructor(
 
     fun cancelStageBySystem(
         userId: String,
+        buildInfo: BuildInfo,
         buildStage: PipelineBuildStage,
         timeout: Boolean? = false
     ) {
@@ -327,13 +332,18 @@ class PipelineStageService @Autowired constructor(
             }
             // #5654 如果是待人工审核则取消人工审核
             else if (pauseCheck?.groupToReview() != null) {
+                val pipelineInfo =
+                    pipelineRepositoryService.getPipelineInfo(buildStage.projectId, buildStage.pipelineId)
                 cancelStage(
                     userId = userId,
+                    triggerUserId = buildInfo.triggerUser,
+                    pipelineName = pipelineInfo?.pipelineName,
+                    buildNum = buildInfo.buildNum,
                     buildStage = buildStage,
                     reviewRequest = StageReviewRequest(
                         reviewParams = listOf(),
                         id = pauseCheck.groupToReview()?.id,
-                        suggest = null
+                        suggest = "CANCEL"
                     ),
                     timeout = timeout
                 )
@@ -343,6 +353,9 @@ class PipelineStageService @Autowired constructor(
 
     fun cancelStage(
         userId: String,
+        pipelineName: String?,
+        buildNum: Int,
+        triggerUserId: String,
         buildStage: PipelineBuildStage,
         reviewRequest: StageReviewRequest?,
         timeout: Boolean? = false
@@ -392,6 +405,29 @@ class PipelineStageService @Autowired constructor(
                     pipelineId = pipelineId, buildId = buildId, userId = userId,
                     stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
                     status = BuildStatus.REVIEW_ABORT.name
+                ),
+                PipelineBuildNotifyEvent(
+                    notifyTemplateEnum = PipelineNotifyTemplateEnum
+                        .PIPELINE_MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE.name,
+                    source = "s($stageId) waiting for REVIEW [triggerUser]",
+                    projectId = projectId, pipelineId = pipelineId,
+                    userId = userId, buildId = buildId,
+                    receivers = listOf(triggerUserId),
+                    titleParams = mutableMapOf(
+                        "projectName" to "need to add in notifyListener",
+                        "pipelineName" to (pipelineName ?: pipelineId),
+                        "buildNum" to buildNum.toString()
+                    ),
+                    bodyParams = mutableMapOf(
+                        "projectName" to "need to add in notifyListener",
+                        "pipelineName" to (pipelineName ?: pipelineId),
+                        "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
+                        "reviewDesc" to (checkIn?.reviewDesc ?: ""),
+                        "suggest" to (reviewRequest?.suggest ?: ""),
+                        "rejectUserId" to userId
+                    ),
+                    position = ControlPointPosition.BEFORE_POSITION,
+                    stageId = stageId
                 )
                 // #3400 FinishEvent会刷新HISTORY列表的Stage状态
             )
@@ -485,6 +521,7 @@ class PipelineStageService @Autowired constructor(
 
     fun pauseStageNotify(
         userId: String,
+        triggerUserId: String,
         stage: PipelineBuildStage,
         pipelineName: String,
         buildNum: String
@@ -522,6 +559,32 @@ class PipelineStageService @Autowired constructor(
                 stageId = stage.stageId
             )
         )
+        if (triggerUserId !in group.reviewers) {
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildNotifyEvent(
+                    notifyTemplateEnum = PipelineNotifyTemplateEnum
+                        .PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE.name,
+                    source = "s(${stage.stageId}) waiting for REVIEW [triggerUser]",
+                    projectId = stage.projectId, pipelineId = stage.pipelineId,
+                    userId = userId, buildId = stage.buildId,
+                    receivers = listOf(triggerUserId),
+                    titleParams = mutableMapOf(
+                        "projectName" to "need to add in notifyListener",
+                        "pipelineName" to pipelineName,
+                        "buildNum" to buildNum
+                    ),
+                    bodyParams = mutableMapOf(
+                        "projectName" to "need to add in notifyListener",
+                        "pipelineName" to pipelineName,
+                        "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
+                        "reviewDesc" to (checkIn.reviewDesc ?: ""),
+                        "reviewers" to group.reviewers.joinToString(prefix = "(", postfix = ")")
+                    ),
+                    position = ControlPointPosition.BEFORE_POSITION,
+                    stageId = stage.stageId
+                )
+            )
+        }
     }
 
     /**
