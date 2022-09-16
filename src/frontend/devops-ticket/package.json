@@ -29,7 +29,7 @@
     "vue-loader": "^15.9.8",
     "vue-property-decorator": "^6.0.0",
     "vue-template-compiler": "2.6.12",
-    "webpack": "^5.58.1"
+    "webpack": "5.58.1"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
