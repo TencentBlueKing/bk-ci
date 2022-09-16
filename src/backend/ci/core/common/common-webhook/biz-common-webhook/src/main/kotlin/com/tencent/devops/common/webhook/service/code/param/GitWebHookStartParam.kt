@@ -45,6 +45,8 @@ import com.tencent.devops.common.webhook.pojo.code.MATCH_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.Repository
 import org.springframework.beans.factory.annotation.Autowired
@@ -83,7 +85,11 @@ class GitWebHookStartParam @Autowired constructor(
         startParams[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK] = element.enableCheck ?: true
         startParams[PIPELINE_GIT_REPO_ID] = element.repositoryName ?: ""
         startParams[BK_REPO_WEBHOOK_REPO_AUTH_USER] =
-            gitScmService.getRepoAuthUser(projectId = projectId, repo = repo)
+            if (repo is CodeGitRepository && repo.authType == RepoAuthType.OAUTH) {
+                repo.userName
+            } else {
+                gitScmService.getRepoAuthUser(projectId = projectId, repo = repo)
+            }
         startParams.putAll(
             matcher.retrieveParams(
                 projectId = projectId,

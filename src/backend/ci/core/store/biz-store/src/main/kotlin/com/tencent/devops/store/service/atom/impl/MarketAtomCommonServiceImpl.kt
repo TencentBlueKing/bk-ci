@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -393,6 +394,13 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val atomEnvRequests = mutableListOf<AtomEnvRequest>()
         val osList = executionInfoMap[KEY_OS] as? List<Map<String, Any>>
         val finishKillFlag = executionInfoMap[KEY_FINISH_KILL_FLAG] as? Boolean
+        val runtimeVersion = executionInfoMap[KEY_RUNTIME_VERSION] as? String
+        val finalRuntimeVersion = if (runtimeVersion.isNullOrBlank() && language == NODEJS) {
+            // 如果nodejs插件未配置runtimeVersion，则给runtimeVersion赋默认值10.*
+            "10.*"
+        } else {
+            runtimeVersion
+        }
         if (null != osList) {
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
@@ -434,7 +442,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     atomPostInfo = atomPostInfo,
                     osName = osName,
                     osArch = osArch,
-                    runtimeVersion = executionInfoMap[KEY_RUNTIME_VERSION] as? String,
+                    runtimeVersion = finalRuntimeVersion,
                     defaultFlag = defaultFlag,
                     finishKillFlag = finishKillFlag
                 )
@@ -469,7 +477,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 shaContent = null,
                 preCmd = JsonUtil.toJson(executionInfoMap[KEY_DEMANDS] ?: ""),
                 atomPostInfo = atomPostInfo,
-                runtimeVersion = executionInfoMap[KEY_RUNTIME_VERSION] as? String,
+                runtimeVersion = finalRuntimeVersion,
                 defaultFlag = true,
                 finishKillFlag = finishKillFlag
             )

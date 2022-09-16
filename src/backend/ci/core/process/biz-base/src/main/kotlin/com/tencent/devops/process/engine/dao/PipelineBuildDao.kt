@@ -248,8 +248,8 @@ class PipelineBuildDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
             when (updateTimeDesc) {
-                true -> select.orderBy(UPDATE_TIME.desc())
-                false -> select.orderBy(UPDATE_TIME.asc())
+                true -> select.orderBy(UPDATE_TIME.desc(), BUILD_ID)
+                false -> select.orderBy(UPDATE_TIME.asc(), BUILD_ID)
                 null -> select.orderBy(BUILD_NUM.desc())
             }
             select.limit(offset, limit)
@@ -649,8 +649,8 @@ class PipelineBuildDao {
             )
 
             when (updateTimeDesc) {
-                true -> where.orderBy(UPDATE_TIME.desc())
-                false -> where.orderBy(UPDATE_TIME.asc())
+                true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
+                false -> where.orderBy(UPDATE_TIME.asc(), BUILD_ID)
                 null -> where.orderBy(BUILD_NUM.desc())
             }
 
