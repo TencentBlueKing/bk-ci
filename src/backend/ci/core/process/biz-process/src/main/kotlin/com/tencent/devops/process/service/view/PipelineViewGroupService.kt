@@ -341,7 +341,7 @@ class PipelineViewGroupService @Autowired constructor(
             if (!firstInit) {
                 return@lockAround emptyList()
             }
-            val pipelineIds = allPipelineInfos(projectId)
+            val pipelineIds = allPipelineInfos(projectId, false)
                 .filter { pipelineViewService.matchView(view, it) }
                 .map { it.pipelineId }
             pipelineIds.forEach {
@@ -386,7 +386,7 @@ class PipelineViewGroupService @Autowired constructor(
         pipelineView: PipelineViewForm
     ): PipelineViewPreview {
         // 获取所有流水线信息
-        val allPipelineInfoMap = allPipelineInfos(projectId).associateBy { it.pipelineId }
+        val allPipelineInfoMap = allPipelineInfos(projectId, false).associateBy { it.pipelineId }
         if (allPipelineInfoMap.isEmpty()) {
             return PipelineViewPreview.EMPTY
         }
@@ -466,7 +466,7 @@ class PipelineViewGroupService @Autowired constructor(
             }
         }
         //流水线信息
-        val pipelineInfoMap = allPipelineInfos(projectId).associateBy { it.pipelineId }
+        val pipelineInfoMap = allPipelineInfos(projectId, true).associateBy { it.pipelineId }
         if (pipelineInfoMap.isEmpty()) {
             return PipelineViewDict.EMPTY
         }
@@ -483,7 +483,8 @@ class PipelineViewGroupService @Autowired constructor(
                         PipelineViewDict.ViewInfo.PipelineInfo(
                             pipelineId = it.pipelineId,
                             pipelineName = it.pipelineName,
-                            viewId = PIPELINE_VIEW_UNCLASSIFIED
+                            viewId = PIPELINE_VIEW_UNCLASSIFIED,
+                            delete = it.delete
                         )
                     }
             )
@@ -502,7 +503,8 @@ class PipelineViewGroupService @Autowired constructor(
                 PipelineViewDict.ViewInfo.PipelineInfo(
                     pipelineId = pipelineInfo.pipelineId,
                     pipelineName = pipelineInfo.pipelineName,
-                    viewId = viewId
+                    viewId = viewId,
+                    delete = pipelineInfo.delete
                 )
             }
             val viewList = if (view.isProject) projectViewList else personalViewList
@@ -517,7 +519,7 @@ class PipelineViewGroupService @Autowired constructor(
         return PipelineViewDict(personalViewList, projectViewList)
     }
 
-    private fun allPipelineInfos(projectId: String): List<TPipelineInfoRecord> {
+    private fun allPipelineInfos(projectId: String, includeDelete: Boolean): List<TPipelineInfoRecord> {
         val pipelineInfos = mutableListOf<TPipelineInfoRecord>()
         val step = 200
         var offset = 0
@@ -528,7 +530,7 @@ class PipelineViewGroupService @Autowired constructor(
                 projectId = projectId,
                 offset = offset,
                 limit = step,
-                deleteFlag = null
+                deleteFlag = if (includeDelete) null else true
             ) ?: emptyList<TPipelineInfoRecord>()
             if (subPipelineInfos.isEmpty()) {
                 break
@@ -673,8 +675,7 @@ class PipelineViewGroupService @Autowired constructor(
     private fun pipelineRecord2Info(record: TPipelineInfoRecord): PipelineViewPreview.PipelineInfo {
         return PipelineViewPreview.PipelineInfo(
             pipelineId = record.pipelineId,
-            pipelineName = record.pipelineName,
-            delete = record.delete
+            pipelineName = record.pipelineName
         )
     }
 

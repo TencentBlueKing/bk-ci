@@ -16,9 +16,7 @@ data class PipelineViewPreview(
         @ApiModelProperty("名称", required = true)
         val pipelineName: String,
         @ApiModelProperty("ID", required = true)
-        val pipelineId: String,
-        @ApiModelProperty("是否已删除", required = true)
-        val delete: Boolean
+        val pipelineId: String
     )
 
     companion object {
