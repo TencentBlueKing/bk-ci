@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.enums.code.tgit
+package com.tencent.devops.common.webhook.enums.code
 
 enum class StreamGitObjectKind(val value: String) {
     PUSH("push"),

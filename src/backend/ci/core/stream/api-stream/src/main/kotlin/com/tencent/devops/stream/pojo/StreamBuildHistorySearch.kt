@@ -28,7 +28,7 @@
 package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.webhook.enums.code.tgit.StreamGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
