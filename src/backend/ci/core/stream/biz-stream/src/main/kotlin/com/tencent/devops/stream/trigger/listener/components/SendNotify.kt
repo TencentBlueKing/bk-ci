@@ -196,7 +196,7 @@ class SendNotify @Autowired constructor(
                     build = build,
                     isMr = action.metaData.isStreamMr(),
                     requestId = requestId,
-                    openUser = build.userId,
+                    openUser = action.data.eventCommon.userId,
                     buildTime = build.totalTime,
                     gitUrl = streamGitConfig.gitUrl!!,
                     streamUrl = streamGitConfig.streamUrl!!,

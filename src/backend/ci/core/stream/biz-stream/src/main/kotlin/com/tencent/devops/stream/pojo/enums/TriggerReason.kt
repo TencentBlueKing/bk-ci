@@ -62,7 +62,7 @@ enum class TriggerReason(val summary: String, val detail: String) {
     ),
     TRIGGER_NOT_MATCH(
         "Does not meet the trigger condition",
-        "Does not meet the trigger condition"
+        "Does not meet the trigger condition :%s"
     ),
     PIPELINE_RUN_ERROR("Pipeline run with error", "pipeline run with error"),
     PIPELINE_DISABLE("Pipeline is disabled", "Pipeline is disabled"),

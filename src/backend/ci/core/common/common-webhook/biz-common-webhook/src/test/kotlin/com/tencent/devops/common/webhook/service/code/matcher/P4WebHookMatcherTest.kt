@@ -42,11 +42,11 @@ import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.core.io.ClassPathResource
 import java.nio.charset.Charset
-import org.junit.jupiter.api.BeforeEach
 
 class P4WebHookMatcherTest {
     private val repository = CodeP4Repository(
