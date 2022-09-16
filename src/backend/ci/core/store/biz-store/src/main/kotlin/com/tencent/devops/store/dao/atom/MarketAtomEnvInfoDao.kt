@@ -276,8 +276,12 @@ class MarketAtomEnvInfoDao {
             baseStep.set(POST_CONDITION, atomPostInfo?.postCondition)
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_ID.eq(atomId))
-            atomEnvRequest.osName?.let { conditions.add(OS_NAME.eq(it)) }
-            atomEnvRequest.osArch?.let { conditions.add(OS_ARCH.eq(it)) }
+            if (!atomEnvRequest.osName.isNullOrBlank()) {
+                conditions.add(OS_NAME.eq(atomEnvRequest.osName))
+            }
+            if (!atomEnvRequest.osArch.isNullOrBlank()) {
+                conditions.add(OS_ARCH.eq(atomEnvRequest.osArch))
+            }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, atomEnvRequest.userId)
                 .where(conditions)
