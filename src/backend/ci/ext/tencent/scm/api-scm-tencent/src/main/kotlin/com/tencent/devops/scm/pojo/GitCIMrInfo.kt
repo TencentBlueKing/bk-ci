@@ -52,10 +52,10 @@ import io.swagger.annotations.ApiModelProperty
     "author": {
         "id": 100936,
         "username": "ruotiantang",
-        "web_url": "http://dev.git.woa.com/u/ruotiantang",
+        "web_url": "http://xxx.com/u/ruotiantang",
         "name": "ruotiantang",
         "state": "active",
-        "avatar_url": "http://dev.git.woa.com/assets/images/avatar/no_user_avatar.png"
+        "avatar_url": "http://xxx.com/assets/images/avatar/no_user_avatar.png"
     },
     "merge_commit_sha": null,
     "milestone": null,
