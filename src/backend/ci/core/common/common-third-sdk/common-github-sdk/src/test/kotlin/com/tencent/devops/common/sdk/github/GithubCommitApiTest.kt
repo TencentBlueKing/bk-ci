@@ -31,8 +31,10 @@ package com.tencent.devops.common.sdk.github
 import com.tencent.devops.common.sdk.github.request.CompareTwoCommitsRequest
 import com.tencent.devops.common.sdk.github.request.GetCommitRequest
 import com.tencent.devops.common.sdk.github.request.ListCommitRequest
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
+@Disabled
 class GithubCommitApiTest : GithubApiTest() {
 
     @Test

@@ -590,7 +590,8 @@ class TGitMrActionGit(
                 repoType = ScmType.CODE_TGIT.name,
                 commitTime = commitTime,
                 eventType = CodeEventType.MERGE_REQUEST.name,
-                mrId = event().object_attributes.id.toString()
+                mrId = event().object_attributes.id.toString(),
+                action = event().object_attributes.action
             )
         }
     }

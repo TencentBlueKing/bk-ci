@@ -25,28 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package upgrade
+package com.tencent.devops.repository.api
 
-import (
-	"testing"
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-)
-
-func Test_startUpgrader_01(t *testing.T) {
-	err := runUpgrader(config.ActionUpgrade)
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("success")
-}
-
-func Test_startUpgrader_02(t *testing.T) {
-	err := runUpgrader(config.ActionUninstall)
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("success")
+@Path("/op/repo/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OPRepositoryResource {
+    @ApiOperation("用于对数据库表填充哈希值")
+    @POST
+    @Path("/addhashid")
+    fun addHashId()
 }

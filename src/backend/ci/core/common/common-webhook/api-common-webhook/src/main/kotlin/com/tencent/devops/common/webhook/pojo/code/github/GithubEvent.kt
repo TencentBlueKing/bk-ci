@@ -72,7 +72,7 @@ data class GithubCommitter(
     @JsonProperty("name")
     val name: String, // GitHub
     @JsonProperty("username")
-    val username: String // web-flow
+    val username: String? // web-flow
 )
 
 @Suppress("ALL")

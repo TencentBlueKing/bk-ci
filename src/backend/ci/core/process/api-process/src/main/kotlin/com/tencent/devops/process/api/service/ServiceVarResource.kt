@@ -57,7 +57,7 @@ interface ServiceVarResource {
         @ApiParam(value = "变量名称", required = false)
         @QueryParam("varName")
         varName: String?,
-        @ApiParam(value = "流水线ID", required = true)
+        @ApiParam(value = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?
     ): Result<Map<String, String>>

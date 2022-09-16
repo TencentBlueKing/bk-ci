@@ -29,8 +29,10 @@
 package com.tencent.devops.common.sdk.github
 
 import com.tencent.devops.common.sdk.github.request.CreateIssueCommentRequest
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
+@Disabled
 class GithubIssueTest : GithubApiTest() {
 
     @Test

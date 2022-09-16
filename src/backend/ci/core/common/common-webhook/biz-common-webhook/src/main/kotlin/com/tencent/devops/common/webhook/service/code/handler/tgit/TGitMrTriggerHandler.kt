@@ -326,7 +326,8 @@ class TGitMrTriggerHandler(
                 repoType = ScmType.CODE_TGIT.name,
                 commitTime = commitTime,
                 eventType = CodeEventType.MERGE_REQUEST.name,
-                mrId = mrId.toString()
+                mrId = mrId.toString(),
+                action = event.object_attributes.action
             )
         }
     }

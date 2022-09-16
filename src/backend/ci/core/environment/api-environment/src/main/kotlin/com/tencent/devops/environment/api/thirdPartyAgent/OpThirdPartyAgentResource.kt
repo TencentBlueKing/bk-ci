@@ -135,7 +135,9 @@ interface OpThirdPartyAgentResource {
     @Path("/agents/setForceUpdateAgents")
     fun setForceUpdateAgents(
         @ApiParam("agentIds", required = true)
-        agentIds: List<Long>
+        agentIds: List<Long>,
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
     ): Result<Boolean>
 
     @ApiOperation("取消agent强制升级")
@@ -143,25 +145,35 @@ interface OpThirdPartyAgentResource {
     @Path("/agents/unsetForceUpdateAgents")
     fun unsetForceUpdateAgents(
         @ApiParam("agentIds", required = true)
-        agentIds: List<Long>
+        agentIds: List<Long>,
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
     ): Result<Boolean>
 
     @ApiOperation("获取所有强制升级agent")
     @POST
     @Path("/agents/getAllForceUpgradeAgents")
-    fun getAllForceUpgradeAgents(): Result<List<Long>>
+    fun getAllForceUpgradeAgents(
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<List<Long>>
 
     @ApiOperation("取消所有强制升级agent")
     @POST
     @Path("/agents/cleanAllForceUpgradeAgents")
-    fun cleanAllForceUpgradeAgents(): Result<Boolean>
+    fun cleanAllForceUpgradeAgents(
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<Boolean>
 
     @ApiOperation("设置agent锁定升级")
     @POST
     @Path("/agents/setLockUpdateAgents")
     fun setLockUpdateAgents(
         @ApiParam("agentIds", required = true)
-        agentIds: List<Long>
+        agentIds: List<Long>,
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
     ): Result<Boolean>
 
     @ApiOperation("取消agent锁定升级")
@@ -169,18 +181,26 @@ interface OpThirdPartyAgentResource {
     @Path("/agents/unsetLockUpdateAgents")
     fun unsetLockUpdateAgents(
         @ApiParam("agentIds", required = true)
-        agentIds: List<Long>
+        agentIds: List<Long>,
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
     ): Result<Boolean>
 
     @ApiOperation("获取所有强制锁定agent")
     @POST
     @Path("/agents/getAllLockUpgradeAgents")
-    fun getAllLockUpgradeAgents(): Result<List<Long>>
+    fun getAllLockUpgradeAgents(
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<List<Long>>
 
     @ApiOperation("取消所有强制锁定agent")
     @POST
     @Path("/agents/cleanAllLockUpgradeAgents")
-    fun cleanAllLockUpgradeAgents(): Result<Boolean>
+    fun cleanAllLockUpgradeAgents(
+        @QueryParam("upgradeType")
+        agentUpgradeType: String?
+    ): Result<Boolean>
 
     @ApiOperation("设置Agent网关")
     @POST

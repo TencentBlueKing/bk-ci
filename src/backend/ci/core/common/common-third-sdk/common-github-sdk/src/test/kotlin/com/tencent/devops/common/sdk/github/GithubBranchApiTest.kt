@@ -30,8 +30,10 @@ package com.tencent.devops.common.sdk.github
 
 import com.tencent.devops.common.sdk.github.request.GetBranchRequest
 import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
+@Disabled
 class GithubBranchApiTest : GithubApiTest() {
 
     @Test

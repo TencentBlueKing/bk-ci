@@ -43,7 +43,9 @@ import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -78,7 +80,11 @@ class TGitWebHookStartParam @Autowired constructor(
                 matchResult.extra[MATCH_BRANCH] ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
             startParams[BK_REPO_WEBHOOK_REPO_AUTH_USER] =
-                gitScmService.getRepoAuthUser(projectId = projectId, repo = repo)
+                if (repo is CodeTGitRepository && repo.authType == RepoAuthType.OAUTH) {
+                    repo.userName
+                } else {
+                    gitScmService.getRepoAuthUser(projectId = projectId, repo = repo)
+                }
             startParams.putAll(
                 matcher.retrieveParams(
                     projectId = projectId,

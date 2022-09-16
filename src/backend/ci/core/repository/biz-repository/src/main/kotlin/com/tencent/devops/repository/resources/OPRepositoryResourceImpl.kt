@@ -25,16 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package installer
+package com.tencent.devops.repository.resources
 
-import (
-	"testing"
-)
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.OPRepositoryResource
+import com.tencent.devops.repository.service.OPRepositoryService
+import org.springframework.beans.factory.annotation.Autowired
 
-func Test_DoInstallAgent_01(t *testing.T) {
-	err := DoInstallAgent()
-	if err != nil {
-		t.Error("err: ", err.Error())
-	}
-	t.Log("done")
+@RestResource
+class OPRepositoryResourceImpl @Autowired constructor(
+    private val opRepositoryService: OPRepositoryService
+) : OPRepositoryResource {
+    override fun addHashId() {
+        opRepositoryService.addHashId()
+    }
 }

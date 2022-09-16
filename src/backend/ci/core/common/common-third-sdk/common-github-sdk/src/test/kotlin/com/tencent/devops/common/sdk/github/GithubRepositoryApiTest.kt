@@ -36,8 +36,10 @@ import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
 import com.tencent.devops.common.sdk.github.request.SearchRepositoriesRequest
 import com.tencent.devops.common.sdk.util.SdkJsonUtil
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
+@Disabled
 class GithubRepositoryApiTest : GithubApiTest() {
 
     @Test
