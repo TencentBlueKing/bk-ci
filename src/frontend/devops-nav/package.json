@@ -60,7 +60,7 @@
     "typescript": "3.4.5",
     "vue-loader": "^15.9.8",
     "vue-template-compiler": "2.6.12",
-    "webpack": "^5.58.1"
+    "webpack": "5.58.1"
   },
   "dependencies": {
     "@icon-cool/bk-icon-devops": "^0.1.13",
