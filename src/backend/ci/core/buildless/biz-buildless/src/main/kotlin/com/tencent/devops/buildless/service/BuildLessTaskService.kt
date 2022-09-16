@@ -78,7 +78,8 @@ class BuildLessTaskService(
                         return AsyncResult(buildLessTask)
                     } catch (e: Exception) {
                         // 异常时任务重新回队列
-                        logger.info("****> container: $containerId claim buildLessTask: $buildLessTask get error, retry.", e)
+                        logger.info("****> container: $containerId claim buildLessTask: $buildLessTask get error, " +
+                                        "retry.", e)
                         redisUtils.leftPushBuildLessReadyTask(buildLessTask)
 
                         continue
