@@ -280,6 +280,19 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(contract)
             .requestInterceptor(requestInterceptor)
+            .retryer(object : Retryer.Default() {
+                override fun clone(): Retryer {
+                    return this
+                }
+
+                override fun continueOrPropagate(e: RetryableException) {
+                    if (e.method() != Request.HttpMethod.GET) {
+                        throw e
+                    } else {
+                        super.continueOrPropagate(e)
+                    }
+                }
+            })
             .target(
                 MicroServiceTarget(
                     findServiceName(clz),
