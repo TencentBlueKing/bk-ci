@@ -50,9 +50,13 @@ data class AtomBuildArchiveElement(
     @ApiModelProperty("插件自定义UI前端文件上传至仓库的目标路径", required = false)
     val frontendDestPath: String? = "\${atomCode}/\${version}",
     @ApiModelProperty("操作系统名称", required = false)
-    val osName: String? = "\${matrixOsName}",
+    val osName: String? = null,
     @ApiModelProperty("操作系统cpu架构", required = false)
-    val osArch: String? = "\${matrixOsArch}"
+    val osArch: String? = null,
+    @ApiModelProperty("是否有可用的操作系统名称配置", required = false)
+    val validOsNameFlag: String? = null,
+    @ApiModelProperty("是否有可用的操作系统cpu架构配置", required = false)
+    val validOsArchFlag: String? = null
 ) : Element(name, id, status) {
 
     companion object {
