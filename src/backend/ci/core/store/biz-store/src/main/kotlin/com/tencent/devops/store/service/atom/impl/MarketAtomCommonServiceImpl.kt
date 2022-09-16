@@ -672,4 +672,28 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         // 判断是否是默认插件
         return redisOperation.isMember(storePublicFlagKey, atomCode)
     }
+
+    override fun getValidOsNameFlag(atomEnvRequests: List<AtomEnvRequest>): Boolean {
+        // 判断task.json的配置是否有根据操作系统名称来配
+        var validOsNameFlag = false
+        for (atomEnvRequest in atomEnvRequests) {
+            if (!atomEnvRequest.osName.isNullOrBlank()) {
+                validOsNameFlag = true
+                break
+            }
+        }
+        return validOsNameFlag
+    }
+
+    override fun getValidOsArchFlag(atomEnvRequests: List<AtomEnvRequest>): Boolean {
+        // 判断task.json的配置是否有根据操作系统cpu架构名称来配
+        var validOsArchFlag = false
+        for (atomEnvRequest in atomEnvRequests) {
+            if (!atomEnvRequest.osArch.isNullOrBlank()) {
+                validOsArchFlag = true
+                break
+            }
+        }
+        return validOsArchFlag
+    }
 }
