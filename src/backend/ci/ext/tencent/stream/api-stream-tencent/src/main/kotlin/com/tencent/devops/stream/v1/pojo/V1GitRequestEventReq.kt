@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.v1.pojo
 
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
@@ -171,7 +171,7 @@ data class V1GitRequestEventReq(
             }
             else -> {
                 when (objectKind) {
-                    TGitObjectKind.SCHEDULE.value -> {
+                    StreamGitObjectKind.SCHEDULE.value -> {
                         buildSource = commitId.take(9)
                     }
                     else -> {}
@@ -179,10 +179,10 @@ data class V1GitRequestEventReq(
                 // 兼容给list接口有title数据。list接口并没有生成大对象，减少负担
                 when (operationKind) {
                     TGitPushOperationKind.DELETE.value -> {
-                        if (objectKind == TGitObjectKind.PUSH.value) {
+                        if (objectKind == StreamGitObjectKind.PUSH.value) {
                             buildTitle = "Branch $branch deleted by $userId"
                         }
-                        if (objectKind == TGitObjectKind.TAG_PUSH.value) {
+                        if (objectKind == StreamGitObjectKind.TAG_PUSH.value) {
                             buildTitle = "Tag $branch deleted by $userId"
                         }
                     }

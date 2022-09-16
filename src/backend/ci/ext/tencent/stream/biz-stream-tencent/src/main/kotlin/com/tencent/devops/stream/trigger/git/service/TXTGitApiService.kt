@@ -36,8 +36,10 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitChangeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectInfo
+import com.tencent.devops.stream.trigger.git.service.StreamApiUtil.doRetryFun
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -50,12 +52,17 @@ class TXTGitApiService @Autowired constructor(
     private val streamTriggerTokenService: StreamTriggerTokenService
 ) : TGitApiService(client) {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(TXTGitApiService::class.java)
+    }
+
     override fun getGitProjectInfo(
         cred: StreamGitCred,
         gitProjectId: String,
         retry: ApiRequestRetryInfo
     ): TGitProjectInfo? {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get project $gitProjectId fail",
             apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR
@@ -99,6 +106,7 @@ class TXTGitApiService @Autowired constructor(
         retry: ApiRequestRetryInfo
     ): List<TGitChangeFileInfo> {
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "getCommitChangeFileListRetry from: $from to: $to error",
             apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
@@ -125,6 +133,7 @@ class TXTGitApiService @Autowired constructor(
     ): String {
         cred as TGitCred
         return doRetryFun(
+            logger = logger,
             retry = retry,
             log = "$gitProjectId get yaml $fileName from $ref fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
