@@ -41,6 +41,7 @@ import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
+import com.tencent.devops.common.webhook.util.WebhookCacheUtil.cache
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
@@ -94,12 +95,15 @@ class P4ChangeTriggerHandler(
             )
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
-                    val changeFiles = client.get(ServiceP4Resource::class).getChangelistFiles(
-                        projectId = projectId,
-                        repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
-                        repositoryType = repositoryConfig.repositoryType,
-                        change = event.change
-                    ).data?.map { it.depotPathString } ?: emptyList()
+                    val cacheKey = "${repository.aliasName}_${event.change}_p4_change"
+                    val changeFiles = cache(cacheKey) {
+                        client.get(ServiceP4Resource::class).getChangelistFiles(
+                            projectId = projectId,
+                            repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                            repositoryType = repositoryConfig.repositoryType,
+                            change = event.change
+                        ).data?.map { it.depotPathString } ?: emptyList()
+                    }!!
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = PathFilterType.RegexBasedFilter,
