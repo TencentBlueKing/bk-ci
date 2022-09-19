@@ -36,6 +36,7 @@ dependencies {
     api(project(":core:repository:api-repository"))
     api(project(":core:repository:model-repository"))
     api(project(":core:repository:plugin-tapd"))
+    api(project(":core:repository:plugin-github"))
     api(project(":core:common:common-db"))
     api(project(":core:auth:api-auth"))
 

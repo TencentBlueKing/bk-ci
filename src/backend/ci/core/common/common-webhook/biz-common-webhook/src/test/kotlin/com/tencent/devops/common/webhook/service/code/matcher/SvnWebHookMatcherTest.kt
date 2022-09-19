@@ -38,10 +38,10 @@ import com.tencent.devops.common.webhook.service.code.handler.svn.SvnCommitTrigg
 import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 import java.nio.charset.Charset
-import org.junit.jupiter.api.BeforeEach
 
 class SvnWebHookMatcherTest {
     private val repository = CodeSvnRepository(

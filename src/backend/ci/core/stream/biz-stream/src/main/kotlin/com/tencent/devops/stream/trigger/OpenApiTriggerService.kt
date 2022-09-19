@@ -31,9 +31,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -141,7 +143,8 @@ class OpenApiTriggerService @Autowired constructor(
         }
 
         val request =
-            action.buildRequestEvent(triggerBuildReq.payload!!)?.copy(objectKind = TGitObjectKind.OBJECT_KIND_OPENAPI)
+            action.buildRequestEvent(triggerBuildReq.payload!!)
+                ?.copy(objectKind = StreamGitObjectKind.OBJECT_KIND_OPENAPI)
                 ?: throw CustomException(
                     status = Response.Status.BAD_REQUEST,
                     message = "event invalid"
@@ -162,10 +165,11 @@ class OpenApiTriggerService @Autowired constructor(
                 message = "eventType can't be empty"
             )
         }
+        val eventStr = triggerBuildReq.payload!!
 
         return when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> try {
-                objectMapper.readValue<GitEvent>(triggerBuildReq.payload!!)
+                objectMapper.readValue<GitEvent>(eventStr)
             } catch (ignore: Exception) {
                 logger.warn(
                     "OpenApiTriggerService|mockWebhookTrigger" +
@@ -175,6 +179,19 @@ class OpenApiTriggerService @Autowired constructor(
                     status = Response.Status.BAD_REQUEST,
                     message = "Fail to parse the git web hook commit event, errMsg: ${ignore.message}"
                 )
+            }
+            ScmType.GITHUB -> {
+                when (triggerBuildReq.eventType) {
+                    GithubPushEvent.classType -> objectMapper.readValue<GithubPushEvent>(eventStr)
+                    GithubPullRequestEvent.classType -> objectMapper.readValue<GithubPullRequestEvent>(eventStr)
+                    else -> {
+                        logger.info("Github event(${triggerBuildReq.eventType}) is ignored")
+                        throw CustomException(
+                            status = Response.Status.BAD_REQUEST,
+                            message = "event not support"
+                        )
+                    }
+                }
             }
             else -> throw CustomException(
                 status = Response.Status.BAD_REQUEST,
@@ -199,7 +216,7 @@ class OpenApiTriggerService @Autowired constructor(
             ),
             triggerBuildReq.checkPipelineTrigger
         )
-        val request = action.buildRequestEvent("")?.copy(objectKind = TGitObjectKind.OBJECT_KIND_OPENAPI)
+        val request = action.buildRequestEvent("")?.copy(objectKind = StreamGitObjectKind.OBJECT_KIND_OPENAPI)
             ?: throw CustomException(
                 status = Response.Status.BAD_REQUEST,
                 message = "event invalid"

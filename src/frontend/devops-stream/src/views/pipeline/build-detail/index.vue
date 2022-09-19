@@ -38,6 +38,7 @@
             return {
                 panels: [
                     { label: this.$t('pipeline.buildDetail'), name: 'buildDetail' },
+                    { label: this.$t('pipeline.artifacts'), name: 'buildArtifacts' },
                     { label: this.$t('pipeline.buildReport'), name: 'buildReports' },
                     { label: this.$t('pipeline.buildConfig'), name: 'buildConfig' }
                 ],

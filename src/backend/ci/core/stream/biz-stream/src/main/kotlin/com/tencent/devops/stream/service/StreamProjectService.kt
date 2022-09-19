@@ -221,6 +221,9 @@ class StreamProjectService @Autowired constructor(
                 }
                 page += 1
             } while (list.isNotEmpty() && page < 3)
+            if (projectList.isEmpty()) {
+                return emptyList()
+            }
             val updateLock = RedisLock(redisOperation, getProjectListLockKey(userId), 10)
             updateLock.lock()
             try {
@@ -268,7 +271,7 @@ class StreamProjectService @Autowired constructor(
             } else {
                 size - 1
             }
-        )?.map { it.removePrefix("git_").toLong() }.let {
+        )?.map { GitCommonUtils.getGitProjectId(it) }.let {
             if (it.isNullOrEmpty()) {
                 return null
             }

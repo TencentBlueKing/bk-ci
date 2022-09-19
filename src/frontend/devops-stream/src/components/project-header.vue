@@ -261,7 +261,8 @@
         border-radius: 50%;
         background-color: red;
         position: relative;
-        left: 4px;
+        left: -6px;
+        top: -5px;
     }
     .choose-project {
         width: 250px;
