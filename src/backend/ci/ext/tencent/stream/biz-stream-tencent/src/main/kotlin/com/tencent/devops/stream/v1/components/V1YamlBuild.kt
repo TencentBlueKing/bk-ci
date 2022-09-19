@@ -67,7 +67,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_REF
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_REPOSITORY
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_REPO_OWNER
@@ -355,7 +355,7 @@ class V1YamlBuild @Autowired constructor(
         val gitToken = client.getScm(ServiceGitResource::class).getToken(gitProjectConf.gitProjectId).data!!
         logger.info("get token from scm success, gitToken: $gitToken")
         val gitCiCodeRepoInput = when (event.objectKind) {
-            TGitObjectKind.PUSH.value -> {
+            StreamGitObjectKind.PUSH.value -> {
                 GitCiCodeRepoInput(
                     repositoryName = gitProjectConf.name,
                     repositoryUrl = gitProjectConf.gitHttpUrl,
@@ -366,7 +366,7 @@ class V1YamlBuild @Autowired constructor(
                     refName = event.commitId
                 )
             }
-            TGitObjectKind.TAG_PUSH.value -> {
+            StreamGitObjectKind.TAG_PUSH.value -> {
                 GitCiCodeRepoInput(
                     repositoryName = gitProjectConf.name,
                     repositoryUrl = gitProjectConf.gitHttpUrl,
@@ -377,7 +377,7 @@ class V1YamlBuild @Autowired constructor(
                     refName = event.branch.removePrefix("refs/tags/")
                 )
             }
-            TGitObjectKind.MERGE_REQUEST.value -> {
+            StreamGitObjectKind.MERGE_REQUEST.value -> {
                 // MR时fork库的源仓库URL会不同，需要单独拿出来处理
                 val gitEvent = objectMapper.readValue<GitEvent>(event.event) as GitMergeRequestEvent
                 GitCiCodeRepoInput(
@@ -402,7 +402,7 @@ class V1YamlBuild @Autowired constructor(
                     hookTargetUrl = gitProjectConf.gitHttpUrl
                 )
             }
-            TGitObjectKind.MANUAL.value -> {
+            StreamGitObjectKind.MANUAL.value -> {
                 GitCiCodeRepoInput(
                     repositoryName = gitProjectConf.name,
                     repositoryUrl = gitProjectConf.gitHttpUrl,

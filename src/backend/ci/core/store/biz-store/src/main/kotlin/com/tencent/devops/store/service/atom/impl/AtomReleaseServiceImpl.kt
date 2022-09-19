@@ -451,8 +451,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 userId = userId,
                 atomFeatureRequest = AtomFeatureRequest(atomCode = atomCode, qualityFlag = qualityFlag)
             )
-
-            asyncHandleUpdateAtom(context = context, atomId = atomId, userId = userId, branch = branch)
+            asyncHandleUpdateAtom(
+                context = context,
+                atomId = atomId,
+                userId = userId,
+                branch = branch,
+                validOsNameFlag = marketAtomCommonService.getValidOsNameFlag(atomEnvRequests),
+                validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(atomEnvRequests)
+            )
         }
         return Result(atomId)
     }
@@ -473,7 +479,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         context: DSLContext,
         atomId: String,
         userId: String,
-        branch: String? = null
+        branch: String? = null,
+        validOsNameFlag: Boolean? = null,
+        validOsArchFlag: Boolean? = null
     )
 
     private fun updateMarketAtom(
@@ -505,6 +513,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         val atomPackageSourceType = getAtomPackageSourceType()
         if (atomPackageSourceType != AtomPackageSourceTypeEnum.UPLOAD) {
+            if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE.releaseType.toByte()) {
+                marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
+            }
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
         // 通过websocket推送状态变更消息
