@@ -499,6 +499,7 @@ class NodeService @Autowired constructor(
     }
 
     fun addHashId() {
+        logger.info("OPRepositoryService:begin addHashId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
             1,
@@ -509,12 +510,14 @@ class NodeService @Autowired constructor(
             ThreadPoolExecutor.AbortPolicy()
         )
         threadPoolExecutor.submit {
+            logger.info("OPRepositoryService:begin addHashId threadPoolExecutor-----------")
             var offset = 0
             val limit = 1000
             try {
                 do {
                     val envRecords = envDao.getAllEnv(dslContext, limit, offset)
                     val envSize = envRecords?.size
+                    logger.info("envSize:$envSize")
                     envRecords?.map {
                         val id = it.value1()
                         val hashId = HashUtil.encodeLongId(it.value1())
@@ -526,6 +529,7 @@ class NodeService @Autowired constructor(
                 do {
                     val nodeRecords = nodeDao.getAllNode(dslContext, limit, offset)
                     val nodeSize = nodeRecords?.size
+                    logger.info("nodeSize:$nodeSize")
                     nodeRecords?.map {
                         val id = it.value1()
                         val hashId = HashUtil.encodeLongId(it.value1())
