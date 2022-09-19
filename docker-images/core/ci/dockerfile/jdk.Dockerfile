@@ -1,12 +1,23 @@
-FROM konajdk/konajdk:8-tlinux
+FROM centos:7
 
 LABEL maintainer="Tencent BlueKing Devops"
+
+# 安装JDK
+RUN mkdir -p /data && \
+    cd /data/ &&\
+    curl -OL https://github.com/Tencent/TencentKona-8/releases/download/8.0.11-GA/TencentKona8.0.11.b2_jdk_linux-x86_64_8u345.tar.gz &&\
+    tar -xzf TencentKona8.0.11.b2_jdk_linux-x86_64_8u345.tar.gz &&\
+    rm -f TencentKona8.0.11.b2_jdk_linux-x86_64_8u345.tar.gz
+ENV JAVA_HOME=/data/TencentKona-8.0.11-345
+ENV PATH=${JAVA_HOME}/bin:$PATH
+ENV CLASSPATH=.:${JAVA_HOME}/lib
 
 # yum安装软件
 RUN yum install -y procps && \
     yum install -y vi && \
     yum install -y vim && \
-    yum install -y less
+    yum install -y less && \
+    yum install -y wget
 
 # 第三方工具
 RUN mkdir -p /data/tools && \
