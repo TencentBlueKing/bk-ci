@@ -348,7 +348,12 @@ class GitScmService @Autowired constructor(
     }
 
     private fun getToken(projectId: String, credentialId: String, userName: String, authType: TokenTypeEnum): String {
-        return cache(credentialId) {
+        val cacheKey = if (authType == TokenTypeEnum.OAUTH) {
+            "${userName}_token"
+        } else {
+            "${projectId}_${credentialId}_token"
+        }
+        return cache(cacheKey) {
             if (authType == TokenTypeEnum.OAUTH) {
                 client.get(ServiceOauthResource::class).gitGet(userName).data?.accessToken ?: ""
             } else {
