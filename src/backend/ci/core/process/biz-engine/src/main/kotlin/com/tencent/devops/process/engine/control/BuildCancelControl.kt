@@ -141,7 +141,12 @@ class BuildCancelControl @Autowired constructor(
 
             if (pendingStage != null) {
                 if (pendingStage.status.isPause()) { // 处于审核暂停的Stage需要走取消Stage逻辑
-                    pipelineStageService.cancelStageBySystem(event.userId, pendingStage, timeout = false)
+                    pipelineStageService.cancelStageBySystem(
+                        userId = event.userId,
+                        buildInfo = buildInfo,
+                        buildStage = pendingStage,
+                        timeout = false
+                    )
                 } else {
                     pendingStage.dispatchEvent(event)
                 }
@@ -201,7 +206,13 @@ class BuildCancelControl @Autowired constructor(
         val projectId = event.projectId
         val pipelineId = event.pipelineId
         val buildId = event.buildId
-        val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, pipelineId, buildId) }
+        val variables: Map<String, String> by lazy {
+            buildVariableService.getAllVariable(
+                projectId,
+                pipelineId,
+                buildId
+            )
+        }
         val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId) }
         val stages = model.stages
         stages.forEachIndexed nextStage@{ index, stage ->

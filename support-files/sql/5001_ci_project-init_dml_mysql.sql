@@ -154,7 +154,9 @@ REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESS
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('d7392d9e8087479abd6b1924eaa5af59', '2101106', '01', '流水线: Stage[{0}]不存在', 'Pipeline: Stage[{0}] is not exists!');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('0880fb89551d41008da661b3a3cf6a5f', '2101107', '01', '流水线：流水线的定时Quartz任务删除失败', 'Pipeline: Pipeline scheduled Quartz task deletion fails');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('166325c97da54011a09090436674b8a6', '2101108', '01', '流水线: Stage[{0}]未处于等待审核', 'Pipeline: Stage [{0}] is not pending review');
-REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('3083340f431749fe8ef9648a22db2675', '2101109', '01', '流水线: 执行条件表达式解析失败', 'Failed to execute conditional expression parsing');
+REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('3083340f431749fe8ef9648a22db2675', '2101109', '01', '流水线: 执行条件表达式解析失败', 'Pipeline: Failed to execute conditional expression parsing');
+REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('0af510843b68440d9b44ea69d9899804', '2101110', '01', '流水线: 触发审核中已被拒绝', 'Pipeline: Rejected in trigger review.');
+REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('65ffa115bbac487c9f3c8d7df7bb1b0c', '2101110', '01', '流水线: 触发不在审核状态中', 'Pipeline: Trigger not under review status.');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('290fef5c80df4bb9a67ebda4e78bd627', '2101121', '01', '流水线：环境名未初始化', 'Pipeline: EnvName is not init');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('844a39e665504e7a8e78820e27601673', '2101122', '01', '流水线：环境ID未初始化', 'Pipeline: EnvId is not init');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('9771658348b4461a9f0fa82ffb4b0e75', '2101123', '01', '流水线：以下这些环境名称不存在,请重新修改流水线！', 'Pipeline: Pipeline: The following environment names do not exist, please modify the pipeline again! $ noExistsEnvNames');
@@ -605,3 +607,17 @@ REPLACE INTO `T_DATA_SOURCE`(`ID`, `MODULE_CODE`, `DATA_SOURCE_NAME`, `FULL_FLAG
 
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES('a9fcc14f1c3f49b6b77bd7bc73dd5206','2101080','01','项目[{0}]已禁用，不能启动', '項目[{0}]已禁用，不能啟動', 'Project [{0}] has disabled and cannot be started');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES('38768ac97fa44427b6f40835ccbe8431','2100021','00','[API permission denied]插件[{0}]无权限使用接口[{1}]，请先在插件工作台 -> 插件基本设置中申请接口使用权限', '[API permission denied]插件[{0}]無權限使用接口[{1}]，請先在插件工作台 -> 插件基本設置中申請接口使用權限', '[API permission denied]The plugin [{0}] does not have permission to use the interface [{1}], please apply for the permission to use the interface in the plugin workbench -> basic settings of the plugin');
+
+-- ID管理配置初始化
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('ATOM_FAIL_SUMMARY_DATA', 1, 100, '插件失败汇总数据ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('ATOM_FAIL_DETAIL_DATA', 1, 1000, '插件失败详情数据ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('ATOM_OVERVIEW_DATA', 1, 100, '插件概览数据ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('PIPELINE_STAGE_DETAIL_DATA', 1, 2000, '流水线stage详情数据ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('PIPELINE_FAIL_SUMMARY_DATA', 1, 500, '流水线失败汇总数据ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('PIPELINE_FAIL_DETAIL_DATA', 1, 1000, '流水线失败详情数据ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('PIPELINE_OVERVIEW_DATA', 1, 100, '流水线概览数据ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('METRICS_ERROR_CODE_INFO', 1, 50, 'metris错误码ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('METRICS_ERROR_TYPPE_DICT', 1, 10, 'metris错误类型ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('METRICS_PROJECT_PIPELINE_LABEL_INFO', 1, 50, 'metris项目标签ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('METRICS_PROJECT_THIRD_PLATFORM_DATA', 1, 100, 'metris项目下第三方平台ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('ATOM_DISPLAY_CONFIG', 1, 100, '项目下展示插件配置ID管理');

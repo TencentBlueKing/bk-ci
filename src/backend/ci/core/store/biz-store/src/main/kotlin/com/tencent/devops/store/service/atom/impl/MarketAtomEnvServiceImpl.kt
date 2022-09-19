@@ -331,13 +331,13 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             if (atomBaseInfoRecord == null) {
                 null
             } else {
+                val tAtom = TAtom.T_ATOM
                 val atomEnvInfoRecord = getAtomEnvInfoRecord(
-                    atomId = atomId,
+                    atomId = atomBaseInfoRecord[tAtom.ID],
                     osName = osName,
                     osArch = osArch,
                     convertOsFlag = convertOsFlag
                 )
-                val tAtom = TAtom.T_ATOM
                 val status = atomBaseInfoRecord[tAtom.ATOM_STATUS] as Byte
                 val createTime = atomBaseInfoRecord[tAtom.CREATE_TIME] as LocalDateTime
                 val updateTime = atomBaseInfoRecord[tAtom.UPDATE_TIME] as LocalDateTime

@@ -139,12 +139,12 @@ class StreamUserMessageDao {
     fun readAllMessage(
         dslContext: DSLContext,
         userId: String?,
-        projectId: String
+        projectCode: String
     ): Int {
         with(TGitUserMessage.T_GIT_USER_MESSAGE) {
             val dsl = dslContext.update(this)
                 .set(HAVE_READ, true)
-                .where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectCode))
             if (!userId.isNullOrBlank()) {
                 dsl.and(USER_ID.eq(userId))
             }
