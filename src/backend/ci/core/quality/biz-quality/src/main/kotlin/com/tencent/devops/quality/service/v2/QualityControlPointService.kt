@@ -29,8 +29,6 @@ package com.tencent.devops.quality.service.v2
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.model.quality.tables.records.TQualityControlPointRecord
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint

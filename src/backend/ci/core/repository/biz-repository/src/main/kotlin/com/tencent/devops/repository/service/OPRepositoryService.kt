@@ -28,8 +28,6 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.repository.dao.RepositoryDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
