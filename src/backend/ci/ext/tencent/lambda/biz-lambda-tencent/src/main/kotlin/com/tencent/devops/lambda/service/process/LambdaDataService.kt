@@ -204,7 +204,8 @@ class LambdaDataService @Autowired constructor(
                         mrId = mergeRequestId,
                         url = url,
                         eventType = eventType,
-                        channel = channel
+                        channel = channel,
+                        action = action
                     )
                 }
                 checkParamBlank(lambdaKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
