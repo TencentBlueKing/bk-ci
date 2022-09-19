@@ -31,7 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -165,8 +165,8 @@ abstract class V1YamlBaseBuild<T> @Autowired constructor(
             // 成功构建的添加 流水线-分支 记录
             if (!event.isFork() &&
                 (
-                    event.objectKind == TGitObjectKind.PUSH.value ||
-                        event.objectKind == TGitObjectKind.MERGE_REQUEST.value
+                    event.objectKind == StreamGitObjectKind.PUSH.value ||
+                        event.objectKind == StreamGitObjectKind.MERGE_REQUEST.value
                     )
             ) {
                 streamPipelineBranchService.saveOrUpdate(
@@ -176,7 +176,7 @@ abstract class V1YamlBaseBuild<T> @Autowired constructor(
                 )
             }
             // 推送启动构建消息,当人工触发时不推送构建消息
-            if (event.objectKind != TGitObjectKind.OBJECT_KIND_MANUAL) {
+            if (event.objectKind != StreamGitObjectKind.OBJECT_KIND_MANUAL) {
                 scmClient.pushCommitCheck(
                     commitId = event.commitId,
                     description = event.description ?: "",

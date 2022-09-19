@@ -34,11 +34,11 @@ import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
@@ -59,6 +59,7 @@ class StreamOpenApiAction(
     }
 
     override fun getProjectCode(gitProjectId: String?) = action.getProjectCode()
+    override fun getGitProjectIdOrName(gitProjectId: String?) = action.getGitProjectIdOrName(gitProjectId)
 
     override fun getGitCred(personToken: String?) = action.getGitCred()
 
@@ -87,7 +88,7 @@ class StreamOpenApiAction(
     fun getStartParams(scmType: ScmType): Map<String, String> {
         return when (scmType) {
             ScmType.CODE_GIT -> {
-                TGitActionCommon.getStartParams(
+                GitActionCommon.getStartParams(
                     action = action,
                     triggerOn = TriggerBuilder.buildManualTriggerOn(action.metaData.streamObjectKind)
                 )

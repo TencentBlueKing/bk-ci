@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.stream.api.user.UserStreamGitResource
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_CI_FILE_DIR
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_FILE_SUFFIX
 import com.tencent.devops.stream.permission.StreamPermissionService
@@ -61,7 +62,8 @@ class UserStreamGitResourceImpl @Autowired constructor(
     private val streamProjectService: StreamProjectService,
     private val streamGitTransferService: StreamGitTransferService,
     private val streamRequestService: StreamRequestService,
-    private val streamPipelineService: StreamPipelineService
+    private val streamPipelineService: StreamPipelineService,
+    private val streamGitConfig: StreamGitConfig
 ) : UserStreamGitResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserStreamGitResourceImpl::class.java)
@@ -72,17 +74,19 @@ class UserStreamGitResourceImpl @Autowired constructor(
             return Result(data = null)
         }
         val projectInfo = streamGitService.getProjectInfo(gitProjectId) ?: return Result(null)
+        val projectCode = GitCommonUtils.getCiProjectId(
+            gitProjectId = projectInfo.gitProjectId,
+            scmType = streamGitConfig.getScmType()
+        )
         // 增加用户访问记录
         streamProjectService.addUserProjectHistory(
             userId = userId,
-            projectId = GitCommonUtils.getCiProjectId(
-                gitProjectId = projectInfo.gitProjectId
-            )
+            projectId = projectCode
         )
         val routerTag = client.get(ServiceProjectResource::class).get(
-            englishName = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId)
+            englishName = projectCode
         ).data?.routerTag
-        return Result(projectInfo.copy(routerTag = routerTag))
+        return Result(projectInfo.copy(routerTag = routerTag, projectCode = projectCode))
     }
 
     override fun getGitCodeProjectMembers(

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.v1.service
 
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamWebsocketService
 import com.tencent.devops.stream.v1.client.V1ScmClient
@@ -114,7 +114,7 @@ class V1GitCIEventService @Autowired constructor(
             ?: throw RuntimeException("can't find gitBasicSetting $gitProjectId")
         // 人工触发不发送
         if (gitBasicSetting.enableCommitCheck &&
-            event.objectKind != TGitObjectKind.MANUAL.value && sendCommitCheck
+            event.objectKind != StreamGitObjectKind.MANUAL.value && sendCommitCheck
         ) {
             val realBlock = gitBasicSetting.enableMrBlock && commitCheckBlock
             scmClient.pushCommitCheckWithBlock(

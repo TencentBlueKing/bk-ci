@@ -176,7 +176,7 @@ class RepositoryDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryType:
-        ScmType?
+            ScmType?
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             return when (repositoryType) {

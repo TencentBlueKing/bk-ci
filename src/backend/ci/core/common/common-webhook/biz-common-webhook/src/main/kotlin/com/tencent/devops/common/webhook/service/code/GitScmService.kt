@@ -206,13 +206,14 @@ class GitScmService @Autowired constructor(
                     page = i,
                     pageSize = 100
                 ).data ?: emptyList()
-                changeSet.addAll(result.map {
-                    if (it.deletedFile) {
-                        it.oldPath
-                    } else {
-                        it.newPath
+                changeSet.addAll(
+                    result.map {
+                        if (it.deletedFile) {
+                            it.oldPath
+                        } else {
+                            it.newPath
+                        }
                     }
-                }
                 )
                 if (result.size < 100) {
                     break

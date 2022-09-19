@@ -54,7 +54,7 @@ interface ServiceMeasurePipelineResource {
         @ApiParam("项目ID", required = true)
         @QueryParam("projectId")
         projectId: Set<String>,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<List<Pipeline>>

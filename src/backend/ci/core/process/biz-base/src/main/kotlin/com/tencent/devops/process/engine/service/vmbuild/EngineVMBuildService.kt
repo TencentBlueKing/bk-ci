@@ -48,11 +48,13 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
 import com.tencent.devops.process.engine.common.VMUtils
@@ -72,6 +74,7 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -608,11 +611,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             // 锁定先 长过期保证降级
             redisOperation.set(tCompleteTaskKey, result.taskId, expiredInSecond = TimeUnit.HOURS.toSeconds(5))
             executeCompleteTaskBus(
-                projectId = projectId,
-                buildId = buildId,
                 result = result,
                 buildInfo = buildInfo,
-                vmSeqId = vmSeqId
+                vmSeqId = vmSeqId,
+                runCondition = buildTask.additionalOptions?.runCondition
             )
         } finally {
             redisOperation.delete(key = tCompleteTaskKey)
@@ -622,12 +624,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     }
 
     private fun executeCompleteTaskBus(
-        projectId: String,
-        buildId: String,
         result: BuildTaskResult,
         buildInfo: BuildInfo,
-        vmSeqId: String
+        vmSeqId: String,
+        runCondition: RunCondition? = null
     ) {
+        val projectId = buildInfo.projectId
+        val buildId = buildInfo.buildId
         // 只要buildResult不为空，都写入到环境变量里面
         if (result.buildResult.isNotEmpty()) {
             LOG.info("ENGINE|$buildId|BCT_ADD_VAR|$projectId| vars=${result.buildResult.size}")
@@ -643,7 +646,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             }
         }
         val errorType = ErrorType.getErrorType(result.errorType)
-        val buildStatus = getCompleteTaskBuildStatus(result, buildId, buildInfo)
+        val buildStatus = getCompleteTaskBuildStatus(
+            result = result,
+            buildInfo = buildInfo,
+            vmSeqId = vmSeqId,
+            runCondition = runCondition
+        )
         val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
             TaskBuildEndParam(
                 projectId = buildInfo.projectId,
@@ -723,32 +731,57 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
     private fun getCompleteTaskBuildStatus(
         result: BuildTaskResult,
-        buildId: String,
-        buildInfo: BuildInfo
+        buildInfo: BuildInfo,
+        vmSeqId: String,
+        runCondition: RunCondition? = null
     ): BuildStatus {
-        return if (result.success) {
-            pipelineTaskService.removeRetryCache(buildId, result.taskId)
-            pipelineTaskService.removeFailTaskVar(
-                buildId = buildId, projectId = buildInfo.projectId,
-                pipelineId = buildInfo.pipelineId, taskId = result.taskId
-            ) // 清理插件错误信息（重试插件成功的情况下）
-            BuildStatus.SUCCEED
-        } else {
-            when {
-                pipelineTaskService.isRetryWhenFail(
-                    projectId = buildInfo.projectId,
-                    taskId = result.taskId,
-                    buildId = buildId
-                ) -> {
-                    BuildStatus.RETRY
-                }
-                else -> { // 记录错误插件信息
-                    pipelineTaskService.createFailTaskVar(
-                        buildId = buildId, projectId = buildInfo.projectId,
-                        pipelineId = buildInfo.pipelineId, taskId = result.taskId
-                    )
-                    if (result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT) BuildStatus.EXEC_TIMEOUT
-                    else BuildStatus.FAILED
+        val buildId = buildInfo.buildId
+        val taskId = result.taskId
+        val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, vmSeqId, false)
+        val cancelFlag = redisOperation.isMember(cancelTaskSetKey, taskId)
+        val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+        if (cancelFlag && failedEvenCancelFlag) {
+            redisOperation.set(
+                key = ContainerUtils.getContainerRunEvenCancelTaskKey(
+                    pipelineId = buildInfo.pipelineId,
+                    buildId = buildInfo.buildId,
+                    containerId = vmSeqId
+                ),
+                value = taskId,
+                expiredInSecond = TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS)
+            )
+        }
+        return when {
+            !failedEvenCancelFlag && cancelFlag -> {
+                // 如果该任务运行时用户点击了取消则将任务的构建状态置为取消状态
+                LOG.warn("ENGINE|$buildId|BCT_CANCEL_NOT_FINISH|${buildInfo.projectId}|job#$vmSeqId|$taskId")
+                BuildStatus.CANCELED
+            }
+            result.success -> {
+                pipelineTaskService.removeRetryCache(buildId, result.taskId)
+                pipelineTaskService.removeFailTaskVar(
+                    buildId = buildId, projectId = buildInfo.projectId,
+                    pipelineId = buildInfo.pipelineId, taskId = result.taskId
+                ) // 清理插件错误信息（重试插件成功的情况下）
+                BuildStatus.SUCCEED
+            }
+            else -> {
+                when {
+                    pipelineTaskService.isRetryWhenFail(
+                        projectId = buildInfo.projectId,
+                        taskId = result.taskId,
+                        buildId = buildId
+                    ) -> {
+                        BuildStatus.RETRY
+                    }
+                    else -> { // 记录错误插件信息
+                        pipelineTaskService.createFailTaskVar(
+                            buildId = buildId, projectId = buildInfo.projectId,
+                            pipelineId = buildInfo.pipelineId, taskId = result.taskId
+                        )
+                        if (result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT) BuildStatus.EXEC_TIMEOUT
+                        else BuildStatus.FAILED
+                    }
                 }
             }
         }
