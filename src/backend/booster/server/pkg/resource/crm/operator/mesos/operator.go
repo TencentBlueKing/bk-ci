@@ -425,6 +425,12 @@ func (o *operator) getJSONFromTemplate(param op.BcsLaunchParam) (string, error) 
 	varMem := o.conf.BcsMemPerInstance
 	varLimitCPU := o.conf.BcsCPUPerInstance
 	varLimitMem := o.conf.BcsMemPerInstance
+	if o.conf.BcsCPULimitPerInstance > 0.0 {
+		varLimitCPU = o.conf.BcsCPULimitPerInstance
+	}
+	if o.conf.BcsMemLimitPerInstance > 0.0 {
+		varLimitMem = o.conf.BcsMemLimitPerInstance
+	}
 	for _, istItem := range o.conf.InstanceType {
 		if !param.CheckQueueKey(istItem) {
 			continue

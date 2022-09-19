@@ -91,12 +91,12 @@ func (s *Server) Start() error {
 
 	// must be launched before others which are observed
 	go func() {
-		err1 := initMetricServer(s.conf)
-		blog.Errorf("metric server failed: %v", err1)
+		err := initMetricServer(s.conf)
+		blog.Errorf("metric server failed: %v", err)
 	}()
 
-	if err1 := s.waitDBReady(); err1 != nil {
-		blog.Infof("wait db ready failed: %v", err1)
+	if err := s.waitDBReady(); err != nil {
+		blog.Infof("wait db ready failed: %v", err)
 		return err
 	}
 	engineList, err := s.initEngineList()
@@ -264,6 +264,7 @@ func (s *Server) waitDBReady() error {
 			return err
 		})
 	}
+
 	if s.conf.K8sResourceConfigList.Enable {
 		pwd, err := encrypt.DesDecryptFromBase([]byte(s.conf.K8sResourceConfigList.MySQLPwd))
 		if err != nil {

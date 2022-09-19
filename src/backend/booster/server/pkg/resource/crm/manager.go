@@ -427,6 +427,7 @@ func (rm *resourceManager) sync() {
 		blog.Errorf("crm: sync resource failed: %v", err)
 		return
 	}
+
 	rm.nodeInfoPool.UpdateResources(nodeInfoList)
 	blog.V(5).Infof(rm.nodeInfoPool.GetStats())
 }
