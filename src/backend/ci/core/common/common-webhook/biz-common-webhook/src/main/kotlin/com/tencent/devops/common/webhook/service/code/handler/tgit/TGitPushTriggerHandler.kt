@@ -180,7 +180,7 @@ class TGitPushTriggerHandler(
                         )
                     ).doFilter(response)
                 }
-             }
+            }
             val pushKindFilter = PushKindFilter(
                 pipelineId = pipelineId,
                 checkCreateAndUpdate = event.create_and_update,
