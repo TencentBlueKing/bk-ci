@@ -52,6 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
+import java.util.Optional
 
 @Configuration
 @ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "weworkRobot")
@@ -117,53 +118,48 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 }
             }
         }
-        val errMsg = doSendRequest(sendRequest)
-        if (errMsg.isNotEmpty()) {
-            logger.warn(
-                "send wework robot message fail : weworkNotifyTextMessage = $weworkNotifyTextMessage " +
-                    "| errorMessage :$errMsg"
-            )
-            saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", false, errMsg)
-        } else {
-            logger.info("send wework robot message success : $weworkNotifyTextMessage")
+        try {
+            doSendRequest(sendRequest)
+            logger.info("send message success, $weworkNotifyTextMessage")
             saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", true, null)
+        } catch (e: Exception) {
+            logger.warn("send message fail, $weworkNotifyTextMessage")
+            saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", false, e.message)
         }
     }
 
-    private fun doSendRequest(requestBodies: List<WeweokRobotBaseMessage>): String {
+    private fun doSendRequest(requestBodies: List<WeweokRobotBaseMessage>) {
         if (requestBodies.isEmpty()) {
             throw OperationException("no message to send")
         }
-        var errMsg = ""
-        requestBodies.map {
-            try {
-                send(it)
-            } catch (e: RemoteServiceException) {
-                errMsg += e
-            }
+        val errMsg = requestBodies.asSequence().map {
+            send(it)
+        }.filter { it.isPresent }.map { it.get().message }.joinToString(", ")
+        if (errMsg.isNotBlank()) {
+            throw RemoteServiceException(errMsg)
         }
-        return errMsg
     }
 
-    private fun send(weworkMessage: WeweokRobotBaseMessage) {
+    private fun send(weworkMessage: WeweokRobotBaseMessage): Optional<Throwable> {
         val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$robotKey")
         val requestBody = JsonUtil.toJson(weworkMessage)
-        OkhttpUtils.doPost(url, requestBody).use {
+        return OkhttpUtils.doPost(url, requestBody).use {
             val responseBody = it.body()?.string() ?: ""
-            logger.info(
-                "sendTextMessage : chatid = ${weworkMessage.chatid} | " +
-                    "responseBody = $responseBody"
-            )
-            val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<WeworkSendMessageResp>())
-            if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
-                throw RemoteServiceException(
-                    httpStatus = it.code(),
-                    responseContent = responseBody,
-                    errorMessage = "send wework robot message failed：errMsg = ${sendMessageResp.errMsg}" +
-                        "|chatid = ${weworkMessage.chatid} ;",
-                    errorCode = sendMessageResp.errCode
-                )
-            }
+            kotlin.runCatching {
+                val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<WeworkSendMessageResp>())
+                if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
+                    throw RemoteServiceException(
+                        httpStatus = it.code(),
+                        responseContent = responseBody,
+                        errorMessage = "send wework robot message failed：errMsg = ${sendMessageResp.errMsg}" +
+                            "|chatid = ${weworkMessage.chatid} ;",
+                        errorCode = sendMessageResp.errCode
+                    )
+                }
+            }.fold({ Optional.empty() }, { e ->
+                logger.warn("${it.request()}|send wework robot message failed, $responseBody")
+                Optional.of(e)
+            })
         }
     }
 
