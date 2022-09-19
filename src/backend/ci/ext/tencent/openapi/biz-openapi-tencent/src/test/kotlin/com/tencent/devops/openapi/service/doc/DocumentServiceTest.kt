@@ -50,15 +50,6 @@ class DocumentServiceTest @Autowired constructor(
         println("${doc.size}|${doc.keys}")
     }
 
-    data class A(
-        val bgId: Int = 2,
-        val bgName: String = "Qwe",
-        val deptId: Int?,
-        val deptName: String?,
-        val centerId: Int = 4,
-        val centerName: String?
-    )
-
     /**
      *  获取所有多态类的实现信息
      */
@@ -96,20 +87,6 @@ class DocumentServiceTest @Autowired constructor(
             res[name] = info
         }
         return res
-    }
-
-    @Test
-    fun getDataClassParameterDefaultTest() {
-        println(
-            getDataClassParameterDefault(
-                Class.forName("DocumentServiceTest\$A")
-            )
-        )
-        println(
-            getDataClassParameterDefault(
-                A::class.java
-            )
-        )
     }
 
     /**
