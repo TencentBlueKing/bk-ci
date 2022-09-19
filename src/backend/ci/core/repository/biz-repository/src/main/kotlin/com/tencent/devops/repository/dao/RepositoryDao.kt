@@ -81,7 +81,7 @@ class RepositoryDao {
                 )
                     .returning(REPOSITORY_ID)
                     .fetchOne()!!.repositoryId
-                val hashId = HashUtil.encodeLongId(repoId)
+                val hashId = HashUtil.encodeOtherLongId(repoId)
                 transactionContext.update(this)
                     .set(REPOSITORY_HASH_ID, hashId)
                     .where(REPOSITORY_ID.eq(repoId))
@@ -176,7 +176,7 @@ class RepositoryDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryType:
-            ScmType?
+        ScmType?
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             return when (repositoryType) {
@@ -354,7 +354,7 @@ class RepositoryDao {
             dslContext.update(this)
                 .set(REPOSITORY_HASH_ID, hashId)
                 .where(REPOSITORY_ID.eq(id))
-                .and(REPOSITORY_HASH_ID.ne(hashId))
+                .and(REPOSITORY_HASH_ID.isNull)
                 .execute()
         }
     }

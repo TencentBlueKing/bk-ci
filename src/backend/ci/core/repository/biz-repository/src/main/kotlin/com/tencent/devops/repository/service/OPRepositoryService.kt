@@ -66,7 +66,7 @@ class OPRepositoryService @Autowired constructor(
                     logger.info("repoSize:$repoSize")
                     repoRecords?.map {
                         val id = it.value1()
-                        val hashId = HashUtil.encodeLongId(it.value1())
+                        val hashId = HashUtil.encodeOtherLongId(it.value1())
                         repositoryDao.updateHashId(dslContext, id, hashId)
                     }
                     offset += limit
