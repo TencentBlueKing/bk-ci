@@ -68,7 +68,7 @@ enum class TriggerReason(val summary: String, val detail: String) {
     PIPELINE_DISABLE("Pipeline is disabled", "Pipeline is disabled"),
     CI_YAML_TEMPLATE_ERROR("YAML template parse error", "YAML template parse error: %s"),
     PIPELINE_PREPARE_ERROR("Pipeline prepare error", "Pipeline prepare error: %s"),
-    CREATE_QUALITY_RULRS_ERROR("Create quality rules error", "Create quality rules error: %s"),
+    CREATE_QUALITY_RULES_ERROR("Create quality rules error", "Create quality rules error: %s"),
     MR_BRANCH_FILE_ERROR(
         "Mr changelist files not incomplete. Stream not trigger.",
         "In the case where the source branch has file %s and the target branch does not, " +
