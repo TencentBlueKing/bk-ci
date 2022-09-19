@@ -583,6 +583,7 @@
     "repoType": "仓库类型",
     "customRepo": "自定义仓库",
     "pipelineRepo": "流水线仓库",
+    "imageRepo": "镜像仓库",
     "noArtifact": "暂时没有任何构件",
     "noDownloadPermTips": "你没有该流水线的下载构件权限，无法下载",
     "qrcode": "二维码",
