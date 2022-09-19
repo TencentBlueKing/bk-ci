@@ -191,6 +191,7 @@
                 left: `${index * 135 + 92}px`
             }))
         }
+
         get recentVisitService (): object[] {
             const recentVisitService = localStorage.getItem('recentVisitService')
             const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
@@ -202,15 +203,18 @@
                 }
             })
         }
+
         get serviceCount (): number {
             return this.services.reduce((sum, service) => {
                 sum += service.children.length
                 return sum
             }, 0)
         }
+
         updateShowAllService (show: boolean): void {
             this.isAllServiceListShow = show
         }
+
         addConsole (link: string): string {
             return urlJoin('/console/', link)
         }
@@ -243,13 +247,16 @@
             }
             document.title = titlesMap[title]
         }
+
         serviceName (name = ''): string {
             const charPos = name.indexOf('(')
             return charPos > -1 ? name.slice(0, charPos) : name
         }
+
         getFullYear () {
             return (new Date()).getFullYear()
         }
+
         created () {
             this.fetchLinks({
                 type: 'news'
