@@ -41,5 +41,5 @@ data class AtomMarketInitPipelineReq(
     @ApiModelProperty("是否有可用的操作系统名称配置", required = false)
     val validOsNameFlag: Boolean? = null,
     @ApiModelProperty("是否有可用的操作系统cpu架构配置", required = false)
-    val validOsArchFlag: Boolean? = null,
+    val validOsArchFlag: Boolean? = null
 )
