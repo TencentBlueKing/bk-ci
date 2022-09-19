@@ -501,7 +501,7 @@ class NodeService @Autowired constructor(
     }
 
     fun addHashId() {
-        val watcher = Watcher(id = "NodeService|addhashid")
+        val startTime = System.currentTimeMillis()
         logger.info("OPRepositoryService:begin addHashId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
@@ -547,7 +547,6 @@ class NodeService @Autowired constructor(
             }
         }
         logger.info("NodeService:finish addHashId-----------")
-        watcher.stop()
-        LogUtils.printCostTimeWE(watcher = watcher)
+        logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 }

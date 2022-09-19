@@ -201,7 +201,7 @@ class QualityControlPointService @Autowired constructor(
     }
 
     fun addHashId() {
-        val watcher = Watcher(id = "QualityControlPointService|addhashid")
+        val startTime = System.currentTimeMillis()
         logger.info("QualityControlPointService:begin addHashId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
@@ -259,8 +259,7 @@ class QualityControlPointService @Autowired constructor(
             }
         }
         logger.info("QualityControlPointService:finish addHashId-----------")
-        watcher.stop()
-        LogUtils.printCostTimeWE(watcher = watcher)
+        logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 
     companion object {

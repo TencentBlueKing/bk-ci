@@ -46,7 +46,7 @@ class OPRepositoryService @Autowired constructor(
     private val dslContext: DSLContext
 ) {
     fun addHashId() {
-        val watcher = Watcher(id = "OPRepositoryService|addhashid")
+        val startTime = System.currentTimeMillis()
         logger.info("OPRepositoryService:begin addHashId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
@@ -80,8 +80,7 @@ class OPRepositoryService @Autowired constructor(
             }
         }
         logger.info("OPRepositoryService:finish addHashId-----------")
-        watcher.stop()
-        LogUtils.printCostTimeWE(watcher = watcher)
+        logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 
     companion object {
