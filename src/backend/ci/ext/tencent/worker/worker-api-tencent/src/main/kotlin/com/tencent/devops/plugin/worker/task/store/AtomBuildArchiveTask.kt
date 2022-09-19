@@ -121,8 +121,8 @@ class AtomBuildArchiveTask : ITask() {
                 )
             }
         }
-        val osName = buildVariable[KEY_OS_NAME]
-        val osArch = buildVariable[KEY_OS_ARCH]
+        val osName = taskParams[KEY_OS_NAME]
+        val osArch = taskParams[KEY_OS_ARCH]
         val validOsNameFlag = buildVariable[KEY_VALID_OS_NAME_FLAG]?.toBoolean()
         val validOsArchFlag = buildVariable[KEY_VALID_OS_ARCH_FLAG]?.toBoolean()
         val finalOsName = if (validOsNameFlag == true) {
@@ -131,9 +131,9 @@ class AtomBuildArchiveTask : ITask() {
             null
         }
         val finalOsArch = if (validOsArchFlag == true) {
-            osName
-        } else {
             osArch
+        } else {
+            null
         }
         val atomEnv = atomEnv(
             projectId = buildVariables.projectId,

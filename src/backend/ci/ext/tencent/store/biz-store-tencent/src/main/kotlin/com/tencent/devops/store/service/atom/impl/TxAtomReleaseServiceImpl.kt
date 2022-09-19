@@ -630,7 +630,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             osNames.add(OSType.LINUX.name.toLowerCase())
         }
         if (osArchs.isEmpty()) {
-            osNames.add("amd64")
+            osArchs.add("amd64")
         }
         if (null == atomPipelineRelRecord) {
             // 为用户初始化构建流水线并触发执行
