@@ -74,7 +74,7 @@ import java.util.Date
  * @version 1.0
  */
 @Service
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "LongMethod")
 class PipelineStageService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
