@@ -27,6 +27,10 @@
 
 package com.tencent.devops.plugin.worker.task.store
 
+import com.tencent.devops.common.api.constant.KEY_OS_ARCH
+import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_ARCH_FLAG
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_NAME_FLAG
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -117,15 +121,26 @@ class AtomBuildArchiveTask : ITask() {
                 )
             }
         }
-        val osName = taskParams["osName"]
-        val osArch = taskParams["osArch"]
-
+        val osName = buildVariable[KEY_OS_NAME]
+        val osArch = buildVariable[KEY_OS_ARCH]
+        val validOsNameFlag = buildVariable[KEY_VALID_OS_NAME_FLAG]?.toBoolean()
+        val validOsArchFlag = buildVariable[KEY_VALID_OS_ARCH_FLAG]?.toBoolean()
+        val finalOsName = if (validOsNameFlag == true) {
+            osName
+        } else {
+            null
+        }
+        val finalOsArch = if (validOsArchFlag == true) {
+            osName
+        } else {
+            osArch
+        }
         val atomEnv = atomEnv(
             projectId = buildVariables.projectId,
             atomCode = atomCode,
             atomVersion = atomVersion,
-            osName = osName,
-            osArch = osArch
+            osName = finalOsName,
+            osArch = finalOsArch
         )
 
         val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID)
@@ -146,8 +161,8 @@ class AtomBuildArchiveTask : ITask() {
             shaContent = fileSha,
             preCmd = atomRunConditionHandleService.handleAtomPreCmd(preCmd, AgentEnv.getOS(), packageName),
             atomPostInfo = atomEnv.atomPostInfo,
-            osName = osName,
-            osArch = osArch
+            osName = finalOsName,
+            osArch = finalOsArch
         )
         val result = atomApi.updateAtomEnv(buildVariables.projectId, atomCode, atomVersion, request)
         if (result.data != null && result.data == true) {
