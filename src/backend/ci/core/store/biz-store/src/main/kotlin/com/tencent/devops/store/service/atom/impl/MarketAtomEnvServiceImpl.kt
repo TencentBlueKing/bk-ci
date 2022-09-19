@@ -57,7 +57,6 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.StoreVersion
-import com.tencent.devops.store.pojo.common.enums.LanguageEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
@@ -422,17 +421,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             defaultAtomEnvInfoRecord = marketAtomEnvInfoDao.getDefaultAtomEnvInfo(dslContext, atomId)
             // 把操作系统名称和cpu架构转换成开发语言对应的格式
             defaultAtomEnvInfoRecord?.language?.let {
-                val language = LanguageEnum.valueOf(it.toUpperCase())
-                // 跨平台语言的环境信息与操作系统和cpu架构无关，故将osName和osArch置为空
-                if (language.isCrossPlatformLanguage()) {
-                    finalOsName = null
-                    finalOsArch = null
-                } else {
-                    val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(it)
-                    osName?.let {
-                        finalOsName = atomBusHandleService.handleOsName(osName)
-                        finalOsArch = osArch?.let { atomBusHandleService.handleOsArch(osName, osArch) }
-                    }
+                val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(it)
+                osName?.let {
+                    finalOsName = atomBusHandleService.handleOsName(osName)
+                    finalOsArch = osArch?.let { atomBusHandleService.handleOsArch(osName, osArch) }
                 }
             }
         }
@@ -500,11 +492,14 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             return Result(atomResult.status, atomResult.message ?: "", false)
         }
         atomEnvRequest.language?.let {
-            val language = LanguageEnum.valueOf(it.toUpperCase())
-            // 跨平台语言的环境信息与操作系统和cpu架构无关，故将osName和osArch置为空
-            if (language.isCrossPlatformLanguage()) {
-                atomEnvRequest.osName = null
-                atomEnvRequest.osArch = null
+            val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(it)
+            val osName = atomEnvRequest.osName
+            val osArch = atomEnvRequest.osArch
+            if (!osName.isNullOrBlank()) {
+                atomEnvRequest.osName = atomBusHandleService.handleOsName(osName)
+            }
+            if (!osName.isNullOrBlank() && !osArch.isNullOrBlank()) {
+                atomEnvRequest.osArch = atomBusHandleService.handleOsArch(osName, osArch)
             }
         }
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
