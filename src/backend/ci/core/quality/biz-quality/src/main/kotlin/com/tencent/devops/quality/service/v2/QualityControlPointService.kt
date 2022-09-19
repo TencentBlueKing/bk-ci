@@ -29,6 +29,8 @@ package com.tencent.devops.quality.service.v2
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.model.quality.tables.records.TQualityControlPointRecord
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
@@ -199,6 +201,7 @@ class QualityControlPointService @Autowired constructor(
     }
 
     fun addHashId() {
+        val watcher = Watcher(id = "QualityControlPointService|addhashid")
         logger.info("QualityControlPointService:begin addHashId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
@@ -255,6 +258,9 @@ class QualityControlPointService @Autowired constructor(
                 threadPoolExecutor.shutdown()
             }
         }
+        logger.info("QualityControlPointService:finish addHashId-----------")
+        watcher.stop()
+        LogUtils.printCostTimeWE(watcher = watcher)
     }
 
     companion object {

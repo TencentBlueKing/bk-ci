@@ -28,6 +28,8 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.repository.dao.RepositoryDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -44,6 +46,7 @@ class OPRepositoryService @Autowired constructor(
     private val dslContext: DSLContext
 ) {
     fun addHashId() {
+        val watcher = Watcher(id = "OPRepositoryService|addhashid")
         logger.info("OPRepositoryService:begin addHashId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
@@ -76,6 +79,9 @@ class OPRepositoryService @Autowired constructor(
                 threadPoolExecutor.shutdown()
             }
         }
+        logger.info("OPRepositoryService:finish addHashId-----------")
+        watcher.stop()
+        LogUtils.printCostTimeWE(watcher = watcher)
     }
 
     companion object {

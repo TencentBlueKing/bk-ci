@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
@@ -499,6 +501,7 @@ class NodeService @Autowired constructor(
     }
 
     fun addHashId() {
+        val watcher = Watcher(id = "NodeService|addhashid")
         logger.info("OPRepositoryService:begin addHashId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
@@ -510,7 +513,7 @@ class NodeService @Autowired constructor(
             ThreadPoolExecutor.AbortPolicy()
         )
         threadPoolExecutor.submit {
-            logger.info("OPRepositoryService:begin addHashId threadPoolExecutor-----------")
+            logger.info("NodeService:begin addHashId threadPoolExecutor-----------")
             var offset = 0
             val limit = 1000
             try {
@@ -543,5 +546,8 @@ class NodeService @Autowired constructor(
                 threadPoolExecutor.shutdown()
             }
         }
+        logger.info("NodeService:finish addHashId-----------")
+        watcher.stop()
+        LogUtils.printCostTimeWE(watcher = watcher)
     }
 }
