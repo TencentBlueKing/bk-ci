@@ -27,16 +27,49 @@
 package com.tencent.devops.lambda.storage
 
 import java.util.regex.Pattern
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
+@Suppress("ComplexCondition")
 class LambdaFuncTest {
     companion object {
-        private val pattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9\\.\\-_]*")
+        private val pattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9\\.\\-_]*[a-zA-Z0-9\\-_]\$")
     }
 
     @Test
     fun variablesMatchTest() {
-        println(pattern.matcher("a123-abc.456-EDF_789").find())
-        println(pattern.matcher("123a-abc.456-EDF_789").find())
+        Assertions.assertEquals(true, pattern.matcher("variables.abc").find())
+        Assertions.assertEquals(true, pattern.matcher("a123-abc.456-EDF_789").find())
+        Assertions.assertEquals(false, pattern.matcher("123a-abc.456-EDF_789").find())
+        Assertions.assertEquals(false, pattern.matcher("variables.这是错的变量").find())
+        Assertions.assertEquals(false, pattern.matcher(".variables.abc.").find())
+    }
+
+    @Test
+    fun variablesExpressionTest() {
+        val variables = mapOf(
+            "xxx" to "666",
+            "xx" to "555",
+            "a.b.c" to "1",
+            "a.b.d" to "1",
+            "a.b" to "2"
+        )
+        val invalidKeyList = mutableSetOf<String>()
+        variables.forEach { (key, _) ->
+            variables.forEach { (another, _) ->
+                if (
+                    key != another &&
+                    !(invalidKeyList.contains(key) && invalidKeyList.contains(another)) &&
+                    (
+                        key.startsWith(another) && key.removePrefix(another).startsWith('.') ||
+                            another.startsWith(key) && another.removePrefix(key).startsWith('.')
+                        )
+                ) {
+                    invalidKeyList.add(key)
+                    invalidKeyList.add(another)
+                }
+            }
+        }
+        println(invalidKeyList)
     }
 }
