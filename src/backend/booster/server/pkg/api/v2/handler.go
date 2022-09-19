@@ -84,6 +84,7 @@ func SendMessage(req *restful.Request, resp *restful.Response) {
 			if err == nil && net.ParseIP(ip) != nil {
 				blog.Infof("send message: request from client(%s) has null project id", ip)
 			}
+			blog.Infof("send message: got null project id, not sent")
 			api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: api.ServerErrSendMessageFailed, Message: err.Error()})
 			return
 		}
