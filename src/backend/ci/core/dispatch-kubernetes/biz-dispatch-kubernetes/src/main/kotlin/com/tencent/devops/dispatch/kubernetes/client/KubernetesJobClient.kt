@@ -69,6 +69,7 @@ class KubernetesJobClient @Autowired constructor(
             )
         ).build()
         val responseBody = OkhttpUtils.doHttp(request).body()!!.string()
+        logger.info("createJob response: ${JsonUtil.toJson(responseBody)}")
         return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 
