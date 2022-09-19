@@ -57,7 +57,7 @@ class OPRepositoryService @Autowired constructor(
         threadPoolExecutor.submit {
             logger.info("OPRepositoryService:begin addHashId threadPoolExecutor-----------")
             var offset = 0
-            val limit = 100
+            val limit = 1000
             try {
                 do {
                     val repoRecords = repositoryDao.getAllRepo(dslContext, limit, offset)
@@ -69,7 +69,7 @@ class OPRepositoryService @Autowired constructor(
                         repositoryDao.updateHashId(dslContext, id, hashId)
                     }
                     offset += limit
-                } while (repoSize == 100)
+                } while (repoSize == 1000)
             } catch (e: Exception) {
                 logger.warn("OpRepositoryService：addHashId failed | $e ")
             } finally {
