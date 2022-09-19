@@ -494,7 +494,7 @@
             },
 
             cleanFilterData () {
-                this.$router.push({ query: { page: 1 } })
+                this.$router.replace({ query: { page: 1 } })
                 this.compactPaging.current = 1
                 this.filterData = {
                     commitMsg: '',

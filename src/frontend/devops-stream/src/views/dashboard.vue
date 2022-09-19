@@ -123,7 +123,6 @@
         },
         data () {
             return {
-                hasNext: true,
                 type: 'MY_PROJECT',
                 limit: 30,
                 searchStr: '',
@@ -171,11 +170,13 @@
                 })
             },
             async getRepoList (page = 1, pageSize = this.limit) {
+                let hasNext = false
                 await common.getStreamProjects(this.type, page, pageSize, this.searchStr).then((res = {}) => {
                     this.repoList = (res.records || []).map(item => ({
                         ...item,
                         avatarUrl: (item.avatarUrl.endsWith('.jpg') || item.avatarUrl.endsWith('.jpeg') || item.avatarUrl.endsWith('.png')) ? (item.avatarUrl.replace('http:', '').replace('https:', '')) : gitcode
                     }))
+                    hasNext = res.hasNext
                 }).catch((err) => {
                     this.$bkMessage({
                         theme: 'error',
@@ -183,7 +184,7 @@
                     })
                 })
                 return {
-                    hasNext: this.hasNext || false,
+                    hasNext,
                     records: this.repoList || []
                 }
             },
@@ -229,10 +230,6 @@
                 }).then(res => {
                     this.updateList()
                     this.getRecentProjects()
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: 'EnableCI successfully'
-                    })
                 }).catch((err) => {
                     this.$bkMessage({
                         theme: 'primary',
