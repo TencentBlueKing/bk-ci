@@ -25,25 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.common
+package com.tencent.devops.misc.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.TxServiceStoreApproveResource
-import com.tencent.devops.store.service.common.TxStoreMoaApproveCallBackService
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 
-@RestResource
-class TxServiceStoreApproveResourceImpl @Autowired constructor(
-    private val txStoreMoaApproveCallBackService: TxStoreMoaApproveCallBackService
-) : TxServiceStoreApproveResource {
-
-    override fun moaApproveCallBack(
-        verifier: String,
-        result: Int,
-        taskId: String,
-        message: String
-    ): Result<Boolean> {
-        return txStoreMoaApproveCallBackService.moaApproveCallBack(verifier, result, taskId, message)
-    }
-}
+@ConstructorBinding
+@ConfigurationProperties(prefix = "build.data.clear")
+data class BasicAuthProperties(
+    val basicAuths: List<BasicAuthConfig> // 流水线构建相关平台配置
+)

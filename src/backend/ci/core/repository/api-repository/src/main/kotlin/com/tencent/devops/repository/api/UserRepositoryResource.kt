@@ -272,7 +272,8 @@ interface UserRepositoryResource {
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
-//
+
+    //
 //
 //    @ApiOperation("是否拥有创建代码库权限")
 // //    @Path("/{projectId}/hasCreatePermission")

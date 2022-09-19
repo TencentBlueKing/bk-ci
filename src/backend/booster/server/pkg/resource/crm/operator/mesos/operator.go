@@ -34,8 +34,8 @@ const (
 	templateVarInstance        = "__crm_instance__"
 	templateVarCPU             = "__crm_cpu__"
 	templateVarMem             = "__crm_mem__"
-	templateRequestVarCPU      = "__crm_request_cpu__"
-	templateRequestVarMem      = "__crm_request_mem__"
+	templateLimitVarCPU        = "__crm_limit_cpu__"
+	templateLimitVarMem        = "__crm_limit_mem__"
 	templateVarConstraint      = "__crm_constraint__"
 	templateVarConstraintKey   = "__crm_constraint_key__"
 	templateVarConstraintValue = "__crm_constraint_value__"
@@ -423,32 +423,38 @@ func (o *operator) getJSONFromTemplate(param op.BcsLaunchParam) (string, error) 
 	data = strings.Replace(data, templateVarInstance, strconv.Itoa(param.Instance), -1)
 	varCPU := o.conf.BcsCPUPerInstance
 	varMem := o.conf.BcsMemPerInstance
-	varRequestCPU := o.conf.BcsCPUPerInstance
-	varRequestMem := o.conf.BcsMemPerInstance
+	varLimitCPU := o.conf.BcsCPUPerInstance
+	varLimitMem := o.conf.BcsMemPerInstance
+	if o.conf.BcsCPULimitPerInstance > 0.0 {
+		varLimitCPU = o.conf.BcsCPULimitPerInstance
+	}
+	if o.conf.BcsMemLimitPerInstance > 0.0 {
+		varLimitMem = o.conf.BcsMemLimitPerInstance
+	}
 	for _, istItem := range o.conf.InstanceType {
 		if !param.CheckQueueKey(istItem) {
 			continue
 		}
 		if istItem.CPUPerInstance > 0.0 {
 			varCPU = istItem.CPUPerInstance
-			varRequestCPU = istItem.CPUPerInstance
+			varLimitCPU = istItem.CPUPerInstance
 		}
 		if istItem.MemPerInstance > 0.0 {
 			varMem = istItem.MemPerInstance
-			varRequestMem = istItem.MemPerInstance
+			varLimitMem = istItem.MemPerInstance
 		}
-		if istItem.CPURequestPerInstance > 0.0 {
-			varRequestCPU = istItem.CPURequestPerInstance
+		if istItem.CPULimitPerInstance > 0.0 {
+			varLimitCPU = istItem.CPULimitPerInstance
 		}
-		if istItem.MemRequestPerInstance > 0.0 {
-			varRequestMem = istItem.MemRequestPerInstance
+		if istItem.MemLimitPerInstance > 0.0 {
+			varLimitMem = istItem.MemLimitPerInstance
 		}
 		break
 	}
 	data = strings.Replace(data, templateVarCPU, fmt.Sprintf("%.2f", varCPU), -1)
 	data = strings.Replace(data, templateVarMem, fmt.Sprintf("%.2f", varMem), -1)
-	data = strings.Replace(data, templateRequestVarCPU, fmt.Sprintf("%.2f", varRequestCPU), -1)
-	data = strings.Replace(data, templateRequestVarMem, fmt.Sprintf("%.2f", varRequestMem), -1)
+	data = strings.Replace(data, templateLimitVarCPU, fmt.Sprintf("%.2f", varLimitCPU), -1)
+	data = strings.Replace(data, templateLimitVarMem, fmt.Sprintf("%.2f", varLimitMem), -1)
 
 	data = insertConstraint(data, param.AttributeCondition)
 	data = insertEnv(data, param.Env)

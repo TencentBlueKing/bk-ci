@@ -291,12 +291,12 @@ class TemplatePipelineDao {
                 .and(PROJECT_ID.eq(projectId))
             when (sortType) {
                 TemplateSortTypeEnum.VERSION -> {
-                    baseStep.orderBy(if (desc == false) VERSION else VERSION.desc())
+                    baseStep.orderBy(if (desc == false) VERSION else VERSION.desc(), PIPELINE_ID)
                 }
                 TemplateSortTypeEnum.UPDATE_TIME -> {
-                    baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc())
+                    baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc(), PIPELINE_ID)
                 }
-                else -> baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc())
+                else -> baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc(), PIPELINE_ID)
             }
             val allCount = baseStep.count()
             val records = baseStep.limit((page - 1) * pageSize, pageSize).fetch()

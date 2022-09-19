@@ -28,6 +28,7 @@ import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
 import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
 import com.tencent.devops.stream.v1.pojo.V1GitCIModelDetail
 import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -36,6 +37,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
 ) : ApigwStreamResourceV4 {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(ApigwStreamResourceV4Impl::class.java)
         private const val MAX_PAGE_SIZE = 50
     }
 
@@ -79,6 +81,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         pipelineId: String,
         triggerBuildReq: OpenapiTriggerReq
     ): Result<TriggerBuildResult> {
+        logger.info("STREAM_V4|openapiTrigger|$userId|$projectId|$pipelineId|$triggerBuildReq")
         return client.get(ServiceStreamTriggerResource::class).openapiTrigger(
             userId = userId,
             projectId = projectId,

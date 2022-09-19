@@ -29,8 +29,10 @@ package com.tencent.devops.store.service.image
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.LATEST
 import com.tencent.devops.common.api.exception.DataConsistencyException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -364,8 +366,14 @@ abstract class ImageReleaseService {
         val releaseType = marketImageUpdateRequest.releaseType
         val version = marketImageUpdateRequest.version
         val dbVersion = imageRecord.version
+        val imageStatus = imageRecord.imageStatus
+        // 判断镜像首个版本对应的请求是否合法
+        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
+            imageStatus != ImageStatusEnum.INIT.status.toByte()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
+        }
         // 最近的版本处于上架中止状态，重新升级版本号不变
-        val cancelFlag = imageRecord.imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
+        val cancelFlag = imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val requireVersionList =
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                 listOf(dbVersion)
@@ -403,7 +411,7 @@ abstract class ImageReleaseService {
             // 如果是首次发布，处于初始化的镜像状态也允许添加新的版本
             imageFinalStatusList.add(ImageStatusEnum.INIT.status.toByte())
         }
-        if (!imageFinalStatusList.contains(imageRecord.imageStatus)) {
+        if (!imageFinalStatusList.contains(imageStatus)) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
                 arrayOf(imageRecord.imageName, imageRecord.version)

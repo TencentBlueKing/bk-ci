@@ -170,7 +170,7 @@ class ManualTriggerService @Autowired constructor(
     ): Pair<String?, PreTemplateScriptBuildYaml> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
 
-        // 获取yaml对象，除了需要替换的 variables和一些信息剩余全部设置为空
+        // 获取yaml对象，除了需要替换的 variables，extends和一些信息剩余全部设置为空
         val yaml = try {
             streamPipelineService.getYamlByPipeline(
                 gitProjectId, pipelineId,
@@ -216,7 +216,6 @@ class ManualTriggerService @Autowired constructor(
             stages = null,
             jobs = null,
             steps = null,
-            extends = null,
             notices = null,
             finally = null,
             concurrency = null

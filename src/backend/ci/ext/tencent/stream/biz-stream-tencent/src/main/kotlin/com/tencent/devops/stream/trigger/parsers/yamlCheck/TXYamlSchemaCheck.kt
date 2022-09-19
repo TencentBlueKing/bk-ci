@@ -138,25 +138,6 @@ class TXYamlSchemaCheck @Autowired constructor(
         val str = redisOperation.get("$REDIS_STREAM_YAML_SCHEMA:$file") ?: return getSchemaFromGit(file)
         return schemaFactory.getSchema(str)
     }
-
-    private fun getSchemaFromGit(file: String): JsonSchema {
-        if (schemaMap[file] != null) {
-            return schemaMap[file]!!
-        }
-        val schema = schemaFactory.getSchema(
-            scmService.getYamlFromGit(
-                token = streamGitTokenService.getToken(txStreamGitConfig.schemaGitProjectId!!),
-                gitProjectId = txStreamGitConfig.schemaGitProjectId!!.toString(),
-                fileName = "${txStreamGitConfig.schemaGitPath}/$file.json",
-                ref = txStreamGitConfig.schemaGitRef!!,
-                useAccessToken = true
-            ).ifBlank {
-                throw RuntimeException("init yaml schema for git error: yaml blank")
-            }
-        )
-        schemaMap[file] = schema
-        return schema
-    }
 }
 
 private fun JsonSchema.check(yaml: JsonNode) {

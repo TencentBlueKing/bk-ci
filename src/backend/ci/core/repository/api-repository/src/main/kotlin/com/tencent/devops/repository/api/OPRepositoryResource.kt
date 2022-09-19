@@ -25,42 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package fileutil
+package com.tencent.devops.repository.api
 
-import (
-	"testing"
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-)
-
-func Test_CopyFile_01(t *testing.T) {
-	if _, err := fileutil.CopyFile("d:\\a.conf", "d:\\b.conf", true); err != nil {
-		t.Error("failed", err)
-	}
-}
-
-func Test_Md5_01(t *testing.T) {
-	md5, err := fileutil.GetFileMd5("d:\\time.exe")
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("md5: " + md5)
-}
-
-func Test_SetExecutable_01(t *testing.T) {
-	md5, err := fileutil.GetFileMd5("d:\\time.exe")
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
-	t.Log("md5: " + md5)
-}
-
-func Test_unzip(t *testing.T) {
-	err := fileutil.Unzip("/Users/xxx/Downloads/1/agent.zip", "/Users/xxx/Downloads/1/")
-	if err != nil {
-		t.Error("err: ", err.Error())
-		return
-	}
+@Path("/op/repo/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OPRepositoryResource {
+    @ApiOperation("用于对数据库表填充哈希值")
+    @POST
+    @Path("/addhashid")
+    fun addHashId()
 }

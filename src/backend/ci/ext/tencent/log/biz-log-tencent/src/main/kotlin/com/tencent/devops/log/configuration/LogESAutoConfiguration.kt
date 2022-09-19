@@ -115,11 +115,11 @@ class LogESAutoConfiguration {
     @Value("\${log.elasticsearch.https:#{null}}")
     private val e2Https: String? = null
 
-    private val tcpKeepAliveSeconds = 30000                     // 探活连接时长
-    private val connectTimeout = 1000                           // 请求连接超时
-    private val connectionRequestTimeout = 500                  // 获取连接的超时时间
-    private val maxConnectNum = 100                             // 最大连接数
-    private val maxConnectPerRoute = 100                        // 最大路由连接数
+    private val tcpKeepAliveSeconds = 30000 // 探活连接时长
+    private val connectTimeout = 1000 // 请求连接超时
+    private val connectionRequestTimeout = 500 // 获取连接的超时时间
+    private val maxConnectNum = 1000 // 最大连接数
+    private val maxConnectPerRoute = 300 // 最大单节点连接数
 
     fun client(): ESClient {
         if (e1IP.isNullOrBlank()) {
@@ -133,11 +133,11 @@ class LogESAutoConfiguration {
         }
 
         val httpPort = e1Port ?: 9200
-        val indexShards = e1Shards ?: 1                       // 索引总分片数
-        val indexReplicas = e1Replicas ?: 1                   // 分片副本数
-        val indexShardsPerNode = e1ShardsPerNode ?: 1         // 每个节点分片数
-        val socketTimeout = e1socketTimeout ?: 5000           // 等待连接响应超时
-        val requestTimeout = if (socketTimeout > 0) {         // ES响应超时，取主动超时的一半
+        val indexShards = e1Shards ?: 1 // 索引总分片数
+        val indexReplicas = e1Replicas ?: 1 // 分片副本数
+        val indexShardsPerNode = e1ShardsPerNode ?: 1 // 每个节点分片数
+        val socketTimeout = e1socketTimeout ?: 5000 // 等待连接响应超时
+        val requestTimeout = if (socketTimeout > 0) { // ES响应超时，取主动超时的一半
             socketTimeout / 2
         } else {
             30000
@@ -182,11 +182,11 @@ class LogESAutoConfiguration {
         }
 
         val httpPort = e2Port ?: 9200
-        val indexShards = e2Shards ?: 1                       // 索引总分片数
-        val indexReplicas = e2Replicas ?: 1                   // 分片副本数
-        val indexShardsPerNode = e2ShardsPerNode ?: 1         // 每个节点分片数
-        val socketTimeout = e2socketTimeout ?: 5000           // 等待连接响应超时
-        val requestTimeout = if (socketTimeout > 0) {         // ES响应超时，取主动超时的一半
+        val indexShards = e2Shards ?: 1 // 索引总分片数
+        val indexReplicas = e2Replicas ?: 1 // 分片副本数
+        val indexShardsPerNode = e2ShardsPerNode ?: 1 // 每个节点分片数
+        val socketTimeout = e2socketTimeout ?: 5000 // 等待连接响应超时
+        val requestTimeout = if (socketTimeout > 0) { // ES响应超时，取主动超时的一半
             socketTimeout / 2
         } else {
             30000
