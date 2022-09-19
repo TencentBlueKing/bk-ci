@@ -68,6 +68,26 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun getAppDownloadUrl(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Url> {
+        logger.info(("OPENAPI_ARTIFACTORY_V4|$userId|get app download url|$projectId|$artifactoryType|$path"))
+        return client.get(ServiceArtifactoryResource::class).externalUrl(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = path,
+            creatorId = userId,
+            ttl = 24 * 3600 * 30,
+            directed = false
+        )
+    }
+
     override fun search(
         appCode: String?,
         apigwType: String?,
@@ -105,7 +125,7 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
     ): Result<Url> {
         logger.info(
             "OPENAPI_ARTIFACTORY_V4|$userId|get plugin log url|$projectId|$pipelineId|$buildId|$elementId" +
-                "|$executeCount"
+                    "|$executeCount"
         )
         return client.get(ServiceLogFileResource::class).getPluginLogUrl(
             userId = userId,
@@ -130,7 +150,7 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
     ): Result<Page<FileInfo>> {
         logger.info(
             "OPENAPI_ARTIFACTORY_V4|$userId|list custom files|$projectId|$fullPath|$includeFolder|$deep" +
-                "|$page|$pageSize"
+                    "|$page|$pageSize"
         )
         return client.get(ServiceArtifactoryResource::class).listCustomFiles(
             userId = userId,

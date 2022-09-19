@@ -55,10 +55,40 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwArtifactoryResourceV4 {
 
-    @ApiOperation("获取用户下载链接", tags = ["v4_app_artifactory_userDownloadUrl", "v4_user_artifactory_userDownloadUrl"])
+    @ApiOperation(
+        "获取用户下载链接",
+        tags = ["v4_app_artifactory_userDownloadUrl", "v4_user_artifactory_userDownloadUrl"]
+    )
     @Path("/user_download_url")
     @GET
     fun getUserDownloadUrl(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @QueryParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String
+    ): Result<Url>
+
+    @ApiOperation(
+        "获取APP跳转链接",
+        tags = ["v4_app_artifactory_userDownloadUrl", "v4_user_artifactory_userDownloadUrl"]
+    )
+    @Path("/app_download_url")
+    @GET
+    fun getAppDownloadUrl(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
