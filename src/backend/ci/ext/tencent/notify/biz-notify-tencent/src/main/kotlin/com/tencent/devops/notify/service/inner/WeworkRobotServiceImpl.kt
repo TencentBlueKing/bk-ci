@@ -134,7 +134,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
         }
         val errMsg = requestBodies.asSequence().map {
             send(it)
-        }.filter { it.isPresent }.joinToString(", ")
+        }.filter { it.isPresent }.map { it.get().message }.joinToString(", ")
         if (errMsg.isNotBlank()) {
             throw RemoteServiceException(errMsg)
         }
