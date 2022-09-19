@@ -153,7 +153,7 @@
             />
         </section>
 
-        <bk-sideslider @hidden="hidden" :is-show.sync="showTriggle" :width="622" :quick-close="true" :title="$t('pipeline.triggerTitle')">
+        <bk-sideslider @hidden="hidden" :is-show.sync="showTriggle" :width="triggleWidth" :quick-close="true" :title="$t('pipeline.triggerTitle')">
             <bk-form :model="formData" ref="triggleForm" :label-width="500" slot="content" class="triggle-form" form-type="vertical">
                 <bk-form-item :label="$t('pipeline.branch')" :required="true" :rules="[requireRule($t('pipeline.branch'))]" property="branch" error-display-type="normal">
                     <bk-select v-model="formData.branch"
@@ -382,6 +382,14 @@
                     content: !this.curPipeline.enabled ? this.$t('pipeline.pipelineDisabled') : this.$t('exception.permissionDeny'),
                     disabled: this.curPipeline.enabled && this.permission
                 }
+            },
+
+            triggleWidth () {
+                return window.innerWidth * 0.8
+            },
+
+            defaultBranch () {
+                return this.projectInfo.default_branch || ''
             }
         },
 
@@ -565,7 +573,10 @@
 
             showTriggleBuild () {
                 if (!this.curPipeline.enabled || !this.permission) return
-
+                if (this.defaultBranch) {
+                    this.formData.branch = this.defaultBranch
+                    this.branchList.push(this.defaultBranch)
+                }
                 this.showTriggle = true
             },
 
