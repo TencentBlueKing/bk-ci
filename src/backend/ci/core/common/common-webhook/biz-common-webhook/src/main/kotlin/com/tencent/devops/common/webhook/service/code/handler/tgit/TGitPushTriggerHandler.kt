@@ -147,12 +147,15 @@ class TGitPushTriggerHandler(
             val commits = event.commits
             // 如果是强制提交,文件列表应该只获取强制提交变更的文件，而不是所有的
             val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
-                gitScmService.getChangeFileList(
-                    projectId = projectId,
-                    repo = repository,
-                    from = event.after,
-                    to = event.before
-                )
+                val changeFileList by lazy {
+                    gitScmService.getChangeFileList(
+                        projectId = projectId,
+                        repo = repository,
+                        from = event.after,
+                        to = event.before
+                    )
+                }
+                changeFileList
             } else {
                 val eventPaths = mutableSetOf<String>()
                 commits?.forEach { commit ->
