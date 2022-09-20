@@ -724,8 +724,8 @@ class EnvService @Autowired constructor(
             )
         }
         envShareProjectDao.count(dslContext = dslContext, projectId = projectId, envId = envId, name = null).let {
-            if (it + sharedProjects.size > 100) {
-                throw ErrorCodeException(errorCode = ERROR_QUOTA_LIMIT, params = arrayOf("100", it.toString()))
+            if (it + sharedProjects.size > 500) {
+                throw ErrorCodeException(errorCode = ERROR_QUOTA_LIMIT, params = arrayOf("500", it.toString()))
             }
         }
 

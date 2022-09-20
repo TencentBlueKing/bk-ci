@@ -55,6 +55,7 @@
     "group": "group",
     "failToGetData": "get data failed",
     "noPermToView": "no view permission",
+    "pleaseLogin": "Please login",
     "header": {
         "pipelines": "Pipelines",
         "metrics": "Metrics",
@@ -109,6 +110,12 @@
         "debugLeaveTips": "If leave, the data of new edition will be lost",
         "thirdReport": "Third party report",
         "noReports": "No reports yet",
+        "reviewInfo": "Review information",
+        "reviewTitle": "This pipeline is awaiting approval from a maintainer.",
+        "noYmlFiles": "No yml file change",
+        "reviewTips": "This run will use the credentials, build machines or other resources under the project. Please check if it can be run.",
+        "approveAndRun": "Approve and run",
+        "refuse": "Refuse",
         "system": "System",
         "openapi": "OPENAPI",
         "editNote": "Edit notes",
@@ -276,7 +283,8 @@
             "token": "Token",
             "tokenPlaceholder": "Please enter token",
             "passwordToken": "User password+private token",
-            "passwordTokenDesc": "Used for linking Git-typed code repo through http"
+            "passwordTokenDesc": "Used for linking Git-typed code repo through http",
+            "privateKey": "PrivateKey"
         },
         "userGroup": {
             "createGroup": "New Group",
