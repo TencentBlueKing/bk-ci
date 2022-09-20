@@ -66,7 +66,7 @@ class GolangAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         pkgName: String,
         runtimeVersion: String?
     ): String {
-        val preCmds = CommonUtils.strToList(preCmd).toMutableList()
+        val preCmds = CommonUtils.strToSet(preCmd).toMutableList()
         if (osType == OSType.MAC_OS || osType == OSType.LINUX) {
             preCmds.add(0, "chmod +x $pkgName")
         }
