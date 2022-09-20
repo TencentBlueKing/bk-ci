@@ -200,14 +200,14 @@ object CommonUtils {
      * @param str 字符串
      * @return 数组对象
      */
-    fun strToSet(str: String): Set<String> {
-        val dataSet = mutableSetOf<String>()
+    fun strToList(str: String): List<String> {
+        val dataList = mutableListOf<String>()
         if (str.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*]\\s*$"))) {
-            dataSet.addAll(JsonUtil.to(str))
+            dataList.addAll(JsonUtil.to(str))
         } else if (str.isNotBlank()) {
-            dataSet.add(str)
+            dataList.add(str)
         }
-        return dataSet
+        return dataList
     }
 
     /**
