@@ -173,7 +173,7 @@ interface AppExperienceIndexResource {
         userId: String,
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: Int,
+        platform: Int
     ): Result<List<IndexAppInfoVO>>
 
     @ApiOperation("MiniGame--展示图")
