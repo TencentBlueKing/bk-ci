@@ -70,9 +70,6 @@
                     if (val) {
                         document.title = instance.proxy.$t('pleaseLogin')
                     }
-                },
-                {
-                    immediate: true
                 }
             )
 
