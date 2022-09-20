@@ -45,7 +45,7 @@
                         <span class="title-item">
                             <span v-if="buildDetail.objectKind === 'schedule'">{{$t('pipeline.system')}}</span>
                             <template v-else>
-                                <img :src="`http://dayu.oa.com/avatars/${buildDetail.userId}/profile.jpg`">
+                                <img :src="`https://dayu.woa.com/avatars/${buildDetail.userId}/profile.jpg`">
                                 <template v-if="buildDetail.objectKind === 'openApi'">
                                     {{$t('pipeline.openapi')}}（{{ buildDetail.userId }}）
                                 </template>
@@ -345,6 +345,7 @@
     }
     .detail-content {
         background: #fff;
+        height: 100%;
     }
     .detail-header {
         padding: 10px 24px;
