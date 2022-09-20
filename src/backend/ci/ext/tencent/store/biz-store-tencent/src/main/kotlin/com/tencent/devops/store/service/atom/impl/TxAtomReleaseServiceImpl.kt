@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.JS
 import com.tencent.devops.common.api.constant.KEY_BRANCH
 import com.tencent.devops.common.api.constant.KEY_COMMIT_ID
+import com.tencent.devops.common.api.constant.KEY_INVALID_OS_INFO
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
@@ -613,6 +614,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val osNames = mutableSetOf<String>()
         val osArchs = mutableSetOf<String>()
         var runtimeVersion: String? = null
+        val validOsInfos = mutableSetOf<String>()
         atomEnvRecords?.forEach { atomEnvRecord ->
             if (runtimeVersion == null) {
                 runtimeVersion = atomEnvRecord.runtimeVersion
@@ -625,7 +627,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             if (!osArch.isNullOrBlank()) {
                 osArchs.add(osArch)
             }
+            validOsInfos.add("$osName-$osArch")
         }
+        val invalidOsInfos = getInvalidOsInfos(osNames, osArchs, validOsInfos)
         if (osNames.isEmpty()) {
             osNames.add(OSType.LINUX.name.toLowerCase())
         }
@@ -645,6 +649,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 branch = branch ?: MASTER,
                 osName = JsonUtil.toJson(osNames),
                 osArch = JsonUtil.toJson(osArchs),
+                invalidOsInfo = JsonUtil.toJson(invalidOsInfos),
                 runtimeVersion = runtimeVersion
             )
             val pipelineModelConfig = businessConfigDao.get(
@@ -727,6 +732,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             startParams[KEY_BRANCH] = branch ?: MASTER
             startParams[KEY_OS_NAME] = JsonUtil.toJson(osNames)
             startParams[KEY_OS_ARCH] = JsonUtil.toJson(osArchs)
+            startParams[KEY_INVALID_OS_INFO] = JsonUtil.toJson(invalidOsInfos)
             runtimeVersion?.let { startParams[KEY_RUNTIME_VERSION] = it }
             validOsNameFlag?.let {
                 startParams[KEY_VALID_OS_NAME_FLAG] = it.toString()
@@ -761,6 +767,24 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
         }
         return true
+    }
+
+    private fun getInvalidOsInfos(
+        osNames: MutableSet<String>,
+        osArchs: MutableSet<String>,
+        validOsInfos: MutableSet<String>
+    ): ArrayList<Map<String, String>> {
+        val invalidOsInfos = arrayListOf<Map<String, String>>()
+        if (osNames.isNotEmpty() && osArchs.isNotEmpty()) {
+            osNames.forEach { osName ->
+                osArchs.forEach { osArch ->
+                    if (!validOsInfos.contains("$osName-$osArch")) {
+                        invalidOsInfos.add(mapOf(KEY_OS_NAME to osName, KEY_OS_ARCH to osArch))
+                    }
+                }
+            }
+        }
+        return invalidOsInfos
     }
 
     private fun handleCodeccTask(
