@@ -84,7 +84,7 @@ interface ApigwArtifactoryResourceV4 {
 
     @ApiOperation(
         "获取APP跳转链接",
-        tags = ["v4_app_artifactory_userDownloadUrl", "v4_user_artifactory_userDownloadUrl"]
+        tags = ["v4_app_artifactory_appDownloadUrl", "v4_user_artifactory_appDownloadUrl"]
     )
     @Path("/app_download_url")
     @GET
