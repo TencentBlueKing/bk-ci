@@ -775,12 +775,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         validOsInfos: MutableSet<String>
     ): ArrayList<Map<String, String>> {
         val invalidOsInfos = arrayListOf<Map<String, String>>()
-        if (osNames.isNotEmpty() && osArchs.isNotEmpty()) {
-            osNames.forEach { osName ->
-                osArchs.forEach { osArch ->
-                    if (!validOsInfos.contains("$osName-$osArch")) {
-                        invalidOsInfos.add(mapOf(KEY_OS_NAME to osName, KEY_OS_ARCH to osArch))
-                    }
+        if (osNames.isEmpty() && osArchs.isEmpty()) {
+            return invalidOsInfos
+        }
+        osNames.forEach { osName ->
+            osArchs.forEach { osArch ->
+                if (!validOsInfos.contains("$osName-$osArch")) {
+                    invalidOsInfos.add(mapOf(KEY_OS_NAME to osName, KEY_OS_ARCH to osArch))
                 }
             }
         }
