@@ -160,7 +160,10 @@ class OpExperienceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateExtendBanner(userId: String, bannerId: Long, experienceExtendBanner: ExperienceExtendBanner): Result<Int> {
+    override fun updateExtendBanner(
+        userId: String, bannerId: Long,
+        experienceExtendBanner: ExperienceExtendBanner
+    ): Result<Int> {
         return Result(
             experienceExtendBannerDao.update(
                 dslContext = dslContext,

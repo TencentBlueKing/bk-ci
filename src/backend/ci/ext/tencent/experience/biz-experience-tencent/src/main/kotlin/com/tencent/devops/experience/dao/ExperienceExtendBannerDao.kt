@@ -86,10 +86,22 @@ class ExperienceExtendBannerDao {
         val now = LocalDateTime.now()
         return with(TExperienceExtendBanner.T_EXPERIENCE_EXTEND_BANNER) {
             dslContext.update(this)
-                .let { if (experienceExtendBanner.bannerUrl == null) it else it.set(BANNER_URL, experienceExtendBanner.bannerUrl) }
-                .let { if (experienceExtendBanner.type == null) it else it.set(TYPE, experienceExtendBanner.type) }
-                .let { if (experienceExtendBanner.link == null) it else it.set(LINK, experienceExtendBanner.link) }
-                .let { if (experienceExtendBanner.online == null) it else it.set(ONLINE, experienceExtendBanner.online) }
+                .let {
+                    if (experienceExtendBanner.bannerUrl == null) it
+                    else it.set(BANNER_URL, experienceExtendBanner.bannerUrl)
+                }
+                .let {
+                    if (experienceExtendBanner.type == null) it
+                    else it.set(TYPE, experienceExtendBanner.type)
+                }
+                .let {
+                    if (experienceExtendBanner.link == null) it
+                    else it.set(LINK, experienceExtendBanner.link)
+                }
+                .let {
+                    if (experienceExtendBanner.online == null) it
+                    else it.set(ONLINE, experienceExtendBanner.online)
+                }
                 .set(UPDATE_TIME, now)
                 .where(ID.eq(bannerId))
                 .execute()
