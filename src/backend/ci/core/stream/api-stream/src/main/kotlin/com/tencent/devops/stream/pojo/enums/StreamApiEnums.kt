@@ -58,7 +58,8 @@ enum class StreamProjectsOrder(val value: String) {
     PATH("path"),
     CREATED("created_at"),
     UPDATE("updated_at"),
-    ACTIVITY("activity")
+    ACTIVITY("activity"),
+    FULL_NAME("full_name"),
 }
 
 fun StreamProjectsOrder?.toGitCodeOrderBy(): GitCodeProjectsOrder? {
@@ -72,5 +73,6 @@ fun StreamProjectsOrder?.toGitCodeOrderBy(): GitCodeProjectsOrder? {
         StreamProjectsOrder.CREATED -> GitCodeProjectsOrder.CREATED
         StreamProjectsOrder.UPDATE -> GitCodeProjectsOrder.UPDATE
         StreamProjectsOrder.ACTIVITY -> GitCodeProjectsOrder.ACTIVITY
+        StreamProjectsOrder.FULL_NAME -> GitCodeProjectsOrder.FULL_NAME
     }
 }

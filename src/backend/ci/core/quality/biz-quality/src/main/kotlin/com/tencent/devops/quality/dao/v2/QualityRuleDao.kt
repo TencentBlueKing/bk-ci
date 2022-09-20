@@ -361,7 +361,7 @@ class QualityRuleDao {
             dslContext.update(this)
                 .set(QUALITY_RULE_HASH_ID, hashId)
                 .where(ID.eq(id))
-                .and(QUALITY_RULE_HASH_ID.ne(hashId))
+                .and(QUALITY_RULE_HASH_ID.isNull)
                 .execute()
         }
     }

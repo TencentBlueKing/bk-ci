@@ -65,16 +65,25 @@ class BuildLessTaskService(
 
                 val buildLessTask = redisUtils.popBuildLessReadyTask()
                 if (buildLessTask != null) {
-                    logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
-                    dispatchClient.updateContainerId(
-                        buildLessTask = buildLessTask,
-                        containerId = containerId
-                    )
+                    try {
+                        logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
+                        dispatchClient.updateContainerId(
+                            buildLessTask = buildLessTask,
+                            containerId = containerId
+                        )
 
-                    logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
-                    redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
+                        logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
+                        redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
 
-                    return AsyncResult(buildLessTask)
+                        return AsyncResult(buildLessTask)
+                    } catch (e: Exception) {
+                        // 异常时任务重新回队列
+                        logger.info("****> container: $containerId claim buildLessTask: $buildLessTask get error, " +
+                                        "retry.", e)
+                        redisUtils.leftPushBuildLessReadyTask(buildLessTask)
+
+                        continue
+                    }
                 }
 
                 loopCount++

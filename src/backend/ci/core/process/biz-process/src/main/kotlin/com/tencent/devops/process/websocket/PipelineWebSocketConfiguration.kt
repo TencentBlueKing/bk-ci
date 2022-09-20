@@ -34,6 +34,9 @@ import com.tencent.devops.process.websocket.listener.PipelineWebSocketListener
 import com.tencent.devops.process.websocket.page.DefaultDetailPageBuild
 import com.tencent.devops.process.websocket.page.DefaultHistoryPageBuild
 import com.tencent.devops.process.websocket.page.DefaultStatusPageBuild
+import com.tencent.devops.process.websocket.page.GithubDetailPageBuild
+import com.tencent.devops.process.websocket.page.GithubHistoryPageBuild
+import com.tencent.devops.process.websocket.page.GithubStatusPageBuild
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -46,6 +49,7 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -107,14 +111,26 @@ class PipelineWebSocketConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = ["historyPage"])
-    fun historyPage() = DefaultHistoryPageBuild()
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "github")
+    fun githubDetailPage() = GithubDetailPageBuild()
 
     @Bean
-    @ConditionalOnMissingBean(name = ["detailPage"])
-    fun detailPage() = DefaultDetailPageBuild()
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "github")
+    fun githubHistoryPage() = GithubHistoryPageBuild()
 
     @Bean
-    @ConditionalOnMissingBean(name = ["statusPage"])
-    fun statusPage() = DefaultStatusPageBuild()
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "github")
+    fun githubStatusPage() = GithubStatusPageBuild()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
+    fun defaultHistoryPage() = DefaultHistoryPageBuild()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
+    fun defaultDetailPage() = DefaultDetailPageBuild()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
+    fun defaultStatusPage() = DefaultStatusPageBuild()
 }
