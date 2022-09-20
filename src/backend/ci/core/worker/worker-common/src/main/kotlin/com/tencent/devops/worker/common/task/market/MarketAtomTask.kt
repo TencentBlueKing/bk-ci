@@ -276,7 +276,7 @@ open class MarketAtomTask : ITask() {
             val buildEnvs = buildVariables.buildEnvs
             if (!preCmd.isNullOrBlank()) {
                 runPreCmds(
-                    preCmds = CommonUtils.strToSet(preCmd),
+                    preCmds = CommonUtils.strToList(preCmd),
                     buildVariables = buildVariables,
                     atomTmpSpace = atomTmpSpace,
                     workspace = workspace,

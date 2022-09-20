@@ -138,7 +138,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         pkgName: String,
         runtimeVersion: String?
     ): String {
-        val preCmds = CommonUtils.strToSet(preCmd).toMutableList()
+        val preCmds = CommonUtils.strToList(preCmd).toMutableList()
         preCmds.add(0, "tar -xzf $pkgName")
         logger.info("handleAtomPreCmd convertPreCmd:$preCmds")
         return JsonUtil.toJson(preCmds, false)
