@@ -55,7 +55,7 @@ stages:
       checkout: null
     - name: "腾讯代码分析(官方-代码分析工作组)"
       id: "check"
-      if: "true"
+      if: "(true == true)"
       if-modify: null
       uses: "CodeccCheckAtomDebug@4.*"
       with:

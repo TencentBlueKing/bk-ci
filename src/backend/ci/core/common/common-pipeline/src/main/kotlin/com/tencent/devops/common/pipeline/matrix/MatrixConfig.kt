@@ -26,9 +26,6 @@ data class MatrixConfig(
         val (keyList, strategyCase) = calculateContextMatrix(strategy)
         combinations.addAll(strategyCase)
 
-        // 先对json中的额外和排除做增删
-        exclude?.let { combinations.removeAll(exclude) } // 排除特定的参数组合
-
         // 将额外添加的参数在匹配的组合内进行追加
         val caseToAdd = mutableListOf<MutableMap<String, String>>()
         include?.forEach { includeCase ->
@@ -41,17 +38,24 @@ data class MatrixConfig(
             val matchKey = includeCase.keys.filter { keyList.contains(it) }
             // 如果没有匹配的key则直接丢弃
             if (matchKey.isEmpty()) return@forEach
+            var expanded = false
+            val caseToAddTmp = mutableListOf<MutableMap<String, String>>()
             combinations.forEach { case ->
                 if (keyValueMatch(case, includeCase, matchKey)) {
                     // 将全匹配的额外参数直接追加到匹配的组合
                     case.putAll(includeCase)
+                    expanded = true
                 } else {
                     // 不能全匹配的额外参数作为一个新组合加入
-                    caseToAdd.add(includeCase.toMutableMap())
+                    caseToAddTmp.add(includeCase.toMutableMap())
                 }
             }
+            if (!expanded) caseToAdd.addAll(caseToAddTmp)
         }
         combinations.addAll(caseToAdd)
+
+        // 计算strategy和include后，再进行组合排除
+        exclude?.let { combinations.removeAll(exclude) } // 排除特定的参数组合
 
         return combinations.map { list ->
             list.map { map -> "${MATRIX_CONTEXT_KEY_PREFIX}${map.key}" to map.value }.toMap()

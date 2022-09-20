@@ -29,9 +29,6 @@ package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_ID
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_COMMIT_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
@@ -46,7 +43,12 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_INCLUDE_P
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_AUTH_USER
 import com.tencent.devops.common.webhook.pojo.code.MATCH_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.repository.pojo.Repository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -83,7 +85,11 @@ class GitWebHookStartParam @Autowired constructor(
         startParams[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK] = element.enableCheck ?: true
         startParams[PIPELINE_GIT_REPO_ID] = element.repositoryName ?: ""
         startParams[BK_REPO_WEBHOOK_REPO_AUTH_USER] =
-            gitScmService.getRepoAuthUser(projectId = projectId, repo = repo)
+            if (repo is CodeGitRepository && repo.authType == RepoAuthType.OAUTH) {
+                repo.userName
+            } else {
+                gitScmService.getRepoAuthUser(projectId = projectId, repo = repo)
+            }
         startParams.putAll(
             matcher.retrieveParams(
                 projectId = projectId,

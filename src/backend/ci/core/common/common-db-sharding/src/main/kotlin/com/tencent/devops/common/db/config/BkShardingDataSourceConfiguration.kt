@@ -35,7 +35,7 @@ import com.tencent.devops.common.db.pojo.TableRuleConfig
 import com.tencent.devops.common.db.pojo.TableShardingStrategyEnum
 import com.zaxxer.hikari.HikariDataSource
 import org.apache.shardingsphere.driver.api.ShardingSphereDataSourceFactory
-import org.apache.shardingsphere.infra.config.algorithm.ShardingSphereAlgorithmConfiguration
+import org.apache.shardingsphere.infra.config.algorithm.AlgorithmConfiguration
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableRuleConfiguration
 import org.apache.shardingsphere.sharding.api.config.strategy.sharding.NoneShardingStrategyConfiguration
@@ -155,7 +155,7 @@ class BkShardingDataSourceConfiguration {
             dbShardingAlgorithmProps.setProperty(STRATEGY, STANDARD)
             dbShardingAlgorithmProps.setProperty(ALGORITHM_CLASS_NAME, databaseAlgorithmClassName)
             shardingRuleConfig.shardingAlgorithms[DB_SHARDING_ALGORITHM_NAME] =
-                ShardingSphereAlgorithmConfiguration(CLASS_BASED, dbShardingAlgorithmProps)
+                AlgorithmConfiguration(CLASS_BASED, dbShardingAlgorithmProps)
             // 设置分库默认策略
             shardingRuleConfig.defaultDatabaseShardingStrategy =
                 StandardShardingStrategyConfiguration(databaseShardingField, DB_SHARDING_ALGORITHM_NAME)
@@ -166,7 +166,7 @@ class BkShardingDataSourceConfiguration {
             tableShardingAlgorithmProps.setProperty(STRATEGY, STANDARD)
             tableShardingAlgorithmProps.setProperty(ALGORITHM_CLASS_NAME, tableAlgorithmClassName)
             shardingRuleConfig.shardingAlgorithms[TABLE_SHARDING_ALGORITHM_NAME] =
-                ShardingSphereAlgorithmConfiguration(CLASS_BASED, tableShardingAlgorithmProps)
+                AlgorithmConfiguration(CLASS_BASED, tableShardingAlgorithmProps)
             // 设置分表默认策略
             shardingRuleConfig.defaultTableShardingStrategy =
                 StandardShardingStrategyConfiguration(tableShardingField, TABLE_SHARDING_ALGORITHM_NAME)

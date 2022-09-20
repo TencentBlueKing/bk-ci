@@ -188,7 +188,6 @@
                 'isShowCompleteLog',
                 'showPanelType',
                 'fetchingAtomList',
-                'pipeline',
                 'showStageReviewPanel'
             ]),
             ...mapState([
@@ -336,7 +335,7 @@
                 return this.execDetail && ['RUNNING', 'QUEUE', 'STAGE_SUCCESS'].indexOf(this.execDetail.status) < 0
             },
             isInstanceEditable () {
-                return this.pipeline && this.pipeline.instanceFromTemplate
+                return this.execDetail?.model?.instanceFromTemplate
             },
             curMatchRules () {
                 return this.$route.path.indexOf('template') > 0 ? this.templateRuleList : this.isInstanceEditable ? this.templateRuleList.concat(this.ruleList) : this.ruleList
@@ -353,6 +352,9 @@
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
+                if (val?.model?.instanceFromTemplate && val?.model?.templateId) {
+                    this.requestMatchTemplateRules(val.model.templateId)
+                }
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
@@ -366,14 +368,10 @@
                     this.isLoading = false
                     this.hasNoPermission = true
                 }
-            },
-            pipeline (val) {
-                if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             }
         },
 
         mounted () {
-            this.requestPipeline(this.$route.params)
             this.requestPipelineExecDetail(this.routerParams)
             this.$store.dispatch('common/requestInterceptAtom', {
                 projectId: this.routerParams.projectId,
@@ -414,7 +412,6 @@
                 'getInitLog',
                 'getAfterLog',
                 'pausePlugin',
-                'requestPipeline'
             ]),
             ...mapActions('common', [
                 'requestInterceptAtom'
@@ -486,7 +483,7 @@
                     }
 
                     data.ruleIds = this.getRelativeRuleHashId(this.curMatchRules)
-                    
+
                     const res = await this.reviewExcuteAtom(data)
                     if (res) {
                         this.$showTips({

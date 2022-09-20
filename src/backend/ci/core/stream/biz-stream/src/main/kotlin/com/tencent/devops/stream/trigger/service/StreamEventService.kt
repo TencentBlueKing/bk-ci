@@ -114,7 +114,8 @@ class StreamEventService @Autowired constructor(
                     ),
                     context = "${context.pipeline!!.filePath}@${action.metaData.streamObjectKind.name}",
                     description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
-                    mrId = null
+                    mrId = null,
+                    addCommitCheck = action.api::addCommitCheck
                 )
             }
             return saveNotBuildEvent(
@@ -198,7 +199,10 @@ class StreamEventService @Autowired constructor(
                 messageId = event.id.toString(),
                 messageTitle = messageTitle
             )
-            websocketService.pushNotifyWebsocket(userId, gitProjectId.toString())
+            websocketService.pushNotifyWebsocket(
+                userId,
+                GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
+            )
         }
 
         return messageId

@@ -6,7 +6,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.tencent.devops.common.sdk.json.JsonIgnorePathAnnotationIntrospector
 import java.lang.reflect.Type
 
 object SdkJsonUtil {
@@ -18,6 +20,14 @@ object SdkJsonUtil {
         setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
         disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+        setAnnotationIntrospectors(
+            AnnotationIntrospectorPair.pair(
+                serializationConfig.annotationIntrospector, JsonIgnorePathAnnotationIntrospector()
+            ),
+            AnnotationIntrospectorPair.pair(
+                deserializationConfig.annotationIntrospector, JsonIgnorePathAnnotationIntrospector()
+            )
+        )
     }
 
     fun getObjectMapper(): ObjectMapper {

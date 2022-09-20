@@ -62,7 +62,7 @@ enum class TriggerReason(val summary: String, val detail: String) {
     ),
     TRIGGER_NOT_MATCH(
         "Does not meet the trigger condition",
-        "Does not meet the trigger condition"
+        "Does not meet the trigger condition :%s"
     ),
     PIPELINE_RUN_ERROR("Pipeline run with error", "pipeline run with error"),
     PIPELINE_DISABLE("Pipeline is disabled", "Pipeline is disabled"),
@@ -82,6 +82,10 @@ enum class TriggerReason(val summary: String, val detail: String) {
     REPO_TRIGGER_FAILED(
         "repo trigger failed",
         "repo trigger failed: %s"
+    ),
+    SAVE_PIPELINE_FAILED(
+        "save pipeline failed",
+        "save pipeline failed: %s"
     ),
     UNKNOWN_ERROR(
         "Unknown error, please contact DevOps-helper",

@@ -29,7 +29,7 @@ package com.tencent.devops.stream.v1.components
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.stream.v1.client.V1ScmClient
 import com.tencent.devops.stream.v1.dao.V1GitCISettingDao
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
@@ -60,7 +60,7 @@ class V1SendCommitCheck @Autowired constructor(
         val requestEvent = gitRequestEventDao.getWithEvent(dslContext, requestEventId) ?: return
 
         // 当人工触发时不推送CommitCheck消息
-        if (requestEvent.objectKind == TGitObjectKind.MANUAL.value) {
+        if (requestEvent.objectKind == StreamGitObjectKind.MANUAL.value) {
             return
         }
 

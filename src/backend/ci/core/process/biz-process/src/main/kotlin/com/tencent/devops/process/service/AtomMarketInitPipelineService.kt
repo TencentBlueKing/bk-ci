@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.constant.KEY_COMMIT_ID
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_ARCH_FLAG
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_NAME_FLAG
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -102,6 +104,12 @@ class AtomMarketInitPipelineService @Autowired constructor(
         val runtimeVersion = atomBaseInfo.runtimeVersion
         if (!runtimeVersion.isNullOrBlank()) {
             startParams[KEY_RUNTIME_VERSION] = runtimeVersion
+        }
+        atomMarketInitPipelineReq.validOsNameFlag?.let {
+            startParams[KEY_VALID_OS_NAME_FLAG] = it.toString()
+        }
+        atomMarketInitPipelineReq.validOsArchFlag?.let {
+            startParams[KEY_VALID_OS_ARCH_FLAG] = it.toString()
         }
         var atomBuildStatus = AtomStatusEnum.BUILDING
         var buildId: String? = null

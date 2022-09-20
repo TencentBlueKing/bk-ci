@@ -29,6 +29,7 @@ package com.tencent.devops.prebuild.v2.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
@@ -165,7 +166,8 @@ class PreBuildV2Service @Autowired constructor(
             modelName = pipelineName,
             event = modelCreateEvent,
             yaml = scriptBuildYaml,
-            pipelineParams = getPipelineParams(scriptBuildYaml.variables, userId, pipelineName)
+            pipelineParams = getPipelineParams(scriptBuildYaml.variables, userId, pipelineName),
+            asCodeSettings = PipelineAsCodeSettings(true)
         ).model
 
         // 若是本机构建，需后置填充调度信息

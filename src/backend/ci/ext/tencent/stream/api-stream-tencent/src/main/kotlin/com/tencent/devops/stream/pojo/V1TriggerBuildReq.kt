@@ -28,7 +28,7 @@
 package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -62,7 +62,7 @@ data class V1TriggerBuildReq(
     val scmType: ScmType = ScmType.CODE_GIT,
     @ApiModelProperty("模拟代码事件类型")
     val eventType: String? = null,
-    val objectKind: String = TGitObjectKind.OBJECT_KIND_MANUAL
+    val objectKind: String = StreamGitObjectKind.OBJECT_KIND_MANUAL
 ) : StreamBaseRepository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
 @ApiModel("V2AppTriggerBuild请求")

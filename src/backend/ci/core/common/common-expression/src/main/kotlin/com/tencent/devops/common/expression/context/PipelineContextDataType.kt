@@ -40,4 +40,6 @@ object PipelineContextDataType {
     const val NUMBER = 4
 
     const val CASE_SENSITIVE_DICTIONARY = 5
+
+    const val EXPRESSION = 6
 }

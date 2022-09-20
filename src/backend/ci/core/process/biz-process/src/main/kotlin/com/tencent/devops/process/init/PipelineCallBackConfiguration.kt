@@ -31,6 +31,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineStreamEnabledListener
 import com.tencent.devops.process.engine.listener.run.callback.PipelineBuildCallBackListener
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -42,13 +44,16 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import java.time.Duration
 
 /**
  * 流水线回调扩展配置
  */
 @Configuration
+@EnableConfigurationProperties(CallbackCircuitBreakerProperties::class)
 class PipelineCallBackConfiguration {
 
     /**
@@ -134,5 +139,24 @@ class PipelineCallBackConfiguration {
             concurrency = pipelineStreamEnabledConcurrency!!,
             maxConcurrency = 50
         )
+    }
+
+    @Bean
+    fun callbackCircuitBreakerRegistry(
+        callbackCircuitBreakerProperties: CallbackCircuitBreakerProperties
+    ): CircuitBreakerRegistry {
+        val builder = CircuitBreakerConfig.custom()
+        builder.enableAutomaticTransitionFromOpenToHalfOpen()
+        builder.writableStackTraceEnabled(false)
+        with(callbackCircuitBreakerProperties) {
+            failureRateThreshold?.let { builder.failureRateThreshold(it) }
+            slowCallRateThreshold?.let { builder.slowCallRateThreshold(it) }
+            slowCallDurationThreshold?.let { builder.slowCallDurationThreshold(Duration.ofSeconds(it)) }
+            waitDurationInOpenState?.let { builder.waitDurationInOpenState(Duration.ofSeconds(it)) }
+            permittedNumberOfCallsInHalfOpenState?.let { builder.permittedNumberOfCallsInHalfOpenState(it) }
+            slidingWindow?.let { builder.slidingWindowSize(it) }
+            minimumNumberOfCalls?.let { builder.minimumNumberOfCalls(it) }
+        }
+        return CircuitBreakerRegistry.of(builder.build())
     }
 }

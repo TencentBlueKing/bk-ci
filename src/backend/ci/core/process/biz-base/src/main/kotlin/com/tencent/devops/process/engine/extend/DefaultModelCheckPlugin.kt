@@ -310,6 +310,7 @@ open class DefaultModelCheckPlugin constructor(
                 val dispatchType = vmBuildContainer.dispatchType ?: return true
                 return when (dispatchType.buildType()) {
                     BuildType.THIRD_PARTY_AGENT_ID, BuildType.THIRD_PARTY_AGENT_ENV -> dispatchType.value.isBlank()
+                    BuildType.WINDOWS -> false
                     else -> true
                 }
             }

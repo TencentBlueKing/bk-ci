@@ -37,6 +37,14 @@ class ObjectReplaceEnvVarUtilTest {
 
     private val envMap: MutableMap<String, String> = HashMap()
 
+    private val replacement = object : KeyReplacement {
+        override fun getReplacement(key: String, doubleCurlyBraces: Boolean) = if (doubleCurlyBraces) {
+            "\${{$key}}"
+        } else {
+            "\${$key}"
+        }
+    }
+
     @BeforeEach
     fun setup() {
         envMap["normalStrEnvVar"] = "123"
@@ -123,8 +131,10 @@ class ObjectReplaceEnvVarUtilTest {
                     member.forEach { sm ->
                         when {
                             sm.key.toString() == "testBean" -> {
-                                assertEquals("bean变量替换测试_${envMap["specStrEnvVar"]}",
-                                    (sm.value as TestBean).testBeanKey)
+                                assertEquals(
+                                    "bean变量替换测试_${envMap["specStrEnvVar"]}",
+                                    (sm.value as TestBean).testBeanKey
+                                )
                                 assertEquals(jsonExcept, (sm.value as TestBean).testBeanValue)
                             }
                             sm.key.toString() == "dataMapKey" -> {

@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -50,12 +51,14 @@ class CallBackControlTest : TestBase() {
     private val pipelineRepositoryService: PipelineRepositoryService = mock()
     private val projectPipelineCallBackService: ProjectPipelineCallBackService = mock()
     private val client: Client = mock()
+    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry = mock()
 
     private val callBackControl = CallBackControl(
         pipelineBuildDetailService = pipelineBuildDetailService,
         pipelineRepositoryService = pipelineRepositoryService,
         projectPipelineCallBackService = projectPipelineCallBackService,
-        client = client
+        client = client,
+        callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
     )
 
     private val testUrl = "https://mock/callback"

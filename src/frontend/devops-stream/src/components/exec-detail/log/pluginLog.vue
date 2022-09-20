@@ -2,7 +2,7 @@
     <section class="plugin-log">
         <bk-log-search :execute-count="plugin.executeCount" @change-execute="changeExecute" class="log-tools">
             <template #tool>
-                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? $t('pipeline.showLog') : $t('pipeline.hideLog')}}</li>
+                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? $t('pipeline.hideLog') : $t('pipeline.showLog')}}</li>
                 <li class="more-button" @click="downloadLog">{{$t('pipeline.downloadLog')}}</li>
             </template>
         </bk-log-search>

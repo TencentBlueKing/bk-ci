@@ -394,6 +394,7 @@ class BuildEndControl @Autowired constructor(
         val parentTaskId = buildInfo.parentTaskId ?: return
         val parentProjectId = buildVariableService.getVariable(
             projectId = buildInfo.projectId,
+            pipelineId = buildInfo.pipelineId,
             buildId = buildInfo.buildId,
             varName = PIPELINE_START_PARENT_PROJECT_ID
         ) ?: return
