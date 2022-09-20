@@ -50,7 +50,7 @@
     "acorn": "^6.0.5",
     "axios": "^0.27.2",
     "babel-loader": "^8.0.2",
-    "bkui-pipeline": "^0.1.23",
+    "bkui-pipeline": "^0.1.27",
     "codemirror": "^5.61.0",
     "core-js": "^3.14.0",
     "core-js-compat": "^3.8.3",
