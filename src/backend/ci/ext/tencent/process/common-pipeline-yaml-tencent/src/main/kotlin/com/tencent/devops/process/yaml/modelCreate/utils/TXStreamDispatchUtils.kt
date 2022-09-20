@@ -135,7 +135,7 @@ object TXStreamDispatchUtils {
             return MacOSDispatchType(
                 macOSEvn = "Catalina10.15.4:12.2",
                 systemVersion = "Catalina10.15.4",
-                xcodeVersion = "12.2"
+                xcodeVersion = job.runsOn.xcode ?: "12.2"
             )
         }
 
