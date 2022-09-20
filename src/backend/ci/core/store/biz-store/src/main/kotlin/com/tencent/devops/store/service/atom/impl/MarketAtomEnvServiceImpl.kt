@@ -514,9 +514,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             )
             atomEnvRecord?.let {
                 // 合并用户配置的前置命令和系统预置的前置命令
-                val dbPreCmds = CommonUtils.strToSet(atomEnvRecord.preCmd ?: "")
-                val requestPreCmds = CommonUtils.strToSet(atomEnvRequest.preCmd ?: "")
-                val finalPreCmds = dbPreCmds.plus(requestPreCmds)
+                val dbPreCmds = CommonUtils.strToList(atomEnvRecord.preCmd ?: "")
+                val requestPreCmds = CommonUtils.strToList(atomEnvRequest.preCmd ?: "")
+                val finalPreCmds = requestPreCmds.plus(dbPreCmds)
                 atomEnvRequest.preCmd = JsonUtil.toJson(finalPreCmds, false)
                 marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomId, atomEnvRequest)
             }
