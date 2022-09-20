@@ -154,6 +154,9 @@ class TGitPushTriggerHandler(
             )
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
+                    if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
+                        return true
+                    }
                     val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
                         gitScmService.getChangeFileList(
                             projectId = projectId,
