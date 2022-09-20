@@ -474,6 +474,32 @@ class PipelineInfoDao {
         }
     }
 
+    fun searchInfoByPipelineIds(
+        dslContext: DSLContext,
+        channelCode: ChannelCode,
+        projectId: String? = null,
+        pipelineIds: Set<String>,
+        filterDelete: Boolean = true,
+        offset: Int,
+        limit: Int,
+        pipelineName: String?
+    ): Result<TPipelineInfoRecord> {
+        return with(T_PIPELINE_INFO) {
+            val query =
+                if (projectId.isNullOrBlank()) {
+                    dslContext.selectFrom(this).where(PIPELINE_ID.`in`(pipelineIds))
+                } else {
+                    dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.`in`(pipelineIds))
+                }
+            query.and(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
+            if (filterDelete) query.and(DELETE.eq(false))
+            if (!pipelineName.isNullOrBlank()) {
+                query.and(PIPELINE_NAME.like("%$pipelineName%"))
+            }
+            query.offset(offset).limit(limit).fetch()
+        }
+    }
+
     fun getPipelineInfo(
         dslContext: DSLContext,
         projectId: String,

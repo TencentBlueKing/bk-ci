@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.SubPipeline
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
@@ -554,4 +555,28 @@ interface ServicePipelineResource {
     fun batchUpdateModelName(
         modelUpdateList: List<ModelUpdate>
     ): Result<List<ModelUpdate>>
+
+    @ApiOperation("通过流水线名称模糊查询子流水线")
+    @GET
+    @Path("/projects/{projectId}/{pipelineId}/hasPermissionList")
+    fun hasPermissionList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("别名", required = false)
+        @QueryParam("aliasName")
+        aliasName: String? = null,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<SubPipeline>>
 }

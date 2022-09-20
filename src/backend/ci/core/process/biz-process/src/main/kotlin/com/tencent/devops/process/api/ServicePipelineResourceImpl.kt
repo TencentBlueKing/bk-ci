@@ -52,6 +52,7 @@ import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.SubPipeline
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
@@ -491,6 +492,44 @@ class ServicePipelineResourceImpl @Autowired constructor(
 
     override fun batchUpdateModelName(modelUpdateList: List<ModelUpdate>): Result<List<ModelUpdate>> {
         return Result(pipelineInfoFacadeService.batchUpdateModelName(modelUpdateList))
+    }
+
+    override fun hasPermissionList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        aliasName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<SubPipeline>> {
+        try {
+            // 从权限中拉取有权限的流水线，若无userId则返回空值
+            val hasPermissionList =
+                if (userId.isBlank()) {
+                    emptyList()
+                } else {
+                    pipelinePermissionService.getResourceByPermission(
+                        userId = userId,
+                        projectId = projectId,
+                        permission = AuthPermission.EXECUTE
+                    )
+                }
+
+            // 获取项目下所有流水线，并过滤出有权限部分，有权限列表为空时返回项目所有流水线
+            val buildPipelineRecords =
+                pipelineInfoFacadeService.searchInfoByPipelineIds(
+                    projectId = projectId,
+                    pipelineIds = hasPermissionList.toSet(),
+                    channelCode = ChannelCode.BS,
+                    offset = page ?: 0,
+                    limit = pageSize ?: 1000,
+                    pipelineName = aliasName
+                )
+
+            return Result(buildPipelineRecords)
+        } catch (t: Throwable) {
+            return Result(emptyList())
+        }
     }
 
     private fun checkParams(userId: String, projectId: String) {
