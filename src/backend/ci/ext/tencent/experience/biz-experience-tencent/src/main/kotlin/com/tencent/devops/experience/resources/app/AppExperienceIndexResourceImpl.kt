@@ -105,6 +105,6 @@ class AppExperienceIndexResourceImpl @Autowired constructor(
     }
 
     override fun miniGamePicture(userId: String): Result<String> {
-        return experienceIndexService.showMiniGamePicture();
+        return experienceIndexService.showMiniGamePicture()
     }
 }

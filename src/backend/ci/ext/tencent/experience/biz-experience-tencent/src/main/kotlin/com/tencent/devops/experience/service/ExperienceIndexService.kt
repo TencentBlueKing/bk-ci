@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.experience.dao.ExperienceDao
