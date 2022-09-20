@@ -379,7 +379,7 @@ class KubernetesContainerService @Autowired constructor(
 
         val info = with(dispatchBuildImageReq) {
             BuildAndPushImage(
-                name = getOnlyName(userId),
+                name = jobName,
                 resource = KubernetesResource(
                     requestCPU = cpu.toString(),
                     requestDisk = "${disk}G",
