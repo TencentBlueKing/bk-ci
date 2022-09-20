@@ -49,13 +49,13 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         projectCode: String,
         atomCode: String,
         version: String,
-        queryOfflineFlag: Boolean
+        queryOfflineFlag: Boolean?
     ): Result<PipelineAtom?> {
         return atomService.getPipelineAtom(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
-            queryOfflineFlag = queryOfflineFlag
+            queryOfflineFlag = queryOfflineFlag ?: true
         )
     }
 
