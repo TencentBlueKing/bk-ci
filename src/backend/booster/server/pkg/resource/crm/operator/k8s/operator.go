@@ -242,8 +242,8 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 		}
 	}
 
-	blog.Infof("[micheal debug]: *************")
 	if o.debugTimes < 300 {
+		blog.Infof("[micheal debug]: *************")
 		cpuUsedList := make([]float64, 0, 100)
 		for _, rs := range allocatedResourceList[:10] {
 			cpuUsedList = append(cpuUsedList, float64(rs.Cpu().Value()))
@@ -267,8 +267,8 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 			blog.Infof("[micheal debug]: node (%s) has (%d) pods", node.Name, podNum)
 		}
 		o.debugTimes++
+		blog.Infof("[micheal debug]: *************")
 	}
-	blog.Infof("[micheal debug]: *************")
 
 	blog.Debugf("k8s-operator: success to get resource clusterID(%s)", clusterID)
 	return nodeInfoList, nil
