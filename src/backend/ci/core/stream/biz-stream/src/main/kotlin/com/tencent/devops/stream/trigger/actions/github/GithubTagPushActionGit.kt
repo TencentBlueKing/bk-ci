@@ -153,13 +153,9 @@ class GithubTagPushActionGit(
             data.getUserId(),
             GitActionCommon.getTriggerBranch(event.baseRef!!)
         )
-        val params = GitActionCommon.getStartParams(
-            action = this,
-            triggerOn = triggerOn
-        )
         return TriggerResult(
             trigger = isMatch,
-            startParams = params,
+            triggerOn = triggerOn,
             timeTrigger = false,
             deleteTrigger = false
         )

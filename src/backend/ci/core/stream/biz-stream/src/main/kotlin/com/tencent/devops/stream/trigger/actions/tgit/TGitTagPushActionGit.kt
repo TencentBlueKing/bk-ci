@@ -171,13 +171,9 @@ class TGitTagPushActionGit(
             data.getUserId(),
             event.create_from
         )
-        val params = GitActionCommon.getStartParams(
-            action = this,
-            triggerOn = triggerOn
-        )
         return TriggerResult(
             trigger = isMatch,
-            startParams = params,
+            triggerOn = triggerOn,
             timeTrigger = false,
             deleteTrigger = false
         )

@@ -170,10 +170,14 @@ class TGitIssueActionGit(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val (isTrigger, startParams) = GitActionCommon.matchAndStartParams(this, triggerOn)
+        val (isTrigger, _) = GitActionCommon.matchAndStartParams(
+            action = this,
+            triggerOn = triggerOn,
+            onlyMatch = true
+        )
         return TriggerResult(
             trigger = TriggerBody(isTrigger),
-            startParams = startParams,
+            triggerOn = triggerOn,
             timeTrigger = false,
             deleteTrigger = false
         )
