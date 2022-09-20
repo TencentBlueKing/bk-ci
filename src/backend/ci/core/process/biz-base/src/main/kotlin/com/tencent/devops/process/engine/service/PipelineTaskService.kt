@@ -46,6 +46,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.ControlUtils
+import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -641,20 +642,24 @@ class PipelineTaskService @Autowired constructor(
         val taskId = task.taskId
         val taskName = task.taskName
         logger.info("${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode")
-        updateTaskStatusInfo(
-            userId = userId,
-            updateTaskInfo = UpdateTaskInfo(
-                projectId = projectId,
-                buildId = buildId,
-                taskId = taskId,
-                taskStatus = taskStatus,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg,
-                platformCode = platformCode,
-                platformErrorCode = platformErrorCode
+        ContainerIdLock(redisOperation, buildId, task.containerId).use {
+            // 加锁防止和引擎并发改task状态的情况
+            it.lock()
+            updateTaskStatusInfo(
+                userId = userId,
+                updateTaskInfo = UpdateTaskInfo(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    taskStatus = taskStatus,
+                    errorType = errorType,
+                    errorCode = errorCode,
+                    errorMsg = errorMsg,
+                    platformCode = platformCode,
+                    platformErrorCode = platformErrorCode
+                )
             )
-        )
+        }
         // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新
         if (buildStatus.isRunning()) {
             pipelineBuildSummaryDao.updateCurrentBuildTask(

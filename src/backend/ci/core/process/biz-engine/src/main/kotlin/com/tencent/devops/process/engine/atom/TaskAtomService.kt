@@ -42,9 +42,11 @@ import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
+import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
@@ -65,6 +67,7 @@ import org.springframework.stereotype.Service
 @Service
 class TaskAtomService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
+    private val redisOperation: RedisOperation,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildDetailService: TaskBuildDetailService,
     private val buildVariableService: BuildVariableService,
@@ -211,23 +214,27 @@ class TaskAtomService @Autowired(required = false) constructor(
                         atomVersion = atomVersion
                     )
                 )
-                updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
-                    pipelineTaskService.updateTaskStatusInfo(
-                        updateTaskInfo = UpdateTaskInfo(
-                            projectId = task.projectId,
-                            buildId = task.buildId,
-                            taskId = updateTaskStatusInfo.taskId,
-                            taskStatus = updateTaskStatusInfo.buildStatus
+                ContainerIdLock(redisOperation, task.buildId, task.containerId).use {
+                    // 加锁防止和引擎并发改task状态的情况
+                    it.lock()
+                    updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
+                        pipelineTaskService.updateTaskStatusInfo(
+                            updateTaskInfo = UpdateTaskInfo(
+                                projectId = task.projectId,
+                                buildId = task.buildId,
+                                taskId = updateTaskStatusInfo.taskId,
+                                taskStatus = updateTaskStatusInfo.buildStatus
+                            )
                         )
-                    )
-                    if (!updateTaskStatusInfo.message.isNullOrBlank()) {
-                        buildLogPrinter.addLine(
-                            buildId = task.buildId,
-                            message = updateTaskStatusInfo.message!!,
-                            tag = updateTaskStatusInfo.taskId,
-                            jobId = updateTaskStatusInfo.containerHashId,
-                            executeCount = updateTaskStatusInfo.executeCount
-                        )
+                        if (!updateTaskStatusInfo.message.isNullOrBlank()) {
+                            buildLogPrinter.addLine(
+                                buildId = task.buildId,
+                                message = updateTaskStatusInfo.message!!,
+                                tag = updateTaskStatusInfo.taskId,
+                                jobId = updateTaskStatusInfo.containerHashId,
+                                executeCount = updateTaskStatusInfo.executeCount
+                            )
+                        }
                     }
                 }
                 measureService?.postTaskData(
