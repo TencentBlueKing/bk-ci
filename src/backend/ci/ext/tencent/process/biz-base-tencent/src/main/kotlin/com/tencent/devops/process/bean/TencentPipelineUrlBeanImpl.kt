@@ -27,9 +27,12 @@
 
 package com.tencent.devops.process.bean
 
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import kotlin.math.log
 
 class TencentPipelineUrlBeanImpl constructor(
     private val commonConfig: CommonConfig,
@@ -50,15 +53,27 @@ class TencentPipelineUrlBeanImpl constructor(
     ): String {
         val devopsHostGateway = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         logger.info("[$buildId]|genBuildDetailUrl| host=$devopsHostGateway")
-        return "$devopsHostGateway/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-//        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+        val url = "$devopsHostGateway/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+        return try {
+            if (needShortUrl) {
+                client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+            } else url
+        } catch (ignore: Throwable) {
+            logger.warn("[$buildId]|genBuildDetailUrl| failed with:", ignore)
+            url
+        }
     }
 
     override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
         val devopsOuterHostGateWay = HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
         logger.info("[$buildId]|genBuildDetailUrl| outHost=$devopsOuterHostGateWay")
-        return "$devopsOuterHostGateWay/app/download/devops_app_forward.html" +
+        val url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html" +
             "?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId"
-//        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+        return try {
+            client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+        } catch (ignore: Throwable) {
+            logger.warn("[$buildId]|genBuildDetailUrl| failed with:", ignore)
+            url
+        }
     }
 }
