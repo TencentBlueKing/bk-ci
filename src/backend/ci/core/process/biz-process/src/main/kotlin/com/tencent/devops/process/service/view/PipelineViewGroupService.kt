@@ -530,7 +530,7 @@ class PipelineViewGroupService @Autowired constructor(
                 projectId = projectId,
                 offset = offset,
                 limit = step,
-                deleteFlag = if (includeDelete) null else true
+                deleteFlag = if (includeDelete) null else false
             ) ?: emptyList<TPipelineInfoRecord>()
             if (subPipelineInfos.isEmpty()) {
                 break
