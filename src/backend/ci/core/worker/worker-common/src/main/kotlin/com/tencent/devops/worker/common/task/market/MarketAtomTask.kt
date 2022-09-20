@@ -438,7 +438,7 @@ open class MarketAtomTask : ITask() {
     }
 
     private fun runPreCmds(
-        preCmds: List<String>,
+        preCmds: Set<String>,
         buildVariables: BuildVariables,
         atomTmpSpace: File,
         workspace: File,
