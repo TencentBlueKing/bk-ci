@@ -32,7 +32,6 @@ import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import kotlin.math.log
 
 class TencentPipelineUrlBeanImpl constructor(
     private val commonConfig: CommonConfig,
