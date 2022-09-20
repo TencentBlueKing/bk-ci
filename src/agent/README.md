@@ -34,7 +34,7 @@ windows编译，执行脚本 `build_windows.bat`
 ### Agent 模块说明
 agent模块为GoAgent的核心模块。主要负责**执行worker以及做相关辅助工作**。
 #### 模块主流程说明
-![avatar](文档图片/Agent模块流程图.png)
+![image](https://github.com/tangruotian/bk-ci/blob/issue_7352/docs/resource/img/Agent%E6%A8%A1%E5%9D%97%E6%B5%81%E7%A8%8B%E5%9B%BE.png)
 #### 步骤说明
 针对流程图步骤补充说明，序号为流程图步骤序号。
 ##### 1 检查进程。
