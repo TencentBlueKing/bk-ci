@@ -31,6 +31,7 @@
                                 :class="`path${key}`"
                             />
                         </i>
+                        <Logo v-else-if="serviceIcon(child.logoUrl) === 'metrics'" name="metric-link" size="16"  />
                         <icon
                             v-else
                             class="devops-icon service-icon"
