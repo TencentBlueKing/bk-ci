@@ -94,6 +94,10 @@ class PipelineStageService @Autowired constructor(
         return pipelineBuildStageDao.get(dslContext, projectId, buildId, stageId)
     }
 
+    fun getAllBuildStage(projectId: String, buildId: String): Collection<PipelineBuildStage> {
+        return pipelineBuildStageDao.getByBuildId(dslContext, projectId, buildId)
+    }
+
     fun updateStageStatus(
         projectId: String,
         buildId: String,
