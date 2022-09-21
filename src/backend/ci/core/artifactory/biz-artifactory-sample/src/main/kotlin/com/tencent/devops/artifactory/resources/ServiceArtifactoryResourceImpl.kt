@@ -94,6 +94,16 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
+    override fun appDownloadUrl(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        creatorId: String?,
+        userId: String,
+        path: String
+    ): Result<Url> {
+        TODO("Not yet implemented")
+    }
+
     override fun downloadUrlForOpenApi(
         userId: String,
         projectId: String,
