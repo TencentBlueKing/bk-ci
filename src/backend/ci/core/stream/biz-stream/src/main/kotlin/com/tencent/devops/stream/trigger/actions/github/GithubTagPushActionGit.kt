@@ -148,10 +148,10 @@ class GithubTagPushActionGit(
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         val event = event()
         val isMatch = TriggerMatcher.isTagPushMatch(
-            triggerOn,
-            GitActionCommon.getTriggerBranch(event.ref),
-            data.getUserId(),
-            GitActionCommon.getTriggerBranch(event.baseRef!!)
+            triggerOn = triggerOn,
+            eventTag = GitActionCommon.getTriggerBranch(event.ref),
+            userId = data.getUserId(),
+            fromBranch = event.baseRef?.let { GitActionCommon.getTriggerBranch(it) }
         )
         val params = GitActionCommon.getStartParams(
             action = this,

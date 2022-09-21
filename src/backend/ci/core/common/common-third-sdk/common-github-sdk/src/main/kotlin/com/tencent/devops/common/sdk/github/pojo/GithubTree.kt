@@ -6,5 +6,5 @@ data class GithubTree(
     val sha: String,
     val size: Int,
     val type: String,
-    val url: String
+    val url: String?
 )
