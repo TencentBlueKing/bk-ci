@@ -74,7 +74,7 @@ import java.util.Date
  * @version 1.0
  */
 @Service
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "LongMethod")
 class PipelineStageService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
@@ -578,7 +578,7 @@ class PipelineStageService @Autowired constructor(
                         "pipelineName" to pipelineName,
                         "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                         "reviewDesc" to (checkIn.reviewDesc ?: ""),
-                        "reviewers" to group.reviewers.joinToString(prefix = "(", postfix = ")")
+                        "reviewers" to group.reviewers.joinToString()
                     ),
                     position = ControlPointPosition.BEFORE_POSITION,
                     stageId = stage.stageId

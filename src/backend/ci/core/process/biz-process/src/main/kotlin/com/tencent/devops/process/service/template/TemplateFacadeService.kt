@@ -203,7 +203,13 @@ class TemplateFacadeService @Autowired constructor(
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
             )
 
-            insertTemplateSetting(context, projectId, templateId, template.name)
+            insertTemplateSetting(
+                context = context,
+                projectId = projectId,
+                templateId = templateId,
+                pipelineName = template.name,
+                isTemplate = true
+            )
             logger.info("Get the template version $version")
         }
 
@@ -254,7 +260,13 @@ class TemplateFacadeService @Autowired constructor(
                 )
                 saveTemplatePipelineSetting(userId, setting, true)
             } else {
-                insertTemplateSetting(context, projectId, newTemplateId, copyTemplateReq.templateName)
+                insertTemplateSetting(
+                    context = context,
+                    projectId = projectId,
+                    templateId = newTemplateId,
+                    isTemplate = true,
+                    pipelineName = copyTemplateReq.templateName
+                )
             }
 
             logger.info("Get the template version $version")
@@ -310,7 +322,13 @@ class TemplateFacadeService @Autowired constructor(
                 )
                 saveTemplatePipelineSetting(userId, setting, true)
             } else {
-                insertTemplateSetting(context, projectId, templateId, saveAsTemplateReq.templateName)
+                insertTemplateSetting(
+                    context = context,
+                    projectId = projectId,
+                    templateId = templateId,
+                    pipelineName = saveAsTemplateReq.templateName,
+                    isTemplate = true
+                )
             }
 
             logger.info("Get the template version $version")
@@ -1270,7 +1288,13 @@ class TemplateFacadeService @Autowired constructor(
                         )
                         saveTemplatePipelineSetting(userId, setting)
                     } else {
-                        insertTemplateSetting(context, projectId, pipelineId, pipelineName)
+                        insertTemplateSetting(
+                            context = context,
+                            projectId = projectId,
+                            templateId = pipelineId,
+                            pipelineName = pipelineName,
+                            isTemplate = false
+                        )
                     }
                     addRemoteAuth(instanceModel, projectId, pipelineId, userId)
                     successPipelines.add(instance.pipelineName)
@@ -1989,14 +2013,15 @@ class TemplateFacadeService @Autowired constructor(
         context: DSLContext,
         projectId: String,
         templateId: String,
-        pipelineName: String
+        pipelineName: String,
+        isTemplate: Boolean
     ) {
         pipelineSettingDao.insertNewSetting(
             dslContext = context,
             projectId = projectId,
             pipelineId = templateId,
             pipelineName = pipelineName,
-            isTemplate = true,
+            isTemplate = isTemplate,
             failNotifyTypes = pipelineInfoExtService.failNotifyChannel(),
             pipelineAsCodeSettings = try {
                 client.get(ServiceProjectResource::class).get(projectId).data
@@ -2072,7 +2097,13 @@ class TemplateFacadeService @Autowired constructor(
                     weight = 0,
                     version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
                 )
-                insertTemplateSetting(context, it, templateId, templateName)
+                insertTemplateSetting(
+                    context = context,
+                    projectId = it,
+                    templateId = templateId,
+                    isTemplate = true,
+                    pipelineName = templateName
+                )
                 projectTemplateMap[it] = templateId
             }
         }
