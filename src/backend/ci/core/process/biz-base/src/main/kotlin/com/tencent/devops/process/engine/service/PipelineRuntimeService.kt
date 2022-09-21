@@ -1114,7 +1114,8 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId,
                 projectId = projectId,
                 triggerReviewers = triggerReviewers,
-                variables = startParamMap
+                pipelineName = pipelineParamMap[PIPELINE_NAME]?.value?.toString() ?: pipelineId,
+                buildNum = pipelineParamMap[PIPELINE_BUILD_NUM]?.value?.toString() ?: "1"
             )
             buildLogPrinter.addYellowLine(
                 buildId = buildId, message = "Waiting for the review of $triggerReviewers",
@@ -1262,8 +1263,9 @@ class PipelineRuntimeService @Autowired constructor(
         buildId: String,
         pipelineId: String,
         projectId: String,
-        triggerReviewers: List<String>,
-        variables: Map<String, String>
+        pipelineName: String,
+        buildNum: String,
+        triggerReviewers: List<String>
     ) {
         // #7565 如果是需要启动审核的则进入审核状态
         pipelineTriggerReviewDao.createReviewRecord(
@@ -1273,8 +1275,6 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = projectId,
             reviewers = triggerReviewers
         )
-        val pipelineName = variables[PIPELINE_NAME] ?: pipelineId
-        val buildNum = variables[PIPELINE_BUILD_NUM] ?: "1"
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "build waiting for REVIEW",
