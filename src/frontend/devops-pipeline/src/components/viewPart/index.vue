@@ -15,7 +15,8 @@
             <div class="table-body">
                 <div class="table-row" v-for="(row, index) of partList" :key="index">
                     <div class="table-part-item part-item-name" @click.stop="showDetail(row)">
-                        <i :class="['devops-icon', `icon-${extForFile(row.name)}`]"></i>
+                        <Logo v-if="row.artifactoryType === 'IMAGE'" class="image-icon" name="docker-svgrepo-com" size="30" />
+                        <i v-else :class="['devops-icon', `icon-${extForFile(row.name)}`]"></i>
                         <span :title="row.name">{{ row.name }}</span>
                     </div>
                     <div class="table-part-item part-item-path">
@@ -25,14 +26,13 @@
                         <span>{{ convertInfoItem('size', row.size) }}</span>
                     </div>
                     <div class="table-part-item part-item-type">
-                        <span v-if="row.artifactoryType === 'CUSTOM_DIR'">{{ $t('details.customRepo') }}</span>
-                        <span v-if="row.artifactoryType === 'PIPELINE'">{{ $t('details.pipelineRepo') }}</span>
+                        {{ repoTypeNameMap[row.artifactoryType].i18n }}
                     </div>
                     <div class="table-part-item part-item-handler">
                         <span @click.stop="gotoArtifactory(row)" class="handler-btn" v-bk-tooltips="$t('editPage.atomForm.toArtifactory')">
                             {{ $t('locate') }}
                         </span>
-                        <span class="handler-btn" v-if="hasPermission" v-bk-tooltips="$t('download')"
+                        <span class="handler-btn" v-if="hasPermission && row.artifactoryType !== 'IMAGE'" v-bk-tooltips="$t('download')"
                             @click="requestUrl(row, 'download')">
                             {{$t('download')}}
                         </span>
@@ -142,12 +142,14 @@
 
 <script>
     import qrcode from '@/components/devops/qrcode'
+    import Logo from '@/components/Logo'
     import { convertFileSize, convertTime } from '@/utils/util'
     import { ArtifactoryOperation } from '@/components/Hooks'
 
     export default {
         components: {
             qrcode,
+            Logo,
             ArtifactoryOperation
         },
         data () {
@@ -183,6 +185,20 @@
                         ]
                     },
                     isLoading: false
+                },
+                repoTypeNameMap: {
+                    CUSTOM_DIR: {
+                        i18n: this.$t('details.customRepo'),
+                        name: 'custom'
+                    },
+                    PIPELINE: {
+                        i18n: this.$t('details.pipelineRepo'),
+                        name: 'pipeline'
+                    },
+                    IMAGE: {
+                        i18n: this.$t('details.imageRepo'),
+                        name: 'image'
+                    }
                 }
             }
         },
@@ -319,10 +335,13 @@
                 }
             },
             gotoArtifactory (row) {
-                let repoName = row.artifactoryType
-                if (repoName === 'PIPELINE') repoName = 'pipeline'
-                if (repoName === 'CUSTOM_DIR') repoName = 'custom'
-                const url = `${WEB_URL_PREFIX}/repo/${this.projectId}/generic?repoName=${repoName}&path=${row.path}`
+                const repoName = this.repoTypeNameMap[row.artifactoryType].name
+                let url = ''
+                if (repoName === 'image') {
+                    url = `${WEB_URL_PREFIX}/repo//${this.projectId}/docker/package?repoName=${repoName}&packageKey=docker://${row.name}&version=${row.fullName.split(':')[1]}`
+                } else {
+                    url = `${WEB_URL_PREFIX}/repo/${this.projectId}/generic?repoName=${repoName}&path=${row.path}`
+                }
                 window.open(url, '_blank')
             },
             addClickListenr () {
@@ -367,7 +386,7 @@
                 } = this
                 try {
                     sideSliderConfig.isLoading = true
-                    const type = row.artifactoryType === 'PIPELINE' ? 'PIPELINE' : 'CUSTOM_DIR'
+                    const type = row.artifactoryType
                     const res = await this.$store.dispatch('common/requestFileInfo', {
                         projectId: projectId,
                         type: type,
@@ -508,6 +527,13 @@
                 font-size: 30px;
                 width: 38px;
                 color: $fontLighterColor;
+            }
+            .image-icon {
+                position: absolute;
+                top: 10px;
+                left: -4px;
+                font-size: 30px;
+                width: 38px;
             }
         }
         .part-item-path {
