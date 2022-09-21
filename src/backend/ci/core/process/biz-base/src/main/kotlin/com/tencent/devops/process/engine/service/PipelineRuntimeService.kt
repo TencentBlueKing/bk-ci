@@ -1303,7 +1303,7 @@ class PipelineRuntimeService @Autowired constructor(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
-                    "reviewers" to triggerReviewers.joinToString(prefix = "(", postfix = ")"),
+                    "reviewers" to triggerReviewers.joinToString(),
                     "triggerUser" to userId
                 ),
                 position = null,
