@@ -443,7 +443,7 @@ class ExperiencePublicDao {
             .fetch(p.RECORD_ID)
     }
 
-    fun listMiniGameExperience(
+    fun listExperienceByProjectId(
         dslContext: DSLContext,
         platform: String?,
         projectId: String

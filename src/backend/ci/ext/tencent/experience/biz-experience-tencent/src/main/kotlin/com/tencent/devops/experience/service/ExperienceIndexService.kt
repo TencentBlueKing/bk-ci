@@ -274,7 +274,7 @@ class ExperienceIndexService @Autowired constructor(
         }
         val platformStr = PlatformEnum.of(platform)?.name
         val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
-        val records = experiencePublicDao.listMiniGameExperience(
+        val records = experiencePublicDao.listExperienceByProjectId(
             dslContext = dslContext,
             platform = platformStr,
             projectId = minigameProjectId!!
