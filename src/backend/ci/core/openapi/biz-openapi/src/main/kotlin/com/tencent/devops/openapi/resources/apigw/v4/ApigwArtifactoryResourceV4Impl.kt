@@ -77,14 +77,11 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         path: String
     ): Result<Url> {
         logger.info(("OPENAPI_ARTIFACTORY_V4|$userId|get app download url|$projectId|$artifactoryType|$path"))
-        return client.get(ServiceArtifactoryResource::class).externalUrl(
-            userId = userId,
+        return client.get(ServiceArtifactoryResource::class).appDownloadUrl(
             projectId = projectId,
+            userId = userId,
             artifactoryType = artifactoryType,
-            path = path,
-            creatorId = userId,
-            ttl = 24 * 3600 * 30,
-            directed = false
+            path = path
         )
     }
 
