@@ -125,7 +125,7 @@
                             <span class="artifact-size">{{ artifactory.size }}</span>
                         </p>
                         <bk-popover ref="popover" placement="top" :content="$t('download')" transfer>
-                            <i class="devops-icon icon-download download-link history-text-link" @click.stop="downloadFile(artifactory)" />
+                            <i v-if="artifactory.artifactoryType !== 'IMAGE'" class="devops-icon icon-download download-link history-text-link" @click.stop="downloadFile(artifactory)" />
                         </bk-popover>
                         <bk-popover ref="popover" placement="top" :content="$t('history.copyToCustomArtifactory')" transfer>
                             <Logo class="icon-copy" name="copy" size="12" v-if="artifactory.artifactoryType === 'PIPELINE'" @click.stop.native="copyToCustom(artifactory)"></Logo>
