@@ -100,7 +100,7 @@
                         content: [
                             {
                                 id: 'v1',
-                                label: 'privateKey',
+                                label: this.$t('setting.ticket.privateKey'),
                                 type: 'textarea',
                                 required: true,
                                 rules: [
