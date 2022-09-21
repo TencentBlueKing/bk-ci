@@ -1289,7 +1289,11 @@ class PipelineRuntimeService @Autowired constructor(
                 source = "build waiting for REVIEW",
                 projectId = projectId, pipelineId = pipelineId,
                 userId = userId, buildId = buildId,
-                receivers = triggerReviewers,
+                receivers = if (triggerReviewers.contains(userId)) {
+                    triggerReviewers
+                } else {
+                    triggerReviewers.plus(userId)
+                },
                 titleParams = mutableMapOf(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
@@ -1299,37 +1303,13 @@ class PipelineRuntimeService @Autowired constructor(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
+                    "reviewers" to triggerReviewers.joinToString(prefix = "(", postfix = ")"),
                     "triggerUser" to userId
                 ),
                 position = null,
                 stageId = null
             )
         )
-        if (userId !in triggerReviewers) {
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildNotifyEvent(
-                    notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE.name,
-                    source = "build waiting for REVIEW [triggerUser]",
-                    projectId = projectId, pipelineId = pipelineId,
-                    userId = userId, buildId = buildId,
-                    receivers = listOf(userId),
-                    titleParams = mutableMapOf(
-                        "projectName" to "need to add in notifyListener",
-                        "pipelineName" to pipelineName,
-                        "buildNum" to buildNum
-                    ),
-                    bodyParams = mutableMapOf(
-                        "projectName" to "need to add in notifyListener",
-                        "pipelineName" to pipelineName,
-                        "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
-                        "reviewers" to triggerReviewers.joinToString(prefix = "(", postfix = ")"),
-                        "triggerUser" to userId
-                    ),
-                    position = null,
-                    stageId = null
-                )
-            )
-        }
     }
 
     private fun getWebhookInfo(params: Map<String, Any>): String? {
