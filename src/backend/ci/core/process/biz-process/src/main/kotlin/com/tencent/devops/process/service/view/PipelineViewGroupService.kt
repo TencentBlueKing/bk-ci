@@ -386,7 +386,9 @@ class PipelineViewGroupService @Autowired constructor(
         pipelineView: PipelineViewForm
     ): PipelineViewPreview {
         // 获取所有流水线信息
-        val allPipelineInfoMap = allPipelineInfos(projectId, true).associateBy { it.pipelineId }
+        val allPipelineInfoMap = allPipelineInfos(
+            projectId, pipelineView.viewType == PipelineViewType.STATIC
+        ).associateBy { it.pipelineId }
         if (allPipelineInfoMap.isEmpty()) {
             return PipelineViewPreview.EMPTY
         }
