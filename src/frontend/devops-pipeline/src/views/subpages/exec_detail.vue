@@ -411,7 +411,7 @@
                 'setPipelineDetail',
                 'getInitLog',
                 'getAfterLog',
-                'pausePlugin',
+                'pausePlugin'
             ]),
             ...mapActions('common', [
                 'requestInterceptAtom'
