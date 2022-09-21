@@ -494,7 +494,7 @@
             }
             .image-icon {
                 position: absolute;
-                top: 10px;
+                top: 14px;
                 left: -4px;
                 font-size: 30px;
                 width: 38px;
