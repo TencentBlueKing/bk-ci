@@ -44,7 +44,6 @@ import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
-import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -159,7 +158,7 @@ class AtomBuildArchiveTask : ITask() {
             minVersion = atomEnv.minVersion,
             target = target ?: atomEnv.target,
             shaContent = fileSha,
-            preCmd = atomRunConditionHandleService.handleAtomPreCmd(preCmd, AgentEnv.getOS(), packageName),
+            preCmd = atomRunConditionHandleService.handleAtomPreCmd(preCmd, osName ?: "", packageName),
             atomPostInfo = atomEnv.atomPostInfo,
             osName = finalOsName,
             osArch = finalOsArch
