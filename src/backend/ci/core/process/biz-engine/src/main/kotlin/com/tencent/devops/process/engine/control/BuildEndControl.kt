@@ -322,7 +322,7 @@ class BuildEndControl @Autowired constructor(
                 errorInfoList.add(
                     ErrorInfo(
                         stageId = stage.stageId,
-                        jobId = null,
+                        jobId = "",
                         taskId = "",
                         taskName = "",
                         atomCode = "",

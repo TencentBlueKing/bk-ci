@@ -1181,7 +1181,7 @@ class PipelineRuntimeService @Autowired constructor(
             newBuildStatus = newBuildStatus,
             errorInfoList = listOf(
                 ErrorInfo(
-                    stageId = null, jobId = null,
+                    stageId = "", jobId = "",
                     taskId = "", taskName = "", atomCode = "",
                     errorType = ErrorType.USER.num, errorMsg = "Rejected by $userId in trigger review.",
                     errorCode = ProcessMessageCode.ERROR_TRIGGER_REVIEW_ABORT.toInt()

@@ -110,7 +110,7 @@ object Runner {
             // #1613 worker-agent.jar 增强在启动之前的异常情况上报（本机故障）
             EngineService.submitError(
                 ErrorInfo(
-                    stageId = null,
+                    stageId = "",
                     jobId = buildVariables.containerId,
                     taskId = "",
                     taskName = "",
