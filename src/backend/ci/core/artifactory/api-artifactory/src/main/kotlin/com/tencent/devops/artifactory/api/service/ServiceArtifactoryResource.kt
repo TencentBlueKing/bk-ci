@@ -171,6 +171,24 @@ interface ServiceArtifactoryResource {
         directed: Boolean?
     ): Result<Url>
 
+    @ApiOperation("APP构件跳转链接")
+    @Path("/{projectId}/{artifactoryType}/appDownloadUrl")
+    @GET
+    fun appDownloadUrl(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("下载用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String
+    ): Result<Url>
+
     @ApiOperation("创建内部链接")
     // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
     @Path("/{projectId}/{artifactoryType}/downloadUrl")
