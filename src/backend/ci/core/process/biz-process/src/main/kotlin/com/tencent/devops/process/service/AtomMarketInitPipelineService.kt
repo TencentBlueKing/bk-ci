@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.KEY_BRANCH
 import com.tencent.devops.common.api.constant.KEY_COMMIT_ID
+import com.tencent.devops.common.api.constant.KEY_INVALID_OS_INFO
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
@@ -100,6 +101,10 @@ class AtomMarketInitPipelineService @Autowired constructor(
         val osArch = atomBaseInfo.osArch
         if (!osArch.isNullOrBlank()) {
             startParams[KEY_OS_ARCH] = osArch
+        }
+        val invalidOsInfo = atomBaseInfo.invalidOsInfo
+        if (!invalidOsInfo.isNullOrBlank()) {
+            startParams[KEY_INVALID_OS_INFO] = invalidOsInfo
         }
         val runtimeVersion = atomBaseInfo.runtimeVersion
         if (!runtimeVersion.isNullOrBlank()) {
