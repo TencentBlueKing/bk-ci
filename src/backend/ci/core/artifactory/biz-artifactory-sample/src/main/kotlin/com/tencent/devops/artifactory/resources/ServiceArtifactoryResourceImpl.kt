@@ -97,7 +97,6 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     override fun appDownloadUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,
-        creatorId: String?,
         userId: String,
         path: String
     ): Result<Url> {
