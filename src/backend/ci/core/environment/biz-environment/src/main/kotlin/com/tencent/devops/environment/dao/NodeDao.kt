@@ -533,7 +533,7 @@ class NodeDao {
             dslContext.update(this)
                 .set(NODE_HASH_ID, hashId)
                 .where(NODE_ID.eq(id))
-                .and(NODE_HASH_ID.ne(hashId))
+                .and(NODE_HASH_ID.isNull)
                 .execute()
         }
     }

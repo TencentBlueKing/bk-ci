@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.constant.BUILD_QUEUE
+import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -40,6 +41,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -117,6 +119,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
@@ -126,6 +129,7 @@ import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
@@ -146,10 +150,12 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -160,6 +166,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
+import java.util.Date
 
 /**
  * 流水线运行时相关的服务
@@ -723,14 +730,6 @@ class PipelineRuntimeService @Autowired constructor(
             // 默认都是排队状态
             BuildStatus.QUEUE
         } else {
-            // #7565 如果是需要启动审核的则进入审核状态
-            pipelineTriggerReviewDao.createReviewRecord(
-                dslContext = dslContext,
-                buildId = buildId,
-                pipelineId = pipelineInfo.pipelineId,
-                projectId = pipelineInfo.projectId,
-                reviewers = triggerReviewers
-            )
             BuildStatus.TRIGGER_REVIEWING
         }
         val detailUrl = pipelineUrlBean.genBuildDetailUrl(
@@ -1108,7 +1107,16 @@ class PipelineRuntimeService @Autowired constructor(
                 context = context,
                 startBuildStatus = startBuildStatus
             )
-        } else {
+        } else if (triggerReviewers?.isNotEmpty() == true) {
+            prepareTriggerReview(
+                userId = startParamMap[PIPELINE_START_USER_ID] ?: pipelineInfo.lastModifyUser,
+                buildId = buildId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                triggerReviewers = triggerReviewers,
+                pipelineName = pipelineParamMap[PIPELINE_NAME]?.value?.toString() ?: pipelineId,
+                buildNum = pipelineParamMap[PIPELINE_BUILD_NUM]?.value?.toString() ?: "1"
+            )
             buildLogPrinter.addYellowLine(
                 buildId = buildId, message = "Waiting for the review of $triggerReviewers",
                 tag = TAG, jobId = JOB_ID, executeCount = 1
@@ -1246,6 +1254,60 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 actionType = context.actionType,
                 triggerType = context.startType.name
+            )
+        )
+    }
+
+    private fun prepareTriggerReview(
+        userId: String,
+        buildId: String,
+        pipelineId: String,
+        projectId: String,
+        pipelineName: String,
+        buildNum: String,
+        triggerReviewers: List<String>
+    ) {
+        // #7565 如果是需要启动审核的则进入审核状态
+        pipelineTriggerReviewDao.createReviewRecord(
+            dslContext = dslContext,
+            buildId = buildId,
+            pipelineId = pipelineId,
+            projectId = projectId,
+            reviewers = triggerReviewers
+        )
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildReviewBroadCastEvent(
+                source = "build waiting for REVIEW",
+                projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, userId = userId,
+                reviewType = BuildReviewType.TRIGGER_REVIEW,
+                status = BuildStatus.REVIEWING.name,
+                stageId = null, taskId = null
+            ),
+            PipelineBuildNotifyEvent(
+                notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE.name,
+                source = "build waiting for REVIEW",
+                projectId = projectId, pipelineId = pipelineId,
+                userId = userId, buildId = buildId,
+                receivers = if (triggerReviewers.contains(userId)) {
+                    triggerReviewers
+                } else {
+                    triggerReviewers.plus(userId)
+                },
+                titleParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "buildNum" to buildNum
+                ),
+                bodyParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
+                    "reviewers" to triggerReviewers.joinToString(),
+                    "triggerUser" to userId
+                ),
+                position = null,
+                stageId = null
             )
         )
     }

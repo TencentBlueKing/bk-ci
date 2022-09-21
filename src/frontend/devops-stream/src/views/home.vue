@@ -92,7 +92,7 @@
                         <h2 class="section--title" style="">丰富的腾讯 CI 插件生态</h2>
                         <div class="section--sub">
                             <p>蓝盾研发商店自发布以来，共上架<strong>1250</strong>个流水线插件</p>
-                            <p>在 Stream 中，你可以通过<em>uses</em>关键字方便引入这些插件，让插件生态得以最大化利用。<a href="http://devops.oa.com/console/store/market/list?features=&sortType=RECENT_EXECUTE_NUM&pipeType=atom" target="_blank">
+                            <p>在 Stream 中，你可以通过<em>uses</em>关键字方便引入这些插件，让插件生态得以最大化利用。<a href="https://devops.woa.com/console/store/market/list?features=&sortType=RECENT_EXECUTE_NUM&pipeType=atom" target="_blank">
                                 点击浏览所有腾讯CI插件
                             </a></p>
                         </div>
