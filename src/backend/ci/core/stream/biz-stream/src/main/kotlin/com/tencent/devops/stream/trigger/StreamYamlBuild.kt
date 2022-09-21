@@ -233,7 +233,7 @@ class StreamYamlBuild @Autowired constructor(
                     Triple(
                         false,
                         e.message,
-                        TriggerReason.CREATE_QUALITY_RULRS_ERROR
+                        TriggerReason.CREATE_QUALITY_RULES_ERROR
                     )
                 }
                 // 指定异常直接扔出在外面统一处理
