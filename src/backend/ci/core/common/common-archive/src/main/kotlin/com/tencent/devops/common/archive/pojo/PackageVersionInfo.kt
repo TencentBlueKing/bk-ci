@@ -41,4 +41,3 @@ data class PackageVersionInfo(
     @ApiModelProperty("元数据信息")
     val metadata: List<Map<String, Any>>
 )
-

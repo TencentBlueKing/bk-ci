@@ -83,7 +83,7 @@ object BkRepoUtils {
     fun parseArtifactoryType(repoName: String): ArtifactoryType {
         return if (repoName == REPO_NAME_CUSTOM) {
             ArtifactoryType.CUSTOM_DIR
-        } else if (repoName == REPO_NAME_IMAGE){
+        } else if (repoName == REPO_NAME_IMAGE) {
             ArtifactoryType.IMAGE
         } else {
             ArtifactoryType.PIPELINE
