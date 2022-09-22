@@ -25,15 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.resources
 
-class SimpleLocalManagerServiceImpl : LocalManagerService {
-    override fun projectManagerCheck(
-        userId: String,
-        projectCode: String,
-        action: String,
-        resourceType: String
-    ): Boolean {
-        return false
+import com.tencent.devops.auth.api.login.UserThirdLoginResource
+import com.tencent.devops.auth.service.ThirdLoginService
+import com.tencent.devops.common.web.RestResource
+import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class UserThirdLoginResourceImpl @Autowired constructor(
+    val loginService: ThirdLoginService
+) : UserThirdLoginResource {
+
+    override fun thirdLoginOut(userId: String): Response {
+        return loginService.thirdLoginOut(userId)
     }
 }

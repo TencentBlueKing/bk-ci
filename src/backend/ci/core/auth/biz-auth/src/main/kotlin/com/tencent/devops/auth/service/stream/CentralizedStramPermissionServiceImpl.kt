@@ -27,16 +27,25 @@
 
 package com.tencent.devops.auth.service.stream
 
+import com.tencent.devops.auth.utils.GitTypeUtils
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Autowired
 
-class GitlabStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl() {
+class CentralizedStramPermissionServiceImpl @Autowired constructor(
+    val client: Client
+) : StreamPermissionServiceImpl() {
     override fun isPublicProject(projectCode: String, userId: String?): Boolean {
-        TODO("Not yet implemented")
+        val gitType = GitTypeUtils.getType()
+        // type: github, gitlab, svn, tgitd等
+        // TODO: 根据不同的类型调用不同的代码源接口
+        return true
     }
 
     override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        TODO("Not yet implemented")
+        val gitType = GitTypeUtils.getType()
+        // TODO: 根据不同的类型调用不同的代码源接口
+        return Pair(true, true)
     }
 
     override fun extPermission(
@@ -45,6 +54,6 @@ class GitlabStreamPermissionServiceImpl @Autowired constructor() : StreamPermiss
         action: AuthPermission,
         resourceType: String
     ): Boolean {
-        TODO("Not yet implemented")
+        return false
     }
 }

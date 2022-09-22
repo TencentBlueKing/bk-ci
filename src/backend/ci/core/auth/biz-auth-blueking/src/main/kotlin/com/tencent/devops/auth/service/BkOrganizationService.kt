@@ -28,9 +28,7 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.pojo.OrganizationEntity
-import org.springframework.stereotype.Service
 
-@Service
 class BkOrganizationService : OrganizationService {
 
     override fun getParentOrganizationInfo(organizationId: String, level: Int): List<OrganizationEntity>? {
