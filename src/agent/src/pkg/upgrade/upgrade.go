@@ -123,7 +123,7 @@ func syncJdkVersion() ([]string, error) {
 	stat, err := os.Stat(config.GetJavaDir())
 	if err != nil {
 		if os.IsNotExist(err) {
-			logs.Error("syncJdkVersion no jdk dir find")
+			logs.Error("syncJdkVersion no jdk dir find", err)
 			return nil, nil
 		}
 		return nil, errors.Wrap(err, "agent check jdk dir error")
