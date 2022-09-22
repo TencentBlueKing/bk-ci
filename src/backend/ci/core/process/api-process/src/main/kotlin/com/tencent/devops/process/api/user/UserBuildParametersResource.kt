@@ -129,9 +129,6 @@ interface UserBuildParametersResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("对应权限", required = true, defaultValue = "")
-        @QueryParam("permission")
-        permission: Permission,
         @ApiParam("别名", required = false)
         @QueryParam("aliasName")
         aliasName: String? = null,

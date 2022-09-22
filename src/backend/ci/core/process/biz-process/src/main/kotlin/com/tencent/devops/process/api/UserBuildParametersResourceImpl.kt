@@ -150,7 +150,6 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: Permission,
         aliasName: String?,
         page: Int?,
         pageSize: Int?
