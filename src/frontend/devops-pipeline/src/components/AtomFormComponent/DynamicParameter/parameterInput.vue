@@ -4,7 +4,7 @@
         <section class="parameter-input">
             <p v-if="label && label.trim()" class="input-label" :title="label">{{ label }}：</p>
             <bk-input class="input-main" :clearable="!disabled" :value="value" @change="(newValue) => $emit('update-value', newValue)" v-if="type === 'input'" :disabled="disabled"></bk-input>
-            <vuex-textarea v-else-if="type === 'textarea'" :value="value" :handle-change="(name, value) => $emit('update-value', value)" :disabled="disabled" click-unfold hover-unfold></vuex-textarea>
+            <vuex-textarea class="textarea-main" v-else-if="type === 'textarea'" :value="value" :handle-change="(name, value) => $emit('update-value', value)" :disabled="disabled" click-unfold hover-unfold></vuex-textarea>
             <section v-else class="parameter-select input-main" v-bk-clickoutside="toggleShowList">
                 <bk-input ref="inputItem"
                     :clearable="!disabled"
@@ -239,6 +239,9 @@
         }
         .input-main {
             flex: 1;
+        }
+        .textarea-main {
+            position: relative;
         }
     }
     .parameter-select {
