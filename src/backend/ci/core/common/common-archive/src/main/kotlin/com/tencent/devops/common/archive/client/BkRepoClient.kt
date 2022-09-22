@@ -103,10 +103,6 @@ class BkRepoClient constructor(
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
     }
 
-    private fun getBkRepoUrl(): String {
-        return bkRepoClientConfig.bkRepoBaseUrl.removeSuffix("/")
-    }
-
     fun useBkRepo(): Boolean {
         return BKREPO_REALM == bkRepoClientConfig.artifactoryRealm
     }
@@ -615,9 +611,8 @@ class BkRepoClient constructor(
         fullPath: String,
         outputStream: OutputStream
     ) {
-        val url = "${getBkRepoUrl()}/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
+        val url = "${getGatewayUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
         val request = Request.Builder().url(url)
-            .header("Authorization", bkRepoClientConfig.bkRepoAuthorization)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
