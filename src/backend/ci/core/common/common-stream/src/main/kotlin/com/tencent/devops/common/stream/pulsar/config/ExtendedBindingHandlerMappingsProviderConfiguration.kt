@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.stream.pulsar.config
 
+import com.tencent.devops.common.stream.config.StreamBindingEnvironmentPostProcessor
 import com.tencent.devops.common.stream.pulsar.convert.PulsarMessageConverter
 import com.tencent.devops.common.stream.pulsar.custom.PulsarConfigBeanPostProcessor
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -51,6 +52,11 @@ class ExtendedBindingHandlerMappingsProviderConfiguration {
     @Bean
     fun pulsarConfigBeanPostProcessor(): PulsarConfigBeanPostProcessor {
         return PulsarConfigBeanPostProcessor()
+    }
+
+    @Bean
+    fun streamBindingEnvironmentPostProcessor(): StreamBindingEnvironmentPostProcessor {
+        return StreamBindingEnvironmentPostProcessor()
     }
 
     /**
