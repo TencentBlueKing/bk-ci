@@ -305,7 +305,7 @@
                 return this.execDetail && ['RUNNING', 'QUEUE', 'STAGE_SUCCESS'].indexOf(this.execDetail.status) < 0
             },
             isInstanceEditable () {
-                return this.pipeline && this.pipeline.instanceFromTemplate
+                return this.execDetail?.model?.instanceFromTemplate
             },
             curMatchRules () {
                 return this.$route.path.indexOf('template') > 0 ? this.templateRuleList : this.isInstanceEditable ? this.templateRuleList.concat(this.ruleList) : this.ruleList
@@ -459,7 +459,7 @@
                         isContinue,
                         element: atom
                     }
-                    
+
                     try {
                         await this.pausePlugin(postData)
                         this.requestPipelineExecDetail(this.routerParams)

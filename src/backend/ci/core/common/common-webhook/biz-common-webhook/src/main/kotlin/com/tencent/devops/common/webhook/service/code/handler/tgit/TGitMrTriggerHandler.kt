@@ -158,8 +158,10 @@ class TGitMrTriggerHandler(
 
     override fun preMatch(event: GitMergeRequestEvent): ScmWebhookMatcher.MatchResult {
         if (event.object_attributes.action == "close" ||
-            (event.object_attributes.action == "update" &&
-                    event.object_attributes.extension_action != "push-update")
+            (
+                event.object_attributes.action == "update" &&
+                    event.object_attributes.extension_action != "push-update"
+                )
         ) {
             logger.info("Git web hook is ${event.object_attributes.action} merge request")
             return ScmWebhookMatcher.MatchResult(false)
@@ -324,7 +326,8 @@ class TGitMrTriggerHandler(
                 repoType = ScmType.CODE_TGIT.name,
                 commitTime = commitTime,
                 eventType = CodeEventType.MERGE_REQUEST.name,
-                mrId = mrId.toString()
+                mrId = mrId.toString(),
+                action = event.object_attributes.action
             )
         }
     }
@@ -342,11 +345,14 @@ class TGitMrTriggerHandler(
         } else {
             event.object_attributes.id
         }
+        // MR提交人
+        val mrInfo = gitScmService.getMergeRequestInfo(projectId, mrRequestId, repository)
+        val reviewers = gitScmService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)?.reviewers
+
         return WebhookUtils.mrStartParam(
-            gitScmService = gitScmService,
-            mrRequestId = mrRequestId,
-            projectId = projectId,
-            repository = repository
+            mrInfo = mrInfo,
+            reviewers = reviewers,
+            mrRequestId = mrRequestId
         )
     }
 }

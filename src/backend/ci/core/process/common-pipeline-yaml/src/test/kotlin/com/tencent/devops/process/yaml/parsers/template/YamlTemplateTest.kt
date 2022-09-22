@@ -43,7 +43,6 @@ import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
-import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -54,6 +53,7 @@ import java.io.InputStreamReader
 import java.io.StringReader
 
 @Suppress("LoopWithTooManyJumpStatements")
+@DisplayName("Yaml模板替换综合测试")
 class YamlTemplateTest {
 
     private val sampleDir = "samples"
@@ -255,47 +255,50 @@ variables:
 
     private fun check(file: String, old: Boolean, hasOldFile: Boolean = false) {
         var flag = true
-        val sample = BufferedReader(
-            StringReader(
-                replace(file, null, null, true, old).toString()
-            )
-        )
-        val compared = if (!hasOldFile) {
-            BufferedReader(
-                StringReader(
-                    getStrFromResource("compared/${file.removePrefix("samples")}")
-                )
-            )
+
+        val actual = replace(file, null, null, true, old).toString()
+        val sample = BufferedReader(StringReader(actual))
+        println("------------ Actual ------------")
+        println(actual)
+        println("------------------------")
+
+        val expect = if (!hasOldFile) {
+            getStrFromResource("compared/${file.removePrefix("samples")}")
         } else {
-            BufferedReader(
-                StringReader(
-                    getStrFromResource(
-                        "compared/${
-                        file.removePrefix("samples")
-                            .replace("_old.yml", ".yml")
-                            .replace(".yml", "_old.yml")
-                        }"
-                    )
-                )
+            getStrFromResource(
+                "compared/${
+                file.removePrefix("samples")
+                    .replace("_old.yml", ".yml")
+                    .replace(".yml", "_old.yml")
+                }"
             )
         }
+        val compared = BufferedReader(StringReader(expect))
+        println("------------ Expect ------------")
+        println(expect)
+        println("------------------------")
+
+        var lineNumber = 1
         var line = sample.readLine()
         var lineCompare = compared.readLine()
+        println("------------ Diff ------------")
         while (line != null) {
             // 随机生成的id不计入比较
             if (line.trim().startsWith("id") || line.trim().startsWith("- id")) {
                 line = sample.readLine()
                 lineCompare = compared.readLine()
+                lineNumber++
                 continue
             }
             if (line != lineCompare) {
-                println("$line != $lineCompare")
+                println("$lineNumber: $line != $lineCompare")
                 flag = false
-                break
             }
             line = sample.readLine()
             lineCompare = compared.readLine()
+            lineNumber++
         }
+        println("------------------------")
         Assertions.assertTrue(flag)
     }
 
@@ -329,11 +332,9 @@ variables:
         }
         val (normalOb, trans) = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
         val yamls = YamlUtil.toYaml(normalOb)
-        println(YamlCommonUtils.toYamlNotNull(preScriptBuildYaml))
-        println("------------------------")
+        println("------------ Trans -----------")
         println(JsonUtil.toJson(trans))
         println("------------------------")
-        println(yamls)
         return yamls
     }
 

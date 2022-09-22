@@ -84,13 +84,21 @@ BEGIN
 		ALTER TABLE T_ATOM_ENV_INFO ADD INDEX `UNI_INX_TAEI_ID_OS_NAME_ARCH` (`ATOM_ID`, `OS_NAME`,`OS_ARCH`);
 	END IF;
 	
-	IF EXISTS(SELECT 1
-			  FROM information_schema.statistics
-			  WHERE TABLE_SCHEMA = db
-				 AND TABLE_NAME = 'T_ATOM_ENV_INFO'
-				 AND INDEX_NAME = 'inx_tpaei_atom_id') THEN
-		ALTER TABLE T_ATOM_ENV_INFO DROP INDEX `inx_tpaei_atom_id`;
-	END IF;
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_STORE_APPROVE'
+                    AND COLUMN_NAME = 'TOKEN') THEN
+    ALTER TABLE T_STORE_APPROVE ADD `TOKEN` varchar(64) DEFAULT NULL;
+    END IF;
+
+    IF EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_ATOM_ENV_INFO'
+                     AND INDEX_NAME = 'inx_tpaei_atom_id') THEN
+    ALTER TABLE T_ATOM_ENV_INFO DROP INDEX `inx_tpaei_atom_id`;
+    END IF;
 
     COMMIT;
 END <CI_UBF>
