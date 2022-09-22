@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
@@ -516,13 +517,14 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 }
 
             // 获取项目下所有流水线，并过滤出有权限部分，有权限列表为空时返回项目所有流水线
+            val limit = PageUtil.convertPageSizeToSQLLimit(page ?: 0, pageSize ?: 1000)
             val buildPipelineRecords =
                 pipelineInfoFacadeService.searchInfoByPipelineIds(
                     projectId = projectId,
                     pipelineIds = hasPermissionList.toSet(),
                     channelCode = ChannelCode.BS,
-                    offset = page ?: 0,
-                    limit = pageSize ?: 1000,
+                    offset = limit.offset,
+                    limit = limit.limit,
                     pipelineName = aliasName
                 )
 
