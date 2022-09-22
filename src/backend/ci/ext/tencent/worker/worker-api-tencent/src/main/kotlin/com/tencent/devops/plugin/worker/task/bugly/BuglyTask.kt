@@ -90,7 +90,7 @@ class BuglyTask : ITask() {
         val credId = taskParams["credId"]!!
         val platform = taskParams["platform"]!!
 
-        val credList = CredentialUtils.getCredential(buildVariables.buildId, credId)
+        val credList = CredentialUtils.getCredential(credentialId = credId)
 
         val appId = credList[0]
         val appKey = credList[1]

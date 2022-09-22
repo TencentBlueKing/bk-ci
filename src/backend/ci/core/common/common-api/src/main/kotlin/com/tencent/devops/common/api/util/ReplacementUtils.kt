@@ -137,7 +137,7 @@ object ReplacementUtils {
                 index = parseVariable(command, index + 2, inside, replacement, contextMap, depth)
                 token.append(inside)
             } else if (c == '}') {
-                var tokenValue = getVariable(token.toString(), replacement, false)
+                var tokenValue :String? = getVariable(token.toString(), replacement, false)
                 if (tokenValue == "\${$token}") {
                     tokenValue = contextMap?.get(token.toString())
                 }
@@ -181,7 +181,7 @@ object ReplacementUtils {
                 token.append(inside)
             } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
                 val tokenStr = token.toString().trim()
-                var tokenValue = getVariable(token.toString().trim(), replacement, true)
+                var tokenValue :String? = getVariable(token.toString().trim(), replacement, true)
                 if (tokenValue == "\${{$tokenStr}}") {
                     tokenValue = contextMap?.get(tokenStr)
                 }
@@ -209,5 +209,10 @@ object ReplacementUtils {
         c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{'
 
     private fun getVariable(key: String, replacement: KeyReplacement, doubleCurlyBraces: Boolean) =
-        replacement.getReplacement(key, doubleCurlyBraces)
+        replacement.getReplacement(key)
+            ?: if (doubleCurlyBraces) {
+                "\${{$key}}"
+            } else {
+                "\${$key}"
+            }
 }

@@ -57,7 +57,7 @@ class EnvUtilTest {
         val data = HashMap<String, String>()
         data["ab3c"] = "123"
         data["ab.cd"] = "5678"
-        data["t.cd"] = "\${{ab.cd}}" // 二次替换 只能 对应处理 一直是双括号或者一直是单括号
+        data["t.cd"] = "\${ab.cd}"
 
         val template2 = "abcd_\$abc}_ffs_\${{\${{ce}}_\${{ab.c}_ end"
         val buff = EnvUtils.parseEnv(template2, data)
@@ -166,7 +166,6 @@ class EnvUtilTest {
             EnvUtils.parseEnv(
                 command = command9,
                 data = map,
-                replaceWithEmpty = false, // 这里如果为true，则会导致先识别到 ${{ci.workspace} 并替换为空格，无法正常识别 ${{}}
                 isEscape = true,
                 contextMap = mapOf("ci.workspace" to "/data/landun/workspace")
             )
