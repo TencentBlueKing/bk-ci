@@ -39,7 +39,7 @@ func ParseJsonToData(jsonData interface{}, targetData interface{}) error {
 		return err
 	}
 
-	err = json.Unmarshal([]byte(dataStr), targetData)
+	err = json.Unmarshal(dataStr, targetData)
 	if err != nil {
 		return err
 	} else {
