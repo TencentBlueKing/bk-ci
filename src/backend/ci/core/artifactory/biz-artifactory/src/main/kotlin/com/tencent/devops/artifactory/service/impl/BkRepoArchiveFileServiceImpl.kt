@@ -53,6 +53,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -230,7 +231,36 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             page = page ?: 1,
             pageSize = pageSize ?: DEFAULT_PAGESIZE,
             totalPages = 1,
-            records = nodeList.map { FileInfo(
+            records = nodeList.map { buildFileInfo(it) }
+        )
+    }
+
+    private fun buildFileInfo(it: QueryNodeInfo): FileInfo {
+        return if (parseArtifactoryType(it.repoName) == ArtifactoryType.IMAGE) {
+            val (imageName, version) = DefaultPathUtils.getImageNameAndVersion(it.fullPath)
+            val packageVersion = bkRepoClient.getPackageVersionInfo(
+                userId = it.createdBy,
+                projectId = it.projectId,
+                repoName = it.repoName,
+                packageKey = "docker://$imageName",
+                version = version
+            )
+            with(packageVersion) {
+                FileInfo(
+                    name = imageName,
+                    fullName = "$imageName:${basic.version}",
+                    path = basic.fullPath,
+                    fullPath = basic.fullPath,
+                    size = basic.size,
+                    modifiedTime = LocalDateTime.parse(basic.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
+                        .timestamp(),
+                    folder = false,
+                    artifactoryType = ArtifactoryType.IMAGE,
+                    properties = metadata.map { m -> Property(m["key"].toString(), m["value"].toString()) }
+                )
+            }
+        } else {
+            FileInfo(
                 name = it.name,
                 fullName = it.name,
                 path = it.path,
@@ -240,8 +270,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                 properties = it.metadata?.map { m -> Property(m.key, m.value) },
                 modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 artifactoryType = parseArtifactoryType(it.repoName)
-            ) }
-        )
+            )
+        }
     }
 
     override fun generateDestPath(

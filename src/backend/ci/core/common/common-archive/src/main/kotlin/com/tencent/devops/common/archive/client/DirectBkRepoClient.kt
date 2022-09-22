@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.archive.client
 
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.MediaType
 import okhttp3.Request
@@ -57,7 +58,8 @@ class DirectBkRepoClient {
         metadata: Map<String, String> = mapOf(),
         override: Boolean = true
     ) {
-        logger.info("uploadLocalFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, file: ${file.canonicalPath}, metadata: $metadata, override: $override")
+        logger.info("uploadLocalFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, " +
+            "file: ${file.canonicalPath}, metadata: $metadata, override: $override")
         buildMetadataHeader(metadata)
         val request = Request.Builder()
             .url("${getBkRepoUrl()}/generic/$projectId/$repoName/${path.removePrefix("/")}")
@@ -69,8 +71,7 @@ class DirectBkRepoClient {
             .build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                logger.error("upload file failed, responseContent: ${response.body()!!.string()}")
-                throw RuntimeException("upload file failed")
+                throw RemoteServiceException("upload file failed: ${response.body()!!.string()}", response.code())
             }
         }
     }
@@ -87,7 +88,8 @@ class DirectBkRepoClient {
         metadata: Map<String, String> = mapOf(),
         override: Boolean = true
     ): String {
-        logger.info("uploadByteArray, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, metadata: $metadata, override: $override")
+        logger.info("uploadByteArray, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, " +
+            "metadata: $metadata, override: $override")
         buildMetadataHeader(metadata)
         val url = "${getBkRepoUrl()}/generic/$projectId/$repoName/${path.removePrefix("/")}"
         val request = Request.Builder()
@@ -100,8 +102,7 @@ class DirectBkRepoClient {
             .build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                logger.error("upload file failed, responseContent: ${response.body()!!.string()}")
-                throw RuntimeException("upload file failed")
+                throw RemoteServiceException("upload file failed: ${response.body()!!.string()}", response.code())
             }
             return url
         }
@@ -109,7 +110,7 @@ class DirectBkRepoClient {
 
     fun getBkRepoUrl(): String {
         if (bkrepoUrl.isNullOrBlank()) {
-            throw RuntimeException("bkrepo.url config is null")
+            throw IllegalArgumentException("bkrepo.url config is null")
         }
         return if (bkrepoUrl.startsWith("http://") || bkrepoUrl.startsWith("https://")) {
             bkrepoUrl.removeSuffix("/")
