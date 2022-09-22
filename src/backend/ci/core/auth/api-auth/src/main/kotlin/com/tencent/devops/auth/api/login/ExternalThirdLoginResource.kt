@@ -25,26 +25,52 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.stream
+package com.tencent.devops.auth.api.login
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_CI_LOGIN_TOKEN
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
-class GitlabStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl() {
-    override fun isPublicProject(projectCode: String, userId: String?): Boolean {
-        TODO("Not yet implemented")
-    }
+@Api(tags = ["AUTH_THIRD_LOGIN"], description = "权限-第三方登陆")
+@Path("/external/third/login")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ExternalThirdLoginResource {
 
-    override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun extPermission(
-        projectCode: String,
+    @Path("/")
+    @GET
+    @ApiOperation("第三方登录")
+    fun thirdLogin(
+        @QueryParam("code")
+        @ApiParam("验证code")
+        code: String,
+        @QueryParam("userId")
+        @ApiParam("用户ID")
         userId: String,
-        action: AuthPermission,
-        resourceType: String
-    ): Boolean {
-        TODO("Not yet implemented")
-    }
+        @QueryParam("type")
+        @ApiParam("登陆类型")
+        type: String,
+        @QueryParam("email")
+        @ApiParam("邮箱")
+        email: String? = null
+    ): Response
+
+    @Path("/verifyToken")
+    @GET
+    @ApiOperation("校验凭证")
+    fun verifyToken(
+        @HeaderParam(AUTH_HEADER_BK_CI_LOGIN_TOKEN)
+        @ApiParam("凭证")
+        token: String
+    ): Result<String>
 }

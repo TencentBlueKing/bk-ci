@@ -25,26 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.stream
+package com.tencent.devops.auth.filter
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.auth.utils.GitTypeUtils
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
+import org.springframework.stereotype.Component
+import javax.servlet.Filter
+import javax.servlet.FilterChain
+import javax.servlet.ServletRequest
+import javax.servlet.ServletResponse
+import javax.servlet.http.HttpServletRequest
 
-class GitlabStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl() {
-    override fun isPublicProject(projectCode: String, userId: String?): Boolean {
-        TODO("Not yet implemented")
+/**
+ * 仅在Stream的场景生效，用于区分不同的代码库源，对应不同的校验逻辑
+ */
+@Component
+class GitTypeFilter : Filter {
+
+    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
+        if (request == null || chain == null) {
+            return
+        }
+        val httpServletRequest = request as HttpServletRequest
+        val gitType = httpServletRequest.getHeader(AUTH_HEADER_GIT_TYPE)
+        // 获取HEAD内仓库类型，供后续的校验逻辑使用，仅在Stream场景下会传 AUTH_HEADER_GIT_TYPE
+        if (!gitType.isNullOrEmpty()) {
+            GitTypeUtils.setType(gitType)
+        }
+        chain.doFilter(request, response)
     }
 
-    override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun extPermission(
-        projectCode: String,
-        userId: String,
-        action: AuthPermission,
-        resourceType: String
-    ): Boolean {
-        TODO("Not yet implemented")
+    override fun destroy() {
+        // 清理本次请求type，否则会污染下一次请求
+        GitTypeUtils.removeType()
+        super.destroy()
     }
 }

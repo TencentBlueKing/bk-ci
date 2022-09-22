@@ -25,26 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.stream
+package com.tencent.devops.auth.resources
 
-import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.auth.api.login.ExternalThirdLoginResource
+import com.tencent.devops.auth.service.ThirdLoginService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
-class GitlabStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl() {
-    override fun isPublicProject(projectCode: String, userId: String?): Boolean {
-        TODO("Not yet implemented")
+@RestResource
+class ExternalThirdLoginResourceImpl @Autowired constructor(
+    val loginService: ThirdLoginService
+) : ExternalThirdLoginResource {
+    override fun thirdLogin(code: String, userId: String, type: String, email: String?): Response {
+        return loginService.thirdLogin(code, userId, type, email)
     }
 
-    override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun extPermission(
-        projectCode: String,
-        userId: String,
-        action: AuthPermission,
-        resourceType: String
-    ): Boolean {
-        TODO("Not yet implemented")
+    override fun verifyToken(token: String): Result<String> {
+        return Result(loginService.verifyToken(token))
     }
 }

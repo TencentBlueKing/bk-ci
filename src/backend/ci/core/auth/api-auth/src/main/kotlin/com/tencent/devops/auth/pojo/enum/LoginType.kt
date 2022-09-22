@@ -25,26 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.stream
+package com.tencent.devops.auth.pojo.enum
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import org.springframework.beans.factory.annotation.Autowired
+enum class LoginType(val value: String, val typeNum: Int) {
+    ACCOUNT("account", 0),
+    GITHUB("github", 1),
+    GITLAB("gitlab", 2);
 
-class GitlabStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl() {
-    override fun isPublicProject(projectCode: String, userId: String?): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun extPermission(
-        projectCode: String,
-        userId: String,
-        action: AuthPermission,
-        resourceType: String
-    ): Boolean {
-        TODO("Not yet implemented")
+    companion object {
+        fun getTypeNum(type: String): LoginType {
+            values().forEach {
+                if (it.value == type) {
+                    return it
+                }
+            }
+            throw IllegalArgumentException("No LoginType enum for constant $type")
+        }
     }
 }
