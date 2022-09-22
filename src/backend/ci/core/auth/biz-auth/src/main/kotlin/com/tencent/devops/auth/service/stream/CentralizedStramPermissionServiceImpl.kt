@@ -34,8 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 class CentralizedStramPermissionServiceImpl @Autowired constructor(
     val client: Client
-) : StreamPermissionServiceImpl(){
-
+) : StreamPermissionServiceImpl() {
     override fun isPublicProject(projectCode: String, userId: String?): Boolean {
         val gitType = GitTypeUtils.getType()
         // type: github, gitlab, svn, tgitd等
@@ -49,7 +48,12 @@ class CentralizedStramPermissionServiceImpl @Autowired constructor(
         return Pair(true, true)
     }
 
-    override fun extPermission(projectCode: String, userId: String, action: AuthPermission, resourceType: String): Boolean {
+    override fun extPermission(
+        projectCode: String,
+        userId: String,
+        action: AuthPermission,
+        resourceType: String
+    ): Boolean {
         return false
     }
 }

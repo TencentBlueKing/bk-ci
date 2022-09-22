@@ -41,7 +41,7 @@ class SamplePermissionRoleMemberService : PermissionRoleMemberService {
         roleId: Int,
         members: List<RoleMemberDTO>,
         managerGroup: Boolean,
-        checkAGradeManager: Boolean?,
+        checkAGradeManager: Boolean?
     ) {
         TODO("Not yet implemented")
     }

@@ -205,5 +205,4 @@ class AuthCoreConfiguration {
     @Bean
     @ConditionalOnMissingBean(OrganizationService::class)
     fun sampleOrganizationService() = SampleOrganizationService()
-
 }

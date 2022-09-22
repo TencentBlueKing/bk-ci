@@ -35,7 +35,7 @@ class SamplePermissionExtService : PermissionExtService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String,
+        resourceName: String
     ): Boolean {
         TODO("Not yet implemented")
     }

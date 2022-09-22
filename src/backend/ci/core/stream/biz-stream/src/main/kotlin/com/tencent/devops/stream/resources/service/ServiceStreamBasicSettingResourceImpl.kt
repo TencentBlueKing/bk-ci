@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceStreamBasicSettingResourceImpl @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService
-): ServiceStreamBasicSettingResource {
+) : ServiceStreamBasicSettingResource {
 
     override fun getStreamConf(projectId: String): Result<StreamBasicSetting?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
