@@ -318,7 +318,7 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         concurrencyGroup: String,
-        pipelineId: String? = null,
+        pipelineId: String? = null
     ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
