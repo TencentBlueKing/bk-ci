@@ -28,9 +28,6 @@
 package com.tencent.devops.common.archive.pojo
 
 import com.tencent.bkrepo.generic.pojo.FileInfo
-import com.tencent.devops.common.api.util.timestamp
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 data class QueryNodeInfo(
     var createdBy: String,

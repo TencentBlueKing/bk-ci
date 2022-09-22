@@ -1029,7 +1029,7 @@ class BkRepoClient constructor(
         version: String? = null,
         metadata: Map<String, String>? = null
     ): PackageVersionInfo {
-        val url = "${getGatewayUrl()}/bkrepo/api/service/docker/ext/version/detail/${projectId}/${repoName}" +
+        val url = "${getGatewayUrl()}/bkrepo/api/service/docker/ext/version/detail/$projectId/$repoName" +
             "?packageKey=$packageKey&version=$version"
         val request = Request.Builder().url(url).header(BK_REPO_UID, userId).get().build()
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
