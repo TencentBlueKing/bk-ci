@@ -37,7 +37,8 @@ object CredentialUtils {
     @Suppress("ALL")
     fun getCredential(repository: Repository, credentials: List<String>, credentialType: CredentialType): Credential {
         if (repository is CodeSvnRepository &&
-                repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
+            repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP
+        ) {
             // 兼容老的数据，老的数据是用的是password, 新的是username_password
             return if (credentialType == CredentialType.USERNAME_PASSWORD) {
                 if (credentials.size <= 1) {

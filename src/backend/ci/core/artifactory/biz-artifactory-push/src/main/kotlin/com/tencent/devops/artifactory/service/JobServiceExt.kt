@@ -105,7 +105,7 @@ class JobServiceExt @Autowired constructor(
                             TaskResult(isFinish = true, success = true, msg = "Success")
                         }
                         4 -> {
-                            logger.error("Job execute task failed")
+                            logger.error("BKSystemErrorMonitor|JobService|Job execute task failed")
                             TaskResult(isFinish = true, success = false, msg = "Job failed")
                         }
                         else -> {
@@ -115,12 +115,12 @@ class JobServiceExt @Autowired constructor(
                     }
                 } else {
                     val msg = response["message"] as String
-                    logger.error("job execute failed, msg: $msg")
+                    logger.error("BKSystemErrorMonitor|JobService|error=$msg")
                     throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL, params = arrayOf(msg))
                 }
             }
         } catch (e: Exception) {
-            logger.error("execute job error", e)
+            logger.error("BKSystemErrorMonitor|JobService|error=${e.message}", e)
             throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL, params = arrayOf(e.message ?: ""))
         }
     }

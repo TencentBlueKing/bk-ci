@@ -47,7 +47,7 @@
     <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
     <% } %>
     <!-- end devops:css -->
-    <title>蓝盾DevOps平台</title>
+    <title>持续集成平台-蓝盾 | 腾讯蓝鲸智云 | 首页</title>
   </head>
   <body>
     <script>
@@ -58,7 +58,7 @@
         true
       )
       ajax.send()
-      ajax.onload = function(e) {
+      ajax.onload = function (e) {
         var div = document.createElement('div')
         div.setAttribute('style', 'position: absolute; width: 0; height: 0')
         div.innerHTML = ajax.responseText
@@ -66,7 +66,7 @@
       }
     </script>
     <div id="devops-root">
-      <div class="bk-loading" style="position: absolute;">
+      <div class="bk-loading" style="position: absolute">
         <div class="bk-loading-wrapper">
           <div class="bk-loading1">
             <div class="point point1"></div>
@@ -176,7 +176,7 @@
           '; path=/'
       }
 
-      window.setProjectIdCookie = function(projectId) {
+      window.setProjectIdCookie = function (projectId) {
         try {
           var domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
           var topDomain =
@@ -222,7 +222,7 @@
       window.setProjectIdCookie(pathPid)
     </script>
     <script>
-      window.getLoginUrl = function() {
+      window.getLoginUrl = function () {
         var cUrl =
           location.origin +
           location.pathname +
@@ -242,9 +242,9 @@
       }
 
       function asyncGet(url, pid) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
           var xhr = new XMLHttpRequest()
-          xhr.onreadystatechange = function() {
+          xhr.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
               var res = JSON.parse(xhr.responseText)
               resolve(res && res.data ? res.data : res)
@@ -278,7 +278,9 @@
       }
 
       function fetchAllProjects() {
-        return asyncGet(API_URL_PREFIX + '/project/api/user/projects/')
+        return asyncGet(
+          API_URL_PREFIX + '/project/api/user/projects/?enabled=true'
+        )
       }
 
       function fetchProjectById(projectId) {
@@ -410,7 +412,7 @@
       }
 
       var CACHE_PREFIX = '_cache_'
-      window.setLsCacheItem = function(key, value) {
+      window.setLsCacheItem = function (key, value) {
         try {
           if (key && typeof key === 'string') {
             var cacheKey = CACHE_PREFIX + key
@@ -421,7 +423,7 @@
         }
       }
 
-      window.getLsCacheItem = function(key) {
+      window.getLsCacheItem = function (key) {
         if (key && typeof key === 'string') {
           var cacheKey = CACHE_PREFIX + key
           var cacheJson = localStorage.getItem(cacheKey)
@@ -498,7 +500,7 @@
         .then((response) => {
           init(...response)
         })
-        .catch(function(e) {
+        .catch(function (e) {
           console.log(e)
           printError(e.status)
         })
@@ -536,7 +538,7 @@
         }
       }
 
-      ;(function() {
+      ;(function () {
         document.addEventListener(
           'visibilitychange',
           handleVisibilityChange,
@@ -544,7 +546,7 @@
         )
       })()
 
-      window.onbeforeunload = function() {
+      window.onbeforeunload = function () {
         document.removeEventListener(
           'visibilitychange',
           handleVisibilityChange,

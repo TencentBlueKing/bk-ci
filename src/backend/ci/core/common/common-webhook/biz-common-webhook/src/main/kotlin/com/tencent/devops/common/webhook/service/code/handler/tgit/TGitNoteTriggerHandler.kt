@@ -161,16 +161,21 @@ class TGitNoteTriggerHandler(
             } else {
                 id
             }
+            startParams[PIPELINE_GIT_MR_ACTION] = action ?: ""
+            if (projectId == null || repository == null) {
+                return@apply
+            }
+            // MR提交人
+            val mrInfo = gitScmService.getMergeRequestInfo(projectId, mrRequestId, repository)
+            val reviewers = gitScmService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)?.reviewers
             startParams.putAll(
                 WebhookUtils.mrStartParam(
-                    gitScmService = gitScmService,
+                    mrInfo = mrInfo,
+                    reviewers = reviewers,
                     mrRequestId = mrRequestId,
-                    projectId = projectId,
-                    repository = repository,
                     homepage = event.repository.homepage
                 )
             )
-            startParams[PIPELINE_GIT_MR_ACTION] = action ?: ""
         }
         event.issue?.apply {
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_TITLE] = title

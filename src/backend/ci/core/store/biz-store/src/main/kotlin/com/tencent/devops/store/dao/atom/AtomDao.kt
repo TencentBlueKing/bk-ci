@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_SUMMARY
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
@@ -80,7 +81,6 @@ import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
@@ -89,6 +89,7 @@ import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
@@ -137,9 +138,9 @@ class AtomDao : AtomBaseDao() {
                     atomRequest.name,
                     atomRequest.atomCode,
                     classType,
-                    JsonUtil.getObjectMapper().writeValueAsString(atomRequest.serviceScope),
+                    JsonUtil.toJson(atomRequest.serviceScope, formatted = false),
                     atomRequest.jobType.name,
-                    JsonUtil.getObjectMapper().writeValueAsString(atomRequest.os),
+                    JsonUtil.toJson(atomRequest.os, formatted = false),
                     atomRequest.classifyId,
                     atomRequest.docsLink,
                     atomRequest.atomType.type.toByte(),
@@ -451,7 +452,8 @@ class AtomDao : AtomBaseDao() {
         projectCode: String,
         atomCode: String,
         defaultFlag: Boolean,
-        atomStatusList: List<Byte>?
+        atomStatusList: List<Byte>? = null,
+        limitNum: Int? = null
     ): Result<out Record>? {
         val tAtom = TAtom.T_ATOM
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
@@ -499,7 +501,7 @@ class AtomDao : AtomBaseDao() {
             delim = ".",
             count = -1
         )
-        return dslContext.select(
+        val queryStep = dslContext.select(
             t.field(KEY_VERSION),
             t.field(KEY_ATOM_STATUS),
             firstVersion,
@@ -507,7 +509,8 @@ class AtomDao : AtomBaseDao() {
             thirdVersion
         ).from(t)
             .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
-            .fetch()
+        limitNum?.let { queryStep.limit(it) }
+        return queryStep.fetch()
     }
 
     fun getPipelineAtoms(
@@ -965,9 +968,9 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(NAME, atomUpdateRequest.name)
-                .set(SERVICE_SCOPE, JsonUtil.getObjectMapper().writeValueAsString(atomUpdateRequest.serviceScope))
+                .set(SERVICE_SCOPE, JsonUtil.toJson(atomUpdateRequest.serviceScope, formatted = false))
                 .set(JOB_TYPE, atomUpdateRequest.jobType.name)
-                .set(OS, JsonUtil.getObjectMapper().writeValueAsString(atomUpdateRequest.os))
+                .set(OS, JsonUtil.toJson(atomUpdateRequest.os, formatted = false))
                 .set(CLASS_TYPE, classType)
                 .set(CLASSIFY_ID, atomUpdateRequest.classifyId)
                 .set(DOCS_LINK, atomUpdateRequest.docsLink)
@@ -1216,6 +1219,17 @@ class AtomDao : AtomBaseDao() {
                 .where(
                     LATEST_FLAG.eq(true)
                         .and(DEFAULT_FLAG.eq(true))
+                )
+                .fetch()
+        }
+    }
+
+    fun batchGetAtomName(dslContext: DSLContext, atomCodes: Collection<String>): Result<Record2<String, String>>? {
+        return with(TAtom.T_ATOM) {
+            dslContext.select(ATOM_CODE, NAME).from(this)
+                .where(
+                    LATEST_FLAG.eq(true)
+                        .and(ATOM_CODE.`in`(atomCodes))
                 )
                 .fetch()
         }

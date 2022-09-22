@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
@@ -108,6 +109,7 @@ class BuildStartControl @Autowired constructor(
         private const val DEFAULT_DELAY = 1000
     }
 
+    @BkTimed
     fun handle(event: PipelineBuildStartEvent) {
         val watcher = Watcher(id = "ENGINE|BuildStart|${event.traceId}|${event.buildId}|${event.status}")
         with(event) {
@@ -129,7 +131,7 @@ class BuildStartControl @Autowired constructor(
     }
 
     fun PipelineBuildStartEvent.execute(watcher: Watcher) {
-        val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
+        val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
         buildLogPrinter.addDebugLine(
             buildId = buildId, message = "Enter BuildStartControl",
             tag = TAG, jobId = JOB_ID, executeCount = executeCount
@@ -187,7 +189,7 @@ class BuildStartControl @Autowired constructor(
                 message = "Illegal build #${buildInfo.buildNum} [${buildInfo.status}]",
                 buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
             )
-            return true
+            return false
         }
         val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
         try {
@@ -248,12 +250,14 @@ class BuildStartControl @Autowired constructor(
     ): Boolean {
         var checkStart = true
         val concurrencyGroup = buildInfo.concurrencyGroup ?: return true
-        ConcurrencyGroupLock(redisOperation, concurrencyGroup).use { groupLock ->
+        ConcurrencyGroupLock(redisOperation, projectId, concurrencyGroup).use { groupLock ->
             groupLock.lock()
             if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
+                // 只有最新进来排队的构建才能QUEUE -> QUEUE_CACHE
                 checkStart = pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
                     projectId = projectId,
-                    concurrencyGroup = concurrencyGroup
+                    concurrencyGroup = concurrencyGroup,
+                    buildId = buildId
                 )?.buildId == buildId
             }
             // #6521 并发组中需要等待其他流水线
@@ -543,7 +547,9 @@ class BuildStartControl @Autowired constructor(
             message = "Async fetch latest commit/revision, please wait...",
             buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
-        val startParams: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, buildId) }
+        val startParams: Map<String, String> by lazy {
+            buildVariableService.getAllVariable(projectId, pipelineId, buildId)
+        }
         if (actionType == ActionType.START) {
             supplementModel(
                 projectId = projectId, pipelineId = pipelineId,

@@ -7,5 +7,8 @@ data class WebhookCommit(
     val authorName: String,
     val message: String,
     val repoType: String,
-    val commitTime: LocalDateTime
+    val commitTime: LocalDateTime,
+    var mrId: String?,
+    var eventType: String,
+    val action: String?
 )

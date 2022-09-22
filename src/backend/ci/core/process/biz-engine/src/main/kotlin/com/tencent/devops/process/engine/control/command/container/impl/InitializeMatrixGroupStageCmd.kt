@@ -30,8 +30,8 @@ package com.tencent.devops.process.engine.control.command.container.impl
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CASE_MAX_COUNT
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
@@ -52,6 +53,7 @@ import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
+import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.control.lock.StageMatrixLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -161,6 +163,7 @@ class InitializeMatrixGroupStageCmd(
 
         val event = commandContext.event
         val variables = commandContext.variables
+        val asCodeEnabled = commandContext.pipelineAsCodeEnabled ?: false
         val modelStage = containerBuildDetailService.getBuildModel(
             projectId = parentContainer.projectId,
             buildId = parentContainer.buildId
@@ -190,7 +193,7 @@ class InitializeMatrixGroupStageCmd(
         LOG.info(
             "ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
                 "matrixGroupId=$matrixGroupId|containerHashId=${modelContainer.containerHashId}" +
-                "|context=$context"
+                "|context=$context|asCodeEnabled=$asCodeEnabled"
         )
 
         val matrixOption: MatrixControlOption
@@ -209,7 +212,7 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                matrixConfig = matrixOption.convertMatrixConfig(variables, asCodeEnabled)
                 contextCaseList = matrixConfig.getAllCombinations()
 
                 if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
@@ -220,7 +223,9 @@ class InitializeMatrixGroupStageCmd(
                 }
 
                 contextCaseList.forEach { contextCase ->
-
+                    val contextPair = if (asCodeEnabled) {
+                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                    } else null
                     // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                     val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
 
@@ -240,8 +245,10 @@ class InitializeMatrixGroupStageCmd(
                     val customBuildEnv = parsedInfo?.buildEnv
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
-                            mutexGroupName = EnvUtils.parseEnv(self.mutexGroupName, allContext),
-                            linkTip = EnvUtils.parseEnv(self.linkTip, allContext)
+                            mutexGroupName = EnvReplacementParser.parse(
+                                self.mutexGroupName, allContext, asCodeEnabled, contextPair
+                            ),
+                            linkTip = EnvReplacementParser.parse(self.linkTip, allContext, asCodeEnabled, contextPair)
                         )
                     }
                     val newSeq = context.containerSeq++
@@ -253,7 +260,7 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.elements, context.executeCount, postParentIdMap
                     )
                     val newContainer = VMBuildContainer(
-                        name = EnvUtils.parseEnv(modelContainer.name, allContext),
+                        name = EnvReplacementParser.parse(modelContainer.name, allContext, asCodeEnabled, contextPair),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),
@@ -274,13 +281,13 @@ class InitializeMatrixGroupStageCmd(
                         dispatchType = customDispatchType ?: modelContainer.dispatchType,
                         buildEnv = customBuildEnv ?: modelContainer.buildEnv,
                         thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
-                            EnvUtils.parseEnv(self, allContext)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
                         },
                         thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId?.let { self ->
-                            EnvUtils.parseEnv(self, allContext)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
                         },
                         thirdPartyWorkspace = modelContainer.thirdPartyWorkspace?.let { self ->
-                            EnvUtils.parseEnv(self, allContext)
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
                         }
                     )
 
@@ -321,7 +328,7 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                matrixConfig = matrixOption.convertMatrixConfig(variables, asCodeEnabled)
                 contextCaseList = matrixConfig.getAllCombinations()
 
                 contextCaseList.forEach { contextCase ->
@@ -335,14 +342,22 @@ class InitializeMatrixGroupStageCmd(
                     val statusElements = generateMatrixElements(
                         modelContainer.elements, context.executeCount, postParentIdMap
                     )
+                    val replacement = if (asCodeEnabled) {
+                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                    } else null
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
-                            mutexGroupName = EnvUtils.parseEnv(self.mutexGroupName, contextCase),
-                            linkTip = EnvUtils.parseEnv(self.linkTip, contextCase)
+                            mutexGroupName = EnvReplacementParser.parse(
+                                value = self.mutexGroupName,
+                                contextMap = contextCase,
+                                onlyExpression = asCodeEnabled,
+                                contextPair = replacement
+                            ),
+                            linkTip = EnvReplacementParser.parse(self.linkTip, contextCase, asCodeEnabled, replacement)
                         )
                     }
                     val newContainer = NormalContainer(
-                        name = EnvUtils.parseEnv(modelContainer.name, contextCase),
+                        name = EnvReplacementParser.parse(modelContainer.name, contextCase, asCodeEnabled, replacement),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),
@@ -410,33 +425,40 @@ class InitializeMatrixGroupStageCmd(
                 "${modelContainer.containerHashId}|context=$context|" +
                 "groupJobSize=${groupContainers.size}|taskSize=${buildTaskList.size}"
         )
-
-        // 在表中增加所有分裂的矩阵和插件
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            // #6440 进行已有总容器数量判断，如果大于单个stage下的job数量则分裂出错
-            val currentCount = pipelineContainerService.countStageContainers(
-                transactionContext = transactionContext,
-                projectId = parentContainer.projectId,
-                buildId = parentContainer.buildId,
-                stageId = parentContainer.stageId,
-                onlyMatrixGroup = false
+        // #6440 进行已有总容器数量判断，如果大于单个stage下的job数量则分裂出错
+        val stageContainers = pipelineContainerService.listContainers(
+            projectId = parentContainer.projectId,
+            buildId = parentContainer.buildId,
+            stageId = parentContainer.stageId
+        )
+        val count = stageContainers.size + groupContainers.size - commandContext.stageMatrixCount
+        LOG.info(
+            "ENGINE|${event.buildId}|${event.source}|CHECK_CONTAINER_COUNT" +
+                "|${event.stageId}|${modelContainer.id}|containerHashId=" +
+                "${modelContainer.containerHashId}|currentCount=${stageContainers.size}|" +
+                "countResult=$count"
+        )
+        if (count > PIPELINE_STAGE_CONTAINERS_COUNT_MAX) {
+            throw InvalidParamException(
+                "The number of containers($count) in stage(${parentContainer.stageId})" +
+                    " exceeds the limit[$PIPELINE_STAGE_CONTAINERS_COUNT_MAX]"
             )
-            val count = currentCount + groupContainers.size - commandContext.stageMatrixCount
-            LOG.info(
-                "ENGINE|${event.buildId}|${event.source}|CHECK_CONTAINER_COUNT" +
-                    "|${event.stageId}|${modelContainer.id}|containerHashId=" +
-                    "${modelContainer.containerHashId}|currentCount=$currentCount|" +
-                    "countResult=$count"
-            )
-            if (count > PIPELINE_STAGE_CONTAINERS_COUNT_MAX) {
-                throw InvalidParamException(
-                    "The number of containers($count) in stage(${parentContainer.stageId})" +
-                        " exceeds the limit[$PIPELINE_STAGE_CONTAINERS_COUNT_MAX]"
-                )
+        }
+        // #7168 在表中增加所有分裂的Job和Task，此时需要避免同时有update操作，因此先获取所有Job的id锁
+        val containerLockList = stageContainers.filter { c ->
+            c.matrixGroupFlag != true && !c.status.isFinish()
+        }.map { c ->
+            ContainerIdLock(redisOperation, c.buildId, c.containerId)
+        }
+        try {
+            containerLockList.forEach { it.lock() }
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                pipelineContainerService.batchSave(transactionContext, buildContainerList)
+                pipelineTaskService.batchSave(transactionContext, buildTaskList)
             }
-            pipelineContainerService.batchSave(transactionContext, buildContainerList)
-            pipelineTaskService.batchSave(transactionContext, buildTaskList)
+        } finally {
+            containerLockList.forEach { it.unlock() }
         }
 
         buildLogPrinter.addLine(
@@ -496,15 +518,18 @@ class InitializeMatrixGroupStageCmd(
             // 刷新ID为新的唯一值，强制设为无法重试
             e.id = newTaskId
             e.canRetry = false
-            val (interceptTask, interceptTaskName) = when (e) {
+            val (interceptTask, interceptTaskName, reviewUsers) = when (e) {
                 is QualityGateInElement -> {
-                    Pair(e.interceptTask, e.interceptTaskName)
+                    Triple(e.interceptTask, e.interceptTaskName, e.reviewUsers)
                 }
                 is QualityGateOutElement -> {
-                    Pair(e.interceptTask, e.interceptTaskName)
+                    Triple(e.interceptTask, e.interceptTaskName, e.reviewUsers)
+                }
+                is ManualReviewUserTaskElement -> {
+                    Triple(null, null, e.reviewUsers)
                 }
                 else -> {
-                    Pair(null, null)
+                    Triple(null, null, null)
                 }
             }
             MatrixStatusElement(
@@ -513,8 +538,11 @@ class InitializeMatrixGroupStageCmd(
                 stepId = e.stepId,
                 executeCount = executeCount,
                 originClassType = e.getClassType(),
+                originAtomCode = e.getAtomCode(),
+                originTaskAtom = e.getTaskAtom(),
                 interceptTask = interceptTask,
-                interceptTaskName = interceptTaskName
+                interceptTaskName = interceptTaskName,
+                reviewUsers = reviewUsers?.toMutableList()
             )
         }
     }

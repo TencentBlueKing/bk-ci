@@ -28,9 +28,6 @@
 package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_COMMIT_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS
@@ -40,12 +37,22 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_FINAL_INC
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_AUTH_USER
 import com.tencent.devops.common.webhook.pojo.code.MATCH_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.repository.pojo.CodeTGitRepository
+import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TGitWebHookStartParam : ScmWebhookStartParams<CodeTGitWebHookTriggerElement> {
+class TGitWebHookStartParam @Autowired constructor(
+    private val gitScmService: GitScmService
+) : ScmWebhookStartParams<CodeTGitWebHookTriggerElement> {
 
     override fun elementClass(): Class<CodeTGitWebHookTriggerElement> {
         return CodeTGitWebHookTriggerElement::class.java
@@ -72,6 +79,12 @@ class TGitWebHookStartParam : ScmWebhookStartParams<CodeTGitWebHookTriggerElemen
             startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] =
                 matchResult.extra[MATCH_BRANCH] ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
+            startParams[BK_REPO_WEBHOOK_REPO_AUTH_USER] =
+                if (repo is CodeTGitRepository && repo.authType == RepoAuthType.OAUTH) {
+                    repo.userName
+                } else {
+                    gitScmService.getRepoAuthUser(projectId = projectId, repo = repo)
+                }
             startParams.putAll(
                 matcher.retrieveParams(
                     projectId = projectId,

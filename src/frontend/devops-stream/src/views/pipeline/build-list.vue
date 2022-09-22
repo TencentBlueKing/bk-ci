@@ -124,7 +124,7 @@
                     <template slot-scope="props">
                         <opt-menu>
                             <li @click="cancelBuild(props.row)"
-                                v-if="['RUNNING', 'PREPARE_ENV', 'QUEUE', 'LOOP_WAITING', 'CALL_WAITING'].includes(props.row.buildHistory.status)"
+                                v-if="['RUNNING', 'PREPARE_ENV', 'QUEUE', 'LOOP_WAITING', 'CALL_WAITING', 'REVIEWING'].includes(props.row.buildHistory.status)"
                                 v-bk-tooltips="computedOptToolTip"
                                 :class="{ disabled: !curPipeline.enabled || !permission }"
                             >{{$t('pipeline.cancelBuild')}}</li>
@@ -143,7 +143,7 @@
             />
         </section>
 
-        <bk-sideslider @hidden="hidden" :is-show.sync="showTriggle" :width="622" :quick-close="true" :title="$t('pipeline.triggerTitle')">
+        <bk-sideslider @hidden="hidden" :is-show.sync="showTriggle" :width="triggleWidth" :quick-close="true" :title="$t('pipeline.triggerTitle')">
             <bk-form :model="formData" ref="triggleForm" :label-width="500" slot="content" class="triggle-form" form-type="vertical">
                 <bk-form-item :label="$t('pipeline.branch')" :required="true" :rules="[requireRule($t('pipeline.branch'))]" property="branch" error-display-type="normal">
                     <bk-select v-model="formData.branch"
@@ -162,41 +162,90 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item class="mt15">
-                    <bk-checkbox v-model="formData.useCommitId" @change="getPipelineBranchYaml">{{$t('pipeline.commitTriggerTips')}}</bk-checkbox>
-                </bk-form-item>
-                <bk-form-item :label="$t('pipeline.commit')" :required="true" :rules="[requireRule($t('pipeline.commit'))]" property="commitId" error-display-type="normal" v-if="formData.useCommitId">
-                    <bk-tag-input :placeholder="$t('pipeline.commitPlaceholder')"
-                        v-model="formData.commitId"
-                        @change="getPipelineBranchYaml"
-                        :max-data="1"
-                        :loading="isLoadingCommit"
-                        :list="triggerCommits"
-                        :tpl="renderCommitList"
-                        tooltip-key="message"
-                        allow-create
-                        save-key="id"
-                        display-key="message"
-                        search-key="message"
-                        trigger="focus"
+                <template v-if="disableManual">
+                    <bk-form-item v-if="yamlErrorMessage">
+                        <bk-alert
+                            type="error"
+                            :title="yamlErrorMessage"
+                        ></bk-alert>
+                    </bk-form-item>
+                    <bk-form-item v-else>
+                        <bk-alert
+                            type="warning"
+                            :title="$t('pipeline.noYamlOrDisable')"
+                        ></bk-alert>
+                    </bk-form-item>
+                </template>
+                <template v-else>
+                    <bk-form-item class="mt15">
+                        <bk-checkbox v-model="formData.useCommitId" @change="getPipelineParams">{{$t('pipeline.commitTriggerTips')}}</bk-checkbox>
+                    </bk-form-item>
+                    <bk-form-item :label="$t('pipeline.commit')" :required="true" :rules="[requireRule($t('pipeline.commit'))]" property="commitId" error-display-type="normal" v-if="formData.useCommitId">
+                        <bk-tag-input :placeholder="$t('pipeline.commitPlaceholder')"
+                            v-model="formData.commitId"
+                            @change="getPipelineParams"
+                            :max-data="1"
+                            :loading="isLoadingCommit"
+                            :list="triggerCommits"
+                            :tpl="renderCommitList"
+                            tooltip-key="message"
+                            allow-create
+                            save-key="id"
+                            display-key="message"
+                            search-key="message"
+                            trigger="focus"
+                        >
+                        </bk-tag-input>
+                    </bk-form-item>
+                    <bk-form-item :label="$t('pipeline.buildMsg')" :required="true" :rules="[requireRule($t('pipeline.buildMsg'))]" property="customCommitMsg" :desc="$t('pipeline.buildMsgTips')" error-display-type="normal">
+                        <bk-input v-model="formData.customCommitMsg" :placeholder="$t('pipeline.buildMsgPlaceholder')"></bk-input>
+                    </bk-form-item>
+                    <!-- <bk-form-item
+                        label="Yaml"
+                        ref="codeSection"
+                        property="yaml"
+                        error-display-type="normal"
+                        class="mb8"
+                        :required="true"
+                        :rules="[requireRule('yaml'), checkYaml]"
+                        v-bkloading="{ isLoading: isLoadingYaml }"
                     >
-                    </bk-tag-input>
-                </bk-form-item>
-                <bk-form-item :label="$t('pipeline.buildMsg')" :required="true" :rules="[requireRule($t('pipeline.buildMsg'))]" property="customCommitMsg" :desc="$t('pipeline.buildMsgTips')" error-display-type="normal">
-                    <bk-input v-model="formData.customCommitMsg" :placeholder="$t('pipeline.buildMsgPlaceholder')"></bk-input>
-                </bk-form-item>
-                <bk-form-item label="Yaml" ref="codeSection" property="yaml" :required="true" :rules="[requireRule('yaml'), checkYaml]" error-display-type="normal" v-bkloading="{ isLoading: isLoadingYaml }">
-                    <code-section @blur="$refs.codeSection.validate('blur')"
-                        @focus="$refs.codeSection.clearValidator()"
-                        :code.sync="formData.yaml"
-                        :cursor-blink-rate="530"
-                        :read-only="false"
-                        ref="codeEditor"
-                    />
-                </bk-form-item>
+                        <code-section @blur="$refs.codeSection.validate('blur')"
+                            @focus="$refs.codeSection.clearValidator()"
+                            :code.sync="formData.yaml"
+                            :cursor-blink-rate="530"
+                            :read-only="false"
+                            ref="codeEditor"
+                        />
+                    </bk-form-item> -->
+                    <bk-form-item
+                        v-if="uiFormSchema && Object.keys(uiFormSchema).length"
+                        :label="$t('pipeline.variable')"
+                    >
+                        <bk-ui-form
+                            class="ui-form"
+                            v-bkloading="{ isLoading: isLoadingSchema }"
+                            v-model="formData.inputs"
+                            ref="bkUiForm"
+                            :schema="uiFormSchema"
+                            :layout="uiFormLayout"
+                            :rules="uiFormRules"
+                        />
+                    </bk-form-item>
+                </template>
                 <bk-form-item>
-                    <bk-button ext-cls="mr5" theme="primary" @click.stop.prevent="submitData" :loading="isTriggering">{{$t('submit')}}</bk-button>
-                    <bk-button ext-cls="mr5" @click="hidden" :disabled="isTriggering">{{$t('cancel')}}</bk-button>
+                    <bk-button
+                        ext-cls="mr5"
+                        theme="primary"
+                        :disabled="disableManual"
+                        @click.stop.prevent="submitData"
+                        :loading="isTriggering"
+                    >{{$t('submit')}}</bk-button>
+                    <bk-button
+                        ext-cls="mr5"
+                        :disabled="isTriggering || disableManual"
+                        @click="hidden"
+                    >{{$t('cancel')}}</bk-button>
                 </bk-form-item>
             </bk-form>
         </bk-sideslider>
@@ -218,11 +267,22 @@
     import { getPipelineStatusClass, getPipelineStatusCircleIconCls } from '@/components/status'
     import register from '@/utils/websocket-register'
     import validateRule from '@/utils/validate-rule'
+    import createForm from '@blueking/bkui-form'
+    import '@blueking/bkui-form/dist/bkui-form.css'
+    import UiTips from '@/components/ui-form/tips.vue'
+    import UiSelector from '@/components/ui-form/selector.vue'
+    const BkUiForm = createForm({
+        components: {
+            tips: UiTips,
+            selector: UiSelector
+        }
+    })
 
     export default {
         components: {
             optMenu,
-            codeSection
+            codeSection,
+            BkUiForm
         },
 
         filters: {
@@ -240,7 +300,7 @@
                 buildList: [],
                 compactPaging: {
                     limit: 10,
-                    current: +this.$route.query.page,
+                    current: +this.$route.query.page || 1,
                     count: 0
                 },
                 filterData: {
@@ -274,14 +334,31 @@
                     useCommitId: false,
                     commitId: [],
                     customCommitMsg: '',
-                    yaml: ''
+                    yaml: '',
+                    inputs: {}
                 },
                 triggerCommits: [],
                 checkYaml: validateRule.checkYaml,
                 pipelineList: [],
                 isLoadingPipeline: false,
                 isLoadingEvent: false,
-                eventList: []
+                eventList: [],
+                isLoadingSchema: false,
+                disableManual: false,
+                uiFormSchema: {},
+                uiFormLayout: {
+                    container: {
+                        gap: '8px'
+                    }
+                },
+                uiFormRules: {
+                    required: {
+                        validator: "{{ $self.value !== undefined && !!String($self.value).length }}",
+                        message: this.$t('pipeline.required')
+                    }
+                },
+                emptyYaml: false,
+                yamlErrorMessage: ''
             }
         },
 
@@ -290,9 +367,17 @@
 
             computedOptToolTip () {
                 return {
-                    content: !this.curPipeline.enabled ? this.$t('pipeline.pipelineDisabled') : this.$t('exception.pemissionDeny'),
+                    content: !this.curPipeline.enabled ? this.$t('pipeline.pipelineDisabled') : this.$t('exception.permissionDeny'),
                     disabled: this.curPipeline.enabled && this.permission
                 }
+            },
+
+            triggleWidth () {
+                return window.innerWidth * 0.8
+            },
+
+            defaultBranch () {
+                return this.projectInfo.default_branch || ''
             }
         },
 
@@ -405,7 +490,7 @@
             },
 
             cleanFilterData () {
-                this.$router.push({ query: { page: 1 } })
+                this.$router.replace({ query: { page: 1 } })
                 this.compactPaging.current = 1
                 this.filterData = {
                     commitMsg: '',
@@ -476,7 +561,12 @@
 
             showTriggleBuild () {
                 if (!this.curPipeline.enabled || !this.permission) return
-
+                if (this.defaultBranch) {
+                    this.formData.branch = this.defaultBranch
+                    this.branchList = [this.defaultBranch]
+                    this.getBranchCommits()
+                    this.getPipelineParams()
+                }
                 this.showTriggle = true
             },
 
@@ -501,6 +591,7 @@
                 this.showTriggle = false
                 this.triggerCommits = []
                 this.triggerBranches = []
+                this.uiFormSchema = {}
                 this.formData = {
                     branch: '',
                     useCommitId: false,
@@ -508,11 +599,15 @@
                     customCommitMsg: '',
                     yaml: ''
                 }
+                this.yamlErrorMessage = ''
+                this.emptyYaml = false
+                this.disableManual = false
             },
 
             selectBranch () {
                 this.getBranchCommits()
-                this.getPipelineBranchYaml()
+                // this.getPipelineBranchYaml()
+                this.getPipelineParams()
             },
 
             getBranchCommits (value, options, query = {}) {
@@ -546,6 +641,34 @@
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
                     this.isLoadingYaml = false
+                })
+            },
+
+            getPipelineParams () {
+                const branchName = this.formData.branch
+                const commitId = this.formData.useCommitId ? this.formData.commitId[0] : undefined
+                if (!branchName && !commitId) return
+
+                this.isLoadingSchema = true
+                this.yamlErrorMessage = ''
+                this.emptyYaml = false
+                this.disableManual = false
+                return pipelines.getPipelineParamJson(this.projectId, this.curPipeline.pipelineId, { branchName, commitId }).then((res) => {
+                    this.uiFormSchema = res.schema || {}
+                    this.formData.yaml = res.yaml || ''
+                    this.disableManual = res.enable === false
+                }).catch((err) => {
+                    if (err.code === 2129028) {
+                        this.emptyYaml = true
+                        this.disableManual = true
+                    } else if (err.code === 2129029) {
+                        this.yamlErrorMessage = err.message
+                        this.disableManual = true
+                    } else {
+                        this.$bkMessage({ theme: 'error', message: err.message || err })
+                    }
+                }).finally(() => {
+                    this.isLoadingSchema = false
                 })
             },
 
@@ -584,7 +707,10 @@
             },
 
             submitData () {
-                this.$refs.triggleForm.validate().then(() => {
+                Promise.all([
+                    this.$refs.triggleForm.validate(),
+                    this.$refs.bkUiForm?.validate()
+                ]).then(() => {
                     const postData = {
                         ...this.formData,
                         projectId: this.projectId,
@@ -601,7 +727,8 @@
                         this.isTriggering = false
                     })
                 }, (err) => {
-                    this.$bkMessage({ theme: 'error', message: err.content || err })
+                    const message = Array.isArray(err) ? `${err[0].path}是${err[0].message}` : (err.content || err.message || err)
+                    this.$bkMessage({ theme: 'error', message })
                 })
             },
 
@@ -805,5 +932,12 @@
         /deep/ .bk-tag-selector .bk-tag-input .tag {
             max-width: 500px;
         }
+        .ui-form {
+            padding: 10px;
+            border: 1px solid #c4c6cc;
+        }
+    }
+    .mb8 {
+        margin-bottom: 8px;
     }
 </style>

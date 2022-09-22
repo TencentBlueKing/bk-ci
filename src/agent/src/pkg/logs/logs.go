@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -32,6 +33,13 @@ func Init(filepath string) error {
 	return nil
 }
 
+// DebugInit 初始化为debug模式下的log，将日志输出到标准输出流，只是为了单元测试使用
+func DebugInit() {
+	logInfo := logrus.New()
+	logInfo.SetOutput(os.Stdout)
+	logs = logInfo
+}
+
 type MyFormatter struct{}
 
 func (m *MyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
@@ -42,7 +50,7 @@ func (m *MyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		b = &bytes.Buffer{}
 	}
 
-	timestamp := entry.Time.Format("2006/01/02 15:04:01.002")
+	timestamp := entry.Time.Format("2006-01-02 15:04:05.000")
 	var newLog string
 
 	//HasCaller()为true才会有调用信息

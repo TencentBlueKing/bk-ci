@@ -8,28 +8,29 @@ import VueRouter from 'vue-router'
 import websocket from '@/utils/websocket'
 Vue.use(VueRouter)
 
-const dashboard = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard')
-const main = () => import(/* webpackChunkName: 'entry' */'@/views/index')
-const projectIndex = () => import(/* webpackChunkName: 'entry' */'@/views/project-index')
-const exception = () => import(/* webpackChunkName: 'entry' */'@/views/exception')
-const notifications = () => import(/* webpackChunkName: 'notifications' */'@/views/notifications')
-const pipeline = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeline')
-const buildList = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeline/build-list')
-const pipelineDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/index')
-const buildDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/detail')
-const buildReports = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/reports')
-const buildConfig = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/config')
+const dashboard = () => import(/* webpackChunkName: 'dashboard' */'@/views/dashboard.vue')
+const main = () => import(/* webpackChunkName: 'entry' */'@/views/index.vue')
+const projectIndex = () => import(/* webpackChunkName: 'entry' */'@/views/project-index.vue')
+const exception = () => import(/* webpackChunkName: 'entry' */'@/views/exception.vue')
+const notifications = () => import(/* webpackChunkName: 'notifications' */'@/views/notifications.vue')
+const pipeline = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeline/index.vue')
+const buildList = () => import(/* webpackChunkName: 'pipelines' */'@/views/pipeline/build-list.vue')
+const pipelineDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/index.vue')
+const buildArtifacts = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/artifacts.vue')
+const buildDetail = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/detail.vue')
+const buildReports = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/reports.vue')
+const buildConfig = () => import(/* webpackChunkName: 'buildDetail' */'@/views/pipeline/build-detail/config.vue')
 const webConsole = () => import(/* webpackChunkName: "webConsole" */'@/views/pipeline/web-console.vue')
-const setting = () => import(/* webpackChunkName: 'setting' */'@/views/setting/index')
-const basicSetting = () => import(/* webpackChunkName: 'setting' */'@/views/setting/basic')
-const credentialList = () => import(/* webpackChunkName: 'credential' */'@/views/setting/credential/credential-list')
-const credentialSettings = () => import(/* webpackChunkName: 'credential' */'@/views/setting/credential/credential-settings')
-const expGroupsList = () => import(/* webpackChunkName: 'expGroups' */'@/views/setting/exp-groups')
-const agentPools = () => import(/* webpackChunkName: 'pool' */'@/views/setting/agent-pools/index')
-const poolSettings = () => import(/* webpackChunkName: 'pool' */'@/views/setting/agent-pools/pool-settings')
-const addAgent = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/add-agent')
-const agentList = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/agent-list')
-const agentDetail = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/agent-detail')
+const setting = () => import(/* webpackChunkName: 'setting' */'@/views/setting/index.vue')
+const basicSetting = () => import(/* webpackChunkName: 'setting' */'@/views/setting/basic.vue')
+const credentialList = () => import(/* webpackChunkName: 'credential' */'@/views/setting/credential/credential-list.vue')
+const credentialSettings = () => import(/* webpackChunkName: 'credential' */'@/views/setting/credential/credential-settings.vue')
+const expGroupsList = () => import(/* webpackChunkName: 'expGroups' */'@/views/setting/exp-groups/index.vue')
+const agentPools = () => import(/* webpackChunkName: 'pool' */'@/views/setting/agent-pools/index.vue')
+const poolSettings = () => import(/* webpackChunkName: 'pool' */'@/views/setting/agent-pools/pool-settings.vue')
+const addAgent = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/add-agent.vue')
+const agentList = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/agent-list.vue')
+const agentDetail = () => import(/* webpackChunkName: 'agent' */'@/views/setting/agent-pools/agent-detail.vue')
 const metric = () => import(/* webpackChunkName: 'metric' */'@/views/metric.vue')
 
 const routes = [
@@ -79,6 +80,11 @@ const routes = [
                                         meta: {
                                             websocket: true
                                         }
+                                    },
+                                    {
+                                        path: 'artifacts',
+                                        name: 'buildArtifacts',
+                                        component: buildArtifacts
                                     },
                                     {
                                         path: 'reports',
@@ -172,13 +178,12 @@ const router = new VueRouter({
     routes: routes
 })
 
-router.afterEach(route => {
-    websocket.changeRoute(route)
-})
-
 // 自动携带项目信息
 router.beforeEach((to, from, next) => {
+    // 清除
     websocket.loginOut(from)
+    // 写入
+    websocket.changeRoute(to)
     const params = {
         ...to,
         hash: to.hash || from.hash

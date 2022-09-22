@@ -77,7 +77,7 @@ class StreamTriggerCache @Autowired constructor(
         }
         val gitProjectInfo = getProjectInfo(
             action.getGitCred(),
-            gitProjectKey,
+            action.getGitProjectIdOrName(gitProjectKey),
             ApiRequestRetryInfo(true)
         ) ?: return null
         val cacheData = StreamGitProjectCache(
@@ -128,7 +128,11 @@ class StreamTriggerCache @Autowired constructor(
                 null
             }
         } catch (ignore: Exception) {
-            logger.warn("stream request gitProjectInfo cache get $gitRequestEventId|$gitProjectKey error", ignore)
+            logger.warn(
+                "StreamTriggerCache|getRequestGitProjectInfo|error" +
+                    "|eventId|$gitRequestEventId|projectKey|$gitProjectKey",
+                ignore
+            )
             null
         }
     }

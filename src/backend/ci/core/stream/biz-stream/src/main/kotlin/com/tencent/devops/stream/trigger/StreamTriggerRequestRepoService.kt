@@ -29,7 +29,9 @@ package com.tencent.devops.stream.trigger
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamRepoHookEvent
@@ -60,7 +62,8 @@ class StreamTriggerRequestRepoService @Autowired constructor(
     private val exHandler: StreamTriggerExceptionHandler,
     private val eventActionFactory: EventActionFactory,
     @org.springframework.context.annotation.Lazy
-    private val streamTriggerRequestService: StreamTriggerRequestService
+    private val streamTriggerRequestService: StreamTriggerRequestService,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamTriggerRequestRepoService::class.java)
@@ -83,10 +86,13 @@ class StreamTriggerRequestRepoService @Autowired constructor(
 
         action.data.context.repoTrigger = RepoTrigger("", triggerPipelineList)
 
-        logger.info("|${action.data.context.requestEventId}|repoTriggerBuild|")
+        logger.info(
+            "StreamTriggerRequestRepoService|repoTriggerBuild" +
+                "|requestEventId|${action.data.context.requestEventId}"
+        )
 
         if (triggerPipelineList.isEmpty()) {
-            logger.info("repo trigger pipeline list is empty ,skip it")
+            logger.info("StreamTriggerRequestRepoService|repoTriggerBuild|pipeline list is empty ,skip it")
             return true
         }
 
@@ -108,7 +114,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             action.data.context.pipeline = gitProjectPipeline
             exHandler.handle(action) {
                 // 使用跨项目触发的action
-                triggerPerPipeline(StreamRepoTriggerAction(action, client))
+                triggerPerPipeline(StreamRepoTriggerAction(action, client, streamGitConfig))
             }
         }
 
@@ -118,26 +124,48 @@ class StreamTriggerRequestRepoService @Autowired constructor(
     private fun triggerPerPipeline(
         action: BaseAction
     ): Boolean {
-        logger.info("|${action.data.context.requestEventId}|triggerPerPipeline")
+        logger.info(
+            "StreamTriggerRequestRepoService|triggerPerPipeline" +
+                "|requestEventId|${action.data.context.requestEventId}"
+        )
         val pipeline = action.data.context.pipeline!!
 
         // 剔除不触发的情形
         streamSettingDao.getSetting(dslContext, pipeline.gitProjectId.toLong())?.let { setting ->
             action.data.setting = StreamTriggerSetting(setting)
-            logger.info("|${action.data.context.requestEventId}|triggerPerPipeline|action|${action.format()}")
-            action.data.context.repoTrigger = action.data.context.repoTrigger!!.copy(
-                branch = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                    gitProjectKey = pipeline.gitProjectId,
-                    action = action,
-                    getProjectInfo = action.api::getGitProjectInfo
-                )!!.defaultBranch!!
+            logger.info(
+                "StreamTriggerRequestRepoService|triggerPerPipeline" +
+                    "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
             )
-            action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
             try {
                 CheckStreamSetting.checkGitProjectConf(action)
             } catch (triggerException: StreamTriggerException) {
                 return false
             }
+            val targetProjectInfo = try {
+                // 这里把第一个访问工蜂项目的接口异常抓住,主要是为了兼容项目被删除之后触发异常.待删除项目闭环处理之后.可去除该限制
+                streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                    gitProjectKey = pipeline.gitProjectId,
+                    action = action,
+                    getProjectInfo = action.api::getGitProjectInfo
+                )
+            } catch (error: ErrorCodeException) {
+                logger.warn(
+                    "StreamTriggerRequestRepoService|triggerPerPipeline" +
+                        "|may be deleted, repo trigger error|project[${pipeline.gitProjectId}]"
+                )
+                return false
+            }
+
+            action.data.context.repoTrigger = action.data.context.repoTrigger!!.copy(
+                branch = targetProjectInfo!!.defaultBranch!!
+            )
+            action.data.context.repoTrigger?.triggerGitHttpUrl = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                gitProjectKey = action.data.eventCommon.gitProjectId,
+                action = action,
+                getProjectInfo = action.api::getGitProjectInfo
+            )?.gitHttpUrl
+            action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
 
             // 校验mr请求是否产生冲突
             if (!action.checkMrConflict(path2PipelineExists = mapOf(pipeline.filePath to pipeline))) {

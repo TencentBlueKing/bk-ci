@@ -27,11 +27,9 @@
 
 package com.tencent.devops.stream.trigger.mq.streamRequest
 
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.StreamTriggerRequestService
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.amqp.core.ExchangeTypes
 import org.springframework.amqp.rabbit.annotation.Exchange
 import org.springframework.amqp.rabbit.annotation.Queue
@@ -61,23 +59,18 @@ class StreamRequestListener @Autowired constructor(
         ]
     )
     fun listenStreamRequestEvent(streamRequestEvent: StreamRequestEvent) {
-        val traceId = MDC.get(TraceTag.BIZID)
-        if (traceId.isNullOrEmpty()) {
-            if (!streamRequestEvent.traceId.isNullOrEmpty()) {
-                MDC.put(TraceTag.BIZID, streamRequestEvent.traceId)
-            } else {
-                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            }
-        }
         try {
             steamRequestService.externalCodeGitBuild(
                 eventType = streamRequestEvent.eventType,
+                webHookType = streamRequestEvent.webHookType,
                 event = streamRequestEvent.event
             )
         } catch (ignore: Throwable) {
-            logger.warn("Fail to request stream $streamRequestEvent", ignore)
-        } finally {
-            MDC.remove(TraceTag.BIZID)
+            logger.warn(
+                "StreamRequestListener|listenStreamRequestEvent" +
+                    "|Fail to request stream $streamRequestEvent",
+                ignore
+            )
         }
     }
 

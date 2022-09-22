@@ -29,13 +29,22 @@ package com.tencent.devops.process.yaml.parsers.template
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
+import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
+import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.VariableDatasource
+import com.tencent.devops.process.yaml.v2.models.VariablePropOption
+import com.tencent.devops.process.yaml.v2.models.VariablePropType
+import com.tencent.devops.process.yaml.v2.models.VariableProps
 import com.tencent.devops.process.yaml.v2.models.format
 import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
-import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
@@ -44,51 +53,63 @@ import java.io.InputStreamReader
 import java.io.StringReader
 
 @Suppress("LoopWithTooManyJumpStatements")
+@DisplayName("Yaml模板替换综合测试")
 class YamlTemplateTest {
 
-    val sampleDir = "samples"
+    private val sampleDir = "samples"
 
     @Test
     fun testAllTemplate() {
         val dir = "all"
-        check("$sampleDir/$dir/all.yml")
+        check("$sampleDir/$dir/all.yml", false)
+        check("$sampleDir/$dir/all.yml", true, true)
     }
 
     @Test
     fun testStagesTemplate() {
         val dir = "stages"
-        check("$sampleDir/$dir/stages.yml")
+        check("$sampleDir/$dir/stages.yml", false)
+        check("$sampleDir/$dir/stages.yml", true)
     }
 
     @Test
     fun testJobsTemplate() {
         val dir = "jobs"
-        check("$sampleDir/$dir/jobs.yml")
+        check("$sampleDir/$dir/jobs.yml", false)
+        check("$sampleDir/$dir/jobs.yml", true)
     }
 
     @Test
     fun testStepsTemplate() {
         val dir = "steps"
-        check("$sampleDir/$dir/stepss.yml")
+        check("$sampleDir/$dir/stepss.yml", false)
+        check("$sampleDir/$dir/stepss.yml", true)
     }
 
     @Test
     fun testExtendsTemplate() {
         val dir = "extends"
-        check("$sampleDir/$dir/extends.yml")
+        check("$sampleDir/$dir/extends.yml", false)
+        check("$sampleDir/$dir/extends.yml", true, true)
     }
 
     @Test
     fun testSpecialsTemplate() {
         val dir = "specials"
-        check("$sampleDir/$dir/longParametersTest.yml")
+        check("$sampleDir/$dir/longParametersTest.yml", false)
+        check("$sampleDir/$dir/longParametersTest_old.yml", true, true)
 
-        check("$sampleDir/$dir/user.yml")
+        check("$sampleDir/$dir/user.yml", false)
+        check("$sampleDir/$dir/user.yml", true)
 
         // resource
         val resourceExt = mutableMapOf<String, ResourcesPools>()
-        replace("$sampleDir/$dir/resource/resources.yml", resourceExt)
-        assert(
+        replace(
+            "$sampleDir/$dir/resource/resources.yml", resourceExt = resourceExt,
+            normalized = true,
+            useOldParametersExpression = true
+        )
+        Assertions.assertTrue(
             resourceExt.keys.equalss(
                 mutableListOf(
                     "lawrenzhang_testgroup/int/test_ci_temp@rezbuild+rezbuild",
@@ -97,8 +118,12 @@ class YamlTemplateTest {
             )
         )
         resourceExt.clear()
-        replace("$sampleDir/$dir/resource/resource-remote.yml", resourceExt)
-        assert(
+        replace(
+            "$sampleDir/$dir/resource/resource-remote.yml", resourceExt = resourceExt,
+            normalized = true,
+            useOldParametersExpression = false
+        )
+        Assertions.assertTrue(
             resourceExt.keys.equalss(
                 mutableListOf(
                     "xxxxx/int/test_ci_temp@rezbuild+rezbuild"
@@ -106,8 +131,13 @@ class YamlTemplateTest {
             )
         )
         resourceExt.clear()
-        replace("$sampleDir/$dir/resource/resource-remote-mul.yml", resourceExt)
-        assert(
+        replace(
+            "$sampleDir/$dir/resource/resource-remote-mul.yml",
+            resourceExt = resourceExt,
+            normalized = true,
+            useOldParametersExpression = true
+        )
+        Assertions.assertTrue(
             resourceExt.keys.equalss(
                 mutableListOf(
                     "xxxxx/int/test_ci_temp@rezbuild1+rezbuild1",
@@ -121,43 +151,166 @@ class YamlTemplateTest {
     @Test
     fun testParametersTemplate() {
         val dir = "parameters"
-        check("$sampleDir/$dir/parameters.yml")
+        check("$sampleDir/$dir/parameters.yml", false)
+        check("$sampleDir/$dir/parameters.yml", true, true)
     }
 
-    private fun check(file: String) {
+    @DisplayName("测试只替换variables模板(为手动输入参数)")
+    @Test
+    fun variablesSubTest() {
+        val vars = replace("$sampleDir/variablesSub/variablesSub.yml", null, null, false, false)
+        val oldVars = replace("$sampleDir/variablesSub/variablesSub.yml", null, null, false, true)
+        val expect = mapOf<String, Any>(
+            "USERNAME" to Variable(
+                value = "1,2,3", readonly = null, allowModifyAtStartup = true,
+                props = VariableProps(
+                    label = "我是预定义下拉可选值的字段",
+                    type = VariablePropType.SELECTOR.value,
+                    options = listOf(
+                        VariablePropOption(1),
+                        VariablePropOption(2, "二"),
+                        VariablePropOption(3, description = "xxx"),
+                        VariablePropOption("VARIABLES"),
+                        VariablePropOption("xxxxx")
+                    ),
+                    multiple = true,
+                    description = "这是个允许多选的下拉选择字段",
+                    required = null
+                )
+            ),
+            "cyc_USERNAME1" to Variable(
+                value = "CYC_VARIABLES", readonly = null, allowModifyAtStartup = null,
+                props = VariableProps(
+                    label = "我是通过url获取下拉可选值的字段",
+                    type = VariablePropType.SELECTOR.value,
+                    multiple = null,
+                    required = true,
+                    datasource = VariableDatasource(
+                        url = "sss",
+                        dataPath = "222",
+                        paramId = "",
+                        paramName = "123",
+                        hasAddItem = true,
+                        itemText = "123123",
+                        itemTargetUrl = "777"
+                    )
+                )
+            ),
+            "cyc_USERNAME2" to Variable(value = "CYC_VARIABLES2", readonly = null, allowModifyAtStartup = null),
+            "RES_REPOA_VAR1_USERNAME" to Variable(
+                value = "RES_VARIABLE",
+                readonly = null,
+                allowModifyAtStartup = null
+            ),
+            "RES_REPOA_VAR2_USERNAME" to Variable(value = "aaa", readonly = null, allowModifyAtStartup = null)
+        )
+        Assertions.assertEquals(expect, (vars as PreScriptBuildYaml).variables)
+        Assertions.assertEquals(expect, (oldVars as PreScriptBuildYaml).variables)
+    }
+
+    private val variableCoexist = """
+variables:
+    test:
+        value: xxx
+        props:
+            type: selector
+            datasource:
+              url: xxx
+            options:
+            - id: xxx  
+    """.trimIndent()
+
+    private val variableNotInOptions = """
+variables:
+    test:
+        value: xxxx, xxx
+        props:
+            type: selector
+            options:
+            - id: xxxx
+    """.trimIndent()
+
+    @DisplayName("测试模板替换异常")
+    @Test
+    fun templateReplaceExceptionTest() {
+        Assertions.assertThrows(YamlFormatException::class.java) {
+            replace(
+                testYaml = null,
+                yamlContent = variableCoexist,
+                resourceExt = null,
+                normalized = false,
+                useOldParametersExpression = false
+            )
+        }
+        Assertions.assertThrows(YamlFormatException::class.java) {
+            replace(
+                testYaml = null,
+                yamlContent = variableNotInOptions,
+                resourceExt = null,
+                normalized = false,
+                useOldParametersExpression = false
+            )
+        }
+    }
+
+    private fun check(file: String, old: Boolean, hasOldFile: Boolean = false) {
         var flag = true
-        val sample = BufferedReader(
-            StringReader(
-                replace(file)
+
+        val actual = replace(file, null, null, true, old).toString()
+        val sample = BufferedReader(StringReader(actual))
+        println("------------ Actual ------------")
+        println(actual)
+        println("------------------------")
+
+        val expect = if (!hasOldFile) {
+            getStrFromResource("compared/${file.removePrefix("samples")}")
+        } else {
+            getStrFromResource(
+                "compared/${
+                file.removePrefix("samples")
+                    .replace("_old.yml", ".yml")
+                    .replace(".yml", "_old.yml")
+                }"
             )
-        )
-        val compared = BufferedReader(
-            StringReader(
-                getStrFromResource("compared/${file.removePrefix("samples")}")
-            )
-        )
+        }
+        val compared = BufferedReader(StringReader(expect))
+        println("------------ Expect ------------")
+        println(expect)
+        println("------------------------")
+
+        var lineNumber = 1
         var line = sample.readLine()
         var lineCompare = compared.readLine()
+        println("------------ Diff ------------")
         while (line != null) {
             // 随机生成的id不计入比较
             if (line.trim().startsWith("id") || line.trim().startsWith("- id")) {
                 line = sample.readLine()
                 lineCompare = compared.readLine()
+                lineNumber++
                 continue
             }
             if (line != lineCompare) {
-                println("$line != $lineCompare")
+                println("$lineNumber: $line != $lineCompare")
                 flag = false
-                break
             }
             line = sample.readLine()
             lineCompare = compared.readLine()
+            lineNumber++
         }
-        assert(flag)
+        println("------------------------")
+        Assertions.assertTrue(flag)
     }
 
-    private fun replace(testYaml: String, resourceExt: MutableMap<String, ResourcesPools>? = null): String {
-        val sb = getStrFromResource(testYaml)
+    private fun replace(
+        testYaml: String?,
+        yamlContent: String? = null,
+        resourceExt: MutableMap<String, ResourcesPools>? = null,
+        normalized: Boolean = true,
+        useOldParametersExpression: Boolean
+    ): Any {
+
+        val sb = yamlContent ?: getStrFromResource(testYaml!!)
 
         val yaml = ScriptYmlUtils.formatYaml(sb)
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
@@ -165,21 +318,23 @@ class YamlTemplateTest {
             resourceExt?.put(pool.format(), pool)
         }
         val preScriptBuildYaml = YamlTemplate(
-            filePath = testYaml,
+            filePath = "",
             yamlObject = preTemplateYamlObject,
             extraParameters = null,
             getTemplateMethod = ::getTestTemplate,
             nowRepo = null,
             repo = null,
-            resourcePoolMapExt = resourceExt
+            resourcePoolMapExt = resourceExt,
+            conf = YamlTemplateConf(useOldParametersExpression = useOldParametersExpression)
         ).replace()
+        if (!normalized) {
+            return preScriptBuildYaml
+        }
         val (normalOb, trans) = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
         val yamls = YamlUtil.toYaml(normalOb)
-        println(YamlCommonUtils.toYamlNotNull(preScriptBuildYaml))
-        println("------------------------")
+        println("------------ Trans -----------")
         println(JsonUtil.toJson(trans))
         println("------------------------")
-        println(yamls)
         return yamls
     }
 

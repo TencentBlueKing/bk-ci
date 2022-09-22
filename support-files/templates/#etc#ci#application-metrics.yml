@@ -1,0 +1,66 @@
+# 服务配置文件模板
+spring:
+  datasource:
+    # 数据源配置（勿随便变更配置项的顺序）
+    dataSourceConfigs:
+      - index: 0
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_metrics?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+        username: __BK_CI_MYSQL_USER__
+        password: __BK_CI_MYSQL_PASSWORD__
+    # 数据库表分片规则配置
+    tableRuleConfigs:
+      - index: 0
+        name: T_PIPELINE_OVERVIEW_DATA
+        databaseShardingStrategy: SHARDING
+      - index: 1
+        name: T_PIPELINE_STAGE_OVERVIEW_DATA
+        databaseShardingStrategy: SHARDING
+      - index: 2
+        name: T_PIPELINE_FAIL_SUMMARY_DATA
+        databaseShardingStrategy: SHARDING
+      - index: 3
+        name: T_PIPELINE_FAIL_DETAIL_DATA
+        databaseShardingStrategy: SHARDING
+      - index: 4
+        name: T_ATOM_OVERVIEW_DATA
+        databaseShardingStrategy: SHARDING
+      - index: 5
+        name: T_ATOM_FAIL_SUMMARY_DATA
+        databaseShardingStrategy: SHARDING
+      - index: 6
+        name: T_ATOM_FAIL_DETAIL_DATA
+        databaseShardingStrategy: SHARDING
+      - index: 7
+        name: T_PROJECT_THIRD_PLATFORM_DATA
+        databaseShardingStrategy: SHARDING
+      - index: 8
+        name: T_PROJECT_PIPELINE_LABEL_INFO
+        databaseShardingStrategy: SHARDING
+      - index: 9
+        name: T_ATOM_DISPLAY_CONFIG
+        databaseShardingStrategy: SHARDING
+      - index: 10
+        name: T_ERROR_TYPE_DICT
+        broadcastFlag: true
+      - index: 11
+        name: T_ERROR_CODE_INFO
+        broadcastFlag: true    
+
+# 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21990
+server:
+  port: __BK_CI_METRICS_API_PORT__
+
+metrics:
+  devopsUrl: __BK_CI_PUBLIC_URL__
+  streamUrl: __BK_CI_STREAM_URL__
+  queryDaysMax: 180
+  queryCountMax: 10000
+  defaultLimitNum: 10
+
+sharding:
+  routing:
+    cacheSize: 100000
+  databaseShardingStrategy:
+    shardingField: PROJECT_ID
+    algorithmClassName: "com.tencent.devops.metrics.sharding.BkMetricsDatabaseShardingAlgorithm"
+

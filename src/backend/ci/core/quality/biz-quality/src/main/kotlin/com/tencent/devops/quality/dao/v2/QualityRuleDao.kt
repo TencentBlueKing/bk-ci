@@ -34,61 +34,72 @@ import com.tencent.devops.model.quality.tables.records.TQualityRuleRecord
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
-@Repository@Suppress("ALL")
+@Repository
+@Suppress("ALL")
 class QualityRuleDao {
     fun create(dslContext: DSLContext, userId: String, projectId: String, ruleRequest: RuleCreateRequest): Long {
-        val rule = with(TQualityRule.T_QUALITY_RULE) {
-            dslContext.insertInto(
-                this,
-                NAME,
-                DESC,
-                INDICATOR_RANGE,
-                PIPELINE_TEMPLATE_RANGE,
-                CONTROL_POINT,
-                CONTROL_POINT_POSITION,
-                PROJECT_ID,
-                CREATE_USER,
-                CREATE_TIME,
-                GATEWAY_ID
-            )
-                .values(
-                    ruleRequest.name,
-                    ruleRequest.desc,
-                    ruleRequest.range.joinToString(","),
-                    ruleRequest.templateRange.joinToString(","),
-                    ruleRequest.controlPoint,
-                    ruleRequest.controlPointPosition,
-                    projectId,
-                    userId,
-                    LocalDateTime.now(),
-                    ruleRequest.gatewayId
+        var ruleId = 0L
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            with(TQualityRule.T_QUALITY_RULE) {
+                ruleId = transactionContext.insertInto(
+                    this,
+                    NAME,
+                    DESC,
+                    INDICATOR_RANGE,
+                    PIPELINE_TEMPLATE_RANGE,
+                    CONTROL_POINT,
+                    CONTROL_POINT_POSITION,
+                    PROJECT_ID,
+                    CREATE_USER,
+                    CREATE_TIME,
+                    GATEWAY_ID
                 )
-                .returning(ID)
-                .fetchOne()!!
-        }
-        with(TQualityRuleMap.T_QUALITY_RULE_MAP) {
-            dslContext.insertInto(
-                this,
-                RULE_ID,
-                INDICATOR_IDS,
-                INDICATOR_OPERATIONS,
-                INDICATOR_THRESHOLDS
-            )
-                .values(
-                    rule.id,
-                    ruleRequest.indicatorIds.joinToString(",") { HashUtil.decodeIdToLong(it.hashId).toString() },
-                    ruleRequest.indicatorIds.joinToString(",") { it.operation },
-                    ruleRequest.indicatorIds.joinToString(",") { it.threshold }
-
+                    .values(
+                        ruleRequest.name,
+                        ruleRequest.desc,
+                        ruleRequest.range.joinToString(","),
+                        ruleRequest.templateRange.joinToString(","),
+                        ruleRequest.controlPoint,
+                        ruleRequest.controlPointPosition,
+                        projectId,
+                        userId,
+                        LocalDateTime.now(),
+                        ruleRequest.gatewayId
+                    )
+                    .returning(ID)
+                    .fetchOne()!!.id
+                val hashId = HashUtil.encodeLongId(ruleId)
+                transactionContext.update(this)
+                    .set(QUALITY_RULE_HASH_ID, hashId)
+                    .where(ID.eq(ruleId))
+                    .execute()
+            }
+            with(TQualityRuleMap.T_QUALITY_RULE_MAP) {
+                transactionContext.insertInto(
+                    this,
+                    RULE_ID,
+                    INDICATOR_IDS,
+                    INDICATOR_OPERATIONS,
+                    INDICATOR_THRESHOLDS
                 )
-                .execute()
+                    .values(
+                        ruleId,
+                        ruleRequest.indicatorIds.joinToString(",") { HashUtil.decodeIdToLong(it.hashId).toString() },
+                        ruleRequest.indicatorIds.joinToString(",") { it.operation },
+                        ruleRequest.indicatorIds.joinToString(",") { it.threshold }
+                    )
+                    .execute()
+            }
         }
-        return rule.id
+        return ruleId
     }
 
     fun update(context: DSLContext, userId: String, projectId: String, ruleId: Long, ruleRequest: RuleUpdateRequest) {
@@ -325,6 +336,33 @@ class QualityRuleDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(NAME.like("%$name%"))
                 .fetchOne(0, kotlin.Long::class.java)!!
+        }
+    }
+
+    fun getAllRule(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<Record1<Long>>? {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.select(ID).from(this)
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateHashId(
+        dslContext: DSLContext,
+        id: Long,
+        hashId: String
+    ) {
+        with(TQualityRule.T_QUALITY_RULE) {
+            dslContext.update(this)
+                .set(QUALITY_RULE_HASH_ID, hashId)
+                .where(ID.eq(id))
+                .and(QUALITY_RULE_HASH_ID.isNull)
+                .execute()
         }
     }
 }

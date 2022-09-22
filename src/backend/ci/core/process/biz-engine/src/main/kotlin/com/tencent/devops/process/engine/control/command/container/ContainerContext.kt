@@ -45,6 +45,8 @@ data class ContainerContext(
     var latestSummary: String, // 最新备注信息，64字符以内
     var cmdFlowState: CmdFlowState = CmdFlowState.CONTINUE, // 当前容器引擎命令流转状态
     val stageMatrixCount: Int = 0,
+    var firstQueueTaskId: String? = null, // 缓存找到的第一个待执行的任务（未必执行）
+    val pipelineAsCodeEnabled: Boolean? = null,
     override var cmdFlowSeq: Int = 0, // 命令序号
     override val variables: Map<String, String>, // 变量
     override val watcher: Watcher, // 监控对象

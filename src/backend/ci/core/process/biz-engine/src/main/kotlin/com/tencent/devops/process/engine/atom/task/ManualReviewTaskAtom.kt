@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -49,7 +50,9 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.Date
 
@@ -64,6 +67,8 @@ class ManualReviewTaskAtom(
     private val pipelineVariableService: BuildVariableService
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
+    @Value("\${esb.appSecret:#{null}}")
+    private val appSecret: String? = null
     override fun getParamElement(task: PipelineBuildTask): ManualReviewUserTaskElement {
         return JsonUtil.mapTo((task.taskParams), ManualReviewUserTaskElement::class.java)
     }
@@ -90,23 +95,24 @@ class ManualReviewTaskAtom(
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
         buildLogPrinter.addYellowLine(
-            buildId = task.buildId, message = "============步骤等待审核============",
+            buildId = task.buildId, message = "============步骤等待审核(Pending approval)============",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "待审核人：$reviewUsers",
+            buildId = task.buildId, message = "待审核人(Reviewers)：$reviewUsers",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核说明：$reviewDesc",
+            buildId = task.buildId, message = "审核说明(Description)：$reviewDesc",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = buildId, message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
+            buildId = buildId, message = "审核参数(Params)：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
 
-        val pipelineName = runVariables[PIPELINE_NAME].toString()
+        val pipelineName = runVariables[PIPELINE_NAME] ?: pipelineId
+        val projectName = runVariables[PROJECT_NAME_CHINESE] ?: projectCode
         pipelineEventDispatcher.dispatch(
             PipelineBuildReviewBroadCastEvent(
                 source = "ManualReviewTaskAtom",
@@ -127,13 +133,23 @@ class ManualReviewTaskAtom(
                 ),
                 bodyParams = mutableMapOf(
                     "buildNum" to (runVariables[PIPELINE_BUILD_NUM] ?: "1"),
-                    "projectName" to "need to add in notifyListener",
+                    "projectName" to projectName,
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
-                    "reviewDesc" to reviewDesc
+                    "reviewDesc" to reviewDesc,
+                    "manualReviewParam" to JsonUtil.toJson(param.params),
+                    "checkParams" to param.params.isNotEmpty().toString()
                 ),
                 position = null,
-                stageId = null
+                stageId = null,
+                callbackData = mapOf(
+                    "projectId" to projectCode,
+                    "pipelineId" to pipelineId,
+                    "buildId" to buildId,
+                    "elementId" to (param.id ?: ""),
+                    "reviewUsers" to reviewUsers,
+                    "signature" to ShaUtils.sha256(projectCode + buildId + (param.id ?: "") + appSecret)
+                )
             )
         )
 
@@ -165,10 +181,12 @@ class ManualReviewTaskAtom(
 
         val response = when (ManualReviewAction.valueOf(manualAction)) {
             ManualReviewAction.PROCESS -> {
-                buildLogPrinter.addLine(buildId = buildId, message = "审核结果：继续",
+                buildLogPrinter.addLine(
+                    buildId = buildId, message = "审核结果(result)：继续(Approve)",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
-                buildLogPrinter.addLine(buildId = buildId, message = "审核参数：${getParamList(taskParam)}",
+                buildLogPrinter.addLine(
+                    buildId = buildId, message = "审核参数(Params)：${getParamList(taskParam)}",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 pipelineEventDispatcher.dispatch(
@@ -183,7 +201,8 @@ class ManualReviewTaskAtom(
                 AtomResponse(BuildStatus.SUCCEED)
             }
             ManualReviewAction.ABORT -> {
-                buildLogPrinter.addRedLine(buildId = buildId, message = "审核结果：驳回",
+                buildLogPrinter.addRedLine(
+                    buildId = buildId, message = "审核结果(result)：驳回(Reject)",
                     tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 pipelineEventDispatcher.dispatch(
@@ -198,7 +217,25 @@ class ManualReviewTaskAtom(
                 AtomResponse(BuildStatus.REVIEW_ABORT)
             }
         }
-
+        val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), runVariables)
+        pipelineEventDispatcher.dispatch(
+            // 发送审批取消通知
+            PipelineBuildNotifyEvent(
+                notifyCompleteCheck = true,
+                notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE.name,
+                source = "ManualReviewTaskAtomFinish", projectId = task.projectId, pipelineId = task.pipelineId,
+                userId = task.starter, buildId = buildId,
+                receivers = reviewUsers.split(","),
+                notifyType = checkNotifyType(param.notifyType),
+                titleParams = mutableMapOf(),
+                bodyParams = mutableMapOf(),
+                position = null,
+                stageId = null,
+                callbackData = mapOf(
+                    "signature" to ShaUtils.sha256(task.projectId + buildId + (param.id ?: "") + appSecret)
+                )
+            )
+        )
         postPrint(param = param, task = task, suggestContent = suggestContent)
         return response
     }
@@ -261,15 +298,15 @@ class ManualReviewTaskAtom(
     ): Any? {
         val suggestContent = taskParam[BS_MANUAL_ACTION_SUGGEST]
         buildLogPrinter.addYellowLine(
-            buildId = task.buildId, message = "============步骤审核结束============",
+            buildId = task.buildId, message = "============步骤审核结束(Final approval)============",
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核人：$manualActionUserId",
+            buildId = task.buildId, message = "审核人(Reviewer)：$manualActionUserId",
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId, message = "审核意见：$suggestContent",
+            buildId = task.buildId, message = "审核意见(Review comments)：$suggestContent",
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         return suggestContent

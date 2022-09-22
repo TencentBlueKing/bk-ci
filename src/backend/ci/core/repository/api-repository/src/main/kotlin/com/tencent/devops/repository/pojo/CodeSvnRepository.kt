@@ -62,7 +62,7 @@ data class CodeSvnRepository(
     override fun isLegal(): Boolean {
         if (svnType == SVN_TYPE_HTTP) {
             return url.startsWith("http://") ||
-                url.startsWith("https://")
+                url.startsWith("https://") || url.startsWith("svn://")
         }
         return url.startsWith(getStartPrefix())
     }

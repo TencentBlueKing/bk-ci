@@ -158,7 +158,12 @@ data class StartBuildContext(
 
     companion object {
 
-        fun init(projectId: String, pipelineId: String, buildId: String, params: Map<String, Any>): StartBuildContext {
+        fun init(
+            projectId: String,
+            pipelineId: String,
+            buildId: String,
+            params: Map<String, Any>
+        ): StartBuildContext {
 
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]?.toString()
 
