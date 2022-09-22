@@ -33,7 +33,12 @@ import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 
 class SamplePermissionRoleService : PermissionRoleService {
-    override fun createPermissionRole(userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO): Int {
+    override fun createPermissionRole(
+        userId: String,
+        projectId: Int,
+        projectCode: String,
+        groupInfo: ProjectRoleDTO
+    ): Int {
         TODO("Not yet implemented")
     }
 
