@@ -138,14 +138,14 @@ class QueueInterceptor @Autowired constructor(
                 )
             queueCount >= setting.maxQueueSize -> {
                 if (groupName == null) {
-                    outQueueCancelSingle(
+                    outQueueCancelBySingle(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         latestStartUser = latestStartUser,
                         task = task
                     )
                 } else {
-                    outQueueCancelGroup(
+                    outQueueCancelByGroup(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         groupName = groupName,
@@ -161,7 +161,7 @@ class QueueInterceptor @Autowired constructor(
         }
     }
 
-    private fun outQueueCancelSingle(
+    private fun outQueueCancelBySingle(
         projectId: String,
         pipelineId: String,
         latestStartUser: String?,
@@ -194,7 +194,7 @@ class QueueInterceptor @Autowired constructor(
         }
     }
 
-    private fun outQueueCancelGroup(
+    private fun outQueueCancelByGroup(
         projectId: String,
         pipelineId: String,
         groupName: String,
@@ -219,7 +219,7 @@ class QueueInterceptor @Autowired constructor(
             )
             buildLogPrinter.addRedLine(
                 buildId = buildInfo.buildId,
-                message = "[concurrency]Canceling since <a target='_blank' href='$detailUrl'>" +
+                message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
                     "a higher priority waiting request</a> for group($groupName) exists",
                 tag = "QueueInterceptor",
                 jobId = "",
@@ -319,7 +319,7 @@ class QueueInterceptor @Autowired constructor(
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: ${task["status"] ?: ""}")
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "[concurrency]Canceling since <a target='_blank' href='$detailUrl'>" +
+                    message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
                         "a higher priority waiting request</a> for group($groupName) exists",
                     tag = taskId,
                     jobId = task["containerId"]?.toString() ?: "",
@@ -329,7 +329,7 @@ class QueueInterceptor @Autowired constructor(
             if (tasks.isEmpty()) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "[concurrency]Canceling all since <a target='_blank' href='$detailUrl'>" +
+                    message = "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
                         "a higher priority waiting request</a> for group($groupName) exists",
                     tag = "QueueInterceptor",
                     jobId = "",
