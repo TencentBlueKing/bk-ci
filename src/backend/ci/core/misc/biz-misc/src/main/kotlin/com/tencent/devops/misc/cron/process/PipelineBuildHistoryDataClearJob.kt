@@ -87,6 +87,9 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
     @Value("\${process.deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Long = 30 // 回收站已删除流水线保存天数
 
+    @Value("\${process.clearBaseBuildData:false}")
+    private val clearBaseBuildData: Boolean = false // 是否开启清理【被彻底删除的流水线】的基础构建流水数据（建议开启）
+
     @PostConstruct
     fun init() {
         logger.info("start init pipelineBuildHistoryDataClearJob")
@@ -175,7 +178,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         maxThreadProjectPrimaryId: Long
     ): Future<Boolean> {
         val threadName = "Thread-$threadNo"
-        return executor!!.submit(Callable<Boolean> {
+        return executor!!.submit(Callable {
             var handleProjectPrimaryId =
                 redisOperation.get(key = "$threadName:$PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY",
                     isDistinguishCluster = true)?.toLong()
@@ -195,7 +198,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 isDistinguishCluster = true)
             try {
                 val maxEveryProjectHandleNum = miscBuildDataClearConfig.maxEveryProjectHandleNum
-                var maxHandleProjectPrimaryId = handleProjectPrimaryId ?: 0L
+                var maxHandleProjectPrimaryId = handleProjectPrimaryId.toLong()
                 val projectInfoList = if (projectIdList.isNullOrEmpty()) {
                     val channelCodeList = miscBuildDataClearConfig.clearChannelCodes.split(",")
                     maxHandleProjectPrimaryId = handleProjectPrimaryId + maxEveryProjectHandleNum
@@ -346,7 +349,9 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             pipelineHistoryBuildIdList?.forEach { buildId ->
                 // 依次删除process表中的相关构建记录(T_PIPELINE_BUILD_HISTORY做为基准表，
                 // 为了保证构建流水记录删干净，T_PIPELINE_BUILD_HISTORY记录要最后删)
-                processDataClearService.clearBaseBuildData(projectId, buildId)
+                if (clearBaseBuildData) {
+                    processDataClearService.clearBaseBuildData(projectId, buildId)
+                }
                 repositoryDataClearService.clearBuildData(buildId)
                 if (isCompletelyDelete) {
                     dispatchDataClearService.clearBuildData(buildId)
@@ -358,7 +363,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 }
             }
             totalHandleNum += DEFAULT_PAGE_SIZE
-            if (!cleanBuilds.isNullOrEmpty()) {
+            if (cleanBuilds.isNotEmpty()) {
                 processRelatedPlatformDataClearService.cleanBuildData(projectId, pipelineId, cleanBuilds)
             }
         }
