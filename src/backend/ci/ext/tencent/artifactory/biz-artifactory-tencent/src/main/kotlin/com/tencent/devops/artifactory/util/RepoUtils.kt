@@ -29,7 +29,6 @@ package com.tencent.devops.artifactory.util
 
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
-import com.tencent.bkrepo.repository.pojo.packages.PackageVersion
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -148,7 +147,7 @@ object RepoUtils {
                 size = basic.size,
                 createdTime = LocalDateTime.parse(basic.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 modifiedTime = LocalDateTime.parse(basic.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                checksums = FileChecksums(basic.sha256, "", ""),
+                checksums = FileChecksums(basic.sha256, "", basic.md5),
                 meta = metadata.associate { it["key"].toString() to it["value"].toString() }
             )
         }

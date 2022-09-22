@@ -31,6 +31,7 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import java.net.URLEncoder
 import java.nio.file.Paths
+import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 
 object PathUtils {
@@ -105,10 +106,16 @@ object PathUtils {
         })
     }
 
+    /**
+     * 根据manifest文件路径解析镜像名称和版本
+     * eg: /jq/manifest/1.0.0/manifest.json
+     */
     fun getImageNameAndVersion(manifestPath: String): Pair<String, String> {
-        val fullPathList = manifestPath.split("/")
-        val imageName = fullPathList[1]
-        val version = fullPathList[3]
-        return Pair(imageName, version)
+        val pattern = Pattern.compile("/(.*)/manifest/(.*)/manifest.json")
+        val matcher = pattern.matcher(manifestPath)
+        if (!matcher.find()) {
+            throw IllegalArgumentException("illegal manifestPath: $manifestPath")
+        }
+        return Pair(matcher.group(1), matcher.group(2))
     }
 }
