@@ -498,8 +498,8 @@ var (
 		"/FI":                 true,
 		"/Yu":                 true,
 		"/sourceDependencies": true,
-		"/external:":          true, //specify compiler diagnostic behavior for certain header files
-		"-external:":          true, //specify compiler diagnostic behavior for certain header files
+		"/external:I":         true, //specify compiler diagnostic behavior for certain header files
+		"-external:I":         true, //specify compiler diagnostic behavior for certain header files
 	}
 
 	// skip options without value
@@ -512,18 +512,18 @@ var (
 
 	// skip options start with flags
 	skipLocalOptionStartWith = map[string]bool{
-		"/D":         true,
-		"/I":         true,
-		"-D":         true,
-		"-I":         true,
-		"/U":         true,
-		"/Fd":        true,
-		"/FI":        true, // Preprocesses the specified include file.
-		"/Fp":        true, // Preprocesses the specified include file.
-		"/Yu":        true, // Uses a precompiled header file during build.
-		"/Zm":        true, // Specifies the precompiled header memory allocation limit.
-		"/external:": true, //specify compiler diagnostic behavior for certain header files
-		"-external:": true, //specify compiler diagnostic behavior for certain header files
+		"/D":          true,
+		"/I":          true,
+		"-D":          true,
+		"-I":          true,
+		"/U":          true,
+		"/Fd":         true,
+		"/FI":         true, // Preprocesses the specified include file.
+		"/Fp":         true, // Preprocesses the specified include file.
+		"/Yu":         true, // Uses a precompiled header file during build.
+		"/Zm":         true, // Specifies the precompiled header memory allocation limit.
+		"/external:W": true, //specify compiler diagnostic behavior for certain header files
+		"-external:W": true, //specify compiler diagnostic behavior for certain header files
 	}
 )
 
