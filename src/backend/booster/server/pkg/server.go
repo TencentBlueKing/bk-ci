@@ -455,9 +455,9 @@ func (s *Server) initK8sResourceManagers() (k8sRm crm.ResourceManager,
 	}
 
 	k8sConf := s.conf.K8sContainerResourceConfig
-	for queueName, val := range curQueueMap {
-		if !val {
-			initInstanceType(&k8sConf, k8sQueueIstList[queueName])
+	for queueName, istItem := range k8sQueueIstList {
+		if !curQueueMap[queueName] {
+			initInstanceType(&k8sConf, istItem)
 		}
 	}
 	k8sRm, err = s.initContainerResourceManager(&k8sConf, s.rd)
