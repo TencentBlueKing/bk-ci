@@ -139,6 +139,4 @@ interface UserBuildParametersResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<BuildFormValue>>
-
-
 }
