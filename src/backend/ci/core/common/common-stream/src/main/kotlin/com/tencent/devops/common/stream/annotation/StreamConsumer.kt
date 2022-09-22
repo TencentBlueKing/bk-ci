@@ -31,13 +31,13 @@ import org.springframework.context.annotation.Bean
 
 /**
  * Stream消费者注解
- * @param streamEvent 目标绑定接受的事件
+ * @param destination 绑定要消费的topic
  * @param group 指定订阅组，如果是广播事件则需要指定，否则为非广播默认订阅组
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 @Bean
 annotation class StreamConsumer(
-    val streamEvent: StreamEvent,
+    val destination: String,
     val group: String = ""
 )

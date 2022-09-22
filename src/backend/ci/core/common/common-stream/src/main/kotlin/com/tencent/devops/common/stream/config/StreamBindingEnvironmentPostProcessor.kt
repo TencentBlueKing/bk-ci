@@ -64,6 +64,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
             // 如果未配置服务使用的binder类型，则使用全局默认binder类型
             // 如果均未配置则不进行注解的反射解析
             val binder = serviceBinder ?: defaultBinder ?: return PropertiesPropertySource(STREAM_SOURCE_NAME, this)
+            val definition = mutableListOf<String>()
             val eventClasses = Reflections(
                 ConfigurationBuilder()
                     .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
@@ -75,6 +76,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                     "Found StreamEvent class: ${clazz.name}, " +
                         "with destination[${streamEvent.destination}]"
                 )
+                definition.add(clazz.simpleName)
                 setProperty("spring.cloud.stream.bindings.${clazz.simpleName}.destination", streamEvent.destination)
                 setProperty("spring.cloud.stream.bindings.${clazz.simpleName}.destination", binder)
             }
@@ -88,8 +90,9 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 val streamConsumer = method.getAnnotation(StreamConsumer::class.java)
                 println(
                     "Found StreamConsumer class: ${method.name}, " +
-                        "with destination[${streamConsumer.streamEvent}] group[${streamConsumer.group}]"
+                        "with destination[${streamConsumer.destination}] group[${streamConsumer.group}]"
                 )
+                definition.add(method.name)
                 // 如果注解中指定了订阅组，则直接设置
                 // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
                 val subscriptionGroup = streamConsumer.group.ifBlank {
@@ -97,13 +100,14 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 }
                 setProperty(
                     "spring.cloud.stream.bindings.${method.name}-in-0",
-                    streamConsumer.streamEvent.destination
+                    streamConsumer.destination
                 )
                 setProperty(
                     "spring.cloud.stream.bindings.bindings.${method.name}-in-0",
                     subscriptionGroup
                 )
             }
+            setProperty("spring.cloud.stream.function.definition", definition.joinToString(";"))
             return PropertiesPropertySource(STREAM_SOURCE_NAME, this)
         }
     }
