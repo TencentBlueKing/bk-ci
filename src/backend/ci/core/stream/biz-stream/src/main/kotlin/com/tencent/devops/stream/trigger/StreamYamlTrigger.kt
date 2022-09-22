@@ -45,6 +45,7 @@ import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplateConf
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
@@ -86,7 +87,8 @@ class StreamYamlTrigger @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val yamlBuild: StreamYamlBuild,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val streamYamlBaseBuild: StreamYamlBaseBuild
+    private val streamYamlBaseBuild: StreamYamlBaseBuild,
+    private val streamGitConfig: StreamGitConfig
 ) {
 
     companion object {
@@ -127,13 +129,14 @@ class StreamYamlTrigger @Autowired constructor(
         }
 
         // 这里判断，各类注册事件如果修改blobId肯定不同，相同的肯定注册过了，所以只要不触发git就直接跳过
-        if (triggerEvent != null && !triggerEvent.second.trigger) {
+        if (triggerEvent != null && !triggerEvent.second.trigger.trigger) {
             logger.info(
                 "${buildPipeline.pipelineId}| use trigger cache" +
                     "Matcher is false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
                     "eventId: ${action.data.context.requestEventId}"
             )
-            throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH)
+            throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH,
+                reasonParams = listOf(triggerEvent.second.trigger.notTriggerReason ?: ""))
         }
 
         val yamlContent = action.getYamlContent(filePath)
@@ -214,31 +217,27 @@ class StreamYamlTrigger @Autowired constructor(
         }
 
         // 获取蓝盾流水线的pipelineAsCodeSetting
-        val projectCode = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong())
-        val pipelineAsCodeSettings = if (pipeline.pipelineId.isNotBlank()) {
-            client.get(ServicePipelineSettingResource::class).getPipelineSetting(
-                projectId = projectCode,
-                pipelineId = pipeline.pipelineId,
-                channelCode = ChannelCode.GIT
-            ).data?.pipelineAsCodeSettings
-        } else {
-            client.get(ServiceProjectResource::class).get(projectCode)
-                .data?.properties?.pipelineAsCodeSettings
-        } ?: throw StreamTriggerException(
-            action = action,
-            triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
-            reasonParams = listOf("Pipeline settings not found"),
-            commitCheck = CommitCheck(
-                block = false,
-                state = StreamCommitCheckState.FAILURE
-            )
-        )
-        action.data.context.pipelineAsCodeSettings = pipelineAsCodeSettings
+        val projectCode = GitCommonUtils.getCiProjectId(pipeline.gitProjectId.toLong(), streamGitConfig.getScmType())
+        action.data.context.pipelineAsCodeSettings = try {
+            if (pipeline.pipelineId.isNotBlank()) {
+                client.get(ServicePipelineSettingResource::class).getPipelineSetting(
+                    projectId = projectCode,
+                    pipelineId = pipeline.pipelineId,
+                    channelCode = ChannelCode.GIT
+                ).data?.pipelineAsCodeSettings
+            } else {
+                client.get(ServiceProjectResource::class).get(projectCode)
+                    .data?.properties?.pipelineAsCodeSettings
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("StreamYamlTrigger get project[$projectCode] as code settings error.", ignore)
+            null
+        }
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
-            action.data.getGitProjectId(),
+            action.getGitProjectIdOrName(),
             ApiRequestRetryInfo(true)
         )!!
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)
@@ -256,7 +255,8 @@ class StreamYamlTrigger @Autowired constructor(
         } else {
             triggerMatcher.isMatch(action)
         }
-        val (isTrigger, _, isTiming, isDelete, repoHookName) = tr
+        val (isTriggerBody, _, isTiming, isDelete, repoHookName) = tr
+        val (isTrigger, notTriggerReason) = isTriggerBody
         logger.info(
             "StreamYamlTrigger|triggerBuild|pipelineId|" +
                 "${pipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
@@ -271,7 +271,11 @@ class StreamYamlTrigger @Autowired constructor(
                     "Matcher is false|gitProjectId|${action.data.getGitProjectId()}|" +
                     "eventId|${action.data.context.requestEventId}"
             )
-            throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH)
+            throw StreamTriggerException(
+                action = action,
+                triggerReason = TriggerReason.TRIGGER_NOT_MATCH,
+                reasonParams = listOf(notTriggerReason ?: "")
+            )
         }
 
         // 替换yaml模板

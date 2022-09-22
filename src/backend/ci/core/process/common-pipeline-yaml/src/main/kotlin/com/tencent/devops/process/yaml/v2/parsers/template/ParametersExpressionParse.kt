@@ -55,7 +55,6 @@ object ParametersExpressionParse {
         // 模板替换 先替换调用模板传入的参数，再替换模板的默认参数
         templateParameters.forEachIndexed { index, param ->
             if (param.name.contains(".")) {
-                logger.error("PARAMETERS|NAME|WARNING|${param.name}")
                 throw error(
                     Constants.PARAMETER_FORMAT_ERROR.format(path, "parameter name ${param.name} not allow contains '.'")
                 )

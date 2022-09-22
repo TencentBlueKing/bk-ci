@@ -171,7 +171,7 @@ class YamlSchemaCheck @Autowired constructor() {
         return getSchemaFromGit(file)
     }
 
-    private fun getSchemaFromGit(file: String): JsonSchema {
+    fun getSchemaFromGit(file: String): JsonSchema {
         if (schemaMap[file] != null) {
             return schemaMap[file]!!
         }

@@ -256,4 +256,15 @@ class EnvShareProjectDao {
                 .execute()
         }
     }
+
+    fun deleteByEnvId(
+        dslContext: DSLContext,
+        envId: Long
+    ) {
+        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
+            dslContext.deleteFrom(this)
+                .where(ENV_ID.eq(envId))
+                .execute()
+        }
+    }
 }

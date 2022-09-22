@@ -28,13 +28,17 @@
 package com.tencent.devops.environment.dao
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import org.jooq.DSLContext
+import org.jooq.Record1
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import org.jooq.impl.DSL
 
 @Repository
 @Suppress("ALL")
@@ -74,35 +78,42 @@ class EnvDao {
         envVars: String
     ): Long {
         val now = LocalDateTime.now()
+        var envId = 0L
         with(TEnv.T_ENV) {
-            val record = dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                ENV_NAME,
-                ENV_DESC,
-                ENV_TYPE,
-                ENV_VARS,
-                CREATED_USER,
-                UPDATED_USER,
-                CREATED_TIME,
-                UPDATED_TIME,
-                IS_DELETED
-            ).values(
-                projectId,
-                envName,
-                envDesc,
-                envType,
-                envVars,
-                userId,
-                userId,
-                now,
-                now,
-                false
-            )
-                .returning(ENV_ID)
-                .fetchOne()
-            return record!!.envId!!
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                envId = transactionContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    ENV_NAME,
+                    ENV_DESC,
+                    ENV_TYPE,
+                    ENV_VARS,
+                    CREATED_USER,
+                    UPDATED_USER,
+                    CREATED_TIME,
+                    UPDATED_TIME,
+                    IS_DELETED
+                ).values(
+                    projectId,
+                    envName,
+                    envDesc,
+                    envType,
+                    envVars,
+                    userId,
+                    userId,
+                    now,
+                    now,
+                    false
+                ).returning(ENV_ID).fetchOne()!!.envId
+                val hashId = HashUtil.encodeLongId(envId)
+                transactionContext.update(this)
+                    .set(ENV_HASH_ID, hashId)
+                    .where(ENV_ID.eq(envId))
+                    .execute()
+            }
         }
+        return envId
     }
 
     fun update(
@@ -273,6 +284,33 @@ class EnvDao {
         with(TEnv.T_ENV) {
             return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId).and(ENV_NAME.like("%$envName%")))
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun getAllEnv(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<Record1<Long>>? {
+        with(TEnv.T_ENV) {
+            return dslContext.select(ENV_ID).from(this)
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateHashId(
+        dslContext: DSLContext,
+        id: Long,
+        hashId: String
+    ) {
+        with(TEnv.T_ENV) {
+            dslContext.update(this)
+                .set(ENV_HASH_ID, hashId)
+                .where(ENV_ID.eq(id))
+                .and(ENV_HASH_ID.isNull)
+                .execute()
         }
     }
 }

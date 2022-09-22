@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.service.StreamScmService
@@ -84,7 +84,7 @@ class V1GitCIHistoryService @Autowired constructor(
         triggerUser: String?,
         pipelineId: String?,
         commitMsg: String? = null,
-        event: TGitObjectKind? = null,
+        event: StreamGitObjectKind? = null,
         status: BuildStatus? = null
     ): Page<V1GitCIBuildHistory> {
         logger.info("get history build list, gitProjectId: $gitProjectId")

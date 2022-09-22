@@ -3,7 +3,6 @@
   "required" : [ "gates" ],
   "properties" : {
     "parameters" : {
-      "description" : "通过 parameters 关键字来实现参数的定义和传递，包含属性：name，type，default，values",
       "type" : "array",
       "items" : {
         "anyOf" : [ {
@@ -12,15 +11,12 @@
           "required" : [ "name", "type" ],
           "properties" : {
             "name" : {
-              "description" : "参数名称",
               "type" : "string"
             },
             "type" : {
-              "description" : "参数类型，支持：string，number，boolean，array",
               "enum" : [ "string", "number", "boolean", "array" ]
             },
             "default" : {
-              "description" : "默认值",
               "anyOf" : [ {
                 "type" : "string"
               }, {
@@ -41,7 +37,6 @@
               } ]
             },
             "values" : {
-              "description" : "枚举值：当值可以枚举时，通过此属性将可选值枚举出来",
               "type" : "array",
               "items" : {
                 "anyOf" : [ {
@@ -55,13 +50,11 @@
             }
           }
         }, {
-          "description" : "模板引用，支持传入模板名称引用模板实例，模板实例按引用顺序插入",
           "type" : "object",
           "additionalProperties" : false,
           "required" : [ "template" ],
           "properties" : {
             "template" : {
-              "description" : "模板名称",
               "type" : "string"
             }
           }
@@ -69,16 +62,13 @@
       }
     },
     "version" : {
-      "description" : "YAML 的版本，v2.0 为新语法第一版",
       "type" : "string",
       "const" : "v2.0"
     },
     "name" : {
-      "description" : "pipeline 名称，缺省则设置为 YAML 文件相对于代码仓库根目录的路径",
       "type" : "string"
     },
     "gates" : {
-      "description" : "质量红线模板定义。查看支持红线的插件与指标详情：需要补充文档/pages/viewpage.action?pageId=1049941592",
       "type" : "array",
       "items" : {
         "type" : "object",
@@ -86,18 +76,15 @@
         "required" : [ "name", "rule" ],
         "properties" : {
           "name" : {
-            "description" : "红线名称",
             "type" : "string"
           },
           "rule" : {
-            "description" : "红线规则，可以定义多个规则，每个规则支持如下格式：格式一 [插件code].[指标名][操作符][阈值] 例CodeccCheckAtomDebug.coverity_serious_defect <= 2，格式二 [STEP@step-name].[指标名][操作符][阈值] 例 STEP@CCK*.coverity_serious_defect <= 2 详见：需要补充文档/pages/viewpage.action?pageId=833350128#Stage%E5%87%86%E5%85%A5/%E5%87%86%E5%87%BA%EF%BC%9A%E4%BA%BA%E5%B7%A5%E5%AE%A1%E6%A0%B8%E5%92%8C%E8%B4%A8%E9%87%8F%E7%BA%A2%E7%BA%BF-%E8%B4%A8%E9%87%8F%E7%BA%A2%E7%BA%BFgates",
             "type" : "array",
             "items" : {
               "type" : "string"
             }
           },
           "notify-on-fail" : {
-            "description" : "红线失败时通知：支持 email，wework-message",
             "type" : "array",
             "items" : {
               "type" : "object",
@@ -121,7 +108,6 @@
             }
           },
           "continue-on-fail" : {
-            "description" : " 暂未实施！红线失败时，如果允许忽略问题，则需设置把关人配置后，发现问题时，不拦截，先通知把关人手动确认是否继续",
             "type" : "object",
             "additionalProperties" : false,
             "required" : [ "gatekeepers" ],
@@ -138,6 +124,5 @@
       }
     }
   },
-  "$schema" : "http://json-schema.org/draft-07/schema",
-  "$comment" : "需要补充文档/pages/viewpage.action?pageId=686380000"
+  "$schema" : "http://json-schema.org/draft-07/schema"
 }
