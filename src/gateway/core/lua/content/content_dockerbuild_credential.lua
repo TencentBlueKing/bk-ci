@@ -20,17 +20,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --- 初始化HTTP连接
 local httpc = http.new()
-local jfrogConfig = config.artifactory
 --- 开始连接
 httpc:set_timeout(3000)
-httpc:connect(jfrogConfig.domain, jfrogConfig.port)
+httpc:connect(config.artifactory.domain, config.artifactory.port)
 --- 发送请求
-local auth_code = "Basic " .. ngx.encode_base64(jfrogConfig.user .. ":" .. jfrogConfig.password)
+local auth_code = "Basic " .. ngx.encode_base64(config.artifactory.user .. ":" .. config.artifactory.password)
 local res, err = httpc:request({
   path = "/api/plugins/execute/createDockerUser?params=projectCode=" .. ngx.var.projectId .. ";permanent=false",
   method = "GET",
   headers = {
-    ["Host"] = jfrogConfig.domain,
+    ["Host"] = config.artifactory.domain,
     ["Authorization"] = auth_code,
   }
 })
@@ -69,7 +68,7 @@ end
 local return_result = {
   user = result.data.user,
   password = result.data.password,
-  host = jfrogConfig.domain,
-  port = jfrogConfig.docker
+  host = config.artifactory.domain,
+  port = config.artifactory.docker
 }
 ngx.say(json.encode(return_result))
