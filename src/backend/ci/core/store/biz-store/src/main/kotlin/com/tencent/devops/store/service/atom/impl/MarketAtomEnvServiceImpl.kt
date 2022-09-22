@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
@@ -491,10 +492,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         if (0 != status) {
             return Result(atomResult.status, atomResult.message ?: "", false)
         }
+        val osName = atomEnvRequest.osName
+        val osArch = atomEnvRequest.osArch
         atomEnvRequest.language?.let {
             val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(it)
-            val osName = atomEnvRequest.osName
-            val osArch = atomEnvRequest.osArch
             if (!osName.isNullOrBlank()) {
                 atomEnvRequest.osName = atomBusHandleService.handleOsName(osName)
             }
@@ -504,7 +505,21 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         }
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
         return if (null != atomRecord) {
-            marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomRecord.id, atomEnvRequest)
+            val atomId = atomRecord.id
+            val atomEnvRecord = marketAtomEnvInfoDao.getAtomEnvInfo(
+                dslContext = dslContext,
+                atomId = atomId,
+                osName = osName,
+                osArch = osArch
+            )
+            atomEnvRecord?.let {
+                // 合并用户配置的前置命令和系统预置的前置命令
+                val dbPreCmds = CommonUtils.strToList(atomEnvRecord.preCmd ?: "")
+                val requestPreCmds = CommonUtils.strToList(atomEnvRequest.preCmd ?: "")
+                val finalPreCmds = requestPreCmds.plus(dbPreCmds)
+                atomEnvRequest.preCmd = JsonUtil.toJson(finalPreCmds, false)
+                marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomId, atomEnvRequest)
+            }
             Result(true)
         } else {
             MessageCodeUtil.generateResponseDataObject(
