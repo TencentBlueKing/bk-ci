@@ -38,7 +38,14 @@ class BuildJinGangAppResourceImpl @Autowired constructor(
     private val jinGangService: JinGangService
 ) : BuildJinGangAppResource {
     override fun updateTask(buildId: String, md5: String, status: Int, taskId: Long, scanUrl: String, result: String) {
-        jinGangService.updateTask(buildId, md5, status, taskId, scanUrl, result)
+        jinGangService.updateTask(
+            buildId = buildId,
+            md5 = md5,
+            status = status,
+            taskId = taskId,
+            scanUrl = scanUrl,
+            result = result
+        )
     }
 
     override fun createTask(
@@ -53,7 +60,18 @@ class BuildJinGangAppResourceImpl @Autowired constructor(
         version: String,
         type: Int
     ): Result<Long> {
-        return Result(jinGangService.createTask(projectId, pipelineId, buildId, buildNo, userId, path, md5, size, version, type))
+        return Result(jinGangService.createTask(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            buildNo = buildNo,
+            userId = userId,
+            path = path,
+            md5 = md5,
+            size = size,
+            version = version,
+            type = type
+        ))
     }
 
     override fun scanApp(
@@ -67,6 +85,16 @@ class BuildJinGangAppResourceImpl @Autowired constructor(
         isCustom: Boolean,
         runType: String
     ): Result<String> {
-        return Result(jinGangService.scanApp(userId, projectId, pipelineId, buildId, buildNo, elementId, file, isCustom, runType))
+        return Result(jinGangService.scanApp(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            buildNo = buildNo,
+            elementId = elementId,
+            file = file,
+            isCustom = isCustom,
+            runType = runType
+        ))
     }
 }
