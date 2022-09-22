@@ -978,7 +978,8 @@ class PipelineBuildFacadeService(
                     pipelineInfo = pipelineInfo,
                     model = null,
                     startType = StartType.MANUAL,
-                    setting = setting
+                    setting = setting,
+                    buildId = buildId
                 )
             )
 

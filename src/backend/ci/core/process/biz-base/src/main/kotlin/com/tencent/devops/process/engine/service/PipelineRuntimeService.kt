@@ -186,7 +186,6 @@ import java.util.Date
 class PipelineRuntimeService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val stageTagService: StageTagService,
-    private val buildIdGenerator: BuildIdGenerator,
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineBuildDao: PipelineBuildDao,
@@ -715,6 +714,7 @@ class PipelineRuntimeService @Autowired constructor(
         originStartParams: MutableList<BuildParameters>,
         pipelineParamMap: MutableMap<String, BuildParameters>,
         setting: PipelineSetting?,
+        buildId: String,
         buildNo: Int? = null,
         buildNumRule: String? = null,
         acquire: Boolean? = false,
@@ -725,7 +725,6 @@ class PipelineRuntimeService @Autowired constructor(
         // 2019-12-16 产品 rerun 需求
         val projectId = pipelineInfo.projectId
         val pipelineId = pipelineInfo.pipelineId
-        val buildId = startParamMap[PIPELINE_RETRY_BUILD_ID] ?: buildIdGenerator.getNextId()
         val startBuildStatus: BuildStatus = if (triggerReviewers.isNullOrEmpty()) {
             // 默认都是排队状态
             BuildStatus.QUEUE

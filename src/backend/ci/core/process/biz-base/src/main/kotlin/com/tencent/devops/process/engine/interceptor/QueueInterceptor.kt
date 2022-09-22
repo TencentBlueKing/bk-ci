@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUMMARY_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
@@ -59,7 +60,8 @@ class QueueInterceptor @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineTaskService: PipelineTaskService,
     private val redisOperation: RedisOperation,
-    private val pipelineRedisService: PipelineRedisService
+    private val pipelineRedisService: PipelineRedisService,
+    private val pipelineUrlBean: PipelineUrlBean
 ) : PipelineInterceptor {
 
     companion object {
@@ -96,8 +98,7 @@ class QueueInterceptor @Autowired constructor(
                     task = task,
                     latestBuildId = buildSummaryRecord.latestBuildId,
                     latestStartUser = buildSummaryRecord.latestStartUser,
-                    runningCount = buildSummaryRecord.runningCount,
-                    queueCount = buildSummaryRecord.queueCount
+                    runningCount = buildSummaryRecord.runningCount
                 )
             setting.maxConRunningQueueSize!! <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) ->
                 Response(
@@ -113,7 +114,8 @@ class QueueInterceptor @Autowired constructor(
         latestBuildId: String?,
         latestStartUser: String?,
         runningCount: Int,
-        queueCount: Int
+        queueCount: Int,
+        groupName: String? = null
     ): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
@@ -135,29 +137,20 @@ class QueueInterceptor @Autowired constructor(
                     message = "流水线串行，排队数设置为0"
                 )
             queueCount >= setting.maxQueueSize -> {
-                // 排队数量超过最大限制,排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"
-                val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildStatus = BuildStatus.UNEXEC
-                )
-                if (buildInfo != null) {
-                    buildLogPrinter.addRedLine(
-                        buildId = buildInfo.buildId,
-                        message = "$pipelineId] queue outSize,cancel first Queue build",
-                        tag = "QueueInterceptor",
-                        jobId = "",
-                        executeCount = 1
+                if (groupName == null) {
+                    outQueueCancelSingle(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        latestStartUser = latestStartUser,
+                        task = task
                     )
-                    pipelineEventDispatcher.dispatch(
-                        PipelineBuildCancelEvent(
-                            source = javaClass.simpleName,
-                            projectId = buildInfo.projectId,
-                            pipelineId = pipelineId,
-                            userId = latestStartUser ?: task.pipelineInfo.creator,
-                            buildId = buildInfo.buildId,
-                            status = BuildStatus.CANCELED
-                        )
+                } else {
+                    outQueueCancelGroup(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        groupName = groupName,
+                        latestStartUser = latestStartUser,
+                        task = task
                     )
                 }
                 Response(data = BuildStatus.RUNNING)
@@ -168,12 +161,88 @@ class QueueInterceptor @Autowired constructor(
         }
     }
 
+    private fun outQueueCancelSingle(
+        projectId: String,
+        pipelineId: String,
+        latestStartUser: String?,
+        task: InterceptData
+    ) {
+        // 排队数量超过最大限制,排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"
+        val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildStatus = BuildStatus.UNEXEC
+        )
+        if (buildInfo != null) {
+            buildLogPrinter.addRedLine(
+                buildId = buildInfo.buildId,
+                message = "[$pipelineId] queue outSize,cancel first Queue build",
+                tag = "QueueInterceptor",
+                jobId = "",
+                executeCount = 1
+            )
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildCancelEvent(
+                    source = javaClass.simpleName,
+                    projectId = buildInfo.projectId,
+                    pipelineId = pipelineId,
+                    userId = latestStartUser ?: task.pipelineInfo.creator,
+                    buildId = buildInfo.buildId,
+                    status = BuildStatus.CANCELED
+                )
+            )
+        }
+    }
+
+    private fun outQueueCancelGroup(
+        projectId: String,
+        pipelineId: String,
+        groupName: String,
+        latestStartUser: String?,
+        task: InterceptData
+    ) {
+        // 因为排队队列是流水线级别，所以是取消当前流水线下同一并发组最早排队的构建，不一定是项目级别下同一并发组最早的构建。
+        val buildInfo = pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
+            projectId = projectId,
+            concurrencyGroup = groupName,
+            pipelineId = pipelineId,
+            buildStatus = BuildStatus.UNEXEC
+        )
+        if (buildInfo != null) {
+            val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+                projectCode = projectId,
+                pipelineId = task.pipelineInfo.pipelineId,
+                buildId = task.buildId,
+                position = null,
+                stageId = null,
+                needShortUrl = false
+            )
+            buildLogPrinter.addRedLine(
+                buildId = buildInfo.buildId,
+                message = "[concurrency]Canceling since <a target='_blank' href='$detailUrl'>" +
+                    "a higher priority waiting request</a> for group($groupName) exists",
+                tag = "QueueInterceptor",
+                jobId = "",
+                executeCount = 1
+            )
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildCancelEvent(
+                    source = javaClass.simpleName,
+                    projectId = buildInfo.projectId,
+                    pipelineId = pipelineId,
+                    userId = latestStartUser ?: task.pipelineInfo.creator,
+                    buildId = buildInfo.buildId,
+                    status = BuildStatus.CANCELED
+                )
+            )
+        }
+    }
+
     private fun checkRunLockWithGroupType(
         task: InterceptData,
         latestBuildId: String?,
         latestStartUser: String?,
-        runningCount: Int,
-        queueCount: Int
+        runningCount: Int
     ): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val setting = task.setting
@@ -185,6 +254,14 @@ class QueueInterceptor @Autowired constructor(
         return when {
             !concurrencyGroup.isNullOrBlank() -> {
                 if (setting.concurrencyCancelInProgress) {
+                    val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+                        projectCode = projectId,
+                        pipelineId = task.pipelineInfo.pipelineId,
+                        buildId = task.buildId,
+                        position = null,
+                        stageId = null,
+                        needShortUrl = false
+                    )
                     // cancel-in-progress: true时， 若有相同 group 的流水线正在执行，则取消正在执行的流水线，新来的触发开始执行
                     val status = listOf(BuildStatus.RUNNING, BuildStatus.QUEUE)
                     pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
@@ -197,7 +274,8 @@ class QueueInterceptor @Autowired constructor(
                             pipelineId = pipelineId,
                             buildId = buildId,
                             userId = latestStartUser ?: task.pipelineInfo.creator,
-                            groupName = concurrencyGroup
+                            groupName = concurrencyGroup,
+                            detailUrl = detailUrl
                         )
                     }
                     Response(data = BuildStatus.RUNNING)
@@ -208,7 +286,13 @@ class QueueInterceptor @Autowired constructor(
                         latestBuildId = latestBuildId,
                         latestStartUser = latestStartUser,
                         runningCount = runningCount,
-                        queueCount = queueCount
+                        // #7681 在history表中取出当前流水线下相同并发组排队的数量。
+                        queueCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+                            projectId = projectId,
+                            concurrencyGroup = concurrencyGroup,
+                            status = listOf(BuildStatus.QUEUE)
+                        ).count { it.first == task.pipelineInfo.pipelineId },
+                        groupName = concurrencyGroup
                     )
                 }
             }
@@ -223,7 +307,8 @@ class QueueInterceptor @Autowired constructor(
         pipelineId: String,
         buildId: String,
         userId: String,
-        groupName: String
+        groupName: String,
+        detailUrl: String
     ) {
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
         try {
@@ -234,8 +319,8 @@ class QueueInterceptor @Autowired constructor(
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: ${task["status"] ?: ""}")
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "[concurrency]Canceling since a higher priority waiting request for " +
-                            "group($groupName) exists",
+                    message = "[concurrency]Canceling since <a target='_blank' href='$detailUrl'>" +
+                        "a higher priority waiting request</a> for group($groupName) exists",
                     tag = taskId,
                     jobId = task["containerId"]?.toString() ?: "",
                     executeCount = task["executeCount"] as? Int ?: 1
@@ -244,8 +329,8 @@ class QueueInterceptor @Autowired constructor(
             if (tasks.isEmpty()) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "[concurrency]Canceling all since a higher priority waiting request for " +
-                            "group($groupName) exists",
+                    message = "[concurrency]Canceling all since <a target='_blank' href='$detailUrl'>" +
+                        "a higher priority waiting request</a> for group($groupName) exists",
                     tag = "QueueInterceptor",
                     jobId = "",
                     executeCount = 1
