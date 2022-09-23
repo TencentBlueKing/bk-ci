@@ -67,9 +67,4 @@ interface AuthManagerApprovalResource {
         @QueryParam("approvalType")
         approvalType: ApprovalType
     ): Result<Boolean>
-
-    @POST
-    @Path("/checkExpiringManager")
-    @ApiOperation("测试")
-    fun checkExpiringManager()
 }
