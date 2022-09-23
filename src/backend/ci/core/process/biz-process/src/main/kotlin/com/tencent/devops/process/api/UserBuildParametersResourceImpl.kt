@@ -28,12 +28,21 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildParametersResource
+import com.tencent.devops.process.engine.pojo.PipelineFilterByLabelInfo
+import com.tencent.devops.process.engine.pojo.PipelineFilterParam
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
+import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
+import com.tencent.devops.process.pojo.classify.enums.Condition
+import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -155,15 +164,44 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<List<BuildFormValue>> {
         try {
-            return Result(
-                client.get(ParamFacadeService::class).hasPermissionPipelineList(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    page = page,
-                    pageSize = pageSize,
-                    pipelineName = aliasName
+            val hasPermissionList =
+                    client.get(PipelinePermissionService::class).getResourceByPermission(
+                        userId = userId,
+                        projectId = projectId,
+                        permission = AuthPermission.EXECUTE
+                    )
+
+            val pipelineFilterParamList = if (!aliasName.isNullOrBlank()) {
+                listOf(
+                    PipelineFilterParam(
+                        logic = Logic.AND,
+                        filterByPipelineNames = listOf(
+                            PipelineViewFilterByName(
+                                condition = Condition.LIKE,
+                                pipelineName = aliasName
+                            )
+                        ),
+                        filterByPipelineCreators = emptyList(),
+                        filterByLabelInfo = PipelineFilterByLabelInfo(
+                            filterByLabels = emptyList(),
+                            labelToPipelineMap = null
+                        )
+                    )
                 )
+            } else {
+                null
+            }
+            val result = client.get(PipelineRuntimeService::class).getBuildPipelineRecords(
+                projectId = projectId,
+                channelCode = ChannelCode.BS,
+                pipelineIds = hasPermissionList,
+                pipelineFilterParamList = pipelineFilterParamList,
+                pageSize = pageSize,
+                page = page
+            )
+            return Result(
+                result.filter { !it.pipelineId.contains(pipelineId) }
+                .map { BuildFormValue(it.pipelineName, it.pipelineName) }
             )
         } catch (ignore: Exception) {
             logger.warn("[$userId|$projectId] Fail to get the repository list", ignore)

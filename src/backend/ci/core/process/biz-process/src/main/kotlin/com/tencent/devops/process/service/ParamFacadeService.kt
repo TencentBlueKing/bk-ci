@@ -39,14 +39,9 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.process.engine.pojo.PipelineFilterByLabelInfo
-import com.tencent.devops.process.engine.pojo.PipelineFilterParam
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.SubPipeline
-import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
-import com.tencent.devops.process.pojo.classify.enums.Condition
-import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.Permission
@@ -121,26 +116,6 @@ class ParamFacadeService @Autowired constructor(
             }
 
         return filterParams.options ?: emptyList()
-    }
-
-    fun hasPermissionPipelineList(
-        userId: String?,
-        projectId: String,
-        pipelineId: String,
-        pageSize: Int? = null,
-        page: Int? = null,
-        pipelineName: String? = null
-    ): List<BuildFormValue> {
-        val hasPermissionPipelines = getHasPermissionPipelineList(
-            userId = userId,
-            projectId = projectId,
-            pageSize = pageSize,
-            page = page,
-            pipelineName = pipelineName
-        )
-        return hasPermissionPipelines
-            .filter { !it.pipelineId.contains(pipelineId) }
-            .map { BuildFormValue(it.pipelineName, it.pipelineName) }
     }
 
     private fun addGitRefs(
@@ -358,10 +333,7 @@ class ParamFacadeService @Autowired constructor(
 
     private fun getHasPermissionPipelineList(
         userId: String?,
-        projectId: String,
-        pageSize: Int? = null,
-        page: Int? = null,
-        pipelineName: String? = null
+        projectId: String
     ): List<SubPipeline> {
         val watcher = Watcher("getHasPermissionPipelineList_$userId")
         try {
@@ -381,34 +353,11 @@ class ParamFacadeService @Autowired constructor(
 
             // 获取项目下所有流水线，并过滤出有权限部分，有权限列表为空时返回项目所有流水线
             watcher.start("s_r_summary")
-            val pipelineFilterParamList = if (!pipelineName.isNullOrBlank()) {
-                listOf(
-                    PipelineFilterParam(
-                        logic = Logic.AND,
-                        filterByPipelineNames = listOf(
-                            PipelineViewFilterByName(
-                                condition = Condition.LIKE,
-                                pipelineName = pipelineName
-                            )
-                        ),
-                        filterByPipelineCreators = emptyList(),
-                        filterByLabelInfo = PipelineFilterByLabelInfo(
-                            filterByLabels = emptyList(),
-                            labelToPipelineMap = null
-                        )
-                    )
-                )
-            } else {
-                null
-            }
             val buildPipelineRecords =
                 pipelineRuntimeService.getBuildPipelineRecords(
                     projectId = projectId,
                     channelCode = ChannelCode.BS,
-                    pipelineIds = hasPermissionList,
-                    pipelineFilterParamList = pipelineFilterParamList,
-                    pageSize = pageSize,
-                    page = page
+                    pipelineIds = hasPermissionList
                 )
             watcher.stop()
 
