@@ -43,7 +43,6 @@ import com.tencent.devops.process.pojo.BuildFormRepositoryValue
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import com.tencent.devops.process.pojo.classify.enums.Logic
-import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -62,7 +61,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("UNUSED")
 @RestResource
 class UserBuildParametersResourceImpl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val pipelinePermissionService: PipelinePermissionService
 ) : UserBuildParametersResource {
 
     companion object {
@@ -165,7 +165,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
     ): Result<List<BuildFormValue>> {
         try {
             val hasPermissionList =
-                    client.get(PipelinePermissionService::class).getResourceByPermission(
+                pipelinePermissionService.getResourceByPermission(
                         userId = userId,
                         projectId = projectId,
                         permission = AuthPermission.EXECUTE

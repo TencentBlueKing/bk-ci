@@ -274,7 +274,15 @@ class ParamFacadeService @Autowired constructor(
             val aliasName = hasPermissionPipelines
                 .filter { pipelineId == null || !it.pipelineId.contains(pipelineId) }
                 .map { BuildFormValue(it.pipelineName, it.pipelineName) }
-            return copyFormProperty(subPipelineFormProperty, aliasName)
+            val searchUrl = "/user/buildParam/pipeline/$projectId/$pipelineId?" +
+                    "&aliasName={words}&page=1&pageSize=100"
+            val replaceKey = "{words}"
+            return copyFormProperty(
+                property = subPipelineFormProperty,
+                options = aliasName,
+                searchUrl = searchUrl,
+                replaceKey = replaceKey
+            )
         } catch (t: Throwable) {
             logger.warn("[$userId|$projectId] Fail to filter the properties of subpipelines", t)
             throw OperationException("子流水线参数过滤失败")
