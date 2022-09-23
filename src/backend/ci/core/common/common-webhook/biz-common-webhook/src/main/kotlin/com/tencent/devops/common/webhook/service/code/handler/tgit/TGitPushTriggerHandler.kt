@@ -54,7 +54,7 @@ import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
-import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.PushKindFilter
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
@@ -74,7 +74,7 @@ import java.util.Date
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
 class TGitPushTriggerHandler(
-    private val gitScmService: GitScmService
+    private val eventCacheService: EventCacheService
 ) : GitHookTriggerHandler<GitPushEvent> {
 
     companion object {
@@ -158,7 +158,7 @@ class TGitPushTriggerHandler(
                         return true
                     }
                     val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
-                        gitScmService.getChangeFileList(
+                        eventCacheService.getChangeFileList(
                             projectId = projectId,
                             repo = repository,
                             from = event.after,

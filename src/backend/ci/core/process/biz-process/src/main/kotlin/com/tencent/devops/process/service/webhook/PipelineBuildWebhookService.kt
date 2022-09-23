@@ -60,7 +60,8 @@ import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.common.webhook.util.WebhookCacheUtil
+import com.tencent.devops.common.webhook.service.code.pojo.EventRepositoryCache
+import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -243,6 +244,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             }
 
             watcher.start("webhookTriggerPipelineBuild")
+            EventCacheUtil.initEventCache()
             pipelines.forEach outside@{ pipeline ->
                 val projectId = pipeline.first
                 val pipelineId = pipeline.second
@@ -285,8 +287,10 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
             return true
         } finally {
-            logger.info("webhook cache:${JsonUtil.toJson(WebhookCacheUtil.getAll())}")
-            WebhookCacheUtil.clear()
+            logger.info(
+                "webhook event all repository cache: ${JsonUtil.toJson(EventCacheUtil.getAll(), false)}"
+            )
+            EventCacheUtil.remove()
             logger.info("$watcher")
         }
     }
@@ -407,6 +411,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 return@elements
             }
 
+            EventCacheUtil.putIfAbsentEventCache(repo, EventRepositoryCache())
             val matchResult = matcher.isMatch(projectId, pipelineId, repo, webHookParams)
             if (matchResult.isMatch) {
                 try {

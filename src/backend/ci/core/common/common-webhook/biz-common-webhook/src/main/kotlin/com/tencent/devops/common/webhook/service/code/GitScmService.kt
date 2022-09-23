@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.webhook.util.WebhookCacheUtil.cache
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
@@ -70,38 +69,34 @@ class GitScmService @Autowired constructor(
         val type = getType(repo)
         if (mrId == null || type == null) return null
 
-        val cacheKey = "${repo.aliasName}_${mrId}_mr_review"
-        return cache(cacheKey) {
-            try {
-                val tokenType =
-                    if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-                val token = getToken(
-                    projectId = projectId,
-                    credentialId = repo.credentialId,
-                    userName = repo.userName,
-                    authType = tokenType
-                )
-                if (type.first == RepoAuthType.OAUTH) {
-                    client.get(ServiceScmOauthResource::class).getMrReviewInfo(
-                        projectName = repo.projectName,
-                        url = repo.url,
-                        type = type.second,
-                        token = token,
-                        mrId = mrId
-                    ).data
-                } else {
-                    client.get(ServiceScmResource::class).getMrReviewInfo(
-                        projectName = repo.projectName,
-                        url = repo.url,
-                        type = type.second,
-                        token = token,
-                        mrId = mrId
-                    ).data
-                }
-            } catch (e: Exception) {
-                logger.warn("fail to get mr reviews info", e)
-                null
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getMrReviewInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getMrReviewInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
             }
+        } catch (e: Exception) {
+            logger.warn("fail to get mr reviews info", e)
+            null
         }
     }
 
@@ -113,38 +108,34 @@ class GitScmService @Autowired constructor(
         val type = getType(repo)
         if (mrId == null || type == null) return null
 
-        val cacheKey = "${repo.aliasName}_${mrId}_mr_info"
-        return cache(cacheKey) {
-            try {
-                val tokenType =
-                    if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-                val token = getToken(
-                    projectId = projectId,
-                    credentialId = repo.credentialId,
-                    userName = repo.userName,
-                    authType = tokenType
-                )
-                if (type.first == RepoAuthType.OAUTH) {
-                    client.get(ServiceScmOauthResource::class).getMrInfo(
-                        projectName = repo.projectName,
-                        url = repo.url,
-                        type = type.second,
-                        token = token,
-                        mrId = mrId
-                    ).data
-                } else {
-                    client.get(ServiceScmResource::class).getMrInfo(
-                        projectName = repo.projectName,
-                        url = repo.url,
-                        type = type.second,
-                        token = token,
-                        mrId = mrId
-                    ).data
-                }
-            } catch (e: Exception) {
-                logger.warn("fail to get mr info", e)
-                null
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getMrInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getMrInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
             }
+        } catch (e: Exception) {
+            logger.warn("fail to get mr info", e)
+            null
         }
     }
 
@@ -156,38 +147,34 @@ class GitScmService @Autowired constructor(
         val type = getType(repo)
         if (mrId == null || type == null) return null
 
-        val cacheKey = "${repo.aliasName}_${mrId}_mr_change"
-        return cache(cacheKey) {
-            try {
-                val tokenType =
-                    if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-                val token = getToken(
-                    projectId = projectId,
-                    credentialId = repo.credentialId,
-                    userName = repo.userName,
-                    authType = tokenType
-                )
-                if (type.first == RepoAuthType.OAUTH) {
-                    client.get(ServiceScmOauthResource::class).getMergeRequestChangeInfo(
-                        projectName = repo.projectName,
-                        url = repo.url,
-                        type = type.second,
-                        token = token,
-                        mrId = mrId
-                    ).data
-                } else {
-                    client.get(ServiceScmResource::class).getMergeRequestChangeInfo(
-                        projectName = repo.projectName,
-                        url = repo.url,
-                        type = type.second,
-                        token = token,
-                        mrId = mrId
-                    ).data
-                }
-            } catch (e: Exception) {
-                logger.warn("fail to get mr info", e)
-                null
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getMergeRequestChangeInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getMergeRequestChangeInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
             }
+        } catch (e: Exception) {
+            logger.warn("fail to get mr info", e)
+            null
         }
     }
 
@@ -198,48 +185,44 @@ class GitScmService @Autowired constructor(
         to: String
     ): Set<String> {
         val type = getType(repo) ?: return emptySet()
-        val cacheKey = "${repo.aliasName}_${from}_${to}_change_file"
-        return cache(cacheKey) {
-            val changeSet = mutableSetOf<String>()
-            try {
-                val tokenType =
-                    if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-                val token = getToken(
-                    projectId = projectId,
-                    credentialId = repo.credentialId,
-                    userName = repo.userName,
-                    authType = tokenType
-                )
-                for (i in 1..10) {
-                    // 反向进行三点比较可以比较出rebase的真实提交
-                    val result = client.get(ServiceGitResource::class).getChangeFileList(
-                        token = token,
-                        tokenType = tokenType,
-                        gitProjectId = repo.projectName,
-                        from = from,
-                        to = to,
-                        straight = false,
-                        page = i,
-                        pageSize = 100
-                    ).data ?: emptyList()
-                    changeSet.addAll(
-                        result.map {
-                            if (it.deletedFile) {
-                                it.oldPath
-                            } else {
-                                it.newPath
-                            }
+        val changeSet = mutableSetOf<String>()
+        try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            for (i in 1..10) {
+                // 反向进行三点比较可以比较出rebase的真实提交
+                val result = client.get(ServiceGitResource::class).getChangeFileList(
+                    token = token,
+                    tokenType = tokenType,
+                    gitProjectId = repo.projectName,
+                    from = from,
+                    to = to,
+                    straight = false,
+                    page = i,
+                    pageSize = 100
+                ).data ?: emptyList()
+                changeSet.addAll(
+                    result.map {
+                        if (it.deletedFile) {
+                            it.oldPath
+                        } else {
+                            it.newPath
                         }
-                    )
-                    if (result.size < 100) {
-                        break
                     }
+                )
+                if (result.size < 100) {
+                    break
                 }
-            } catch (ignore: Exception) {
-                logger.warn("fail to get change file list", ignore)
             }
-            changeSet.toSet()
-        }!!
+        } catch (ignore: Exception) {
+            logger.warn("fail to get change file list", ignore)
+        }
+        return changeSet
     }
 
     fun getDefaultBranchLatestCommitInfo(
@@ -248,8 +231,7 @@ class GitScmService @Autowired constructor(
     ): Pair<String?, GitCommit?> {
         val type = getType(repo) ?: return Pair(null, null)
         return try {
-            val tokenType =
-                if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
             val token = getToken(
                 projectId = projectId,
                 credentialId = repo.credentialId,
@@ -284,39 +266,33 @@ class GitScmService @Autowired constructor(
     ): List<GitCommit> {
         val type = getType(repo) ?: return emptyList()
         if (mrId == null) return emptyList()
-        return try {
-            val tokenType =
-                if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-            val token = getToken(
-                projectId = projectId,
-                credentialId = repo.credentialId,
-                userName = repo.userName,
-                authType = tokenType
-            )
-            if (type.first == RepoAuthType.OAUTH) {
-                client.get(ServiceScmOauthResource::class).getMrCommitList(
-                    projectName = repo.projectName,
-                    url = repo.url,
-                    type = type.second,
-                    token = token,
-                    mrId = mrId,
-                    page = page,
-                    size = size
-                ).data
-            } else {
-                client.get(ServiceScmResource::class).getMrCommitList(
-                    projectName = repo.projectName,
-                    url = repo.url,
-                    type = type.second,
-                    token = token,
-                    mrId = mrId,
-                    page = page,
-                    size = size
-                ).data
-            } ?: emptyList()
-        } catch (ignore: Exception) {
-            logger.warn("fail to get mr commit list", ignore)
-            emptyList()
+        val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+        val token = getToken(
+            projectId = projectId,
+            credentialId = repo.credentialId,
+            userName = repo.userName,
+            authType = tokenType
+        )
+        if (type.first == RepoAuthType.OAUTH) {
+            return client.get(ServiceScmOauthResource::class).getMrCommitList(
+                projectName = repo.projectName,
+                url = repo.url,
+                type = type.second,
+                token = token,
+                mrId = mrId,
+                page = page,
+                size = size
+            ).data ?: emptyList()
+        } else {
+            return client.get(ServiceScmResource::class).getMrCommitList(
+                projectName = repo.projectName,
+                url = repo.url,
+                type = type.second,
+                token = token,
+                mrId = mrId,
+                page = page,
+                size = size
+            ).data ?: emptyList()
         }
     }
 
@@ -325,63 +301,52 @@ class GitScmService @Autowired constructor(
         repo: Repository
     ): String {
         val type = getType(repo) ?: return ""
-        val cacheKey = "${repo.aliasName}_repo_authUser"
-        return cache(cacheKey) {
-            val tokenType =
-                if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-            try {
-                val token = getToken(
-                    projectId = projectId,
-                    credentialId = repo.credentialId,
-                    userName = repo.userName,
-                    authType = tokenType
-                )
-                client.get(ServiceGitResource::class).getUserInfoByToken(
-                    token = token,
-                    tokenType = tokenType
-                ).data?.username ?: ""
-            } catch (ignore: Throwable) {
-                logger.warn("fail to get repo auth user", ignore)
-                ""
-            }
-        }!!
+        val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+        return try {
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            client.get(ServiceGitResource::class).getUserInfoByToken(
+                token = token,
+                tokenType = tokenType
+            ).data?.username ?: ""
+        } catch (ignore: Throwable) {
+            logger.warn("fail to get repo auth user", ignore)
+            ""
+        }
     }
 
     private fun getToken(projectId: String, credentialId: String, userName: String, authType: TokenTypeEnum): String {
-        val cacheKey = if (authType == TokenTypeEnum.OAUTH) {
-            "${userName}_token"
+        return if (authType == TokenTypeEnum.OAUTH) {
+            client.get(ServiceOauthResource::class).gitGet(userName).data?.accessToken ?: ""
         } else {
-            "${projectId}_${credentialId}_token"
-        }
-        return cache(cacheKey) {
-            if (authType == TokenTypeEnum.OAUTH) {
-                client.get(ServiceOauthResource::class).gitGet(userName).data?.accessToken ?: ""
-            } else {
-                val pair = DHUtil.initKey()
-                val encoder = Base64.getEncoder()
-                val decoder = Base64.getDecoder()
-                val credentialResult = client.get(ServiceCredentialResource::class).get(
-                    projectId = projectId, credentialId = credentialId,
-                    publicKey = encoder.encodeToString(pair.publicKey)
-                )
-                if (credentialResult.isNotOk() || credentialResult.data == null) {
-                    throw ErrorCodeException(
-                        errorCode = credentialResult.status.toString(),
-                        defaultMessage = credentialResult.message
-                    )
-                }
-
-                val credential = credentialResult.data!!
-
-                String(
-                    DHUtil.decrypt(
-                        data = decoder.decode(credential.v1),
-                        partBPublicKey = decoder.decode(credential.publicKey),
-                        partAPrivateKey = pair.privateKey
-                    )
+            val pair = DHUtil.initKey()
+            val encoder = Base64.getEncoder()
+            val decoder = Base64.getDecoder()
+            val credentialResult = client.get(ServiceCredentialResource::class).get(
+                projectId = projectId, credentialId = credentialId,
+                publicKey = encoder.encodeToString(pair.publicKey)
+            )
+            if (credentialResult.isNotOk() || credentialResult.data == null) {
+                throw ErrorCodeException(
+                    errorCode = credentialResult.status.toString(),
+                    defaultMessage = credentialResult.message
                 )
             }
-        }!!
+
+            val credential = credentialResult.data!!
+
+            String(
+                DHUtil.decrypt(
+                    data = decoder.decode(credential.v1),
+                    partBPublicKey = decoder.decode(credential.publicKey),
+                    partAPrivateKey = pair.privateKey
+                )
+            )
+        }
     }
 
     private fun getType(repo: Repository): Pair<RepoAuthType?, ScmType>? {

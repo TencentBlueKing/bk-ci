@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.p4
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
@@ -35,21 +34,20 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_CHANGE
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.p4.P4ChangeEvent
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.P4PortFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
-import com.tencent.devops.common.webhook.util.WebhookCacheUtil.cache
 import com.tencent.devops.common.webhook.util.WebhookUtils
-import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
 class P4ChangeTriggerHandler(
-    private val client: Client
+    private val eventCacheService: EventCacheService
 ) : CodeWebhookTriggerHandler<P4ChangeEvent> {
     override fun eventClass(): Class<P4ChangeEvent> {
         return P4ChangeEvent::class.java
@@ -95,15 +93,13 @@ class P4ChangeTriggerHandler(
             )
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
-                    val cacheKey = "${repository.aliasName}_${event.change}_p4_change"
-                    val changeFiles = cache(cacheKey) {
-                        client.get(ServiceP4Resource::class).getChangelistFiles(
-                            projectId = projectId,
-                            repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
-                            repositoryType = repositoryConfig.repositoryType,
-                            change = event.change
-                        ).data?.map { it.depotPathString } ?: emptyList()
-                    }!!
+                    val changeFiles = eventCacheService.getP4ChangelistFiles(
+                        repo = repository,
+                        projectId = projectId,
+                        repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                        repositoryType = repositoryConfig.repositoryType,
+                        change = event.change
+                    )
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = PathFilterType.RegexBasedFilter,
