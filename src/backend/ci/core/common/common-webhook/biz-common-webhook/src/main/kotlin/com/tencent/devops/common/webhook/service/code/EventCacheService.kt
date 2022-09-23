@@ -20,7 +20,7 @@ class EventCacheService @Autowired constructor(
 ) {
 
     fun getMergeRequestReviewersInfo(projectId: String, mrId: Long?, repo: Repository): GitMrReviewInfo? {
-        val eventCache = EventCacheUtil.getEventCache(repo)
+        val eventCache = EventCacheUtil.getOrInitRepoCache(repo)
         return eventCache?.gitMrReviewInfo ?: run {
             val mrReviewInfo = gitScmService.getMergeRequestReviewersInfo(
                 projectId = projectId,
@@ -33,7 +33,7 @@ class EventCacheService @Autowired constructor(
     }
 
     fun getMergeRequestInfo(projectId: String, mrId: Long?, repo: Repository): GitMrInfo? {
-        val eventCache = EventCacheUtil.getEventCache(repo)
+        val eventCache = EventCacheUtil.getOrInitRepoCache(repo)
         return eventCache?.gitMrInfo ?: run {
             val mrInfo = gitScmService.getMergeRequestInfo(
                 projectId = projectId,
@@ -46,7 +46,7 @@ class EventCacheService @Autowired constructor(
     }
 
     fun getMergeRequestChangeInfo(projectId: String, mrId: Long?, repo: Repository): Set<String> {
-        val eventCache = EventCacheUtil.getEventCache(repo)
+        val eventCache = EventCacheUtil.getOrInitRepoCache(repo)
         return eventCache?.gitMrChangeFiles ?: run {
             val mrChangeInfo = gitScmService.getMergeRequestChangeInfo(
                 projectId = projectId,
@@ -66,7 +66,7 @@ class EventCacheService @Autowired constructor(
     }
 
     fun getChangeFileList(projectId: String, repo: Repository, from: String, to: String): Set<String> {
-        val eventCache = EventCacheUtil.getEventCache(repo)
+        val eventCache = EventCacheUtil.getOrInitRepoCache(repo)
         return eventCache?.gitCompareChangeFiles ?: run {
             val compareChangFile = gitScmService.getChangeFileList(
                 projectId = projectId,
@@ -80,7 +80,7 @@ class EventCacheService @Autowired constructor(
     }
 
     fun getRepoAuthUser(projectId: String, repo: Repository): String {
-        val eventCache = EventCacheUtil.getEventCache(repo)
+        val eventCache = EventCacheUtil.getOrInitRepoCache(repo)
         return eventCache?.repoAuthUser ?: run {
             val repoAuthUser = gitScmService.getRepoAuthUser(
                 projectId = projectId,
@@ -98,7 +98,7 @@ class EventCacheService @Autowired constructor(
         repositoryType: RepositoryType?,
         change: Int
     ): List<String> {
-        val eventCache = EventCacheUtil.getEventCache(repo)
+        val eventCache = EventCacheUtil.getOrInitRepoCache(repo)
         return eventCache?.p4ChangeFiles ?: run {
             val changeFiles = client.get(ServiceP4Resource::class).getChangelistFiles(
                 projectId = projectId,

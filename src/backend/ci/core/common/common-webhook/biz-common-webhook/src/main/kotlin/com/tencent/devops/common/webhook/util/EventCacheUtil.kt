@@ -18,6 +18,12 @@ object EventCacheUtil {
     fun putIfAbsentEventCache(repo: Repository, eventCache: EventRepositoryCache) =
         eventThreadLocalCache.get()?.putIfAbsent(repo.aliasName, eventCache)
 
+    /**
+     * 如果不存在,则初始化空的仓库缓存
+     */
+    fun getOrInitRepoCache(repo: Repository) =
+        getEventCache(repo) ?: putIfAbsentEventCache(repo, EventRepositoryCache())
+
     fun remove() = eventThreadLocalCache.remove()
 
     fun getAll(): Map<String, EventRepositoryCache> = eventThreadLocalCache.get()
