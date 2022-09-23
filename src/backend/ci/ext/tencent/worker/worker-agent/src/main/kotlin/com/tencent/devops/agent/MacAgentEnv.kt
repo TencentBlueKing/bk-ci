@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory
 
 object MacAgentEnv {
 
-
     private val logger = LoggerFactory.getLogger(AgentEnv::class.java)
     private const val MACOS_WORKSPACE = "DEVOPS_MACOS_DIR"
     private var macOSWorkspace: String? = null
