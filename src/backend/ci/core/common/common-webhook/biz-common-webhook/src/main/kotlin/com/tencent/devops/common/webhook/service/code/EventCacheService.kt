@@ -5,6 +5,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import org.springframework.beans.factory.annotation.Autowired
@@ -88,6 +89,18 @@ class EventCacheService @Autowired constructor(
             )
             eventCache?.repoAuthUser = repoAuthUser
             repoAuthUser
+        }
+    }
+
+    fun getDefaultBranchLatestCommitInfo(projectId: String, repo: Repository): Pair<String?, GitCommit?> {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(repo)
+        return eventCache?.gitDefaultBranchLatestCommitInfo ?: run {
+            val gitDefaultBranchLatestCommitInfo = gitScmService.getDefaultBranchLatestCommitInfo(
+                projectId = projectId,
+                repo = repo
+            )
+            eventCache?.gitDefaultBranchLatestCommitInfo = gitDefaultBranchLatestCommitInfo
+            gitDefaultBranchLatestCommitInfo
         }
     }
 
