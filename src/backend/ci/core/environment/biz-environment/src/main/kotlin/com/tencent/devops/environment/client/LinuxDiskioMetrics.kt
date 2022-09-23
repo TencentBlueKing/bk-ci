@@ -39,6 +39,8 @@ import javax.annotation.PostConstruct
 @AgentMetrics(metricsType = UsageMetrics.MetricsType.DISK, osTypes = [OS.LINUX, OS.MACOS])
 class LinuxDiskioMetrics @Autowired constructor(val influxdbClient: InfluxdbClient) : UsageMetrics {
 
+    private val emptyDiskioMetrics = mapOf("dev" to listOf(mapOf("time" to "0")))
+
     @PostConstruct
     private fun init() {
         UsageMetrics.registerBean(this)
@@ -53,8 +55,11 @@ class LinuxDiskioMetrics @Autowired constructor(val influxdbClient: InfluxdbClie
                 "SELECT non_negative_derivative(mean(\"write_bytes\"), $timeGroupBy)  as \"write\" FROM \"diskio\" " +
                 "WHERE \"agentId\" =~ /^$agentHashId\$/ AND $timePart, \"name\" fill(null)"
 
-        val queryResult = influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB))
-            ?: return mapOf("dev" to listOf(mapOf("time" to "0")))
+        val queryResult = try {
+            influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyDiskioMetrics
+        } catch (ignore: Exception) {
+            return emptyDiskioMetrics
+        }
 
         if (queryResult.hasError()) {
             throw ErrorCodeException(

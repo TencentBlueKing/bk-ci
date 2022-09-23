@@ -73,6 +73,10 @@ class OPControlPointResourceImpl @Autowired constructor(
         return Result(controlPointService.opGetElementNames())
     }
 
+    override fun addHashId() {
+        controlPointService.addHashId()
+    }
+
     private fun checkParams(userId: String, id: Long = 1) {
         if (userId.isBlank()) throw ParamBlankException("Invalid userId")
         if (id <= 0L) throw ParamBlankException("Invalid id")

@@ -28,8 +28,10 @@
 package com.tencent.devops.stream.trigger
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.service.StreamBasicSettingService
@@ -47,11 +49,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
-@Suppress("ComplexCondition")
+@Suppress("ComplexCondition", "LongParameterList")
 @Primary
 @Service
 class TXStreamYamlTrigger @Autowired constructor(
     dslContext: DSLContext,
+    client: Client,
     triggerMatcher: TriggerMatcher,
     yamlSchemaCheck: YamlSchemaCheck,
     yamlTemplateService: YamlTemplateService,
@@ -60,16 +63,19 @@ class TXStreamYamlTrigger @Autowired constructor(
     gitRequestEventBuildDao: GitRequestEventBuildDao,
     streamYamlBaseBuild: StreamYamlBaseBuild,
     private val objectMapper: ObjectMapper,
-    private val v1YamlTrigger: V1YamlTrigger
+    private val v1YamlTrigger: V1YamlTrigger,
+    private val streamGitConfig: StreamGitConfig
 ) : StreamYamlTrigger(
-    dslContext,
-    triggerMatcher,
-    yamlSchemaCheck,
-    yamlTemplateService,
-    streamBasicSettingService,
-    yamlBuild,
-    gitRequestEventBuildDao,
-    streamYamlBaseBuild
+    client = client,
+    dslContext = dslContext,
+    triggerMatcher = triggerMatcher,
+    yamlSchemaCheck = yamlSchemaCheck,
+    yamlTemplateService = yamlTemplateService,
+    streamBasicSettingService = streamBasicSettingService,
+    yamlBuild = yamlBuild,
+    gitRequestEventBuildDao = gitRequestEventBuildDao,
+    streamYamlBaseBuild = streamYamlBaseBuild,
+    streamGitConfig = streamGitConfig
 ) {
 
     override fun trigger(action: BaseAction, triggerEvent: Pair<List<Any>?, TriggerResult>?) {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.util
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.isFork
@@ -40,6 +41,8 @@ object GitCommonUtils {
     //    private const val dockerHubUrl = "https://index.docker.io/v1/"
 
     private const val tGitProjectPrefix = "git_"
+
+    private const val githubProjectPrefix = "github_"
 
     private const val httpPrefix = "http://"
 
@@ -153,6 +156,9 @@ object GitCommonUtils {
             if (projectId.startsWith(tGitProjectPrefix)) {
                 return projectId.removePrefix(tGitProjectPrefix).toLong()
             }
+            if (projectId.startsWith(githubProjectPrefix)) {
+                return projectId.removePrefix(githubProjectPrefix).toLong()
+            }
         } catch (e: Exception) {
             throw OperationException("蓝盾项目ID $projectId 不正确")
         }
@@ -160,5 +166,9 @@ object GitCommonUtils {
     }
 
     // 获取蓝盾项目名称
-    fun getCiProjectId(gitProjectId: Long) = "${tGitProjectPrefix}$gitProjectId"
+    fun getCiProjectId(gitProjectId: Any?, scmType: ScmType) = when (scmType) {
+        ScmType.CODE_GIT -> "${tGitProjectPrefix}$gitProjectId"
+        ScmType.GITHUB -> "${githubProjectPrefix}$gitProjectId"
+        else -> throw IllegalArgumentException("Unknown scm type($scmType)")
+    }
 }

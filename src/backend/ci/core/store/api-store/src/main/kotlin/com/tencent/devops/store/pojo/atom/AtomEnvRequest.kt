@@ -49,7 +49,7 @@ data class AtomEnvRequest(
     @ApiModelProperty("插件SHA签名串", required = false)
     var shaContent: String?,
     @ApiModelProperty("插件执行前置命令", required = false)
-    val preCmd: String?,
+    var preCmd: String?,
     @ApiModelProperty("插件post信息", required = false)
     val atomPostInfo: AtomPostInfo? = null,
     @ApiModelProperty("支持的操作系统名称", required = false)
@@ -59,5 +59,7 @@ data class AtomEnvRequest(
     @ApiModelProperty("插件运行时版本", required = false)
     val runtimeVersion: String? = null,
     @ApiModelProperty("是否为默认环境信息", required = false)
-    val defaultFlag: Boolean? = null
+    val defaultFlag: Boolean? = null,
+    @ApiModelProperty("插件运行结束后是否立即杀掉其进程", required = false)
+    val finishKillFlag: Boolean? = null
 )

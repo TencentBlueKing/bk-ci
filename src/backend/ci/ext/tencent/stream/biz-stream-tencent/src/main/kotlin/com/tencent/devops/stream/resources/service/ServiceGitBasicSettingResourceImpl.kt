@@ -44,7 +44,7 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
-import com.tencent.devops.stream.constant.StreamConstant.DEVOPS_PROJECT_PREFIX
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.openapi.GitCIUpdateSetting
@@ -63,7 +63,8 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     private val permissionService: StreamPermissionService,
     private val streamScmService: StreamScmService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val client: Client
+    private val client: Client,
+    private val gitConfig: StreamGitConfig
 ) : ServiceGitBasicSettingResource {
 
     companion object {
@@ -76,7 +77,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         enabled: Boolean,
         projectInfo: GitCIProjectInfo
     ): Result<Boolean> {
-        val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
+        val projectId = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId, gitConfig.getScmType())
         val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
         checkCommonUser(userId)
@@ -154,7 +155,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         )
         logger.info("STREAM|validateGitProjectInfo|projectInfo=$projectInfo")
         val gitProjectId = projectInfo.gitProjectId
-        val projectCode = GitCommonUtils.getCiProjectId(gitProjectId)
+        val projectCode = GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType())
 
         permissionService.checkStreamPermission(userId, projectCode, AuthPermission.USE)
 

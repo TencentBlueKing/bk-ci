@@ -35,6 +35,7 @@ interface TxStoreMoaApproveCallBackService {
         verifier: String,
         result: Int,
         taskId: String,
-        message: String
+        message: String,
+        token: String
     ): Result<Boolean>
 }

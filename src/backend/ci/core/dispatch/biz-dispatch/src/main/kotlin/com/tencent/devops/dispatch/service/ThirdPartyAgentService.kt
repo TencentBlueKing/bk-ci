@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -48,12 +49,14 @@ import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
@@ -70,26 +73,32 @@ class ThirdPartyAgentService @Autowired constructor(
     fun queueBuild(
         agent: ThirdPartyAgent,
         thirdPartyAgentWorkspace: String,
-        event: PipelineAgentStartupEvent
+        event: PipelineAgentStartupEvent,
+        retryCount: Int = 0
     ) {
         with(event) {
-            val count = thirdPartyAgentBuildDao.add(
-                dslContext = dslContext,
-                projectId = projectId,
-                agentId = agent.agentId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
-                pipelineName = pipelineName,
-                buildNum = buildNo,
-                taskName = taskName,
-                agentIp = agent.ip,
-                nodeId = HashUtil.decodeIdToLong(agent.nodeId ?: "")
-            )
-            if (count != 1) {
-                logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}|$count)")
-                throw OperationException("Fail to add the third party agent build")
+            try {
+                val count = thirdPartyAgentBuildDao.add(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    agentId = agent.agentId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
+                    pipelineName = pipelineName,
+                    buildNum = buildNo,
+                    taskName = taskName,
+                    agentIp = agent.ip,
+                    nodeId = HashUtil.decodeIdToLong(agent.nodeId ?: "")
+                )
+            } catch (e: DeadlockLoserDataAccessException) {
+                logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
+                if (retryCount <= QUEUE_RETRY_COUNT) {
+                    queueBuild(agent, thirdPartyAgentWorkspace, event)
+                } else {
+                    throw OperationException("Fail to add the third party agent build")
+                }
             }
         }
     }
@@ -206,6 +215,30 @@ class ThirdPartyAgentService @Autowired constructor(
         } catch (t: Throwable) {
             logger.warn("Fail to check if agent can upgrade", t)
             AgentResult(AgentStatus.IMPORT_EXCEPTION, false)
+        }
+    }
+
+    fun checkIfCanUpgradeByVersionNew(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        info: ThirdPartyAgentUpgradeByVersionInfo
+    ): AgentResult<UpgradeItem> {
+        // logger.info("Start to check if the agent($agentId) of version $version of project($projectId) can upgrade")
+        return try {
+            val agentUpgradeResult = client.get(ServiceThirdPartyAgentResource::class)
+                .upgradeByVersionNew(projectId, agentId, secretKey, info)
+            return if (!agentUpgradeResult.data!!.agent && !agentUpgradeResult.data!!.worker &&
+                !agentUpgradeResult.data!!.jdk
+            ) {
+                agentUpgradeResult
+            } else {
+                thirdPartyAgentBuildRedisUtils.setThirdPartyAgentUpgrading(projectId, agentId)
+                agentUpgradeResult
+            }
+        } catch (t: Throwable) {
+            logger.warn("Fail to check if agent can upgrade", t)
+            AgentResult(AgentStatus.IMPORT_EXCEPTION, UpgradeItem(false, false, false))
         }
     }
 
@@ -338,5 +371,7 @@ class ThirdPartyAgentService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentService::class.java)
+
+        private const val QUEUE_RETRY_COUNT = 3
     }
 }

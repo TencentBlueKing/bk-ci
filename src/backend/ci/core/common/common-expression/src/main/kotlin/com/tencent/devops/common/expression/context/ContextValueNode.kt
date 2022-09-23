@@ -41,7 +41,12 @@ class ContextValueNode : NamedValue() {
         return ContextValueNode()
     }
 
-    override fun subNameValueEvaluateCore(context: EvaluationContext): Any {
-        return (context.state as ExecutionContext).expressionValues[name] ?: name
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
+        val values = (context.state as ExecutionContext).expressionValues
+        return if (values[name] != null) {
+            Pair(values[name], true)
+        } else {
+            Pair(name, false)
+        }
     }
 }

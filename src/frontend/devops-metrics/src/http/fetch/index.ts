@@ -93,9 +93,7 @@ allMethods.forEach((method) => {
           const response = await fetch(fetchUrl, fetchConfig);
           return await successInterceptor(response, fetchConfig);
         } catch (err) {
-          if (!document.getElementsByClassName('bk-message').length) {
-            return errorInterceptor(err, fetchConfig);
-          }
+          return errorInterceptor(err, fetchConfig);
         }
       };
     },

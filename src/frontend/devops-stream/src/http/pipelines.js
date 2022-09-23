@@ -141,6 +141,11 @@ export default {
         return api.delete(`${STREAM_PERFIX}/user/builds/${projectId}/${pipelineId}/${buildId}`)
     },
 
+    reviewTrigger (projectId, pipelineId, buildId, approve) {
+        const queryStr = `?pipelineId=${pipelineId}&buildId=${buildId}&approve=${approve}`
+        return api.post(`${STREAM_PERFIX}/user/current/build/detail/${projectId}/review${queryStr}`)
+    },
+
     getContainerInfoByBuildId (projectId, pipelineId, buildId, vmSeqId) {
         return api.get(`${DISPATCH_STREAM_PERFIX}/user/dockerhost/getContainerInfo/${projectId}/${pipelineId}/${buildId}/${vmSeqId}`)
     },

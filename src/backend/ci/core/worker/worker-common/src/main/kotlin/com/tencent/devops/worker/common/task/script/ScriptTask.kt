@@ -54,7 +54,7 @@ import java.net.URLDecoder
 /**
  * 构建脚本任务
  */
-@Suppress("LongMethod")
+@Suppress("LongMethod", "ComplexMethod")
 open class ScriptTask : ITask() {
 
     private val gatewayResourceApi = ApiFactory.create(QualityGatewaySDKApi::class)
@@ -79,15 +79,19 @@ open class ScriptTask : ITask() {
                     errorMsg = "Empty build script content",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
-                ), "UTF-8"
+                ),
+            "UTF-8"
         ).replace("\r", "")
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId
-        val runtimeVariables = buildVariables.variables.map {
-            it.key to it.value.parseCredentialValue(buildTask.buildVariable)
-        }.toMap()
-            .plus(buildTask.buildVariable ?: emptyMap())
+        val runtimeVariables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).let { vars ->
+            if (buildVariables.pipelineAsCodeSettings?.enable == true) {
+                vars.map {
+                    it.key to it.value.parseCredentialValue(buildTask.buildVariable)
+                }.toMap()
+            } else vars
+        }
         val projectId = buildVariables.projectId
 
         ScriptEnvUtils.cleanEnv(buildId, workspace)
@@ -109,7 +113,8 @@ open class ScriptTask : ITask() {
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin",
                 charsetType = charsetType,
-                taskId = buildTask.taskId
+                taskId = buildTask.taskId,
+                asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)

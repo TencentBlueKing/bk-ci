@@ -52,7 +52,11 @@ data class AtomBuildArchiveElement(
     @ApiModelProperty("操作系统名称", required = false)
     val osName: String? = "\${matrixOsName}",
     @ApiModelProperty("操作系统cpu架构", required = false)
-    val osArch: String? = "\${matrixOsArch}"
+    val osArch: String? = "\${matrixOsArch}",
+    @ApiModelProperty("是否有可用的操作系统名称配置", required = false)
+    val validOsNameFlag: String? = null,
+    @ApiModelProperty("是否有可用的操作系统cpu架构配置", required = false)
+    val validOsArchFlag: String? = null
 ) : Element(name, id, status) {
 
     companion object {

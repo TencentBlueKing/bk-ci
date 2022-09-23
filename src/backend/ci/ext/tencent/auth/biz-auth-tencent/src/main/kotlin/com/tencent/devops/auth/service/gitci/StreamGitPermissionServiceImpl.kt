@@ -43,7 +43,7 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
     val managerService: ManagerService,
     val projectInfoService: GitProjectInfoService
 ) : StreamPermissionServiceImpl() {
-    override fun isPublicProject(projectCode: String): Boolean {
+    override fun isPublicProject(projectCode: String, userId: String?): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
         return projectInfoService.checkProjectPublic(gitProjectId)
     }

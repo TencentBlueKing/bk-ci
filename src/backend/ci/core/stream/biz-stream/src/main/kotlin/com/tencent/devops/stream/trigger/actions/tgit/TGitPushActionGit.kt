@@ -26,7 +26,6 @@
  */
 
 package com.tencent.devops.stream.trigger.actions.tgit
-
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
@@ -48,6 +47,7 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
@@ -98,7 +98,7 @@ class TGitPushActionGit(
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.PUSH)
 
     override lateinit var data: ActionData
-    fun event() = data.event as GitPushEvent
+    override fun event() = data.event as GitPushEvent
 
     override val api: TGitApiService
         get() = apiService
@@ -112,11 +112,12 @@ class TGitPushActionGit(
         val lastCommit = getLatestCommit(event)
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.project_id.toString(),
+            scmType = ScmType.CODE_GIT,
             branch = event.ref.removePrefix("refs/heads/"),
             commit = EventCommonDataCommit(
                 commitId = event.after,
                 commitMsg = lastCommit?.message,
-                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
                 commitAuthorName = lastCommit?.author?.name
             ),
             userId = event.user_name,
@@ -219,9 +220,9 @@ class TGitPushActionGit(
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         val changeSet = getChangeSet()
-        return TGitActionCommon.getYamlPathList(
+        return GitActionCommon.getYamlPathList(
             action = this,
-            gitProjectId = this.data.getGitProjectId(),
+            gitProjectId = this.getGitProjectIdOrName(),
             ref = this.data.eventCommon.branch
         ).map { (name, blobId) ->
             YamlPathListEntry(
@@ -241,7 +242,7 @@ class TGitPushActionGit(
             ref = data.eventCommon.branch,
             content = api.getFileContent(
                 cred = this.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
+                gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
                 ref = data.eventCommon.branch,
                 retry = ApiRequestRetryInfo(true)
@@ -319,7 +320,7 @@ class TGitPushActionGit(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val branch = TGitActionCommon.getTriggerBranch(data.eventCommon.branch)
+        val branch = GitActionCommon.getTriggerBranch(data.eventCommon.branch)
 
         val isDefaultBranch = branch == data.context.defaultBranch
 
@@ -352,7 +353,7 @@ class TGitPushActionGit(
             userId = data.getUserId(),
             checkCreateAndUpdate = event().create_and_update
         )
-        val params = TGitActionCommon.getStartParams(
+        val params = GitActionCommon.getStartParams(
             action = this,
             triggerOn = triggerOn
         )
@@ -364,21 +365,22 @@ class TGitPushActionGit(
         )
     }
 
-    override fun updateLastBranch(
+    override fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
-        branch: String
+        branch: String?,
+        displayName: String?
     ) {
         try {
-            gitPipelineResourceDao.updatePipelineLastBranch(
+            gitPipelineResourceDao.updatePipelineLastBranchAndDisplayName(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
-                branch = branch
+                branch = branch,
+                displayName = displayName
             )
         } catch (e: Exception) {
             logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
         }
     }
-
     // 判断是否注册定时任务来看是修改还是删除
     private fun isSchedulesMatch(
         triggerOn: TriggerOn,
@@ -458,7 +460,7 @@ class TGitPushActionGit(
     }
 
     override fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String> {
-        return TGitActionCommon.getStartParams(
+        return GitActionCommon.getStartParams(
             action = this,
             triggerOn = triggerOn
         )
@@ -483,7 +485,8 @@ class TGitPushActionGit(
                 repoType = ScmType.CODE_TGIT.name,
                 commitTime = commitTime,
                 eventType = CodeEventType.PUSH.name,
-                mrId = null
+                mrId = null,
+                action = event().action_kind
             )
         }
     }
