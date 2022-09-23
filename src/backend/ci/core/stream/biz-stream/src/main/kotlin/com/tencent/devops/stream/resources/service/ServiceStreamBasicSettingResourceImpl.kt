@@ -25,26 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.stream
+package com.tencent.devops.stream.resources.service
 
-import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.stream.api.service.ServiceStreamBasicSettingResource
+import com.tencent.devops.stream.pojo.StreamBasicSetting
+import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
-class GitlabStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl() {
-    override fun isPublicProject(projectCode: String, userId: String?): Boolean {
-        TODO("Not yet implemented")
-    }
+@RestResource
+class ServiceStreamBasicSettingResourceImpl @Autowired constructor(
+    private val streamBasicSettingService: StreamBasicSettingService
+) : ServiceStreamBasicSettingResource {
 
-    override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun extPermission(
-        projectCode: String,
-        userId: String,
-        action: AuthPermission,
-        resourceType: String
-    ): Boolean {
-        TODO("Not yet implemented")
+    override fun getStreamConf(projectId: String): Result<StreamBasicSetting?> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        return Result(streamBasicSettingService.getStreamConf(gitProjectId))
     }
 }

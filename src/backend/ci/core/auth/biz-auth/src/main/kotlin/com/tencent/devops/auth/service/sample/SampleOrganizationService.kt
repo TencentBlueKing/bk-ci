@@ -25,26 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.stream
+package com.tencent.devops.auth.service.sample
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.auth.pojo.OrganizationEntity
+import com.tencent.devops.auth.service.OrganizationService
 
-class GitlabStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl() {
-    override fun isPublicProject(projectCode: String, userId: String?): Boolean {
+class SampleOrganizationService : OrganizationService {
+    override fun getParentOrganizationInfo(organizationId: String, level: Int): List<OrganizationEntity>? {
         TODO("Not yet implemented")
     }
 
-    override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun extPermission(
-        projectCode: String,
-        userId: String,
-        action: AuthPermission,
-        resourceType: String
-    ): Boolean {
+    override fun getOrganizationInfo(organizationId: String, level: Int): OrganizationEntity? {
         TODO("Not yet implemented")
     }
 }

@@ -25,18 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.sample
 
-import com.tencent.devops.auth.pojo.PermissionUrlDTO
-import com.tencent.devops.auth.service.iam.PermissionUrlService
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.auth.pojo.DefaultGroup
+import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
+import com.tencent.devops.auth.service.iam.PermissionRoleService
 
-class EmptyPermissionUrlServiceImpl : PermissionUrlService {
-    override fun getPermissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
-        return Result("")
+class SamplePermissionRoleService : PermissionRoleService {
+    override fun createPermissionRole(
+        userId: String,
+        projectId: Int,
+        projectCode: String,
+        groupInfo: ProjectRoleDTO
+    ): Int {
+        TODO("Not yet implemented")
     }
 
-    override fun getRolePermissionUrl(projectId: String, groupId: String?): String? {
-        return null
+    override fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deletePermissionRole(userId: String, projectId: Int, roleId: Int) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getDefaultRole(): List<DefaultGroup> {
+        TODO("Not yet implemented")
     }
 }

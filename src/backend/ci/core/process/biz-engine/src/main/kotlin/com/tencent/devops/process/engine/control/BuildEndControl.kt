@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode.PLUGIN_DEFAULT_ERROR
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_QUALITY_CHECK_FAIL
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -64,6 +65,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MetricsService
 import com.tencent.devops.process.service.BuildVariableService
@@ -84,11 +86,13 @@ import java.time.LocalDateTime
  * @version 1.0
  */
 @Service
+@Suppress("LongParameterList", "LongMethod", "ComplexMethod", "ReturnCount")
 class BuildEndControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineTaskService: PipelineTaskService,
+    private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val buildLogPrinter: BuildLogPrinter,
@@ -154,7 +158,7 @@ class BuildEndControl @Autowired constructor(
         }
         LOG.info("ENGINE|$buildId|$source|BUILD_FINISH|$pipelineId|es=$status|bs=${buildInfo.status}")
 
-        fixTask(buildInfo)
+        fixBuildInfo(buildInfo)
 
         // 记录本流水线最后一次构建的状态
         val endTime = LocalDateTime.now()
@@ -265,52 +269,75 @@ class BuildEndControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo) {
-        val allBuildTask = pipelineTaskService.getAllBuildTask(projectId, buildId)
-        val errorInfos = mutableListOf<ErrorInfo>()
-        allBuildTask.forEach {
+    private fun PipelineBuildFinishEvent.fixBuildInfo(buildInfo: BuildInfo) {
+        val errorInfoList = mutableListOf<ErrorInfo>()
+        pipelineTaskService.getAllBuildTask(projectId, buildId).forEach { task ->
             // 将所有还在运行中的任务全部结束掉
-            if (it.status.isRunning()) {
+            if (task.status.isRunning()) {
                 // 构建机直接结束
-                if (it.containerType == VMBuildContainer.classType) {
+                if (task.containerType == VMBuildContainer.classType) {
                     pipelineTaskService.updateTaskStatus(
-                        task = it, userId = userId, buildStatus = BuildStatus.TERMINATE,
+                        task = task, userId = userId, buildStatus = BuildStatus.TERMINATE,
                         errorType = errorType, errorCode = errorCode, errorMsg = errorMsg
                     )
                 } else {
                     pipelineEventDispatcher.dispatch(
                         PipelineBuildAtomTaskEvent(
                             source = javaClass.simpleName,
-                            projectId = projectId, pipelineId = pipelineId, userId = it.starter,
-                            stageId = it.stageId, buildId = it.buildId, containerId = it.containerId,
-                            containerHashId = it.containerHashId, containerType = it.containerType,
-                            taskId = it.taskId, taskParam = it.taskParams, actionType = ActionType.TERMINATE,
-                            executeCount = it.executeCount ?: 1
+                            projectId = projectId, pipelineId = pipelineId, userId = task.starter,
+                            stageId = task.stageId, buildId = task.buildId, containerId = task.containerId,
+                            containerHashId = task.containerHashId, containerType = task.containerType,
+                            taskId = task.taskId, taskParam = task.taskParams, actionType = ActionType.TERMINATE,
+                            executeCount = task.executeCount ?: 1
                         )
                     )
                 }
             }
             // 将插件出错信息逐一加入构建错误信息
-            if (it.errorType != null) {
-                errorInfos.add(
+            if (task.errorType != null) {
+                errorInfoList.add(
                     ErrorInfo(
-                        taskId = it.taskId,
-                        taskName = it.taskName,
-                        atomCode = it.atomCode ?: it.taskParams["atomCode"] as String? ?: it.taskType,
-                        errorType = it.errorType?.num ?: ErrorType.USER.num,
-                        errorCode = it.errorCode ?: PLUGIN_DEFAULT_ERROR,
+                        stageId = task.taskId,
+                        jobId = task.containerId,
+                        taskId = task.taskId,
+                        taskName = task.taskName,
+                        atomCode = task.atomCode ?: task.taskParams["atomCode"] as String? ?: task.taskType,
+                        errorType = task.errorType?.num ?: ErrorType.USER.num,
+                        errorCode = task.errorCode ?: PLUGIN_DEFAULT_ERROR,
                         errorMsg = CommonUtils.interceptStringInLength(
-                            string = it.errorMsg, length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+                            string = task.errorMsg, length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
                         ) ?: ""
                     )
                 )
                 // 做入库长度保护，假设超过上限则抛弃该错误信息
-                if (JsonUtil.toJson(errorInfos).toByteArray().size > PIPELINE_MESSAGE_STRING_LENGTH_MAX) {
-                    errorInfos.removeAt(errorInfos.lastIndex)
+                if (JsonUtil.toJson(errorInfoList).toByteArray().size > PIPELINE_MESSAGE_STRING_LENGTH_MAX) {
+                    errorInfoList.removeAt(errorInfoList.lastIndex)
                 }
             }
         }
-        if (errorInfos.isNotEmpty()) buildInfo.errorInfoList = errorInfos
+        pipelineStageService.getAllBuildStage(projectId, buildId).forEach { stage ->
+            if (stage.checkIn?.status == BuildStatus.QUALITY_CHECK_FAIL.name ||
+                stage.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name
+            ) {
+                errorInfoList.add(
+                    ErrorInfo(
+                        stageId = stage.stageId,
+                        jobId = "",
+                        taskId = "",
+                        taskName = "",
+                        atomCode = "",
+                        errorType = ErrorType.USER.num,
+                        errorCode = USER_QUALITY_CHECK_FAIL,
+                        errorMsg = "Stage quality check failed"
+                    )
+                )
+            }
+            // 做入库长度保护，假设超过上限则抛弃该错误信息
+            if (JsonUtil.toJson(errorInfoList).toByteArray().size > PIPELINE_MESSAGE_STRING_LENGTH_MAX) {
+                errorInfoList.removeAt(errorInfoList.lastIndex)
+            }
+        }
+        if (errorInfoList.isNotEmpty()) buildInfo.errorInfoList = errorInfoList
     }
 
     private fun PipelineBuildFinishEvent.popNextBuild(buildInfo: BuildInfo?) {

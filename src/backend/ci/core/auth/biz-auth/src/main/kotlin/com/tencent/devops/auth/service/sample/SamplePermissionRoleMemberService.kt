@@ -25,26 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.stream
+package com.tencent.devops.auth.service.sample
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
+import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
+import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 
-class GitlabStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl() {
-    override fun isPublicProject(projectCode: String, userId: String?): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun extPermission(
-        projectCode: String,
+class SamplePermissionRoleMemberService : PermissionRoleMemberService {
+    override fun createRoleMember(
         userId: String,
-        action: AuthPermission,
-        resourceType: String
-    ): Boolean {
+        projectId: Int,
+        roleId: Int,
+        members: List<RoleMemberDTO>,
+        managerGroup: Boolean,
+        checkAGradeManager: Boolean?
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        id: String,
+        type: ManagerScopesEnum,
+        managerGroup: Boolean
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getRoleMember(projectId: Int, roleId: Int, page: Int?, pageSize: Int?): ManagerGroupMemberVo {
+        TODO("Not yet implemented")
+    }
+
+    override fun getProjectAllMember(projectId: Int, page: Int?, pageSize: Int?): ProjectMembersVO? {
+        TODO("Not yet implemented")
+    }
+
+    override fun getUserGroups(projectId: Int, userId: String): List<ManagerRoleGroupInfo>? {
         TODO("Not yet implemented")
     }
 }
