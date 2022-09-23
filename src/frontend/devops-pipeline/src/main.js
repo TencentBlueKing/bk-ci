@@ -32,6 +32,8 @@ import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
+import mavonEditor from 'mavon-editor'
+import 'mavon-editor/dist/css/index.css'
 import PortalVue from 'portal-vue' // eslint-disable-line
 import createLocale from '../../locale'
 import '@icon-cool/bk-icon-devops/src/index'
@@ -49,6 +51,7 @@ const { i18n, setLocale } = createLocale(require.context('@locale/pipeline/', fa
 Vue.use(focus)
 Vue.use(bkMagic)
 Vue.use(PortalVue)
+Vue.use(mavonEditor)
 
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.

@@ -2,7 +2,19 @@
     <section>
         <span class="review-title">{{ $t('stageReview.manualApprovals') }}</span>
         <span class="review-subtitle">{{ $t('stageReview.approvalDescription') }}</span>
-        <section :class="{ 'review-desc': true, 'show-more': isShowMore }">{{ desc }}</section>
+        <section :class="{ 'review-desc': true, 'show-more': isShowMore }">
+            <mavon-editor
+                :editable="false"
+                default-open="preview"
+                :subfield="false"
+                :toolbars-flag="false"
+                :external-link="false"
+                :box-shadow="false"
+                preview-background="#fafbfd"
+                v-model="desc"
+            >
+            </mavon-editor>
+        </section>
         <bk-button text @click="isShowMore = !isShowMore" v-if="isShowMoreButton">
             <span v-if="!isShowMore" class="opt-button">{{ $t('stageReview.showMore') }}<i class="bk-icon icon-angle-down"></i></span>
             <span v-else class="opt-button">{{ $t('stageReview.hideMore') }}<i class="bk-icon icon-angle-up"></i></span>

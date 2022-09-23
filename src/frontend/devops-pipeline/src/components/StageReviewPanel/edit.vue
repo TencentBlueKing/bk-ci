@@ -18,7 +18,19 @@
             </form-field>
 
             <form-field :disabled="disabled" :label="$t('stageReviewInputDesc')" class="mt14">
-                <vuex-textarea :placeholder="$t('stageReviewInputDescTip')" name="reviewDesc" clearable :disabled="disabled" :handle-change="handleUpdateStageControl" :value="reviewDesc"></vuex-textarea>
+                <mavon-editor
+                    class="remark-input"
+                    :placeholder="$t('stageReviewInputDescTip')"
+                    name="reviewDesc"
+                    :editable="!disabled"
+                    :value="reviewDesc"
+                    :toolbars="toolbars"
+                    :external-link="false"
+                    :box-shadow="false"
+                    preview-background="#fff"
+                    @change="(val, render) => handleUpdateStageControl('reviewDesc', val, render)"
+                />
+                <!-- <vuex-textarea :placeholder="$t('stageReviewInputDescTip')" name="reviewDesc" clearable :disabled="disabled" :handle-change="handleUpdateStageControl" :value="reviewDesc"></vuex-textarea> -->
             </form-field>
 
             <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" class="mt14" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
@@ -43,8 +55,9 @@
 <script>
     import Vue from 'vue'
     import { mapActions } from 'vuex'
+    import { toolbars } from '@/utils/util'
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+    // import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import EditParams from './components/params/edit'
     import EditReviewFlow from './components/reviewFlow/edit'
 
@@ -52,7 +65,7 @@
         name: 'stage-review-control',
         components: {
             FormField,
-            VuexTextarea,
+            // VuexTextarea,
             EditParams,
             EditReviewFlow
         },
@@ -71,6 +84,11 @@
             },
             stageReviewType: {
                 type: String
+            }
+        },
+        data () {
+            return {
+                toolbars
             }
         },
         computed: {
@@ -145,7 +163,8 @@
                     }
                 })
             },
-            handleUpdateStageControl (name, value) {
+            handleUpdateStageControl (name, value, a) {
+                console.log(name, value, a)
                 this.setPipelineEditing(true)
                 this.handleStageChange(this.stageReviewType, {
                     ...(this.stageControl || {}),
