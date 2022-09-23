@@ -100,7 +100,7 @@ object AgentEnv {
         return agentId!!
     }
 
-     fun getEnv(): Env {
+    fun getEnv(): Env {
         if (env == null) {
             synchronized(this) {
                 if (env == null) {
@@ -185,6 +185,7 @@ object AgentEnv {
         }
         return os!!
     }
+
     @Suppress("UNUSED")
     fun is32BitSystem() = System.getProperty("sun.arch.data.model") == "32"
 
@@ -223,8 +224,10 @@ object AgentEnv {
             synchronized(this) {
                 if (null == logStorageMode) {
                     logStorageMode = try {
-                        LogStorageMode.valueOf(System.getenv(AGENT_LOG_SAVE_MODE)
-                            ?: throw PropertyNotExistException(AGENT_LOG_SAVE_MODE, "Empty log mode"))
+                        LogStorageMode.valueOf(
+                            System.getenv(AGENT_LOG_SAVE_MODE)
+                                ?: throw PropertyNotExistException(AGENT_LOG_SAVE_MODE, "Empty log mode")
+                        )
                     } catch (t: Throwable) {
                         logger.warn("not system variable named log mode!")
                         LogStorageMode.UPLOAD

@@ -49,10 +49,10 @@ class Profile(private val environment: Environment) {
     private val activeProfiles = environment.activeProfiles
 
     fun isDebug(): Boolean {
-        return activeProfiles.isEmpty()
-            || activeProfiles.contains(PROFILE_DEFAULT)
-            || activeProfiles.contains(PROFILE_DEVELOPMENT)
-            || activeProfiles.contains(PROFILE_TEST)
+        return activeProfiles.isEmpty() ||
+            activeProfiles.contains(PROFILE_DEFAULT) ||
+            activeProfiles.contains(PROFILE_DEVELOPMENT) ||
+            activeProfiles.contains(PROFILE_TEST)
     }
 
     fun isDev(): Boolean {
