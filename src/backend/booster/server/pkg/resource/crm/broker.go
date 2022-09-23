@@ -631,8 +631,8 @@ func (b *Broker) addReleaseResource(id string) {
 }
 
 func (b *Broker) generateID() string {
-	return strings.ReplaceAll(strings.ToLower(fmt.Sprintf("cb-%s-%s-%d-%s",
-		b.user, b.param.Param.BrokerName, time.Now().Unix()%1000, util.RandomString(brokerIDRandomLength),
+	return strings.ReplaceAll(strings.ToLower(fmt.Sprintf("b%s-%d%s",
+		b.param.Param.BrokerName, time.Now().Unix()%1000, util.RandomString(brokerIDRandomLength),
 	)), "_", "-")
 }
 
