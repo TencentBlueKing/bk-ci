@@ -44,7 +44,6 @@ import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_START_MANUAL_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_SERVICE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
