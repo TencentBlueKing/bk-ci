@@ -67,7 +67,7 @@ class LogMQConfiguration @Autowired constructor() {
         }
     }
 
-    @StreamConsumer(StreamBinding.BINDING_LOG_STATUS_EVENT_DESTINATION, STREAM_CONSUMER_GROUP)
+    @StreamConsumer(StreamBinding.BINDING_LOG_STORAGE_EVENT_DESTINATION, STREAM_CONSUMER_GROUP)
     fun logStorageEventIn(
         listenerService: BuildLogListenerService
     ): Consumer<Message<LogStorageEvent>> {
@@ -76,7 +76,7 @@ class LogMQConfiguration @Autowired constructor() {
         }
     }
 
-    @StreamConsumer(StreamBinding.BINDING_LOG_STORAGE_EVENT_DESTINATION, STREAM_CONSUMER_GROUP)
+    @StreamConsumer(StreamBinding.BINDING_LOG_STATUS_EVENT_DESTINATION, STREAM_CONSUMER_GROUP)
     fun logStatusEventIn(
         listenerService: BuildLogListenerService
     ): Consumer<Message<LogStatusEvent>> {

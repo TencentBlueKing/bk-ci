@@ -68,7 +68,6 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                     "Found StreamEvent class: ${clazz.name}, bindingName[$bindingName], " +
                         "with destination[${streamEvent.destination}, delayMills[${streamEvent.delayMills}]"
                 )
-                definition.add(bindingName)
                 val prefix = "spring.cloud.stream.bindings.$bindingName"
                 setProperty("$prefix.destination", streamEvent.destination)
             }
