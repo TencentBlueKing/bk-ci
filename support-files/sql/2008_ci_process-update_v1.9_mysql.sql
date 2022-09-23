@@ -68,6 +68,13 @@ BEGIN
         alter table T_PIPELINE_SETTING add column `PIPELINE_AS_CODE_SETTINGS` varchar(512) DEFAULT NULL COMMENT 'YAML流水线相关配置';
     END IF;
 
+  IF NOT EXISTS(SELECT 1  
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_COMMITS'
+                        AND COLUMN_NAME = 'ACTION') THEN
+        alter table T_PIPELINE_BUILD_COMMITS add column `ACTION` varchar(64) DEFAULT NULL;
+    END IF;
 
     COMMIT;
 END <CI_UBF>

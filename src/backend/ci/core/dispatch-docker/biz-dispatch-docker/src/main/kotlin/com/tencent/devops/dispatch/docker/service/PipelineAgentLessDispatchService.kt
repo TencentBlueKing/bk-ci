@@ -193,15 +193,13 @@ class PipelineAgentLessDispatchService @Autowired constructor(
                 record.buildId,
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-
-            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString(), executeCount)
-
+        } catch (e: Exception) {
+            LOG.warn("${record.buildId}|${record.vmSeqId} Finish the docker buildless error.", e)
+        } finally {
             // 无编译环境清除redisAuth
             val decryptSecretKey = SecurityUtil.decrypt(record.secretKey)
             LOG.info("${record.buildId}|${record.vmSeqId} delete dockerBuildKey ${record.id}|$decryptSecretKey")
-            redisUtils.deleteDockerBuild(record.id, decryptSecretKey)
-        } catch (e: Exception) {
-            LOG.warn("${record.buildId}|${record.vmSeqId} Finish the docker buildless error.", e)
+            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
         }
     }
 

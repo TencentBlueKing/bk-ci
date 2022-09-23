@@ -347,6 +347,7 @@
     }
     .detail-content {
         background: #fff;
+        height: 100%;
     }
     .detail-header {
         padding: 10px 24px;

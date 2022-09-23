@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
@@ -247,6 +248,32 @@ class ServiceBuildResourceImpl @Autowired constructor(
             params, channelCode, ChannelCode.isNeedAuth(channelCode)
         )
         return Result(true)
+    }
+
+    override fun buildTriggerReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        approve: Boolean,
+        channelCode: ChannelCode
+    ): Result<Boolean> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.buildTriggerReview(
+                userId = userId,
+                buildId = buildId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                approve = approve,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
+            )
+        )
     }
 
     override fun getBuildDetail(
@@ -665,6 +692,24 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 buildId = buildId
             )
         )
+    }
+
+    override fun updateRemark(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        remark: BuildHistoryRemark?
+    ): Result<Boolean> {
+        checkParam(projectId, pipelineId)
+        pipelineBuildFacadeService.updateRemark(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            remark = remark?.remark
+        )
+        return Result(true)
     }
 
     private fun checkParam(projectId: String, pipelineId: String) {

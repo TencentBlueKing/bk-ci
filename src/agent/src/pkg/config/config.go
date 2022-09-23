@@ -279,6 +279,7 @@ func LoadAgentConfig() error {
 	if err != nil {
 		logsKeepHours = 96
 	}
+
 	GAgentConfig.LogsKeepHours = logsKeepHours
 
 	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
@@ -356,10 +357,31 @@ func (a *AgentConfig) GetAuthHeaderMap() map[string]string {
 func GetJava() string {
 	workDir := systemutil.GetWorkDir()
 	if systemutil.IsMacos() {
-		return workDir + "/jre/Contents/Home/bin/java"
+		if _, err := os.Stat(workDir + "/jdk/Contents/Home/bin/java"); err != nil && !os.IsExist(err) {
+			return workDir + "/jre/Contents/Home/bin/java"
+		}
+		return workDir + "/jdk/Contents/Home/bin/java"
+	} else if systemutil.IsWindows() {
+		// win程序在获取文件状态时需要指定文件扩展名，但是运行时非shell应用不需要
+		if _, err := os.Stat(workDir + "/jdk/bin/java.exe"); err != nil && !os.IsExist(err) {
+			return workDir + "/jre/bin/java"
+		}
+		return workDir + "/jdk/bin/java"
 	} else {
-		return workDir + "/jre/bin/java"
+		if _, err := os.Stat(workDir + "/jdk/bin/java"); err != nil && !os.IsExist(err) {
+			return workDir + "/jre/bin/java"
+		}
+		return workDir + "/jdk/bin/java"
 	}
+}
+
+// GetJavaDir 获取本地java文件夹
+func GetJavaDir() string {
+	workDir := systemutil.GetWorkDir()
+	if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
+		return workDir + "/jre"
+	}
+	return workDir + "/jdk"
 }
 
 // initCert 初始化证书
