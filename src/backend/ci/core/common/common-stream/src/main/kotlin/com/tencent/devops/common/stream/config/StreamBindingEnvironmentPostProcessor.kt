@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.stream.config
 
-import com.tencent.devops.common.stream.annotation.StreamConsumer
 import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.stream.annotation.StreamEventConsumer
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners
@@ -76,22 +76,22 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                     .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
                     .setExpandSuperTypes(true)
                     .setScanners(Scanners.MethodsAnnotated)
-            ).getMethodsAnnotatedWith(StreamConsumer::class.java)
+            ).getMethodsAnnotatedWith(StreamEventConsumer::class.java)
 
             // 反射扫描所有带有 StreamConsumer 注解的bean方法
             consumerMethodBeans.forEach { method ->
-                val streamConsumer = method.getAnnotation(StreamConsumer::class.java)
+                val streamEventConsumer = method.getAnnotation(StreamEventConsumer::class.java)
                 val bindingName = DefaultBindingUtils.getInBindingName(method)
                 logger.info(
                     "Found StreamConsumer method: ${method.name}, bindingName[$bindingName], " +
-                        "with destination[${streamConsumer.destination}], group[${streamConsumer.group}]"
+                        "with destination[${streamEventConsumer.destination}], group[${streamEventConsumer.group}]"
                 )
                 definition.add(bindingName)
                 // 如果注解中指定了订阅组，则直接设置
                 // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
                 val prefix = "spring.cloud.stream.bindings.$bindingName-in-0"
-                setProperty("$prefix.destination", streamConsumer.destination)
-                setProperty("$prefix.group", streamConsumer.group)
+                setProperty("$prefix.destination", streamEventConsumer.destination)
+                setProperty("$prefix.group", streamEventConsumer.group)
             }
 
             // 反射扫描所有带有 StreamConsumer 注解的bean类型
@@ -100,9 +100,9 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                     .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
                     .setExpandSuperTypes(true)
                     .setScanners(Scanners.MethodsAnnotated)
-            ).getTypesAnnotatedWith(StreamConsumer::class.java)
+            ).getTypesAnnotatedWith(StreamEventConsumer::class.java)
             consumerClassBeans.forEach { clazz ->
-                val streamConsumer = clazz.getAnnotation(StreamConsumer::class.java)
+                val streamConsumer = clazz.getAnnotation(StreamEventConsumer::class.java)
                 val bindingName = DefaultBindingUtils.getInBindingName(clazz)
                 logger.info(
                     "Found StreamConsumer class: ${clazz.name}, bindingName[$bindingName], " +

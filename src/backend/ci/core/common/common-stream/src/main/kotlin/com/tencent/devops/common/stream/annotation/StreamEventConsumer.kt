@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Bean
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 @Bean
-annotation class StreamConsumer(
+annotation class StreamEventConsumer(
     val destination: String,
     val group: String
 )

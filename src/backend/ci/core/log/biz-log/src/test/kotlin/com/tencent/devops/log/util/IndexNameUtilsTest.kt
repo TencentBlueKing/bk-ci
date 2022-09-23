@@ -1,7 +1,7 @@
 package com.tencent.devops.log.util
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.common.stream.annotation.StreamConsumer
+import com.tencent.devops.common.stream.annotation.StreamEventConsumer
 import com.tencent.devops.common.stream.annotation.StreamEvent
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -61,12 +61,12 @@ class IndexNameUtilsTest {
                 .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
                 .setExpandSuperTypes(true)
                 .setScanners(Scanners.MethodsAnnotated)
-        ).getMethodsAnnotatedWith(StreamConsumer::class.java)
+        ).getMethodsAnnotatedWith(StreamEventConsumer::class.java)
         consumerBeans.forEach { method ->
-            val streamConsumer = method.getAnnotation(StreamConsumer::class.java)
+            val streamEventConsumer = method.getAnnotation(StreamEventConsumer::class.java)
             println(
                 "Found StreamConsumer class: ${method.name}, " +
-                    "with destination[${streamConsumer.destination}] group[${streamConsumer.group}]"
+                    "with destination[${streamEventConsumer.destination}] group[${streamEventConsumer.group}]"
             )
             definition.add("${method.name}In")
             // 如果注解中指定了订阅组，则直接设置
