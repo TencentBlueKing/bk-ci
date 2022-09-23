@@ -71,7 +71,7 @@ interface StreamMrAction : BaseAction {
     fun getMrReviewers(): List<String>
 
     override fun forkMrNeedReviewers(): List<String> {
-        return if (!checkMrForkReview() || forkMrYamlList().isNotEmpty()) {
+        return if (!checkMrForkReview()) {
             var page = 1
             val reviewers = mutableListOf<String>()
             // 首先添加reviewer为审核人
