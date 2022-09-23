@@ -432,7 +432,6 @@
                 this.active.isGroupEdit = false
                 this.addTagGroupIndex = null
                 this.addTagIndex = null
-
                 this.$bkInfo({
                     title: '确认删除该标签?',
                     confirmFn: () => {

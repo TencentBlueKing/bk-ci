@@ -7,8 +7,7 @@
         <bk-tab :active.sync="active" class="atom-manage-main" @tab-change="tabChange">
             <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
                 <template slot="label">
-                    <span>{{panel.label}}</span>
-                    <i class="atom-panel-count">{{panel.count}}</i>
+                    <span>{{ panel.label }}</span>
                 </template>
                 <bk-table :data="atomList" size="large" :empty-text="$t('noData')" :show-header="false">
                     <bk-table-column prop="logoUrl" width="80">
@@ -106,17 +105,15 @@
 <script>
     import { mapActions } from 'vuex'
     import Logo from '@/components/Logo'
-
     export default {
         components: {
             Logo
         },
-
         data () {
             return {
                 panels: [],
                 active: 'all',
-                installAtomList: [],
+                atomList: [],
                 deleteObj: {
                     showDialog: false,
                     detail: {},
@@ -137,20 +134,10 @@
                 }
             }
         },
-
         computed: {
             projectId () {
                 return this.$route.params.projectId
             },
-
-            atomList () {
-                const curTabAtomList = this.installAtomList.filter((atom) => (this.active === 'all' || atom.classifyCode === this.active)) || []
-                this.defaultPaging.count = curTabAtomList.length
-                const startIndex = this.defaultPaging.limit * (this.defaultPaging.current - 1)
-                const endIndex = this.defaultPaging.limit * this.defaultPaging.current
-                return curTabAtomList.slice(startIndex, endIndex)
-            },
-
             showOtherReason () {
                 const lastReason = this.deleteReasons.slice(-1)[0] || {}
                 const otherId = lastReason.id
@@ -158,33 +145,44 @@
                 return selectIds.includes(otherId)
             }
         },
-
         created () {
             this.initData()
         },
-
         methods: {
             ...mapActions('atom', ['getInstallAtomList', 'getInstallAtomDetail', 'unInstallAtom', 'getDeleteReasons', 'getAtomClassify']),
-
-            initData () {
+            async initData () {
                 this.isLoading = true
-                Promise.all([this.getInstallAtomList(this.projectId), this.getAtomClassify(), this.getDeleteReasons()]).then(([{ data: atomList }, { data: classifyList }, { data: reasons }]) => {
-                    this.installAtomList = atomList.records || []
-                    this.deleteReasons = reasons || []
-                    this.panels = (classifyList || []).map((classify) => {
-                        const count = (this.installAtomList.filter((atom) => (atom.classifyCode === classify.classifyCode)) || []).length
-                        return { name: classify.classifyCode, label: classify.classifyName, count }
+                await this.fetchAtomList()
+                Promise.all([this.getAtomClassify(), this.getDeleteReasons()])
+                    .then(([{ data: classifyList }, { data: reasons }]) => {
+                        this.deleteReasons = reasons || []
+                        this.panels = (classifyList || []).map(item => {
+                            item.name = item.classifyCode
+                            item.label = item.classifyName
+                            return item
+                        })
+                        this.panels.unshift({ name: 'all', label: this.$t('atomManage.all') })
+                    }).catch(err => this.$bkMessage({ theme: 'error', message: err.message })).finally(() => {
+                        this.isLoading = false
                     })
-                    this.panels.unshift({ name: 'all', label: this.$t('atomManage.all'), count: this.installAtomList.length })
-                }).catch(err => this.$bkMessage({ theme: 'error', message: err.message })).finally(() => {
-                    this.isLoading = false
+            },
+            fetchAtomList () {
+                const classifyCode = this.active === 'all' ? '' : this.active
+                return this.getInstallAtomList({
+                    projectCode: this.projectId,
+                    page: this.defaultPaging.current,
+                    pageSize: this.defaultPaging.limit,
+                    classifyCode: classifyCode
+                }).then(res => {
+                    const data = res.data || {}
+                    this.atomList = data.records || []
+                    this.defaultPaging.count = data.count || 0
                 })
             },
-
             tabChange () {
                 this.defaultPaging.current = 1
+                this.fetchAtomList()
             },
-
             showDetail (row) {
                 this.isLoading = true
                 this.detailObj.detail = row
@@ -198,12 +196,10 @@
                     this.detailObj.showSlide = true
                 })
             },
-
             showDeletaDialog (row) {
                 this.deleteObj.detail = row
                 this.deleteObj.showDialog = true
             },
-
             deleteAtom () {
                 this.isLoading = true
                 const lastReason = this.deleteReasons.slice(-1)[0] || {}
@@ -223,37 +219,31 @@
                     this.clearReason()
                 })
             },
-
             pageChange (page) {
                 if (page) this.defaultPaging.current = page
+                this.fetchAtomList()
             },
-
             limitChange (limit) {
                 if (limit === this.defaultPaging.limit) return
-
                 this.defaultPaging.limit = limit
                 this.defaultPaging.current = 1
+                this.fetchAtomList()
             },
-
             clearReason () {
                 this.deleteObj.reasonList = []
                 this.deleteObj.otherStr = ''
             },
-
             getInstallInfo (row) {
                 let des = this.$t('atomManage.installedAt')
                 if (row.default) des = this.$t('atomManage.createdAt')
                 return `${row.installer} ${des} ${row.installTime}`
             },
-
             goToStoreDetail (atomCode) {
                 window.open(`${WEB_URL_PREFIX}/store/atomStore/detail/atom/${atomCode}`, '_blank')
             },
-
             goToPipeline (pipelineId) {
                 window.open(`${WEB_URL_PREFIX}/pipeline/${this.projectId}/${pipelineId}/edit`, '_blank')
             },
-
             goToStore () {
                 window.open(`${WEB_URL_PREFIX}/store/market/home?pipeType=atom`, '_blank')
             }
@@ -263,7 +253,6 @@
 
 <style lang="scss" scoped>
     @import './../../scss/conf';
-
     .atom-manage-home {
         min-height: calc(100% - 60px);
         background: #fff;
@@ -409,7 +398,6 @@
             }
         }
     }
-
     .delete-reasons {
         display: block;
         padding: 6px 0;
@@ -417,12 +405,10 @@
             font-size: 12px;
         }
     }
-
     .other-reason {
         font-size: 12px;
         line-height: 32px;
     }
-
     .reason-text {
         width: 498px;
         height: 36px;
@@ -433,7 +419,6 @@
         border: 1px solid $fontLighterColor;
         resize: none;
     }
-
     .choose-reason-title {
         display: inline-block;
         margin-bottom: 5px;
