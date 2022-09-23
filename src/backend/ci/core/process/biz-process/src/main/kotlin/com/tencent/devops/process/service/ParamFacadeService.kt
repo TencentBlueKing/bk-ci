@@ -365,7 +365,9 @@ class ParamFacadeService @Autowired constructor(
                 pipelineRuntimeService.getBuildPipelineRecords(
                     projectId = projectId,
                     channelCode = ChannelCode.BS,
-                    pipelineIds = hasPermissionList
+                    pipelineIds = hasPermissionList,
+                    page = 1,
+                    pageSize = 1000
                 )
             watcher.stop()
 
