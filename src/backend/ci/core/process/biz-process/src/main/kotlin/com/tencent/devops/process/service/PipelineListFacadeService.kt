@@ -512,6 +512,7 @@ class PipelineListFacadeService @Autowired constructor(
                     dslContext = dslContext,
                     projectId = projectId,
                     channelCode = channelCode,
+                    pipelineIds = pipelineIds,
                     viewId = viewId,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
