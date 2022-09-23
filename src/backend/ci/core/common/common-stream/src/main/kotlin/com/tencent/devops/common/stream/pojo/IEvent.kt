@@ -49,8 +49,7 @@ open class IEvent(
     fun sendTo(bridge: StreamBridge) {
         try {
             val eventType = this::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
-            // TODO #7443
-            bridge.send(eventType.destination, buildMessage(eventType.delayMills))
+            bridge.send("${this::class.java.simpleName.decapitalize()}Out", buildMessage(eventType.delayMills))
         } catch (ignored: Exception) {
             logger.error("[STREAM MQ] Fail to dispatch the event($this)", ignored)
         }

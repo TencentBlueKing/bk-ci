@@ -41,32 +41,37 @@ class IndexNameUtilsTest {
 
     @Test
     fun testReflections() {
-        val re = Reflections(
+        val definition = mutableListOf<String>()
+        val eventClasses = Reflections(
             ConfigurationBuilder()
                 .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
                 .setExpandSuperTypes(true)
         ).getTypesAnnotatedWith(StreamEvent::class.java)
-        println(re)
-        re.forEach { clazz ->
+        eventClasses.forEach { clazz ->
             val streamEvent = clazz.getAnnotation(StreamEvent::class.java)
             println(
-                "Found StreamEvent class: ${clazz.simpleName.decapitalize()}, " +
+                "Found StreamEvent class: ${clazz.name}, " +
                     "with destination[${streamEvent.destination}]"
             )
+            val bindingName = "${clazz.simpleName.decapitalize()}Out"
+            definition.add(bindingName)
         }
-        val re1 = Reflections(
+        val consumerBeans = Reflections(
             ConfigurationBuilder()
                 .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
                 .setExpandSuperTypes(true)
                 .setScanners(Scanners.MethodsAnnotated)
         ).getMethodsAnnotatedWith(StreamConsumer::class.java)
-        println(re1)
-        re1.forEach { method ->
+        consumerBeans.forEach { method ->
             val streamConsumer = method.getAnnotation(StreamConsumer::class.java)
             println(
-                "Found StreamEvent class: ${method.name}, " +
-                    "with destination[${streamConsumer.destination}]"
+                "Found StreamConsumer class: ${method.name}, " +
+                    "with destination[${streamConsumer.destination}] group[${streamConsumer.group}]"
             )
+            definition.add("${method.name}In")
+            // 如果注解中指定了订阅组，则直接设置
+            // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
         }
+        println(definition)
     }
 }

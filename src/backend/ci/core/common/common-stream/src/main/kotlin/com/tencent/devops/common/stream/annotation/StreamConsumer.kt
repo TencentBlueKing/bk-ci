@@ -39,5 +39,5 @@ import org.springframework.context.annotation.Bean
 @Bean
 annotation class StreamConsumer(
     val destination: String,
-    val group: String = ""
+    val group: String
 )

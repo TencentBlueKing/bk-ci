@@ -52,7 +52,6 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         with(Properties()) {
             // 如果未配置服务使用的binder类型，则使用全局默认binder类型
             // 如果均未配置则不进行注解的反射解析
-            val binder = "\${spring.cloud.stream.service-binder}"
             val definition = mutableListOf<String>()
             val eventClasses = Reflections(
                 ConfigurationBuilder()
@@ -61,35 +60,34 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
             ).getTypesAnnotatedWith(StreamEvent::class.java)
             eventClasses.forEach { clazz ->
                 val streamEvent = clazz.getAnnotation(StreamEvent::class.java)
+                val bindingName = "${clazz.simpleName.decapitalize()}Out"
                 logger.info(
-                    "Found StreamEvent class: ${clazz.name}, " +
-                        "with destination[${streamEvent.destination}]"
+                    "Found StreamEvent class: ${clazz.name}, bindingName[$bindingName], " +
+                        "with destination[${streamEvent.destination}, delayMills[${streamEvent.delayMills}]"
                 )
-                definition.add(clazz.simpleName)
-                val prefix = "spring.cloud.stream.bindings.${clazz.simpleName}"
+                definition.add(bindingName)
+                val prefix = "spring.cloud.stream.bindings.$bindingName"
                 setProperty("$prefix.destination", streamEvent.destination)
-                setProperty("$prefix.binder", binder)
             }
             val consumerBeans = Reflections(
                 ConfigurationBuilder()
                     .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
                     .setExpandSuperTypes(true)
                     .setScanners(Scanners.MethodsAnnotated)
-            ).getTypesAnnotatedWith(StreamConsumer::class.java)
+            ).getMethodsAnnotatedWith(StreamConsumer::class.java)
             consumerBeans.forEach { method ->
                 val streamConsumer = method.getAnnotation(StreamConsumer::class.java)
-                println(
-                    "Found StreamConsumer class: ${method.name}, " +
-                        "with destination[${streamConsumer.destination}] group[${streamConsumer.group}]"
+                val bindingName = "${method.name}In"
+                logger.info(
+                    "Found StreamConsumer method: ${method.name}, bindingName[$bindingName], " +
+                        "with destination[${streamConsumer.destination}], group[${streamConsumer.group}]"
                 )
-                definition.add(method.name)
+                definition.add(bindingName)
                 // 如果注解中指定了订阅组，则直接设置
                 // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
-                val subscriptionGroup = "\${spring.application.name}"
-                val prefix = "spring.cloud.stream.bindings.${method.name}-in-0"
+                val prefix = "spring.cloud.stream.bindings.${method.name}In-in-0"
                 setProperty("$prefix.destination", streamConsumer.destination)
-                setProperty("$prefix.group", subscriptionGroup)
-                setProperty("$prefix.binder", binder)
+                setProperty("$prefix.group", streamConsumer.group)
             }
             setProperty("spring.cloud.stream.function.definition", definition.joinToString(";"))
             return PropertiesPropertySource(STREAM_SOURCE_NAME, this)
