@@ -338,7 +338,7 @@
                 const repoName = this.repoTypeNameMap[row.artifactoryType].name
                 let url = ''
                 if (repoName === 'image') {
-                    url = `${WEB_URL_PREFIX}/repo//${this.projectId}/docker/package?repoName=${repoName}&packageKey=docker://${row.name}&version=${row.fullName.split(':')[1]}`
+                    url = `${WEB_URL_PREFIX}/repo/${this.projectId}/docker/package?repoName=${repoName}&packageKey=docker://${row.name}&version=${row.fullName.split(':')[1]}`
                 } else {
                     url = `${WEB_URL_PREFIX}/repo/${this.projectId}/generic?repoName=${repoName}&path=${row.path}`
                 }
