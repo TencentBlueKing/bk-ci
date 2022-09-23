@@ -32,9 +32,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.user.UserBuildParametersResource
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
+import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -155,18 +155,15 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<List<BuildFormValue>> {
         try {
-            val result = client.get(ServicePipelineResource::class).hasPermissionList(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                page = page,
-                pageSize = pageSize,
-                aliasName = aliasName
-            ).data ?: emptyList()
             return Result(
-                result
-                    .filter { !it.pipelineId.contains(pipelineId) }
-                    .map { BuildFormValue(key = it.pipelineName, value = it.pipelineName) }
+                client.get(ParamFacadeService::class).hasPermissionPipelineList(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    page = page,
+                    pageSize = pageSize,
+                    pipelineName = aliasName
+                )
             )
         } catch (ignore: Exception) {
             logger.warn("[$userId|$projectId] Fail to get the repository list", ignore)

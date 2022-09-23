@@ -921,32 +921,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         return failUpdateModels
     }
 
-    fun searchInfoByPipelineIds(
-        projectId: String? = null,
-        pipelineIds: Set<String>,
-        channelCode: ChannelCode,
-        offset: Int,
-        limit: Int,
-        pipelineName: String?
-    ): List<SubPipeline> {
-        val pipelineInfoRecord = pipelineInfoDao.searchInfoByPipelineIds(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineIds = pipelineIds,
-            channelCode = channelCode,
-            filterDelete = true,
-            offset = offset,
-            limit = limit,
-            pipelineName = pipelineName
-        )
-        return pipelineInfoRecord.map {
-            SubPipeline(
-                pipelineName = it.pipelineName,
-                pipelineId = it.pipelineId
-            )
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineInfoFacadeService::class.java)
     }
