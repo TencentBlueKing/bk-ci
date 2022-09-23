@@ -301,14 +301,15 @@
         },
 
         data () {
+            const { commitMsg, triggerUser, branch, event, status, pipelineIds } = this.$route.query
             const getFilterData = () => {
                 return {
-                    commitMsg: this.$route.query.commitMsg || '',
-                    triggerUser: this.$route.query.triggerUser || '',
-                    branch: (this.$route.query.branch && this.$route.query.branch.split(',')) || [],
-                    event: (this.$route.query.event && this.$route.query.event.split(',')) || [],
-                    status: (this.$route.query.status && this.$route.query.status.split(',')) || [],
-                    pipelineIds: (this.$route.query.pipelineIds && this.$route.query.pipelineIds.split(',')) || []
+                    commitMsg: commitMsg || '',
+                    triggerUser: triggerUser || '',
+                    branch: (branch && branch.split(',')) || [],
+                    event: (event && event.split(',')) || [],
+                    status: (status && status.split(',')) || [],
+                    pipelineIds: (pipelineIds && pipelineIds.split(',')) || []
                 }
             }
             return {
@@ -366,8 +367,7 @@
                     }
                 },
                 emptyYaml: false,
-                yamlErrorMessage: '',
-                getFilterData
+                yamlErrorMessage: ''
             }
         },
 
@@ -392,15 +392,15 @@
 
         watch: {
             curPipeline: {
-                handler () {
-                    this.cleanFilterData()
+                handler (newVal, oldVal) {
+                    if (Object.keys(oldVal).length) this.cleanFilterData()
                     this.initBuildData()
                 }
             },
             filterData: {
                 handler () {
                     this.initBuildData()
-                    const query = {}
+                    const query = { page: 1 }
                     Object.keys(this.filterData).forEach(key => {
                         if (this.filterData[key].length && typeof this.filterData[key] === 'string') {
                             query[key] = this.filterData[key]
@@ -408,16 +408,13 @@
                             query[key] = this.filterData[key].join(',')
                         }
                     })
-                    this.$router.push({
-                        query
-                    })
+                    this.$router.replace({ query })
                 },
                 deep: true
             }
         },
 
         created () {
-            this.initBuildData()
             this.loopGetList()
             this.setHtmlTitle()
             this.toggleFilterEvent(true)
@@ -513,9 +510,15 @@
             },
 
             cleanFilterData () {
-                this.filterData = this.getFilterData()
-                this.$router.replace({ query: { page: 1, ...this.$route.query } })
                 this.compactPaging.current = 1
+                this.filterData = {
+                    commitMsg: '',
+                    triggerUser: '',
+                    branch: [],
+                    event: [],
+                    status: [],
+                    pipelineIds: []
+                }
             },
 
             initBuildData () {
