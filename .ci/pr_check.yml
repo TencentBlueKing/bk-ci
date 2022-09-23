@@ -52,17 +52,6 @@ stages:
             - "GOLANG"
             - "KOTLIN"
             checkerSetType: "normal"
-            tools:
-            - "CLOC"
-            - "SENSITIVE"
-            - "DUPC"
-            - "CCN"
-            - "GOML"
-            - "WOODPECKER_SENSITIVE"
-            - "CHECKSTYLE"
-            - "KTLINT"
-            - "DETEKT"
-            - "IP_CHECK"
             asyncTask: false
             asyncTaskId: ""
             goPath: "src/agent/src"
@@ -70,13 +59,12 @@ stages:
             scriptType: "SHELL"
             languageRuleSetMap:
               JAVA_RULE:
-              - "bk_ci_java_sec"
+              - "codecc_default_java"
               KOTLIN_RULE:
-              - "bk_ci_kotlin"
+              - "codecc_default_kotlin"
               JS_RULE: []
               RUBY_RULE: []
               GOLANG_RULE:
-              - "bk_ci_go_sec"
               - "codecc_default_go"
             C_CPP_RULE: []
             rtxReceiverType: "4"
@@ -104,13 +92,13 @@ stages:
             scanTestSource: false
             openScanPrj: false
             JAVA_RULE:
-            - "bk_ci_java_sec"
+            - "codecc_default_java"
             JAVA_TOOL:
             - toolList:
               - "CHECKSTYLE"
               - "WOODPECKER_SENSITIVE"
             KOTLIN_RULE:
-            - "bk_ci_kotlin"
+            - "codecc_default_kotlin"
             KOTLIN_TOOL:
             - toolList:
               - "KTLINT"
@@ -139,7 +127,6 @@ stages:
               - "COVERITY"
               - "CCN"
             GOLANG_RULE:
-            - "bk_ci_go_sec"
             - "codecc_default_go"
             GOLANG_TOOL:
             - toolList:

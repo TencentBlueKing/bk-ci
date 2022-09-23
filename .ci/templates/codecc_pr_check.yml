@@ -10,6 +10,7 @@ gates:
       - CodeCCCheckAtom.eslint_all_defect <= 0
       - CodeCCCheckAtom.go_all_defect <= 0
       - CodeCCCheckAtom.woodpecker_all_defect <= 0
+      - CodeCCCheckAtom.detekt_all_defect <= 0
     notify-on-fail:
       - type: email
         receivers: [ mingshewhe@tencent.com ]
