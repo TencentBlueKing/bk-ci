@@ -336,11 +336,11 @@
             },
             gotoArtifactory (row) {
                 const repoName = this.repoTypeNameMap[row.artifactoryType].name
-                let url = ''
+                let url = `${WEB_URL_PREFIX}/repo/${this.projectId}/`
                 if (repoName === 'image') {
-                    url = `${WEB_URL_PREFIX}/repo/${this.projectId}/docker/package?repoName=${repoName}&packageKey=docker://${row.name}&version=${row.fullName.split(':')[1]}`
+                    url += `docker/package?repoName=${repoName}&packageKey=docker://${row.name}&version=${row.fullName.split(':')[1]}`
                 } else {
-                    url = `${WEB_URL_PREFIX}/repo/${this.projectId}/generic?repoName=${repoName}&path=${row.path}`
+                    url += `generic?repoName=${repoName}&path=${row.path}`
                 }
                 window.open(url, '_blank')
             },
