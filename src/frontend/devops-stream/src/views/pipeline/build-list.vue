@@ -30,7 +30,7 @@
         <section class="main-body section-box">
             <section class="build-filter">
                 <bk-input v-model="filterData.commitMsg" class="filter-item w300" :placeholder="$t('pipeline.commitMsg')"></bk-input>
-                <bk-input :value="filterData.triggerUser.join(',')" class="filter-item w300" :placeholder="$t('pipeline.actor')"></bk-input>
+                <bk-input v-model="filterData.triggerUser" name="triggerUser" class="filter-item w300" :placeholder="$t('pipeline.actor')"></bk-input>
                 <bk-select v-model="filterData.branch"
                     class="filter-item"
                     :placeholder="$t('pipeline.branch')"
@@ -60,7 +60,12 @@
                         :name="event.name">
                     </bk-option>
                 </bk-select>
-                <bk-select v-model="filterData[filter.id]" v-for="filter in filterList" :key="filter.id" class="filter-item" :placeholder="filter.placeholder" multiple>
+                <bk-select v-model="filterData[filter.id]"
+                    v-for="filter in filterList" :key="filter.id"
+                    class="filter-item"
+                    :placeholder="filter.placeholder"
+                    multiple
+                >
                     <bk-option v-for="option in filter.data"
                         :key="option.id"
                         :id="option.id"
@@ -296,6 +301,16 @@
         },
 
         data () {
+            const getFilterData = () => {
+                return {
+                    commitMsg: this.$route.query.commitMsg || '',
+                    triggerUser: this.$route.query.triggerUser || '',
+                    branch: (this.$route.query.branch && this.$route.query.branch.split(',')) || [],
+                    event: (this.$route.query.event && this.$route.query.event.split(',')) || [],
+                    status: (this.$route.query.status && this.$route.query.status.split(',')) || [],
+                    pipelineIds: (this.$route.query.pipelineIds && this.$route.query.pipelineIds.split(',')) || []
+                }
+            }
             return {
                 buildList: [],
                 compactPaging: {
@@ -303,14 +318,7 @@
                     current: +this.$route.query.page || 1,
                     count: 0
                 },
-                filterData: {
-                    commitMsg: '',
-                    triggerUser: [],
-                    branch: [],
-                    event: [],
-                    status: [],
-                    pipelineIds: []
-                },
+                filterData: getFilterData(),
                 branchList: [],
                 filterList: [
                     {
@@ -358,7 +366,8 @@
                     }
                 },
                 emptyYaml: false,
-                yamlErrorMessage: ''
+                yamlErrorMessage: '',
+                getFilterData
             }
         },
 
@@ -391,6 +400,17 @@
             filterData: {
                 handler () {
                     this.initBuildData()
+                    const query = {}
+                    Object.keys(this.filterData).forEach(key => {
+                        if (this.filterData[key].length && typeof this.filterData[key] === 'string') {
+                            query[key] = this.filterData[key]
+                        } else if (this.filterData[key].length && Array.isArray(this.filterData[key])) {
+                            query[key] = this.filterData[key].join(',')
+                        }
+                    })
+                    this.$router.push({
+                        query
+                    })
                 },
                 deep: true
             }
@@ -400,6 +420,9 @@
             this.initBuildData()
             this.loopGetList()
             this.setHtmlTitle()
+            this.toggleFilterEvent(true)
+            this.toggleFilterBranch(true)
+            this.toggleFilterPipeline(true)
         },
 
         beforeDestroy () {
@@ -490,16 +513,9 @@
             },
 
             cleanFilterData () {
-                this.$router.replace({ query: { page: 1 } })
+                this.filterData = this.getFilterData()
+                this.$router.replace({ query: { page: 1, ...this.$route.query } })
                 this.compactPaging.current = 1
-                this.filterData = {
-                    commitMsg: '',
-                    triggerUser: [],
-                    branch: [],
-                    event: [],
-                    status: [],
-                    pipelineIds: []
-                }
             },
 
             initBuildData () {
@@ -526,11 +542,14 @@
             },
 
             getBuildData () {
+                let { triggerUser } = this.filterData
+                triggerUser = triggerUser ? triggerUser.split(',') : []
                 const params = {
                     page: this.compactPaging.current,
                     pageSize: this.compactPaging.limit,
                     pipelineId: this.curPipeline.pipelineId,
-                    ...this.filterData
+                    ...this.filterData,
+                    triggerUser
                 }
                 return pipelines.getPipelineBuildList(this.projectId, params).then((res = {}) => {
                     this.buildList = (res.records || []).map((build) => {
@@ -546,7 +565,6 @@
 
             togglePipelineEnable () {
                 if (!this.permission) return
-
                 this.clickEmpty()
                 pipelines.toggleEnablePipeline(this.projectId, this.curPipeline.pipelineId, !this.curPipeline.enabled).then(() => {
                     const pipeline = {
@@ -746,7 +764,7 @@
             resetFilter () {
                 this.filterData = {
                     commitMsg: '',
-                    triggerUser: [],
+                    triggerUser: '',
                     branch: [],
                     event: [],
                     status: [],
