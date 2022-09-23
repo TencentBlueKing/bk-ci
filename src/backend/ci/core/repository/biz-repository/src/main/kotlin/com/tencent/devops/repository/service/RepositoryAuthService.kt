@@ -70,21 +70,23 @@ class RepositoryAuthService @Autowired constructor(
     }
 
     // 此处用户iam无权限跳转回调，已页面拿到的id透传。 此处页面拿到的为hashId
-    fun getRepositoryInfo(hashId: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+    fun getRepositoryInfo(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
         authTokenApi.checkToken(token)
-        val repositoryInfos =
-            repositoryService.getInfoByHashIds(hashId as List<String>)
+        var repositoryInfos = repositoryService.getInfoByIds(ids as List<Long>)
         val result = FetchInstanceInfo()
         if (repositoryInfos == null || repositoryInfos.isEmpty()) {
-            logger.info("$hashId 未匹配到代码库")
-            return result.buildFetchInstanceFailResult()
+            repositoryInfos = repositoryService.getInfoByHashIds(ids as List<String>)
+            if (repositoryInfos == null) {
+                logger.info("$ids 未匹配到代码库")
+                return result.buildFetchInstanceFailResult()
+            }
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         repositoryInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.repositoryHashId
+            entity.id = it.repositoryId!!.toString()
             entity.displayName = it.aliasName
-            entity.iamApprover = arrayListOf(it.createUser)
+            entity.iamApprover = if (it.createUser == null) emptyList() else arrayListOf(it.createUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${repositoryInfos.size.toLong()}")
