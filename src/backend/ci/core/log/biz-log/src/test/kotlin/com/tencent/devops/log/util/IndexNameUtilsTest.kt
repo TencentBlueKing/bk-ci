@@ -50,7 +50,7 @@ class IndexNameUtilsTest {
         re.forEach { clazz ->
             val streamEvent = clazz.getAnnotation(StreamEvent::class.java)
             println(
-                "Found StreamEvent class: ${clazz.canonicalName}, " +
+                "Found StreamEvent class: ${clazz.simpleName.decapitalize()}, " +
                     "with destination[${streamEvent.destination}]"
             )
         }
@@ -62,10 +62,10 @@ class IndexNameUtilsTest {
         ).getMethodsAnnotatedWith(StreamConsumer::class.java)
         println(re1)
         re1.forEach { method ->
-            val streamEvent = method.getAnnotation(StreamConsumer::class.java)
+            val streamConsumer = method.getAnnotation(StreamConsumer::class.java)
             println(
                 "Found StreamEvent class: ${method.name}, " +
-                    "with destination[${streamEvent.streamEvent}]"
+                    "with destination[${streamConsumer.destination}]"
             )
         }
     }
