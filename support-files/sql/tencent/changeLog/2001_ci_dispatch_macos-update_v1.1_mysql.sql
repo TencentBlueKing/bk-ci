@@ -1,4 +1,4 @@
-USE devops_dispatch_macos;
+USE devops_ci_dispatch_macos;
 SET NAMES utf8mb4;
 
 DROP PROCEDURE IF EXISTS ci_dispatch_macos_schema_update;
