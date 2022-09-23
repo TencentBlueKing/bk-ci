@@ -99,7 +99,7 @@ class ExperienceIndexService @Autowired constructor(
                     type = it.type,
                     externalUrl = it.link
                 )
-            }?.toMutableList()?.map { banners.add(index++, it) }
+            }?.toMutableList()?.forEach { banners.add(index++, it) }
         }
         return Result(Pagination(hasNext, banners))
     }
