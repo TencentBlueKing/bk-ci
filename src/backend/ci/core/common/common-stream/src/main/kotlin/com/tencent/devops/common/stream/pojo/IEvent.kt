@@ -29,6 +29,7 @@ package com.tencent.devops.common.stream.pojo
 
 import com.tencent.devops.common.stream.annotation.StreamEvent
 import com.tencent.devops.common.stream.constants.StreamHeader.X_DELAY
+import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.messaging.Message
@@ -49,7 +50,7 @@ open class IEvent(
     fun sendTo(bridge: StreamBridge) {
         try {
             val eventType = this::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
-            bridge.send("${this::class.java.simpleName.decapitalize()}Out", buildMessage(eventType.delayMills))
+            bridge.send(DefaultBindingUtils.getOutBindingName(this::class.java), buildMessage(eventType.delayMills))
         } catch (ignored: Exception) {
             logger.error("[STREAM MQ] Fail to dispatch the event($this)", ignored)
         }

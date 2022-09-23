@@ -4,7 +4,6 @@ import com.tencent.devops.common.stream.annotation.StreamEvent
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.reflections.Reflections
-import org.reflections.scanners.Scanners
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
 
