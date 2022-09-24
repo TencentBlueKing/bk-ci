@@ -328,7 +328,10 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
                     if (element !is MarketBuildLessAtomElement && element !is SubPipelineCallElement) {
                         return@element
                     }
-                    if (element is MarketBuildLessAtomElement && element.getAtomCode() != atomCode) {
+                    if (element is MarketBuildLessAtomElement &&
+                        element.getAtomCode() != atomCode &&
+                        !element.isElementEnable()
+                    ) {
                         return@element
                     }
                     if (element is SubPipelineCallElement && element.subPipelineId.isBlank()) {
