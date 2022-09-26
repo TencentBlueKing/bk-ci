@@ -338,8 +338,8 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
                         val msg = map["input"] as? Map<*, *> ?: return@element
                         val subPip = msg["subPip"]?.toString() ?: return@element
                         logger.info(
-                            "callPipelineStartup: " +
-                                "supProjectId:${msg["projectId"]},subPipelineId:$subPip" +
+                            "callPipelineStartup|" +
+                                "supProjectId:${msg["projectId"]},subPipelineId:$subPip,subElementId:${element.id}" +
                                 "parentProjectId:$projectId, parentPipelineId:$pipelineId"
                         )
                         val subProj = msg["projectId"]?.toString()?.ifBlank { projectId } ?: projectId
