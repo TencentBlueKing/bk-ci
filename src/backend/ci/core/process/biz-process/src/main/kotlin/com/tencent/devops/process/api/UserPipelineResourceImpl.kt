@@ -216,8 +216,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                name = pipeline.name,
-                desc = pipeline.desc,
+                pipelineCopy = pipeline,
                 channelCode = ChannelCode.BS
             )
         )
@@ -464,7 +463,7 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun getCount(userId: String, projectId: String): Result<PipelineCount> {
         checkParam(userId, projectId)
-        return Result(pipelineListFacadeService.getCount(userId,projectId))
+        return Result(pipelineListFacadeService.getCount(userId, projectId))
     }
 
     override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
