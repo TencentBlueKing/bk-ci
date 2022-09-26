@@ -24,18 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.auth.service
 
-import com.tencent.devops.auth.service.iam.PermissionExtService
+package com.tencent.devops.auth.service.sample
 
-class EmptyPermissionExtServiceImpl : PermissionExtService {
-    override fun resourceCreateRelation(
-        userId: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Boolean {
-        return true
+import com.tencent.devops.auth.pojo.PermissionUrlDTO
+import com.tencent.devops.auth.service.iam.PermissionUrlService
+import com.tencent.devops.common.api.pojo.Result
+
+class SamplePermissionUrlServiceImpl : PermissionUrlService {
+    override fun getPermissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
+        return Result("")
+    }
+
+    override fun getRolePermissionUrl(projectId: String, groupId: String?): String? {
+        return null
     }
 }

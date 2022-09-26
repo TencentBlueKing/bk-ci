@@ -106,8 +106,8 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
 
     override fun getStreamConf(userId: String, projectId: String): Result<StreamBasicSetting?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(userId)
-        permissionService.checkStreamPermission(userId, projectId)
+//        checkParam(userId)
+//        permissionService.checkStreamPermission(userId, projectId)
         return Result(streamBasicSettingService.getStreamConf(gitProjectId))
     }
 
