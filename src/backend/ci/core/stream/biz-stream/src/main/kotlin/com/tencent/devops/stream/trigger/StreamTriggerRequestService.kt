@@ -135,6 +135,7 @@ class StreamTriggerRequestService @Autowired constructor(
                 action.data.setting = StreamTriggerSetting(gitCIBasicSetting)
             }
         }
+        action.initCacheData()
         // 获取前端展示相关的requestEvent
         val requestEvent = action.buildRequestEvent(event) ?: return false
 
