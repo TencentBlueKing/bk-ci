@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
-import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ACTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
@@ -46,6 +45,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWN
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_URL
+import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.service.code.GitScmService

@@ -130,6 +130,7 @@ class PipelineRemoteAuthService @Autowired constructor(
             // 在远程触发器job中打印sourcIp
             val taskId = buildVariableService.getVariable(
                 projectId = pipeline.projectId,
+                pipelineId = pipeline.pipelineId,
                 buildId = buildId.id,
                 varName = PIPELINE_START_TASK_ID
             )

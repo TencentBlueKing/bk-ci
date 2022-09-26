@@ -27,15 +27,26 @@
 
 package com.tencent.devops.common.sdk.github
 
+import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.sdk.github.util.GithubJwtUtil
 import com.tencent.devops.common.sdk.util.SdkHttpUtil
+import com.tencent.devops.common.sdk.util.SdkRetryHelper
 import okhttp3.Credentials
 import org.slf4j.LoggerFactory
+import java.lang.IllegalArgumentException
 
-open class DefaultGithubClient(
+class DefaultGithubClient(
     // github服务域名
-    open val serverUrl: String,
+    private val serverUrl: String,
     // github接口地址
-    open val apiUrl: String
+    private val apiUrl: String,
+    // github app appId
+    private val appId: String? = null,
+    // github app privatekey
+    private val privateKey: String? = null,
+    // 最大重试次数
+    private val maxAttempts: Int = 3,
+    private val retryWaitTime: Long = 500
 ) : GithubClient {
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultGithubClient::class.java)
@@ -46,11 +57,21 @@ open class DefaultGithubClient(
             "Authorization" to "token  $oauthToken",
             "Accept" to "application/vnd.github.v3+json"
         )
-        return SdkHttpUtil.execute(
-            apiUrl = apiUrl,
-            systemHeaders = headers,
-            request = request
-        )
+        return if (request.getHttpMethod() == HttpMethod.GET) {
+            SdkRetryHelper(maxAttempts = maxAttempts, retryWaitTime = retryWaitTime).execute {
+                SdkHttpUtil.execute(
+                    apiUrl = apiUrl,
+                    systemHeaders = headers,
+                    request = request
+                )
+            }
+        } else {
+            SdkHttpUtil.execute(
+                apiUrl = apiUrl,
+                systemHeaders = headers,
+                request = request
+            )
+        }
     }
 
     override fun <T> execute(username: String, token: String, request: GithubRequest<T>): T {
@@ -58,10 +79,45 @@ open class DefaultGithubClient(
             "Authorization" to Credentials.basic(username, token),
             "Accept" to "application/vnd.github.v3+json"
         )
-        return SdkHttpUtil.execute(
-            apiUrl = apiUrl,
-            systemHeaders = headers,
-            request = request
+        return if (request.getHttpMethod() == HttpMethod.GET) {
+            SdkHttpUtil.execute(
+                apiUrl = apiUrl,
+                systemHeaders = headers,
+                request = request
+            )
+        } else {
+            SdkHttpUtil.execute(
+                apiUrl = apiUrl,
+                systemHeaders = headers,
+                request = request
+            )
+        }
+    }
+
+    override fun <T> executeByJwt(request: GithubRequest<T>): T {
+        if (appId.isNullOrBlank()) {
+            throw IllegalArgumentException("appId is empty")
+        }
+        if (privateKey.isNullOrBlank()) {
+            throw IllegalArgumentException("privatekey is empty")
+        }
+        val jwt = GithubJwtUtil.generatorJwt(appId = appId, privateKey = privateKey)
+        val headers = mutableMapOf(
+            "Authorization" to "Bearer $jwt",
+            "Accept" to "application/vnd.github.v3+json"
         )
+        return if (request.getHttpMethod() == HttpMethod.GET) {
+            SdkHttpUtil.execute(
+                apiUrl = apiUrl,
+                systemHeaders = headers,
+                request = request
+            )
+        } else {
+            SdkHttpUtil.execute(
+                apiUrl = apiUrl,
+                systemHeaders = headers,
+                request = request
+            )
+        }
     }
 }

@@ -108,6 +108,7 @@ class BuildStartControl @Autowired constructor(
         private const val JOB_ID = "0"
         private const val DEFAULT_DELAY = 1000
     }
+
     @BkTimed
     fun handle(event: PipelineBuildStartEvent) {
         val watcher = Watcher(id = "ENGINE|BuildStart|${event.traceId}|${event.buildId}|${event.status}")
@@ -130,7 +131,7 @@ class BuildStartControl @Autowired constructor(
     }
 
     fun PipelineBuildStartEvent.execute(watcher: Watcher) {
-        val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
+        val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
         buildLogPrinter.addDebugLine(
             buildId = buildId, message = "Enter BuildStartControl",
             tag = TAG, jobId = JOB_ID, executeCount = executeCount
@@ -188,7 +189,7 @@ class BuildStartControl @Autowired constructor(
                 message = "Illegal build #${buildInfo.buildNum} [${buildInfo.status}]",
                 buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
             )
-            return true
+            return false
         }
         val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
         try {
@@ -546,7 +547,9 @@ class BuildStartControl @Autowired constructor(
             message = "Async fetch latest commit/revision, please wait...",
             buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
-        val startParams: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, buildId) }
+        val startParams: Map<String, String> by lazy {
+            buildVariableService.getAllVariable(projectId, pipelineId, buildId)
+        }
         if (actionType == ActionType.START) {
             supplementModel(
                 projectId = projectId, pipelineId = pipelineId,

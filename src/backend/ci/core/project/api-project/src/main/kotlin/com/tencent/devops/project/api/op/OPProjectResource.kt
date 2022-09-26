@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
@@ -53,6 +54,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface OPProjectResource {
 
     @GET
@@ -157,4 +159,18 @@ interface OPProjectResource {
         @QueryParam(value = "isRefresh")
         isRefresh: Boolean
     ): Result<List<String>>
+
+    @ApiOperation("修改项目配置")
+    @PUT
+    @Path("/{projectId}/setProjectProperties")
+    fun setProjectProperties(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目code", required = true)
+        @PathParam("projectId")
+        projectCode: String,
+        @ApiParam(value = "项目其他配置", required = true)
+        properties: ProjectProperties
+    ): Result<Boolean>
 }

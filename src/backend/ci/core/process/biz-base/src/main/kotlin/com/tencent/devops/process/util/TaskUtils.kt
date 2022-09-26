@@ -162,7 +162,17 @@ object TaskUtils {
     /**
      * 获取当前构建取消任务ID集合的redis键
      */
-    fun getCancelTaskIdRedisKey(buildId: String, containerId: String) = "CANCEL_TASK_IDS_${buildId}_$containerId"
+    fun getCancelTaskIdRedisKey(
+        buildId: String,
+        containerId: String,
+        killFlag: Boolean = true
+    ): String {
+        return if (killFlag) {
+            "CANCEL_TASK_IDS_${buildId}_$containerId"
+        } else {
+            "CANCEL_TASK_IDS_${buildId}_${containerId}_set"
+        }
+    }
 
     /**
      * 获取当前构建插件失败自动重试的redis键

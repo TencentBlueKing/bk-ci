@@ -68,6 +68,7 @@ class MarketAtomEnvInfoDao {
                     OS_ARCH,
                     RUNTIME_VERSION,
                     DEFAULT_FLAG,
+                    FINISH_KILL_FLAG,
                     CREATOR,
                     MODIFIER
                 )
@@ -87,6 +88,7 @@ class MarketAtomEnvInfoDao {
                         atomEnvRequest.osArch,
                         atomEnvRequest.runtimeVersion,
                         atomEnvRequest.defaultFlag,
+                        atomEnvRequest.finishKillFlag,
                         atomEnvRequest.userId,
                         atomEnvRequest.userId
                     ).execute()
@@ -198,8 +200,12 @@ class MarketAtomEnvInfoDao {
         return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_ID.eq(atomId))
-            osName?.let { conditions.add(OS_NAME.eq(osName)) }
-            osArch?.let { conditions.add(OS_ARCH.eq(osArch)) }
+            if (!osName.isNullOrBlank()) {
+                conditions.add(OS_NAME.eq(osName))
+            }
+            if (!osArch.isNullOrBlank()) {
+                conditions.add(OS_ARCH.eq(osArch))
+            }
             dslContext.selectFrom(this)
                 .where(conditions)
                 .limit(1)
@@ -226,7 +232,9 @@ class MarketAtomEnvInfoDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_ID.eq(atomId))
             conditions.add(DEFAULT_FLAG.eq(true))
-            osName?.let { conditions.add(OS_NAME.eq(it)) }
+            if (!osName.isNullOrBlank()) {
+                conditions.add(OS_NAME.eq(osName))
+            }
             dslContext.selectFrom(this)
                 .where(conditions)
                 .limit(1)
@@ -268,13 +276,18 @@ class MarketAtomEnvInfoDao {
                 baseStep.set(RUNTIME_VERSION, atomEnvRequest.runtimeVersion)
             }
             atomEnvRequest.defaultFlag?.let { baseStep.set(DEFAULT_FLAG, it) }
+            atomEnvRequest.finishKillFlag?.let { baseStep.set(FINISH_KILL_FLAG, it) }
             val atomPostInfo = atomEnvRequest.atomPostInfo
             baseStep.set(POST_ENTRY_PARAM, atomPostInfo?.postEntryParam)
             baseStep.set(POST_CONDITION, atomPostInfo?.postCondition)
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_ID.eq(atomId))
-            atomEnvRequest.osName?.let { conditions.add(OS_NAME.eq(it)) }
-            atomEnvRequest.osArch?.let { conditions.add(OS_ARCH.eq(it)) }
+            if (!atomEnvRequest.osName.isNullOrBlank()) {
+                conditions.add(OS_NAME.eq(atomEnvRequest.osName))
+            }
+            if (!atomEnvRequest.osArch.isNullOrBlank()) {
+                conditions.add(OS_ARCH.eq(atomEnvRequest.osArch))
+            }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, atomEnvRequest.userId)
                 .where(conditions)
