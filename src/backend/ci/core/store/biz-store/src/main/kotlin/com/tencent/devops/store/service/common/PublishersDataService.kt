@@ -35,17 +35,43 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface PublishersDataService {
 
+    /**
+     * 创建发布者信息记录
+     */
     fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int
 
+    /**
+     * 删除发布者信息记录
+     */
     fun deletePublisherData(userId: String, publishers: List<PublishersRequest>): Int
 
+    /**
+     * 更新发布者信息记录
+     */
     fun updatePublisherData(userId: String, publishers: List<PublishersRequest>): Int
 
+    /**
+     * 创建平台信息记录
+     */
     fun createPlatformsData(userId: String, storeDockingPlatformRequests: List<StoreDockingPlatformRequest>): Int
 
+    /**
+     * 删除平台信息记录
+     */
     fun deletePlatformsData(userId: String, storeDockingPlatformRequests: List<StoreDockingPlatformRequest>): Int
 
+    /**
+     * 更新平台信息记录
+     */
     fun updatePlatformsData(userId: String, storeDockingPlatformRequests: List<StoreDockingPlatformRequest>): Int
 
+    /**
+     * 获取发布者信息
+     */
     fun getPublishers(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<PublisherInfo>>
+
+    /**
+     * 更新平台logo信息
+     */
+    fun updatePlatformsLogoInfo(userId: String, platformCode: String, logoUrl: String): Boolean
 }

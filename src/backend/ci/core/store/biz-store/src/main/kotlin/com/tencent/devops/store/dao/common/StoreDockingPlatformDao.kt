@@ -152,10 +152,9 @@ class StoreDockingPlatformDao {
     ): Int {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.batch(storeDockingPlatformRequests.map { storeDockingPlatformRequest ->
-                dslContext.update(this)
+                var step = dslContext.update(this)
                     .set(SUMMARY, storeDockingPlatformRequest.summary)
                     .set(PRINCIPAL, storeDockingPlatformRequest.principal)
-                    .set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
                     .set(PLATFORM_NAME, storeDockingPlatformRequest.platformName)
                     .set(WEBSITE, storeDockingPlatformRequest.website)
                     .set(LABELS, storeDockingPlatformRequest.labels?.joinToString(","))
@@ -163,7 +162,10 @@ class StoreDockingPlatformDao {
                     .set(MODIFIER, userId)
                     .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
                     .set(OWNERS, storeDockingPlatformRequest.owner)
-                    .where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
+                if (!storeDockingPlatformRequest.logoUrl.isNullOrBlank()) {
+                    step = step.set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
+                }
+                    step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
             }
             ).execute().size
         }
@@ -212,6 +214,24 @@ class StoreDockingPlatformDao {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
                 .fetchOne()
+        }
+    }
+
+    fun getStoreDockingPlatformByCode(dslContext: DSLContext, platformCode: String): String? {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.select(ID)
+                .from(this)
+                .where(PLATFORM_CODE.eq(platformCode))
+                .fetchOne(0, String::class.java)
+        }
+    }
+
+    fun updateStoreDockingPlatformLogoUrl(dslContext: DSLContext, id: String, logoUrl: String): Int {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.update(this)
+                .set(LOGO_URL, logoUrl)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
