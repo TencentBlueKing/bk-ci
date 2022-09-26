@@ -40,6 +40,7 @@ import com.tencent.devops.notify.ROUTE_WEWORK
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
+import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.service.WeworkService
 import com.tencent.devops.notify.wework.config.WeworkConfiguration
 import com.tencent.devops.notify.wework.pojo.AbstractSendMessageRequest
@@ -107,7 +108,7 @@ class WeworkServiceImpl(
         }
     }
 
-    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
+    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
         with(weworkNotifyTextMessage) {
             kotlin.runCatching {
                 val (toUser, toParty) =
@@ -135,6 +136,7 @@ class WeworkServiceImpl(
                 saveResult(receivers, "type:$textType\n$message", false, it.message)
             })
         }
+        return true
     }
 
     private fun doSendRequest(requestBodies: List<Optional<AbstractSendMessageRequest>>) {

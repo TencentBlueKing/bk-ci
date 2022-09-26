@@ -126,7 +126,6 @@ class ServiceNotifyResourceImpl @Autowired constructor(
             message = weworkRobotNotifyMessage.message,
             attachments = weworkRobotNotifyMessage.attachments
         )
-        weworkService.sendTextMessage(weworkNotifyTextMessage)
-        return Result(true)
+        return Result(weworkService.sendTextMessage(weworkNotifyTextMessage))
     }
 }
