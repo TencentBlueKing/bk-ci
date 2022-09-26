@@ -305,6 +305,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
     private fun checkSub(atomCode: String, projectId: String, pipelineId: String, existPipelines: HashSet<String>) {
 
         if (existPipelines.contains(pipelineId)) {
+            logger.warn("subPipeline does not allow loop calls|projectId:$projectId|pipelineId:$pipelineId")
             throw OperationException("子流水线不允许循环调用,循环流水线:projectId:$projectId,pipelineId:$pipelineId")
         }
         existPipelines.add(pipelineId)
@@ -336,7 +337,11 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
                         }
                         val msg = map["input"] as? Map<*, *> ?: return@element
                         val subPip = msg["subPip"]?.toString() ?: return@element
-                        logger.info("callPipelineStartup: supProjectId:${msg["projectId"]},parentProjectId:$projectId")
+                        logger.info(
+                            "callPipelineStartup: " +
+                                "supProjectId:${msg["projectId"]},subPipelineId:$subPip" +
+                                "parentProjectId:$projectId, parentPipelineId:$pipelineId"
+                        )
                         val subProj = msg["projectId"]?.toString()?.ifBlank { projectId } ?: projectId
                         val exist = HashSet(currentExistPipelines)
                         checkSub(atomCode, projectId = subProj, pipelineId = subPip, existPipelines = exist)
@@ -350,7 +355,8 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
     private fun needCheckSubElement(element: Element, atomCode: String): Boolean {
         return when {
             !element.isElementEnable() -> false
-            element.getAtomCode() != atomCode -> false
+            (element is MarketBuildLessAtomElement || element is MarketBuildAtomElement) &&
+                element.getAtomCode() != atomCode -> false
             element is SubPipelineCallElement && element.subPipelineId.isBlank() -> false
             else -> true
         }
