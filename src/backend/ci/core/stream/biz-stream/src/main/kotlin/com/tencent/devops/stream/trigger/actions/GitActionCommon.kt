@@ -57,7 +57,7 @@ object GitActionCommon {
         )
 
         val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
-        val repository = if (action.data.context.repoTrigger != null) {
+        val repository = if (action.checkRepoHookTrigger()) {
             TriggerBuilder.buildCodeGitForRepoRepository(action)
         } else TriggerBuilder.buildCodeGitRepository(action.data.setting)
         try {

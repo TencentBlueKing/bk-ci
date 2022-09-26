@@ -122,6 +122,25 @@ class TGitReviewActionGit(
             },
             gitProjectName = GitUtils.getProjectName(event.repository.homepage)
         )
+        this.data.context.gitDefaultBranchLatestCommitInfo = defaultBranch to latestCommit?.toGitCommit()
+        if (data.isSettingInitialized && event.reviewableId != null && event.reviewableType == "merge_request") {
+            try {
+                data.context.gitMrInfo = apiService.getMrInfo(
+                    cred = getGitCred(),
+                    gitProjectId = data.eventCommon.gitProjectId,
+                    mrId = event.reviewableId.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )?.baseInfo
+                data.context.gitMrReviewInfo = apiService.getMrReview(
+                    cred = getGitCred(),
+                    gitProjectId = data.eventCommon.gitProjectId,
+                    mrId = event.reviewableId.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )
+            } catch (e: Throwable) {
+                logger.warn("TGit review action cache mrInfo/mrReviewInfo error", e)
+            }
+        }
         return this
     }
 
