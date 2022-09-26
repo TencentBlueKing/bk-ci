@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
@@ -72,26 +73,32 @@ class ThirdPartyAgentService @Autowired constructor(
     fun queueBuild(
         agent: ThirdPartyAgent,
         thirdPartyAgentWorkspace: String,
-        event: PipelineAgentStartupEvent
+        event: PipelineAgentStartupEvent,
+        retryCount: Int = 0
     ) {
         with(event) {
-            val count = thirdPartyAgentBuildDao.add(
-                dslContext = dslContext,
-                projectId = projectId,
-                agentId = agent.agentId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
-                pipelineName = pipelineName,
-                buildNum = buildNo,
-                taskName = taskName,
-                agentIp = agent.ip,
-                nodeId = HashUtil.decodeIdToLong(agent.nodeId ?: "")
-            )
-            if (count != 1) {
-                logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}|$count)")
-                throw OperationException("Fail to add the third party agent build")
+            try {
+                val count = thirdPartyAgentBuildDao.add(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    agentId = agent.agentId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
+                    pipelineName = pipelineName,
+                    buildNum = buildNo,
+                    taskName = taskName,
+                    agentIp = agent.ip,
+                    nodeId = HashUtil.decodeIdToLong(agent.nodeId ?: "")
+                )
+            } catch (e: DeadlockLoserDataAccessException) {
+                logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
+                if (retryCount <= QUEUE_RETRY_COUNT) {
+                    queueBuild(agent, thirdPartyAgentWorkspace, event)
+                } else {
+                    throw OperationException("Fail to add the third party agent build")
+                }
             }
         }
     }
@@ -364,5 +371,7 @@ class ThirdPartyAgentService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentService::class.java)
+
+        private const val QUEUE_RETRY_COUNT = 3
     }
 }

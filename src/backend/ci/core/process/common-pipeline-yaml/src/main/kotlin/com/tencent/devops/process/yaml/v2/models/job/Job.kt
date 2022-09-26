@@ -112,6 +112,7 @@ data class RunsOn(
     @JsonProperty("agent-selector")
     val agentSelector: List<String>? = null,
     val workspace: String? = null,
+    val xcode: String? = null,
     @ApiModelProperty(name = "queue-timeout-minutes")
     @JsonProperty("queue-timeout-minutes")
     val queueTimeoutMinutes: Int? = null,

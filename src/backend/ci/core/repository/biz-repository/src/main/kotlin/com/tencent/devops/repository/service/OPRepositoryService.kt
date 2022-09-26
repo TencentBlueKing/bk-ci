@@ -44,6 +44,8 @@ class OPRepositoryService @Autowired constructor(
     private val dslContext: DSLContext
 ) {
     fun addHashId() {
+        val startTime = System.currentTimeMillis()
+        logger.info("OPRepositoryService:begin addHashId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
             1,
@@ -54,15 +56,17 @@ class OPRepositoryService @Autowired constructor(
             ThreadPoolExecutor.AbortPolicy()
         )
         threadPoolExecutor.submit {
+            logger.info("OPRepositoryService:begin addHashId threadPoolExecutor-----------")
             var offset = 0
             val limit = 1000
             try {
                 do {
                     val repoRecords = repositoryDao.getAllRepo(dslContext, limit, offset)
                     val repoSize = repoRecords?.size
+                    logger.info("repoSize:$repoSize")
                     repoRecords?.map {
                         val id = it.value1()
-                        val hashId = HashUtil.encodeLongId(it.value1())
+                        val hashId = HashUtil.encodeOtherLongId(it.value1())
                         repositoryDao.updateHashId(dslContext, id, hashId)
                     }
                     offset += limit
@@ -73,6 +77,8 @@ class OPRepositoryService @Autowired constructor(
                 threadPoolExecutor.shutdown()
             }
         }
+        logger.info("OPRepositoryService:finish addHashId-----------")
+        logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 
     companion object {

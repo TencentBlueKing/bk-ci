@@ -27,6 +27,10 @@
 
 package com.tencent.devops.common.auth
 
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.MockAuthPermissionApi
 import com.tencent.devops.common.auth.api.MockAuthProjectApi
 import com.tencent.devops.common.auth.api.MockAuthResourceApi
@@ -41,33 +45,36 @@ import com.tencent.devops.common.auth.code.MockQualityAuthServiceCode
 import com.tencent.devops.common.auth.code.MockRepoAuthServiceCode
 import com.tencent.devops.common.auth.code.MockTicketAuthServiceCode
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Configuration
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
+// @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class MockAuthAutoConfiguration {
 
     @Bean
-    @Primary
+//    @Primary
+    @ConditionalOnMissingBean(AuthTokenApi::class)
     fun authTokenApi() = MockAuthTokenApi()
 
     @Bean
-    @Primary
+//    @Primary
+    @ConditionalOnMissingBean(AuthPermissionApi::class)
     fun authPermissionApi() = MockAuthPermissionApi()
 
     @Bean
-    @Primary
+//    @Primary
+    @ConditionalOnMissingBean(AuthResourceApi::class)
     fun authResourceApi(authTokenApi: MockAuthTokenApi) = MockAuthResourceApi()
 
     @Bean
-    @Primary
+//    @Primary
+    @ConditionalOnMissingBean(AuthProjectApi::class)
     fun authProjectApi(bkAuthPermissionApi: MockAuthPermissionApi) = MockAuthProjectApi(bkAuthPermissionApi)
 
     @Bean

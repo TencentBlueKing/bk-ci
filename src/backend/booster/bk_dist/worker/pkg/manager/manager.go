@@ -12,6 +12,7 @@ package manager
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net"
 	"os"
 	"path/filepath"
@@ -30,6 +31,8 @@ import (
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/protocol"
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
 	commonUtil "github.com/Tencent/bk-ci/src/booster/common/util"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
 )
 
 // Manager manager hosts
@@ -44,6 +47,8 @@ const (
 
 	cmdCheckIntervalTime     = 100 // time.Millisecond
 	maxWaitConnectionSeconds = 600
+
+	maxCpuUsed = 90.00
 )
 
 // NewManager return Manager interface
@@ -54,6 +59,7 @@ func NewManager(conf *config.ServerConfig) (Manager, error) {
 		curjobs:     0,
 		whiteips:    make([]string, 0),
 		allowallips: false,
+		memperjob:   1024 * 1024 * 1024 * 2, // 2G
 	}
 
 	if err := o.init(); err != nil {
@@ -91,6 +97,7 @@ type tcpManager struct {
 	joblock    sync.RWMutex
 	curjobs    int
 	maxjobs    int
+	memperjob  uint64 // memory size for each job
 	maxprocess int
 
 	whiteips    []string
@@ -132,6 +139,23 @@ func (o *tcpManager) init() error {
 		}
 	}
 	blog.Infof("set max job %d", o.maxjobs)
+
+	envmemperjob := env.GetEnv(env.KeyWorkerMemPerJob)
+	if envmemperjob != "" {
+		intval, err := strconv.ParseInt(envmemperjob, 10, 64)
+		if err == nil && intval > 0 {
+			o.memperjob = uint64(intval)
+			// set o.maxjobs by o.memperjob
+			// it's maybe system memory, not docker, but harmless
+			v, err := mem.VirtualMemory()
+			if err == nil {
+				maxjobsbymem := v.Total / o.memperjob
+				o.maxjobs = int(math.Min(float64(o.maxjobs), float64(maxjobsbymem)))
+				blog.Infof("set mem per job %d,max job %d", o.memperjob, o.maxjobs)
+			}
+		}
+	}
+	blog.Infof("set mem per job %d", o.memperjob)
 
 	// init file path chan
 	o.filepathchan = make(chan string, o.maxjobs)
@@ -567,10 +591,49 @@ func (o *tcpManager) obtainChance() bool {
 	}()
 
 	if o.curjobs < o.maxjobs {
-		blog.Infof("got chance")
-		o.curjobs++
-		blog.Infof("current jobs %d", o.curjobs)
-		return true
+		// we will launch docker with 8 jobs on linux
+		if o.curjobs < int(math.Min(float64(o.maxjobs/2), 4)) {
+			blog.Infof("got chance")
+			o.curjobs++
+			blog.Infof("current jobs %d", o.curjobs)
+			return true
+		} else {
+			// check avaiable resource now
+			// it's maybe system resource, not docker, but harmless
+			v, err := mem.VirtualMemory()
+			if err == nil {
+				maybetotalused := uint64(o.curjobs) * o.memperjob
+				if maybetotalused >= v.Total {
+					blog.Infof("current total used mem:%d greater than total mem:%d", maybetotalused, v.Total)
+					return false
+				}
+
+				if v.Available < o.memperjob {
+					blog.Infof("current available mem:%d less than mem per job:%d", v.Available, o.memperjob)
+					return false
+				}
+
+				avgmem := (v.Total - v.Free) / uint64(o.curjobs)
+				if v.Available < avgmem {
+					blog.Infof("current available mem:%d less than avg mem:%d", v.Available, avgmem)
+					return false
+				}
+			}
+
+			per, err := cpu.Percent(0, false)
+			if err == nil {
+				if per[0] > maxCpuUsed {
+					blog.Infof("current cpu usage:%d over max cpu usage:%d", per[0], maxCpuUsed)
+					return false
+				}
+			}
+
+			// failed to get resource info or has enought resource, return ok
+			blog.Infof("got chance")
+			o.curjobs++
+			blog.Infof("current jobs %d", o.curjobs)
+			return true
+		}
 	}
 
 	return false

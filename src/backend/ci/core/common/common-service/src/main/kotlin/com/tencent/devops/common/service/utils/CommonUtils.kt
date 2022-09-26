@@ -204,7 +204,7 @@ object CommonUtils {
         val dataList = mutableListOf<String>()
         if (str.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*]\\s*$"))) {
             dataList.addAll(JsonUtil.to(str))
-        } else {
+        } else if (str.isNotBlank()) {
             dataList.add(str)
         }
         return dataList

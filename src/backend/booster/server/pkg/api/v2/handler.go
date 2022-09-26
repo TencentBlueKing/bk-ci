@@ -11,6 +11,7 @@ package v2
 
 import (
 	"io/ioutil"
+	"net"
 	"strings"
 
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
@@ -78,6 +79,15 @@ func SendMessage(req *restful.Request, resp *restful.Response) {
 			return
 		}
 	case MessageProject:
+		if param.ProjectID == "" {
+			ip, _, err := net.SplitHostPort(req.Request.RemoteAddr)
+			if err == nil && net.ParseIP(ip) != nil {
+				blog.Infof("send message: request from client(%s) has null project id", ip)
+			}
+			blog.Infof("send message: got null project id, not sent")
+			api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: api.ServerErrSendMessageFailed, Message: err.Error()})
+			return
+		}
 		if data, err = defaultManager.SendProjectMessage(param.ProjectID, []byte(param.Extra)); err != nil {
 			blog.Errorf("send message: send project(%s) message to engine failed, url(%s) message(%s): %v",
 				param.ProjectID, req.Request.URL.String(), param.Extra, err)
