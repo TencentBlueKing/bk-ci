@@ -32,7 +32,6 @@ import com.tencent.devops.auth.api.manager.AuthManagerApprovalResource
 import com.tencent.devops.auth.pojo.enum.ApprovalType
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WeworkRobotCustomConfig
-import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
 import com.tencent.devops.support.robot.pojo.RobotCallback
 import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
 import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
@@ -43,6 +42,7 @@ import org.w3c.dom.Document
 import org.xml.sax.InputSource
 import java.io.StringReader
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.support.util.callback.WXBizMsgCryptV2
 import javax.xml.parsers.DocumentBuilderFactory
 
 @Service
@@ -52,7 +52,7 @@ class RobotService @Autowired constructor(
     val client: Client
 ) {
     private val rototWxcpt =
-        WXBizMsgCrypt(weworkRobotCustomConfig.token, weworkRobotCustomConfig.aeskey, "")
+        WXBizMsgCryptV2(weworkRobotCustomConfig.token, weworkRobotCustomConfig.aeskey, "")
 
     /*
     * 验证geturl
