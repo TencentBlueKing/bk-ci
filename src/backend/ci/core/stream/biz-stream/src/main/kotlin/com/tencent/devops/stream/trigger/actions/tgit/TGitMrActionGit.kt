@@ -204,6 +204,11 @@ class TGitMrActionGit(
             userId = event.user.username,
             gitProjectName = GitUtils.getProjectName(event.object_attributes.target.http_url)
         )
+        return this
+    }
+
+    override fun initCacheData() {
+        val event = event()
         // 初始化setting
         if (!data.isSettingInitialized) {
             val gitCIBasicSetting = streamSettingDao.getSetting(dslContext, event.object_attributes.target_project_id)
@@ -229,7 +234,6 @@ class TGitMrActionGit(
                 logger.warn("TGit MR action cache mrInfo/mrReviewInfo error", e)
             }
         }
-        return this
     }
 
     override fun tryGetMrInfoFromCache(): TGitMrInfo? {
