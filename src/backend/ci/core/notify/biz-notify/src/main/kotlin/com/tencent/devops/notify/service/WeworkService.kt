@@ -36,5 +36,5 @@ interface WeworkService {
 
     fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage)
 
-    fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage):Boolean
+    fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean
 }
