@@ -359,20 +359,19 @@ func (m *Mgr) Release(req *v2.ParamRelease) error {
 
 // releaseOne release one resouce
 func (m *Mgr) releaseOne(req *v2.ParamRelease, r *Res) error {
-	blog.Infof("resource: try to release one dist-resource task(%s) for work(%s)", r.taskid, m.work.ID())
+	blog.Infof("resource: try to release one dist-resource task(%s) status(%s) for work(%s)",
+		r.taskid, r.status.String(), m.work.ID())
 
 	if !r.canRelease() {
 		return nil
 	}
 
-	m.reslock.Lock()
-	defer func() {
-		m.reslock.Unlock()
-		m.onResChanged()
-	}()
-
-	if m.newlyTaskID == r.taskid {
-		m.newlyTaskID = ""
+	if req == nil {
+		req = &v2.ParamRelease{
+			Success: true,
+			Message: "",
+			Extra:   "",
+		}
 	}
 
 	r.status = ResourceReleasing
@@ -380,6 +379,7 @@ func (m *Mgr) releaseOne(req *v2.ParamRelease, r *Res) error {
 	if err != nil {
 		r.status = ResourceReleaseFailed
 		go m.releaseTimer(req, r)
+
 		return err
 	}
 
@@ -488,13 +488,13 @@ func (m *Mgr) SendStats(brief bool) error {
 	_ = codec.EncJSON(message, &data)
 
 	if _, _, err := m.request("POST", m.serverHost, messageURI, data); err != nil {
-		blog.Errorf("resource: send stats to server for task(%s) work(%s) failed: %v",
-			info.TaskID(), info.WorkID(), err)
+		blog.Errorf("resource: send stats(detail %v) to server for task(%s) work(%s) failed: %v",
+			brief, info.TaskID(), info.WorkID(), err)
 		return err
 	}
 
-	blog.Infof("resource: success to send stats to server for task(%s) work(%s)",
-		info.TaskID(), info.WorkID())
+	blog.Infof("resource: success to send statsdetail %v to server for task(%s) work(%s)",
+		brief, info.TaskID(), info.WorkID())
 	return nil
 }
 
@@ -560,7 +560,15 @@ func (m *Mgr) inspectInfo(taskID string) {
 			// Once task is running or terminated, no need keep inspecting info.
 			switch info.Status {
 			case engine.TaskStatusRunning:
-				m.addRes(&info, ResourceApplySucceed)
+				// we should set ResourceApplyFailed if len(info.HostList) == 0
+				s := ResourceApplySucceed
+				if len(info.HostList) == 0 {
+					s = ResourceApplyFailed
+				}
+
+				m.clearOldInvalidRes(&info)
+				m.addRes(&info, s)
+
 				// 更新work info状态
 				m.work.Lock()
 				workinfo := m.work.Basic().Info()
@@ -569,13 +577,15 @@ func (m *Mgr) inspectInfo(taskID string) {
 				}
 				m.work.Unlock()
 
-				m.updateApplyEndStatus(true)
+				m.updateApplyEndStatus(s == ResourceApplySucceed)
 				blog.Infof("resource: success to apply resources and get host(%d): %v",
 					len(info.HostList), info.HostList)
 				return
 
 			case engine.TaskStatusFinish, engine.TaskStatusFailed:
+				m.clearOldInvalidRes(&info)
 				m.addRes(&info, ResourceApplyFailed)
+
 				// 更新work info状态
 				m.work.Lock()
 				workinfo := m.work.Basic().Info()
@@ -592,16 +602,67 @@ func (m *Mgr) inspectInfo(taskID string) {
 	}
 }
 
+// clean old resources which host list is empty, and notify server to terminate these resources
+func (m *Mgr) clearOldInvalidRes(info *v2.RespTaskInfo) error {
+	blog.Infof("resource: ready check and clean old invalid resource")
+
+	m.reslock.Lock()
+	defer m.reslock.Unlock()
+
+	if len(m.resources) == 0 {
+		return nil
+	}
+
+	needrelease := false
+	for _, r := range m.resources {
+		if r.status == ResourceInit || r.status == ResourceApplying {
+			continue
+		}
+
+		if r.taskInfo != nil && len(r.taskInfo.HostList) == 0 && r.taskid != info.TaskID {
+			needrelease = true
+		}
+	}
+
+	if !needrelease {
+		return nil
+	}
+
+	newres := []*Res{}
+	for _, r := range m.resources {
+		// do nothing with current task info, it mabye need by others
+		if r.taskid == info.TaskID {
+			newres = append(newres, r)
+			continue
+		}
+
+		if len(r.taskInfo.HostList) == 0 {
+			m.releaseOne(nil, r)
+		} else {
+			newres = append(newres, r)
+		}
+	}
+	m.resources = newres
+
+	return nil
+}
+
 func (m *Mgr) addRes(info *v2.RespTaskInfo, status Status) error {
 	if info == nil {
 		return nil
 	}
 
+	changed := false
 	m.reslock.Lock()
 	defer func() {
 		m.reslock.Unlock()
-		m.onResChanged()
+		if changed {
+			m.onResChanged()
+		}
 	}()
+
+	// send stat data with the newly taskid(resource id)
+	m.newlyTaskID = info.TaskID
 
 	for _, r := range m.resources {
 		if r.taskid == info.TaskID {
@@ -611,12 +672,31 @@ func (m *Mgr) addRes(info *v2.RespTaskInfo, status Status) error {
 				return nil
 			}
 
+			if status == ResourceApplySucceed {
+				// check whether host list changed
+				if r.taskInfo == nil {
+					changed = true
+				} else if len(info.HostList) != len(r.taskInfo.HostList) {
+					changed = true
+				} else {
+					for _, v1 := range r.taskInfo.HostList {
+						found := false
+						for _, v2 := range info.HostList {
+							if v1 == v2 {
+								found = true
+								break
+							}
+						}
+						if !found {
+							changed = true
+							break
+						}
+					}
+				}
+			}
+
 			r.status = status
 			r.taskInfo = info
-
-			if status == ResourceApplySucceed {
-				m.newlyTaskID = info.TaskID
-			}
 
 			blog.Infof("resource: add task:%s status(%s) work:%s", r.taskid, status.String(), m.work.ID())
 			return nil
@@ -631,7 +711,7 @@ func (m *Mgr) addRes(info *v2.RespTaskInfo, status Status) error {
 	})
 
 	if status == ResourceApplySucceed {
-		m.newlyTaskID = info.TaskID
+		changed = true
 	}
 
 	return nil
