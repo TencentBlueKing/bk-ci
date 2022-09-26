@@ -10,6 +10,7 @@
 package pkg
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"runtime"
@@ -88,37 +89,63 @@ func (d *Executor) runWork(fullargs []string, workdir string) (int, error) {
 
 	if len(r.Stdout) > 0 {
 		d.outputmsg = r.Stdout
+		hasNewline := bytes.HasSuffix(r.Stdout, []byte("\n"))
 		// https://docs.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
 		// 65001 means utf8, we will try convert to gbk which is not utf8
 		if charcode > 0 && charcode != 65001 {
 			// fmt.Printf("get charset code:%d\n", dcSyscall.GetConsoleCP())
 			gbk, err := dcUtil.Utf8ToGbk(r.Stdout)
 			if err == nil {
-				_, _ = fmt.Fprint(os.Stdout, string(gbk))
+				if hasNewline {
+					_, _ = fmt.Fprintf(os.Stdout, "%s", string(gbk))
+				} else {
+					_, _ = fmt.Fprintf(os.Stdout, "%s\n", string(gbk))
+				}
 			} else {
-				_, _ = fmt.Fprint(os.Stdout, string(r.Stdout))
-				// _, _ = fmt.Fprint(os.Stdout, "errro:%v\n", err)
+				if hasNewline {
+					_, _ = fmt.Fprintf(os.Stdout, "%s", string(r.Stdout))
+				} else {
+					_, _ = fmt.Fprintf(os.Stdout, "%s\n", string(r.Stdout))
+				}
+				// _, _ = fmt.Fprintf(os.Stdout, "errro:%v\n", err)
 			}
 		} else {
-			_, _ = fmt.Fprint(os.Stdout, string(r.Stdout))
+			if hasNewline {
+				_, _ = fmt.Fprintf(os.Stdout, "%s", string(r.Stdout))
+			} else {
+				_, _ = fmt.Fprintf(os.Stdout, "%s\n", string(r.Stdout))
+			}
 		}
 	}
 
 	if len(r.Stderr) > 0 {
 		d.errormsg = r.Stderr
+		hasNewline := bytes.HasSuffix(r.Stderr, []byte("\n"))
 		// https://docs.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
 		// 65001 means utf8, we will try convert to gbk which is not utf8
 		if charcode > 0 && charcode != 65001 {
 			// fmt.Printf("get charset code:%d\n", dcSyscall.GetConsoleCP())
 			gbk, err := dcUtil.Utf8ToGbk(r.Stderr)
 			if err == nil {
-				_, _ = fmt.Fprint(os.Stderr, string(gbk))
+				if hasNewline {
+					_, _ = fmt.Fprintf(os.Stderr, "%s", string(gbk))
+				} else {
+					_, _ = fmt.Fprintf(os.Stderr, "%s\n", string(gbk))
+				}
 			} else {
-				_, _ = fmt.Fprint(os.Stderr, string(r.Stderr))
+				if hasNewline {
+					_, _ = fmt.Fprintf(os.Stderr, "%s", string(r.Stderr))
+				} else {
+					_, _ = fmt.Fprintf(os.Stderr, "%s\n", string(r.Stderr))
+				}
 				// _, _ = fmt.Fprint(os.Stderr, "errro:%v\n", err)
 			}
 		} else {
-			_, _ = fmt.Fprint(os.Stderr, string(r.Stderr))
+			if hasNewline {
+				_, _ = fmt.Fprintf(os.Stderr, "%s", string(r.Stderr))
+			} else {
+				_, _ = fmt.Fprintf(os.Stderr, "%s\n", string(r.Stderr))
+			}
 		}
 	}
 
