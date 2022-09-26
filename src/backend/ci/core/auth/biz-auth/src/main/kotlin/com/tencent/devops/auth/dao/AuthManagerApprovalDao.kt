@@ -67,7 +67,7 @@ class AuthManagerApprovalDao {
                 managerId,
                 expireTime,
                 now,
-                now.plusDays(2),
+                now.plusDays(EXPIRATION_TIME_OF_APPROVAL),
                 status,
                 now,
                 now
@@ -83,5 +83,9 @@ class AuthManagerApprovalDao {
         with(TAuthManagerApproval.T_AUTH_MANAGER_APPROVAL) {
             return dslContext.deleteFrom(this).where(ID.eq(approvalId)).execute()
         }
+    }
+
+    companion object {
+        const val EXPIRATION_TIME_OF_APPROVAL = 3L
     }
 }
