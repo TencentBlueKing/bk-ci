@@ -123,6 +123,11 @@ class TGitReviewActionGit(
             gitProjectName = GitUtils.getProjectName(event.repository.homepage)
         )
         this.data.context.gitDefaultBranchLatestCommitInfo = defaultBranch to latestCommit?.toGitCommit()
+        return this
+    }
+
+    override fun initCacheData() {
+        val event = event()
         if (data.isSettingInitialized && event.reviewableId != null && event.reviewableType == "merge_request") {
             try {
                 data.context.gitMrInfo = apiService.getMrInfo(
@@ -141,7 +146,6 @@ class TGitReviewActionGit(
                 logger.warn("TGit review action cache mrInfo/mrReviewInfo error", e)
             }
         }
-        return this
     }
 
     override fun isStreamDeleteAction() = event().isDeleteEvent()

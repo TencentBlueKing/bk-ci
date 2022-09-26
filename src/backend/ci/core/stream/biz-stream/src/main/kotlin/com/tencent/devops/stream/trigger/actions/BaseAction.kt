@@ -41,6 +41,11 @@ interface BaseAction {
     fun init(): BaseAction?
 
     /**
+     * 初始化一些用于缓存的数据，主要是为了减少接口调用
+     */
+    fun initCacheData() = Unit
+
+    /**
      * 通过GIT项目唯一ID获取蓝盾项目ID
      * @param gitProjectId git项目唯一标识，为空时取action的执行项目
      */
