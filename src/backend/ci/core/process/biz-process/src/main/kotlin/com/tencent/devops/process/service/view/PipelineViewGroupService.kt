@@ -639,7 +639,7 @@ class PipelineViewGroupService @Autowired constructor(
                     updateTime = LocalDateTime.now().timestamp(),
                     creator = "admin",
                     top = true,
-                    viewType = PipelineViewType.DYNAMIC,
+                    viewType = PipelineViewType.UNCLASSIFIED,
                     pipelineCount = unclassifiedCount
                 )
             )
