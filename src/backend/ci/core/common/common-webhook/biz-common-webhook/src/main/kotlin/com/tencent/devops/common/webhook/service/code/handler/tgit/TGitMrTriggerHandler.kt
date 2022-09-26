@@ -72,6 +72,7 @@ import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
@@ -94,7 +95,8 @@ import java.util.Date
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
 class TGitMrTriggerHandler(
-    private val gitScmService: GitScmService
+    private val gitScmService: GitScmService,
+    private val eventCacheService: EventCacheService
 ) : GitHookTriggerHandler<GitMergeRequestEvent> {
 
     companion object {
@@ -198,7 +200,7 @@ class TGitMrTriggerHandler(
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
                     // 只有开启路径匹配时才查询mr change file list
-                    val mrChangeInfo = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
+                    val changeFiles = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
                         null
                     } else {
                         val mrId = if (repository is CodeGitlabRepository) {
@@ -206,15 +208,8 @@ class TGitMrTriggerHandler(
                         } else {
                             event.object_attributes.id
                         }
-                        gitScmService.getMergeRequestChangeInfo(projectId, mrId, repository)
-                    }
-                    val changeFiles = mrChangeInfo?.files?.map {
-                        if (it.deletedFile) {
-                            it.oldPath
-                        } else {
-                            it.newPath
-                        }
-                    } ?: emptyList()
+                        eventCacheService.getMergeRequestChangeInfo(projectId, mrId, repository)
+                    }?.toList() ?: emptyList()
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = pathFilterType,
@@ -346,8 +341,8 @@ class TGitMrTriggerHandler(
             event.object_attributes.id
         }
         // MR提交人
-        val mrInfo = gitScmService.getMergeRequestInfo(projectId, mrRequestId, repository)
-        val reviewers = gitScmService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)?.reviewers
+        val mrInfo = eventCacheService.getMergeRequestInfo(projectId, mrRequestId, repository)
+        val reviewers = eventCacheService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)?.reviewers
 
         return WebhookUtils.mrStartParam(
             mrInfo = mrInfo,

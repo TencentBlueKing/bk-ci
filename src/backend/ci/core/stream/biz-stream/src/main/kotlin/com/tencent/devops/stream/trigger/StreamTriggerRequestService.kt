@@ -300,7 +300,7 @@ class StreamTriggerRequestService @Autowired constructor(
                     creator = action.data.getUserId()
                 )
                 // 远程仓库触发时，主库不需要新建流水线
-                if (action.data.context.repoTrigger != null && buildPipeline.pipelineId.isBlank()) {
+                if (action.checkRepoHookTrigger() && buildPipeline.pipelineId.isBlank()) {
                     return@yamlEach
                 }
 
