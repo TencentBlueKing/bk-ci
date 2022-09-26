@@ -62,7 +62,17 @@ object GitActionCommon {
         } else TriggerBuilder.buildCodeGitRepository(action.data.setting)
         try {
             EventCacheUtil.initEventCache()
-            EventCacheUtil.putIfAbsentEventCache(repository, EventRepositoryCache())
+            val eventRepoCache = with(action.data.context) {
+                EventRepositoryCache(
+                    gitMrReviewInfo = gitMrReviewInfo,
+                    gitMrInfo = gitMrInfo,
+                    gitMrChangeFiles = changeSet,
+                    gitDefaultBranchLatestCommitInfo = gitDefaultBranchLatestCommitInfo
+                )
+            }
+            EventCacheUtil.putIfAbsentEventCache(
+                repository, eventRepoCache
+            )
             val isMatch = if (needMatch) {
                 matcher.isMatch(
                     projectId = action.data.setting.projectCode ?: "",
