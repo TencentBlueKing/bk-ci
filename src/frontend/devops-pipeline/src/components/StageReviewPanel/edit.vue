@@ -28,7 +28,7 @@
                     :external-link="false"
                     :box-shadow="false"
                     preview-background="#fff"
-                    @change="(val, render) => handleUpdateStageControl('reviewDesc', val, render)"
+                    @change="(val, render) => handleUpdateStageControl('reviewDesc', val)"
                 />
                 <!-- <vuex-textarea :placeholder="$t('stageReviewInputDescTip')" name="reviewDesc" clearable :disabled="disabled" :handle-change="handleUpdateStageControl" :value="reviewDesc"></vuex-textarea> -->
             </form-field>
@@ -163,8 +163,7 @@
                     }
                 })
             },
-            handleUpdateStageControl (name, value, a) {
-                console.log(name, value, a)
+            handleUpdateStageControl (name, value) {
                 this.setPipelineEditing(true)
                 this.handleStageChange(this.stageReviewType, {
                     ...(this.stageControl || {}),
