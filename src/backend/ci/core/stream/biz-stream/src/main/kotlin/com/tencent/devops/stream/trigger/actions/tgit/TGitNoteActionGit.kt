@@ -142,8 +142,8 @@ class TGitNoteActionGit @Autowired constructor(
                     mrId = event.mergeRequest!!.id.toString(),
                     retry = ApiRequestRetryInfo(true)
                 )
-            } catch (e: Throwable) {
-                logger.warn("TGit note action cache mrInfo/mrReviewInfo error", e)
+            } catch (ignore: Throwable) {
+                logger.warn("TGit note action cache mrInfo/mrReviewInfo error", ignore)
             }
         }
     }

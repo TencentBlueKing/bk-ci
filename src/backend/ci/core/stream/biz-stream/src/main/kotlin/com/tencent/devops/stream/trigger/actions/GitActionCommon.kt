@@ -101,7 +101,9 @@ object GitActionCommon {
             }
             return Pair(isMatch, startParam)
         } finally {
-            logger.info("git action event cache: ${JsonUtil.toJson(EventCacheUtil.getAll(), false)}")
+            if (logger.isDebugEnabled) {
+                logger.debug("git action event cache: ${JsonUtil.toJson(EventCacheUtil.getAll(), false)}")
+            }
             EventCacheUtil.remove()
         }
     }

@@ -142,8 +142,8 @@ class TGitReviewActionGit(
                     mrId = event.reviewableId.toString(),
                     retry = ApiRequestRetryInfo(true)
                 )
-            } catch (e: Throwable) {
-                logger.warn("TGit review action cache mrInfo/mrReviewInfo error", e)
+            } catch (ignore: Throwable) {
+                logger.warn("TGit review action cache mrInfo/mrReviewInfo error", ignore)
             }
         }
     }

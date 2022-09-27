@@ -286,9 +286,11 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
             return true
         } finally {
-            logger.info(
-                "webhook event all repository cache: ${JsonUtil.toJson(EventCacheUtil.getAll(), false)}"
-            )
+            if (logger.isDebugEnabled) {
+                logger.debug(
+                    "webhook event repository cache: ${JsonUtil.toJson(EventCacheUtil.getAll(), false)}"
+                )
+            }
             EventCacheUtil.remove()
             logger.info("$watcher")
         }
