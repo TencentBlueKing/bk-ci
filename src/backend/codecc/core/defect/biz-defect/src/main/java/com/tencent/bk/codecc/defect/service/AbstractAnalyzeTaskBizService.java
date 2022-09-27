@@ -234,7 +234,7 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
                 && uploadTaskLogStepVO.getFlag() == ComConstants.StepFlag.SUCC.value())
         {
             GrayTaskStatVO grayTaskStatVO = null;
-            LintStatisticEntity lintStatisticEntity = lintStatisticRepository.findByTaskIdAndToolNameAndBuildId(
+            LintStatisticEntity lintStatisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(
                     taskLogEntity.getTaskId(), taskLogEntity.getToolName(), taskLogEntity.getBuildId());
             if (null != lintStatisticEntity && StringUtils.isNotBlank(lintStatisticEntity.getEntityId()))
             {

@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcTy
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
+import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
 import com.tencent.devops.process.yaml.v2.models.Resources
@@ -117,6 +118,7 @@ object TXStreamDispatchUtils {
 
         val poolName = EnvUtils.parseEnv(job.runsOn.poolName, context ?: mapOf())
         val workspace = EnvUtils.parseEnv(job.runsOn.workspace, context ?: mapOf())
+        val xcode = EnvUtils.parseEnv(job.runsOn.xcode, context ?: mapOf())
 
         // 第三方构建机
         if (job.runsOn.selfHosted == true) {
@@ -131,10 +133,19 @@ object TXStreamDispatchUtils {
 
         // macos构建机
         if (poolName.startsWith("macos")) {
+
             return MacOSDispatchType(
-                macOSEvn = "Catalina10.15.4:12.2",
-                systemVersion = "Catalina10.15.4",
-                xcodeVersion = "12.2"
+                macOSEvn = "${poolName.removePrefix("macos-")}:$xcode",
+                systemVersion = poolName.removePrefix("macos-"),
+                xcodeVersion = xcode
+            )
+        }
+
+        // windows公共构建机
+        if (poolName.startsWith("windows")) {
+            return WindowsDispatchType(
+                env = "",
+                systemVersion = poolName
             )
         }
 
@@ -334,15 +345,14 @@ object TXStreamDispatchUtils {
                     val gitProjectInfo =
                         client.getScm(ServiceGitCiResource::class).getGitCodeProjectInfo(repoNameAndPool[0]).data
                     val result = "git_${gitProjectInfo!!.id}@${repoNameAndPool[1]}"
-                    logger.info("Get envName from Resource.pools success. envName: $result")
                     return result
                 } catch (e: Exception) {
-                    logger.error("Get projectInfo from git failed, envName: $poolName. exception:", e)
+                    logger.warn("Get projectInfo from git failed, pools: $pools envName: $poolName. exception:", e)
                     return poolName
                 }
             }
         }
-        logger.info("Get envName from Resource.pools no match. envName: $poolName")
+        logger.info("Get envName from Resource.pools no match.pools: $pools envName: $poolName")
         return poolName
     }
 }

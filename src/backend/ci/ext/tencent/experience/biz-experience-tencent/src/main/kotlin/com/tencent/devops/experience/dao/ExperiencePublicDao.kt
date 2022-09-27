@@ -139,7 +139,8 @@ class ExperiencePublicDao {
     fun listLikeExperienceName(
         dslContext: DSLContext,
         experienceName: String,
-        platform: String?
+        platform: String?,
+        projectId: String?
     ): Result<TExperiencePublicRecord> {
         val now = LocalDateTime.now()
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -149,6 +150,9 @@ class ExperiencePublicDao {
                 .and(EXPERIENCE_NAME.like("%$experienceName%"))
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .let {
+                    if (projectId == null) it else it.and(PROJECT_ID.eq(projectId))
                 }
                 .orderBy(UPDATE_TIME.desc())
                 .limit(100)
@@ -437,5 +441,24 @@ class ExperiencePublicDao {
             .orderBy(p.UPDATE_TIME.desc())
             .limit(limit)
             .fetch(p.RECORD_ID)
+    }
+
+    fun listExperienceByProjectId(
+        dslContext: DSLContext,
+        platform: String?,
+        projectId: String
+    ): Result<TExperiencePublicRecord> {
+        val now = LocalDateTime.now()
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .and(PROJECT_ID.eq(projectId))
+                .let {
+                    if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .orderBy(DOWNLOAD_TIME.desc())
+                .fetch()
+        }
     }
 }

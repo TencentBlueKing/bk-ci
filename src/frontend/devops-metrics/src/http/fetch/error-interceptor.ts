@@ -13,8 +13,9 @@ export default (error, config) => {
     case 401:
       authModel.showLoginModal(response);
   }
+
   // 全局捕获错误给出提示
-  if (config.globalError) {
+  if (config.globalError && !document.getElementsByClassName('bk-message').length) {
     Message({ theme: 'error', message });
   }
   return Promise.reject(error);

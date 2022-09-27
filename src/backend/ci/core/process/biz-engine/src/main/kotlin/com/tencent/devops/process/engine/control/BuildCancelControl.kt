@@ -121,13 +121,15 @@ class BuildCancelControl @Autowired constructor(
                 setBuildCancelActionRedisFlag(buildId)
             }
             cancelAllPendingTask(event = event, model = model)
-            // 修改detail model
-            pipelineBuildDetailService.buildCancel(
-                projectId = event.projectId,
-                buildId = event.buildId,
-                buildStatus = event.status,
-                cancelUser = event.userId
-            )
+            if (event.actionType == ActionType.TERMINATE) {
+                // 修改detail model
+                pipelineBuildDetailService.buildCancel(
+                    projectId = event.projectId,
+                    buildId = event.buildId,
+                    buildStatus = event.status,
+                    cancelUser = event.userId
+                )
+            }
 
             // 排队的则不再获取Pending Stage，防止Final Stage被执行
             val pendingStage: PipelineBuildStage? =
@@ -139,7 +141,12 @@ class BuildCancelControl @Autowired constructor(
 
             if (pendingStage != null) {
                 if (pendingStage.status.isPause()) { // 处于审核暂停的Stage需要走取消Stage逻辑
-                    pipelineStageService.cancelStageBySystem(event.userId, pendingStage, timeout = false)
+                    pipelineStageService.cancelStageBySystem(
+                        userId = event.userId,
+                        buildInfo = buildInfo,
+                        buildStage = pendingStage,
+                        timeout = false
+                    )
                 } else {
                     pendingStage.dispatchEvent(event)
                 }
@@ -197,9 +204,16 @@ class BuildCancelControl @Autowired constructor(
     @Suppress("ALL")
     private fun cancelAllPendingTask(event: PipelineBuildCancelEvent, model: Model) {
         val projectId = event.projectId
+        val pipelineId = event.pipelineId
         val buildId = event.buildId
-        val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(projectId, buildId) }
-        val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, buildId) }
+        val variables: Map<String, String> by lazy {
+            buildVariableService.getAllVariable(
+                projectId,
+                pipelineId,
+                buildId
+            )
+        }
+        val executeCount: Int by lazy { buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId) }
         val stages = model.stages
         stages.forEachIndexed nextStage@{ index, stage ->
             if (stage.status == null || index == 0) { // Trigger 和 未启动的忽略

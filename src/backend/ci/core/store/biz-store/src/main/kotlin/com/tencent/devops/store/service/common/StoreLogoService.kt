@@ -47,7 +47,7 @@ interface StoreLogoService {
     fun uploadStoreLogo(
         userId: String,
         contentLength: Long,
-        sizeLimitiFlag: Boolean? = true,
+        sizeLimitFlag: Boolean? = true,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<StoreLogoInfo?>

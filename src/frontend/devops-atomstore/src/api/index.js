@@ -103,5 +103,8 @@ export default {
     },
     requestAtomVersionDetail (code) {
         return vue.$ajax.get(`${prefix}/user/market/atoms/${code}/showVersionInfo`)
+    },
+    requestAtomErrorCode (storeType, storeCode) {
+        return vue.$ajax.get(`${prefix}/user/store/statistic/types/${storeType}/codes/${storeCode}/errorCode`)
     }
 }

@@ -1,11 +1,14 @@
 package com.tencent.devops.stream.resources.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.OpenapiTriggerReq
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
@@ -17,6 +20,7 @@ import com.tencent.devops.stream.service.StreamYamlService
 import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.trigger.OpenApiTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -25,8 +29,13 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
     private val permissionService: StreamPermissionService,
     private val streamScmService: StreamScmService,
     private val streamGitTokenService: StreamGitTokenService,
+    private val manualTriggerService: ManualTriggerService,
     private val streamYamlService: StreamYamlService
 ) : ServiceStreamTriggerResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceStreamTriggerResourceImpl::class.java)
+    }
 
     override fun triggerStartup(
         userId: String,
@@ -56,16 +65,52 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
         return Result(openApiTriggerService.triggerBuild(userId, pipelineId, new))
     }
 
+    override fun getManualTriggerInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        commitId: String?
+    ): Result<ManualTriggerInfo> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
+        try {
+            return Result(
+                manualTriggerService.getManualTriggerInfo(
+                    userId = userId,
+                    pipelineId = pipelineId,
+                    projectId = projectId,
+                    branchName = branchName,
+                    commitId = commitId
+                )
+            )
+        } catch (e: ErrorCodeException) {
+            return Result(
+                status = e.statusCode,
+                message = e.defaultMessage
+            )
+        } catch (e: Exception) {
+            return Result(
+                status = ErrorCodeEnum.MANUAL_TRIGGER_YAML_INVALID.errorCode,
+                message = "Invalid yaml: ${e.message}"
+            )
+        }
+    }
+
     override fun openapiTrigger(
         userId: String,
         projectId: String,
         pipelineId: String,
         triggerBuildReq: OpenapiTriggerReq
     ): Result<TriggerBuildResult> {
+        logger.info("STREAM_TRIGGER_SERVICE|openapiTrigger|$userId|$projectId|$pipelineId|$triggerBuildReq")
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkStreamAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
         return with(triggerBuildReq) {
+            val openapiInput = inputs?.toMutableMap()
+            val checkPipelineTrigger = openapiInput?.remove("ThisIsSubPipelineExecStream", "")
             Result(
                 openApiTriggerService.triggerBuild(
                     userId, pipelineId,
@@ -82,7 +127,8 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                         commitId = commitId,
                         payload = null,
                         eventType = null,
-                        inputs = ManualTriggerService.parseInputs(inputs)
+                        inputs = ManualTriggerService.parseInputs(openapiInput),
+                        checkPipelineTrigger = checkPipelineTrigger ?: false
                     )
                 )
             )

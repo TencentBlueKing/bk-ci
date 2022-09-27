@@ -27,11 +27,13 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.tgit
 
+import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitMrInfo
 
 data class TGitMrInfo(
     override val mergeStatus: String,
-    val baseCommit: String?
+    val baseCommit: String?,
+    val baseInfo: GitMrInfo? = null
 ) : StreamGitMrInfo
 
 enum class TGitMrStatus(val value: String) {

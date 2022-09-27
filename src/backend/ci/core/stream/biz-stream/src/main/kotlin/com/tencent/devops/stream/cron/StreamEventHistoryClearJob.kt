@@ -30,6 +30,7 @@ package com.tencent.devops.stream.cron
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.config.StreamCronConfig
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -37,6 +38,7 @@ import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.dao.StreamUserMessageDao
 import com.tencent.devops.stream.pojo.message.UserMessageType
 import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -61,7 +63,8 @@ class StreamEventHistoryClearJob @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val streamUserMessageDao: StreamUserMessageDao,
-    private val streamBasicSettingService: StreamBasicSettingService
+    private val streamBasicSettingService: StreamBasicSettingService,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamEventHistoryClearJob::class.java)
@@ -352,7 +355,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
                     gitRequestEventNotBuildDao.deleteByEventId(context, gitProjectId, eventId)
                     streamUserMessageDao.deleteByMessageId(
                         context,
-                        "git_$gitProjectId",
+                        GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType()),
                         eventId.toString(),
                         UserMessageType.REQUEST
                     )

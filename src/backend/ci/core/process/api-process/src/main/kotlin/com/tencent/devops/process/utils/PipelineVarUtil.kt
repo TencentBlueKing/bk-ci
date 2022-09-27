@@ -58,6 +58,13 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_OWNER
@@ -67,13 +74,6 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_COMMENT
@@ -87,6 +87,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANC
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 
+@Suppress("TooManyFunctions")
 object PipelineVarUtil {
 
     /**
@@ -153,6 +154,7 @@ object PipelineVarUtil {
         "pipeline.start.pipeline.user.id" to PIPELINE_START_PIPELINE_USER_ID,
         "git_mr_number" to GIT_MR_NUMBER,
         "github_pr_number" to GITHUB_PR_NUMBER,
+        "project.name" to PROJECT_NAME,
         "pipeline.build.id" to PIPELINE_BUILD_ID,
         "pipeline.job.id" to PIPELINE_VMSEQ_ID,
         "pipeline.task.id" to PIPELINE_ELEMENT_ID,
@@ -315,7 +317,6 @@ object PipelineVarUtil {
                 }
                 // 已经存在从新变量转化过来的旧变量，则不覆盖，放弃
                 if (!allVars.containsKey(it.key) || it.key == "BuildNo") {
-                    // 不要问，问就是不知道，怒了，这个类必须在github上消失，内部版不管了
                     allVars[it.key] = it.value
                 }
             }
@@ -344,7 +345,7 @@ object PipelineVarUtil {
             // 如果新旧key同时存在，则保留原value
             if (varMaps[it.key] != null && varMaps[it.value] == null) {
                 varMaps[it.value] = varMaps[it.key]!!
-                if (replace && it.key != "BuildNo") { // 不要问，问就是不知道，怒了，这个类必须在github上消失，内部版不管了
+                if (replace && it.key != "BuildNo") {
                     varMaps.remove(it.key)
                 }
             }

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.service.BuildVariableService
@@ -43,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildPipelineResourceImpl @Autowired constructor(
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
+    private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService
 ) : BuildPipelineResource {
     override fun getPipelineNameByIds(projectId: String, pipelineIds: Set<String>): Result<Map<String, String>> {
@@ -60,7 +62,7 @@ class BuildPipelineResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info("the method of being done is: getHistoryBuild")
-        val userId = buildVariableService.getVariable(projectId, currentBuildId, "pipeline.start.user.id")
+        val userId = buildVariableService.getVariable(projectId, pipelineId, currentBuildId, "pipeline.start.user.id")
         val result = pipelineBuildFacadeService.getHistoryBuild(
             userId = userId,
             projectId = projectId,
@@ -72,9 +74,20 @@ class BuildPipelineResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun list(currentBuildId: String, projectId: String, pipelineIdListString: String?): Result<List<Pipeline>> {
+    override fun list(
+        currentBuildId: String,
+        projectId: String,
+        pipelineIdListString: String?
+    ): Result<List<Pipeline>> {
         logger.info("the method of being done is: list")
-        val userId = buildVariableService.getVariable(projectId, currentBuildId, "pipeline.start.user.id")!!
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, currentBuildId)
+            ?: return Result(emptyList())
+        val userId = buildVariableService.getVariable(
+            projectId = projectId,
+            pipelineId = buildInfo.pipelineId,
+            buildId = currentBuildId,
+            varName = "pipeline.start.user.id"
+        )!!
         val pipelineIdList = pipelineIdListString?.split(",")
         return Result(pipelineListFacadeService.listPipelineInfo(
             userId = userId, projectId = projectId, pipelineIdList = pipelineIdList

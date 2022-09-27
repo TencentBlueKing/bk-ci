@@ -31,19 +31,21 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
@@ -83,6 +85,9 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
 
     @Autowired
     lateinit var pipelineBuildService: PipelineBuildService
+
+    @Autowired
+    lateinit var pipelineRuntimeService: PipelineRuntimeService
 
     @Autowired
     lateinit var pipelineBuildTaskDao: PipelineBuildTaskDao
@@ -129,15 +134,17 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         val fixProjectId = callProjectId.ifBlank { projectId }
 
         // 通过 runVariables获取 userId 和 channelCode
-        val runVariables = buildVariableService.getAllVariable(projectId, buildId)
+        val runVariables = buildVariableService.getAllVariable(projectId, parentPipelineId, buildId)
         val userId =
             runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)]
-            ?: "null"
+                ?: "null"
         val triggerUser =
-            runVariables[PIPELINE_START_USER_NAME] ?: runVariables[PipelineVarUtil.newVarToOldVar(
-                PIPELINE_START_USER_NAME
-            )]
-            ?: userId
+            runVariables[PIPELINE_START_USER_NAME] ?: runVariables[
+                PipelineVarUtil.newVarToOldVar(
+                    PIPELINE_START_USER_NAME
+                )
+            ]
+                ?: userId
 
         logger.info(
             "[$buildId]|callPipelineStartup|$userId|$triggerUser|$fixProjectId|$callProjectId" +
@@ -298,7 +305,8 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
     private fun checkSub(atomCode: String, projectId: String, pipelineId: String, existPipelines: HashSet<String>) {
 
         if (existPipelines.contains(pipelineId)) {
-            throw OperationException("子流水线不允许循环调用")
+            logger.warn("subPipeline does not allow loop calls|projectId:$projectId|pipelineId:$pipelineId")
+            throw OperationException("子流水线不允许循环调用,循环流水线:projectId:$projectId,pipelineId:$pipelineId")
         }
         existPipelines.add(pipelineId)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
@@ -312,39 +320,45 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
                 return@stage
             }
             stage.containers.forEach container@{ container ->
-                if (container !is NormalContainer) {
-                    // 只在无构建环境中
-                    return@container
-                }
-
                 container.elements.forEach element@{ element ->
-                    // 只能是无构建环境插件
-                    if (element !is MarketBuildLessAtomElement && element !is SubPipelineCallElement) {
-                        return@element
-                    }
-                    if (element is MarketBuildLessAtomElement && element.getAtomCode() != atomCode) {
-                        return@element
-                    }
-                    if (element is SubPipelineCallElement && element.subPipelineId.isBlank()) {
+                    if (!needCheckSubElement(element, atomCode)) {
                         return@element
                     }
 
-                    if (element is MarketBuildLessAtomElement) {
-                        val map = element.data
+                    if (element is SubPipelineCallElement) {
+                        val exist = HashSet(currentExistPipelines)
+                        checkSub(atomCode, projectId, pipelineId = element.subPipelineId, existPipelines = exist)
+                        existPipelines.addAll(exist)
+                    } else {
+                        val map = when (element) {
+                            is MarketBuildLessAtomElement -> element.data
+                            is MarketBuildAtomElement -> element.data
+                            else -> return@element
+                        }
                         val msg = map["input"] as? Map<*, *> ?: return@element
                         val subPip = msg["subPip"]?.toString() ?: return@element
-                        logger.info("callPipelineStartup: ${msg["projectId"]} $projectId")
+                        logger.info(
+                            "callPipelineStartup|" +
+                                "supProjectId:${msg["projectId"]},subPipelineId:$subPip,subElementId:${element.id}," +
+                                "parentProjectId:$projectId, parentPipelineId:$pipelineId"
+                        )
                         val subProj = msg["projectId"]?.toString()?.ifBlank { projectId } ?: projectId
                         val exist = HashSet(currentExistPipelines)
                         checkSub(atomCode, projectId = subProj, pipelineId = subPip, existPipelines = exist)
                         existPipelines.addAll(exist)
-                    } else if (element is SubPipelineCallElement) {
-                        val exist = HashSet(currentExistPipelines)
-                        checkSub(atomCode, projectId, pipelineId = element.subPipelineId, existPipelines = exist)
-                        existPipelines.addAll(exist)
                     }
                 }
             }
+        }
+    }
+
+    private fun needCheckSubElement(element: Element, atomCode: String): Boolean {
+        return when {
+            !element.isElementEnable() -> false
+            (element is MarketBuildLessAtomElement || element is MarketBuildAtomElement) &&
+                element.getAtomCode() != atomCode -> false
+            element is SubPipelineCallElement && element.subPipelineId.isBlank() -> false
+            else -> true
         }
     }
 
@@ -443,7 +457,9 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
 
         val subBuildId = task.subBuildId ?: return Result(emptyMap())
         val subProjectId = task.subProjectId ?: return Result(emptyMap())
-        return Result(buildVariableService.getAllVariable(subProjectId, subBuildId))
+        val subPipelineId = pipelineRuntimeService.getBuildInfo(subProjectId, subBuildId)?.pipelineId
+            ?: return Result(emptyMap())
+        return Result(buildVariableService.getAllVariable(subProjectId, subPipelineId, subBuildId))
     }
 
     fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {

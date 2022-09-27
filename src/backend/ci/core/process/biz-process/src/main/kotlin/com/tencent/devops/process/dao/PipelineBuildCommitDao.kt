@@ -23,7 +23,8 @@ class PipelineBuildCommitDao {
         eventType: String,
         commitTime: LocalDateTime,
         mrId: String,
-        channel: String
+        channel: String,
+        action: String
     ) {
         with(TPipelineBuildCommits.T_PIPELINE_BUILD_COMMITS) {
             dslContext.insertInto(
@@ -41,7 +42,8 @@ class PipelineBuildCommitDao {
                 EVENT_TYPE,
                 COMMIT_TIME,
                 CREATE_TIME,
-                CHANNEL
+                CHANNEL,
+                ACTION
             )
                 .values(
                     id,
@@ -57,7 +59,8 @@ class PipelineBuildCommitDao {
                     eventType,
                     commitTime,
                     LocalDateTime.now(),
-                    channel
+                    channel,
+                    action
                 ).execute()
         }
     }

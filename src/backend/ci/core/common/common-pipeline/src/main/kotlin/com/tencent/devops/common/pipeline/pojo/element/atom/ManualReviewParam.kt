@@ -69,7 +69,7 @@ data class ManualReviewParam(
             EnvUtils.parseEnv(variableOption, variables).let {
                 val optionList = try {
                     JsonUtil.to<List<Any>>(it)
-                } catch (e: Throwable) {
+                } catch (ignore: Throwable) {
                     emptyList()
                 }
                 optionList.map { item -> ManualReviewParamPair(item.toString(), item.toString()) }

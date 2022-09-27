@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.parsers
 
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.config.StreamPreTriggerConfig
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamOauthService
@@ -43,7 +44,8 @@ class TXPreTrigger @Autowired constructor(
     private val config: StreamPreTriggerConfig,
     private val scmService: StreamScmService,
     private val streamOauthService: StreamOauthService,
-    private val gitBasicSettingService: StreamBasicSettingService
+    private val gitBasicSettingService: StreamBasicSettingService,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TXPreTrigger::class.java)
@@ -79,7 +81,7 @@ class TXPreTrigger @Autowired constructor(
         try {
             gitBasicSettingService.initStreamConf(
                 userId = realUser,
-                projectId = GitCommonUtils.getCiProjectId(event.project_id),
+                projectId = GitCommonUtils.getCiProjectId(event.project_id, streamGitConfig.getScmType()),
                 gitProjectId = event.project_id,
                 enabled = true
             )

@@ -107,7 +107,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         val repoName = BkRepoUtils.getRepoName(fileType)
         return if (logo == true) {
             defaultBkRepoClient.uploadLocalFile(
-                userId = userId,
+                userId = BKREPO_DEFAULT_USER,
                 projectId = BKREPO_STORE_PROJECT_ID,
                 repoName = REPO_NAME_STATIC,
                 path = destPath,

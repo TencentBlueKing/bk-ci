@@ -20,14 +20,14 @@ function getServiceName()
   echo "devops_agent_"${agent_id}
 }
 
-function unzip_jre()
+function unzip_jdk()
 {
-  echo "start unzipping jre package"
-  if [[ -d "jre" ]]; then
-    echo "jre already exists, skip unzip"
+  echo "start unzipping jdk package"
+  if [[ -d "jdk" ]]; then
+    echo "jdk already exists, skip unzip"
     return
   fi
-  unzip -q -o jre.zip -d jre
+  unzip -q -o jre.zip -d jdk
 }
 
 exists()
@@ -159,7 +159,7 @@ if [[ ! -f "agent.zip" ]]; then
   unzip -o agent.zip
 fi
 
-unzip_jre
+unzip_jdk
 
 os=`uname`
 arch1=`uname -m`
@@ -167,7 +167,7 @@ echo "OS: $os"
 echo "ARCH: ${arch1}"
 
 echo "check java version"
-jre/bin/java -version
+jdk/bin/java -version
 
 echo "check and write ssh config"
 writeSSHConfig

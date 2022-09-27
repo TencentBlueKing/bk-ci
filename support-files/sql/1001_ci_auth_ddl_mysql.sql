@@ -127,4 +127,17 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_USER_BLACKLIST` (
    KEY `bk_userId` (`USER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `T_AUTH_USER_INFO`  (
+   `ID` int NOT NULL AUTO_INCREMENT,
+   `userId` varchar(255) NOT NULL COMMENT '用户ID',
+   `email` varchar(255) NULL COMMENT '邮箱',
+   `phone` varchar(32) NULL COMMENT '手机号',
+   `create_time` datetime NOT NULL COMMENT '注册时间',
+   `user_type` int NOT NULL COMMENT '用户类型 0.页面注册 1.GitHub 2.Gitlab',
+   `last_login_time` datetime NULL COMMENT '最后登陆时间',
+  `user_status` int NOT NULL COMMENT '用户状态,0--正常,1--冻结',
+   PRIMARY KEY (`ID`),
+   UNIQUE INDEX `bk_user`(`userId`, `user_type`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='账号信息表';
+
 SET FOREIGN_KEY_CHECKS = 1;
