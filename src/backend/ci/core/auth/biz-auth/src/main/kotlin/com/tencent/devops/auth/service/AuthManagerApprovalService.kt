@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
+@SuppressWarnings("ALL")
 class AuthManagerApprovalService @Autowired constructor(
     val dslContext: DSLContext,
     val authManagerApprovalDao: AuthManagerApprovalDao,
