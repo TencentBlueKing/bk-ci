@@ -122,7 +122,30 @@ class TGitNoteActionGit @Autowired constructor(
             userId = event.user.username,
             gitProjectName = GitUtils.getProjectName(event.repository.homepage)
         )
+        this.data.context.gitDefaultBranchLatestCommitInfo = defaultBranch to latestCommit?.toGitCommit()
         return this
+    }
+
+    override fun initCacheData() {
+        val event = event()
+        if (data.isSettingInitialized && event.mergeRequest != null) {
+            try {
+                data.context.gitMrInfo = apiService.getMrInfo(
+                    cred = getGitCred(),
+                    gitProjectId = data.eventCommon.gitProjectId,
+                    mrId = event.mergeRequest!!.id.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )?.baseInfo
+                data.context.gitMrReviewInfo = apiService.getMrReview(
+                    cred = getGitCred(),
+                    gitProjectId = event.mergeRequest!!.target_project_id.toString(),
+                    mrId = event.mergeRequest!!.id.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )
+            } catch (ignore: Throwable) {
+                logger.warn("TGit note action cache mrInfo/mrReviewInfo error", ignore)
+            }
+        }
     }
 
     override fun isStreamDeleteAction() = event().isDeleteEvent()

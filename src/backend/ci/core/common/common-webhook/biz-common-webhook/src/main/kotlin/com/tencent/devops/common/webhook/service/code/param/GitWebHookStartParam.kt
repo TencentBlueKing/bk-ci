@@ -44,17 +44,17 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_AUTH_USE
 import com.tencent.devops.common.webhook.pojo.code.MATCH_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.service.code.GitScmService
-import com.tencent.devops.repository.pojo.CodeGitRepository
-import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class GitWebHookStartParam @Autowired constructor(
-    private val gitScmService: GitScmService
+    private val eventCacheService: EventCacheService
 ) : ScmWebhookStartParams<CodeGitWebHookTriggerElement> {
 
     override fun elementClass(): Class<CodeGitWebHookTriggerElement> {
@@ -88,7 +88,7 @@ class GitWebHookStartParam @Autowired constructor(
             if (repo is CodeGitRepository && repo.authType == RepoAuthType.OAUTH) {
                 repo.userName
             } else {
-                gitScmService.getRepoAuthUser(projectId = projectId, repo = repo)
+                eventCacheService.getRepoAuthUser(projectId = projectId, repo = repo)
             }
         startParams.putAll(
             matcher.retrieveParams(

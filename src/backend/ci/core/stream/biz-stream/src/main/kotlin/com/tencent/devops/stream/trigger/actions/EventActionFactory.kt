@@ -197,6 +197,8 @@ class EventActionFactory @Autowired constructor(
             }
             is GitMergeRequestEvent -> {
                 val tGitMrAction = TGitMrActionGit(
+                    dslContext = dslContext,
+                    streamSettingDao = basicSettingDao,
                     apiService = tGitApiService,
                     mrConflictCheck = mrConflictCheck,
                     pipelineDelete = pipelineDelete,
