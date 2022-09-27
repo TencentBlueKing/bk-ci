@@ -68,5 +68,7 @@ data class ModelDetail(
     @ApiModelProperty("最近修改人", required = true)
     val lastModifyUser: String?,
     @ApiModelProperty("执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
-    val executeTime: Long = 0
+    val executeTime: Long = 0,
+    @ApiModelProperty("触发审核人列表", required = false)
+    val triggerReviewers: List<String>? = null
 )

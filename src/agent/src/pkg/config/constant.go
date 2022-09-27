@@ -66,6 +66,8 @@ const (
 	UpgraderFileServerMacOs   = "upgrader_macos"
 
 	WorkAgentFile = "worker-agent.jar"
+
+	JdkClientFile = "jdk.zip"
 )
 
 // Auth Header

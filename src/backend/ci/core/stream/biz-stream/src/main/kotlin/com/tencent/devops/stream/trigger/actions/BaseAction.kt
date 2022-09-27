@@ -1,5 +1,6 @@
 package com.tencent.devops.stream.trigger.actions
 
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
@@ -11,6 +12,7 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
+import com.tencent.devops.stream.pojo.ChangeYamlList
 import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -42,6 +44,13 @@ interface BaseAction {
      * @param gitProjectId git项目唯一标识，为空时取action的执行项目
      */
     fun getProjectCode(gitProjectId: String? = null): String
+
+    /**
+     *  由于API接口所需参数不同,所以区分
+     *  TGIT -> 接口需要 git project id
+     *  Github -> 接口需要 git project name
+     */
+    fun getGitProjectIdOrName(gitProjectId: String? = null): String
 
     /**
      * 获取调用当前git平台信息的cred，可能会请求Git api,所以放到action
@@ -144,8 +153,25 @@ interface BaseAction {
 
     fun needAddWebhookParams() = false
 
-    fun updateLastBranch(
+    fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
-        branch: String
+        branch: String?,
+        displayName: String?
     )
+
+    /**
+     * 启动类型
+     */
+    fun getStartType(): StartType
+
+    /**
+     *  fork 库触发需要审核，提供审核人
+     *  返回空表示不属于fork库触发或是有权限触发
+     */
+    fun forkMrNeedReviewers() = emptyList<String>()
+
+    /**
+     *  fork 库触发审核时，提供yaml文件跳转链接
+     */
+    fun forkMrYamlList() = emptyList<ChangeYamlList>()
 }

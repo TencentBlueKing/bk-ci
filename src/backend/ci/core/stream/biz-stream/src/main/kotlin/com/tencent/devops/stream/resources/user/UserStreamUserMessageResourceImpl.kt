@@ -64,11 +64,11 @@ class UserStreamUserMessageResourceImpl @Autowired constructor(
         return Result(data = streamUserMessageService.getNoReadMessageCount(projectId, userId))
     }
 
-    override fun readMessage(userId: String, id: Int, projectId: String?): Result<Boolean> {
-        return Result(streamUserMessageService.readMessage(userId = userId, id = id, projectId = projectId))
+    override fun readMessage(userId: String, id: Int, projectCode: String?): Result<Boolean> {
+        return Result(streamUserMessageService.readMessage(userId = userId, id = id, projectCode = projectCode))
     }
 
-    override fun readAllMessages(userId: String, projectId: String?): Result<Boolean> {
-        return Result(streamUserMessageService.readAllMessage(projectId, userId = userId))
+    override fun readAllMessages(userId: String, projectCode: String?): Result<Boolean> {
+        return Result(streamUserMessageService.readAllMessage(projectCode, userId = userId))
     }
 }

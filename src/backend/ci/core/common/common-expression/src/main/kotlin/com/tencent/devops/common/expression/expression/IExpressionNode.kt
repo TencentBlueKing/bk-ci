@@ -28,6 +28,7 @@
 package com.tencent.devops.common.expression.expression
 
 import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
+import com.tencent.devops.common.expression.SubNameValueEvaluateResult
 
 interface IExpressionNode {
     fun evaluate(
@@ -47,12 +48,11 @@ interface IExpressionNode {
      *
      * 如果不包含
      * * 直接计算
-     * @return 返回 <值，是否完全替换完成>
      */
     fun subNameValueEvaluate(
         trace: ITraceWriter?,
         state: Any?,
         options: EvaluationOptions?,
         subInfo: SubNameValueEvaluateInfo
-    ): Pair<String, Boolean>
+    ): SubNameValueEvaluateResult
 }

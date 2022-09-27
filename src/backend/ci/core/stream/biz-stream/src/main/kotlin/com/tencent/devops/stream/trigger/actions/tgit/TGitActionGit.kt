@@ -30,6 +30,14 @@ abstract class TGitActionGit(
         }
     }
 
+    /**
+     * 提供拿取gitProjectId的公共方法
+     * 因为会存在跨库触发导致的event的gitProjectId和触发的不一致的问题
+     * 所以会优先拿取pipeline的gitProjectId
+     */
+    override fun getGitProjectIdOrName(gitProjectId: String?) =
+        gitProjectId ?: data.context.pipeline?.gitProjectId ?: data.eventCommon.gitProjectId
+
     override fun getGitCred(personToken: String?): TGitCred {
         if (personToken != null) {
             return TGitCred(
@@ -87,9 +95,13 @@ abstract class TGitActionGit(
             } else {
                 false
             },
-            reportData = reportData
+            reportData = reportData,
+            addCommitCheck = api::addCommitCheck
         )
     }
-
-    override fun updateLastBranch(pipelineId: String, branch: String) {}
+    override fun updatePipelineLastBranchAndDisplayName(
+        pipelineId: String,
+        branch: String?,
+        displayName: String?
+    ) = Unit
 }

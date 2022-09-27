@@ -67,8 +67,8 @@ class ManualReviewTaskAtom(
     private val pipelineVariableService: BuildVariableService
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
-    @Value("\${esb.appSecret}")
-    private val appSecret = ""
+    @Value("\${esb.appSecret:#{null}}")
+    private val appSecret: String? = null
     override fun getParamElement(task: PipelineBuildTask): ManualReviewUserTaskElement {
         return JsonUtil.mapTo((task.taskParams), ManualReviewUserTaskElement::class.java)
     }

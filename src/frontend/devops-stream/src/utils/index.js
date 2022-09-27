@@ -174,7 +174,8 @@ export function getbuildTypeIcon (objectKind, operationKind) {
         openApi: 'open-api',
         issue: 'issue',
         review: 'code-review',
-        note: 'comment'
+        note: 'comment',
+        pull_request: 'merge'
     }
     return operationKindMap[operationKind] || objectKindIconMap[objectKind] || 'well'
 }

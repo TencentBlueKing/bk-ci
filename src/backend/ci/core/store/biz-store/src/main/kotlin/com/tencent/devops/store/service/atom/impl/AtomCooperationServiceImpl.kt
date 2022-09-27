@@ -89,6 +89,7 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY)
         }
         val approveId = UUIDUtil.generate()
+        val token = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             atomApproveRelDao.add(
@@ -107,10 +108,17 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
                 approveType = ApproveTypeEnum.ATOM_COLLABORATOR_APPLY,
                 approveStatus = ApproveStatusEnum.WAIT,
                 storeCode = atomCode,
-                storeType = StoreTypeEnum.ATOM
+                storeType = StoreTypeEnum.ATOM,
+                token = token
             )
         }
-        sendMoaMessage(atomCode, atomCollaboratorCreateReq, approveId, userId)
+        sendMoaMessage(
+            atomCode = atomCode,
+            atomCollaboratorCreateReq = atomCollaboratorCreateReq,
+            approveId = approveId,
+            userId = userId,
+            token = token
+        )
         return Result(AtomCollaboratorCreateResp(userId, ApproveStatusEnum.WAIT.name))
     }
 
@@ -118,6 +126,7 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
         atomCode: String,
         atomCollaboratorCreateReq: AtomCollaboratorCreateReq,
         approveId: String,
-        userId: String
+        userId: String,
+        token: String
     )
 }

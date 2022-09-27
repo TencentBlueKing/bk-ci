@@ -65,11 +65,6 @@
                                         <span>{{ props.row.elementDetail }}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column label="指标所包含数据" prop="metadatas" min-width="90">
-                                    <template slot-scope="props">
-                                        <span>{{ getMetadata(props.row.metadatas) }}</span>
-                                    </template>
-                                </bk-table-column>
                                 <bk-table-column label="可选操作" prop="availableOperation">
                                     <template slot-scope="props">
                                         <span>{{ getOperation(props.row.availableOperation) }}</span>
@@ -205,10 +200,6 @@
             getOperation (list) {
                 const target = list.map(item => this.operationMap[item])
                 return target.join(' ')
-            },
-            getMetadata (data) {
-                const target = data.map(item => item.cnName)
-                return target.length ? target.join('+') : '-'
             },
             changeTab (val) {
                 this.currentTab = val

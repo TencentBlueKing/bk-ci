@@ -89,6 +89,7 @@ class YamlSchemaCheck @Autowired constructor() {
         val loadYaml = try {
             YamlUtil.toYaml(Yaml().load(originYaml))
         } catch (ignored: Throwable) {
+            logger.warn("YAML_SCHEMA_CHECK|originYaml=$originYaml", ignored)
             throw YamlFormatException("There may be a problem with your yaml syntax ${ignored.message}")
         }
         // 解析锚点
@@ -170,7 +171,7 @@ class YamlSchemaCheck @Autowired constructor() {
         return getSchemaFromGit(file)
     }
 
-    private fun getSchemaFromGit(file: String): JsonSchema {
+    fun getSchemaFromGit(file: String): JsonSchema {
         if (schemaMap[file] != null) {
             return schemaMap[file]!!
         }

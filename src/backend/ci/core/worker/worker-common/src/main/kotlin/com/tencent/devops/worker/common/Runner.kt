@@ -110,6 +110,8 @@ object Runner {
             // #1613 worker-agent.jar 增强在启动之前的异常情况上报（本机故障）
             EngineService.submitError(
                 ErrorInfo(
+                    stageId = "",
+                    jobId = buildVariables.containerId,
                     taskId = "",
                     taskName = "",
                     atomCode = "",
@@ -193,6 +195,9 @@ object Runner {
                         logger.info("Complete the task (${buildTask.elementName})")
                         // 获取执行结果
                         val buildTaskRst = taskDaemon.getBuildResult()
+                        val finishKillFlag = task.getFinishKillFlag()
+                        val projectId = buildVariables.projectId
+                        handleTaskProcess(finishKillFlag, projectId, buildTask)
                         EngineService.completeTask(buildTaskRst)
                         logger.info("Finish completing the task ($buildTask)")
                     } catch (ignore: Throwable) {
@@ -219,6 +224,19 @@ object Runner {
         }
 
         return failed
+    }
+
+    private fun handleTaskProcess(finishKillFlag: Boolean?, projectId: String, buildTask: BuildTask) {
+        if (finishKillFlag == true) {
+            // 杀掉task对应的进程（配置DEVOPS_DONT_KILL_PROCESS_TREE标识的插件除外）
+            KillBuildProcessTree.killProcessTree(
+                projectId = projectId,
+                buildId = buildTask.buildId,
+                vmSeqId = buildTask.vmSeqId,
+                taskIds = setOf(buildTask.taskId!!),
+                forceFlag = true
+            )
+        }
     }
 
     private fun finally(workspacePathFile: File?, failed: Boolean) {
