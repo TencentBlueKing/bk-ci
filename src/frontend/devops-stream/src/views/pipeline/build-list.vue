@@ -318,7 +318,7 @@
             const getFilterData = () => {
                 return {
                     commitMsg: commitMsg || '',
-                    triggerUser: triggerUser.split(',') || [],
+                    triggerUser: (triggerUser && triggerUser.split(',')) || [],
                     branch: (branch && branch.split(',')) || [],
                     event: (event && event.split(',')) || [],
                     status: (status && status.split(',')) || [],
