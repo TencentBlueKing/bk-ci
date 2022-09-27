@@ -59,6 +59,8 @@ import java.util.logging.Logger;
  * 	<li>如果安装了JDK，将两个jar文件放到%JDK_HOME%\jre\lib\security目录下覆盖原来文件</li>
  * </ol>
  */
+@Deprecated
+// 请使用WXBizMsgCryptV2
 public class WXBizMsgCrypt {
     static Charset CHARSET = Charset.forName("utf-8");
     Base64 base64 = new Base64();

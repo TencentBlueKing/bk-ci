@@ -28,7 +28,7 @@
 package com.tencent.devops.support.robot
 
 import com.tencent.bkrepo.common.api.util.toJsonString
-import com.tencent.devops.auth.api.manager.AuthManagerApprovalResource
+import com.tencent.devops.auth.api.manager.ServiceManagerApprovalResource
 import com.tencent.devops.auth.pojo.enum.ApprovalType
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WeworkRobotCustomConfig
@@ -75,13 +75,9 @@ class RobotService @Autowired constructor(
     }
 
     fun robotCallbackPost(signature: String, timestamp: Long, nonce: String, reqData: String?): Boolean {
-        logger.info("signature:$signature")
-        logger.info("timestamp:$timestamp")
-        logger.info("nonce:$nonce")
-        logger.info("reqData:$reqData")
+        logger.info("signature:$signature | timestamp:$timestamp | nonce:$nonce | reqData:$reqData")
         val robotCallBack = getCallbackInfo(signature, timestamp, nonce, reqData)
-        logger.info("chitId:${robotCallBack.chatId}")
-        logger.info("robotCallBack:$robotCallBack")
+        logger.info("chitId:${robotCallBack.chatId} | robotCallBack:$robotCallBack")
         if (robotCallBack.eventType == "enter_chat") {
             // 如为进入机器人单聊, 直接返回空包
             return true
@@ -104,36 +100,18 @@ class RobotService @Autowired constructor(
         }
         when (callbackId) {
             MANAGER_APPROVAL -> {
-                when (actionName) {
-                    MANAGER_AGREE_TO_APPROVAL -> {
-                        client.get(AuthManagerApprovalResource::class).managerApproval(
-                            approvalId = actionValue!!.toInt(),
-                            approvalType = ApprovalType.AGREE
-                        )
-                    }
-                    MANAGER_REFUSE_TO_APPROVAL -> {
-                        client.get(AuthManagerApprovalResource::class).managerApproval(
-                            approvalId = actionValue!!.toInt(),
-                            approvalType = ApprovalType.REFUSE
-                        )
-                    }
-                }
+                client.get(ServiceManagerApprovalResource::class).managerApproval(
+                    approvalId = actionValue!!.toInt(),
+                    approvalType = if (actionName == MANAGER_AGREE_TO_APPROVAL) ApprovalType.AGREE
+                    else ApprovalType.REFUSE
+                )
             }
             USER_RENEWAL -> {
-                when (actionName) {
-                    USER_AGREE_TO_RENEWAL -> {
-                        client.get(AuthManagerApprovalResource::class).userRenewalAuth(
-                            approvalId = actionValue!!.toInt(),
-                            approvalType = ApprovalType.AGREE
-                        )
-                    }
-                    USER_REFUSE_TO_RENEWAL -> {
-                        client.get(AuthManagerApprovalResource::class).userRenewalAuth(
-                            approvalId = actionValue!!.toInt(),
-                            approvalType = ApprovalType.REFUSE
-                        )
-                    }
-                }
+                client.get(ServiceManagerApprovalResource::class).userRenewalAuth(
+                    approvalId = actionValue!!.toInt(),
+                    approvalType = if (actionName == USER_AGREE_TO_RENEWAL) ApprovalType.AGREE
+                    else ApprovalType.REFUSE
+                )
             }
         }
         return true
@@ -222,8 +200,6 @@ class RobotService @Autowired constructor(
         const val MANAGER_APPROVAL = "approval"
         const val USER_RENEWAL = "renewal"
         const val MANAGER_AGREE_TO_APPROVAL = "agree"
-        const val MANAGER_REFUSE_TO_APPROVAL = "refuse"
         const val USER_AGREE_TO_RENEWAL = "agree"
-        const val USER_REFUSE_TO_RENEWAL = "refuse"
     }
 }
