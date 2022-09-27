@@ -115,7 +115,6 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName-in-0"
                 setProperty("$bindingPrefix.destination", streamConsumer.destination)
                 setProperty("$bindingPrefix.group", streamConsumer.group)
-                setProperty("$bindingPrefix.group", streamConsumer.group)
                 setProperty("$rabbitPropPrefix.consumer.delayed-exchange", "true")
             }
 
