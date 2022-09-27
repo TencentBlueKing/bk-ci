@@ -80,7 +80,7 @@ abstract class AbstractClusterDefectService constructor(
     @LINT
     fun getLintStatistic(clusterResultVO: BaseClusterResultVO, taskId: Long, buildId: String, toolName: String) {
         logger.info("lint statistic")
-        val lintStatistic = lintStatisticRepository.findByTaskIdAndToolNameAndBuildId(
+        val lintStatistic = lintStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(
                 taskId,
                 toolName,
                 buildId
