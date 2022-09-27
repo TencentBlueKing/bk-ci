@@ -107,7 +107,7 @@ class AuthManagerApprovalService @Autowired constructor(
             receiverType = WeworkReceiverType.single,
             textType = WeworkTextType.markdown,
             message = "**蓝盾超级管理员权限续期申请审批**\\n申请人：$userId\\n授权名称：$authName" +
-                "\\n授权详情：$authDetail\\n过期时间：$expiredTime\\n请选择是否同意用户续期权限\\n",
+                "\\n授权详情：$authDetail\\n用户权限过期时间：$expiredTime\\n请选择是否同意用户续期权限\\n",
             attachments = WeworkMarkdownAttachment(
                 callbackId = "approval",
                 actions = actions
@@ -270,7 +270,7 @@ class AuthManagerApprovalService @Autowired constructor(
             receiverType = WeworkReceiverType.single,
             textType = WeworkTextType.markdown,
             message = "**蓝盾超级管理员权限续期**\\n授权名称：$authName\\n授权详情：$authDetail" +
-                "\\n审批人：$manager\\n过期时间：$expiredTime\\n请选择是否需要续期权限\\n",
+                "\\n审批人：$manager\\n用户权限过期时间：$expiredTime\\n请选择是否需要续期权限\\n",
             attachments = WeworkMarkdownAttachment(
                 callbackId = "renewal",
                 actions = actions
