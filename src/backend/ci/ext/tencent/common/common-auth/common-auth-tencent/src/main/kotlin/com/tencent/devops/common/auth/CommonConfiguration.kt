@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.jmx.export.MBeanExporter
 
 @Configuration
@@ -33,42 +34,55 @@ class CommonConfiguration {
     fun jmxAuthApi(mBeanExporter: MBeanExporter) = JmxAuthApi(mBeanExporter)
 
     @Bean
+    @Primary
     fun bcsAuthServiceCode() = BSBcsAuthServiceCode()
 
     @Bean
+    @Primary
     fun bsPipelineAuthServiceCode() = BSPipelineAuthServiceCode()
 
     @Bean
+    @Primary
     fun codeAuthServiceCode() = BSCodeAuthServiceCode()
 
     @Bean
+    @Primary
     fun vsAuthServiceCode() = BSVSAuthServiceCode()
 
     @Bean
+    @Primary
     fun environmentAuthServiceCode() = BSEnvironmentAuthServiceCode()
 
     @Bean
+    @Primary
     fun repoAuthServiceCode() = BSRepoAuthServiceCode()
 
     @Bean
+    @Primary
     fun ticketAuthServiceCode() = BSTicketAuthServiceCode()
 
     @Bean
+    @Primary
     fun qualityAuthServiceCode() = BSQualityAuthServiceCode()
 
     @Bean
+    @Primary
     fun wetestAuthServiceCode() = BSWetestAuthServiceCode()
 
     @Bean
+    @Primary
     fun experienceAuthServiceCode() = BSExperienceAuthServiceCode()
 
     @Bean
+    @Primary
     fun projectAuthSeriviceCode() = BSProjectServiceCodec()
 
     @Bean
+    @Primary
     fun artifactoryAuthServiceCode() = BSArtifactoryAuthServiceCode()
 
     @Bean
+    @Primary
     fun commonAuthServiceCode() = BSCommonAuthServiceCode()
 
     @Value("\${auth.url:}")
