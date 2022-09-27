@@ -173,7 +173,7 @@ class TGitMrActionGit(
         } ?: TGitCred(data.setting.enableUser)
     }
 
-    override fun init(): BaseAction? {
+    override fun init(): BaseAction {
         return initCommonData()
     }
 

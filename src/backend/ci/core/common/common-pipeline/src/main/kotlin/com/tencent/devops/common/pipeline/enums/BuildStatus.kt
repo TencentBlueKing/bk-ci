@@ -33,7 +33,6 @@ package com.tencent.devops.common.pipeline.enums
  */
 @Suppress("TooManyFunctions")
 enum class BuildStatus(val statusName: String, val visible: Boolean) {
-
     SUCCEED("成功", true), // 0 成功（最终态）
     FAILED("失败", true), // 1 失败（最终态）
     CANCELED("取消", true), // 2 取消（最终态）

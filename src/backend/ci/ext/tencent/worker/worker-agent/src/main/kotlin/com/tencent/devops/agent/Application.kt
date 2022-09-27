@@ -83,6 +83,7 @@ fun main(args: Array<String>) {
                 }
             })
         }
+
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspaceAndLogDir(
@@ -102,6 +103,7 @@ fun main(args: Array<String>) {
                 }
             })
         }
+
         BuildType.MACOS.name -> {
             var startBuild = false
             val gateyway = AgentEnv.getGateway()
@@ -176,7 +178,7 @@ fun main(args: Array<String>) {
                     variables: Map<String, String>,
                     pipelineId: String
                 ): Pair<File, File> {
-                    val workspace = AgentEnv.getMacOSWorkspace()
+                    val workspace = MacAgentEnv.getMacOSWorkspace()
                     println("MacOS workspace: $workspace")
                     val workspaceDir = File(workspace)
                     workspaceDir.mkdirs()
@@ -186,9 +188,11 @@ fun main(args: Array<String>) {
                 }
             })
         }
+
         BuildType.AGENT.name -> {
             WorkRunner.execute(args)
         }
+
         else -> {
             if (buildType.isNullOrBlank()) {
                 throw RuntimeException("The build type is empty")
