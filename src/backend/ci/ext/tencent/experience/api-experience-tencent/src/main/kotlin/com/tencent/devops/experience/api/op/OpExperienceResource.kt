@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.experience.pojo.ExperienceExtendBanner
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -155,4 +156,29 @@ interface OpExperienceResource {
         @ApiParam(value = "外部体验参数")
         externalAdd: ExperiencePublicExternalAdd
     ): Result<String>
+
+    @ApiOperation("添加扩展banner")
+    @Path("/index/addExtendBanner")
+    @POST
+    fun addExtendBanner(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "扩展banner")
+        experienceExtendBanner: ExperienceExtendBanner
+    ): Result<Int>
+
+    @ApiOperation("修改扩展banner")
+    @Path("/index/updateExtendBanner")
+    @POST
+    fun updateExtendBanner(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "bannerId", required = true)
+        @QueryParam("bannerId")
+        bannerId: Long,
+        @ApiParam(value = "扩展banner")
+        experienceExtendBanner: ExperienceExtendBanner
+    ): Result<Int>
 }

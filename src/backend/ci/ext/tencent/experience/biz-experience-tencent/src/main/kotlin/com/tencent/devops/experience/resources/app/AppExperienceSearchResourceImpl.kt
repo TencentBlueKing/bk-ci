@@ -47,9 +47,17 @@ class AppExperienceSearchResourceImpl @Autowired constructor(
         platform: Int?,
         organization: String?,
         experienceName: String,
-        experiencePublic: Boolean
+        experiencePublic: Boolean,
+        minigame: Boolean?
     ): Result<List<SearchAppInfoVO>> {
-        return experienceSearchService.search(userId, platform, experienceName, experiencePublic, organization)
+        return experienceSearchService.search(
+            userId = userId,
+            platform = platform,
+            experienceName = experienceName,
+            experiencePublic = experiencePublic,
+            organization = organization,
+            minigame = minigame
+        )
     }
 
     @AllowOuter
