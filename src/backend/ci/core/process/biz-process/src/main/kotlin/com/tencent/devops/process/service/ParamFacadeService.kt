@@ -275,7 +275,7 @@ class ParamFacadeService @Autowired constructor(
                 .filter { pipelineId == null || !it.pipelineId.contains(pipelineId) }
                 .map { BuildFormValue(it.pipelineName, it.pipelineName) }
             val searchUrl = "/user/buildParam/pipeline/$projectId/$pipelineId?" +
-                    "&aliasName={words}&page=1&pageSize=100"
+                    "aliasName={words}&page=1&pageSize=100"
             val replaceKey = "{words}"
             return copyFormProperty(
                 property = subPipelineFormProperty,
