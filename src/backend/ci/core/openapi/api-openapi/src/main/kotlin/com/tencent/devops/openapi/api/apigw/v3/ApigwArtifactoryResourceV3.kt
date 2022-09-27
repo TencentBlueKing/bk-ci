@@ -79,7 +79,10 @@ interface ApigwArtifactoryResourceV3 {
         path: String
     ): Result<Url>
 
-    @ApiOperation("根据元数据获取文件", tags = ["v3_app_artifactory_list", "v3_user_artifactory_list"])
+    @ApiOperation(
+        "根据元数据获取文件(注意: 如果需要构建产物的下载url，请单独调用下载接口，如 v3_app_artifactory_userDownloadUrl)",
+        tags = ["v3_app_artifactory_list", "v3_user_artifactory_list"]
+    )
     @Path("/")
     @GET
     fun search(

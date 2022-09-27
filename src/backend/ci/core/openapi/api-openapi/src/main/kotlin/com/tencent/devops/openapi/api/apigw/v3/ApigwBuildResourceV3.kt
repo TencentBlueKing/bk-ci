@@ -293,7 +293,10 @@ interface ApigwBuildResourceV3 {
         reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 
-    @ApiOperation("获取构建中的变量值", tags = ["v3_app_build_variables_value", "v3_user_build_variables_value"])
+    @ApiOperation(
+        "获取构建中的变量值(注意：变量具有时效性，只能获取最近一个月的任务数据)",
+        tags = ["v3_app_build_variables_value", "v3_user_build_variables_value"]
+    )
     @POST
     @Path("/{buildId}/variables")
     fun getVariableValue(

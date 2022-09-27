@@ -177,7 +177,10 @@ interface ApigwLogResourceV4 {
         executeCount: Int?
     ): Result<QueryLogs>
 
-    @ApiOperation("下载日志接口", tags = ["v4_user_log_download", "v4_app_log_download"])
+    @ApiOperation(
+        "下载日志接口(注意: 接口返回application/octet-stream数据，Request Header Accept 类型不一致将导致错误)",
+        tags = ["v4_user_log_download", "v4_app_log_download"]
+    )
     @GET
     @Path("/download_logs")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
