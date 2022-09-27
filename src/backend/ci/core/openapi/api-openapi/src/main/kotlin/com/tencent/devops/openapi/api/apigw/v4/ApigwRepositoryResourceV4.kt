@@ -39,6 +39,8 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import io.swagger.annotations.Example
+import io.swagger.annotations.ExampleProperty
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -139,7 +141,72 @@ interface ApigwRepositoryResourceV4 {
         @ApiParam("代码库哈希ID", required = true)
         @QueryParam("repositoryHashId")
         repositoryHashId: String,
-        @ApiParam(value = "代码库模型", required = true)
+        @ApiParam(
+            value = "代码库模型", required = true, examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "如果我想通过oauth关联codeGit类型的代码库",
+                        value = """
+                            {
+                                "@type": "codeGit",
+                                "aliasName": "devops/test",
+                                "credentialId": "",
+                                "projectName": "devops/test",
+                                "url": "https://www.xxx.com/devops/test.git",
+                                "authType": "OAUTH",
+                                "svnType": "ssh",
+                                "userName": "devops"
+                            }
+                                """
+                    ),
+                    ExampleProperty(
+                        mediaType = "如果我想关联TGIT类型的代码库，只能通过HTTP，需要使用凭据test",
+                        value = """
+                            {
+                                "@type": "codeTGit",
+                                "aliasName": "devops/test",
+                                "credentialId": "test",
+                                "projectName": "devops/test",
+                                "url": "https://git.tencent.com/devops/test.git",
+                                "authType": "HTTPS",
+                                "svnType": "ssh",
+                                "userName": "devops"
+                            }
+                                """
+                    ),
+                    ExampleProperty(
+                        mediaType = "如果我想关联GitHub类型的代码库，只能通过Oauth",
+                        value = """
+                            {
+                                "@type": "github",
+                                "aliasName": "Tencent/bk-ci",
+                                "credentialId": "",
+                                "projectName": "Tencent/bk-ci",
+                                "url": "https://github.com/Tencent/bk-ci.git",
+                                "authType": "OAUTH",
+                                "svnType": "ssh",
+                                "userName": "devops"
+                            }
+                                """
+                    ),
+                    ExampleProperty(
+                        mediaType = "如果我想关联P4类型的代码库，只能通过HTTP，需要使用凭据test",
+                        value = """
+                            {
+                                "@type": "codeP4",
+                                "aliasName": "devops/test",
+                                "credentialId": "test",
+                                "projectName": "localhost:1666",
+                                "url": "localhost:1666",
+                                "authType": "HTTP",
+                                "svnType": "ssh",
+                                "userName": "devops"
+                            }
+                                """
+                    )
+                ]
+            )
+        )
         repository: Repository
     ): Result<Boolean>
 }
