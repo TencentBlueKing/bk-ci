@@ -89,9 +89,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 definition.add(bindingName)
                 // 如果注解中指定了订阅组，则直接设置
                 // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
-                val prefix = "spring.cloud.stream.bindings.$bindingName-in-0"
-                setProperty("$prefix.destination", streamEventConsumer.destination)
-                setProperty("$prefix.group", streamEventConsumer.group)
+                setBindings(bindingName, streamEventConsumer)
             }
 
             // 反射扫描所有带有 StreamConsumer 注解的bean类型
@@ -102,26 +100,31 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                     .setScanners(Scanners.MethodsAnnotated)
             ).getTypesAnnotatedWith(StreamEventConsumer::class.java)
             consumerClassBeans.forEach { clazz ->
-                val streamConsumer = clazz.getAnnotation(StreamEventConsumer::class.java)
+                val streamEventConsumer = clazz.getAnnotation(StreamEventConsumer::class.java)
                 val bindingName = DefaultBindingUtils.getInBindingName(clazz)
                 logger.info(
                     "Found StreamConsumer class: ${clazz.name}, bindingName[$bindingName], " +
-                        "with destination[${streamConsumer.destination}], group[${streamConsumer.group}]"
+                        "with destination[${streamEventConsumer.destination}], " +
+                        "group[${streamEventConsumer.group}]"
                 )
                 definition.add(bindingName)
                 // 如果注解中指定了订阅组，则直接设置
                 // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
-                val bindingPrefix = "spring.cloud.stream.bindings.$bindingName-in-0"
-                val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName-in-0"
-                setProperty("$bindingPrefix.destination", streamConsumer.destination)
-                setProperty("$bindingPrefix.group", streamConsumer.group)
-                setProperty("$rabbitPropPrefix.consumer.delayed-exchange", "true")
+                setBindings(bindingName, streamEventConsumer)
             }
 
             // 声明所有扫描结果的函数式声明
             setProperty("spring.cloud.stream.function.definition", definition.joinToString(";"))
             return PropertiesPropertySource(STREAM_SOURCE_NAME, this)
         }
+    }
+
+    private fun Properties.setBindings(bindingName: String, streamEventConsumer: StreamEventConsumer) {
+        val bindingPrefix = "spring.cloud.stream.bindings.$bindingName-in-0"
+        val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName-in-0"
+        setProperty("$bindingPrefix.destination", streamEventConsumer.destination)
+        setProperty("$bindingPrefix.group", streamEventConsumer.group)
+        setProperty("$rabbitPropPrefix.consumer.delayed-exchange", "true")
     }
 
     override fun getOrder(): Int {
