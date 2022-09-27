@@ -135,7 +135,7 @@ class TGitApiService @Autowired constructor(
             log = "$gitProjectId get project($gitProjectId) user($search) info fail",
             apiErrorCode = ErrorCodeEnum.GET_USER_INFO_ERROR
         ) {
-            client.get(ServiceGitResource::class).getMembers(
+            client.get(ServiceGitResource::class).getProjectMembersAll(
                 token = cred.toToken(),
                 gitProjectId = gitProjectId,
                 page = page ?: 1,

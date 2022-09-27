@@ -129,9 +129,9 @@ class TGitMrActionGit(
             this.data.setting.triggerReviewSetting.whitelist
         val checkProjectInWhiteList = this.data.eventCommon.gitProjectId in
             this.data.setting.triggerReviewSetting.whitelist
-        return (checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
+        return ((checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
             checkUserInWhiteList ||
-            checkProjectInWhiteList
+            checkProjectInWhiteList) && forkMrYamlList().isEmpty()
     }
 
     override fun getMrId() = event().object_attributes.id
@@ -173,7 +173,7 @@ class TGitMrActionGit(
         } ?: TGitCred(data.setting.enableUser)
     }
 
-    override fun init(): BaseAction? {
+    override fun init(): BaseAction {
         return initCommonData()
     }
 

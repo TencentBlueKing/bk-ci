@@ -380,6 +380,9 @@
                   },
                   "workspace" : {
                     "type" : "string"
+                  },
+                  "xcode" : {
+                    "type" : "string"
                   }
                 }
               } ]

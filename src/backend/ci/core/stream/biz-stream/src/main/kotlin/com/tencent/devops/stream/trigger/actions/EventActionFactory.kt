@@ -184,7 +184,6 @@ class EventActionFactory @Autowired constructor(
             is GitPushEvent -> {
                 val tGitPushAction = TGitPushActionGit(
                     dslContext = dslContext,
-                    client = client,
                     apiService = tGitApiService,
                     streamEventService = streamEventService,
                     streamTimerService = streamTimerService,

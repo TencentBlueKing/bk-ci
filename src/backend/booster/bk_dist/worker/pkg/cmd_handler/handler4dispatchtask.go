@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
 
 	dcConfig "github.com/Tencent/bk-ci/src/booster/bk_dist/common/config"
+	dcEnv "github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
 	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
 	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
 	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
@@ -201,14 +202,27 @@ func (h *Handle4DispatchReq) dealOneCommand(onecmd *dcProtocol.PBCommand,
 
 	// get environments
 	environments := make([]string, 0)
+	overwrite := true
+	appendEnvKey := dcEnv.GetEnvKey(dcEnv.KeyRemoteEnvAppend)
 	for _, item := range onecmd.GetEnv() {
 		environments = append(environments, string(item))
+		if strings.HasPrefix(string(item), appendEnvKey) {
+			overwrite = false
+		}
 	}
 
 	sandbox := dcSyscall.Sandbox{}
 	sandbox.Dir = basedir
 	if len(environments) > 0 {
-		sandbox.Env = env.NewSandbox(environments)
+		// overwrite env
+		if overwrite {
+			sandbox.Env = env.NewSandbox(environments)
+		} else {
+			// append env
+			envs := os.Environ()
+			envs = append(envs, environments...)
+			sandbox.Env = env.NewSandbox(envs)
+		}
 	}
 	if workDir := onecmd.GetWorkdir(); workDir != "" {
 		sandbox.Dir = workDir

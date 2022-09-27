@@ -59,7 +59,6 @@ object CredentialUtils {
     var signToken = ""
 
     fun getCredential(
-        buildId: String,
         credentialId: String,
         showErrorLog: Boolean = true,
         acrossProjectId: String? = null
