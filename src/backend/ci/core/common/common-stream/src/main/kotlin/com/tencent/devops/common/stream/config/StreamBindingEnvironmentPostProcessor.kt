@@ -111,9 +111,12 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 definition.add(bindingName)
                 // 如果注解中指定了订阅组，则直接设置
                 // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
-                val prefix = "spring.cloud.stream.bindings.$bindingName-in-0"
-                setProperty("$prefix.destination", streamConsumer.destination)
-                setProperty("$prefix.group", streamConsumer.group)
+                val bindingPrefix = "spring.cloud.stream.bindings.$bindingName-in-0"
+                val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName-in-0"
+                setProperty("$bindingPrefix.destination", streamConsumer.destination)
+                setProperty("$bindingPrefix.group", streamConsumer.group)
+                setProperty("$bindingPrefix.group", streamConsumer.group)
+                setProperty("$rabbitPropPrefix.consumer.delayed-exchange", "true")
             }
 
             // 声明所有扫描结果的函数式声明
