@@ -241,22 +241,22 @@ interface ApigwBuildResourceV4 {
         @ApiParam("触发方式", required = false)
         @QueryParam("trigger")
         trigger: List<StartType>?,
-        @ApiParam("排队于-开始时间(时间戳形式)", required = false)
+        @ApiParam("排队于-开始时间(时间戳milliseconds形式)", required = false)
         @QueryParam("queueTimeStartTime")
         queueTimeStartTime: Long?,
-        @ApiParam("排队于-结束时间(时间戳形式)", required = false)
+        @ApiParam("排队于-结束时间(时间戳milliseconds形式)", required = false)
         @QueryParam("queueTimeEndTime")
         queueTimeEndTime: Long?,
-        @ApiParam("开始于-流水线的执行开始时间(时间戳形式)", required = false)
+        @ApiParam("开始于-流水线的执行开始时间(时间戳milliseconds形式)", required = false)
         @QueryParam("startTimeStartTime")
         startTimeStartTime: Long?,
-        @ApiParam("开始于-流水线的执行结束时间(时间戳形式)", required = false)
+        @ApiParam("开始于-流水线的执行结束时间(时间戳milliseconds形式)", required = false)
         @QueryParam("startTimeEndTime")
         startTimeEndTime: Long?,
-        @ApiParam("结束于-流水线的执行开始时间(时间戳形式)", required = false)
+        @ApiParam("结束于-流水线的执行开始时间(时间戳milliseconds形式)", required = false)
         @QueryParam("endTimeStartTime")
         endTimeStartTime: Long?,
-        @ApiParam("结束于-流水线的执行结束时间(时间戳形式)", required = false)
+        @ApiParam("结束于-流水线的执行结束时间(时间戳milliseconds形式)", required = false)
         @QueryParam("endTimeEndTime")
         endTimeEndTime: Long?,
         @ApiParam("耗时最小值", required = false)
@@ -359,7 +359,10 @@ interface ApigwBuildResourceV4 {
         reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 
-    @ApiOperation("获取构建中的变量值", tags = ["v4_app_build_variables_value", "v4_user_build_variables_value"])
+    @ApiOperation(
+        "获取构建中的变量值(注意：变量具有时效性，只能获取最近一个月的任务数据)",
+        tags = ["v4_app_build_variables_value", "v4_user_build_variables_value"]
+    )
     @POST
     @Path("/build_variables")
     fun getVariableValue(
