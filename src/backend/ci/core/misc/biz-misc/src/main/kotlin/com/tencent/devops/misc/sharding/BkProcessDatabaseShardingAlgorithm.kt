@@ -43,6 +43,12 @@ import java.util.Properties
 
 class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
 
+    /**
+     * 分片路由算法
+     * @param availableTargetNames 可用的数据源列表
+     * @param shardingValue 分片规则名称
+     * @return 分片规则值（数据源名称）
+     */
     override fun doSharding(
         availableTargetNames: MutableCollection<String>,
         shardingValue: PreciseShardingValue<String>

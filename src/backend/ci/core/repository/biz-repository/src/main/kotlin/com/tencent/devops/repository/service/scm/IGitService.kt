@@ -38,8 +38,6 @@ import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
-import com.tencent.devops.repository.pojo.git.GitMrInfo
-import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
@@ -55,6 +53,8 @@ import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
