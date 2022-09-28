@@ -109,8 +109,6 @@ class AuthCronManager @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.warn("AuthCronManager|checkExpiringManager|error", e)
-        } finally {
-            redisLock.unlock()
         }
     }
 
