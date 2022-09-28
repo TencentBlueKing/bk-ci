@@ -131,7 +131,7 @@ spec:
               subPathExpr: bkci/jvm/$(POD_NAME)
       volumes:
         - name: storage
-          {{- if .Values.persistence.enabled }}
+          {{- if and .Values.persistence.enabled (eq .Values.config.bkCiArtifactoryRealm "local") }}
           persistentVolumeClaim:
             claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "bkci.names.fullname" . }}-storage{{- end }}
           {{- else }}
