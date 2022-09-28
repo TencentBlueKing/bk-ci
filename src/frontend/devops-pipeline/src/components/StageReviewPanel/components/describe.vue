@@ -4,13 +4,14 @@
         <span class="review-subtitle">{{ $t('stageReview.approvalDescription') }}</span>
         <section :class="{ 'review-desc': true, 'show-more': isShowMore }">
             <mavon-editor
+                class="markdown-desc"
                 :editable="false"
                 default-open="preview"
                 :subfield="false"
                 :toolbars-flag="false"
                 :external-link="false"
                 :box-shadow="false"
-                preview-background="#fafbfd"
+                preview-background="#fff"
                 v-model="desc"
             >
             </mavon-editor>
@@ -79,10 +80,13 @@
         word-break: break-all;
         font-size: 12px;
         color: #666770;
-        white-space: pre-wrap;
         &.show-more {
             display: block;
         }
+    }
+    .markdown-desc {
+        min-height: 100px;
+        max-height: 250px;
     }
     .opt-button {
         font-size: 12px;
