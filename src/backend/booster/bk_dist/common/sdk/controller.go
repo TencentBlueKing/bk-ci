@@ -127,6 +127,7 @@ type ControllerConfig struct {
 	DisableFileLock    bool
 	AutoResourceMgr    bool
 	ResIdleSecsForFree int
+	SendCork           bool
 }
 
 // Target return the server ip and port of controller

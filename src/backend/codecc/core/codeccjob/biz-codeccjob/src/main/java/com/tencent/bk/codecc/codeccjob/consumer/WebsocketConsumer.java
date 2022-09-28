@@ -48,9 +48,7 @@ public class WebsocketConsumer {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @RabbitListener(bindings = @QueueBinding(
-            value = @Queue,
-            exchange = @Exchange(value = EXCHANGE_TASKLOG_DEFECT_WEBSOCKET, durable = "true", delayed = "true", type = ExchangeTypes.FANOUT)))
+
     public void sendWebsocketMsg(WebsocketDTO websocketDTO) {
         TaskLogVO taskLogVO = websocketDTO.getTaskLogVO();
         TaskOverviewVO.LastAnalysis lastAnalysis = websocketDTO.getLastAnalysisResultList();

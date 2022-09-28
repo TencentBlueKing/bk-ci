@@ -70,7 +70,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_COMMENT
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_ID
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
-import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.RegexContainFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -82,7 +82,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
 class TGitNoteTriggerHandler(
-    private val gitScmService: GitScmService
+    private val eventCacheService: EventCacheService
 ) : GitHookTriggerHandler<GitNoteEvent> {
 
     override fun eventClass(): Class<GitNoteEvent> {
@@ -134,7 +134,7 @@ class TGitNoteTriggerHandler(
         }
         if (projectId != null && repository != null) {
             val (defaultBranch, commitInfo) =
-                gitScmService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
+                eventCacheService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
             startParams[PIPELINE_GIT_REF] = defaultBranch ?: ""
             startParams[CI_BRANCH] = defaultBranch ?: ""
 
@@ -166,8 +166,9 @@ class TGitNoteTriggerHandler(
                 return@apply
             }
             // MR提交人
-            val mrInfo = gitScmService.getMergeRequestInfo(projectId, mrRequestId, repository)
-            val reviewers = gitScmService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)?.reviewers
+            val mrInfo = eventCacheService.getMergeRequestInfo(projectId, mrRequestId, repository)
+            val reviewers =
+                eventCacheService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)?.reviewers
             startParams.putAll(
                 WebhookUtils.mrStartParam(
                     mrInfo = mrInfo,

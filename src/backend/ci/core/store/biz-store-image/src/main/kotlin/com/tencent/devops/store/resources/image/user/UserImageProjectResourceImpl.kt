@@ -82,7 +82,7 @@ class UserImageProjectResourceImpl @Autowired constructor(
                 accessToken = accessToken,
                 userId = userId,
                 projectCode = projectCode,
-                agentType = agentType,
+                agentType = ImageAgentTypeEnum.getImageAgentType(agentType?.name ?: ""),
                 recommendFlag = recommendFlag,
                 classifyId = classifyId,
                 page = page,

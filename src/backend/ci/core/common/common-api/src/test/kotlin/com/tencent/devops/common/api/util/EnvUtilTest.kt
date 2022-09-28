@@ -158,7 +158,6 @@ class EnvUtilTest {
             EnvUtils.parseEnv(
                 command = command9,
                 data = map,
-                replaceWithEmpty = true,
                 isEscape = true,
                 contextMap = mapOf("ci.workspace" to "/data/landun/workspace")
             )
@@ -190,8 +189,7 @@ class EnvUtilTest {
 
         val data = mapOf(
             "variables.abc" to "variables.value",
-            "variables.hello" to "hahahahaha",
-            "{variables.abc" to "jacky"
+            "variables.hello" to "hahahahaha"
         )
 
         Assertions.assertEquals("hello variables.value world", EnvUtils.parseEnv(command1, data))

@@ -105,7 +105,12 @@ type BoosterWorks struct {
 	PumpDisableMacro     bool
 	PumpIncludeSysHeader bool
 	PumpCheck            bool
-	ForceLocalList       []string
+	PumpCache            bool
+	PumpCacheDir         string
+	PumpCacheSizeMaxMB   int32
+	PumpCacheRemoveAll   bool
+
+	ForceLocalList []string
 
 	NoWork bool
 

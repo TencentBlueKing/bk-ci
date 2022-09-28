@@ -118,6 +118,13 @@ func GetLogsDir() string {
 	return dir
 }
 
+// GetPumpCacheDir get the runtime pump cache dir
+func GetPumpCacheDir() string {
+	dir := path.Join(GetRuntimeDir(), "pump_cache")
+	_ = os.MkdirAll(dir, os.ModePerm)
+	return dir
+}
+
 // GetRecordDir get the record dir
 func GetRecordDir() string {
 	dir := filepath.Join(GetGlobalDir(), "record")
