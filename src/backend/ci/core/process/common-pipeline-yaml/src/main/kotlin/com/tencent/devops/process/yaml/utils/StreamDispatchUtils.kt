@@ -191,7 +191,6 @@ object StreamDispatchUtils {
         if (containsMatrix == true) {
             return DockerDispatchType(defaultImage)
         } else {
-            logger.warn("StreamDispatchUtils|poolName|$poolName|job| $job")
             throw CustomException(Response.Status.NOT_FOUND, "公共构建资源池不存在，请检查yml配置.")
         }
     }

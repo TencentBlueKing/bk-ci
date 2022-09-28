@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 @DisplayName("TGit Mr Action 相关测试")
 internal class TGitMrActionGitTest {
 
-    private val action = TGitMrActionGit(mock(), mock(), mock(), mock(), mock())
+    private val action = TGitMrActionGit(mock(), mock(), mock(), mock(), mock(), mock(), mock())
 
     /**
      * 校验

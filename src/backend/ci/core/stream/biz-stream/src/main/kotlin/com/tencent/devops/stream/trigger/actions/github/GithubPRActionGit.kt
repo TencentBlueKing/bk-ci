@@ -63,6 +63,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
 import com.tencent.devops.stream.pojo.ChangeYamlList
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubMrInfo
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
@@ -126,9 +127,9 @@ class GithubPRActionGit(
             this.data.setting.triggerReviewSetting.whitelist
         val checkProjectInWhiteList = this.data.eventCommon.gitProjectId in
             this.data.setting.triggerReviewSetting.whitelist
-        return (checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
+        return ((checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
             checkUserInWhiteList ||
-            checkProjectInWhiteList
+            checkProjectInWhiteList) && forkMrYamlList().isEmpty()
     }
 
     override fun getMrId() = event().pullRequest.number.toLong()
@@ -208,6 +209,11 @@ class GithubPRActionGit(
             eventType = GithubPullRequestEvent.classType
         )
         return this
+    }
+
+    override fun tryGetMrInfoFromCache(): GithubMrInfo? {
+        // todo
+        return null
     }
 
     override fun isStreamDeleteAction() = false
@@ -399,7 +405,7 @@ class GithubPRActionGit(
             return sourceContent
         }
 
-        val mergeRequest = apiService.getMrInfo(
+        val mergeRequest = tryGetMrInfoFromCache() ?: apiService.getMrInfo(
             cred = getGitCred(),
             gitProjectId = getGitProjectIdOrName(event.pullRequest.base.repo.id.toString()),
             mrId = this.getMrId().toString(),

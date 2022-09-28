@@ -55,6 +55,7 @@ import java.time.LocalDateTime
  * 每一个Stage结束后续命令处理
  */
 @Service
+@Suppress("LongParameterList", "TooManyFunctions")
 class UpdateStateForStageCmdFinally(
     private val pipelineStageService: PipelineStageService,
     private val pipelineRuntimeService: PipelineRuntimeService,

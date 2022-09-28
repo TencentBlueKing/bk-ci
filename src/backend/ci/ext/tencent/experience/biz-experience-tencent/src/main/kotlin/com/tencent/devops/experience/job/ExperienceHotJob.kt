@@ -2,7 +2,6 @@ package com.tencent.devops.experience.job
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.Profile
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
@@ -19,7 +18,6 @@ import java.time.LocalDateTime
 @RefreshScope
 @SuppressWarnings("TooGenericExceptionCaught", "MagicNumber")
 class ExperienceHotJob @Autowired constructor(
-    private val profile: Profile,
     private val redisOperation: RedisOperation,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceDao: ExperienceDao,
@@ -32,10 +30,6 @@ class ExperienceHotJob @Autowired constructor(
     @Scheduled(cron = "0 5 0 * * ?")
     @SuppressWarnings("MagicNumber", "NestedBlockDepth", "SwallowedException")
     fun jobHot() {
-        if (profile.isProd() && !profile.isProdGray()) {
-            logger.info("profile is prod , no start")
-            return
-        }
         if (hotDays <= 0) {
             logger.info("some params is null , jobHot no start")
             return

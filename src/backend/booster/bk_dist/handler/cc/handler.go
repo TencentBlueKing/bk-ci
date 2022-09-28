@@ -647,10 +647,17 @@ func (cc *TaskCC) scanPchFile(args []string) []string {
 	filename := fmt.Sprintf("%s.gch", cc.firstIncludeFile)
 
 	existed, fileSize, modifyTime, fileMode := dcFile.Stat(filename).Batch()
+
 	if !existed {
 		blog.Debugf("cc: [%s] try to get pch file for %s but %s is not exist",
 			cc.tag, cc.firstIncludeFile, filename)
-		return args
+
+		filename = cc.sandbox.GetAbsPath(filename)
+		existed, fileSize, modifyTime, _ = dcFile.Stat(filename).Batch()
+		if !existed {
+			return args
+		}
+		blog.Infof("cc: find gch file in relative path(%s), filesize(%v), modifytime:(%v)", filename, fileSize, modifyTime)
 	}
 	cc.pchFile = filename
 

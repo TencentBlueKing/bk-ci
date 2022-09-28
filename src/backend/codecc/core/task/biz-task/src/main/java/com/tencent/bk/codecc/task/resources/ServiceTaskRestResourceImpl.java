@@ -53,7 +53,6 @@ import com.tencent.bk.codecc.task.vo.pipeline.PipelineTaskVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
 import com.tencent.bk.codecc.task.vo.tianyi.QueryMyTasksReqVO;
 import com.tencent.bk.codecc.task.vo.tianyi.TaskInfoVO;
-import com.tencent.devops.common.api.CommonPageVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.exception.CodeCCException;

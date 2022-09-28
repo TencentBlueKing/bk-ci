@@ -135,6 +135,7 @@ class StreamTriggerRequestService @Autowired constructor(
                 action.data.setting = StreamTriggerSetting(gitCIBasicSetting)
             }
         }
+        action.initCacheData()
         // 获取前端展示相关的requestEvent
         val requestEvent = action.buildRequestEvent(event) ?: return false
 
@@ -300,7 +301,7 @@ class StreamTriggerRequestService @Autowired constructor(
                     creator = action.data.getUserId()
                 )
                 // 远程仓库触发时，主库不需要新建流水线
-                if (action.data.context.repoTrigger != null && buildPipeline.pipelineId.isBlank()) {
+                if (action.checkRepoHookTrigger() && buildPipeline.pipelineId.isBlank()) {
                     return@yamlEach
                 }
 
