@@ -603,6 +603,13 @@ export default {
     getMacXcodeVersion () {
         return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2`)
     },
+
+    getWinVersion () {
+        return request.get('/dispatch-windows/api/user/systemVersions').then((res) => {
+            return res.data
+        })
+    },
+
     setImportedPipelineJson ({ commit }, importedJson) {
         commit(SET_IMPORTED_JSON, importedJson)
     },

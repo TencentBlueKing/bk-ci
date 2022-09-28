@@ -660,6 +660,7 @@
     "manualReviewSuggestNameSpaceTip": "审核意见",
     "atomHelpDoc": "帮助文档",
     "macSystemVersion": "MacOS系统版本",
+    "winSystemVersion": "Windows系统版本",
     "xcodeVersion": "XCode版本",
     "notRecomendPlugin": "该插件已不推荐使用",
     "notRecomendImage": "该镜像已不推荐使用",
