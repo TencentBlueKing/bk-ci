@@ -108,7 +108,7 @@ class AuthCronManager @Autowired constructor(
                 logger.info("AuthCronManager|checkExpiringManager | running")
             }
         } catch (e: Throwable) {
-            logger.warn("AuthCronManager|checkExpiringManager|error", e)
+            logger.warn("AuthCronManager|checkExpiringManager | error", e)
         }
     }
 
