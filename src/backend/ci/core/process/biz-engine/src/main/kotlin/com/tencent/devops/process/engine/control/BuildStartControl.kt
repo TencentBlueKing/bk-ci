@@ -283,7 +283,7 @@ class BuildStartControl @Autowired constructor(
                 )
                 buildLogPrinter.addLine(
                     message = "Mode: ${setting.runLockType}," +
-                        "concurrency for group(${setting.concurrencyGroup}[$concurrencyGroup]) " +
+                        "concurrency for group($concurrencyGroup) " +
                         "and queue: ${concurrencyGroupRunning.count()}, now waiting for " +
                         "<a target='_blank' href='$detailUrl'>${concurrencyGroupRunning.first().second}</a>",
                     buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
