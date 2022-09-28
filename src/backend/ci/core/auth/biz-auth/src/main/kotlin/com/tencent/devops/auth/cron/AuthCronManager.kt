@@ -99,16 +99,16 @@ class AuthCronManager @Autowired constructor(
     fun checkExpiringManager() {
         val redisLock = RedisLock(redisOperation, AUTH_EXPIRING_MANAGAER_APPROVAL, 60L)
         try {
-            logger.info("AuthCronManager|checkExpiringManager|start")
+            logger.info("AuthCronManager|checkExpiringManager | start")
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 authManagerApprovalService.checkExpiringManager()
-                logger.info("AuthCronManager|checkExpiringManager|finish")
+                logger.info("AuthCronManager|checkExpiringManager | finish")
             } else {
-                logger.info("AuthCronManager|checkExpiringManager|running")
+                logger.info("AuthCronManager|checkExpiringManager | running")
             }
         } catch (e: Throwable) {
-            logger.warn("AuthCronManager|checkExpiringManager|error", e)
+            logger.warn("AuthCronManager|checkExpiringManager | error", e)
         }
     }
 
