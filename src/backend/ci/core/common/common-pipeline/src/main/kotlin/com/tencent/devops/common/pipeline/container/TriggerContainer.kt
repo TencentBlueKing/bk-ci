@@ -94,13 +94,4 @@ data class TriggerContainer(
     override fun fetchGroupContainers(): List<Container>? = null
 
     override fun fetchMatrixContext(): Map<String, String>? = null
-
-    override fun checkOptions() {
-        val types = listOf(BuildFormPropertyType.MULTIPLE, BuildFormPropertyType.ENUM)
-        params.forEach { param ->
-            if (types.contains(param.type)) {
-                param.options = emptyList()
-            }
-        }
-    }
 }

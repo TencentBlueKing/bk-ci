@@ -88,8 +88,4 @@ interface Container {
     fun fetchGroupContainers(): List<Container>?
 
     fun fetchMatrixContext(): Map<String, String>?
-
-    fun checkOptions() {
-        // 普通Container什么也不做，只有TriggerContainer会清除无用的options
-    }
 }

@@ -137,12 +137,6 @@ open class DefaultModelCheckPlugin constructor(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
                 )
             }
-
-            // 清除containers中的无用options
-            containers.forEach {
-                it.checkOptions()
-            }
-
             if (s.finally) { // finallyStage只能存在于最后一个
                 if (nowPosition < lastPosition) {
                     throw ErrorCodeException(
