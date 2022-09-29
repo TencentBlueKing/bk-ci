@@ -176,9 +176,13 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long?,
+        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
+        val projectId = GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
+        checkParam(userId)
+        permissionService.checkCommonUser(userId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
         return streamGitTransferService.isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
