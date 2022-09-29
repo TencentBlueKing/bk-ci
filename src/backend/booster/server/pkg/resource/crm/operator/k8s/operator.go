@@ -242,32 +242,45 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 		}
 	}
 
-	if o.debugTimes < 300 {
+	if o.debugTimes < 100 {
+		ifzero := true
 		blog.Infof("[micheal debug]: *************")
-		cpuUsedList := make([]float64, 0, 100)
-		for _, rs := range allocatedResourceList[:10] {
-			cpuUsedList = append(cpuUsedList, float64(rs.Cpu().Value()))
-		}
-		blog.Infof("[micheal debug]: cpuUsedList:(%v)", cpuUsedList)
-		for _, node := range zeroNodeList[:10] {
-			podNum := 0
-			for _, pod := range nodeNonTerminatedPodsList.Items {
-				if pod.Spec.NodeName != node.Name {
-					continue
-				}
-				podContainerCpuList := make([]float64, 0, 100)
-				for _, c := range pod.Spec.Containers {
-					if val, ok := c.Resources.Requests["cpu"]; ok {
-						podContainerCpuList = append(podContainerCpuList, float64(val.Value()))
-					}
-				}
-				blog.Infof("[micheal debug]: pod (%s) containers used cpu list:(%v)", pod.Name, podContainerCpuList)
-				podNum++
+
+		for _, rs := range allocatedResourceList {
+			if rs.Cpu().Value() != 0 {
+				ifzero = false
+				break
 			}
-			blog.Infof("[micheal debug]: node (%s) has (%d) pods", node.Name, podNum)
 		}
-		o.debugTimes++
-		blog.Infof("[micheal debug]: *************")
+		if ifzero {
+			blog.Infof("[micheal debug]: there are (%d) nodes and (%d) pods", len(nodeList.Items), len(nodeNonTerminatedPodsList.Items))
+			var podNameList []string
+			nodeNameList := make([]string, 0, 20)
+			for _, pod := range nodeNonTerminatedPodsList.Items {
+				podNameList = append(podNameList, pod.Spec.NodeName)
+			}
+			for i, node := range zeroNodeList {
+				if i >= 10 {
+					break
+				}
+				nodeNameList = append(nodeNameList, node.Name)
+			}
+			blog.Infof("[micheal debug]: zero node name list:[%v]", nodeNameList)
+			blog.Infof("[micheal debug]: pod name list:[%v]", podNameList)
+
+			for i, pod := range nodeNonTerminatedPodsList.Items {
+				if i >= 10 {
+					break
+				}
+				podRequests := podRequests(&pod)
+				blog.Infof("[micheal debug]: debug pod name (%s),pod spec node name:(%s)", pod.Name, &pod.Spec.NodeName)
+				for k, v := range podRequests {
+					blog.Infof("  [micheal debug]: (%s):(%d)", k, v.Value())
+				}
+			}
+			o.debugTimes++
+			blog.Infof("[micheal debug]: *************")
+		}
 	}
 
 	blog.Debugf("k8s-operator: success to get resource clusterID(%s)", clusterID)
