@@ -46,9 +46,9 @@ class Table(
                 postfix = SEPARATOR
             ) { index, element ->
                 WHITESPACE + element.padEnd(interval[index] ?: 0, ' ') + WHITESPACE
-            }.append('\n').append('\n')
+            }.append('\n')
         }
-        return body.toString()
+        return body.append('\n').toString()
     }
 
     fun setRow(vararg row: String): Table {
