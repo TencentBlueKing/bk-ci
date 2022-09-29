@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.pojo.app.BuildEnvParameters
 import io.swagger.annotations.Api
@@ -119,7 +120,7 @@ interface UserBuildParametersResource {
     @ApiOperation("构建表单查询子流水线列表")
     @GET
     @Path("/pipeline/{projectId}/{pipelineId}")
-    fun listPipeline(
+    fun listPipelineName(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -139,4 +140,29 @@ interface UserBuildParametersResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<BuildFormValue>>
+
+    @ApiOperation("构建表单查询子流水线列表")
+    @GET
+    @Path("/pipelineId/{projectId}")
+    fun listPipelineIdAndName(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String? = null,
+        @ApiParam("别名", required = false)
+        @QueryParam("aliasName")
+        aliasName: String? = null,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<PipelineIdAndName>>
+
 }

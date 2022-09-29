@@ -27,6 +27,9 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -91,4 +94,13 @@ data class TriggerContainer(
     override fun fetchGroupContainers(): List<Container>? = null
 
     override fun fetchMatrixContext(): Map<String, String>? = null
+
+    override fun checkOptions() {
+        val types = listOf(BuildFormPropertyType.MULTIPLE, BuildFormPropertyType.ENUM)
+        params.forEach { param ->
+            if (types.contains(param.type)) {
+                param.options = emptyList()
+            }
+        }
+    }
 }

@@ -44,6 +44,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
@@ -668,7 +669,7 @@ class TemplateFacadeService @Autowired constructor(
                         if (templatePipelineVersion != version) {
                             logger.info(
                                 "The pipeline $templatePipelineId need to upgrade " +
-                                    "from $templatePipelineVersion to $version"
+                                        "from $templatePipelineVersion to $version"
                             )
                             hasInstances2Upgrade = true
                             return@lit
