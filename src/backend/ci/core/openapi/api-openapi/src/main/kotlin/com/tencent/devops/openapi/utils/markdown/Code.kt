@@ -12,6 +12,6 @@ class Code(
     }
 
     override fun toString(): String {
-        return "$CODE_FILL$language\n$body\n$CODE_FILL\n"
+        return "\n$CODE_FILL$language\n$body\n$CODE_FILL\n\n"
     }
 }
