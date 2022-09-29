@@ -308,7 +308,7 @@ class PipelineBuildDao {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(STATUS.eq(BuildStatus.QUEUE.ordinal))
+                .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny()
         }
