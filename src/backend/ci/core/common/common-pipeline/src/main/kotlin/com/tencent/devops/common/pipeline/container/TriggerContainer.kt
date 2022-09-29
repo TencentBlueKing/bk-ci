@@ -27,9 +27,6 @@
 
 package com.tencent.devops.common.pipeline.container
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element

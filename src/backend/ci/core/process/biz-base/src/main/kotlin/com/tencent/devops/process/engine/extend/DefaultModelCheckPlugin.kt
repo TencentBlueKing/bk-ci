@@ -137,6 +137,7 @@ open class DefaultModelCheckPlugin constructor(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
                 )
             }
+
             if (s.finally) { // finallyStage只能存在于最后一个
                 if (nowPosition < lastPosition) {
                     throw ErrorCodeException(
