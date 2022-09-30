@@ -60,7 +60,6 @@ class ThirdFilter(
                 changeFiles = changeFiles
             )
         )
-        logger.info("$pipelineId|third filter|$body")
         val builder = Request.Builder()
             .url(thirdUrl!!)
             .post(
