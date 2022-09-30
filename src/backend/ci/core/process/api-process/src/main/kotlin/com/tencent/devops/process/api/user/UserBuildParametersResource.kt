@@ -29,9 +29,11 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
+import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.pojo.app.BuildEnvParameters
@@ -163,5 +165,5 @@ interface UserBuildParametersResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<PipelineIdAndName>>
+    ): Result<Page<Pipeline>>
 }
