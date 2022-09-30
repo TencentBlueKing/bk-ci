@@ -204,7 +204,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                 pageSize = pageSize,
                 page = page
             )
-            val result =  if (buildPipelineRecords.size > 0) {
+            val result = if (buildPipelineRecords.size > 0) {
                 val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
                 pipelineListFacadeService.buildPipelines(
                     pipelineInfoRecords = buildPipelineRecords,
