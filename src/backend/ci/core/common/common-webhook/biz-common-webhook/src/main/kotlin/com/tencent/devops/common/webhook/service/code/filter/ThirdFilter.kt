@@ -46,7 +46,7 @@ class ThirdFilter(
                 }
             } ?: send()
         } catch (ignore: Exception) {
-            logger.warn("Failed to call third filter", ignore)
+            logger.warn("$pipelineId|Failed to call third filter", ignore)
             false
         }
     }
@@ -56,7 +56,7 @@ class ThirdFilter(
             ThirdFilterBody(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                event = event,
+                event = JsonUtil.toJson(event),
                 changeFiles = changeFiles
             )
         )
@@ -78,7 +78,7 @@ class ThirdFilter(
                 if (!response.isSuccessful) {
                     throw CustomException(
                         status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
-                        message = "Failed to call third filter|code:${response.code()})|data:$data"
+                        message = "Failed to call third filter|code:${response.code()}|data:$data"
                     )
                 }
                 JsonUtil.to(data, ThirdFilterResult::class.java).match
