@@ -56,10 +56,11 @@ class ThirdFilter(
             ThirdFilterBody(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                event = JsonUtil.toJson(event),
+                event = event,
                 changeFiles = changeFiles
             )
         )
+        logger.info("$pipelineId|third filter|$body")
         val builder = Request.Builder()
             .url(thirdUrl!!)
             .post(
