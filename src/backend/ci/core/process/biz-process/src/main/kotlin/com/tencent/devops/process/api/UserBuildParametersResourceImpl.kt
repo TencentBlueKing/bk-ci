@@ -69,7 +69,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
     private val client: Client,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineListFacadeService: PipelineListFacadeService,
-    private val pipelineGroupService: PipelineGroupService,
+    private val pipelineGroupService: PipelineGroupService
 ) : UserBuildParametersResource {
 
     companion object {
