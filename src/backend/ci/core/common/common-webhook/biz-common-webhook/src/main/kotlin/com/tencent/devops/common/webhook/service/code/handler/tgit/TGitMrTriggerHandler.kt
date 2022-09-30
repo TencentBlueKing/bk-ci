@@ -77,6 +77,7 @@ import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
@@ -89,14 +90,19 @@ import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import java.util.Date
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
 class TGitMrTriggerHandler(
     private val gitScmService: GitScmService,
-    private val eventCacheService: EventCacheService
+    private val eventCacheService: EventCacheService,
+    // stream没有这个配置
+    @Autowired(required = false)
+    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry?
 ) : GitHookTriggerHandler<GitMergeRequestEvent> {
 
     companion object {
@@ -196,6 +202,7 @@ class TGitMrTriggerHandler(
                 included = convert(includeMrAction)
             )
 
+            var mrChangeFiles: Set<String>? = null
             // 懒加载请求修改的路径,只有前面所有匹配通过,再去查询
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
@@ -210,6 +217,7 @@ class TGitMrTriggerHandler(
                         }
                         eventCacheService.getMergeRequestChangeInfo(projectId, mrId, repository)
                     }?.toList() ?: emptyList()
+                    mrChangeFiles = changeFiles.toSet()
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = pathFilterType,
@@ -227,7 +235,17 @@ class TGitMrTriggerHandler(
                 event.object_attributes.last_commit.message,
                 pipelineId
             )
-            return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter, actionFilter)
+            val thirdFilter = ThirdFilter(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = event,
+                changeFiles = mrChangeFiles,
+                thirdUrl = thirdUrl,
+                thirdSecretToken = thirdSecretToken,
+                gitScmService = gitScmService,
+                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
+            )
+            return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter, actionFilter, thirdFilter)
         }
     }
 
