@@ -29,7 +29,6 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -44,11 +43,11 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
 import com.tencent.devops.process.pojo.Pipeline
-import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -69,7 +68,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserBuildParametersResourceImpl @Autowired constructor(
     private val client: Client,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineListFacadeService: PipelineListFacadeService
+    private val pipelineListFacadeService: PipelineListFacadeService,
+    private val pipelineGroupService: PipelineGroupService,
 ) : UserBuildParametersResource {
 
     companion object {
@@ -197,33 +197,24 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<Pipeline>> {
         try {
-            val result = listSubPipelineInfo(
+            val buildPipelineRecords = listSubPipelineInfo(
                 userId = userId,
                 projectId = projectId,
                 aliasName = aliasName,
                 pageSize = pageSize,
                 page = page
-            ).filter { pipelineId == null || !it.pipelineId.contains(pipelineId) }
-                .map {
-                    Pipeline(
-                        projectId = it.projectId,
-                        pipelineId = it.pipelineId,
-                        pipelineName = it.pipelineName,
-                        taskCount = it.taskCount,
-                        canManualStartup = it.manualStartup == 1,
-                        latestBuildEstimatedExecutionSeconds = 1L,
-                        deploymentTime = (it.updateTime)?.timestampmilli() ?: 0,
-                        createTime = (it.createTime)?.timestampmilli() ?: 0,
-                        updateTime = (it.updateTime)?.timestampmilli() ?: 0,
-                        pipelineVersion = it.version,
-                        currentTimestamp = System.currentTimeMillis(),
-                        hasPermission = true,
-                        hasCollect = false,
-                        updater = it.lastModifyUser,
-                        creator = it.creator
-                    )
-                }
-
+            )
+            val result =  if (buildPipelineRecords.size > 0) {
+                val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
+                pipelineListFacadeService.buildPipelines(
+                    pipelineInfoRecords = buildPipelineRecords,
+                    favorPipelines = favorPipelines,
+                    authPipelines = emptyList(),
+                    projectId = projectId
+                )
+            } else {
+                mutableListOf()
+            }
             return Result(
                 data = Page(
                     page = page ?: 0,
@@ -251,7 +242,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         aliasName: String?,
         page: Int?,
         pageSize: Int?
-    ): List<TPipelineInfoRecord> {
+    ): org.jooq.Result<TPipelineInfoRecord> {
         val hasPermissionList =
             pipelinePermissionService.getResourceByPermission(
                 userId = userId,

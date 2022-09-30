@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
 import com.tencent.devops.process.pojo.Pipeline
-import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.pojo.app.BuildEnvParameters
 import io.swagger.annotations.Api
