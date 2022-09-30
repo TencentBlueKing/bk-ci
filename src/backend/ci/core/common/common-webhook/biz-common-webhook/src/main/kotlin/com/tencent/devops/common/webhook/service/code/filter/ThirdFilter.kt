@@ -81,6 +81,7 @@ class ThirdFilter(
                         message = "Failed to call third filter|code:${response.code()}|data:$data"
                     )
                 }
+                logger.info("$pipelineId|third filter result:$data")
                 JsonUtil.to(data, ThirdFilterResult::class.java).match
             }
         }
