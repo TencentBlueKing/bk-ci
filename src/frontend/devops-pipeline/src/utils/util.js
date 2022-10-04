@@ -260,7 +260,6 @@ export function convertMStoString (time) {
  *  @return {String} str - 转换后的字符串
  */
 export function convertMStoStringByRule (time) {
-    console.log(time)
     if (time < 0) {
         return '--'
     }

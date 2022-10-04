@@ -1,6 +1,7 @@
 {
   "name": "devops-turbo",
   "version": "1.0.0",
+  "private": true,
   "devDependencies": {
     "@babel/core": "^7.15.8",
     "@babel/eslint-parser": "^7.15.8",

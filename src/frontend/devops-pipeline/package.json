@@ -2,6 +2,7 @@
     "name": "devops-pipeline",
     "version": "1.0.1",
     "description": "devops-pipeline",
+    "private": true,
     "author": "",
     "scripts": {
         "dev": "webpack-cli serve --mode development --progress",

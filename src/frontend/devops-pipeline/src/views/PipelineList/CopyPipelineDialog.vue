@@ -1,6 +1,6 @@
 <template>
     <bk-dialog
-        width="800"
+        width="480"
         v-model="isCopyDialogShow"
         :title="$t('newlist.copyPipeline')"
         :mask-close="false"
@@ -10,7 +10,7 @@
         @confirm="submit"
         @cancel="cancel"
     >
-        <bk-form :model="model" v-bkloading="{ isLoading: isSubmiting }">
+        <bk-form :model="model" form-type="vertical" v-bkloading="{ isLoading: isSubmiting }" ver>
             <bk-form-item
                 v-for="item in formModel"
                 :key="item.name"
@@ -24,14 +24,56 @@
                     @input="item.handleInput"
                 />
             </bk-form-item>
+            <bk-form-item :label="$t('label')">
+                <PipelineLabelSelector
+                    v-model="initTags"
+                    @change="updateDynamicGroup"
+                />
+            </bk-form-item>
+
+            <bk-form-item :label="$t('dynamicPipelineGroup')">
+                <bk-select
+                    :value="dynamicGroup"
+                    disabled
+                    :loading="isMatching"
+                    multiple
+                >
+                    <bk-option
+                        v-for="group in dynamicPipelineGroups"
+                        :key="group.id"
+                        :id="group.id"
+                        :name="group.name"
+                    >
+                    </bk-option>
+                </bk-select>
+            </bk-form-item>
+            <bk-form-item :label="$t('staticPipelineGroup')">
+                <bk-select
+                    multiple
+                    v-model="model.staticViews"
+                >
+                    <bk-option
+                        v-for="group in staticPipelineGroups"
+                        :key="group.id"
+                        :id="group.id"
+                        :name="group.name"
+                    >
+                    </bk-option>
+                </bk-select>
+            </bk-form-item>
         </bk-form>
     </bk-dialog>
 </template>
 
 <script>
+    import { mapActions, mapGetters } from 'vuex'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import PipelineLabelSelector from '@/components/PipelineLabelSelector'
     export default {
         name: 'copy-pipeline-dialog',
+        components: {
+            PipelineLabelSelector
+        },
         mixins: [piplineActionMixin],
         props: {
             isCopyDialogShow: Boolean,
@@ -43,13 +85,22 @@
         data () {
             return {
                 isSubmiting: false,
+                initTags: {},
+                dynamicGroup: [],
+                isMatching: false,
                 model: {
                     name: `${this.pipeline?.pipelineName}_copy`,
+                    labels: [],
+                    staticViews: [],
                     desc: ''
                 }
             }
         },
         computed: {
+            ...mapGetters('pipelines', [
+                'staticPipelineGroups',
+                'dynamicPipelineGroups'
+            ]),
             formModel () {
                 return [
                     {
@@ -73,7 +124,7 @@
                         }
                     },
                     {
-                        name: 'desc',
+                        name: 'label',
                         placeholder: 'pipelineDescInputTips',
                         value: this.model.desc,
                         rules: [
@@ -96,16 +147,48 @@
             }
         },
         methods: {
+            ...mapActions('pipelines', [
+                'matchDynamicView'
+            ]),
+            async updateDynamicGroup (tags) {
+                this.isMatching = true
+                this.model.labels = Object.values(tags).flat()
+                try {
+                    const labels = Object.keys(tags).map(key => ({
+                        groupId: key,
+                        labelIds: tags[key]
+                    }))
+
+                    const { data } = await this.matchDynamicView({
+                        projectId: this.$route.params.projectId,
+                        pipelineName: this.model.name,
+                        labels
+                    })
+                    this.dynamicGroup = data
+                } catch (e) {
+                    console.error(e)
+                } finally {
+                    this.isMatching = false
+                }
+            },
             async submit () {
                 this.isSubmiting = true
 
                 this.copy(this.model, this.pipeline)
                 this.isSubmiting = false
                 this.cancel()
+                this.$emit('done')
             },
             reset () {
-                this.model.name = ''
-                this.model.desc = ''
+                this.initTags = {}
+                this.dynamicGroup = []
+                this.isMatching = false
+                this.model = {
+                    name: '',
+                    labels: [],
+                    staticViews: [],
+                    desc: ''
+                }
             },
             cancel () {
                 this.reset()

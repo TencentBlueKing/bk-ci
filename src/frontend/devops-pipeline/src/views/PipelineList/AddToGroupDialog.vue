@@ -16,18 +16,34 @@
                 <p>
                     {{ groupTitle }}
                 </p>
-                <bk-input :placeholder="$t('searchPipelineGroup')" v-model="filterKeyword" right-icon="bk-icon icon-search" />
-                <ul class="add-to-pipeline-group-list">
-                    <li v-for="(item, index) in pipelineGroups" :key="index" :class="{ disabled: item.disabled }">
-                        <bk-checkbox
-                            :disabled="item.disabled"
-                            :value="selectedGroupNameMap[item.name]"
-                            @change="(checked) => handleChecked(checked, item)"
-                        ></bk-checkbox>
-                        <span class="add-to-pipeline-group-item-name">{{item.name}}</span>
-                        <span v-if="item.disabled">{{$t('added')}}</span>
-                    </li>
-                </ul>
+                <bk-input
+                    :placeholder="$t('searchPipelineGroup')"
+                    v-model="filterKeyword"
+                    @enter="handleSearch"
+                    right-icon="bk-icon icon-search"
+                />
+                <bk-big-tree
+                    ref="pipelineGroupTree"
+                    :data="pipelineGroupsTree"
+                    node-key="id"
+                    :show-icon="false"
+                    default-expand-all
+                    class="add-to-pipeline-group-list"
+                >
+                    <div class="add-to-pipeline-group-tree-node" slot-scope="{ node, data }">
+                        <span @click.stop>
+                            <bk-checkbox
+                                :disabled="savedPipelineGroupMap[data.id]"
+                                :value="isChecked(data)"
+                                :indeterminate="isIndeterminate(data)"
+                                @change="(checked) => handleChecked(checked, data)"
+                            />
+                        </span>
+                        <span class="add-to-pipeline-group-item-name">{{data.name}}</span>
+                        <span class="added-pipeline-group-desc" v-if="savedPipelineGroupMap[data.id]">{{$t('added')}}</span>
+                    </div>
+                </bk-big-tree>
+
             </aside>
             <aside class="add-group-right">
                 <header>
@@ -50,7 +66,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
+    import { mapState, mapActions, mapGetters } from 'vuex'
     export default {
         props: {
             pipeline: {
@@ -78,6 +94,9 @@
             ...mapState('pipelines', [
                 'allPipelineGroup'
             ]),
+            ...mapGetters('pipelines', [
+                'groupMap'
+            ]),
             title () {
                 return this.$t(this.isPatch ? 'patchAddTo' : 'addTo')
             },
@@ -85,11 +104,22 @@
                 return this.isPatch ? this.$t('patchAddToGroupTitle', [this.pipelineList.length]) : this.$t('addToGroupTitle', [this.pipeline.pipelineName])
             },
             pipelineGroups () {
-                return this.allPipelineGroup.filter(group => group.viewType === 2 && group.name.indexOf(this.filterKeyword) > -1)
-                    .map(group => ({
-                        ...group,
-                        disabled: this.selectedGroupNameMap[group.name]
-                    }))
+                return this.allPipelineGroup.filter(group => group.viewType === 2)
+            },
+            pipelineGroupsTree () {
+                return this.pipelineGroups.reduce((acc, group) => {
+                    const index = group.projected ? 1 : 0
+                    acc[index].children.push(group)
+                    return acc
+                }, [{
+                    id: 'personal',
+                    name: this.$t('personalPipelineGroup'),
+                    children: []
+                }, {
+                    id: 'projected',
+                    name: this.$t('projectPipelineGroup'),
+                    children: []
+                }])
             },
             groupIdMap () {
                 return this.pipelineGroups.reduce((acc, group) => ({
@@ -97,24 +127,23 @@
                     [group.name]: group.id
                 }), {})
             },
-            selectedGroupNameMap () {
+            selectedGroupIdMap () {
                 return this.selectedGroups.reduce((acc, group) => ({
                     ...acc,
-                    [group.name]: true
+                    [group.id]: true
                 }), {})
-            }
-        },
-        watch: {
-            pipeline: {
-                handler: function (pipeline) {
-                    if (!this.isPatch) {
-                        this.selectedGroups = pipeline?.viewNames.map(name => ({
-                            id: this.groupIdMap[name],
-                            name
-                        })) ?? []
-                    }
-                },
-                immediate: true
+            },
+            savedPipelineGroups () {
+                return this.pipeline?.viewNames?.map(name => ({
+                    id: this.groupIdMap[name],
+                    name
+                })) ?? []
+            },
+            savedPipelineGroupMap () {
+                return this.savedPipelineGroups.reduce((acc, group) => ({
+                    ...acc,
+                    [group.id]: true
+                }), {})
             }
         },
         methods: {
@@ -126,12 +155,52 @@
                 this.filterKeyword = ''
                 this.$emit('close')
             },
-            handleChecked (checked, { id, name }) {
-                if (checked) {
-                    this.selectedGroups.push({
-                        id,
-                        name
+            handleSearch () {
+                console.log(this.$refs.pipelineGroupTree)
+                this.$refs.pipelineGroupTree.filter(this.filterKeyword)
+            },
+            isChecked ({ id, children }) {
+                if (Array.isArray(children)) {
+                    return children.every(this.isChecked)
+                }
+                return this.savedPipelineGroupMap[id] || this.selectedGroupIdMap[id]
+            },
+            isIndeterminate ({ children }) {
+                if (Array.isArray(children)) {
+                    let checkNum = 0
+                    children.forEach(child => {
+                        if (this.isChecked(child)) checkNum++
                     })
+                    return checkNum > 0 && checkNum < children.length
+                }
+                return false
+            },
+            handleChecked (checked, { id, name, children }) {
+                const isRoot = Array.isArray(children)
+
+                if (checked) {
+                    const sub = isRoot
+                        ? children.filter(child => !this.isChecked(child)).map(child => ({
+                            id: child.id,
+                            name: child.name
+                        }))
+                        : [{
+                            id,
+                            name
+                        }]
+                    this.selectedGroups.push(...sub)
+                } else {
+                    const editableChildren = children?.filter(child => !this.savedPipelineGroupMap[id]) ?? []
+                    const removeMap = isRoot
+                        ? editableChildren.reduce((acc, child) => {
+                            acc[child.id] = true
+                            return acc
+                        }, {})
+                        : {
+                            [id]: true
+                        }
+
+                    this.selectedGroups = this.selectedGroups.filter(group => !removeMap[group.id])
                 }
             },
             emptySelectedGroups () {
@@ -150,6 +219,15 @@
                         projectId: this.$route.params.projectId,
                         pipelineIds: this.isPatch ? this.pipelineList.map(pipeline => pipeline.pipelineId) : [this.pipeline.pipelineId],
                         viewIds: this.selectedGroups.map(group => group.id)
+                    })
+
+                    this.selectedGroups.forEach(group => {
+                        this.$store.commit('pipelines/UPDATE_PIPELINE_GROUP', {
+                            id: group.id,
+                            body: {
+                                pipelineCount: this.groupMap[group.id].pipelineCount + 1
+                            }
+                        })
                     })
                     this.handleClose()
                     this.$emit('done')
@@ -198,28 +276,23 @@
                     flex: 1;
                     overflow: auto;
                     margin-top: 8px;
-                    > li {
+                    .add-to-pipeline-group-tree-node {
                         display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        padding: 0 16px 0 24px;
                         font-size: 12px;
-                        height: 32px;
-                        &:hover {
-                            background: #E1ECFF;
-                        }
-                        &.disabled {
-                            color: #C4C6CC;
-                        }
                         .add-to-pipeline-group-item-name {
                             flex: 1;
-                            margin: 0 10px;
                             @include ellipsis();
+                            margin-left: 8px;
+                        }
+                        .added-pipeline-group-desc {
+                            color: #c4c4c4;
                         }
                     }
                 }
             }
             .add-group-right {
+                display: flex;
+                flex-direction: column;
                 flex: 2;
                 padding: 24px;
                 background: #F5F7FA;
@@ -233,6 +306,8 @@
                     }
                 }
                 .add-group-result-preview-list {
+                    flex: 1;
+                    overflow: auto;
                     > li {
                         font-size: 12px;
                         height: 30px;

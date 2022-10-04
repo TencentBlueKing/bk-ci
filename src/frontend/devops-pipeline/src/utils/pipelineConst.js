@@ -62,6 +62,11 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'errorCode'
 ]
 
+export const VIEW_CONDITION = {
+    LIKE: 'LIKE',
+    INCLUDE: 'INCLUDE'
+}
+
 export function getVersionConfig () {
     return {
         BK_CI_MAJOR_VERSION: {

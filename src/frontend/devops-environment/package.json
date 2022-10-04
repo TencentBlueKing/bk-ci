@@ -2,6 +2,7 @@
   "name": "devops-environment",
   "version": "1.0.0",
   "description": "",
+  "private": true,
   "dependencies": {
     "@vue/composition-api": "^1.6.1",
     "clipboard": "^1.7.1",

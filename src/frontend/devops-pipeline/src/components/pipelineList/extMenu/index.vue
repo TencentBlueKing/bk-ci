@@ -6,7 +6,7 @@
         theme="dot-menu light"
         trigger="mouseenter"
     >
-        <div class="dot-menu-trigger">
+        <div :class="`dot-menu-trigger ${extCls}`">
             <i class="devops-icon icon-more"></i>
         </div>
         <ul v-if="config.length > 0" class="dot-menu-list" slot="content">
@@ -26,6 +26,10 @@
             config: {
                 type: Array,
                 default: () => []
+            },
+            extCls: {
+                type: String,
+                default: ''
             }
         },
         methods: {

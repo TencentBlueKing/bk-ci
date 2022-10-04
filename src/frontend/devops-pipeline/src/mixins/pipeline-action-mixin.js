@@ -40,6 +40,7 @@ export default {
     },
     computed: {
         isDeleteView () {
+            console.log(this.$route.params.viewId, DELETED_VIEW_ID)
             return this.$route.params.viewId === DELETED_VIEW_ID
         }
     },
@@ -226,21 +227,32 @@ export default {
                 activePipelineList: [pipeline]
             })
         },
-        resetActivePipeline () {
+        closeCopyDialog () {
             this.updatePipelineActionState({
-                addToDialogShow: false,
-                confirmType: '',
-                isConfirmShow: false,
-                isCopyDialogShow: false,
-                isSaveAsTemplateShow: false,
-                activePipelineList: [],
+                isCopyDialogShow: true,
                 activePipeline: null
             })
         },
-        handleCancelRemove () {
-            this.confirmType = ''
-            this.isConfirmShow = false
+        closeAddToDialog () {
+            this.updatePipelineActionState({
+                addToDialogShow: false,
+                activePipeline: null
+            })
         },
+        closeRemoveConfirmDialog () {
+            this.updatePipelineActionState({
+                confirmType: '',
+                isConfirmShow: false,
+                activePipelineList: []
+            })
+        },
+        closeSaveAsDialog () {
+            this.updatePipelineActionState({
+                isSaveAsTemplateShow: false,
+                activePipeline: null
+            })
+        },
+
         jumpToTemplate ({ templateId }) {
             this.$router.push({
                 name: 'templateEdit',
@@ -373,15 +385,159 @@ export default {
                     projectId,
                     pipelineId
                 })
+                return true
             } catch (err) {
                 message = err.message || err
                 theme = 'error'
+                return false
             } finally {
                 this.$showTips({
                     message,
                     theme
                 })
             }
+        },
+        updatePipelineStatus (data, isFirst = false) {
+            const {
+                statusMap
+            } = this
+            const knownErrorList = JSON.parse(localStorage.getItem('pipelineKnowError')) || {}
+            Object.keys(data).forEach(pipelineId => {
+                const item = data[pipelineId]
+                if (item) {
+                    const status = statusMap[item.latestBuildStatus]
+                    let feConfig = {
+                        isRunning: false,
+                        status: status || 'not_built'
+                    }
+                    // 单独修改当前任务是否在执行的状态, 拼接右下角按钮
+                    switch (feConfig.status) {
+                        case 'error': {
+                            const isKnowErrorPipeline = !!knownErrorList[`${this.projectId}_${pipelineId}_${item.latestBuildId}`]
+                            feConfig = {
+                                ...feConfig,
+                                customBtns: isKnowErrorPipeline
+                                    ? []
+                                    : [{
+                                        icon: 'check-1',
+                                        text: this.$t('newlist.known'),
+                                        handler: 'error-noticed'
+                                    }],
+                                isRunning: !isKnowErrorPipeline,
+                                status: isKnowErrorPipeline ? 'known_error' : 'error'
+                            }
+                            break
+                        }
+                        case 'cancel': {
+                            const isKnowCancelPipeline = !!knownErrorList[`${this.projectId}_${pipelineId}_${item.latestBuildId}`]
+                            feConfig = {
+                                ...feConfig,
+                                customBtns: isKnowCancelPipeline
+                                    ? []
+                                    : [{
+                                        icon: 'check-1',
+                                        text: this.$t('newlist.known'),
+                                        handler: 'error-noticed'
+                                    }],
+                                isRunning: !isKnowCancelPipeline,
+                                status: isKnowCancelPipeline ? 'known_cancel' : 'cancel'
+                            }
+                            break
+                        }
+                        case 'running':
+                            feConfig = {
+                                ...feConfig,
+                                isRunning: true,
+                                customBtns: [{
+                                    text: this.$t('terminate'),
+                                    handler: 'terminate-pipeline'
+                                }]
+                            }
+                            break
+                        case 'warning':
+                            feConfig = {
+                                ...feConfig,
+                                customBtns: [
+                                    {
+                                        text: this.$t('resume'),
+                                        handler: 'resume-pipeline'
+                                    },
+                                    {
+                                        text: this.$t('terminate'),
+                                        handler: 'terminate-pipeline'
+                                    }
+                                ],
+                                isRunning: true
+                            }
+                            break
+                        default:
+                            feConfig.isRunning = false
+                    }
+
+                    feConfig = {
+                        ...feConfig,
+                        footer: [
+                            {
+                                upperText: item.taskCount,
+                                lowerText: this.$t('newlist.totalAtomNums'),
+                                handler: this.goEditPipeline
+                            },
+                            {
+                                upperText: item.buildCount,
+                                lowerText: this.$t('newlist.execTimes'),
+                                handler: this.goHistory
+                            }
+                        ],
+                        runningInfo: {
+                            time: convertMStoStringByRule(status === 'error' ? (item.latestBuildEndTime - item.latestBuildStartTime) : (item.currentTimestamp - item.latestBuildStartTime)),
+                            percentage: this.calcPercentage(item),
+                            log: item.latestBuildTaskName,
+                            buildCount: item.runningBuildCount || 0
+                        },
+                        projectId: this.projectId,
+                        pipelineId,
+                        buildId: item.latestBuildId || 0
+                    }
+                    if (!(this.pipelineFeConfMap[pipelineId] && this.pipelineFeConfMap[pipelineId].extMenu && this.pipelineFeConfMap[pipelineId].extMenu.length)) {
+                        feConfig.extMenu = [
+                            {
+                                text: this.$t('edit'),
+                                handler: this.goEditPipeline
+                            },
+                            {
+                                text: (item.hasCollect ? this.$t('uncollect') : this.$t('collect')),
+                                handler: this.togglePipelineCollect
+                            },
+                            {
+                                text: this.$t('newlist.copyAs'),
+                                handler: this.copyPipeline
+                            },
+                            {
+                                text: this.$t('newlist.saveAsTemp'),
+                                disable: !this.hasTemplatePermission,
+                                handler: this.copyAsTemplate
+                            },
+                            {
+                                text: this.$t('delete'),
+                                handler: this.deletePipeline
+                            }
+                        ]
+                    }
+
+                    if (this.pipelineFeConfMap[pipelineId] && !this.pipelineFeConfMap[pipelineId].extMenu.length && this.pipelineFeConfMap[pipelineId].isInstanceTemplate) {
+                        feConfig.extMenu.splice((feConfig.extMenu.length - 1), 0, {
+                            text: this.$t('newlist.jumpToTemp'),
+                            handler: this.jumpToTemplate,
+                            isJumpToTem: true
+                        })
+                    }
+
+                    this.pipelineFeConfMap[pipelineId] = {
+                        ...(this.pipelineFeConfMap[pipelineId] || {}),
+                        ...feConfig
+                    }
+                }
+            })
         },
         applyPermission ({ pipelineName, pipelineId }) {
             bus.$emit(

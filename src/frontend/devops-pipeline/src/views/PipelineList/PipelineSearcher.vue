@@ -116,10 +116,10 @@
         },
         methods: {
             ...mapActions('pipelines', [
-                'requestLabelLists'
+                'requestTagList'
             ]),
             async init () {
-                await this.requestLabelLists(this.$route.params)
+                await this.requestTagList(this.$route.params)
             },
             getFilterLabelValues (keyName, ids) {
                 const tagGroupIdMap = ids.reduce((acc, id) => {

@@ -35,10 +35,17 @@
             overflow: hidden;
 
             .current-pipeline-group-name {
+                display: flex;
+                align-items: center;
                 font-size: 14px;
                 line-height: 22px;
                 margin: 0 0 16px 0;
                 color: #313238;
+                font-weight: normal;
+                > span {
+                    font-weight: bold;
+                    margin-left: 8px;
+                }
 
             }
             .pipeline-list-main-header {

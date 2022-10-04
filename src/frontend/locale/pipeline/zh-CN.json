@@ -247,7 +247,7 @@
     "restoreSuc": "恢复成功",
     "emptyTitle": "暂无可恢复的流水线",
     "emptyDesc": "30天内被删除的流水线可在此页面恢复",
-    "restoreSearchTips": "流水线名称/删除人"
+    "restoreSearchTips": "流水线名称"
   },
   "atomManage": {
     "installedAtom": "已安装插件",
@@ -410,7 +410,7 @@
     "execTimes": "已执行次数",
     "known": "知道了",
     "noExecution": "未执行过",
-    "copyAs": "复制为",
+    "copyAs": "复制流水线",
     "exportPipelineJson": "导出",
     "importModifyPipelineJson": "导入更新",
     "updatePipelineJson": "更新流水线",
@@ -1007,7 +1007,7 @@
   "unStickyTop": "取消置顶",
   "unStickyTopSuccess": "{0}取消置顶成功",
   "stickyTopSuccess": "{0}置顶成功",
-  "pipelineCountEdit": "增减流水线",
+  "pipelineCountEdit": "添加/移出流水线",
   "pipelineGroupAuth": "流水线组权限",
   "renameSuccess": "流水线组{0}重命名成功",
   "deleteGroupTitle": "确定删除【{0}】吗?",
@@ -1015,7 +1015,7 @@
   "groupStrategy": "分组管理策略",
   "staticGroup": "静态分组",
   "dynamicGroup": "动态分组",
-  "pipelineCountEditSuccess": "【{0}】增减流水线成功",
+  "pipelineCountEditSuccess": "【{0}】添加/移出流水线成功",
   "groupLogicLabel": "分组条件逻辑连接",
   "added": "已添加",
   "new": "新增",
@@ -1057,5 +1057,15 @@
   "alreadyDeleted": "流水线已删除",
   "execedTimes": "已运行",
   "removeSuc": "移除成功",
-  "addPipelineGroupSuc": "创建流水线组成功"
+  "addPipelineGroupSuc": "创建流水线组成功",
+  "total": "共",
+  "strip": "条",
+  "saveBeforePreviewTips": "修改条件后，请先预览确认再保存",
+  "staticGroupPlaceholder": "将根据流水线属性自动匹配",
+  "dynamicPipelineGroup": "动态流水线组",
+  "staticPipelineGroup": "静态流水线组",
+  "personalPipelineGroup": "个人流水线组",
+  "projectPipelineGroup": "项目流水线组",
+  "static": "静态",
+  "dynamic": "动态"
 }

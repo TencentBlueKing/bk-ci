@@ -2,6 +2,7 @@
   "name": "devops-metrics",
   "version": "1.0.0",
   "description": "",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "public:dev": "cross-env NODE_ENV=master vite build",

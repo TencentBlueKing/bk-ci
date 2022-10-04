@@ -19,16 +19,15 @@
 
             </div>
             <div class="pipeline-list-main-header-right-area">
-                <bk-input
-                    :placeholder="$t('patchSearchInputPlaceholder')"
-                    right-icon="bk-icon icon-search"
+                <pipeline-searcher
+                    v-model="filters"
                 />
-
             </div>
         </header>
         <pipeline-table-view
             ref="pipelineTable"
             :fetch-pipelines="getPipelines"
+            :filter-params="filters"
             @selection-change="handleSelectChange"
             is-patch-view
         ></pipeline-table-view>
@@ -55,17 +54,21 @@
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import PipelineSearcher from './PipelineSearcher'
     export default {
         name: 'patch-manage-list',
         components: {
+            PipelineSearcher,
             PipelineTableView,
             AddToGroupDialog,
             RemoveConfirmDialog
         },
         data () {
+            const { page, pageSize, sortType, ...restQuery } = this.$route.query
             return {
                 selected: [],
                 addToDialogShow: false,
+                filters: restQuery,
                 isConfirmShow: false
             }
         },

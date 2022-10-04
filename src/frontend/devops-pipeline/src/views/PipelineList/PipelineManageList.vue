@@ -5,7 +5,11 @@
             <bk-input :placeholder="$t('restore.restoreSearchTips')" />
         </div>
         <template v-else>
-            <h5 class="current-pipeline-group-name">{{currentViewName}}</h5>
+
+            <h5 class="current-pipeline-group-name">
+                <bk-tag v-if="pipelineGroupType" type="stroke">{{ pipelineGroupType }}</bk-tag>
+                <span>{{currentViewName}}</span>
+            </h5>
             <header class="pipeline-list-main-header">
                 <div class="pipeline-list-main-header-left-area">
                     <bk-dropdown-menu trigger="click">
@@ -23,7 +27,6 @@
                 <div class="pipeline-list-main-header-right-area">
                     <pipeline-searcher
                         v-model="filters"
-                        @search="filterPipelines"
                     />
                     <bk-dropdown-menu class="pipeline-sort-dropdown-menu" align="right">
                         <template slot="dropdown-trigger">
@@ -61,23 +64,24 @@
             </header>
         </template>
         <div class="pipeline-list-box">
-            <pipelines-card-view
-                v-if="isCardLayout"
-                :filter-params="filters"
-                :sort-type="sortType"
-                ref="pipelineBox"
-            />
             <pipeline-table-view
-                v-else-if="isTableLayout"
+                v-if="isTableLayout"
                 :filter-params="filters"
                 :sort-type="sortType"
                 ref="pipelineBox"
             />
+            <pipelines-card-view
+                v-else-if="isCardLayout"
+                :filter-params="filters"
+                :sort-type="sortType"
+                ref="pipelineBox"
+            />
+
         </div>
         <add-to-group-dialog
             :add-to-dialog-show="pipelineActionState.addToDialogShow"
             :pipeline="pipelineActionState.activePipeline"
-            @close="resetActivePipeline"
+            @close="closeAddToDialog"
             @done="refresh"
         />
         <remove-confirm-dialog
@@ -86,19 +90,19 @@
             :group-name="currentViewName"
             :group-id="$route.params.viewId"
             :pipeline-list="pipelineActionState.activePipelineList"
-            @close="handleCancelRemove"
+            @close="closeRemoveConfirmDialog"
             @done="refresh"
         />
         <copy-pipeline-dialog
             :is-copy-dialog-show="pipelineActionState.isCopyDialogShow"
             :pipeline="pipelineActionState.activePipeline"
-            @cancel="resetActivePipeline"
+            @cancel="closeCopyDialog"
             @done="refresh"
         />
         <save-as-template-dialog
             :is-save-as-template-show="pipelineActionState.isSaveAsTemplateShow"
             :pipeline="pipelineActionState.activePipeline"
-            @cancel="resetActivePipeline"
+            @cancel="closeSaveAsDialog"
             @done="refresh"
         />
         <pipeline-template-popup
@@ -142,11 +146,12 @@
         },
         mixins: [piplineActionMixin],
         data () {
+            const { page, pageSize, sortType, ...restQuery } = this.$route.query
             return {
                 layout: this.getLs('pipelineLayout') || TABLE_LAYOUT,
                 hasCreatePermission: false,
                 sortType: this.getLs('pipelineSortType') || 'CREATE_TIME',
-                filters: this.$route.query,
+                filters: restQuery,
                 templatePopupShow: false,
                 importPipelinePopupShow: false,
                 newPipelineDropdown: [{
@@ -166,13 +171,20 @@
                 'groupMap'
             ]),
             isTableLayout () {
-                return this.layout === TABLE_LAYOUT
+                return this.isDeleteView || this.layout === TABLE_LAYOUT
             },
             isCardLayout () {
                 return this.layout === CARD_LAYOUT
             },
+            currentGroup () {
+                return this.groupMap?.[this.$route.params.viewId]
+            },
             currentViewName () {
-                return this.$t(this.groupMap?.[this.$route.params.viewId]?.name ?? '')
+                return this.$t(this.currentGroup?.name ?? '')
+            },
+            pipelineGroupType () {
+                const typeAlias = ['', 'dynamic', 'static']
+                return this.$t(typeAlias[this.currentGroup?.viewType ?? 1])
             },
             sortList () {
                 return [

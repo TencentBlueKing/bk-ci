@@ -2,6 +2,7 @@
   "name": "devops-artifactory",
   "version": "1.0.1",
   "description": "",
+  "private": true,
   "dependencies": {
     "clipboard": "^1.7.1",
     "js-cookie": "^3.0.1",

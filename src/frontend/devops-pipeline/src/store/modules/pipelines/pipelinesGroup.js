@@ -31,6 +31,7 @@ const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects`
 const groupPrefix = `/${PROCESS_API_URL_PREFIX}/user/pipelineGroups`
 const SET_ALL_PIPELINE_GROUP = 'SET_ALL_PIPELINE_GROUP'
 const SET_LABEL_LIST = 'SET_LABEL_LIST'
+const UPDATE_PIPELINE_GROUP = 'UPDATE_PIPELINE_GROUP'
 
 const state = {
     allPipelineGroup: [],
@@ -85,6 +86,8 @@ const getters = {
             projectViewList: []
         })
     },
+    dynamicPipelineGroups: state => state.allPipelineGroup.filter(group => group.viewType === 1),
+    staticPipelineGroups: state => state.allPipelineGroup.filter(group => group.viewType === 2),
     groupMap: state => state.allPipelineGroup.reduce((acc, item) => {
         acc[item.id] = item
         return acc
@@ -93,7 +96,7 @@ const getters = {
             name: ALL_PIPELINE_VIEW_ID
         }
     }),
-    getLabelList: (state) => { // 标签分组集
+    getTagList: (state) => { // 标签分组集
         const list = state.tagGroupList || []
         return list.map((item) => {
             item.labelValue = []
@@ -147,6 +150,13 @@ const mutations = {
             state.hardViews[0],
             ...state.hardViews.slice(1)
         ]
+    },
+    [UPDATE_PIPELINE_GROUP]: (state, { id, body }) => {
+        console.log(id, body)
+        const group = state.allPipelineGroup.find(pipelineGroup => pipelineGroup.id === id)
+        if (group) {
+            Object.assign(group, body)
+        }
     }
 }
 
@@ -238,7 +248,10 @@ const actions = {
     async updatePipelineGroup ({ commit, getters, dispatch }, { id, projectId, ...body }) {
         await ajax.put(`${prefix}/${projectId}/views/${id}`, body)
 
-        Object.assign(getters.groupMap[id], body)
+        commit(UPDATE_PIPELINE_GROUP, {
+            id,
+            body
+        })
     },
     /**
      * 删除流水线分组
@@ -258,7 +271,7 @@ const actions = {
     /**
      * 获取自定义属性列表
     */
-    async requestLabelLists ({ commit, state, dispatch }, { projectId }) {
+    async requestTagList ({ commit, state, dispatch }, { projectId }) {
         const { data } = await ajax.get(`${groupPrefix}/groups?projectId=${projectId}`)
         commit(SET_LABEL_LIST, data)
     },
@@ -318,6 +331,9 @@ const actions = {
     },
     removePipelineFromGroup (_ctx, { projectId, ...body }) {
         return ajax.post(`${prefix}/${projectId}/bulkRemove`, body)
+    },
+    matchDynamicView (_ctx, { projectId, ...body }) {
+        return ajax.post(`${prefix}/${projectId}/matchDynamicView`, body)
     }
 }
 

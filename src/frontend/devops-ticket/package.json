@@ -2,6 +2,7 @@
   "name": "devops-ticket",
   "version": "1.0.0",
   "description": "",
+  "private": true,
   "dependencies": {
     "vee-validate": "^2.0.3",
     "vuex-class": "^0.3.0"

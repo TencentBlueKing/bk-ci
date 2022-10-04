@@ -10,7 +10,9 @@
                     </span>
                     <span v-if="pipeline.viewNames" class="pipeline-group-names-span">
                         <logo size="12" name="pipeline-group" />
-                        {{pipeline.viewNames.join(';')}}
+                        <span v-bk-tooltips="viewNamesStr">
+                            {{viewNamesStr}}
+                        </span>
                     </span>
                 </p>
             </aside>
@@ -32,7 +34,7 @@
                         name="play"
                     />
                 </span>
-                <ext-menu :data="pipeline" class="bk-pipeline-card-more" :config="pipeline.pipelineActions" />
+                <ext-menu :data="pipeline" ext-cls="bk-pipeline-card-more-trigger" :config="pipeline.pipelineActions" />
             </aside>
         </header>
         <section class="bk-pipeline-card-info">
@@ -131,6 +133,9 @@
             disabledTips () {
                 if (!this.disabled) return ''
                 return this.$t(this.pipeline.lock ? '流水线已禁用执行；可前往基础设置中恢复' : '该流水线未配置手动触发')
+            },
+            viewNamesStr () {
+                return this.pipeline.viewNames.join(';')
             }
         },
         methods: {
@@ -187,8 +192,12 @@
                     }
                     .pipeline-group-names-span {
                         flex: 1;
-                        @include ellipsis();
                         display: flex;
+                        overflow: hidden;
+                        > span {
+                            @include ellipsis();
+                            flex: 1;
+                        }
                     }
                 }
             }
@@ -205,9 +214,8 @@
                         color: $primaryColor;
                     }
                 }
-                .bk-pipeline-card-more {
-                    display: flex;
-                    align-items: center;
+                .bk-pipeline-card-more-trigger {
+                    font-size: 24px;
                 }
             }
         }

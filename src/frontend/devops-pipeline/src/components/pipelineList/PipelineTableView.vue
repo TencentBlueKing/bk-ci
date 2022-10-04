@@ -4,6 +4,7 @@
         ref="pipelineTable"
         size="large"
         height="100%"
+        row-key="pipelineId"
         :data="pipelineList"
         :pagination="pagination"
         @page-change="handlePageChange"
@@ -30,17 +31,21 @@
             <bk-table-column width="250" sortable :label="$t('latestExec')" prop="latestBuildNum">
                 <span slot-scope="props">{{ props.row.latestBuildNum ? `#${props.row.latestBuildNum}` : '--' }}</span>
             </bk-table-column>
-            <bk-table-column width="150" :label="$t('lastExecTime')" prop="latestBuildStartDate"></bk-table-column>
-            <bk-table-column width="250" sortable :label="$t('restore.createTime')" prop="createTime"></bk-table-column>
-            <bk-table-column width="250" sortable :label="$t('creator')" prop="creator"></bk-table-column>
+            <bk-table-column width="150" :label="$t('lastExecTime')" prop="latestBuildStartDate" />
+            <bk-table-column width="250" sortable :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
+            <bk-table-column width="250" sortable :label="$t('creator')" prop="creator" />
         </template>
         <template v-else-if="isDeleteView">
-            <bk-table-column :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime"></bk-table-column>
-            <bk-table-column :label="$t('restore.deleteTime')" prop="updateTime" :formatter="formatTime"></bk-table-column>
-            <bk-table-column :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
+            <bk-table-column :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
+            <bk-table-column :label="$t('restore.deleteTime')" prop="updateTime" :formatter="formatTime" />
+            <bk-table-column :label="$t('restore.deleter')" prop="lastModifyUser" column-key="lastModifyUser">
+                <span slot-scope="props">
+                    {{ props.row.lastModifyUser }}
+                </span>
+            </bk-table-column>
         </template>
         <template v-else>
-            <bk-table-column :label="$t('latestExec')">
+            <bk-table-column :label="$t('latestExec')" key="latestBuildStatus">
                 <div slot-scope="props" class="pipeline-latest-exec-cell">
                     <pipeline-status-icon :status="props.row.latestBuildStatus" />
                     <div class="pipeline-exec-msg">
@@ -65,7 +70,7 @@
                     </div>
                 </div>
             </bk-table-column>
-            <bk-table-column width="150" :label="$t('lastExecTime')" prop="latestBuildStartDate">
+            <bk-table-column width="150" :label="$t('lastExecTime')" prop="latestBuildStartDate" key="latestBuildStatus">
                 <template slot-scope="props">
                     <p>{{ props.row.latestBuildStartDate }}</p>
                     <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
@@ -73,14 +78,14 @@
                 </template>
             </bk-table-column>
         </template>
-        <bk-table-column v-if="!isPatchView" width="150" :label="$t('operate')">
+        <bk-table-column v-if="!isPatchView" width="150" :label="$t('operate')" prop="pipelineId">
             <div class="pipeline-operation-cell" slot-scope="props">
                 <bk-button
                     v-if="isDeleteView"
                     text
                     theme="primary"
                     class="pipeline-exec-btn"
-                    @click="restore(props.row)">
+                    @click="handleRestore(props.row)">
                     {{ $t('restore.restore') }}
                 </bk-button>
                 <bk-button
@@ -174,7 +179,10 @@
                 })
             },
             filterParams: function (filterMap) {
-                this.requestList(filterMap)
+                this.requestList({
+                    ...filterMap,
+                    page: 1
+                })
             }
         },
         created () {
@@ -189,16 +197,15 @@
                 return Object.keys(clsObj).filter(key => clsObj[key]).join(' ')
             },
             clearSelection () {
-                console.log(this.$refs.pipelineTable)
                 this.$refs.pipelineTable?.clearSelection?.()
             },
             handlePageLimitChange (limit) {
                 this.pagination.limit = limit
-                this.$nextTick(this.getPipelines)
+                this.$nextTick(this.requestList)
             },
             handlePageChange (page) {
                 this.pagination.current = page
-                this.$nextTick(this.getPipelines)
+                this.$nextTick(this.requestList)
             },
             async requestList (query = {}) {
                 this.isLoading = true
@@ -223,6 +230,12 @@
             },
             formatTime (row, cell, value) {
                 return convertTime(value)
+            },
+            async handleRestore (...args) {
+                const res = await this.restore(...args)
+                if (res) {
+                    this.refresh()
+                }
             }
         }
     }

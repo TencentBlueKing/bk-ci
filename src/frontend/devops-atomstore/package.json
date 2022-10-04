@@ -1,6 +1,7 @@
 {
   "name": "devops-atomstore",
   "version": "1.0.1",
+  "private": true,
   "description": "",
   "dependencies": {
     "@blueking/bkcharts": "^2.0.10",

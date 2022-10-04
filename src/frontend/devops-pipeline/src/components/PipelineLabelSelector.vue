@@ -1,0 +1,109 @@
+<template>
+    <ul class="pipeline-label-selector">
+        <li
+            v-for="item in tagSelectModelList"
+            :key="item.id"
+        >
+            <label class="pipeline-selector-label"> {{item.name}} </label>
+            <bk-select
+                class="sub-label-select"
+                :value="labelIdMap[item.id]"
+                @change="item.handleChange"
+                multiple
+            >
+                <bk-option
+                    v-for="label in item.labels"
+                    :key="label.id"
+                    :id="label.id"
+                    :name="label.name"
+                >
+                </bk-option>
+            </bk-select>
+        </li>
+
+    </ul>
+</template>
+
+<script>
+    import { mapActions, mapState } from 'vuex'
+    export default {
+        emits: ['input', 'change'],
+        props: {
+            value: {
+                type: Object,
+                default: () => ({})
+            }
+        },
+        data () {
+            return {
+                isLoading: false,
+                labelIdMap: this.value
+            }
+        },
+        computed: {
+            ...mapState('pipelines', [
+                'tagGroupList'
+            ]),
+            tagSelectModelList () {
+                return this.tagGroupList.map(item => ({
+                    ...item,
+                    handleChange: (...args) => this.handleChange(item.id, ...args)
+                }))
+            }
+        },
+        watch: {
+            value (newVal) {
+                this.labelIdMap = newVal
+            }
+        },
+        created () {
+            this.init()
+        },
+        methods: {
+            ...mapActions('pipelines', [
+                'requestTagList'
+            ]),
+            async init () {
+                this.isLoading = true
+                await this.requestTagList(this.$route.params)
+                this.labelIdMap = this.tagGroupList.reduce((acc, tag) => {
+                    acc[tag.id] = []
+                    return acc
+                }, {})
+                this.isLoading = false
+            },
+            handleChange (groupId, labelIds) {
+                this.labelIdMap[groupId] = labelIds
+                this.$emit('change', this.labelIdMap)
+                this.$emit('input', this.labelIdMap)
+            }
+        }
+    }
+</script>
+<style lang="scss">
+    @import '@/scss/conf';
+    @import '@/scss/mixins/ellipsis';
+
+    .pipeline-label-selector {
+        border-radius: 2px;
+        border: 1px solid #DCDEE5;
+        padding: 16px;
+        > li {
+            display: flex;
+            &:not(:last-child) {
+                padding-bottom: 16px;
+            }
+            .pipeline-selector-label {
+                width: 80px;
+                text-align: right;
+                @include ellipsis();
+                margin-right: 22px;
+            }
+            .sub-label-select {
+                flex: 1;
+                overflow: hidden;
+            }
+
+        }
+    }
+</style>

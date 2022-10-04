@@ -2,183 +2,218 @@
     <bk-dialog
         :value="isShow"
         width="960"
+        ext-cls="pipeline-group-edit-dialog"
+        :quick-close="false"
+        :close-icon="false"
         :draggable="false"
-        @confirm="handleSubmit"
-        @cancel="handleClose"
     >
-        <section v-bkloading="{ isLoading }" v-if="group" class="pipeline-group-edit-dialog">
-            <header class="pipeline-group-edit-header">{{ title }}</header>
-            <div class="group-form-item">
-                <label class="group-form-label">{{$t('groupStrategy')}}</label>
-                <bk-radio-group class="group-form-radio-group" v-model="model.viewType">
-                    <bk-radio :value="2">{{$t('staticGroup')}}</bk-radio>
-                    <bk-radio :value="1">{{$t('dynamicGroup')}}</bk-radio>
-                </bk-radio-group>
-            </div>
-            <main class="pipeline-group-edit-panel">
-                <aside class="pipeline-group-edit-source">
-                    <header>{{$t( isDynamicGroup ? 'dynamicStrategy' : 'addablePipelin')}}</header>
-                    <article>
-                        <template v-if="isDynamicGroup">
-                            <div class="group-form-item">
-                                <label class="group-form-label">
-                                    {{$t('groupLogicLabel')}}
-                                </label>
-                                <bk-radio-group class="group-form-radio-group" v-model="model.logic">
-                                    <bk-radio value="AND">{{$t('view.and')}}</bk-radio>
-                                    <bk-radio value="OR">{{$t('view.or')}}</bk-radio>
-                                </bk-radio-group>
-                            </div>
-                            <bk-table class="group-filters-table" :data="formatFilters">
-                                <bk-table-column width="152" :label="$t('view.key')">
-                                    <template slot-scope="props">
-                                        <bk-select v-model="props.row.id" @change="handleFilterTypeChange(props.row)">
+        <section v-bkloading="{ isLoading }" v-if="group" class="pipeline-group-edit-dialog-main">
+            <aside class="pipeline-group-edit-source">
+                <header class="pipeline-group-edit-header">{{ title }}</header>
+                <div class="group-form-item">
+                    <label class="group-form-label">{{$t('groupStrategy')}}</label>
+                    <bk-radio-group class="group-form-radio-group" v-model="model.viewType">
+                        <bk-radio :value="2">{{$t('staticGroup')}}</bk-radio>
+                        <bk-radio :value="1">{{$t('dynamicGroup')}}</bk-radio>
+                    </bk-radio-group>
+                </div>
+                <article>
+                    <template v-if="isDynamicGroup">
+                        <div class="group-form-item">
+                            <label class="group-form-label">
+                                {{$t('groupLogicLabel')}}
+                            </label>
+                            <bk-radio-group class="group-form-radio-group" v-model="model.logic" @change="changeFilterChangeFlag">
+                                <bk-radio value="AND">{{$t('view.and')}}</bk-radio>
+                                <bk-radio value="OR">{{$t('view.or')}}</bk-radio>
+                            </bk-radio-group>
+                        </div>
+                        <bk-table class="group-filters-table" :data="formatFilters">
+                            <bk-table-column width="152" :label="$t('view.key')">
+                                <template slot-scope="props">
+                                    <bk-select v-model="props.row.id" @change="handleFilterTypeChange(props.row)">
+                                        <bk-option
+                                            v-for="item in filterTypes"
+                                            :id="item.id"
+                                            :key="item.id"
+                                            :name="item.name"
+                                        />
+                                    </bk-select>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column :label="$t('view.value')" prop="value">
+                                <div class="group-filter-value-cell" slot-scope="props">
+                                    <section class="group-filter-value-input">
+                                        <bk-input
+                                            v-if="props.row.id === NAME_FILTER_TYPE"
+                                            :placeholder="$t('view.nameTips')"
+                                            maxlength="40"
+                                            id="pipelineName"
+                                            v-model="props.row.pipelineName"
+                                        />
+                                        <bk-tag-input
+                                            v-else-if="props.row.id === CREATOR_FILTER_TYPE"
+                                            allow-create
+                                            allow-auto-match
+                                            v-model="props.row.userIds"
+                                        >
+                                        </bk-tag-input>
+                                        <bk-select
+                                            v-else
+                                            v-model="props.row.labelIds"
+                                            :multiple="true"
+                                        >
                                             <bk-option
-                                                v-for="item in filterTypes"
-                                                :id="item.id"
+                                                v-for="item in filterLabelMap[props.row.id]"
                                                 :key="item.id"
                                                 :name="item.name"
+                                                :id="item.id"
                                             />
                                         </bk-select>
-                                    </template>
-                                </bk-table-column>
-                                <bk-table-column :label="$t('view.value')" prop="value">
-                                    <div class="group-filter-value-cell" slot-scope="props">
-                                        <section class="group-filter-value-input">
-                                            <bk-input
-                                                v-if="props.row.id === NAME_FILTER_TYPE"
-                                                :placeholder="$t('view.nameTips')"
-                                                maxlength="40"
-                                                id="pipelineName"
-                                                v-model="props.row.pipelineName"
-                                            />
-                                            <bk-tag-input
-                                                v-else-if="props.row.id === CREATOR_FILTER_TYPE"
-                                                allow-create
-                                                v-model="props.row.userIds"
-                                            >
-                                            </bk-tag-input>
-                                            <bk-select
-                                                v-else
-                                                v-model="props.row.labelIds"
-                                                :multiple="true"
-                                            >
-                                                <bk-option
-                                                    v-for="item in filterLabelMap[props.row.id]"
-                                                    :key="item.id"
-                                                    :name="item.name"
-                                                    :id="item.id"
-                                                />
-                                            </bk-select>
-                                        </section>
+                                    </section>
+                                    <span class="filter-operations-span">
                                         <bk-button theme="normal" text @click="removeFilter(props)">
                                             <i class="devops-icon icon-minus-circle" />
                                         </bk-button>
-                                    </div>
-                                </bk-table-column>
-                            </bk-table>
-                            <bk-button @click="addFilters" icon="plus">{{$t('add')}}</bk-button>
-                        </template>
-                        <template v-else>
-                            <bk-input
-                                class="pipeline-group-tree-search"
-                                v-model="searchKeyWord"
-                                right-icon="bk-icon icon-search"
-                                @enter="handleSearch"
-                            />
-                            <div class="pipeline-group-tree">
-                                <bk-big-tree
-                                    ref="pipelineGroupTree"
-                                    :data="pipleinGroupTree"
-                                    node-key="id"
-                                    :show-icon="false"
-                                >
-                                    <div class="pipeline-group-tree-node" slot-scope="{ node, data }">
-                                        <span class="pipeline-group-tree-node-name">{{data.name}}</span>
-                                        <span class="pipeline-group-tree-node-added" v-if="model.pipelineIds.has(data.id)">
-                                            {{ $t('added') }}
-                                        </span>
-                                        <bk-button v-else-if="!data.children" text theme="normal" class="add-pipeline-btn" @click="toggleSelect(data.id)">
-                                            <i class="devops-icon icon-plus-circle"></i>
+                                        <bk-button theme="normal" text @click="addFilters">
+                                            <i class="devops-icon icon-plus-circle" />
                                         </bk-button>
-                                    </div>
-                                </bk-big-tree>
-                            </div>
-                        </template>
-                    </article>
-                </aside>
-                <aside class="pipeline-group-edit-preview">
-                    <header>
-                        {{$t('resultPreview')}}
-                        <span v-if="isDynamicGroup" class="show-removed-pipeline-switcher">
-                            <bk-switcher v-model="showRemovedPipeline" theme="primary"></bk-switcher>
-                            {{ $t('showRemovedPipeline') }}
-                        </span>
-                    </header>
-                    <article v-bkloading="{ isLoading: loading }">
-                        <header>
-                            <span>{{group ? group.name : '--'}}</span>
-                        </header>
-                        <ul v-if="preAddedPipelineList.length > 0" class="preview-pipeline-ul">
-                            <li
-                                v-for="pipeline in preAddedPipelineList"
-                                :key="pipeline.pipelineId"
-
-                            >
-                                <main>
-                                    <p>
-                                        <span
-                                            :class="{
-                                                'is-new-add-pipeline': pipeline.isNew,
-                                                'is-removed-pipeline': pipeline.isRemoved
-                                            }"
-                                            v-if="pipeline.tag"
-                                        >
-                                            [{{ $t(pipeline.tag) }}]
-                                        </span>
-                                        {{ pipeline.pipelineName }}
-                                    </p>
-                                    <footer v-bk-tooltips="{ content: pipeline.groups, extCls: 'pipeline-group-tooltips' }">
-                                        {{pipeline.groups}}
-                                    </footer>
-                                </main>
-                                <bk-button
-                                    text
-                                    v-if="!isDynamicGroup"
-                                    theme="primary"
-                                    @click="toggleSelect(pipeline.pipelineId)"
-                                >
-                                    <span v-if="pipeline.isRemoved">
-                                        {{$t('restore.restore')}}
                                     </span>
-                                    <i v-else class="devops-icon icon-minus-circle" />
-                                </bk-button>
-                            </li>
-                        </ul>
-                        <div v-if="isDynamicGroup" v-show="isFilterChange" class="dynamic-group-preview-mask">
-                            <div class="dynamic-group-preview-refresh">
-                                {{$t('filterChanged')}}
-                                <bk-button text size="small" @click="updatePreview">
-                                    {{$t('refreshPreview')}}
-                                </bk-button>
-                            </div>
+                                </div>
+                            </bk-table-column>
+                        </bk-table>
+                        <bk-button outline theme="primary" @click="updatePreview">{{$t('pipelinesPreview')}}</bk-button>
+                    </template>
+                    <template v-else>
+                        <bk-input
+                            class="pipeline-group-tree-search"
+                            v-model="searchKeyWord"
+                            right-icon="bk-icon icon-search"
+                            @enter="handleSearch"
+                        />
+                        <div class="pipeline-group-tree">
+                            <bk-big-tree
+                                ref="pipelineGroupTree"
+                                :data="pipleinGroupTree"
+                                node-key="id"
+                                :show-icon="false"
+                            >
+                                <div class="pipeline-group-tree-node" slot-scope="{ node, data }">
+                                    <span @click.stop>
+                                        <bk-checkbox v-if="Array.isArray(data.children)" v-bind="parentCheckStatusMap[data.id]" @change="(checked) => handleRootCheck(checked, data)" />
+                                        <bk-checkbox v-else :value="model.pipelineIds.has(data.id)" @change="(checked) => handleCheck(checked, data)" />
+                                    </span>
+                                    <span class="pipeline-group-tree-node-name">{{data.name}}</span>
+                                </div>
+                            </bk-big-tree>
                         </div>
-                    </article>
-                </aside>
-            </main>
+                    </template>
+                </article>
+            </aside>
+            <aside class="pipeline-group-edit-preview">
+                <header>
+                    {{$t('resultPreview')}}
+                </header>
+                <article v-bkloading="{ isLoading: loading }">
+                    <header class="preview-pipeline-title">
+                        {{$t('total')}}
+                        <span class="pipeline-total-count">
+                            {{ totalPreviewCount }}
+                        </span>
+                        {{$t('strip')}}，
+                        <p>
+                            {{$t('new')}}
+                            <span class="pipeline-add-count">
+                                {{ preview.addedPipelineInfos.length }}
+                            </span>
+                            {{$t('strip')}}，
+                        </p>
+                        <p>
+                            {{$t('removeFrom')}}
+                            <span class="pipeline-removed-count">
+                                {{ preview.removedPipelineInfos.length }}
+                            </span>
+                            {{$t('strip')}}
+                        </p>
+                    </header>
+                    <ul v-if="preAddedPipelineList.length > 0" class="preview-pipeline-ul">
+                        <li
+                            v-for="pipeline in preAddedPipelineList"
+                            :key="pipeline.pipelineId"
+
+                        >
+                            <main>
+                                <p>
+                                    <bk-tag
+                                        ext-cls="pipeline-classify-tag"
+                                        v-if="pipeline.tag"
+                                        :theme="pipeline.theme"
+                                    >
+                                        {{ $t(pipeline.tag) }}
+                                    </bk-tag>
+                                    {{ pipeline.pipelineName }}
+                                </p>
+                                <footer v-bk-tooltips="{ content: pipeline.groups, extCls: 'pipeline-group-tooltips' }">
+                                    {{pipeline.groups}}
+                                </footer>
+                            </main>
+                            <bk-button
+                                text
+                                v-if="!isDynamicGroup"
+                                size="small"
+                                @click="togglePipeline(pipeline, index)"
+                            >
+                                <logo
+                                    v-if="pipeline.isRemoved"
+                                    name="undo"
+                                    size="14"
+                                    v-bk-tooltips="$t('restore.restore')"
+                                />
+                                <i v-else-if="pipeline.isAdded" class="devops-icon icon-close" />
+                            </bk-button>
+                        </li>
+                    </ul>
+                </article>
+            </aside>
         </section>
+        <footer slot="footer">
+            <bk-popover v-bind="saveDisableTips">
+                <bk-button
+                    theme="primary"
+                    v-bk-tooltips="saveDisableTips"
+                    @click="handleSubmit"
+                    :disabled="isFilterChange"
+                >
+                    {{$t('confirm')}}
+                </bk-button>
+            </bk-popover>
+            <bk-button @click="handleClose">
+                {{$t('cancel')}}
+            </bk-button>
+        </footer>
     </bk-dialog>
 </template>
 
 <script>
     import { mapState, mapGetters, mapActions } from 'vuex'
+    import Logo from '@/components/Logo'
     import {
         NAME_FILTER_TYPE,
         CREATOR_FILTER_TYPE,
-        FILTER_BY_LABEL
+        FILTER_BY_LABEL,
+        VIEW_CONDITION
     } from '@/utils/pipelineConst'
 
+    const defaultFilter = {
+        '@type': NAME_FILTER_TYPE,
+        id: NAME_FILTER_TYPE,
+        condition: VIEW_CONDITION.LIKE,
+        pipelineName: ''
+    }
     export default {
+        components: {
+            Logo
+        },
         props: {
             group: {
                 type: Object,
@@ -202,17 +237,19 @@
                     removedPipelineInfos: [],
                     reservePipelineInfos: []
                 },
+                savedPipelineInfos: [],
                 inited: false,
                 model: {
                     viewType: this.group?.viewType ?? 2,
                     pipelineIds: new Set(this.group?.pipelineIds),
-                    filters: [],
+                    filters: [{
+                        ...defaultFilter
+                    }],
                     logic: 'AND'
                 }
             }
         },
         computed: {
-
             ...mapState('pipelines', [
                 'tagGroupList'
             ]),
@@ -220,12 +257,6 @@
                 'groupMap'
             ]),
 
-            conditionConst () {
-                return {
-                    LIKE: 'LIKE',
-                    INCLUDE: 'INCLUDE'
-                }
-            },
             title () {
                 return `${this.group?.name} - ${this.$t('pipelineCountEdit')}`
             },
@@ -255,6 +286,7 @@
                 ]
             },
             formatFilters () { // TODO: ugly
+                console.log(this.model.filters)
                 return this.model.filters.map(item => {
                     let id
                     switch (item['@type']) {
@@ -278,25 +310,37 @@
             },
             preAddedPipelineList () {
                 return [
-                    ...(this.showRemovedPipeline
-                        ? this.preview.removedPipelineInfos.map(pipeline => ({
-                            ...pipeline,
-                            tag: 'removeFrom',
-                            isRemoved: true,
-                            groups: (this.pipelineGroupMap[pipeline.pipelineId]?.groupIds.map(groupId => this.groupMap[groupId]?.name) ?? []).join(';')
-                        }))
-                        : []),
-                    ...this.preview.addedPipelineInfos.map(pipeline => ({
-                        ...pipeline,
-                        tag: 'new',
-                        isNew: true,
-                        groups: (this.pipelineGroupMap[pipeline.pipelineId]?.groupIds.map(groupId => this.groupMap[groupId]?.name) ?? []).join(';')
-                    })),
-                    ...this.preview.reservePipelineInfos.map(pipeline => ({
-                        ...pipeline,
-                        groups: (this.pipelineGroupMap[pipeline.pipelineId]?.groupIds.map(groupId => this.groupMap[groupId]?.name) ?? []).join(';')
-                    }))
+                    ...this.preview.addedPipelineInfos.map(pipeline => this.generatePreviewPipeline(pipeline, false, true)),
+                    ...this.preview.removedPipelineInfos.map(pipeline => this.generatePreviewPipeline(pipeline, true, false)),
+                    ...this.preview.reservePipelineInfos.map(this.generatePreviewPipeline)
                 ]
+            },
+            parentCheckStatusMap () {
+                const res = this.pipleinGroupTree.reduce((acc, root) => {
+                    let checkedNum = 0
+                    console.log(root.children)
+                    root.children.forEach(pipeline => {
+                        if (this.model.pipelineIds.has(pipeline.id)) {
+                            checkedNum++
+                        }
+                    })
+                    acc[root.id] = {
+                        checked: checkedNum === root.children.length,
+                        indeterminate: checkedNum > 0 && checkedNum < root.children.length
+                    }
+                    return acc
+                }, {})
+                console.log(res)
+                return res
+            },
+            saveDisableTips () {
+                return {
+                    content: this.$t('saveBeforePreviewTips'),
+                    disabled: !this.isFilterChange
+                }
+            },
+            totalPreviewCount () {
+                return this.preAddedPipelineList.length - this.preview.removedPipelineInfos.length
             }
         },
         watch: {
@@ -305,10 +349,7 @@
             },
             'model.filters': {
                 handler () {
-                    if (this.inited) {
-                        this.isFilterChange = true
-                    }
-                    this.inited = true
+                    this.changeFilterChangeFlag()
                 },
                 deep: true
             }
@@ -322,10 +363,16 @@
             ...mapActions('pipelines', [
                 'requestPipelineGroup',
                 'requestGroupListsDict',
-                'requestLabelLists',
+                'requestTagList',
                 'updatePipelineGroup',
                 'previewGroupResult'
             ]),
+            changeFilterChangeFlag () {
+                if (this.inited) {
+                    this.isFilterChange = true
+                }
+                this.inited = true
+            },
             async init (group) {
                 if (this.isLoading || !group?.id) return
                 this.isLoading = true
@@ -336,13 +383,13 @@
                 const [groupDetail, { dict, pipelineGroupMap }] = await Promise.all([
                     this.requestPipelineGroup(params),
                     this.requestGroupListsDict(params),
-                    this.requestLabelLists(params)
+                    this.requestTagList(params)
                 ])
                 const pipelineIdsSet = new Set(groupDetail.pipelineIds)
                 this.model = {
                     viewType: groupDetail.viewType ?? group.viewType,
                     pipelineIds: pipelineIdsSet,
-                    filters: groupDetail.filters ?? [],
+                    filters: groupDetail.filters.length > 0 ? groupDetail.filters : this.model.filters,
                     logic: groupDetail.logic
                 }
                 this.pipleinGroupTree = [
@@ -354,32 +401,92 @@
                         name: groupItem.viewName,
                         children: groupItem.pipelineList.map(pipeline => ({
                             id: pipeline.pipelineId,
-                            checked: pipelineIdsSet.has(pipeline.pipelineId),
                             name: pipeline.pipelineName
                         }))
                     }
                 }, [])
                 this.pipelineGroupMap = pipelineGroupMap
-                this.preview.reservePipelineInfos = groupDetail.pipelineIds.map(id => ({
-                    pipelineId: id,
-                    pipelineName: this.pipelineGroupMap[id]?.pipelineName,
-                    groups: (this.pipelineGroupMap[id]?.groupIds.map(groupId => this.groupMap[groupId]?.name) ?? []).join(';')
+                this.preview.reservePipelineInfos = groupDetail.pipelineIds.map(pipelineId => this.generatePreviewPipeline({
+                    pipelineId
                 }))
+                this.savedPipelineInfos = this.preview.reservePipelineInfos.map(pipeline => pipeline.pipelineId)
                 this.isLoading = false
             },
             handleSearch () {
-                this.$refs.pipelineGroupTree.searchNode(this.searchKeyWord)
+                this.$refs.pipelineGroupTree.filter(this.searchKeyWord)
                 // const searchResult = this.$refs.tree5.getSearchResult()
                 // this.isEmpty = searchResult.isEmpty
             },
-            async toggleSelect (id) {
+            generatePreviewPipeline (originPipeline, isRemoved = false, isAdded = false) {
+                const { pipelineId, pipelineName } = originPipeline
+                const pipelingGroup = this.pipelineGroupMap[originPipeline.pipelineId]
+                let metaData = {}
+                switch (true) {
+                    case isRemoved:
+                        metaData = {
+                            tag: 'removeFrom',
+                            isRemoved,
+                            theme: 'danger'
+                        }
+                        break
+                    case isAdded:
+                        metaData = {
+                            tag: 'new',
+                            isAdded,
+                            theme: 'success'
+                        }
+                        break
+                }
+                return {
+                    pipelineId,
+                    pipelineName: pipelineName ?? pipelingGroup?.pipelineName,
+                    ...metaData,
+                    groups: (pipelingGroup.groupIds ?? []).map(groupId => this.groupMap[groupId]?.name).join(';')
+                }
+            },
+            handleRootCheck (checked, root) {
+                root.children.forEach(child => this.handleCheck(checked, child))
+            },
+            async handleCheck (checked, data) {
+                this.updatePipelineIds(data.id)
+                const previewPipeline = this.generatePreviewPipeline({
+                    pipelineId: data.id,
+                    pipelineName: data.name
+                })
+                if (checked) {
+                    if (this.savedPipelineInfos.includes(data.id)) {
+                        this.preview.reservePipelineInfos.push(previewPipeline)
+                        this.preview.removedPipelineInfos = this.preview.removedPipelineInfos.filter(pip => pip.pipelineId !== data.id)
+                    } else {
+                        this.preview.addedPipelineInfos.push(previewPipeline)
+                    }
+                } else {
+                    if (this.savedPipelineInfos.includes(data.id)) {
+                        this.preview.removedPipelineInfos.push(previewPipeline)
+                        this.preview.reservePipelineInfos = this.preview.reservePipelineInfos.filter(pip => pip.pipelineId !== data.id)
+                    } else {
+                        this.preview.addedPipelineInfos = this.preview.addedPipelineInfos.filter(pip => pip.pipelineId !== data.id)
+                    }
+                }
+            },
+            togglePipeline (pipeline, index) {
+                const { isRemoved, isAdded, pipelineId } = pipeline
+                if (isRemoved) {
+                    const originPipeline = this.generatePreviewPipeline(pipeline)
+                    this.preview.reservePipelineInfos.push(originPipeline)
+                    this.preview.removedPipelineInfos.splice(index, 1)
+                } else if (isAdded) {
+                    this.preview.addedPipelineInfos.splice(index, 1)
+                }
+                this.updatePipelineIds(pipelineId)
+            },
+            updatePipelineIds (id) {
                 if (!this.model.pipelineIds.has(id)) {
                     this.model.pipelineIds.add(id)
                 } else {
                     this.model.pipelineIds.delete(id)
                 }
                 this.model.pipelineIds = new Set(this.model.pipelineIds)
-                this.updatePreview()
             },
             async updatePreview () {
                 try {
@@ -403,11 +510,11 @@
             handleFilterTypeChange (filter) {
                 switch (filter.id) {
                     case NAME_FILTER_TYPE:
-                        filter.condition = this.conditionConst.LIKE
+                        filter.condition = VIEW_CONDITION.LIKE
                         filter['@type'] = NAME_FILTER_TYPE
                         break
                     case CREATOR_FILTER_TYPE:
-                        filter.condition = this.conditionConst.INCLUDE
+                        filter.condition = VIEW_CONDITION.INCLUDE
                         filter['@type'] = CREATOR_FILTER_TYPE
                         break
                     default:
@@ -417,14 +524,17 @@
             },
             addFilters () {
                 this.model.filters.push({
-                    '@type': NAME_FILTER_TYPE,
-                    id: NAME_FILTER_TYPE,
-                    condition: this.conditionConst.LIKE,
-                    pipelineName: ''
+                    ...defaultFilter
                 })
             },
             removeFilter ({ $index }) {
-                this.model.filters.splice($index, 1)
+                if (this.model.filters.length === 1) {
+                    this.model.filters.splice($index, 1, {
+                        ...defaultFilter
+                    })
+                } else {
+                    this.model.filters.splice($index, 1)
+                }
             },
             async handleSubmit () {
                 if (this.isSubmiting) return
@@ -437,10 +547,9 @@
                         projectId: this.$route.params.projectId,
                         ...this.group,
                         ...this.model,
-                        pipelineCount: pipelineIds.length,
+                        pipelineCount: this.isDynamicGroup ? this.totalPreviewCount : pipelineIds.length,
                         pipelineIds: pipelineIds
                     })
-
                     this.handleClose()
                     this.$emit('done')
                 } catch (error) {
@@ -460,9 +569,12 @@
                 this.model = {
                     viewType: 2,
                     pipelineIds: new Set(),
-                    filters: [],
+                    filters: [{
+                        ...defaultFilter
+                    }],
                     logic: 'AND'
                 }
+                this.isFilterChange = false
                 this.preview = {
                     addedPipelineInfos: [],
                     removedPipelineInfos: [],
@@ -478,67 +590,62 @@
     @import '@/scss/conf';
     @import '@/scss/mixins/ellipsis';
     .pipeline-group-edit-dialog {
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        height: 666px;
-        .pipeline-group-edit-header {
-            color: #313238;
-            font-size: 14px;
-            margin-bottom: 16px;
+        .bk-dialog-tool {
+            display: none;
         }
-        .group-form-item {
-            font-size: 12px;
-            margin-bottom: 24px;
-            .group-form-label {
-                display: flex;
-                padding-bottom: 10px;
-            }
-            .group-form-radio-group {
-                > :first-child {
-                    margin-right: 60px;
-                }
-            }
+        .bk-dialog-body {
+            padding: 0;
         }
-        .pipeline-group-edit-panel {
+        .pipeline-group-edit-dialog-main {
             display: flex;
-            flex: 1;
-            border: 1px solid #DCDEE5;
             overflow: hidden;
-            .pipeline-group-edit-source {
-                border-right: 1px solid #DCDEE5;
-            }
+            height: 666px;
             .pipeline-group-edit-source,
             .pipeline-group-edit-preview {
                 display: flex;
                 flex-direction: column;
-                flex: 1;
+                flex: 2;
+                background: #F5F7FA;
                 overflow: hidden;
+                padding: 24px;
+                &.pipeline-group-edit-source {
+                    border-right: 1px solid #DCDEE5;
+                    background: white;
+                    flex: 3;
+                }
                 > header {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    background: #FAFBFD;
-                    font-weight: bold;
-                    padding: 12px 16px;
-                    border-bottom: 1px solid #DCDEE5;
-                    .show-removed-pipeline-switcher {
-                        display: flex;
-                        align-items: center;
-                        font-weight: normal;
-                        font-size: 12px;
-                        > :first-child {
-                            margin-right: 4px;
-                        }
-                    }
+                    color: #313238;
+                    padding: 16px 0;
                 }
+
                 > article {
                     position: relative;
-                    padding: 16px;
                     flex: 1;
                     display: flex;
                     flex-direction: column;
                     overflow: hidden;
+                    .preview-pipeline-title {
+                        display: flex;
+                        align-items: center;
+                        justify-content: flex-start;
+                        font-size: 12px;
+                        font-weight: bold;
+                        .pipeline-total-count {
+                            color: $primaryColor;
+                        }
+                        .pipeline-add-count {
+                            color: $successColor;
+                        }
+                        .pipeline-removed-count {
+                            color: $dangerColor;
+                        }
+                    }
+                    .pipeline-group-tree-search {
+                        margin: 8px 0;
+                    }
                     .pipeline-group-tree {
                         overflow: auto;
                         flex: 1;
@@ -548,6 +655,7 @@
                             justify-content: space-between;
                             font-size: 12px;
                             .pipeline-group-tree-node-name {
+                                padding-left: 8px;
                                 flex: 1;
                                 @include ellipsis();
                             }
@@ -570,36 +678,39 @@
                                 flex: 1;
                                 margin-right: 8px;
                             }
+                            .filter-operations-span {
+                                width: 40px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                            }
                         }
                     }
                 }
+
                 .preview-pipeline-ul {
-                    border: 1px solid #DCDEE5;
                     margin: 16px 0;
+                    overflow: auto;
                     > li {
                         height: 48px;
                         display: flex;
                         align-items: center;
                         border-bottom: 1px solid #DCDEE5;
                         padding: 0 16px;
+                        background: white;
                         > main {
                             display: flex;
                             flex-direction: column;
                             flex: 1;
                             overflow: hidden;
+                            .pipeline-classify-tag {
+                                margin: 0;
+                            }
                             > p,
                             > footer {
                                 font-size: 12px;
                                 line-height: 20px;
                                 @include ellipsis();
-                            }
-                            .is-new-add-pipeline {
-                                color: $successColor;
-                                padding: 0 4px;
-                            }
-                            .is-removed-pipeline {
-                                color: $warningColor;
-                                padding: 0 4px;
                             }
 
                             > footer {
@@ -615,34 +726,17 @@
                     }
 
                 }
-                &.pipeline-group-edit-preview {
-                    > article > header {
-                        display: flex;
-                        justify-content: space-between;
-                    }
-
-                }
-
-                .dynamic-group-preview-mask {
-                    width: 100%;
-                    height: 100%;
-                    position: absolute;
+            }
+            .group-form-item {
+                font-size: 12px;
+                margin-bottom: 24px;
+                .group-form-label {
                     display: flex;
-                    padding-top: 80px;
-                    justify-content: center;
-                    background: rgba(255, 255, 255, 0.7);
-                    .dynamic-group-preview-refresh {
-                        font-size: 12px;
-                        display: grid;
-                        grid-row-gap: 8px;
-                        grid-auto-rows: 16px;
-                        width: 170px;
-                        height: 84px;
-                        border: 1px solid #DCDEE5;
-                        background: white;
-                        border-radius: 2px;
-                        justify-content: center;
-                        align-content: center;
+                    padding-bottom: 10px;
+                }
+                .group-form-radio-group {
+                    > :first-child {
+                        margin-right: 60px;
                     }
                 }
             }

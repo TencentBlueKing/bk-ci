@@ -1,7 +1,7 @@
 <template>
     <bk-dialog
         ext-cls="remove-pipeline-confirm-dialog"
-        width="480"
+        :width="width"
         :value="isShow"
         :title="title"
         header-position="left"
@@ -24,12 +24,17 @@
             </p>
         </template>
         <ul class="operate-pipeline-list">
-            <li v-for="pipeline in pipelineList" :key="pipeline.pipelineId">
-                <span>{{ pipeline.pipelineName }}</span>
-                <div v-if="!isRemoveType" class="belongs-pipeline-group">
-                    <bk-tag v-for="name in pipeline.viewNames" :key="name">
+            <li v-for="(pipeline, index) in removedPipelines" :key="pipeline.pipelineId">
+                <span>{{ pipeline.name }}</span>
+                <div v-if="!isRemoveType" class="belongs-pipeline-group" ref="belongsGroupBox">
+                    <bk-tag v-for="name in pipeline.groups" :key="name" :ref="`groupName_${index}`">
                         {{name}}
                     </bk-tag>
+                    <bk-popover ref="groupNameMore" v-if="pipeline.showMoreTag" :disabled="!pipeline.hiddenGroups" :content="pipeline.hiddenGroups">
+                        <bk-tag>
+                            +{{pipeline.overflowCount}}
+                        </bk-tag>
+                    </bk-popover>
                 </div>
             </li>
         </ul>
@@ -60,6 +65,13 @@
                 default: () => []
             }
         },
+        data () {
+            return {
+                visibleTagCountList: [],
+                width: 480,
+                padding: 40
+            }
+        },
         computed: {
             ...mapState('pipelines', [
                 'allPipelineGroup'
@@ -69,9 +81,31 @@
             },
             title () {
                 return this.isRemoveType ? this.$t('removeFrom') : ''
+            },
+            groupNameBoxWidth () {
+                return ((this.width - 2 - (this.padding * 2)) * 5 / 7).toFixed(2)
+            },
+            removedPipelines () {
+                return this.pipelineList.map((pipeline, index) => {
+                    const visibleTagCount = this.visibleTagCountList[index] ?? pipeline.viewNames.length
+                    const overflowCount = pipeline.viewNames.length - visibleTagCount
+                    return {
+                        name: pipeline.pipelineName,
+                        groups: pipeline.viewNames.slice(0, visibleTagCount),
+                        hiddenGroups: pipeline.viewNames.slice(visibleTagCount).join(';'),
+                        overflowCount,
+                        showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0)
+                    }
+                })
             }
         },
-
+        updated () {
+            setTimeout(() => {
+                if (this.visibleTagCountList.length === 0) {
+                    this.calcOverPos()
+                }
+            }, 100)
+        },
         methods: {
             ...mapActions('pipelines', [
                 'removePipelineFromGroup',
@@ -98,7 +132,26 @@
                 this.$emit('done')
             },
             handleClose () {
+                this.visibleTagCountList = []
                 this.$emit('close')
+            },
+            calcOverPos () {
+                const tagMargin = 6
+                this.visibleTagCountList = this.$refs.belongsGroupBox?.map((_, index) => {
+                    const moreTag = this.$refs.groupNameMore?.[index]?.$el
+                    const moreTagWidth = (moreTag?.offsetWidth ?? 0) + tagMargin
+                    const viewPortWidth = this.groupNameBoxWidth - moreTagWidth
+                    let sumTagWidth = 0
+                    let tagVisbleCount = 0
+
+                    this.$refs[`groupName_${index}`].every((groupName) => {
+                        sumTagWidth += groupName.$el.offsetWidth + tagMargin
+                        const isOverSize = sumTagWidth < viewPortWidth
+                        isOverSize && tagVisbleCount++
+                        return isOverSize
+                    })
+                    return tagVisbleCount
+                })
             }
         }
     }
@@ -148,7 +201,8 @@
                 }
                 .belongs-pipeline-group {
                     flex: 5;
-
+                    height: 22px;
+                    overflow: hidden;
                 }
             }
         }
