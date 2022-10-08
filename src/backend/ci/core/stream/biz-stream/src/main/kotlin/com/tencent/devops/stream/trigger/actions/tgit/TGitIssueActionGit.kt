@@ -120,6 +120,7 @@ class TGitIssueActionGit(
             userId = event.user.username,
             gitProjectName = GitUtils.getProjectName(event.repository.homepage)
         )
+        this.data.context.gitDefaultBranchLatestCommitInfo = defaultBranch to latestCommit?.toGitCommit()
         return this
     }
 

@@ -69,7 +69,7 @@ public interface LintStatisticRepository extends MongoRepository<LintStatisticEn
      * @param buildId
      * @return
      */
-    LintStatisticEntity findByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
+    LintStatisticEntity findFirstByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
 
     /**
      * 通过任务id和工具名查询每次分析的统计信息
