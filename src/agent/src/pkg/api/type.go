@@ -42,6 +42,28 @@ type ThirdPartyBuildInfo struct {
 	Workspace     string   `json:"workspace"`
 	PipelineId    string   `json:"pipelineId"`
 	ToDelTmpFiles []string `json:"-"` // #5806 增加异常时清理脚本文件列表, 不序列化
+	// TODO: issue_7748 docker构建相关，暂时不完全
+	DockerBuildInfo *ThirdPartyDockerBuildInfo
+	ExecuteCount    *int
+}
+
+type ThirdPartyDockerBuildInfo struct {
+	OriginImageName string
+	RegistryUser    string
+	RegistryPwd     string
+	ContainerHashId string
+	CustomBuildEnv  map[string]string
+	DockerResource  *DockerResourceOptions
+}
+
+type DockerResourceOptions struct {
+	MemoryLimitBytes    int64
+	CpuPeriod           int64
+	CpuQuota            int64
+	BlkioDeviceWriteBps int64
+	BlkioDeviceReadBps  int64
+	Disk                int
+	Description         string
 }
 
 type ThirdPartyBuildWithStatus struct {
@@ -107,4 +129,23 @@ func NewPipelineResponse(seqId string, status string, response string) *Pipeline
 		Status:   status,
 		Response: response,
 	}
+}
+
+type LogType string
+
+const (
+	LogtypeLog   LogType = "LOG"
+	LogtypeDebug LogType = "DEBUG"
+	LogtypeError LogType = "ERROR"
+	LogtypeWarn  LogType = "WARN"
+)
+
+type LogMessage struct {
+	Message      string  `json:"message"`
+	Timestamp    int64   `json:"timestamp"` // Millis
+	Tag          string  `json:"tag"`
+	JobId        string  `json:"jobId"`
+	LogType      LogType `json:"logType"`
+	ExecuteCount *int    `json:"executeCount"`
+	SubTag       *string `json:"subTag"`
 }

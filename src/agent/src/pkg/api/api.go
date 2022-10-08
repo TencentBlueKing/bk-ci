@@ -29,6 +29,8 @@ package api
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"runtime"
 	"strconv"
 	"strings"
@@ -137,4 +139,44 @@ func DownloadAgentInstallBatchZip(saveFile string) error {
 	url := buildUrl(fmt.Sprintf("/ms/environment/api/external/thirdPartyAgent/%s/batch_zip",
 		config.GAgentConfig.BatchInstallKey))
 	return httputil.DownloadAgentInstallScript(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
+}
+
+// AuthHeaderDevopsBuildId log需要的buildId的header
+const AuthHeaderDevopsBuildId = "X-DEVOPS-BUILD-ID"
+
+func AddLogLine(buildId string, message *LogMessage) (*httputil.DevopsResult, error) {
+	url := buildUrl("/ms/log/api/build/logs")
+	headers := config.GAgentConfig.GetAuthHeaderMap()
+	headers[AuthHeaderDevopsBuildId] = buildId
+	return httputil.NewHttpClient().
+		Post(url).Body(message).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().
+		IntoDevopsResult()
+}
+
+func AddLogRedLine(buildId string, message *LogMessage) (*httputil.DevopsResult, error) {
+	url := buildUrl("/ms/log/api/build/logs/red")
+	headers := config.GAgentConfig.GetAuthHeaderMap()
+	headers[AuthHeaderDevopsBuildId] = buildId
+	return httputil.NewHttpClient().
+		Post(url).Body(message).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().
+		IntoDevopsResult()
+}
+
+func DownloadDockerInitFile() (io.ReadCloser, error) {
+	// TODO: issue_7748
+	url := ""
+	headers := config.GAgentConfig.GetAuthHeaderMap()
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Body, nil
 }

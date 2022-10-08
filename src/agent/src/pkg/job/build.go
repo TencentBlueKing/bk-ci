@@ -95,11 +95,7 @@ func DoPollAndBuild() {
 			continue
 		}
 
-		instanceCount := GBuildManager.GetInstanceCount()
-		if config.GAgentConfig.ParallelTaskCount != 0 && instanceCount >= config.GAgentConfig.ParallelTaskCount {
-			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, "+
-				"ParallelTaskCount config: %d, instance count: %d",
-				config.GAgentConfig.ParallelTaskCount, instanceCount))
+		if ok := checkParallelTaskCount(); !ok {
 			continue
 		}
 
@@ -119,6 +115,15 @@ func DoPollAndBuild() {
 			continue
 		}
 
+		// TODO: issue_7748 通过条件区分docker任务和agent任务，如果是docker任务，则直接调用docker接口
+		if true {
+			// 接取job任务之后才可以解除总任务锁解锁
+			GBuildDockerManager.AddCurrentJobs(1)
+			GBuildManager.Lock.Unlock()
+
+			go DoDockerJob(buildInfo)
+		}
+
 		// 接取任务之后解锁
 		GBuildManager.AddPreInstance(buildInfo.BuildId)
 		GBuildManager.Lock.Unlock()
@@ -128,6 +133,31 @@ func DoPollAndBuild() {
 			logs.Error("start build failed: ", err.Error())
 		}
 	}
+}
+
+// checkParallelTaskCount 检查当前运行的最大任务数
+func checkParallelTaskCount() bool {
+	// TODO: issue_7748 通过条件区分docker任务和agent任务
+	if true {
+		instanceCount := GBuildDockerManager.GetCurrentJobsCount()
+		if GBuildDockerManager.MaxJob != 0 && instanceCount >= GBuildDockerManager.MaxJob {
+			logs.Info(fmt.Sprintf("DOCKER_JOB|parallel docker task count exceed , wait job done, "+
+				"maxJob config: %d, instance count: %d",
+				GBuildDockerManager.MaxJob, instanceCount))
+			return false
+		}
+		return true
+	}
+
+	instanceCount := GBuildManager.GetInstanceCount()
+	if config.GAgentConfig.ParallelTaskCount != 0 && instanceCount >= config.GAgentConfig.ParallelTaskCount {
+		logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, "+
+			"ParallelTaskCount config: %d, instance count: %d",
+			config.GAgentConfig.ParallelTaskCount, instanceCount))
+		return false
+	}
+
+	return true
 }
 
 // getBuild 从服务器认领要构建的信息
