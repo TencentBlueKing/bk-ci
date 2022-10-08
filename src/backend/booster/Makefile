@@ -107,7 +107,7 @@ DISTEXECUTOR_BIN_PATH=${BIN_PATH}/bkdist
 
 dist_prepare:
 	mkdir -p ${DISTEXECUTOR_BIN_PATH}
-	go get -u github.com/gobuffalo/packr/v2/packr2
+	go install github.com/gobuffalo/packr/v2/packr2
 	export PATH=${GOPATH}/bin:${PATH}
 	if [ -z "${DISABLE_PACKR2}" ]; then cd bk_dist/controller/pkg/dashboard && packr2; fi
 
