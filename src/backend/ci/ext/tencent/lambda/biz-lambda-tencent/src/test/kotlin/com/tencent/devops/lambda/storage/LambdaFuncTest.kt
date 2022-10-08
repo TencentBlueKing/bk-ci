@@ -26,28 +26,17 @@
  */
 package com.tencent.devops.lambda.storage
 
-class ESServiceTest {
+import java.util.regex.Pattern
+import org.junit.jupiter.api.Test
 
-/*    private val client: TransportClient = mock()
-    private val esClient: ESClient = ESClient("esClient", client, false)
-    private val redisTemplate: RedisTemplate<String, String> = mock()
-    private val redisOperation: RedisOperation = RedisOperation(redisTemplate)
-    private val objectMapper: ObjectMapper = mock()
-    private val dslContext: DSLContext = mock()
-    private val lambdaBuildIndexDao: LambdaBuildIndexDao = mock()
-    private val indexService = IndexService(dslContext, lambdaBuildIndexDao, redisOperation)
-    private val esService: ESService = ESService(
-        esClient = esClient,
-        redisOperation = redisOperation,
-        indexService = indexService,
-        objectMapper = objectMapper
-    )
+class LambdaFuncTest {
+    companion object {
+        private val pattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9\\.\\-_]*")
+    }
 
     @Test
-    fun testDate() {
-        val begin = LocalDateTime.now().minusDays(10).timestamp()
-        val end = System.currentTimeMillis() / 1000
-        val index = esService.getIndex(begin, end)
-        assertEquals(11, index.size)
-    }*/
+    fun variablesMatchTest() {
+        println(pattern.matcher("a123-abc.456-EDF_789").find())
+        println(pattern.matcher("123a-abc.456-EDF_789").find())
+    }
 }
