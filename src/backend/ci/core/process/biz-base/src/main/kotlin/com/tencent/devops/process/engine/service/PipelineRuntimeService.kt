@@ -211,38 +211,6 @@ class PipelineRuntimeService @Autowired constructor(
         private const val JOB_ID = "0"
     }
 
-    fun deletePipelineBuilds(projectId: String, pipelineId: String) {
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            pipelineBuildSummaryDao.delete(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-            pipelineBuildDao.deletePipelineBuilds(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-//            pipelineStageService.deletePipelineBuildStages(
-//                transactionContext = transactionContext,
-//                projectId = projectId,
-//                pipelineId = pipelineId
-//            )
-//            pipelineContainerService.deletePipelineBuildContainers(
-//                transactionContext = transactionContext,
-//                projectId = projectId,
-//                pipelineId = pipelineId
-//            )
-//            pipelineTaskService.deletePipelineBuildTasks(
-//                transactionContext = transactionContext,
-//                projectId = projectId,
-//                pipelineId = pipelineId
-//            )
-        }
-//        buildVariableService.deletePipelineBuildVar(projectId = projectId, pipelineId = pipelineId)
-    }
-
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {
         val runningBuilds = pipelineBuildDao.getBuildTasksByStatus(
             dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
@@ -1189,6 +1157,7 @@ class PipelineRuntimeService @Autowired constructor(
             newBuildStatus = newBuildStatus,
             errorInfoList = listOf(
                 ErrorInfo(
+                    stageId = "", jobId = "",
                     taskId = "", taskName = "", atomCode = "",
                     errorType = ErrorType.USER.num, errorMsg = "Rejected by $userId in trigger review.",
                     errorCode = ProcessMessageCode.ERROR_TRIGGER_REVIEW_ABORT.toInt()

@@ -285,7 +285,7 @@ class CodeScoringServiceImpl @Autowired constructor(
      * @param buildId
      */
     private fun getSecurityDefectNum(taskId: Long, buildId: String, toolName: String): Pair<Double, Double>? {
-        val res = lintStatisticRepository.findByTaskIdAndToolNameAndBuildId(
+        val res = lintStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(
             taskId,
             toolName,
             buildId
@@ -300,7 +300,7 @@ class CodeScoringServiceImpl @Autowired constructor(
      * @param buildId
      */
     private fun getLintDefectNum(toolName: String, taskId: Long, buildId: String): Pair<Double, Double> {
-        val res: LintStatisticEntity? = lintStatisticRepository.findByTaskIdAndToolNameAndBuildId(
+        val res: LintStatisticEntity? = lintStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(
             taskId,
             toolName,
             buildId
@@ -754,7 +754,7 @@ class CodeScoringServiceImpl @Autowired constructor(
      * 获取特定构建的告警信息
      */
     fun getLintStatInfo(taskId: Long, toolName: String, buildId: String): GrayTaskStatVO? {
-        val lintStatisticEntity = lintStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId)
+        val lintStatisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId)
         return if (null == lintStatisticEntity || lintStatisticEntity.entityId.isNullOrBlank()) {
             null
         } else {

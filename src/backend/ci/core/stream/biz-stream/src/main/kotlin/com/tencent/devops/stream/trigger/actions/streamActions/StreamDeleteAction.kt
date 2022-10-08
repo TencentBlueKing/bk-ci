@@ -83,17 +83,14 @@ class StreamDeleteAction(
             ?: return TriggerResult(
                 trigger = TriggerBody().triggerFail("on.delete.types", "does not currently exist"),
                 timeTrigger = false,
-                startParams = emptyMap(),
+                triggerOn = null,
                 deleteTrigger = false
             )
         return if (gitAction.metaData.streamObjectKind.value in deleteObjectKinds) {
-            val startParams = gitAction.getWebHookStartParam(
-                triggerOn = triggerOn
-            )
             TriggerResult(
                 trigger = TriggerBody(true),
                 timeTrigger = false,
-                startParams = startParams,
+                triggerOn = triggerOn,
                 deleteTrigger = true
             )
         } else {
@@ -103,7 +100,7 @@ class StreamDeleteAction(
                     "current type(${gitAction.metaData.streamObjectKind.value}) not match"
                 ),
                 timeTrigger = false,
-                startParams = emptyMap(),
+                triggerOn = null,
                 deleteTrigger = false
             )
         }

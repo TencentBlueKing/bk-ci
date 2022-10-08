@@ -357,7 +357,8 @@ class StreamYamlBaseBuild @Autowired constructor(
             )
             val pipelineParams = modelParameters.webHookParams.toMutableMap()
             buildId = client.get(ServiceWebhookBuildResource::class).webhookTrigger(
-                userId = action.data.getUserId(),
+                // #7700 此处传入userid 为权限人。同一为用ci开启人做权限校验
+                userId = action.data.setting.enableUser,
                 projectId = action.getProjectCode(),
                 pipelineId = pipeline.pipelineId,
                 params = WebhookTriggerParams(

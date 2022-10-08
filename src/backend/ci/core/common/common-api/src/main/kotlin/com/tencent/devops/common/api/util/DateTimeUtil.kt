@@ -29,7 +29,6 @@ package com.tencent.devops.common.api.util
 
 import java.text.SimpleDateFormat
 import java.time.LocalDate
-import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -49,10 +48,6 @@ fun LocalDateTime.timestamp(): Long {
 fun LocalDateTime.timestampmilli(): Long {
     val zoneId = ZoneId.systemDefault()
     return this.atZone(zoneId).toInstant().toEpochMilli()
-}
-
-fun LocalDateTime.between(endLocalDateTime: LocalDateTime?): Duration {
-    return Duration.between(this, endLocalDateTime)
 }
 
 @Suppress("ALL")

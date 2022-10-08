@@ -158,7 +158,7 @@ class EventActionFactory @Autowired constructor(
             action.data.setting = actionSetting
         }
         return if (actionContext.repoTrigger != null) {
-            StreamRepoTriggerAction(action, client, streamGitConfig)
+            StreamRepoTriggerAction(action, client, streamGitConfig, streamTriggerCache)
         } else action
     }
 
@@ -184,7 +184,6 @@ class EventActionFactory @Autowired constructor(
             is GitPushEvent -> {
                 val tGitPushAction = TGitPushActionGit(
                     dslContext = dslContext,
-                    client = client,
                     apiService = tGitApiService,
                     streamEventService = streamEventService,
                     streamTimerService = streamTimerService,
@@ -198,6 +197,8 @@ class EventActionFactory @Autowired constructor(
             }
             is GitMergeRequestEvent -> {
                 val tGitMrAction = TGitMrActionGit(
+                    dslContext = dslContext,
+                    streamSettingDao = basicSettingDao,
                     apiService = tGitApiService,
                     mrConflictCheck = mrConflictCheck,
                     pipelineDelete = pipelineDelete,

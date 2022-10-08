@@ -88,7 +88,7 @@ class BuildTypeEnumModifier : EnumModifier {
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.WINDOWS.name,
-            additionalValues = arrayOf("蓝盾WINDOWS公共构建资源", listOf(OS.WINDOWS), false, true, true)
+            additionalValues = arrayOf("蓝盾WINDOWS公共构建资源", listOf(OS.WINDOWS), false, true, false)
         )
     }
 }

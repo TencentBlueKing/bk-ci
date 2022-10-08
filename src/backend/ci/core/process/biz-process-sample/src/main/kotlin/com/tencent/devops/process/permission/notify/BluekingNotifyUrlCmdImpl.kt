@@ -7,7 +7,6 @@ import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.impl.NotifyUrlBuildCmd
 import org.springframework.beans.factory.annotation.Autowired
 
-@Suppress("NestedBlockDepth")
 class BluekingNotifyUrlCmdImpl @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService
 ) : NotifyUrlBuildCmd() {
