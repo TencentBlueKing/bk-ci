@@ -195,10 +195,10 @@ class TGitNoteActionGit @Autowired constructor(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val (isTrigger, startParams) = GitActionCommon.matchAndStartParams(this, triggerOn)
+        val (isTrigger, _) = GitActionCommon.matchAndStartParams(this, triggerOn, onlyMatch = true)
         return TriggerResult(
             trigger = TriggerBody(isTrigger),
-            startParams = startParams,
+            triggerOn = triggerOn,
             timeTrigger = false,
             deleteTrigger = false
         )
