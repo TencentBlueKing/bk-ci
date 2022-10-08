@@ -107,7 +107,6 @@
         computed: {
             restProps () {
                 const { matrix, ...restProps } = this.$props
-                console.log(restProps)
                 return restProps
             },
             matrixToggleCls () {

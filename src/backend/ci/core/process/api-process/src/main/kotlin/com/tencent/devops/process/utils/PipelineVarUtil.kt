@@ -316,7 +316,7 @@ object PipelineVarUtil {
                     allVars[newVarName] = it.value
                 }
                 // 已经存在从新变量转化过来的旧变量，则不覆盖，放弃
-                if (!allVars.containsKey(it.key)) {
+                if (!allVars.containsKey(it.key) || it.key == "BuildNo") {
                     allVars[it.key] = it.value
                 }
             }
@@ -345,7 +345,7 @@ object PipelineVarUtil {
             // 如果新旧key同时存在，则保留原value
             if (varMaps[it.key] != null && varMaps[it.value] == null) {
                 varMaps[it.value] = varMaps[it.key]!!
-                if (replace) {
+                if (replace && it.key != "BuildNo") {
                     varMaps.remove(it.key)
                 }
             }

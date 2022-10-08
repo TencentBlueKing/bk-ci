@@ -1,6 +1,6 @@
 {
   "name": "bkui-pipeline",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "description": "devops pipeline",
   "main": "dist/bk-pipeline.min.js",
   "scripts": {

@@ -59,11 +59,11 @@ import org.slf4j.LoggerFactory
 
 class TGitTagPushActionGit(
     private val apiService: TGitApiService,
-    private val gitCheckService: GitCheckService
+    gitCheckService: GitCheckService
 ) : TGitActionGit(apiService, gitCheckService), GitBaseAction {
 
     companion object {
-        val logger = LoggerFactory.getLogger(TGitTagPushActionGit::class.java)
+        val logger = LoggerFactory.getLogger(TGitTagPushActionGit::class.java)!!
     }
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.TAG_PUSH)
@@ -74,7 +74,7 @@ class TGitTagPushActionGit(
     override val api: TGitApiService
         get() = apiService
 
-    override fun init(): BaseAction? {
+    override fun init(): BaseAction {
         return initCommonData()
     }
 
@@ -138,7 +138,7 @@ class TGitTagPushActionGit(
         return true
     }
 
-    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
+    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) = Unit
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         return GitActionCommon.getYamlPathList(

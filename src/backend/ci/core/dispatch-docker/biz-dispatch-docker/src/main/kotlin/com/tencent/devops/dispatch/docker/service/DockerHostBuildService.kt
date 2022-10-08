@@ -33,7 +33,6 @@ import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.docker.client.DockerHostClient
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerEnableDao
@@ -44,7 +43,6 @@ import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
 import com.tencent.devops.dispatch.docker.pojo.Load
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -65,15 +63,11 @@ class DockerHostBuildService @Autowired constructor(
     private val pipelineDockerTaskDao: PipelineDockerTaskDao,
     private val pipelineDockerPoolDao: PipelineDockerPoolDao,
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
-    private val redisUtils: RedisUtils,
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val gray: Gray,
     private val buildLogPrinter: BuildLogPrinter,
     private val dockerHostQpcService: DockerHostQpcService
 ) {
-
-    private val grayFlag: Boolean = gray.isGray()
 
     fun updateContainerId(
         buildId: String,
@@ -212,7 +206,7 @@ class DockerHostBuildService @Autowired constructor(
             }
 
             // 只要当容器关机成功时才会更新build_history状态
-            finishBuild(record = record, success = event.buildResult, executeCount = event.executeCount)
+            finishBuild(record = record, success = event.buildResult)
         } catch (ignore: Exception) {
             LOG.warn("${event.buildId}|finishDockerFail|vmSeqId=${event.vmSeqId}|result=${event.buildResult}", ignore)
         } finally {
@@ -227,11 +221,7 @@ class DockerHostBuildService @Autowired constructor(
         }
     }
 
-    private fun finishBuild(
-        record: TDispatchPipelineDockerBuildRecord,
-        success: Boolean,
-        executeCount: Int? = null
-    ) {
+    private fun finishBuild(record: TDispatchPipelineDockerBuildRecord, success: Boolean) {
         LOG.info("Finish the docker build(${record.buildId}) with result($success)")
         try {
             pipelineDockerBuildDao.updateStatus(
@@ -274,7 +264,7 @@ class DockerHostBuildService @Autowired constructor(
             }
         } finally {
             redisLock.unlock()
-            LOG.info("[$grayFlag]|updateTimeoutPoolTask| $message")
+            LOG.info("updateTimeoutPoolTask| $message")
         }
     }
 

@@ -44,10 +44,18 @@ spec:
           command: ['/bin/sh','-c','/data/workspace/init-mongodb.sh']
           env:
             - name: CODECC_USERNAME
-              value: {{ .Values.mongodb.auth.username }}
+              value: {{ include "codecc.mongodb.username" . }}
             - name: CODECC_PASSWORD
-              value: {{ .Values.mongodb.auth.password }}
+              value: {{ include "codecc.mongodb.password" . }}
             - name: CODECC_HOST
               value: {{ include "codecc.mongodb.fullname" . }}
+            - name: CODECC_PORT
+              value: {{ include "codecc.mongodb.port" . | quote }}
+            - name: CODECC_AUTH_DB_DEFECT
+              value: {{ include "codecc.mongodb.defectAuthDB" . }}
+            - name: CODECC_AUTH_DB_TASK
+              value: {{ include "codecc.mongodb.taskAuthDB" . }}
+            - name: CODECC_AUTH_DB_QUARTZ
+              value: {{ include "codecc.mongodb.quartzAuthDB" . }}
       restartPolicy: OnFailure
 {{- end }}

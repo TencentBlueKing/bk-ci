@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory
 class TGitReviewActionGit(
     private val dslContext: DSLContext,
     private val apiService: TGitApiService,
-    private val gitCheckService: GitCheckService,
+    gitCheckService: GitCheckService,
     private val basicSettingDao: StreamBasicSettingDao
 ) : TGitActionGit(apiService, gitCheckService), GitBaseAction {
 
@@ -122,12 +122,35 @@ class TGitReviewActionGit(
             },
             gitProjectName = GitUtils.getProjectName(event.repository.homepage)
         )
+        this.data.context.gitDefaultBranchLatestCommitInfo = defaultBranch to latestCommit?.toGitCommit()
         return this
+    }
+
+    override fun initCacheData() {
+        val event = event()
+        if (data.isSettingInitialized && event.reviewableId != null && event.reviewableType == "merge_request") {
+            try {
+                data.context.gitMrInfo = apiService.getMrInfo(
+                    cred = getGitCred(),
+                    gitProjectId = data.eventCommon.gitProjectId,
+                    mrId = event.reviewableId.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )?.baseInfo
+                data.context.gitMrReviewInfo = apiService.getMrReview(
+                    cred = getGitCred(),
+                    gitProjectId = data.eventCommon.gitProjectId,
+                    mrId = event.reviewableId.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )
+            } catch (ignore: Throwable) {
+                logger.warn("TGit review action cache mrInfo/mrReviewInfo error", ignore)
+            }
+        }
     }
 
     override fun isStreamDeleteAction() = event().isDeleteEvent()
 
-    override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
+    override fun buildRequestEvent(eventStr: String): GitRequestEvent {
         return GitRequestEventHandle.createReviewEvent(
             gitReviewEvent = event(),
             e = eventStr,
@@ -140,13 +163,13 @@ class TGitReviewActionGit(
         return false
     }
 
-    override fun checkProjectConfig() {}
+    override fun checkProjectConfig() = Unit
 
     override fun checkMrConflict(path2PipelineExists: Map<String, StreamTriggerPipeline>): Boolean {
         return true
     }
 
-    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
+    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) = Unit
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         return GitActionCommon.getYamlPathList(

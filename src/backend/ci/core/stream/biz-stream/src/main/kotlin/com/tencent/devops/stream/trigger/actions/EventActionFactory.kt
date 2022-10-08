@@ -184,7 +184,6 @@ class EventActionFactory @Autowired constructor(
             is GitPushEvent -> {
                 val tGitPushAction = TGitPushActionGit(
                     dslContext = dslContext,
-                    client = client,
                     apiService = tGitApiService,
                     streamEventService = streamEventService,
                     streamTimerService = streamTimerService,
@@ -198,6 +197,8 @@ class EventActionFactory @Autowired constructor(
             }
             is GitMergeRequestEvent -> {
                 val tGitMrAction = TGitMrActionGit(
+                    dslContext = dslContext,
+                    streamSettingDao = basicSettingDao,
                     apiService = tGitApiService,
                     mrConflictCheck = mrConflictCheck,
                     pipelineDelete = pipelineDelete,

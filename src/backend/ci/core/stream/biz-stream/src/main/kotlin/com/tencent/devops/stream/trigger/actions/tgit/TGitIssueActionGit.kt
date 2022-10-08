@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory
 class TGitIssueActionGit(
     private val dslContext: DSLContext,
     private val apiService: TGitApiService,
-    private val gitCheckService: GitCheckService,
+    gitCheckService: GitCheckService,
     private val basicSettingDao: StreamBasicSettingDao
 ) : TGitActionGit(apiService, gitCheckService), GitBaseAction {
 
@@ -120,6 +120,7 @@ class TGitIssueActionGit(
             userId = event.user.username,
             gitProjectName = GitUtils.getProjectName(event.repository.homepage)
         )
+        this.data.context.gitDefaultBranchLatestCommitInfo = defaultBranch to latestCommit?.toGitCommit()
         return this
     }
 
@@ -138,13 +139,13 @@ class TGitIssueActionGit(
         return false
     }
 
-    override fun checkProjectConfig() {}
+    override fun checkProjectConfig() = Unit
 
     override fun checkMrConflict(path2PipelineExists: Map<String, StreamTriggerPipeline>): Boolean {
         return true
     }
 
-    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
+    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) = Unit
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         return GitActionCommon.getYamlPathList(

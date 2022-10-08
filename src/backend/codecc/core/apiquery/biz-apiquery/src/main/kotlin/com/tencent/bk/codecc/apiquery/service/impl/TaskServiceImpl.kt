@@ -128,7 +128,7 @@ class TaskServiceImpl @Autowired constructor(
         val pageable = PageUtils.convertPageSizeToPageable(pageNum, pageSize, sortField, sortType)
         // 获取任务列表
         val taskList = taskDao.findByPipelineIdList(taskQueryReq.pipelineIdList!!, pageable)
-        if (!taskList.isNullOrEmpty()) {
+        if (taskList.isNotEmpty()) {
             taskList.forEach {
                 val pipelineTaskVO = PipelineTaskVO()
                 BeanUtils.copyProperties(it, pipelineTaskVO)
