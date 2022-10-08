@@ -116,7 +116,6 @@ func NewOperator(conf *config.ContainerResourceConfig) (op.Operator, error) {
 		clusterClientCache: make(map[string]*clusterClientSet),
 		clusterCacheLock:   make(map[string]*sync.Mutex),
 		disableWinHostNW:   conf.BcsDisableWinHostNW,
-		debugTimes:         0,
 	}
 	o.cityLabelKey = o.getCityLabelKey()
 	o.platformLabelKey = o.getPlatformLabelKeyLabelKey()
@@ -135,8 +134,6 @@ type operator struct {
 	cityLabelKey     string
 	platformLabelKey string
 	disableWinHostNW bool
-	// debug times
-	debugTimes int
 }
 
 type clusterClientSet struct {
@@ -193,10 +190,6 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 		List(context.TODO(), metaV1.ListOptions{FieldSelector: fieldSelector.String()})
 
 	nodeInfoList := make([]*op.NodeInfo, 0, 1000)
-	// ++debug
-	allocatedResourceList := make([]coreV1.ResourceList, 0, 1000)
-	zeroNodeList := make([]coreV1.Node, 0, 100)
-
 	for _, node := range nodeList.Items {
 
 		// get internal ip from status
@@ -214,7 +207,6 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 		}
 
 		allocatedResource := getPodsTotalRequests(node.Name, nodeNonTerminatedPodsList)
-		allocatedResourceList = append(allocatedResourceList, allocatedResource)
 
 		// get disable information from labels
 		dl, _ := node.Labels[disableLabel]
@@ -236,51 +228,6 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 
 			Disabled: disabled,
 		})
-
-		if allocatedResource.Cpu().Value() == 0 {
-			zeroNodeList = append(zeroNodeList, node)
-		}
-	}
-
-	if o.debugTimes < 100 {
-		ifzero := true
-		blog.Infof("[micheal debug]: *************")
-
-		for _, rs := range allocatedResourceList {
-			if rs.Cpu().Value() != 0 {
-				ifzero = false
-				break
-			}
-		}
-		if ifzero {
-			blog.Infof("[micheal debug]: there are (%d) nodes and (%d) pods", len(nodeList.Items), len(nodeNonTerminatedPodsList.Items))
-			var podNameList []string
-			nodeNameList := make([]string, 0, 20)
-			for _, pod := range nodeNonTerminatedPodsList.Items {
-				podNameList = append(podNameList, pod.Spec.NodeName)
-			}
-			for i, node := range zeroNodeList {
-				if i >= 10 {
-					break
-				}
-				nodeNameList = append(nodeNameList, node.Name)
-			}
-			blog.Infof("[micheal debug]: zero node name list:[%v]", nodeNameList)
-			blog.Infof("[micheal debug]: pod name list:[%v]", podNameList)
-
-			for i, pod := range nodeNonTerminatedPodsList.Items {
-				if i >= 10 {
-					break
-				}
-				podRequests := podRequests(&pod)
-				blog.Infof("[micheal debug]: debug pod name (%s),pod spec node name:(%s)", pod.Name, &pod.Spec.NodeName)
-				for k, v := range podRequests {
-					blog.Infof("  [micheal debug]: (%s):(%d)", k, v.Value())
-				}
-			}
-			o.debugTimes++
-			blog.Infof("[micheal debug]: *************")
-		}
 	}
 
 	blog.Debugf("k8s-operator: success to get resource clusterID(%s)", clusterID)
