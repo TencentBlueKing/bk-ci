@@ -64,7 +64,7 @@
             </form-field>
             <form-field
                 :label="$t('editPage.assignResource')"
-                v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !showImagePublicTypeList.includes(buildResourceType)"
+                v-if="buildResourceType !== 'MACOS' && buildResourceType !== 'WINDOWS' && !isPublicResourceType && containerModalId && !showImagePublicTypeList.includes(buildResourceType)"
                 :is-error="errors.has('buildResource')"
                 :error-msg="errors.first('buildResource')"
                 :desc="buildResourceType === 'THIRD_PARTY_AGENT_ENV' ? this.$t('editPage.thirdSlaveTips') : ''"
@@ -87,6 +87,20 @@
                     name="buildResource"
                 />
             </form-field>
+
+            <!-- windows公共构建机类型 -->
+            <template v-if="buildResourceType === 'WINDOWS'">
+                <form-field :label="$t('editPage.winSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
+                    <bk-select @change="changeWindowSystem" :disabled="!editable" :value="systemVersion" searchable :loading="isLoadingWin" name="systemVersion" v-validate.initial="'required'">
+                        <bk-option v-for="item in windowsVersionList"
+                            :key="item.name"
+                            :id="item.name"
+                            :name="item.systemVersion"
+                        >
+                        </bk-option>
+                    </bk-select>
+                </form-field>
+            </template>
 
             <template v-if="buildResourceType === 'MACOS'">
                 <form-field :label="$t('editPage.macSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
@@ -282,6 +296,8 @@
                 isLoadingMac: false,
                 xcodeVersionList: [],
                 systemVersionList: [],
+                isLoadingWin: false,
+                windowsVersionList: [],
                 isShowPerformance: false
             }
         },
@@ -478,12 +494,14 @@
                 this.getVersionList(this.container.dispatchType.imageCode)
             }
             if (this.buildResourceType === 'MACOS') this.getMacOsData()
+            if (this.buildResourceType === 'WINDOWS') this.getWinData()
         },
         methods: {
             ...mapActions('atom', [
                 'updateContainer',
                 'getMacSysVersion',
-                'getMacXcodeVersion'
+                'getMacXcodeVersion',
+                'getWinVersion'
             ]),
             ...mapActions('pipelines', [
                 'requestImageVersionlist'
@@ -505,6 +523,7 @@
                     [name]: val
                 }))
                 if (val === 'MACOS') this.getMacOsData()
+                if (val === 'WINDOWS') this.getWinData()
                 if (this.container.dispatchType && this.container.dispatchType.imageCode) this.getVersionList(this.container.dispatchType.imageCode)
             },
 
@@ -623,6 +642,18 @@
                     ...this.container.dispatchType,
                     [name]: value
                 }))
+            },
+            changeWindowSystem (value) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    systemVersion: value,
+                    value
+                }))
+            },
+            async getWinData () {
+                this.isLoadingWin = true
+                this.windowsVersionList = await this.getWinVersion()
+                this.isLoadingWin = false
             },
             handleContainerChange (name, value) {
                 this.updateContainer({

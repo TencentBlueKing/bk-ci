@@ -118,7 +118,7 @@ data class GithubPullRequest(
     @JsonProperty("merged_at")
     val mergedAt: String?, // null
     @JsonProperty("merged_by")
-    val mergedBy: String?, // null
+    val mergedBy: GithubUser?, // null
     @JsonProperty("milestone")
     val milestone: GithubMilestone?, // null
     @JsonProperty("node_id")

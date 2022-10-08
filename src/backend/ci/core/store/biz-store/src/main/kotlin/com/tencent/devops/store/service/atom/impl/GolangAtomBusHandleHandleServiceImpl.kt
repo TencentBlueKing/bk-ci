@@ -41,7 +41,12 @@ class GolangAtomBusHandleHandleServiceImpl : AtomBusHandleService {
     }
 
     override fun handleOsArch(osName: String, osArch: String): String {
-        return when (val osType = OSType.valueOf(osName.toUpperCase())) {
+        val osType = if (osName.toLowerCase() == "darwin") {
+            OSType.MAC_OS
+        } else {
+            OSType.valueOf(osName.toUpperCase())
+        }
+        return when (osType) {
             OSType.LINUX, OSType.MAC_OS -> {
                 if (osArch.contains("amd") || osArch.contains("x86")) {
                     "amd64"

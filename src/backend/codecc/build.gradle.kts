@@ -153,6 +153,44 @@ allprojects {
                 entry("jersey-media-multipart")
             }
 
+            /**
+             * 蓝盾依赖
+             */
+            dependencySet("com.tencent.bk.devops.ci.common:${Versions.devopsVersion}") {
+                entry("common-auth-api")
+                entry("common-auth-v3")
+                entry("common-redis")
+                entry("common-pipeline")
+            }
+            dependencySet("com.tencent.bk.devops.ci.auth:${Versions.devopsVersion}") {
+                entry("api-auth")
+            }
+            dependencySet("com.tencent.bk.devops.ci.project:${Versions.devopsVersion}") {
+                entry("api-project")
+            }
+            dependencySet("com.tencent.bk.devops.ci.process:${Versions.devopsVersion}") {
+                entry("api-process")
+            }
+            dependencySet("com.tencent.bk.devops.ci.log:${Versions.devopsVersion}") {
+                entry("api-log")
+            }
+            dependencySet("com.tencent.bk.devops.ci.quality:${Versions.devopsVersion}") {
+                entry("api-quality")
+            }
+            dependencySet("com.tencent.bk.devops.ci.repository:${Versions.devopsVersion}") {
+                entry("api-repository")
+            }
+            dependencySet("com.tencent.bk.devops.ci.notify:${Versions.devopsVersion}") {
+                entry("api-notify")
+            }
+            dependencySet("com.tencent.bk.devops.ci.image:${Versions.devopsVersion}") {
+                entry("api-image")
+            }
+            dependencySet("com.tencent.bk.devops.ci.plugin:${Versions.devopsVersion}") {
+                entry("api-plugin")
+                entry("api-codecc")
+                entry("common-codecc")
+            }
         }
     }
 

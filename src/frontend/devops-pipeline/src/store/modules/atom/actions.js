@@ -358,10 +358,10 @@ export default {
         commit(CLEAR_ATOM_DATA)
     },
 
-    fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container }) => {
+    fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container, queryOfflineFlag = false }) => {
         try {
             commit(SET_ATOM_MODAL_FETCHING, true)
-            const { data: atomModal } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}`)
+            const { data: atomModal } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
             commit(SET_ATOM_MODAL, {
                 atomCode,
                 version,
@@ -599,6 +599,13 @@ export default {
     getMacXcodeVersion () {
         return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2`)
     },
+
+    getWinVersion () {
+        return request.get('/dispatch-windows/api/user/systemVersions').then((res) => {
+            return res.data
+        })
+    },
+
     setImportedPipelineJson ({ commit }, importedJson) {
         commit(SET_IMPORTED_JSON, importedJson)
     },

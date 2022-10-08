@@ -44,7 +44,7 @@ IF NOT EXISTS(SELECT 1
                     AND TABLE_NAME = 'T_GIT_BASIC_SETTING'
                     AND COLUMN_NAME = 'TRIGGER_REVIEW_SETTING') THEN
 ALTER TABLE `T_GIT_BASIC_SETTING`
-    ADD COLUMN `TRIGGER_REVIEW_SETTING` text not null COMMENT 'pr、mr触发时的权限校验(存储为json字符串)';
+    ADD COLUMN `TRIGGER_REVIEW_SETTING` text null COMMENT 'pr、mr触发时的权限校验(存储为json字符串)';
 	
 END IF;
 

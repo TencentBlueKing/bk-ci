@@ -200,8 +200,12 @@ class MarketAtomEnvInfoDao {
         return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_ID.eq(atomId))
-            osName?.let { conditions.add(OS_NAME.eq(osName)) }
-            osArch?.let { conditions.add(OS_ARCH.eq(osArch)) }
+            if (!osName.isNullOrBlank()) {
+                conditions.add(OS_NAME.eq(osName))
+            }
+            if (!osArch.isNullOrBlank()) {
+                conditions.add(OS_ARCH.eq(osArch))
+            }
             dslContext.selectFrom(this)
                 .where(conditions)
                 .limit(1)
@@ -228,7 +232,9 @@ class MarketAtomEnvInfoDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_ID.eq(atomId))
             conditions.add(DEFAULT_FLAG.eq(true))
-            osName?.let { conditions.add(OS_NAME.eq(it)) }
+            if (!osName.isNullOrBlank()) {
+                conditions.add(OS_NAME.eq(osName))
+            }
             dslContext.selectFrom(this)
                 .where(conditions)
                 .limit(1)

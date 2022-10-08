@@ -144,6 +144,7 @@ class StreamYamlBuild @Autowired constructor(
     fun gitStartBuild(
         action: BaseAction,
         triggerResult: TriggerResult,
+        startParams: Map<String, String>,
         yaml: ScriptBuildYaml,
         gitBuildId: Long?,
         onlySavePipeline: Boolean,
@@ -206,7 +207,7 @@ class StreamYamlBuild @Autowired constructor(
                     action = action,
                     yaml = yaml,
                     gitBuildId = gitBuildId,
-                    params = triggerResult.startParams,
+                    params = startParams,
                     yamlTransferData = yamlTransferData,
                     manualInputs = manualInputs
                 )
@@ -233,7 +234,7 @@ class StreamYamlBuild @Autowired constructor(
                     Triple(
                         false,
                         e.message,
-                        TriggerReason.CREATE_QUALITY_RULRS_ERROR
+                        TriggerReason.CREATE_QUALITY_RULES_ERROR
                     )
                 }
                 // 指定异常直接扔出在外面统一处理

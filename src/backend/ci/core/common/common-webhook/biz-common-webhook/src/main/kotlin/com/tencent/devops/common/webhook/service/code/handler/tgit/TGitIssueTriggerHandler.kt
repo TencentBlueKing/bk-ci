@@ -48,7 +48,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_URL
 import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
-import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
@@ -58,7 +58,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
 class TGitIssueTriggerHandler(
-    private val gitScmService: GitScmService
+    private val eventCacheService: EventCacheService
 ) : GitHookTriggerHandler<GitIssueEvent> {
 
     override fun eventClass(): Class<GitIssueEvent> {
@@ -112,7 +112,7 @@ class TGitIssueTriggerHandler(
         startParams[PIPELINE_GIT_EVENT] = GitIssueEvent.classType
         if (projectId != null && repository != null) {
             val (defaultBranch, commitInfo) =
-                gitScmService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
+                eventCacheService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
             startParams[PIPELINE_GIT_REF] = defaultBranch ?: ""
             startParams[CI_BRANCH] = defaultBranch ?: ""
 

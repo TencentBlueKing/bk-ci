@@ -118,6 +118,7 @@
         created () {
             this.getMessages()
             this.getUnreadNum()
+            document.title = this.$t('notifications')
         },
 
         methods: {
