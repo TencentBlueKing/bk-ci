@@ -396,26 +396,23 @@ func (s *Server) getK8sInstaceList() map[string]*config.InstanceType {
 }
 
 func initInstanceType(confItem *config.ContainerResourceConfig, ist *config.InstanceType) {
-	exsited := false
 	for _, item := range confItem.InstanceType {
 		if item.Platform == ist.Platform && item.Group == ist.Group {
-			exsited = true
 			return
 		}
 	}
-	if !exsited {
-		ist.CPUPerInstance = confItem.BcsCPUPerInstance
-		ist.MemPerInstance = confItem.BcsMemPerInstance
-		ist.CPULimitPerInstance = confItem.BcsCPUPerInstance
-		ist.MemLimitPerInstance = confItem.BcsMemPerInstance
-		if confItem.BcsCPULimitPerInstance > 0.0 {
-			ist.CPULimitPerInstance = confItem.BcsCPULimitPerInstance
-		}
-		if confItem.BcsMemLimitPerInstance > 0.0 {
-			ist.MemLimitPerInstance = confItem.BcsMemLimitPerInstance
-		}
-		confItem.InstanceType = append(confItem.InstanceType, *ist)
+
+	ist.CPUPerInstance = confItem.BcsCPUPerInstance
+	ist.MemPerInstance = confItem.BcsMemPerInstance
+	ist.CPULimitPerInstance = confItem.BcsCPUPerInstance
+	ist.MemLimitPerInstance = confItem.BcsMemPerInstance
+	if confItem.BcsCPULimitPerInstance > 0.0 {
+		ist.CPULimitPerInstance = confItem.BcsCPULimitPerInstance
 	}
+	if confItem.BcsMemLimitPerInstance > 0.0 {
+		ist.MemLimitPerInstance = confItem.BcsMemLimitPerInstance
+	}
+	confItem.InstanceType = append(confItem.InstanceType, *ist)
 }
 
 func (s *Server) initK8sResourceManagers() (k8sRm crm.ResourceManager,
