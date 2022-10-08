@@ -35,10 +35,10 @@ import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -207,8 +207,9 @@ class TGitApiService @Autowired constructor(
             ).data
         }?.let {
             TGitMrInfo(
-                mergeStatus = it.mergeStatus,
-                baseCommit = it.baseCommit
+                mergeStatus = it.mergeStatus ?: "",
+                baseCommit = it.baseCommit,
+                baseInfo = it
             )
         }
     }

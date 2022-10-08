@@ -109,6 +109,7 @@ class AuthConfiguration {
     fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
     @Bean
+    @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
     fun deptService(
         redisOperation: RedisOperation,
@@ -116,6 +117,7 @@ class AuthConfiguration {
     ) = AuthDeptServiceImpl(redisOperation, objectMapper)
 
     @Bean
+    @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
     fun v3permissionService(
         authHelper: AuthHelper,
@@ -125,6 +127,7 @@ class AuthConfiguration {
     ) = BkPermissionService(authHelper, policyService, iamConfiguration, iamCacheService)
 
     @Bean
+    @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
     fun v3permissionProjectService(
         permissionRoleService: PermissionRoleService,

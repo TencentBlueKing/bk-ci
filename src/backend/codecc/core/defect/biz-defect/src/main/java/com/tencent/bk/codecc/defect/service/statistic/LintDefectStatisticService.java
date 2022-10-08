@@ -214,7 +214,7 @@ public class LintDefectStatisticService
         fileCount = filePathSet.size();
         int defectChange;
         int fileChange;
-        LintStatisticEntity lastLintStatisticEntity = lintStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, baseBuildId);
+        LintStatisticEntity lastLintStatisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, baseBuildId);
         if (lastLintStatisticEntity == null)
         {
             defectChange = defectCount;
