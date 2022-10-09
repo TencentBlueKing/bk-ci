@@ -86,7 +86,7 @@ class PipelineViewGroupService @Autowired constructor(
         }
         val viewIds = pipelineViewGroups.map { it.viewId }.toSet()
         val views = pipelineViewDao.list(dslContext, projectId, viewIds)
-        if (viewIds.isEmpty()) {
+        if (views.isEmpty()) {
             return emptyMap()
         }
         val viewId2Name = views.filter { it.isProject }.associate { it.id to it.name }
