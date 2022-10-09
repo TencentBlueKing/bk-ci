@@ -3,7 +3,6 @@ package com.tencent.devops.process.service.view
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
@@ -36,7 +35,6 @@ class PipelineViewGroupServiceTest : BkAbstractTest() {
     private val pipelineViewGroupDao: PipelineViewGroupDao = mockk()
     private val pipelineViewTopDao: PipelineViewTopDao = mockk()
     private val pipelineInfoDao: PipelineInfoDao = mockk()
-    private val redisOperation: RedisOperation = mockk()
     private val objectMapper: ObjectMapper = mockk()
 
     private val self: PipelineViewGroupService = spyk(
@@ -80,8 +78,26 @@ class PipelineViewGroupServiceTest : BkAbstractTest() {
         /*viewType*/PipelineViewType.DYNAMIC
     )
 
-    private val p = TPipelineInfoRecord(
-
+    private val pi = TPipelineInfoRecord(
+        "p-test",//        setPipelineId(pipelineId);
+        "test",//    setProjectId(projectId);
+        "test",//    setPipelineName(pipelineName);
+        "test",//    setPipelineDesc(pipelineDesc);
+        1,//    setVersion(version);
+        now,//    setCreateTime(createTime);
+        "test",//    setCreator(creator);
+        now,//    setUpdateTime(updateTime);
+        "test",//    setLastModifyUser(lastModifyUser);
+        "test",//    setChannel(channel);
+        1,//    setManualStartup(manualStartup);
+        1,//    setElementSkip(elementSkip);
+        1,//    setTaskCount(taskCount);
+        false,//    setDelete(delete);
+        1,//    setId(id);
+        "test",//    setPipelineNamePinyin(pipelineNamePinyin);
+        now,//    setLatestStartTime(latestStartTime);
+        "test",//    setPlatformCode(platformCode);
+        0//    setPlatformErrorCode(platformErrorCode);
     )
 
     private val pipelineViewForm = PipelineViewForm(
@@ -155,20 +171,8 @@ class PipelineViewGroupServiceTest : BkAbstractTest() {
         }
 
         @Test
-        @DisplayName("项目流水线组 & 没有权限")
-        fun test_1() {
-            Assertions.assertThrows(ErrorCodeException::class.java) {
-                self.addViewGroup(
-                    "test",
-                    "false",
-                    pipelineViewForm
-                )
-            }
-        }
-
-        @Test
         @DisplayName("项目流水线组 & 有权限")
-        fun test_2() {
+        fun test_1() {
             val projectId = "test"
             val userId = "true"
             val viewId = 1L
@@ -372,13 +376,43 @@ class PipelineViewGroupServiceTest : BkAbstractTest() {
     }
 
     @Nested
-    inner class UpdateGroupAfterPipelineCreate{
+    inner class UpdateGroupAfterPipelineCreate {
         @Test
-        @DisplayName("正常执行")
-        fun test_1(){
-            every { pipelineInfoDao.getPipelineId(anyDslContext(),any(),any()) } returns p
-            every { pipelineViewGroupDao.countByPipelineId(anyDslContext(),any(),any()) } returns 1
-            Assertions.assertDoesNotThrow(){self.updateGroupAfterPipelineCreate("test","test","test")}
+        @DisplayName("正常执行 , viewGroup 数量不为0")
+        fun test_1() {
+            every { pipelineInfoDao.getPipelineId(anyDslContext(), any(), any()) } returns pi
+            every { pipelineViewGroupDao.countByPipelineId(anyDslContext(), any(), any()) } returns 1
+            Assertions.assertDoesNotThrow() { self.updateGroupAfterPipelineCreate("test", "test", "test") }
+        }
+
+        @Test
+        @DisplayName("正常执行 , viewGroup 数量为0")
+        fun test_2() {
+            every { pipelineInfoDao.getPipelineId(anyDslContext(), any(), any()) } returns pi
+            every { pipelineViewGroupDao.countByPipelineId(anyDslContext(), any(), any()) } returns 0
+            every {
+                pipelineViewDao.list(anyDslContext(), any() as String, any() as Int)
+            } returns dslContext.mockResult(T_PIPELINE_VIEW, pv)
+            every { pipelineViewService.matchView(any(), any()) } returns true
+            justRun { pipelineViewGroupDao.create(anyDslContext(), any(), any(), any(), any()) }
+            Assertions.assertDoesNotThrow { self.updateGroupAfterPipelineCreate("test", "test", "test") }
+        }
+    }
+
+    @Nested
+    inner class UpdateGroupAfterPipelineUpdate {
+        @Test
+        @DisplayName("正常调用 , 没有新命中的流水线组 , 没有需要删除的流水线组")
+        fun test_1() {
+            every { pipelineInfoDao.getPipelineId(anyDslContext(), any(), any()) } returns pi
+            every {
+                pipelineViewDao.list(anyDslContext(), any() as String, any() as Int)
+            } returns dslContext.mockResult(T_PIPELINE_VIEW, pv)
+            every { pipelineViewService.matchView(any(), any()) } returns true
+            every { pipelineViewGroupDao.listByPipelineId(anyDslContext(), any(), any()) } returns listOf(pvg)
+            justRun { pipelineViewGroupDao.create(anyDslContext(), any(), any(), any(), any()) }
+            justRun { pipelineViewGroupDao.remove(anyDslContext(), any(), any(), any()) }
+            Assertions.assertDoesNotThrow { self.updateGroupAfterPipelineUpdate("test", "p-test", "test") }
         }
     }
 }
