@@ -358,7 +358,7 @@ class LambdaDataService @Autowired constructor(
     ) {
         try {
             val variables = variablesWithType.filter {
-                !VariableType.validate(it.key)
+                !it.key.startsWith("BK_")
             }.associate { it.key to it.value.toString() }
             val invalidKeyList = mutableSetOf<String>()
             variables.forEach { (key, _) ->
