@@ -46,5 +46,5 @@ data class GitToken(
     @JsonProperty("expires_in")
     val expiresIn: Long = 0L,
     @ApiModelProperty("创建时间")
-    var createTime: Long? = 0L
+    val createTime: Long? = 0L
 )

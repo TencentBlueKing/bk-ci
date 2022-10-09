@@ -1,6 +1,7 @@
 package com.tencent.bk.codecc.quartz.strategy.sharding
 
 import com.tencent.bk.codecc.quartz.pojo.ShardingResult
+import com.tencent.devops.common.client.discovery.DiscoveryUtils
 import org.springframework.cloud.client.ServiceInstance
 
 abstract class AbstractShardingStrategy {
@@ -9,7 +10,7 @@ abstract class AbstractShardingStrategy {
 
     abstract fun shardInstances(
         instanceList: List<ServiceInstance>,
-        localInstance: ServiceInstance
+        discoveryUtils : DiscoveryUtils
     ): ShardingResult
 
     fun setPreviousShardingResultIfNull(shardingResult: ShardingResult) {

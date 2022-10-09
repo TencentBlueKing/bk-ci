@@ -575,7 +575,9 @@
                 if (!this.curPipeline.enabled || !this.permission) return
                 if (this.defaultBranch) {
                     this.formData.branch = this.defaultBranch
-                    this.branchList.push(this.defaultBranch)
+                    this.branchList = [this.defaultBranch]
+                    this.getBranchCommits()
+                    this.getPipelineParams()
                 }
                 this.showTriggle = true
             },

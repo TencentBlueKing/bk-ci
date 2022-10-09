@@ -112,9 +112,29 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         val isDirected = directed ?: false
-        return Result(bkRepoDownloadService.serviceGetExternalDownloadUrl(creatorId, userId,
-            projectId, artifactoryType, path,
-            ttl, isDirected))
+        return Result(
+            bkRepoDownloadService.serviceGetExternalDownloadUrl(
+                creatorId, userId,
+                projectId, artifactoryType, path,
+                ttl, isDirected
+            )
+        )
+    }
+
+    override fun appDownloadUrl(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        path: String
+    ): Result<Url> {
+        return Result(
+            bkRepoDownloadService.getExternalUrl(
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                argPath = path
+            )
+        )
     }
 
     override fun downloadUrlForOpenApi(
@@ -140,8 +160,12 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         val isDirected = directed ?: false
-        return Result(bkRepoDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl,
-            isDirected))
+        return Result(
+            bkRepoDownloadService.serviceGetInnerDownloadUrl(
+                userId, projectId, artifactoryType, path, ttl,
+                isDirected
+            )
+        )
     }
 
     override fun show(
@@ -205,8 +229,10 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         pageSize: Int?,
         searchProps: List<Property>
     ): Result<FileInfoPage<FileInfo>> {
-        logger.info("searchFileAndPropertyByOr, projectId: $projectId, " +
-                "page: $page, pageSize: $pageSize, searchProps: $searchProps")
+        logger.info(
+            "searchFileAndPropertyByOr, projectId: $projectId, " +
+                    "page: $page, pageSize: $pageSize, searchProps: $searchProps"
+        )
         checkParam(projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1

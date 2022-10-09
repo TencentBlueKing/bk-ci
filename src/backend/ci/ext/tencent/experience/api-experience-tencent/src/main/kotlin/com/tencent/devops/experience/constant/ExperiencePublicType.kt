@@ -36,6 +36,7 @@ enum class ExperiencePublicType(
 
     BANNER_URL(3),
 
+    MINIGAME_URL(4)
     ;
 
     companion object {
