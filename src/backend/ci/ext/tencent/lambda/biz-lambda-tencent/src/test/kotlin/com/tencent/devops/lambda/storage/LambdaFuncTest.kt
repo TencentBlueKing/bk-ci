@@ -70,6 +70,6 @@ class LambdaFuncTest {
                 }
             }
         }
-        println(invalidKeyList)
+        Assertions.assertEquals(listOf("a.b.c", "a.b", "a.b.d"), invalidKeyList.toList())
     }
 }
