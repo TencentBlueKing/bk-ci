@@ -29,10 +29,14 @@ package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -65,6 +69,7 @@ import org.springframework.stereotype.Service
 @Service
 class ScheduleTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val eventActionFactory: EventActionFactory,
     private val streamYamlTrigger: StreamYamlTrigger,
     private val streamYamlBuild: StreamYamlBuild,
@@ -74,7 +79,8 @@ class ScheduleTriggerService @Autowired constructor(
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ScheduleTriggerService::class.java)
@@ -155,7 +161,13 @@ class ScheduleTriggerService @Autowired constructor(
             filePath = existsPipeline.filePath,
             displayName = existsPipeline.displayName,
             enabled = existsPipeline.enabled,
-            creator = existsPipeline.creator
+            creator = existsPipeline.creator,
+            // 兼容定时触发，触发人取流水线最近修改人
+            lastModifier = client.get(ServicePipelineResource::class).getPipelineInfo(
+                projectId = GitCommonUtils.getCiProjectId(existsPipeline.gitProjectId, streamGitConfig.getScmType()),
+                pipelineId = existsPipeline.pipelineId,
+                channelCode = ChannelCode.GIT
+            ).data?.lastModifyUser
         )
         action.data.context.pipeline = buildPipeline
 
