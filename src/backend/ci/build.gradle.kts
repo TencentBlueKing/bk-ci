@@ -114,12 +114,14 @@ allprojects {
         it.exclude("dom4j", "dom4j")
         it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
     }
-    // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656
     dependencies {
+        // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656
         components {
             withModule("org.dom4j:dom4j") {
                 allVariants { withDependencies { clear() } }
             }
         }
+        // 单元测试框架
+        testImplementation("io.mockk:mockk:${Versions.mockk}")
     }
 }
