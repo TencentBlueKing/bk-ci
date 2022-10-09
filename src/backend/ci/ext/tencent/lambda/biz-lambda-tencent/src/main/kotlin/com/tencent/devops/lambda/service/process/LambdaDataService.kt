@@ -362,7 +362,7 @@ class LambdaDataService @Autowired constructor(
             }.associate { it.key to it.value.toString() }
             val invalidKeyList = mutableSetOf<String>()
             variables.forEach { (key, _) ->
-                if (pattern.matcher(key).find()) invalidKeyList.add(key)
+                if (!pattern.matcher(key).find()) invalidKeyList.add(key)
             }
             if (invalidKeyList.isEmpty()) {
                 variables.forEach { (key, _) ->
@@ -383,7 +383,7 @@ class LambdaDataService @Autowired constructor(
             if (invalidKeyList.isEmpty()) return
             logger.info(
                 "invalidVarBuild buildId=${historyRecord.buildId}" +
-                    "|${historyRecord.executeTime}|${historyRecord.buildNum}|$invalidKeyList"
+                    "|${historyRecord.startUser}|${historyRecord.buildNum}|$invalidKeyList"
             )
             val history = genBuildHistory(
                 projectInfo = projectInfo,

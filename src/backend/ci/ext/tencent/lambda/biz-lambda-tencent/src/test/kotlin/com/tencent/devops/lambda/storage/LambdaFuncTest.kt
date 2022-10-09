@@ -30,7 +30,7 @@ import java.util.regex.Pattern
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
-@Suppress("ComplexCondition")
+@Suppress("ComplexCondition", "NestedBlockDepth")
 class LambdaFuncTest {
     companion object {
         private val pattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9\\.\\-_]*[a-zA-Z0-9\\-_]\$")
@@ -48,25 +48,31 @@ class LambdaFuncTest {
     @Test
     fun variablesExpressionTest() {
         val variables = mapOf(
-            "xxx" to "666",
-            "xx" to "555",
+            "jobs..os" to "666",
+            "abc" to "555",
+            "variables.abc" to "555",
             "a.b.c" to "1",
             "a.b.d" to "1",
             "a.b" to "2"
         )
+
         val invalidKeyList = mutableSetOf<String>()
         variables.forEach { (key, _) ->
-            variables.forEach { (another, _) ->
-                if (
-                    key != another &&
-                    !(invalidKeyList.contains(key) && invalidKeyList.contains(another)) &&
-                    (
-                        key.startsWith(another) && key.removePrefix(another).startsWith('.') ||
-                            another.startsWith(key) && another.removePrefix(key).startsWith('.')
-                        )
-                ) {
-                    invalidKeyList.add(key)
-                    invalidKeyList.add(another)
+            if (!pattern.matcher(key).find()) invalidKeyList.add(key)
+        }
+        if (invalidKeyList.isEmpty()) {
+            variables.forEach { (key, _) ->
+                variables.forEach { (another, _) ->
+                    if (
+                        key != another && !(invalidKeyList.contains(key) && invalidKeyList.contains(another)) &&
+                        (
+                            key.startsWith(another) && key.removePrefix(another).startsWith('.') ||
+                                another.startsWith(key) && another.removePrefix(key).startsWith('.')
+                            )
+                    ) {
+                        invalidKeyList.add(key)
+                        invalidKeyList.add(another)
+                    }
                 }
             }
         }
