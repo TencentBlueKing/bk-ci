@@ -1,6 +1,5 @@
 <template>
     <article class="detail-artifactory-home" v-bkloading="{ isLoading }">
-        123
         <bk-table :data="artifactories"
             :outer-border="false"
             :header-border="false"
