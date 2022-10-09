@@ -72,6 +72,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecor
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -356,7 +357,9 @@ class LambdaDataService @Autowired constructor(
         variablesWithType: List<BuildParameters>
     ) {
         try {
-            val variables = variablesWithType.associate { it.key to it.value.toString() }
+            val variables = variablesWithType.filter {
+                !VariableType.validate(it.key)
+            }.associate { it.key to it.value.toString() }
             val invalidKeyList = mutableSetOf<String>()
             variables.forEach { (key, _) ->
                 if (pattern.matcher(key).find()) invalidKeyList.add(key)
