@@ -194,6 +194,7 @@ class StreamYamlBuild @Autowired constructor(
 
             // 改名时保存需要修改名称
             realPipeline.displayName = pipeline.displayName
+            realPipeline.lastModifier = pipeline.lastModifier
             action.data.context.pipeline = realPipeline
 
             // 注册各种事件
