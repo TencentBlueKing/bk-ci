@@ -595,7 +595,6 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun bulkRemove(userId: String, projectId: String, bulkRemove: PipelineViewBulkRemove): Boolean {
-        val isProjectManager = checkPermission(userId, projectId)
         val viewId = HashUtil.decodeIdToLong(bulkRemove.viewId)
         val view = pipelineViewDao.get(
             dslContext = dslContext,
@@ -606,6 +605,7 @@ class PipelineViewGroupService @Autowired constructor(
             logger.warn("bulkRemove , view:$viewId")
             return false
         }
+        val isProjectManager = checkPermission(userId, projectId)
         if (isProjectManager && !view.isProject && view.createUser != userId) {
             logger.warn("bulkRemove , $userId is ProjectManager , but can`t remove other view")
             return false

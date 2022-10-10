@@ -2,6 +2,7 @@ package com.tencent.devops.process.service.view
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW
 import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW_GROUP
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -15,6 +16,8 @@ import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
@@ -663,6 +666,170 @@ class PipelineViewGroupServiceTestCi : BkCiAbstractTest() {
                 Assertions.assertTrue(
                     it.projectViewList.filter { p -> p.viewId == PIPELINE_VIEW_UNCLASSIFIED }.size == 1
                 )
+            }
+        }
+    }
+
+    @Nested
+    inner class AllPipelineInfos {
+        @Test
+        @DisplayName("PipelineInfo有数据")
+        fun test_1() {
+            every {
+                pipelineInfoDao.listPipelineInfoByProject(anyDslContext(), any(), any(), any(), any())
+            } returns dslContext.mockResult(T_PIPELINE_INFO, pi)
+            self.invokePrivate<List<TPipelineInfoRecord>>("allPipelineInfos", "test", false).let {
+                Assertions.assertEquals(it!!.size, 1)
+                Assertions.assertEquals(it[0].pipelineId, "p-test")
+            }
+        }
+
+        @Test
+        @DisplayName("PipelineInfo无数据")
+        fun test_2() {
+            every {
+                pipelineInfoDao.listPipelineInfoByProject(anyDslContext(), any(), any(), any(), any())
+            } returns dslContext.mockResult(T_PIPELINE_INFO)
+            self.invokePrivate<List<TPipelineInfoRecord>>("allPipelineInfos", "test", false).let {
+                Assertions.assertEquals(it!!.size, 0)
+            }
+        }
+    }
+
+    @Nested
+    inner class BulkAdd {
+        @BeforeEach
+        fun permissionFalse() {
+            every { self["checkPermission"]("false", any() as String) } returns false
+            every { self["checkPermission"]("true", any() as String) } returns true
+        }
+
+        private val ba = PipelineViewBulkAdd(
+            pipelineIds = listOf("p-test"),
+            viewIds = listOf("test")
+        )
+
+        @Test
+        @DisplayName("ViewIds 为空")
+        fun test_1() {
+            every {
+                pipelineViewDao.list(anyDslContext(), any() as String, any() as Set<Long>)
+            } returns dslContext.mockResult(T_PIPELINE_VIEW)
+            self.bulkAdd("true", "test", ba).let {
+                Assertions.assertEquals(it, false)
+            }
+        }
+
+        @Test
+        @DisplayName("项目管理员 , 为项目流水线组,  但流水线信息为空")
+        fun test_2() {
+            val pvCopy = pv.copy()
+            pvCopy.viewType = PipelineViewType.STATIC
+            pvCopy.isProject = true
+            pvCopy.id = 1
+            every {
+                pipelineViewDao.list(anyDslContext(), any() as String, any() as Set<Long>)
+            } returns dslContext.mockResult(T_PIPELINE_VIEW, pvCopy)
+            every {
+                pipelineInfoDao.listInfoByPipelineIds(anyDslContext(), any(), any())
+            } returns dslContext.mockResult(T_PIPELINE_INFO)
+            self.bulkAdd("true", "test", ba).let {
+                Assertions.assertEquals(it, false)
+            }
+        }
+
+        @Test
+        @DisplayName("项目管理员 , 为项目流水线组,  流水线信息不为空 , 正常运行")
+        fun test_3() {
+            val pvCopy = pv.copy()
+            pvCopy.viewType = PipelineViewType.STATIC
+            pvCopy.isProject = true
+            pvCopy.id = 1
+            every {
+                pipelineViewDao.list(anyDslContext(), any() as String, any() as Set<Long>)
+            } returns dslContext.mockResult(T_PIPELINE_VIEW, pvCopy)
+            every {
+                pipelineInfoDao.listInfoByPipelineIds(anyDslContext(), any(), any())
+            } returns dslContext.mockResult(T_PIPELINE_INFO, pi)
+            every {
+                pipelineViewGroupDao.listByViewId(anyDslContext(), any(), any())
+            } returns dslContext.mockResult(T_PIPELINE_VIEW_GROUP)
+            self.bulkAdd("true", "test", ba).let {
+                Assertions.assertEquals(it, true)
+            }
+        }
+    }
+
+    @Nested
+    inner class BulkRemove {
+        private val br = PipelineViewBulkRemove(
+            pipelineIds = listOf("p-test"),
+            viewId = "test"
+        )
+
+        @BeforeEach
+        fun permissionFalse() {
+            every { self["checkPermission"]("false", any() as String) } returns false
+            every { self["checkPermission"]("true", any() as String) } returns true
+        }
+
+        @Test
+        @DisplayName("view 为空")
+        fun test_1() {
+            every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns null
+            self.bulkRemove("test", "test", br).let {
+                Assertions.assertEquals(it, false)
+            }
+        }
+
+        @Test
+        @DisplayName("view不为空, 但是为动态组")
+        fun test_2() {
+            val pvCopy = pv.copy()
+            pvCopy.viewType = PipelineViewType.DYNAMIC
+            every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
+            self.bulkRemove("test", "test", br).let {
+                Assertions.assertEquals(it, false)
+            }
+        }
+
+        @Test
+        @DisplayName("view不为空 ,静态组, 项目管理员 , 不是项目流水线组 , 创建者不是自己")
+        fun test_3() {
+            val pvCopy = pv.copy()
+            pvCopy.viewType = PipelineViewType.STATIC
+            pvCopy.isProject = false
+            pvCopy.createUser = "other"
+            every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
+            self.bulkRemove("true", "test", br).let {
+                Assertions.assertEquals(it, false)
+            }
+        }
+
+        @Test
+        @DisplayName("view不为空 ,静态组, 不是项目管理员 , 是项目流水线组")
+        fun test_4() {
+            val pvCopy = pv.copy()
+            pvCopy.viewType = PipelineViewType.STATIC
+            pvCopy.isProject = true
+            pvCopy.createUser = "other"
+            every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
+            self.bulkRemove("false", "test", br).let {
+                Assertions.assertEquals(it, false)
+            }
+        }
+
+        @Test
+        @DisplayName("view不为空 ,静态组, 是项目管理员 , 是项目流水线组")
+        fun test_5() {
+            val pvCopy = pv.copy()
+            pvCopy.viewType = PipelineViewType.STATIC
+            pvCopy.isProject = true
+            pvCopy.createUser = "other"
+            every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
+            every { pipelineViewGroupDao.batchRemove(anyDslContext(), any(), any(), any()) } returns Unit
+            self.bulkRemove("true", "test", br).let {
+                Assertions.assertEquals(it, true)
             }
         }
     }
