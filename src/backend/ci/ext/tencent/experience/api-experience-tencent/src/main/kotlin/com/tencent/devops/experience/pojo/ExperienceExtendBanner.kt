@@ -25,37 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.pojo.index
+package com.tencent.devops.experience.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("版本体验-首页-APP信息")
-data class IndexAppInfoVO(
-    @ApiModelProperty("类型", required = true)
-    val type: Int,
-    @ApiModelProperty("版本体验ID", required = false)
-    val experienceHashId: String,
-    @ApiModelProperty("体验名称", required = true)
-    val experienceName: String,
-    @ApiModelProperty("创建时间", required = true)
-    val createTime: Long,
-    @ApiModelProperty("大小(byte)", required = false)
-    val size: Long,
-    @ApiModelProperty("logo链接", required = true)
-    val logoUrl: String,
-    @ApiModelProperty("版本体验BundleIdentifier", required = true)
-    val bundleIdentifier: String,
-    @ApiModelProperty("应用Scheme", required = false)
-    val appScheme: String,
-    @ApiModelProperty("是否过期", required = true)
-    val expired: Boolean,
-    @ApiModelProperty("上次下载的体验ID", required = true)
-    val lastDownloadHashId: String,
-    @ApiModelProperty("外部链接", required = false)
-    val externalUrl: String,
-    @ApiModelProperty("版本体验版本号", required = true)
-    val version: String,
-    @ApiModelProperty("下载次数", required = true)
-    val downloadTime: Int
+@ApiModel("扩展banner图")
+data class ExperienceExtendBanner(
+    @ApiModelProperty("配置的BannerURL", required = true)
+    val bannerUrl: String?,
+    @ApiModelProperty("banner类型", required = true)
+    val type: Int?,
+    @ApiModelProperty("跳转链接", required = true)
+    val link: String?,
+    @ApiModelProperty("是否上线", required = true)
+    val online: Boolean?,
+    @ApiModelProperty("过期时间", required = true)
+    val endTime: Long?
 )
