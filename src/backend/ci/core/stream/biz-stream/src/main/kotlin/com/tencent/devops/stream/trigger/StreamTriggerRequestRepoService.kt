@@ -114,7 +114,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             action.data.context.pipeline = gitProjectPipeline
             exHandler.handle(action) {
                 // 使用跨项目触发的action
-                triggerPerPipeline(StreamRepoTriggerAction(action, client, streamGitConfig))
+                triggerPerPipeline(StreamRepoTriggerAction(action, client, streamGitConfig, streamTriggerCache))
             }
         }
 
@@ -160,11 +160,6 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             action.data.context.repoTrigger = action.data.context.repoTrigger!!.copy(
                 branch = targetProjectInfo!!.defaultBranch!!
             )
-            action.data.context.repoTrigger?.triggerGitHttpUrl = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                gitProjectKey = action.data.eventCommon.gitProjectId,
-                action = action,
-                getProjectInfo = action.api::getGitProjectInfo
-            )?.gitHttpUrl
             action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
 
             // 校验mr请求是否产生冲突

@@ -596,9 +596,16 @@ export default {
         return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
     },
 
-    getMacXcodeVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2`)
+    getMacXcodeVersion (_, systemVersion = '') {
+        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2?systemVersion=${systemVersion}`)
     },
+
+    getWinVersion () {
+        return request.get('/dispatch-windows/api/user/systemVersions').then((res) => {
+            return res.data
+        })
+    },
+
     setImportedPipelineJson ({ commit }, importedJson) {
         commit(SET_IMPORTED_JSON, importedJson)
     },

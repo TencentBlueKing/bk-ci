@@ -95,7 +95,11 @@ interface ICommand {
                 command,
                 object : KeyReplacement {
                     override fun getReplacement(key: String): String? = contextMap[key] ?: try {
-                        CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
+                        CredentialUtils.getCredential(
+                            credentialId = key,
+                            showErrorLog = false,
+                            acrossProjectId = acrossTargetProjectId
+                        )[0]
                     } catch (ignore: Exception) {
                         CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
                     }

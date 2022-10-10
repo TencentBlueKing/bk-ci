@@ -279,12 +279,13 @@ abstract class BaseManualTriggerService @Autowired constructor(
         )
         return streamYamlBuild.gitStartBuild(
             action = action,
-            TriggerResult(
+            triggerResult = TriggerResult(
                 trigger = TriggerBody(true),
-                startParams = params,
+                triggerOn = null,
                 timeTrigger = false,
                 deleteTrigger = false
             ),
+            startParams = params,
             yaml = yamlReplaceResult.normalYaml,
             gitBuildId = gitBuildId,
             onlySavePipeline = false,

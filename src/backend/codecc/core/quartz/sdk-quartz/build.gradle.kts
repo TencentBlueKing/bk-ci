@@ -4,7 +4,7 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:task:api-task"))
     api(project(":core:defect:api-defect"))
-    api(group = "com.tencent.bk.devops.ci.process", name="api-process", version = Versions.devopsVersion){
+    api(group = "com.tencent.bk.devops.ci.process", name="api-process"){
         isChanging=true
     }
 }

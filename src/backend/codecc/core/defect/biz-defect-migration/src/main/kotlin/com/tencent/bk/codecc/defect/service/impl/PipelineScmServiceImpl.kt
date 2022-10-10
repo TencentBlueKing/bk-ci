@@ -9,12 +9,19 @@ import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.codecc.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.proxy.DevopsProxy
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
 import com.tencent.devops.common.util.HttpPathUrlUtil
+import com.tencent.devops.common.util.OkhttpUtils
 import com.tencent.devops.repository.api.ExternalCodeccRepoResource
+import com.tencent.devops.repository.api.ServiceGithubResource
+import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.apache.commons.collections.CollectionUtils
 import org.apache.commons.lang.math.NumberUtils
 import org.apache.commons.lang3.RandomStringUtils
@@ -32,6 +39,7 @@ class PipelineScmServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineScmServiceImpl::class.java)
+        private val FILE_TOO_LARGE_CONTENT = "当前告警代码文件大小超过1M，不能在平台查看代码详情，可以根据告警行号在IDE查看";
     }
 
     @Value("\${codecc.privatetoken:#{null}}")
@@ -202,5 +210,93 @@ class PipelineScmServiceImpl @Autowired constructor(
         logger.info("getAuthUrl authParamJsonStr is: $authParamJsonStr")
         return client.getDevopsService(ServiceGitResource::class.java).getAuthUrl(authParamJsonStr = authParamJsonStr).data
                 ?: ""
+    }
+
+    override fun getStreamFileContent(
+        projectId: String,
+        userId: String,
+        repoUrl: String,
+        filePath: String,
+        reversion: String?,
+        branch: String?
+    ): String? {
+        if (projectId.startsWith("github_")) {
+            return getGithubFileContent(repoUrl, reversion ?: branch ?: "", filePath)
+        }
+        val token = try {
+            val tokenResult = client.getDevopsService(ServiceOauthResource::class.java, projectId).gitGet(userId)
+            if (tokenResult.data == null || tokenResult.isNotOk()) {
+                logger.error("can not get user repository token: $userId $repoUrl $filePath $reversion $branch")
+                throw CodeCCException(errorCode = CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+            }
+            tokenResult.data!!.accessToken
+        } catch (e: CodeCCException) {
+            if (e.errorCode == CommonMessageCode.OAUTH_TOKEN_IS_INVALID) {
+                throw e
+            } else {
+                ""
+            }
+        } finally {
+            DevopsProxy.projectIdThreadLocal.remove()
+        }
+        if (token.isBlank()) {
+            return ""
+        }
+
+        val fileContent = try {
+            logger.info("get file content: $repoUrl | $filePath | $reversion | $branch | $token")
+            val result = client.getDevopsService(ExternalCodeccRepoResource::class.java, projectId)
+                .getGitFileContentCommon(
+                    repoUrl = repoUrl,
+                    filePath = filePath.removePrefix("/"),
+                    ref = if(!reversion.isNullOrBlank()) reversion else branch,
+                    token = token,
+                    authType = RepoAuthType.OAUTH
+                )
+            if (result.isNotOk()) {
+                logger.error("get file content fail!")
+                throw CodeCCException(CommonMessageCode.CODE_NORMAL_CONTENT_ERROR)
+            }
+            result.data
+        } catch (e: CodeCCException) {
+            return if (e.errorCode == CommonMessageCode.FILE_CONTENT_TOO_LARGE) {
+                FILE_TOO_LARGE_CONTENT
+            } else {
+                throw e
+            }
+        } catch (e: Exception) {
+            logger.error(
+                "get git file content fail!, repoUrl: {}, filePath: {}, token: {}",
+                repoUrl,
+                filePath,
+                token,
+                e
+            )
+            throw CodeCCException(CommonMessageCode.CODE_CONTENT_ERROR)
+        } finally {
+            DevopsProxy.projectIdThreadLocal.remove()
+        }
+
+
+        return fileContent
+    }
+
+    /**
+     * 获取 Github 文本内容
+     * 等待蓝盾支持后，切换到蓝盾的版本
+     */
+    private fun getGithubFileContent(repoUrl: String, ref: String, filePath: String): String {
+        val headerIndex = if (repoUrl.startsWith("https://")) {
+            8
+        } else if (repoUrl.startsWith("http://")) {
+            7
+        } else {
+            0
+        }
+        val startIndex = repoUrl.indexOf("/", headerIndex)
+        val endIndex = repoUrl.lastIndexOf(".git")
+        val projectName = repoUrl.substring(startIndex + 1, endIndex)
+        val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
+        return OkhttpUtils.doGet(url)
     }
 }
