@@ -417,7 +417,7 @@ class KubernetesContainerService @Autowired constructor(
         } else {
             userId
         }
-        return "${subUserId}${System.currentTimeMillis()}-" +
+        return "${subUserId.replace("_", "-")}${System.currentTimeMillis()}-" +
             RandomStringUtils.randomAlphabetic(8).toLowerCase()
     }
 }

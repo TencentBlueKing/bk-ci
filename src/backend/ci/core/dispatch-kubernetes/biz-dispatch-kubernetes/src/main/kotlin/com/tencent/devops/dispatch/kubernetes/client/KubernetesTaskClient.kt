@@ -129,7 +129,7 @@ class KubernetesTaskClient @Autowired constructor(
         }
         // 请求成功但是任务失败
         if (status != null && status.isFailed()) {
-            return Pair(status, taskResponse.message)
+            return Pair(status, taskResponse.data.detail)
         }
 
         return Pair(status, null)
