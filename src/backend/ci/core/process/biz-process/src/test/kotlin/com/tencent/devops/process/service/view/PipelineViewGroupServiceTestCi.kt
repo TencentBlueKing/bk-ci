@@ -1,13 +1,13 @@
 package com.tencent.devops.process.service.view
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW
+import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW_GROUP
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
-import com.tencent.devops.process.BkAbstractTest
+import com.tencent.devops.process.BkCiAbstractTest
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.label.PipelineViewDao
@@ -15,7 +15,10 @@ import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
+import com.tencent.devops.process.pojo.classify.PipelineViewPreview
+import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -28,14 +31,13 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class PipelineViewGroupServiceTest : BkAbstractTest() {
+class PipelineViewGroupServiceTestCi : BkCiAbstractTest() {
     private val pipelineViewService: PipelineViewService = mockk()
     private val pipelinePermissionService: PipelinePermissionService = mockk()
     private val pipelineViewDao: PipelineViewDao = mockk()
     private val pipelineViewGroupDao: PipelineViewGroupDao = mockk()
     private val pipelineViewTopDao: PipelineViewTopDao = mockk()
     private val pipelineInfoDao: PipelineInfoDao = mockk()
-    private val objectMapper: ObjectMapper = mockk()
 
     private val self: PipelineViewGroupService = spyk(
         PipelineViewGroupService(
@@ -110,7 +112,6 @@ class PipelineViewGroupServiceTest : BkAbstractTest() {
     fun mockViewId() {
         mockkObject(HashUtil)
         every { HashUtil.decodeIdToLong(any()) } returns 1L
-        justRun { self["checkPermission"](any() as String, any() as String, any() as Boolean, any() as String?) }
     }
 
     @Nested
@@ -158,16 +159,11 @@ class PipelineViewGroupServiceTest : BkAbstractTest() {
 
     @Nested
     inner class ADDViewGroup {
-
-
         @BeforeEach
-        fun mockPermissionTrue() {
+        fun beforeEach() {
             every { pipelinePermissionService.checkProjectManager("true", any()) } returns true
-        }
-
-        @BeforeEach
-        fun mockPermissionFalse() {
             every { pipelinePermissionService.checkProjectManager("false", any()) } returns false
+            justRun { self["checkPermission"](any() as String, any() as String, any() as Boolean, any() as String?) }
         }
 
         @Test
@@ -198,6 +194,11 @@ class PipelineViewGroupServiceTest : BkAbstractTest() {
 
     @Nested
     inner class UpdateViewGroup {
+        @BeforeEach
+        fun beforeEach() {
+            justRun { self["checkPermission"](any() as String, any() as String, any() as Boolean, any() as String?) }
+        }
+
         @Test
         @DisplayName("获取不到View")
         fun test_1() {
@@ -299,6 +300,11 @@ class PipelineViewGroupServiceTest : BkAbstractTest() {
 
     @Nested
     inner class DeleteViewGroup {
+        @BeforeEach
+        fun beforeEach() {
+            justRun { self["checkPermission"](any() as String, any() as String, any() as Boolean, any() as String?) }
+        }
+
         @Test
         @DisplayName("获取不到view")
         fun test_1() {
@@ -413,6 +419,251 @@ class PipelineViewGroupServiceTest : BkAbstractTest() {
             justRun { pipelineViewGroupDao.create(anyDslContext(), any(), any(), any(), any()) }
             justRun { pipelineViewGroupDao.remove(anyDslContext(), any(), any(), any()) }
             Assertions.assertDoesNotThrow { self.updateGroupAfterPipelineUpdate("test", "p-test", "test") }
+        }
+    }
+
+    @Nested
+    inner class InitVIewGroup {
+        @Test
+        @DisplayName("初始化动态项目组")
+        fun test_1() {
+            val pipelineViewFormCopy = pipelineViewForm.copy(viewType = PipelineViewType.DYNAMIC)
+            every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pv
+            every {
+                self["initDynamicViewGroup"](
+                    any<TPipelineViewRecord>(),
+                    any<String>(),
+                    anyDslContext()
+                )
+            } returns emptyList<String>()
+            Assertions.assertDoesNotThrow {
+                self.invokePrivate<Unit>("initViewGroup", dslContext, pipelineViewFormCopy, "test", 1, "test")
+            }
+        }
+
+        @Test
+        @DisplayName("初始化静态项目组")
+        fun test_2() {
+            val pipelineViewFormCopy =
+                pipelineViewForm.copy(viewType = PipelineViewType.STATIC, pipelineIds = listOf("1"))
+            justRun { pipelineViewGroupDao.create(anyDslContext(), any(), any(), any(), any()) }
+            Assertions.assertDoesNotThrow {
+                self.invokePrivate<Unit>("initViewGroup", dslContext, pipelineViewFormCopy, "test", 1, "test")
+            }
+        }
+    }
+
+    @Nested
+    inner class InitDynamicViewGroup {
+        @Test
+        @DisplayName("不是首次初始化")
+        fun test_1() {
+            every { redisOperation.setIfAbsent(any(), any()) } returns false
+            self.invokePrivate<List<String>>("initDynamicViewGroup", pv, "test", dslContext).let {
+                Assertions.assertTrue(it!!.isEmpty())
+            }
+        }
+
+        @Test
+        @DisplayName("首次初始化")
+        fun test_2() {
+            every { redisOperation.setIfAbsent(any(), any()) } returns true
+            every { self["allPipelineInfos"](any() as String, any() as Boolean) } returns listOf(pi)
+            every { pipelineViewService.matchView(any(), any()) } returns true
+            every { pipelineViewGroupDao.create(anyDslContext(), any(), any(), any(), any()) } returns Unit
+            self.invokePrivate<List<String>>("initDynamicViewGroup", pv, "test", dslContext).let {
+                Assertions.assertTrue(it!!.size == 1)
+                Assertions.assertEquals(it[0], "p-test")
+            }
+        }
+    }
+
+    @Nested
+    inner class CheckPermission {
+        @Test
+        @DisplayName("项目流水线组 & 校验不通过")
+        fun test_1() {
+            every { self["checkPermission"](any() as String, any() as String) } returns false
+            try {
+                self.invokePrivate<Unit>("checkPermission", "test", "test", true, "test")
+            } catch (e: Throwable) {
+                Assertions.assertThrows(ErrorCodeException::class.java) { throw e }
+                Assertions.assertEquals(
+                    (e as ErrorCodeException).errorCode,
+                    ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION
+                )
+            }
+        }
+
+        @Test
+        @DisplayName("个人流水线组 & 校验不通过")
+        fun test_2() {
+            try {
+                self.invokePrivate<Unit>("checkPermission", "test", "test", false, "test")
+            } catch (e: Throwable) {
+                Assertions.assertThrows(ErrorCodeException::class.java) { throw e }
+                Assertions.assertEquals(
+                    (e as ErrorCodeException).errorCode,
+                    ProcessMessageCode.ERROR_DEL_PIPELINE_VIEW_NO_PERM
+                )
+            }
+        }
+    }
+
+    @Nested
+    inner class Preview {
+        @Test
+        @DisplayName("流水线列表为空")
+        fun test_1() {
+            every {
+                self["allPipelineInfos"](
+                    any() as String,
+                    any() as Boolean
+                )
+            } returns emptyList<TPipelineInfoRecord>()
+            self.preview("test", "test", pipelineViewForm).let {
+                Assertions.assertEquals(it, PipelineViewPreview.EMPTY)
+            }
+        }
+
+        @Test
+        @DisplayName("viewId为空 , viewType为动态项目组")
+        fun test_2() {
+            val pipelineViewFormCopy = pipelineViewForm.copy(id = null, viewType = PipelineViewType.DYNAMIC)
+            every {
+                self["allPipelineInfos"](
+                    any() as String,
+                    any() as Boolean
+                )
+            } returns listOf(pi)
+            every { pipelineViewService.matchView(any(), any()) } returns true
+            self.preview("test", "test", pipelineViewFormCopy).let {
+                Assertions.assertTrue(it.addedPipelineInfos.size == 1)
+                Assertions.assertTrue(it.removedPipelineInfos.isEmpty())
+                Assertions.assertTrue(it.reservePipelineInfos.isEmpty())
+            }
+        }
+
+        @Test
+        @DisplayName("viewId为空,viewType为静态项目组")
+        fun test_3() {
+            val pipelineViewFormCopy =
+                pipelineViewForm.copy(id = null, viewType = PipelineViewType.STATIC, pipelineIds = listOf("p-test"))
+            every {
+                self["allPipelineInfos"](
+                    any() as String,
+                    any() as Boolean
+                )
+            } returns listOf(pi)
+            every { pipelineViewService.matchView(any(), any()) } returns true
+            self.preview("test", "test", pipelineViewFormCopy).let {
+                Assertions.assertTrue(it.addedPipelineInfos.size == 1)
+                Assertions.assertTrue(it.removedPipelineInfos.isEmpty())
+                Assertions.assertTrue(it.reservePipelineInfos.isEmpty())
+            }
+        }
+
+        @Test
+        @DisplayName("viewId不为空,viewType为动态项目组")
+        fun test_4() {
+            val pipelineViewFormCopy = pipelineViewForm.copy(id = "test", viewType = PipelineViewType.DYNAMIC)
+            every {
+                self["allPipelineInfos"](
+                    any() as String,
+                    any() as Boolean
+                )
+            } returns listOf(pi)
+            every { pipelineViewGroupDao.listByViewId(anyDslContext(), any(), any()) } returns emptyList()
+            every { pipelineViewService.matchView(any(), any()) } returns true
+            self.preview("test", "test", pipelineViewFormCopy).let {
+                Assertions.assertTrue(it.addedPipelineInfos.size == 1)
+                Assertions.assertTrue(it.removedPipelineInfos.isEmpty())
+                Assertions.assertTrue(it.reservePipelineInfos.isEmpty())
+            }
+        }
+
+        @Test
+        @DisplayName("viewId不为空,viewType为静态项目组")
+        fun test_5() {
+            val pipelineViewFormCopy =
+                pipelineViewForm.copy(id = "test", viewType = PipelineViewType.STATIC, pipelineIds = listOf("p-test"))
+            every {
+                self["allPipelineInfos"](
+                    any() as String,
+                    any() as Boolean
+                )
+            } returns listOf(pi)
+            every { pipelineViewGroupDao.listByViewId(anyDslContext(), any(), any()) } returns emptyList()
+            every { pipelineViewService.matchView(any(), any()) } returns true
+            self.preview("test", "test", pipelineViewFormCopy).let {
+                Assertions.assertTrue(it.addedPipelineInfos.size == 1)
+                Assertions.assertTrue(it.removedPipelineInfos.isEmpty())
+                Assertions.assertTrue(it.reservePipelineInfos.isEmpty())
+            }
+        }
+    }
+
+    @Nested
+    inner class Dict {
+        @Test
+        @DisplayName("ViewInfo列表 为空")
+        fun test_1() {
+            every { pipelineViewDao.list(anyDslContext(), any()) } returns dslContext.mockResult(T_PIPELINE_VIEW)
+            self.dict("test", "test").let {
+                Assertions.assertEquals(it, PipelineViewDict.EMPTY)
+            }
+        }
+
+        @Test
+        @DisplayName("ViewInfo列表 不为空 , viewInfoGroup列表为空")
+        fun test_2() {
+            every { pipelineViewDao.list(anyDslContext(), any()) } returns dslContext.mockResult(T_PIPELINE_VIEW, pv)
+            every {
+                pipelineViewGroupDao.listByProjectId(anyDslContext(), any())
+            } returns dslContext.mockResult(T_PIPELINE_VIEW_GROUP)
+            self.dict("test", "test").let {
+                Assertions.assertEquals(it, PipelineViewDict.EMPTY)
+            }
+        }
+
+        @Test
+        @DisplayName("ViewInfo列表 不为空 , viewInfoGroup列表不为空, pipelineInfo列表为空")
+        fun test_3() {
+            every { pipelineViewDao.list(anyDslContext(), any()) } returns dslContext.mockResult(T_PIPELINE_VIEW, pv)
+            every {
+                pipelineViewGroupDao.listByProjectId(anyDslContext(), any())
+            } returns dslContext.mockResult(T_PIPELINE_VIEW_GROUP, pvg)
+            every {
+                self["allPipelineInfos"](
+                    any() as String,
+                    any() as Boolean
+                )
+            } returns emptyList<TPipelineInfoRecord>()
+            self.dict("test", "test").let {
+                Assertions.assertEquals(it, PipelineViewDict.EMPTY)
+            }
+        }
+
+        @Test
+        @DisplayName("ViewInfo列表 不为空 , viewInfoGroup列表不为空, pipelineInfo列表不为空")
+        fun test_4() {
+            every { pipelineViewDao.list(anyDslContext(), any()) } returns dslContext.mockResult(T_PIPELINE_VIEW, pv)
+            every {
+                pipelineViewGroupDao.listByProjectId(anyDslContext(), any())
+            } returns dslContext.mockResult(T_PIPELINE_VIEW_GROUP, pvg)
+            every {
+                self["allPipelineInfos"](
+                    any() as String,
+                    any() as Boolean
+                )
+            } returns listOf(pi)
+            self.dict("test", "test").let {
+                Assertions.assertTrue(it.projectViewList.size == 2)
+                Assertions.assertTrue(it.personalViewList.isEmpty())
+                Assertions.assertTrue(
+                    it.projectViewList.filter { p -> p.viewId == PIPELINE_VIEW_UNCLASSIFIED }.size == 1
+                )
+            }
         }
     }
 }
