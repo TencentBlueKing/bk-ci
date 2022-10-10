@@ -232,10 +232,11 @@ class ScheduleTriggerService @Autowired constructor(
             action = action,
             triggerResult = TriggerResult(
                 trigger = TriggerBody(true),
-                startParams = emptyMap(),
+                triggerOn = null,
                 timeTrigger = false,
                 deleteTrigger = false
             ),
+            startParams = emptyMap(),
             yaml = yamlReplaceResult.normalYaml,
             gitBuildId = gitBuildId,
             onlySavePipeline = false,

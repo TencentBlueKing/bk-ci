@@ -114,7 +114,7 @@
                     </bk-select>
                 </form-field>
                 <form-field :label="$t('editPage.xcodeVersion')" :required="true" :is-error="errors.has('xcodeVersion')" :error-msg="errors.first(`xcodeVersion`)">
-                    <bk-select :disabled="!editable" :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'">
+                    <bk-select :disabled="!editable" :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'" @toggle="toggleXcode">
                         <bk-option v-for="item in xcodeVersionList"
                             :key="item"
                             :id="item"
@@ -580,7 +580,7 @@
 
             getMacOsData () {
                 this.isLoadingMac = true
-                Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion()]).then(([sysVersion, xcodeVersion]) => {
+                Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion(this.systemVersion)]).then(([sysVersion, xcodeVersion]) => {
                     this.xcodeVersionList = xcodeVersion.data?.versionList || []
                     this.systemVersionList = sysVersion.data?.versionList || []
                     if (this.container.dispatchType?.systemVersion === undefined && this.container.dispatchType?.xcodeVersion === undefined) {
@@ -591,12 +591,21 @@
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => (this.isLoadingMac = false))
             },
+            async toggleXcode (show) {
+                if (show) {
+                    const res = await this.getMacXcodeVersion(this.systemVersion)
+                    this.xcodeVersionList = res.data?.versionList || []
+                }
+            },
             chooseMacSystem (item) {
-                this.handleContainerChange('dispatchType', Object.assign({
-                    ...this.container.dispatchType,
-                    systemVersion: item,
-                    value: `${item}:${this.xcodeVersion}`
-                }))
+                if (item !== this.systemVersion) {
+                    this.handleContainerChange('dispatchType', Object.assign({
+                        ...this.container.dispatchType,
+                        systemVersion: item,
+                        xcodeVersion: '',
+                        value: `${item}:''`
+                    }))
+                }
             },
             chooseXcode (item) {
                 this.handleContainerChange('dispatchType', Object.assign({

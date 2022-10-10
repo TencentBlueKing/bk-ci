@@ -170,7 +170,7 @@ class StreamManualAction(
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         return TriggerResult(
             trigger = TriggerBody(true),
-            startParams = emptyMap(),
+            triggerOn = null,
             timeTrigger = false,
             deleteTrigger = false
         )
