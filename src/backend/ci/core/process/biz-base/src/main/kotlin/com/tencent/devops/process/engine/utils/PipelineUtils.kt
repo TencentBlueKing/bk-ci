@@ -83,6 +83,7 @@ object PipelineUtils {
     /**
      *  检查stage审核参数是否符合规范
      */
+    @Suppress("NestedBlockDepth")
     fun checkStageReviewParam(reviewParams: List<ManualReviewParam>?) {
         reviewParams?.forEach { param ->
             when (param.valueType) {
