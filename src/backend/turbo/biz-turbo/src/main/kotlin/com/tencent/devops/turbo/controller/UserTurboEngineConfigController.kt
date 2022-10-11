@@ -74,4 +74,8 @@ class UserTurboEngineConfigController @Autowired constructor(
         }
         return Response.success(turboEngineConfigService.queryEngineConfigInfo(turboPlanDetailVO.engineCode))
     }
+
+    override fun getDistTaskVersion(): Response<List<String>> {
+        return Response.success(turboEngineConfigService.getDistTaskVersion())
+    }
 }

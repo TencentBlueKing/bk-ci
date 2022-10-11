@@ -1,12 +1,15 @@
 package com.tencent.devops.turbo.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.TurboException
 import com.tencent.devops.common.api.exception.code.TURBO_PARAM_INVALID
 import com.tencent.devops.common.db.PageUtils
+import com.tencent.devops.common.util.JsonUtil
 import com.tencent.devops.common.util.enums.ConfigParamType
 import com.tencent.devops.turbo.dao.mongotemplate.TurboEngineConfigDao
 import com.tencent.devops.turbo.dao.repository.TurboEngineConfigRepository
+import com.tencent.devops.turbo.dto.DistccResponse
 import com.tencent.devops.turbo.job.TBSCreateDataJob
 import com.tencent.devops.turbo.job.TBSUpdateDataJob
 import com.tencent.devops.turbo.model.TTurboEngineConfigEntity
@@ -19,6 +22,7 @@ import com.tencent.devops.turbo.pojo.ParamEnumSimpleModel
 import com.tencent.devops.turbo.pojo.TurboDisplayFieldModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigPriorityModel
+import com.tencent.devops.turbo.sdk.BKDistccApi
 import com.tencent.devops.turbo.vo.TurboEngineConfigVO
 import org.quartz.CronScheduleBuilder
 import org.quartz.JobBuilder
@@ -729,6 +733,19 @@ class TurboEngineConfigService @Autowired constructor(
         } else {
             val parser = SpelExpressionParser()
             parser.parseExpression(turboEngineConfigEntity.spelExpression)
+        }
+    }
+
+    /**
+     * 获取编译加速工具的版本清单
+     */
+    fun getDistTaskVersion(): List<String> {
+        val responseString = BKDistccApi.queryBkdistccVersion()
+        return if (responseString.isBlank()) {
+            logger.warn("getDistTaskVersion response string is blank!")
+            emptyList()
+        } else {
+            JsonUtil.to(responseString, object : TypeReference<DistccResponse<List<String>>>() {}).data
         }
     }
 }
