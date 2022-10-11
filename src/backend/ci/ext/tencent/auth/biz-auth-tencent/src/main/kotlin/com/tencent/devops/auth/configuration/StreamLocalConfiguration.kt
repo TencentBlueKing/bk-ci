@@ -35,11 +35,13 @@ import com.tencent.devops.common.client.Client
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 
 @Configuration
 class StreamLocalConfiguration {
 
     @Bean
+    @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
     fun tgitStreamPermissionService(
         client: Client,
