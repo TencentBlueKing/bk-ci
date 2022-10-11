@@ -118,4 +118,9 @@ class KubernetesClientAutoConfiguration {
         }
     }
 
+    @Bean
+    @ConditionalOnMissingBean(DiscoveryUtils::class)
+    fun discoveryUtils(@Autowired discoveryClient: DiscoveryClient,
+                       @Autowired profile: Profile) = KubernetesDiscoveryUtils(discoveryClient,profile)
+
 }
