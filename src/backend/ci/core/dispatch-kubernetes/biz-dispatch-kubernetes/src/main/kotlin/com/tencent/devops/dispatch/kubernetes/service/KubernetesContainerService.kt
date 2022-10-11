@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
@@ -44,12 +45,14 @@ import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImageInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
@@ -78,6 +81,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
 import com.tencent.devops.dispatch.kubernetes.pojo.readyToStart
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.apache.commons.lang3.RandomStringUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -86,9 +90,11 @@ import org.springframework.stereotype.Service
 @Service("kubernetesContainerService")
 class KubernetesContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
+    private val dslContext: DSLContext,
     private val kubernetesTaskClient: KubernetesTaskClient,
     private val kubernetesBuilderClient: KubernetesBuilderClient,
-    private val kubernetesJobClient: KubernetesJobClient
+    private val kubernetesJobClient: KubernetesJobClient,
+    private val dispatchKubernetesBuildDao: DispatchKubernetesBuildDao
 ) : ContainerService {
 
     companion object {
@@ -241,7 +247,7 @@ class KubernetesContainerService @Autowired constructor(
                 logsPrinter.printLogs(this, "构建机创建成功，等待机器启动...")
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲
-                clearExceptionBuilder(builderName)
+                clearExceptionBuilder(builderName, poolNo)
                 throw BuildFailureException(
                     ErrorCodeEnum.CREATE_VM_ERROR.errorType,
                     ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
@@ -283,10 +289,20 @@ class KubernetesContainerService @Autowired constructor(
         }
     }
 
-    private fun DispatchMessage.clearExceptionBuilder(builderName: String) {
+    private fun DispatchMessage.clearExceptionBuilder(builderName: String, poolNo: Int) {
         try {
             // 下发删除，不管成功失败
             logger.info("[$buildId]|[$vmSeqId] Delete builder, userId: $userId, builderName: $builderName")
+
+            dispatchKubernetesBuildDao.updateStatus(
+                dslContext = dslContext,
+                dispatchType = dockerRoutingType ?: DockerRoutingType.KUBERNETES.name,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                poolNo = poolNo,
+                status = DispatchBuilderStatus.IDLE.status
+            )
+
             kubernetesBuilderClient.operateBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
