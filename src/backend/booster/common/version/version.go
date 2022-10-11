@@ -36,6 +36,7 @@ var (
 	GitHash = "unknown"
 
 	// DisttaskRepo show the url of disttask repo
+	// Will be specific when compiling.
 	DisttaskRepo = ""
 )
 
