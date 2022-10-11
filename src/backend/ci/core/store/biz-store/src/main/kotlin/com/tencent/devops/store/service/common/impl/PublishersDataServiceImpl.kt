@@ -48,6 +48,7 @@ import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
 import com.tencent.devops.store.pojo.common.enums.PublisherType
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.PublishersDataService
+import com.tencent.devops.store.service.common.StoreDeptService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreUserService
 import org.jooq.DSLContext
@@ -65,7 +66,7 @@ class PublishersDataServiceImpl @Autowired constructor(
     private val storeMemberDao: StoreMemberDao,
     private val storeUserService: StoreUserService
 ) : PublishersDataService {
-    override fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int {
+    override fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int  {
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
         val storePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
         publishers.forEach {
@@ -100,9 +101,7 @@ class PublishersDataServiceImpl @Autowired constructor(
             if (it.publishersType == PublisherType.ORGANIZATION) {
                 //  生成可使用组织发布者进行发布的成员关联
                 logger.debug("CreatePublisherMemberRel publisherCode is ${it.publishersCode}, members is ${it.members}")
-                getStoreMemberService(it.storeType)
-                    .getMemberId(it.publishersCode, it.storeType, it.members)
-                    .data?.map { memberId ->
+                it.members.forEach { memberId ->
                     val storePublisherMemberRel = TStorePublisherMemberRelRecord()
                     storePublisherMemberRel.id = UUIDUtil.generate()
                     storePublisherMemberRel.publisherId = storePublisherInfoId
@@ -203,14 +202,14 @@ class PublishersDataServiceImpl @Autowired constructor(
             )) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
-        // 查看是否能使用组织发布者进行发布
-        val viewMemberInfo = getStoreMemberService(storeType).viewMemberInfo(userId, storeCode, storeType).data
-        val organizationPublisherId =
-            publishersDao.getPublisherMemberRelById(dslContext, storeCode, viewMemberInfo!!.id)
-        if (!organizationPublisherId.isNullOrBlank()) {
+        val organizationPublisherIds =
+            publishersDao.getPublisherMemberRelById(dslContext, storeCode, userId)
+        if (organizationPublisherIds.isNotEmpty()) {
             // 获取组织发布者信息
-            val organizationPublisherInfo = publishersDao.getPublisherInfoById(dslContext, organizationPublisherId)
-            publishersInfos.add(organizationPublisherInfo!!)
+            organizationPublisherIds.forEach {
+                val organizationPublisherInfo = publishersDao.getPublisherInfoById(dslContext, it)
+                publishersInfos.add(organizationPublisherInfo!!)
+            }
         }
         var personPublisherInfo = publishersDao.getPublisherInfoByCode(dslContext, userId)
         logger.debug("getPublishers personPublisherInfo is $personPublisherInfo")
@@ -269,10 +268,6 @@ class PublishersDataServiceImpl @Autowired constructor(
         return deptInfos
     }
 
-    private fun getStoreMemberService(storeType: StoreTypeEnum): StoreMemberService {
-        return SpringContextUtil.getBean(StoreMemberService::class.java,
-            "${storeType.name.toLowerCase()}MemberService")
-    }
     companion object {
         private val logger = LoggerFactory.getLogger(PublishersDataServiceImpl::class.java)
     }
