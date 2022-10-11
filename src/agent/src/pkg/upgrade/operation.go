@@ -90,28 +90,23 @@ func runUpgrader(action string) error {
 // DoUpgradeOperation 调用升级程序
 func DoUpgradeOperation(agentChanged bool, workAgentChanged bool, jdkChanged bool) error {
 	logs.Info("[agentUpgrade]|start upgrade, agent changed: ", agentChanged, ", work agent changed: ", workAgentChanged, ", jdk agent changed: ", jdkChanged)
-	config.GIsAgentUpgrading = true
 
 	if !agentChanged && !workAgentChanged && !jdkChanged {
 		logs.Info("[agentUpgrade]|no change to upgrade, skip")
 		return nil
 	}
 
+	// 进入升级逻辑时防止agent接构建任务，同时确保无任何构建任务在进行
+	job.GBuildManager.Lock.Lock()
+	defer func() {
+		job.GBuildManager.Lock.Unlock()
+	}()
+	if job.GBuildManager.GetPreInstancesCount() > 0 && job.GBuildManager.GetInstanceCount() > 0 {
+		return nil
+	}
+
 	if jdkChanged {
 		logs.Info("[agentUpgrade]|jdk changed, replace jdk file")
-		// jdk需要升级的情况下需要等待任务结束，共轮训10次，一次1min
-		for i := 1; i <= 10; i++ {
-			if job.GBuildManager.GetInstanceCount() > 0 {
-				logs.Info("[agentUpgrade]|upgrade jdk wait ", job.GBuildManager.GetInstanceCount(), " jobs finish time ", i, " min")
-			} else {
-				break
-			}
-			time.Sleep(1 * time.Minute)
-			if i == 10 {
-				logs.Warn("[agentUpgrade]|upgrade jdk wait over 10min break upgrade wait next upgrade")
-				return nil
-			}
-		}
 
 		workDir := systemutil.GetWorkDir()
 		// 复制出来jdk.zip

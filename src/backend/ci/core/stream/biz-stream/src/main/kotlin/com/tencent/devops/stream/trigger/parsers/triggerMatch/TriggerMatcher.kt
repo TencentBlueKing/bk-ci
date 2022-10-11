@@ -67,7 +67,7 @@ class TriggerMatcher @Autowired constructor(
             }
         }
 
-        val result = if (action.data.context.repoTrigger != null) {
+        val result = if (action.checkRepoHookTrigger()) {
             val repoTriggerPipelineList = action.data.context.repoTrigger!!.repoTriggerPipelineList
             val repoTriggerOn = ScriptYmlUtils.formatRepoHookTriggerOn(
                 preTriggerOn = newYaml.triggerOn,
@@ -80,7 +80,7 @@ class TriggerMatcher @Autowired constructor(
                 return TriggerResult(
                     trigger = TriggerBody(false, "repo trigger delete yet"),
                     timeTrigger = false,
-                    startParams = emptyMap(),
+                    triggerOn = null,
                     deleteTrigger = false
                 )
             }
@@ -146,7 +146,7 @@ class TriggerMatcher @Autowired constructor(
         }
 
         // 跨库触发这里跨库触发信息放回空，防止重复注册跨库触发信息
-        return if (action.data.context.repoTrigger != null) {
+        return if (action.checkRepoHookTrigger()) {
             val repoTriggerPipelineList = action.data.context.repoTrigger!!.repoTriggerPipelineList
             val repoTriggerOn = ScriptYmlUtils.formatRepoHookTriggerOn(
                 preTriggerOn = trigger,
@@ -161,7 +161,7 @@ class TriggerMatcher @Autowired constructor(
                     TriggerResult(
                         trigger = TriggerBody(false),
                         timeTrigger = false,
-                        startParams = emptyMap(),
+                        triggerOn = null,
                         deleteTrigger = false
                     )
                 )

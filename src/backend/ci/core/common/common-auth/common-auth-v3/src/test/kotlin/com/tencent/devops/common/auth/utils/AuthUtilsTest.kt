@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+@Suppress("MaxLineLength")
 class AuthUtilsTest {
 
     private val actionPolicys = mutableListOf<ActionPolicyDTO>()

@@ -54,11 +54,12 @@ import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
-import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.PushKindFilter
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.WebhookUtils
@@ -73,7 +74,7 @@ import java.util.Date
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
 class TGitPushTriggerHandler(
-    private val gitScmService: GitScmService
+    private val eventCacheService: EventCacheService
 ) : GitHookTriggerHandler<GitPushEvent> {
 
     companion object {
@@ -145,38 +146,44 @@ class TGitPushTriggerHandler(
                 triggerOnMessage = event.commits?.get(0)?.message ?: ""
             )
             val commits = event.commits
-            // 如果是强制提交,文件列表应该只获取强制提交变更的文件，而不是所有的
-            val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
-                gitScmService.getChangeFileList(
-                    projectId = projectId,
-                    repo = repository,
-                    from = event.after,
-                    to = event.before
-                )
-            } else {
-                val eventPaths = mutableSetOf<String>()
-                commits?.forEach { commit ->
-                    eventPaths.addAll(commit.added ?: listOf())
-                    eventPaths.addAll(commit.removed ?: listOf())
-                    eventPaths.addAll(commit.modified ?: listOf())
-                }
-                eventPaths
-            }
             val commitMessageFilter = CommitMessageFilter(
                 includeCommitMsg,
                 excludeCommitMsg,
                 commits?.first()?.message ?: "",
                 pipelineId
             )
-            val pathFilter = PathFilterFactory.newPathFilter(
-                PathFilterConfig(
-                    pathFilterType = pathFilterType,
-                    pipelineId = pipelineId,
-                    triggerOnPath = eventPaths.toList(),
-                    includedPaths = convert(includePaths),
-                    excludedPaths = convert(excludePaths)
-                )
-            )
+            val pathFilter = object : WebhookFilter {
+                override fun doFilter(response: WebhookFilterResponse): Boolean {
+                    if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
+                        return true
+                    }
+                    val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+                        eventCacheService.getChangeFileList(
+                            projectId = projectId,
+                            repo = repository,
+                            from = event.after,
+                            to = event.before
+                        )
+                    } else {
+                        val changeFiles = mutableSetOf<String>()
+                        commits?.forEach { commit ->
+                            changeFiles.addAll(commit.added ?: listOf())
+                            changeFiles.addAll(commit.removed ?: listOf())
+                            changeFiles.addAll(commit.modified ?: listOf())
+                        }
+                        changeFiles
+                    }
+                    return PathFilterFactory.newPathFilter(
+                        PathFilterConfig(
+                            pathFilterType = pathFilterType,
+                            pipelineId = pipelineId,
+                            triggerOnPath = eventPaths.toList(),
+                            includedPaths = convert(includePaths),
+                            excludedPaths = convert(excludePaths)
+                        )
+                    ).doFilter(response)
+                }
+            }
             val pushKindFilter = PushKindFilter(
                 pipelineId = pipelineId,
                 checkCreateAndUpdate = event.create_and_update,

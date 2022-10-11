@@ -116,7 +116,6 @@ func NewOperator(conf *config.ContainerResourceConfig) (op.Operator, error) {
 		clusterClientCache: make(map[string]*clusterClientSet),
 		clusterCacheLock:   make(map[string]*sync.Mutex),
 		disableWinHostNW:   conf.BcsDisableWinHostNW,
-		debugTimes:         0,
 	}
 	o.cityLabelKey = o.getCityLabelKey()
 	o.platformLabelKey = o.getPlatformLabelKeyLabelKey()
@@ -135,8 +134,6 @@ type operator struct {
 	cityLabelKey     string
 	platformLabelKey string
 	disableWinHostNW bool
-	// debug times
-	debugTimes int
 }
 
 type clusterClientSet struct {
@@ -193,10 +190,6 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 		List(context.TODO(), metaV1.ListOptions{FieldSelector: fieldSelector.String()})
 
 	nodeInfoList := make([]*op.NodeInfo, 0, 1000)
-	// ++debug
-	allocatedResourceList := make([]coreV1.ResourceList, 0, 1000)
-	zeroNodeList := make([]coreV1.Node, 0, 100)
-
 	for _, node := range nodeList.Items {
 
 		// get internal ip from status
@@ -214,7 +207,6 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 		}
 
 		allocatedResource := getPodsTotalRequests(node.Name, nodeNonTerminatedPodsList)
-		allocatedResourceList = append(allocatedResourceList, allocatedResource)
 
 		// get disable information from labels
 		dl, _ := node.Labels[disableLabel]
@@ -236,38 +228,6 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 
 			Disabled: disabled,
 		})
-
-		if allocatedResource.Cpu().Value() == 0 {
-			zeroNodeList = append(zeroNodeList, node)
-		}
-	}
-
-	if o.debugTimes < 300 {
-		blog.Infof("[micheal debug]: *************")
-		cpuUsedList := make([]float64, 0, 100)
-		for _, rs := range allocatedResourceList[:10] {
-			cpuUsedList = append(cpuUsedList, float64(rs.Cpu().Value()))
-		}
-		blog.Infof("[micheal debug]: cpuUsedList:(%v)", cpuUsedList)
-		for _, node := range zeroNodeList[:10] {
-			podNum := 0
-			for _, pod := range nodeNonTerminatedPodsList.Items {
-				if pod.Spec.NodeName != node.Name {
-					continue
-				}
-				podContainerCpuList := make([]float64, 0, 100)
-				for _, c := range pod.Spec.Containers {
-					if val, ok := c.Resources.Requests["cpu"]; ok {
-						podContainerCpuList = append(podContainerCpuList, float64(val.Value()))
-					}
-				}
-				blog.Infof("[micheal debug]: pod (%s) containers used cpu list:(%v)", pod.Name, podContainerCpuList)
-				podNum++
-			}
-			blog.Infof("[micheal debug]: node (%s) has (%d) pods", node.Name, podNum)
-		}
-		o.debugTimes++
-		blog.Infof("[micheal debug]: *************")
 	}
 
 	blog.Debugf("k8s-operator: success to get resource clusterID(%s)", clusterID)
