@@ -49,10 +49,10 @@ object GitUtils {
         val groups = Regex("git@([-.a-z0-9A-Z]+):([0-9]+/)?(.*).git").find(gitUrl)?.groups
             ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*).git").find(gitUrl)?.groups
             ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)").find(gitUrl)?.groups
-            ?: throw ScmException("Invalid git url $gitUrl", ScmType.CODE_GIT.name)
+            ?: throw ScmException("Git error, invalid field [http_url]:$gitUrl", ScmType.CODE_GIT.name)
 
         if (groups.size < 3) {
-            throw ScmException("Invalid git url $gitUrl", ScmType.CODE_GIT.name)
+            throw ScmException("Git error, invalid field [http_url]:$gitUrl", ScmType.CODE_GIT.name)
         }
 
         if (gitUrl.startsWith("http")) {

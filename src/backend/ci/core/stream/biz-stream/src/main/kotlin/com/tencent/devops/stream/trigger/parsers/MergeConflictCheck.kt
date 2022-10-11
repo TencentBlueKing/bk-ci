@@ -75,7 +75,7 @@ class MergeConflictCheck @Autowired constructor(
     ): Boolean {
         val projectId = action.data.eventCommon.gitProjectId
 
-        val mrInfo = action.api.getMrInfo(
+        val mrInfo = action.tryGetMrInfoFromCache() ?: action.api.getMrInfo(
             gitProjectId = action.getGitProjectIdOrName(projectId),
             mrId = action.getMrId().toString(),
             cred = action.getGitCred(),
@@ -143,7 +143,7 @@ class MergeConflictCheck @Autowired constructor(
         var isTrigger: Boolean
         val projectId = action.data.eventCommon.gitProjectId
         val mrInfo = try {
-            action.api.getMrInfo(
+            action.tryGetMrInfoFromCache() ?: action.api.getMrInfo(
                 gitProjectId = action.getGitProjectIdOrName(projectId),
                 mrId = action.getMrId().toString(),
                 cred = action.getGitCred(),

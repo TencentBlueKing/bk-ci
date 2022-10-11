@@ -9,7 +9,7 @@ cp -r /data/workspace/script_download ${BK_CODECC_FILE_DATA_PATH}/download
 # create default bkrepo project|repo|user 
 if [[ "$BK_CODECC_STORAGE_TYPE" == "bkrepo" ]];then
     # get authorization header
-    authorization=$(echo $BK_CODECC_STORAGE_BKREPO_ADMIN_USERNAME:$BK_CODECC_STORAGE_BKREPO_ADMIN_PASSWORD | base64)
+    authorization=$(echo -n $BK_CODECC_STORAGE_BKREPO_ADMIN_USERNAME:$BK_CODECC_STORAGE_BKREPO_ADMIN_PASSWORD | base64)
     #create bkrepo project for codecc
     curl -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Basic $authorization" -d "{
         \"name\": \"$BK_CODECC_STORAGE_BKREPO_PROJECT\",
@@ -35,4 +35,4 @@ if [[ "$BK_CODECC_STORAGE_TYPE" == "bkrepo" ]];then
         \"userId\": \"$BK_CODECC_STORAGE_BKREPO_USERNAME\",
         \"group\": false
     }" "${BK_CODECC_STORAGE_BKREPO_SCHEMA}://$BK_CODECC_STORAGE_BKREPO_HOST/auth/api/user/create/repo"
-fi
+fi  
