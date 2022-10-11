@@ -26,6 +26,8 @@ BuildBooster_LDFLAG=-X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/comm
  -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.TestBuildBoosterServerPort=${distcc_server_test_port} \
  -X github.com/Tencent/bk-ci/src/booster/bk_dist/booster/command.ServerNecessary=${booster_server_necessary}
 
+Gateway_LDFLAG=-X github.com/Tencent/bk-ci/src/booster/common/version.DisttaskRepo=${gateway_repo_url}
+
 BIN_PATH=./build
 DISTCC_BIN_PATH=${BIN_PATH}/distcc
 
@@ -107,7 +109,7 @@ DISTEXECUTOR_BIN_PATH=${BIN_PATH}/bkdist
 
 dist_prepare:
 	mkdir -p ${DISTEXECUTOR_BIN_PATH}
-	go get -u github.com/gobuffalo/packr/v2/packr2
+	go install github.com/gobuffalo/packr/v2/packr2
 	export PATH=${GOPATH}/bin:${PATH}
 	if [ -z "${DISABLE_PACKR2}" ]; then cd bk_dist/controller/pkg/dashboard && packr2; fi
 

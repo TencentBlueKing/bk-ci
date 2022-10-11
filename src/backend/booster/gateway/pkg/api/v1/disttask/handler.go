@@ -32,8 +32,9 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
+// ListClientVersion handle the http request for listing client version
 func ListClientVersion(req *restful.Request, resp *restful.Response) {
-	url := "http://bkrepo.oa.com/generic/bkdevops/static/gw/resource/turbo-client/disttask/"
+	url := version.DisttaskRepo
 	res, err := goquery.ParseUrl(url)
 	if err != nil {
 		blog.Errorf("list client version failed, err: %v", err)
