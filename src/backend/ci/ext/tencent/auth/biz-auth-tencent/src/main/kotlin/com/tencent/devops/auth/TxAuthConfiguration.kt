@@ -35,6 +35,9 @@ import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
+import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
+import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
+import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -67,6 +70,11 @@ class TxAuthConfiguration {
     ) = ManagerServiceImpl(managerHttpClientService(iamConfiguration), iamConfiguration)
 
     @Bean
+    fun iamV2ManagerService(
+        iamConfiguration: IamConfiguration
+    ) = V2ManagerServiceImpl(managerHttpClientService(iamConfiguration), iamConfiguration)
+
+    @Bean
     fun tokenService(
         iamConfiguration: IamConfiguration
     ) = TokenServiceImpl(iamConfiguration, apigwHttpClientService(iamConfiguration))
@@ -75,6 +83,21 @@ class TxAuthConfiguration {
     fun policyService(
         iamConfiguration: IamConfiguration
     ) = PolicyServiceImpl(iamConfiguration, apigwHttpClientService(iamConfiguration))
+
+    @Bean
+    fun policyV2Service(
+        iamConfiguration: IamConfiguration
+    ) = V2PolicyServiceImpl(apigwHttpClientService(iamConfiguration), iamConfiguration)
+
+    @Bean
+    fun grantServiceImpl(
+        iamConfiguration: IamConfiguration
+    ) = GrantServiceImpl(managerHttpClientService(iamConfiguration), iamConfiguration)
+
+    @Bean
+    fun grantV2ServiceImpl(
+        iamConfiguration: IamConfiguration
+    ) = V2GrantServiceImpl(managerHttpClientService(iamConfiguration), iamConfiguration)
 
     @Bean
     @ConditionalOnMissingBean
@@ -87,9 +110,4 @@ class TxAuthConfiguration {
         redisOperation: RedisOperation,
         objectMapper: ObjectMapper
     ) = AuthDeptServiceImpl(redisOperation, objectMapper)
-
-    @Bean
-    fun grantServiceImpl(
-        iamConfiguration: IamConfiguration
-    ) = GrantServiceImpl(managerHttpClientService(iamConfiguration), iamConfiguration)
 }
