@@ -117,5 +117,9 @@ class ConsulClientAutoConfiguration {
         }
     }
 
+    @Bean
+    @ConditionalOnMissingBean(DiscoveryUtils::class)
+    fun discoveryUtils(@Autowired registration: Registration) = ConsulDiscoveryUtils(registration)
+
 
 }
