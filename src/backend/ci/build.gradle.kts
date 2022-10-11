@@ -100,6 +100,7 @@ allprojects {
             }
             dependency("com.perforce:p4java:${Versions.p4}")
             dependency("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.JacksonDatatypeJsr}")
+            dependency("io.mockk:mockk:${Versions.mockk}")
         }
     }
 
@@ -121,7 +122,5 @@ allprojects {
                 allVariants { withDependencies { clear() } }
             }
         }
-        // 单元测试框架
-        testImplementation("io.mockk:mockk:${Versions.mockk}")
     }
 }

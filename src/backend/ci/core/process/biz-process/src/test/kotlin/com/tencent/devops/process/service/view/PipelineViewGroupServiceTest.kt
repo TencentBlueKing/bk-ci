@@ -8,7 +8,8 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW_GROUP
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
-import com.tencent.devops.process.BkCiAbstractTest
+import com.tencent.devops.model.process.tables.records.TPipelineViewTopRecord
+import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.label.PipelineViewDao
@@ -16,6 +17,7 @@ import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
@@ -34,7 +36,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class PipelineViewGroupServiceTestCi : BkCiAbstractTest() {
+class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val pipelineViewService: PipelineViewService = mockk()
     private val pipelinePermissionService: PipelinePermissionService = mockk()
     private val pipelineViewDao: PipelineViewDao = mockk()
@@ -391,7 +393,7 @@ class PipelineViewGroupServiceTestCi : BkCiAbstractTest() {
         fun test_1() {
             every { pipelineInfoDao.getPipelineId(anyDslContext(), any(), any()) } returns pi
             every { pipelineViewGroupDao.countByPipelineId(anyDslContext(), any(), any()) } returns 1
-            Assertions.assertDoesNotThrow() { self.updateGroupAfterPipelineCreate("test", "test", "test") }
+            Assertions.assertDoesNotThrow { self.updateGroupAfterPipelineCreate("test", "test", "test") }
         }
 
         @Test
@@ -830,6 +832,74 @@ class PipelineViewGroupServiceTestCi : BkCiAbstractTest() {
             every { pipelineViewGroupDao.batchRemove(anyDslContext(), any(), any(), any()) } returns Unit
             self.bulkRemove("true", "test", br).let {
                 Assertions.assertEquals(it, true)
+            }
+        }
+    }
+
+    @Nested
+    inner class ListView {
+        @Test
+        @DisplayName("是项目流水线组")
+        fun test_1() {
+            every { pipelineViewDao.list(anyDslContext(), any(), any(), any(), any()) } returns emptyList()
+            every { pipelineViewGroupDao.countByViewId(anyDslContext(), any(), any()) } returns emptyMap()
+            every {
+                self["sortViews2Summary"](
+                    any() as String,
+                    any() as String,
+                    any() as List<TPipelineViewRecord>,
+                    any() as Map<Long, Int>
+                )
+            } returns mutableListOf<PipelineNewViewSummary>()
+            self.listView("test", "test", false, PipelineViewType.DYNAMIC).let {
+                Assertions.assertEquals(it.size, 0)
+            }
+        }
+
+        @Test
+        @DisplayName("不是项目流水线组")
+        fun test_2() {
+            every { pipelineViewDao.list(anyDslContext(), any(), any(), any(), any()) } returns emptyList()
+            every { pipelineViewGroupDao.countByViewId(anyDslContext(), any(), any()) } returns emptyMap()
+            every {
+                self["sortViews2Summary"](
+                    any() as String,
+                    any() as String,
+                    any() as List<TPipelineViewRecord>,
+                    any() as Map<Long, Int>
+                )
+            } returns mutableListOf<PipelineNewViewSummary>()
+            every { pipelineViewGroupDao.distinctPipelineIds(anyDslContext(), any()) } returns emptyList()
+            every { pipelineInfoDao.countExcludePipelineIds(anyDslContext(), any(), any()) } returns 0
+            self.listView("test", "test", true, PipelineViewType.DYNAMIC).let {
+                Assertions.assertEquals(it.size, 1)
+                Assertions.assertEquals(it[0].id, PIPELINE_VIEW_UNCLASSIFIED)
+            }
+        }
+    }
+
+    @Nested
+    inner class SortViews2Summary {
+        @Test
+        @DisplayName("正常排序")
+        fun test_1() {
+            val pvCopy1 = pv.copy()
+            pvCopy1.id = 1
+            pvCopy1.name = "test1"
+
+            val pvCopy2 = pv.copy()
+            pvCopy2.id = 2
+            pvCopy2.name = "test2"
+
+            val pvt = TPipelineViewTopRecord()
+            pvt.viewId = pvCopy2.id
+
+            every { pipelineViewTopDao.list(anyDslContext(), any(), any()) } returns listOf(pvt)
+            self.invokePrivate<MutableList<PipelineNewViewSummary>>(
+                "sortViews2Summary", "test", "test", listOf(pvCopy1, pvCopy2), emptyMap<Long, Int>()
+            ).let {
+                Assertions.assertEquals(it!!.size, 2)
+                Assertions.assertEquals(it[0].name, pvCopy2.name)
             }
         }
     }

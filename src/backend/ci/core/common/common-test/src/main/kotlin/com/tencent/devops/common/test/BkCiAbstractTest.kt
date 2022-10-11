@@ -1,4 +1,4 @@
-package com.tencent.devops.process
+package com.tencent.devops.common.test
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
