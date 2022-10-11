@@ -136,7 +136,7 @@ class PublishersDao {
                 .fetchInto(String::class.java)
         }
     }
-    fun getPublisherMemberRelById(dslContext: DSLContext, storeCode: String, memberId: String): List<String> {
+    fun getPublisherMemberRelById(dslContext: DSLContext, memberId: String): List<String> {
         with(TStorePublisherMemberRel.T_STORE_PUBLISHER_MEMBER_REL) {
             return dslContext.select(PUBLISHER_ID)
                 .from(this)
