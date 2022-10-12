@@ -34,6 +34,10 @@ var (
 	// GitHash show the current commit hash.
 	// Will be specific when compiling.
 	GitHash = "unknown"
+
+	// DisttaskRepo show the url of disttask repo
+	// Will be specific when compiling.
+	DisttaskRepo = ""
 )
 
 // ShowVersion is the default handler which match the --version flag.
