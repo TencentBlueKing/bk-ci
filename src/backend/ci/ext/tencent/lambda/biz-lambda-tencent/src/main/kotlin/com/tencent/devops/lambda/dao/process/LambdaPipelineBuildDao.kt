@@ -26,7 +26,10 @@
  */
 package com.tencent.devops.lambda.dao.process
 
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
+import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -43,6 +46,29 @@ class LambdaPipelineBuildDao {
             dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
+        }
+    }
+
+    fun getVarsWithType(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String
+    ): List<BuildParameters> {
+
+        with(T_PIPELINE_BUILD_VAR) {
+            val result = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetch()
+            val list = mutableListOf<BuildParameters>()
+            result.forEach {
+                if (it.varType != null) {
+                    list.add(BuildParameters(it.key, it.value, BuildFormPropertyType.valueOf(it.varType)))
+                } else {
+                    list.add(BuildParameters(it.key, it.value))
+                }
+            }
+            return list
         }
     }
 }

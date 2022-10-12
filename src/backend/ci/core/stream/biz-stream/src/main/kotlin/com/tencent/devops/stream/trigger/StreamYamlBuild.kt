@@ -33,11 +33,13 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
+import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
 import com.tencent.devops.process.yaml.modelCreate.ModelCreate
 import com.tencent.devops.process.yaml.modelCreate.QualityRulesException
 import com.tencent.devops.process.yaml.modelCreate.inner.GitData
@@ -193,6 +195,7 @@ class StreamYamlBuild @Autowired constructor(
 
             // 改名时保存需要修改名称
             realPipeline.displayName = pipeline.displayName
+            realPipeline.lastModifier = pipeline.lastModifier
             action.data.context.pipeline = realPipeline
 
             // 注册各种事件
@@ -349,6 +352,11 @@ class StreamYamlBuild @Autowired constructor(
         val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
             !(action is StreamMrAction && action.checkMrForkAction())
+
+        // 兼容定时触发，取流水线最近修改人
+        if (updateLastModifyUser && action.getStartType() == StartType.TIME_TRIGGER) {
+            modelParams.webHookParams[PIPELINE_START_TIME_TRIGGER_USER_ID] = action.data.getUserId()
+        }
 
         return streamYamlBaseBuild.startBuild(
             action = action,
