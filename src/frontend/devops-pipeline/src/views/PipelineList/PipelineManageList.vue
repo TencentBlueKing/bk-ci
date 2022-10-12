@@ -219,7 +219,7 @@
         },
 
         mounted () {
-            webSocketMessage.installWsMessage(this.updatePipelineStatus)
+            webSocketMessage.installWsMessage(this.$refs.pipelineBox?.updatePipelineStatus)
         },
 
         beforeDestroy () {
