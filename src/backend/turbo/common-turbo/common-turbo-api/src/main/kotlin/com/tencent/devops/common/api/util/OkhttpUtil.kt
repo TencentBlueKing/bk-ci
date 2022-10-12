@@ -13,9 +13,9 @@ import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 
 @Suppress("NestedBlockDepth","MaxLineLength")
-object OkhttpUtils {
+object OkhttpUtil {
 
-    private val logger = LoggerFactory.getLogger(OkhttpUtils::class.java)
+    private val logger = LoggerFactory.getLogger(OkhttpUtil::class.java)
 
     private val okHttpClient = okhttp3.OkHttpClient.Builder()
         .connectTimeout(3L, TimeUnit.SECONDS)
