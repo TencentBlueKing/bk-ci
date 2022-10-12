@@ -37,5 +37,6 @@ import io.swagger.annotations.ApiModel
 data class DebugResponse(
     val websocketUrl: String,
     val containerName: String?,
-    val dispatchType: String = BuildType.DOCKER.name
+    val dispatchType: String = BuildType.DOCKER.name,
+    val dockerRoutingType: String = "VM"
 )
