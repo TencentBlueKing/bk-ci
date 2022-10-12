@@ -27,7 +27,6 @@ const AddPipeline = () => import(/* webpackChunkName: "pipelinesNewList" */'../v
 const pipelineListEntry = () => import(/* webpackChunkName: "pipelineListEntry" */'../views/PipelineList')
 const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../views/list/group')
 const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/list/template')
-const pipelinesRestore = () => import(/* webpackChunkName: "pipelinesRestore" */'../views/list/restore')
 const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../views/list/audit')
 
 const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/')
@@ -58,7 +57,7 @@ const routes = [
         component: pipelines,
         children: [
             {
-                path: '',
+                path: 'list',
                 component: pipelineListEntry,
                 name: 'pipelineListEntry',
                 redirect: {
@@ -79,12 +78,6 @@ const routes = [
                         path: 'atomManage',
                         name: 'atomManage',
                         component: atomManage
-                    },
-                    {
-                        path: 'restore',
-                        name: 'pipelinesRestore',
-                        component: pipelinesRestore
-
                     },
                     {
                         path: 'audit',
@@ -148,7 +141,6 @@ const routes = [
                 name: 'atomDebug',
                 component: atomDebug
             },
-
             {
                 path: 'import',
                 component: ImportPipelineEdit,

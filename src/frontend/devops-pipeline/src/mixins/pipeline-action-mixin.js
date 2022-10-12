@@ -122,7 +122,7 @@ export default {
             const duration = convertMStoStringByRule(latestBuildEndTime - latestBuildStartTime)
             return `${this.$t('history.tableMap.totalTime')}${duration}`
         },
-        calcProgress ({ latestBuildStatus, lastBuildFinishCount, lastBuildTotalCount, currentTimestamp, latestBuildStartTime }) {
+        calcProgress ({ latestBuildStatus, lastBuildFinishCount = 0, lastBuildTotalCount = 1, currentTimestamp, latestBuildStartTime }) {
             if (latestBuildStatus === statusAlias.RUNNING) {
                 return `${this.$t('execedTimes')}${convertMStoStringByRule(currentTimestamp - latestBuildStartTime)}(${Math.floor((lastBuildFinishCount / lastBuildTotalCount) * 100)}%)`
             }
