@@ -741,6 +741,7 @@ class TurboEngineConfigService @Autowired constructor(
      */
     fun getDistTaskVersion(): List<String> {
         val responseString = BKDistccApi.queryBkdistccVersion()
+        logger.info("queryBkdistccVersion responseString: $responseString")
         return if (responseString.isBlank()) {
             logger.warn("getDistTaskVersion response string is blank!")
             emptyList()
