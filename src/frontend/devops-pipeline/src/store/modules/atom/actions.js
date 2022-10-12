@@ -600,8 +600,8 @@ export default {
         return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
     },
 
-    getMacXcodeVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2`)
+    getMacXcodeVersion (_, systemVersion = '') {
+        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2?systemVersion=${systemVersion}`)
     },
 
     getWinVersion () {
