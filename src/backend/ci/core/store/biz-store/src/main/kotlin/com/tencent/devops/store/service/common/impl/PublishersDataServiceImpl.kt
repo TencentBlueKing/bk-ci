@@ -116,23 +116,6 @@ class PublishersDataServiceImpl @Autowired constructor(
         return batchCreateCount
     }
 
-    override fun deletePublisherData(userId: String, publishers: List<PublishersRequest>): Int {
-
-        val organizePublishers = mutableListOf<String>()
-        publishers.map {
-            //  获取删除的组织发布者
-            if (it.publishersType == PublisherType.ORGANIZATION) {
-                organizePublishers.add(it.publishersCode)
-            }
-        }
-        if (organizePublishers.isNotEmpty()) {
-            //  删除组织发布者关联的组织成员关联
-            val organizePublishersIds = publishersDao.getPublisherIdsByCode(dslContext, organizePublishers)
-            publishersDao.batchDeletePublisherMemberRelByPublisherId(dslContext, organizePublishersIds)
-        }
-        return publishersDao.batchDelete(dslContext, publishers)
-    }
-
     override fun updatePublisherData(userId: String, publishers: List<PublishersRequest>): Int {
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
         val addStorePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
@@ -183,6 +166,24 @@ class PublishersDataServiceImpl @Autowired constructor(
         }
         return count
     }
+
+    override fun deletePublisherData(userId: String, publishers: List<PublishersRequest>): Int {
+
+        val organizePublishers = mutableListOf<String>()
+        publishers.map {
+            //  获取删除的组织发布者
+            if (it.publishersType == PublisherType.ORGANIZATION) {
+                organizePublishers.add(it.publishersCode)
+            }
+        }
+        if (organizePublishers.isNotEmpty()) {
+            //  删除组织发布者关联的组织成员关联
+            val organizePublishersIds = publishersDao.getPublisherIdsByCode(dslContext, organizePublishers)
+            publishersDao.batchDeletePublisherMemberRelByPublisherId(dslContext, organizePublishersIds)
+        }
+        return publishersDao.batchDelete(dslContext, publishers)
+    }
+
     private fun updateMembers(
         userId: String,
         publisherId: String,
