@@ -165,30 +165,13 @@ class PublishersDataServiceImpl @Autowired constructor(
                 records.storeType = it.storeType.type.toByte()
                 records.updateTime = LocalDateTime.now()
                 storePublisherInfoRecords.add(records)
-                val members = publishersDao.getPublisherMemberRelMemberIdsByPublisherId(dslContext, id)
-                val newMembers = it.members
-                val intersection = members.intersect(newMembers)
-                members.forEach { member ->
-                    if (!intersection.contains(member)) {
-                        val storePublisherMemberRel = TStorePublisherMemberRelRecord()
-                        storePublisherMemberRel.publisherId = publisherId
-                        storePublisherMemberRel.memberId = member
-                        delStorePublisherMemberRelRecords.add(storePublisherMemberRel)
-                    }
-                }
-                newMembers.forEach { newMember ->
-                    if (!intersection.contains(newMember)) {
-                        val storePublisherMemberRel = TStorePublisherMemberRelRecord()
-                        storePublisherMemberRel.id = UUIDUtil.generate()
-                        storePublisherMemberRel.publisherId = publisherId
-                        storePublisherMemberRel.memberId = newMember
-                        storePublisherMemberRel.creator = userId
-                        storePublisherMemberRel.createTime = LocalDateTime.now()
-                        storePublisherMemberRel.modifier = userId
-                        storePublisherMemberRel.updateTime = LocalDateTime.now()
-                        addStorePublisherMemberRelRecords.add(storePublisherMemberRel)
-                    }
-                }
+                updateMembers(
+                    userId = userId,
+                    publisherId = id,
+                    newMembers = it.members,
+                    addRecords = addStorePublisherMemberRelRecords,
+                    delRecords = delStorePublisherMemberRelRecords
+                )
             }
         }
         var count = 0
@@ -199,6 +182,37 @@ class PublishersDataServiceImpl @Autowired constructor(
             publishersDao.batchDeletePublisherMemberByMemberIds(context, delStorePublisherMemberRelRecords)
         }
         return count
+    }
+    private fun updateMembers(
+        userId: String,
+        publisherId: String,
+        newMembers: List<String>,
+        addRecords: MutableList<TStorePublisherMemberRelRecord>,
+        delRecords: MutableList<TStorePublisherMemberRelRecord>
+    ) {
+        val members = publishersDao.getPublisherMemberRelMemberIdsByPublisherId(dslContext, publisherId)
+        val intersection = members.intersect(newMembers)
+        members.forEach { member ->
+            if (!intersection.contains(member)) {
+                val storePublisherMemberRel = TStorePublisherMemberRelRecord()
+                storePublisherMemberRel.publisherId = publisherId
+                storePublisherMemberRel.memberId = member
+                delRecords.add(storePublisherMemberRel)
+            }
+        }
+        newMembers.forEach { newMember ->
+            if (!intersection.contains(newMember)) {
+                val storePublisherMemberRel = TStorePublisherMemberRelRecord()
+                storePublisherMemberRel.id = UUIDUtil.generate()
+                storePublisherMemberRel.publisherId = publisherId
+                storePublisherMemberRel.memberId = newMember
+                storePublisherMemberRel.creator = userId
+                storePublisherMemberRel.createTime = LocalDateTime.now()
+                storePublisherMemberRel.modifier = userId
+                storePublisherMemberRel.updateTime = LocalDateTime.now()
+                addRecords.add(storePublisherMemberRel)
+            }
+        }
     }
 
     override fun createPlatformsData(
