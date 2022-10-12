@@ -169,10 +169,10 @@ class PublishersDataServiceImpl @Autowired constructor(
                 records.storeType = it.storeType.type.toByte()
                 records.updateTime = LocalDateTime.now()
                 storePublisherInfoRecords.add(records)
-                val members = publishersDao.getPublisherMemberRelById(dslContext, id).toMutableList()
+                val members = publishersDao.getPublisherMemberRelById(dslContext, id)
                 val newMembers = it.members
                 val intersection = members.intersect(newMembers)
-                logger.debug("updatePublisherData intersection is $intersection")
+                logger.debug("updatePublisherData members is $members| newMembers is $newMembers| intersection is $intersection")
                 members.forEach { member ->
                     if (!intersection.contains(member)) {
                         val storePublisherMemberRel = TStorePublisherMemberRelRecord()
