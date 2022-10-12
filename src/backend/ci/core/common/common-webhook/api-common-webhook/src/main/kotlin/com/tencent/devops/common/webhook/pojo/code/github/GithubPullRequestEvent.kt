@@ -165,7 +165,7 @@ data class GithubMilestone(
     @JsonProperty("description")
     val description: String, // Tracking milestone for version 1.0
     @JsonProperty("due_on")
-    val dueOn: String, // 2012-10-09T23:39:01Z
+    val dueOn: String?, // 2012-10-09T23:39:01Z
     @JsonProperty("html_url")
     val htmlUrl: String, // https://github.com/octocat/Hello-World/milestones/v1.0
     @JsonProperty("id")
