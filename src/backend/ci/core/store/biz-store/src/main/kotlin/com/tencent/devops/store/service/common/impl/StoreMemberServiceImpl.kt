@@ -124,10 +124,6 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         return Result(members)
     }
 
-    override fun getMemberId(storeCode: String, storeType: StoreTypeEnum, userName: List<String>): Result<List<String>> {
-        return Result(storeMemberDao.getMemberId(dslContext, storeCode, storeType.type.toByte(), userName))
-    }
-
     /**
      * 查看store组件成员信息
      */
