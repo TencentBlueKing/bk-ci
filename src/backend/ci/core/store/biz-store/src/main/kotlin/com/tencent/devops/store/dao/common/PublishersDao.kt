@@ -106,7 +106,7 @@ class PublishersDao {
                     .set(HELPER, it.helper)
                     .set(UPDATE_TIME, it.updateTime)
                     .set(MODIFIER, it.modifier)
-                    .where(PUBLISHER_CODE.eq(it.publisherCode))
+                    .where(ID.eq(it.id))
                     .and(STORE_TYPE.eq(it.storeType))
             }
             ).execute().size
@@ -120,12 +120,25 @@ class PublishersDao {
         return dslContext.batchInsert(storePublisherMemberRelInfos).execute().size
     }
 
-    fun batchDeletePublisherMemberRelById(
+    fun batchDeletePublisherMemberRelByPublisherId(
         dslContext: DSLContext,
         organizePublishersIds: List<String>
     ) {
         with(TStorePublisherMemberRel.T_STORE_PUBLISHER_MEMBER_REL) {
             dslContext.deleteFrom(this).where(PUBLISHER_ID.`in`(organizePublishersIds)).execute()
+        }
+    }
+
+    fun batchDeletePublisherMemberByMemberIds(
+        dslContext: DSLContext,
+        delStorePublisherMemberRelRecords: List<TStorePublisherMemberRelRecord>
+    ) {
+        with(TStorePublisherMemberRel.T_STORE_PUBLISHER_MEMBER_REL) {
+            dslContext.batch(delStorePublisherMemberRelRecords.map {
+                dslContext.deleteFrom(this)
+                    .where(PUBLISHER_ID.eq(it.publisherId))
+                    .and(MEMBER_ID.eq(it.memberId))
+            }).execute()
         }
     }
 
@@ -136,11 +149,29 @@ class PublishersDao {
                 .fetchInto(String::class.java)
         }
     }
-    fun getPublisherMemberRelById(dslContext: DSLContext, memberId: String): List<String> {
+
+    fun getPublisherId(dslContext: DSLContext, publisherCode: String): String? {
+        with(TStorePublisherInfo.T_STORE_PUBLISHER_INFO) {
+            return dslContext.select(ID).from(this)
+                .where(PUBLISHER_CODE.eq(publisherCode))
+                .fetchOne(0, String::class.java)
+        }
+    }
+
+    fun getPublisherMemberRelByMemberId(dslContext: DSLContext, memberId: String): List<String> {
         with(TStorePublisherMemberRel.T_STORE_PUBLISHER_MEMBER_REL) {
             return dslContext.select(PUBLISHER_ID)
                 .from(this)
                 .where(MEMBER_ID.eq(memberId))
+                .fetchInto(String::class.java)
+        }
+    }
+
+    fun getPublisherMemberRelById(dslContext: DSLContext, publisherId: String): List<String> {
+        with(TStorePublisherMemberRel.T_STORE_PUBLISHER_MEMBER_REL) {
+            return dslContext.select(PUBLISHER_ID)
+                .from(this)
+                .where(PUBLISHER_ID.eq(publisherId))
                 .fetchInto(String::class.java)
         }
     }

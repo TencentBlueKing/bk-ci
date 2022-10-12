@@ -52,6 +52,7 @@ import com.tencent.devops.store.service.common.StoreDeptService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreUserService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -131,40 +132,77 @@ class PublishersDataServiceImpl @Autowired constructor(
         if (organizePublishers.isNotEmpty()) {
             //  删除组织发布者关联的组织成员关联
             val organizePublishersIds = publishersDao.getPublisherIdsByCode(dslContext, organizePublishers)
-            publishersDao.batchDeletePublisherMemberRelById(dslContext, organizePublishersIds)
+            publishersDao.batchDeletePublisherMemberRelByPublisherId(dslContext, organizePublishersIds)
         }
         return publishersDao.batchDelete(dslContext, publishers)
     }
 
     override fun updatePublisherData(userId: String, publishers: List<PublishersRequest>): Int {
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
+        val addStorePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
+        val delStorePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
         publishers.forEach {
+            val publisherId = publishersDao.getPublisherId(dslContext, it.publishersCode)
             val deptInfos = analysisDept(userId, it.organization)
-            val records = TStorePublisherInfoRecord()
-            records.publisherCode = it.publishersCode
-            records.publisherName = it.name
-            records.firstLevelDeptName = deptInfos[0].name
-            records.firstLevelDeptId = deptInfos[0].id.toLong()
-            records.secondLevelDeptName = deptInfos[1].name
-            records.secondLevelDeptId = deptInfos[1].id.toLong()
-            records.thirdLevelDeptId = deptInfos[2].id.toLong()
-            records.thirdLevelDeptName = deptInfos[2].name
-            if (deptInfos.size > 3) {
-                records.fourthLevelDeptId = deptInfos[3].id.toLong()
-                records.fourthLevelDeptName = deptInfos[3].name
+            publisherId?.let { id ->
+                val records = TStorePublisherInfoRecord()
+                records.id = id
+                records.publisherCode = it.publishersCode
+                records.publisherName = it.name
+                records.firstLevelDeptName = deptInfos[0].name
+                records.firstLevelDeptId = deptInfos[0].id.toLong()
+                records.secondLevelDeptName = deptInfos[1].name
+                records.secondLevelDeptId = deptInfos[1].id.toLong()
+                records.thirdLevelDeptId = deptInfos[2].id.toLong()
+                records.thirdLevelDeptName = deptInfos[2].name
+                if (deptInfos.size > 3) {
+                    records.fourthLevelDeptId = deptInfos[3].id.toLong()
+                    records.fourthLevelDeptName = deptInfos[3].name
+                }
+                records.publisherType = it.publishersType.name
+                records.owners = JsonUtil.toJson(it.owners)
+                records.certificationFlag = it.certificationFlag
+                records.organizationName = it.organization
+                records.modifier = userId
+                records.ownerDeptName = it.ownerDeptName
+                records.helper = it.helper
+                records.storeType = it.storeType.type.toByte()
+                records.updateTime = LocalDateTime.now()
+                storePublisherInfoRecords.add(records)
+                val members = publishersDao.getPublisherMemberRelById(dslContext, id).toMutableList()
+                val newMembers = it.members
+                val intersection = members.intersect(newMembers)
+                members.forEach { newMember ->
+                    if (!intersection.contains(newMember)) {
+                        val storePublisherMemberRel = TStorePublisherMemberRelRecord()
+                        storePublisherMemberRel.publisherId = publisherId
+                        storePublisherMemberRel.memberId = newMember
+                        delStorePublisherMemberRelRecords.add(storePublisherMemberRel)
+                    }
+                }
+                newMembers.forEach { member ->
+                    if (!intersection.contains(member)) {
+                        val storePublisherMemberRel = TStorePublisherMemberRelRecord()
+                        storePublisherMemberRel.id = UUIDUtil.generate()
+                        storePublisherMemberRel.publisherId = publisherId
+                        storePublisherMemberRel.memberId = member
+                        storePublisherMemberRel.creator = userId
+                        storePublisherMemberRel.createTime = LocalDateTime.now()
+                        storePublisherMemberRel.modifier = userId
+                        storePublisherMemberRel.updateTime = LocalDateTime.now()
+                        addStorePublisherMemberRelRecords.add(storePublisherMemberRel)
+                    }
+                }
             }
-            records.publisherType = it.publishersType.name
-            records.owners = JsonUtil.toJson(it.owners)
-            records.certificationFlag = it.certificationFlag
-            records.organizationName = it.organization
-            records.modifier = userId
-            records.ownerDeptName = it.ownerDeptName
-            records.helper = it.helper
-            records.storeType = it.storeType.type.toByte()
-            records.updateTime = LocalDateTime.now()
-            storePublisherInfoRecords.add(records)
         }
-        return publishersDao.batchUpdate(dslContext, storePublisherInfoRecords)
+        var count = 0
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            count = publishersDao.batchUpdate(context, storePublisherInfoRecords)
+            publishersDao.batchCreatePublisherMemberRel(context, addStorePublisherMemberRelRecords)
+            publishersDao.batchDeletePublisherMemberByMemberIds(context, delStorePublisherMemberRelRecords)
+        }
+        return count
     }
 
     override fun createPlatformsData(
@@ -203,7 +241,7 @@ class PublishersDataServiceImpl @Autowired constructor(
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val organizationPublisherIds =
-            publishersDao.getPublisherMemberRelById(dslContext, userId)
+            publishersDao.getPublisherMemberRelByMemberId(dslContext, userId)
         if (organizationPublisherIds.isNotEmpty()) {
             // 获取组织发布者信息
             organizationPublisherIds.forEach {
@@ -245,7 +283,6 @@ class PublishersDataServiceImpl @Autowired constructor(
             }
         }
         personPublisherInfo?.let { publishersInfos.add(it) }
-        val organizationPublisherInfos =
         logger.debug("getPublishers $publishersInfos")
         return Result(publishersInfos)
     }
