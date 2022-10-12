@@ -155,7 +155,7 @@ data class GithubPullRequest(
 
 data class GithubMilestone(
     @JsonProperty("closed_at")
-    val closedAt: String, // 2013-02-12T13:22:01Z
+    val closedAt: String?, // 2013-02-12T13:22:01Z
     @JsonProperty("closed_issues")
     val closedIssues: Int, // 8
     @JsonProperty("created_at")
@@ -183,7 +183,7 @@ data class GithubMilestone(
     @JsonProperty("title")
     val title: String, // v1.0
     @JsonProperty("updated_at")
-    val updatedAt: String // 2014-03-03T18:58:10Z
+    val updatedAt: String? // 2014-03-03T18:58:10Z
 //    @JsonProperty("url")
 //    val url: String // https://api.github.com/repos/octocat/Hello-World/milestones/1
 )
