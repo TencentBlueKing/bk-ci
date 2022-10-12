@@ -15,17 +15,25 @@ object BKDistccApi {
 
     private val logger = LoggerFactory.getLogger(BKDistccApi::class.java)
 
-    @Value("\${bkdistcc.host}")
-    lateinit var bkdistccHost: String
+    private var bkdistccHost: String? = null
 
-    @Value("\${bkdistcc.port}")
-    lateinit var port: String
+    private var port: String? = null
+
+    @Value("\${bkdistcc.host:#{null}}")
+    fun setBkdistccHost(bkdistccHost: String) {
+        BKDistccApi.bkdistccHost = bkdistccHost
+    }
+
+    @Value("\${bkdistcc.port:#{null}}")
+    fun setPort(port: String) {
+        BKDistccApi.port = port
+    }
 
     /**
      * 查询编译加速工具版本清单
      */
     fun queryBkdistccVersion(): String {
-        logger.info("queryBkdistccVersion url:$bkdistccHost:$port")
+        logger.info("queryBkdistccVersion url: [$bkdistccHost:$port]")
 
         OkhttpUtils.doGet(
             url = "http://$bkdistccHost:$port/api/v1/disttask/resource/version"
