@@ -64,7 +64,7 @@ class PublishersDataServiceImpl @Autowired constructor(
     private val storeMemberDao: StoreMemberDao,
     private val storeUserService: StoreUserService
 ) : PublishersDataService {
-    override fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int  {
+    override fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int {
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
         val storePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
         publishers.forEach {
