@@ -102,7 +102,7 @@ class TGitMrTriggerHandler(
     private val eventCacheService: EventCacheService,
     // stream没有这个配置
     @Autowired(required = false)
-    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry?
+    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry? = null
 ) : GitHookTriggerHandler<GitMergeRequestEvent> {
 
     companion object {
