@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TStorePublisherInfoRecord
 import com.tencent.devops.model.store.tables.records.TStorePublisherMemberRelRecord
 import com.tencent.devops.project.api.service.ServiceUserResource
@@ -48,8 +47,6 @@ import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
 import com.tencent.devops.store.pojo.common.enums.PublisherType
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.PublishersDataService
-import com.tencent.devops.store.service.common.StoreDeptService
-import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreUserService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -101,7 +98,6 @@ class PublishersDataServiceImpl @Autowired constructor(
             storePublisherInfoRecords.add(storePublisherInfo)
             if (it.publishersType == PublisherType.ORGANIZATION) {
                 //  生成可使用组织发布者进行发布的成员关联
-                logger.debug("CreatePublisherMemberRel publisherCode is ${it.publishersCode}, members is ${it.members}")
                 it.members.forEach { memberId ->
                     val storePublisherMemberRel = TStorePublisherMemberRelRecord()
                     storePublisherMemberRel.id = UUIDUtil.generate()
