@@ -180,6 +180,11 @@ const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
  */
 const val PIPELINE_STAGE_CONTAINERS_COUNT_MAX = 256
 
+/**
+ * 入库VAR表，流水线变量最大长度
+ */
+const val PIPELINE_VARIABLES_STRING_LENGTH_MAX = 4000
+
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
