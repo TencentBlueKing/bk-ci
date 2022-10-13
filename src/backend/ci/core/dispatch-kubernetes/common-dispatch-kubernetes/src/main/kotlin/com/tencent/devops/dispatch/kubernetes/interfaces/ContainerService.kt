@@ -55,6 +55,7 @@ interface ContainerService {
     var memory: String
     var disk: String
     val entrypoint: String
+    val sleepEntrypoint: String
 
     // 平台错误帮助链接
     val helpUrl: String?

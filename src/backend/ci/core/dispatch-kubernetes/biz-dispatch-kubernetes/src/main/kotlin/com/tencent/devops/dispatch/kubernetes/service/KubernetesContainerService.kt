@@ -121,6 +121,9 @@ class KubernetesContainerService @Autowired constructor(
     @Value("\${kubernetes.entrypoint}")
     override val entrypoint: String = "kubernetes_init.sh"
 
+    @Value("\${kubernetes.sleepEntrypoint}")
+    override val sleepEntrypoint: String = "sleep.sh"
+
     override val helpUrl: String? = ""
 
     override fun getBuilderStatus(
@@ -170,7 +173,7 @@ class KubernetesContainerService @Autowired constructor(
                 DispatchBuildOperateBuilderType.STOP -> StopBuilderParams()
                 DispatchBuildOperateBuilderType.START_SLEEP -> StartBuilderParams(
                     env = param.env,
-                    command = listOf("/bin/sh", entrypoint)
+                    command = listOf("/bin/sh", sleepEntrypoint)
                 )
             }
         )
