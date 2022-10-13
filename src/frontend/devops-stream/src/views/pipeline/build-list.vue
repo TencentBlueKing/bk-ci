@@ -65,7 +65,12 @@
                         :name="event.name">
                     </bk-option>
                 </bk-select>
-                <bk-select v-model="filterData[filter.id]" v-for="filter in filterList" :key="filter.id" class="filter-item" :placeholder="filter.placeholder" multiple>
+                <bk-select v-model="filterData[filter.id]"
+                    v-for="filter in filterList" :key="filter.id"
+                    class="filter-item"
+                    :placeholder="filter.placeholder"
+                    multiple
+                >
                     <bk-option v-for="option in filter.data"
                         :key="option.id"
                         :id="option.id"
@@ -308,6 +313,17 @@
         },
 
         data () {
+            const { commitMsg, triggerUser, branch, event, status, pipelineIds } = this.$route.query
+            const getFilterData = () => {
+                return {
+                    commitMsg: commitMsg || '',
+                    triggerUser: triggerUser || '',
+                    branch: (branch && branch.split(',')) || [],
+                    event: (event && event.split(',')) || [],
+                    status: (status && status.split(',')) || [],
+                    pipelineIds: (pipelineIds && pipelineIds.split(',')) || []
+                }
+            }
             return {
                 buildList: [],
                 compactPaging: {
@@ -315,14 +331,7 @@
                     current: +this.$route.query.page || 1,
                     count: 0
                 },
-                filterData: {
-                    commitMsg: '',
-                    triggerUser: [],
-                    branch: [],
-                    event: [],
-                    status: [],
-                    pipelineIds: []
-                },
+                filterData: getFilterData(),
                 branchList: [],
                 filterList: [
                     {
@@ -395,23 +404,34 @@
 
         watch: {
             curPipeline: {
-                handler () {
-                    this.cleanFilterData()
+                handler (newVal, oldVal) {
+                    if (Object.keys(oldVal).length) this.cleanFilterData()
                     this.initBuildData()
                 }
             },
             filterData: {
                 handler () {
                     this.initBuildData()
+                    const query = { page: 1 }
+                    Object.keys(this.filterData).forEach(key => {
+                        if (this.filterData[key].length && typeof this.filterData[key] === 'string') {
+                            query[key] = this.filterData[key]
+                        } else if (this.filterData[key].length && Array.isArray(this.filterData[key])) {
+                            query[key] = this.filterData[key].join(',')
+                        }
+                    })
+                    this.$router.replace({ query })
                 },
                 deep: true
             }
         },
 
         created () {
-            this.initBuildData()
             this.loopGetList()
             this.setHtmlTitle()
+            this.toggleFilterEvent(true)
+            this.toggleFilterBranch(true)
+            this.toggleFilterPipeline(true)
         },
 
         beforeDestroy () {
@@ -502,11 +522,10 @@
             },
 
             cleanFilterData () {
-                this.$router.replace({ query: { page: 1 } })
                 this.compactPaging.current = 1
                 this.filterData = {
                     commitMsg: '',
-                    triggerUser: [],
+                    triggerUser: '',
                     branch: [],
                     event: [],
                     status: [],
@@ -538,11 +557,14 @@
             },
 
             getBuildData () {
+                let { triggerUser } = this.filterData
+                triggerUser = triggerUser ? triggerUser.split(',') : []
                 const params = {
                     page: this.compactPaging.current,
                     pageSize: this.compactPaging.limit,
                     pipelineId: this.curPipeline.pipelineId,
-                    ...this.filterData
+                    ...this.filterData,
+                    triggerUser
                 }
                 return pipelines.getPipelineBuildList(this.projectId, params).then((res = {}) => {
                     this.buildList = (res.records || []).map((build) => {
@@ -558,7 +580,6 @@
 
             togglePipelineEnable () {
                 if (!this.permission) return
-
                 this.clickEmpty()
                 pipelines.toggleEnablePipeline(this.projectId, this.curPipeline.pipelineId, !this.curPipeline.enabled).then(() => {
                     const pipeline = {
@@ -758,7 +779,7 @@
             resetFilter () {
                 this.filterData = {
                     commitMsg: '',
-                    triggerUser: [],
+                    triggerUser: '',
                     branch: [],
                     event: [],
                     status: [],
