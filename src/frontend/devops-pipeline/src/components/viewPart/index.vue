@@ -26,7 +26,7 @@
                         <span>{{ convertInfoItem('size', row.size) }}</span>
                     </div>
                     <div class="table-part-item part-item-type">
-                        {{ repoTypeNameMap[row.artifactoryType] }}
+                        {{ repoTypeNameMap[row.artifactoryType].i18n }}
                     </div>
                     <div class="table-part-item part-item-handler">
                         <span @click.stop="gotoArtifactory(row)" class="handler-btn" v-bk-tooltips="$t('editPage.atomForm.toArtifactory')">
@@ -149,8 +149,8 @@
     export default {
         components: {
             qrcode,
-            ArtifactoryOperation,
-            Logo
+            Logo,
+            ArtifactoryOperation
         },
         data () {
             return {
@@ -187,9 +187,18 @@
                     isLoading: false
                 },
                 repoTypeNameMap: {
-                    CUSTOM_DIR: this.$t('details.customRepo'),
-                    PIPELINE: this.$t('details.pipelineRepo'),
-                    IMAGE: this.$t('details.imageRepo')
+                    CUSTOM_DIR: {
+                        i18n: this.$t('details.customRepo'),
+                        name: 'custom'
+                    },
+                    PIPELINE: {
+                        i18n: this.$t('details.pipelineRepo'),
+                        name: 'pipeline'
+                    },
+                    IMAGE: {
+                        i18n: this.$t('details.imageRepo'),
+                        name: 'image'
+                    }
                 }
             }
         },
@@ -326,10 +335,13 @@
                 }
             },
             gotoArtifactory (row) {
-                let repoName = row.artifactoryType
-                if (repoName === 'PIPELINE') repoName = 'pipeline'
-                if (repoName === 'CUSTOM_DIR') repoName = 'custom'
-                const url = `${WEB_URL_PREFIX}/repo/${this.projectId}/generic?repoName=${repoName}&path=${row.path}`
+                const repoName = this.repoTypeNameMap[row.artifactoryType].name
+                let url = `${WEB_URL_PREFIX}/repo/${this.projectId}/`
+                if (repoName === 'image') {
+                    url += `docker/package?repoName=${repoName}&packageKey=docker://${row.name}&version=${row.fullName.split(':')[1]}`
+                } else {
+                    url += `generic?repoName=${repoName}&path=${row.path}`
+                }
                 window.open(url, '_blank')
             },
             addClickListenr () {
