@@ -101,6 +101,7 @@ object StoreMessageCode {
     const val USER_TEMPLATE_ATOM_IS_INVALID = "2120207" // 研发商店：模版下的插件{0}不可用，请联系模板发布者
     const val USER_TEMPLATE_IMAGE_VISIBLE_DEPT_IS_INVALID = "2120208" // 研发商店：模板的可见范围不在镜像[{0}]的可见范围之内，如有需要请联系镜像的发布者
     const val USER_TEMPLATE_IMAGE_IS_INVALID = "2120209" // 研发商店：模版下的镜像{0}不可用，请联系模板发布者
+    const val USER_INSTALL_TEMPLATE_CODE_IS_INVALID = "2120210" // 研发商店： 商店模板{0}安装到项目[{0}]失败，请确认项目下是否存在与模板{0}同名的自定义模板，如有请卸载或修改模板名称再进行安装
 
     const val USER_IMAGE_VERSION_IS_NOT_FINISH = "2120301" // 研发商店：镜像{0}的{1}版本发布未结束，请稍后再试
     const val USER_IMAGE_VERSION_IS_INVALID = "2120302" // 研发商店：镜像升级的版本号{0}错误，应为{1}
