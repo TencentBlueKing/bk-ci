@@ -235,7 +235,7 @@
                         />
                     </bk-form-item> -->
                     <bk-form-item
-                        v-if="uiFormSchema && Object.keys(uiFormSchema).length"
+                        v-if="uiFormSchema && Object.keys(uiFormSchema).length && uiFormSchema.properties && Object.keys(uiFormSchema.properties).length"
                         :label="$t('pipeline.variable')"
                     >
                         <bk-ui-form
