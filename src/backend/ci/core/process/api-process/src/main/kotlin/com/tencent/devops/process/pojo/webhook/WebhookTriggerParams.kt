@@ -38,5 +38,7 @@ data class WebhookTriggerParams(
     @ApiModelProperty("启动参数(用户自定义参数)", required = false)
     val userParams: List<BuildParameters>? = null,
     @ApiModelProperty("手动触发参数", required = false)
-    val startValues: Map<String, String>? = null
+    val startValues: Map<String, String>? = null,
+    @ApiModelProperty("触发审核人列表", required = false)
+    val triggerReviewers: List<String>? = null
 )

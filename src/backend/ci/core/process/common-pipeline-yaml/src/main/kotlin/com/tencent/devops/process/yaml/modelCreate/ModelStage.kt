@@ -207,7 +207,10 @@ class ModelStage @Autowired(required = false) constructor(
             check.reviewDesc = stageCheck.reviews.description
             check.reviewParams = createReviewParams(stageCheck.reviews.variables)
             check.reviewGroups = stageCheck.reviews.flows.map {
-                StageReviewGroup(name = it.name, reviewers = it.reviewers)
+                StageReviewGroup(
+                    name = it.name,
+                    reviewers = ModelCommon.parseReceivers(it.reviewers).toList()
+                )
             }.toMutableList()
         }
         if (stageCheck.gates?.isNotEmpty() == true) {
@@ -319,7 +322,7 @@ class ModelStage @Autowired(required = false) constructor(
                         notifyUserList = if (notify.receivers.isNullOrEmpty()) {
                             listOf(event.userId)
                         } else {
-                            notify.receivers.toList()
+                            ModelCommon.parseReceivers(notify.receivers).toList()
                         },
                         notifyGroupList = null,
                         auditUserList = null,
@@ -338,15 +341,12 @@ class ModelStage @Autowired(required = false) constructor(
                     gatewayId = null,
                     opList = opList,
                     stageId = stageId,
-                    gateKeepers = gate.continueOnFail?.gatekeepers,
+                    gateKeepers = ModelCommon.parseReceivers(gate.continueOnFail?.gatekeepers).toList(),
                     taskSteps = taskSteps[gate.name]
                 )
             )
         }
-        logger.info(
-            "GitProject: ${event.projectCode} event: ${event.streamData?.requestEventId}" +
-                " ruleList: $ruleList create gates"
-        )
+
         try {
             val resultList = client.get(ServiceQualityRuleResource::class).create(
                 userId = event.userId,

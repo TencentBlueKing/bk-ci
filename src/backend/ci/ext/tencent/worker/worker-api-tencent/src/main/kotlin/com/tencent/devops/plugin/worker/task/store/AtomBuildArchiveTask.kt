@@ -27,6 +27,10 @@
 
 package com.tencent.devops.plugin.worker.task.store
 
+import com.tencent.devops.common.api.constant.KEY_OS_ARCH
+import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_ARCH_FLAG
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_NAME_FLAG
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -40,7 +44,6 @@ import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
-import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -117,15 +120,26 @@ class AtomBuildArchiveTask : ITask() {
                 )
             }
         }
-        val osName = taskParams["osName"]
-        val osArch = taskParams["osArch"]
-
+        val osName = taskParams[KEY_OS_NAME]
+        val osArch = taskParams[KEY_OS_ARCH]
+        val validOsNameFlag = buildVariable[KEY_VALID_OS_NAME_FLAG]?.toBoolean()
+        val validOsArchFlag = buildVariable[KEY_VALID_OS_ARCH_FLAG]?.toBoolean()
+        val finalOsName = if (validOsNameFlag == true) {
+            osName
+        } else {
+            null
+        }
+        val finalOsArch = if (validOsArchFlag == true) {
+            osArch
+        } else {
+            null
+        }
         val atomEnv = atomEnv(
             projectId = buildVariables.projectId,
             atomCode = atomCode,
             atomVersion = atomVersion,
-            osName = osName,
-            osArch = osArch
+            osName = finalOsName,
+            osArch = finalOsArch
         )
 
         val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID)
@@ -144,10 +158,10 @@ class AtomBuildArchiveTask : ITask() {
             minVersion = atomEnv.minVersion,
             target = target ?: atomEnv.target,
             shaContent = fileSha,
-            preCmd = atomRunConditionHandleService.handleAtomPreCmd(preCmd, AgentEnv.getOS(), packageName),
+            preCmd = atomRunConditionHandleService.handleAtomPreCmd(preCmd, osName ?: "", packageName),
             atomPostInfo = atomEnv.atomPostInfo,
-            osName = osName,
-            osArch = osArch
+            osName = finalOsName,
+            osArch = finalOsArch
         )
         val result = atomApi.updateAtomEnv(buildVariables.projectId, atomCode, atomVersion, request)
         if (result.data != null && result.data == true) {

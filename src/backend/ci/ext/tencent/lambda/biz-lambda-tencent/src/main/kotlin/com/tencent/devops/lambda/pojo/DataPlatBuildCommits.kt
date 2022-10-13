@@ -13,5 +13,6 @@ data class DataPlatBuildCommits(
     val mrId: String,
     val url: String,
     val eventType: String,
-    val channel: String
+    val channel: String,
+    val action: String?
 )

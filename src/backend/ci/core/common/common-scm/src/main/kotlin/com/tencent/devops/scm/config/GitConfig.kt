@@ -89,6 +89,9 @@ class GitConfig {
     @Value("\${scm.external.github.webhookUrl:}")
     val githubWebhookUrl: String = ""
 
+    @Value("\${scm.external.github.callbackUrl:}")
+    val githubCallbackUrl: String = ""
+
     @Value("\${scm.external.github.redirectUrl:}")
     val githubRedirectUrl: String = ""
 

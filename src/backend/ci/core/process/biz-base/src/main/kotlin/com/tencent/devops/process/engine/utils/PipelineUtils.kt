@@ -34,18 +34,22 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
+import javax.ws.rs.core.Response
 
 object PipelineUtils {
 
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
-    private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9]*"
+    private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9\\.]*"
 
     fun checkPipelineName(name: String, maxPipelineNameSize: Int) {
         if (name.toCharArray().size > maxPipelineNameSize) {
@@ -72,6 +76,37 @@ object PipelineUtils {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_DESC_TOO_LONG,
                 defaultMessage = "Pipeline's desc is too long"
+            )
+        }
+    }
+
+    /**
+     *  检查stage审核参数是否符合规范
+     */
+    @Suppress("NestedBlockDepth")
+    fun checkStageReviewParam(reviewParams: List<ManualReviewParam>?) {
+        reviewParams?.forEach { param ->
+            when (param.valueType) {
+                ManualReviewParamType.MULTIPLE -> {
+                    val value = param.value
+                    if (value is List<*>) {
+                        value.forEach { checkVariablesLength(param.key, it.toString()) }
+                    }
+                }
+                else -> {
+                    checkVariablesLength(param.key, param.value.toString())
+                }
+            }
+        }
+    }
+
+    private fun checkVariablesLength(key: String, value: String) {
+        if (value.length >= PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH,
+                defaultMessage = "Stage审核参数 $key 超出4000长度限制",
+                params = arrayOf(key)
             )
         }
     }

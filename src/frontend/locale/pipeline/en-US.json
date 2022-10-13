@@ -658,6 +658,7 @@
     "manualReviewSuggestNameSpaceTip": "Audit suggest",
     "atomHelpDoc": "Help documentation",
     "macSystemVersion": "MacOS system version",
+    "winSystemVersion": "Windows system version",
     "xcodeVersion": "XCode version",
     "notRecomendPlugin": "This plugin is not recommended",
     "notRecomendImage": "This image is not recommended",

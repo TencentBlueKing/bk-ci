@@ -393,6 +393,8 @@ func scanArgs(args []string, sandbox *dcSyscall.Sandbox) (*ccArgs, error) {
 	seenInputFile := false
 	seenGcov := false
 	seenFprofileDir := false
+	seenGsplitDwarf := false
+
 	for index := 0; index < len(args); index++ {
 		arg := args[index]
 
@@ -455,6 +457,11 @@ func scanArgs(args []string, sandbox *dcSyscall.Sandbox) (*ccArgs, error) {
 				seenFprofileDir = true
 				continue
 			}
+
+			if strings.HasPrefix(arg, "-gsplit-dwarf") {
+				seenGsplitDwarf = true
+			}
+
 			// --
 
 			// -M(anything else) causes the preprocessor to
@@ -624,6 +631,12 @@ func scanArgs(args []string, sandbox *dcSyscall.Sandbox) (*ccArgs, error) {
 				gcovFile = strings.ReplaceAll(gcovFile, "/", "#")
 				r.additionOutputFile = append(r.additionOutputFile, filepath.Join(sandbox.Dir, gcovFile))
 			}
+		}
+	}
+
+	if seenGsplitDwarf {
+		if dwoFile, _ := outputFromSource(r.outputFile, ".dwo"); dwoFile != "" {
+			r.additionOutputFile = append(r.additionOutputFile, dwoFile)
 		}
 	}
 

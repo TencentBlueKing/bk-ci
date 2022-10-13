@@ -94,12 +94,15 @@ interface ICommand {
             ReplacementUtils.replace(
                 command,
                 object : KeyReplacement {
-                    override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? =
-                        contextMap[key] ?: try {
-                            CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
-                        } catch (ignore: Exception) {
-                            CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
-                        } ?: if (doubleCurlyBraces) "\${{$key}}" else "\${$key}"
+                    override fun getReplacement(key: String): String? = contextMap[key] ?: try {
+                        CredentialUtils.getCredential(
+                            credentialId = key,
+                            showErrorLog = false,
+                            acrossProjectId = acrossTargetProjectId
+                        )[0]
+                    } catch (ignore: Exception) {
+                        CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
+                    }
                 }
             )
         }

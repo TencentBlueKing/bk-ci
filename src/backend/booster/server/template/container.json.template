@@ -34,16 +34,16 @@
             "ports": [__crm_ports__],
             "resources": {
               "limits": {
-                "cpu": "__crm_cpu__",
-                "memory": "__crm_mem__"
+                "cpu": "__crm_limit_cpu__",
+                "memory": "__crm_limit_mem__"
               },
               "requests": {
-                "cpu": "__crm_request_cpu__",
-                "memory": "__crm_request_mem__"
+                "cpu": "__crm_cpu__",
+                "memory": "__crm_mem__"
               }
             },
             "image": "__crm_image__",
-            "imagePullPolicy": "Always"
+            "imagePullPolicy": "IfNotPresent"
           }
         ],
         "networkMode": "HOST",

@@ -732,6 +732,8 @@
   "最近执行时间": "Last execution time",
   "搜索": "Search",
   "质量红线指标": "Quality",
+  "错误码": "Error Code",
+  "错误码说明": "ErrorCode Description",
   "配置片段：": "Configuration Snippet:",
   "输出参数": "Output Parameters",
   "参数名": "Parameter Name",

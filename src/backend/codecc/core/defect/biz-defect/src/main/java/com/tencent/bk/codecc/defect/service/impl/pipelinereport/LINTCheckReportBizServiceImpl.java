@@ -143,7 +143,7 @@ public class LINTCheckReportBizServiceImpl implements ICheckReportBizService
         }
 
         //最近一次分析概要信息
-        LintStatisticEntity lintStatisticEntity = lintStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        LintStatisticEntity lintStatisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         if (lintStatisticEntity == null)
         {
             log.info("no analysis result found! task id: {}, tool name: {}", taskId, toolName);
