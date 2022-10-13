@@ -76,12 +76,12 @@ object IosUtils {
         val scheme = try {
             val schemeArray = rootDict.objectForKey("CFBundleURLTypes") as NSArray
             schemeArray.array
-                .map { it as NSDictionary }
-                .map { it.objectForKey("CFBundleURLSchemes") }
+                .mapNotNull { it as NSDictionary }
+                .mapNotNull { it.objectForKey("CFBundleURLSchemes") }
                 .map { it as NSArray }
-                .map { it.array }
+                .mapNotNull { it.array }
                 .flatMap { it.toList() }
-                .map { it as NSString }
+                .mapNotNull { it as NSString }
                 .map { it.toString() }
                 .maxBy { it.length } ?: ""
         } catch (e: Exception) {
