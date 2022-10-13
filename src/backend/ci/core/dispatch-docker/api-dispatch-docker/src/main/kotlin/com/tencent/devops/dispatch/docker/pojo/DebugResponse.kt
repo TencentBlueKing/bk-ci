@@ -37,6 +37,7 @@ import io.swagger.annotations.ApiModel
 data class DebugResponse(
     val websocketUrl: String,
     val containerName: String?,
+    @Deprecated("待废除")
     val dispatchType: String = BuildType.DOCKER.name,
     val dockerRoutingType: String = "VM"
 )
