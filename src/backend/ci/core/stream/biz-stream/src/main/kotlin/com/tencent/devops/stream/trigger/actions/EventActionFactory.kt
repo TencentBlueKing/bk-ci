@@ -253,13 +253,11 @@ class EventActionFactory @Autowired constructor(
                         streamDeleteEventService = streamDeleteEventService,
                         gitPipelineResourceDao = gitPipelineResourceDao,
                         pipelineDelete = pipelineDelete,
-                        gitCheckService = gitCheckService,
-                        streamTriggerCache = streamTriggerCache
+                        gitCheckService = gitCheckService
                     )
                     event.ref.startsWith("refs/tags/") -> GithubTagPushActionGit(
                         apiService = githubApiService,
-                        gitCheckService = gitCheckService,
-                        streamTriggerCache = streamTriggerCache
+                        gitCheckService = gitCheckService
                     )
                     else -> return null
                 }
@@ -271,8 +269,8 @@ class EventActionFactory @Autowired constructor(
                     pipelineDelete = pipelineDelete,
                     gitCheckService = gitCheckService,
                     streamTriggerTokenService = streamTriggerTokenService,
-                    streamTriggerCache = streamTriggerCache,
-                    basicSettingDao = basicSettingDao, dslContext = dslContext
+                    basicSettingDao = basicSettingDao,
+                    dslContext = dslContext
                 )
             }
             else -> {

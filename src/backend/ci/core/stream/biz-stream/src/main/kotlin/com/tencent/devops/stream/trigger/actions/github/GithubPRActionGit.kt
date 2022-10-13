@@ -37,12 +37,12 @@ import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.pojo.ChangeYamlList
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -55,15 +55,13 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubFileInfo
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubMrInfo
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
-import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
-import com.tencent.devops.stream.pojo.ChangeYamlList
-import com.tencent.devops.stream.trigger.git.pojo.github.GithubMrInfo
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
@@ -81,10 +79,9 @@ class GithubPRActionGit(
     private val pipelineDelete: PipelineDelete,
     private val gitCheckService: GitCheckService,
     private val streamTriggerTokenService: StreamTriggerTokenService,
-    private val streamTriggerCache: StreamTriggerCache,
     private val basicSettingDao: StreamBasicSettingDao,
     private val dslContext: DSLContext
-) : GithubActionGit(apiService, gitCheckService, streamTriggerCache), StreamMrAction {
+) : GithubActionGit(apiService, gitCheckService), StreamMrAction {
 
     companion object {
         private val logger = LoggerFactory.getLogger(GithubPRActionGit::class.java)
@@ -92,7 +89,6 @@ class GithubPRActionGit(
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.PULL_REQUEST)
 
-    override lateinit var data: ActionData
     override fun event() = data.event as GithubPullRequestEvent
 
     override val mrIId: String
@@ -127,9 +123,11 @@ class GithubPRActionGit(
             this.data.setting.triggerReviewSetting.whitelist
         val checkProjectInWhiteList = this.data.eventCommon.gitProjectId in
             this.data.setting.triggerReviewSetting.whitelist
-        return ((checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
-            checkUserInWhiteList ||
-            checkProjectInWhiteList) && forkMrYamlList().isEmpty()
+        return (
+            (checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
+                checkUserInWhiteList ||
+                checkProjectInWhiteList
+            ) && forkMrYamlList().isEmpty()
     }
 
     override fun getMrId() = event().pullRequest.number.toLong()
@@ -215,6 +213,9 @@ class GithubPRActionGit(
         // todo
         return null
     }
+
+    override fun needUpdateLastModifyUser(filePath: String) =
+        super.needUpdateLastModifyUser(filePath) && !checkMrForkAction()
 
     override fun isStreamDeleteAction() = false
 
