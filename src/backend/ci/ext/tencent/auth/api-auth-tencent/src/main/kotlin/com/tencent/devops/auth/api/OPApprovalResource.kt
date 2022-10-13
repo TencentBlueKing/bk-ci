@@ -25,34 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.notify.pojo
+package com.tencent.devops.auth.api
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("企业微信机器人消息内容")
-data class WeworkRobotContentMessage(
-    /**
-     * 文本内容，最长不超过2048个字节，必须是utf8编码
-     */
-    @ApiModelProperty("文本内容")
-    val content: String,
-
-    /**
-     * 提醒群中的指定成员(@某个成员)，@all表示提醒所有人，如果开发者获取不到userid，可以使用mentioned_mobile_list，目前 mentioned_list 暂不支持小黑板
-     */
-    @JsonProperty("mentioned_list")
-    @ApiModelProperty("userid的列表", name = "mentioned_list")
-    val mentionedList: Set<String>?,
-
-    /**
-     * 手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人，目前 mentioned_mobile_list 暂不支持小黑板
-     */
-    @JsonProperty("mentioned_mobile_list")
-    @ApiModelProperty("手机号列表，提醒手机号对应的群成员(@某个成员)，@all表示提醒所有人", name = "mentioned_mobile_list")
-    val mentionedMobileList: Set<String>?,
-
-    @ApiModelProperty("attachments消息事件", required = false)
-    val attachments: WeworkMarkdownAttachment? = null
-)
+@Path("/op/auth/approval")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OPApprovalResource {
+    @POST
+    @Path("/checkExpiringManager")
+    @ApiOperation("触发续期接口")
+    fun checkExpiringManager()
+}

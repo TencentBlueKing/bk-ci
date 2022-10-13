@@ -28,9 +28,10 @@
 package com.tencent.devops.support.robot
 
 import com.tencent.bkrepo.common.api.util.toJsonString
+import com.tencent.devops.auth.api.manager.ServiceManagerApprovalResource
+import com.tencent.devops.auth.pojo.enum.ApprovalType
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WeworkRobotCustomConfig
-import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
 import com.tencent.devops.support.robot.pojo.RobotCallback
 import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
 import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
@@ -40,15 +41,18 @@ import org.springframework.stereotype.Service
 import org.w3c.dom.Document
 import org.xml.sax.InputSource
 import java.io.StringReader
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.support.util.callback.WXBizMsgCryptV2
 import javax.xml.parsers.DocumentBuilderFactory
 
 @Service
 class RobotService @Autowired constructor(
     val weworkRobotCustomConfig: WeworkRobotCustomConfig,
-    val wechatWorkRobotService: WechatWorkRobotService
+    val wechatWorkRobotService: WechatWorkRobotService,
+    val client: Client
 ) {
     private val rototWxcpt =
-        WXBizMsgCrypt(weworkRobotCustomConfig.token, weworkRobotCustomConfig.aeskey, "")
+        WXBizMsgCryptV2(weworkRobotCustomConfig.token, weworkRobotCustomConfig.aeskey, "")
 
     /*
     * 验证geturl
@@ -71,12 +75,9 @@ class RobotService @Autowired constructor(
     }
 
     fun robotCallbackPost(signature: String, timestamp: Long, nonce: String, reqData: String?): Boolean {
-        logger.info("signature:$signature")
-        logger.info("timestamp:$timestamp")
-        logger.info("nonce:$nonce")
-        logger.info("reqData:$reqData")
+        logger.info("signature:$signature | timestamp:$timestamp | nonce:$nonce | reqData:$reqData")
         val robotCallBack = getCallbackInfo(signature, timestamp, nonce, reqData)
-        logger.info("chitId:${robotCallBack.chatId}")
+        logger.info("chitId:${robotCallBack.chatId} | robotCallBack:$robotCallBack")
         if (robotCallBack.eventType == "enter_chat") {
             // 如为进入机器人单聊, 直接返回空包
             return true
@@ -90,8 +91,47 @@ class RobotService @Autowired constructor(
             )
             wechatWorkRobotService.send(msg.toJsonString())
         }
+        val callbackId = robotCallBack.callbackId
+        val actionName = robotCallBack.actionName
+        val actionValue = robotCallBack.actionValue
+        // 若callbackId为空，则表示没有回调事件，不需要再进行下一步回调事件处理
+        if (checkParams(callbackId, actionValue)) {
+            return true
+        }
+        when (callbackId) {
+            MANAGER_APPROVAL -> {
+                client.get(ServiceManagerApprovalResource::class).managerApproval(
+                    approvalId = actionValue!!.toInt(),
+                    approvalType = if (actionName == MANAGER_AGREE_TO_APPROVAL) ApprovalType.AGREE
+                    else ApprovalType.REFUSE
+                )
+            }
+            USER_RENEWAL -> {
+                client.get(ServiceManagerApprovalResource::class).userRenewalAuth(
+                    approvalId = actionValue!!.toInt(),
+                    approvalType = if (actionName == USER_AGREE_TO_RENEWAL) ApprovalType.AGREE
+                    else ApprovalType.REFUSE
+                )
+            }
+        }
         return true
     }
+
+    @SuppressWarnings("ComplexMethod")
+    private fun checkParams(
+        callbackId: String?,
+        actionValue: String?
+    ): Boolean {
+        if (isLegal(callbackId, actionValue)) {
+            return true
+        }
+        return false
+    }
+
+    private fun isLegal(
+        callbackId: String?,
+        actionValue: String?
+    ) = (callbackId == null || callbackId.isEmpty() || actionValue == null || actionValue.isEmpty())
 
     /*
   * 获取密文的CallbackInfo对象
@@ -108,6 +148,9 @@ class RobotService @Autowired constructor(
         val userName = root.getElementsByTagName("Name")
         val userId = root.getElementsByTagName("Alias")
         val eventType = root.getElementsByTagName("Event") ?: null
+        val callbackId = root.getElementsByTagName("CallbackId") ?: null
+        val actions = root.getElementsByTagName("Actions") ?: null
+        val actionValue = root.getElementsByTagName("Value") ?: null
         logger.info("eventType: $eventType, ${eventType?.item(0)}")
         return RobotCallback(
             chatId = chitId.item(0).textContent,
@@ -115,10 +158,13 @@ class RobotService @Autowired constructor(
             getChatInfoUrl = getChatInfoUrl.item(0).textContent,
             msgType = msgType.item(0).textContent,
             msgId = msgId.item(0).textContent,
-            content = content?.item(0)?.textContent ?: "",
+            content = content.item(0)?.textContent ?: "",
             name = userName.item(0).textContent,
             userId = userId.item(0).textContent,
-            eventType = eventType?.item(0)?.firstChild?.textContent
+            eventType = eventType?.item(0)?.firstChild?.textContent,
+            callbackId = callbackId?.item(0)?.textContent,
+            actionName = actions?.item(0)?.firstChild?.textContent,
+            actionValue = actionValue?.item(0)?.textContent
         )
     }
 
@@ -144,12 +190,16 @@ class RobotService @Autowired constructor(
             xmlString = rototWxcpt.DecryptMsg(signature, timestamp.toString(), nonce, reqData)
         } catch (e: Exception) {
             // 转换失败，错误原因请查看异常
-            e.printStackTrace()
+            logger.warn("getDecrypeMsg :$e")
         }
         return xmlString
     }
 
     companion object {
         val logger = LoggerFactory.getLogger(RobotService::class.java)
+        const val MANAGER_APPROVAL = "approval"
+        const val USER_RENEWAL = "renewal"
+        const val MANAGER_AGREE_TO_APPROVAL = "agree"
+        const val USER_AGREE_TO_RENEWAL = "agree"
     }
 }

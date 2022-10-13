@@ -27,58 +27,62 @@
 
 // ------------------------------------------------------------------------
 
-package com.tencent.devops.common.wechatwork.aes;
+package com.tencent.devops.support.util.callback;
 
-import java.security.MessageDigest;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 /**
- * SHA1 class
- *
- * 计算消息签名接口.
+ * 提供基于PKCS7算法的加解密接口.
  */
-@Deprecated
-// 请使用SHA1V2
-class SHA1 {
+class PKCS7EncoderV2 {
+    static Charset CHARSET = Charset.forName("utf-8");
+    static int BLOCK_SIZE = 32;
 
-	/**
-	 * 用SHA1算法生成安全签名
-	 * @param token 票据
-	 * @param timestamp 时间戳
-	 * @param nonce 随机字符串
-	 * @param encrypt 密文
-	 * @return 安全签名
-	 * @throws AesException 
-	 */
-	public static String getSHA1(String token, String timestamp, String nonce, String encrypt) throws AesException
-			  {
-		try {
-			String[] array = new String[] { token, timestamp, nonce, encrypt };
-			StringBuffer sb = new StringBuffer();
-			// 字符串排序
-			Arrays.sort(array);
-			for (int i = 0; i < 4; i++) {
-				sb.append(array[i]);
-			}
-			String str = sb.toString();
-			// SHA1签名生成
-			MessageDigest md = MessageDigest.getInstance("SHA-1");
-			md.update(str.getBytes());
-			byte[] digest = md.digest();
+    /**
+     * 获得对明文进行补位填充的字节.
+     *
+     * @param count 需要进行填充补位操作的明文字节个数
+     * @return 补齐用的字节数组
+     */
+    static byte[] encode(int count) {
+        // 计算需要填充的位数
+        int amountToPad = BLOCK_SIZE - (count % BLOCK_SIZE);
+        if (amountToPad == 0) {
+            amountToPad = BLOCK_SIZE;
+        }
+        // 获得补位所用的字符
+        char padChr = chr(amountToPad);
+        String tmp = new String();
+        for (int index = 0; index < amountToPad; index++) {
+            tmp += padChr;
+        }
+        return tmp.getBytes(CHARSET);
+    }
 
-			StringBuffer hexstr = new StringBuffer();
-			String shaHex = "";
-			for (int i = 0; i < digest.length; i++) {
-				shaHex = Integer.toHexString(digest[i] & 0xFF);
-				if (shaHex.length() < 2) {
-					hexstr.append(0);
-				}
-				hexstr.append(shaHex);
-			}
-			return hexstr.toString();
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new AesException(AesException.ComputeSignatureError);
-		}
-	}
+    /**
+     * 删除解密后明文的补位字符
+     *
+     * @param decrypted 解密后的明文
+     * @return 删除补位字符后的明文
+     */
+    static byte[] decode(byte[] decrypted) {
+        int pad = (int) decrypted[decrypted.length - 1];
+        if (pad < 1 || pad > 32) {
+            pad = 0;
+        }
+        return Arrays.copyOfRange(decrypted, 0, decrypted.length - pad);
+    }
+
+    /**
+     * 将数字转化成ASCII码对应的字符，用于对明文进行补码
+     *
+     * @param a 需要转化的数字
+     * @return 转化得到的字符
+     */
+    static char chr(int a) {
+        byte target = (byte) (a & 0xFF);
+        return (char) target;
+    }
+
 }

@@ -27,7 +27,7 @@
 
 // ------------------------------------------------------------------------
 
-package com.tencent.devops.support.util.aes;
+package com.tencent.devops.support.util.callback;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -43,21 +43,53 @@ import java.io.StringReader;
  * <p>
  * 提供提取消息格式中的密文及生成回复消息格式的接口.
  */
-@Deprecated
-// 请使用XMLParseV2
-class XMLParse {
+class XMLParseV2 {
 
     /**
      * 提取出xml数据包中的加密消息
      *
      * @param xmltext 待提取的xml字符串
      * @return 提取出的加密消息字符串
-     * @throws AesException
+     * @throws AesExceptionV2
      */
-    public static Object[] extract(String xmltext) throws AesException {
+    public static Object[] extract(String xmltext) throws AesExceptionV2 {
         Object[] result = new Object[3];
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+
+            String FEATURE = null;
+            // This is the PRIMARY defense. If DTDs (doctypes) are disallowed, almost all XML entity attacks are prevented
+            // Xerces 2 only - http://xerces.apache.org/xerces2-j/features.html#disallow-doctype-decl
+            FEATURE = "http://apache.org/xml/features/disallow-doctype-decl";
+            dbf.setFeature(FEATURE, true);
+
+            // If you can't completely disable DTDs, then at least do the following:
+            // Xerces 1 - http://xerces.apache.org/xerces-j/features.html#external-general-entities
+            // Xerces 2 - http://xerces.apache.org/xerces2-j/features.html#external-general-entities
+            // JDK7+ - http://xml.org/sax/features/external-general-entities
+            FEATURE = "http://xml.org/sax/features/external-general-entities";
+            dbf.setFeature(FEATURE, false);
+
+            // Xerces 1 - http://xerces.apache.org/xerces-j/features.html#external-parameter-entities
+            // Xerces 2 - http://xerces.apache.org/xerces2-j/features.html#external-parameter-entities
+            // JDK7+ - http://xml.org/sax/features/external-parameter-entities
+            FEATURE = "http://xml.org/sax/features/external-parameter-entities";
+            dbf.setFeature(FEATURE, false);
+
+            // Disable external DTDs as well
+            FEATURE = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
+            dbf.setFeature(FEATURE, false);
+
+            // and these as well, per Timothy Morgan's 2014 paper: "XML Schema, DTD, and Entity Attacks"
+            dbf.setXIncludeAware(false);
+            dbf.setExpandEntityReferences(false);
+
+            // And, per Timothy Morgan: "If for some reason support for inline DOCTYPEs are a requirement, then
+            // ensure the entity settings are disabled (as shown above) and beware that SSRF attacks
+            // (http://cwe.mitre.org/data/definitions/918.html) and denial
+            // of service attacks (such as billion laughs or decompression bombs via "jar:") are a risk."
+
+            // remaining parser logic
             DocumentBuilder db = dbf.newDocumentBuilder();
             StringReader sr = new StringReader(xmltext);
             InputSource is = new InputSource(sr);
@@ -65,14 +97,12 @@ class XMLParse {
 
             Element root = document.getDocumentElement();
             NodeList nodelist1 = root.getElementsByTagName("Encrypt");
-            NodeList nodelist2 = root.getElementsByTagName("ToUserName");
             result[0] = 0;
             result[1] = nodelist1.item(0).getTextContent();
-            result[2] = nodelist2.item(0).getTextContent();
             return result;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new AesException(AesException.ParseXmlError);
+            throw new AesExceptionV2(AesExceptionV2.ParseXmlError);
         }
     }
 

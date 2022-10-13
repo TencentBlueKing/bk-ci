@@ -32,7 +32,7 @@
  * 需要导入架包commons-codec-1.9（或commons-codec-1.8等其他版本）
  * 官方下载地址：http://commons.apache.org/proper/commons-codec/download_codec.cgi
  */
-package com.tencent.devops.common.wechatwork.aes;
+package com.tencent.devops.support.util.callback;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -59,15 +59,13 @@ import java.util.logging.Logger;
  * 	<li>如果安装了JDK，将两个jar文件放到%JDK_HOME%\jre\lib\security目录下覆盖原来文件</li>
  * </ol>
  */
-@Deprecated
-// 请使用WXBizMsgCryptV2
-public class WXBizMsgCrypt {
+public class WXBizMsgCryptV2 {
     static Charset CHARSET = Charset.forName("utf-8");
     Base64 base64 = new Base64();
     byte[] aesKey;
     String token;
     String corpId;
-    static Logger log = Logger.getLogger(WXBizMsgCrypt.class.getName());
+    static Logger log = Logger.getLogger(WXBizMsgCryptV2.class.getName());
 
     /**
      * 构造函数
@@ -75,11 +73,11 @@ public class WXBizMsgCrypt {
      * @param token          企业微信后台，开发者设置的token
      * @param encodingAesKey 企业微信后台，开发者设置的EncodingAESKey
      * @param corpId         企业的corpid
-     * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
+     * @throws AesExceptionV2 执行失败，请查看该异常的错误码和具体的错误信息
      */
-    public WXBizMsgCrypt(String token, String encodingAesKey, String corpId) throws AesException {
+    public WXBizMsgCryptV2(String token, String encodingAesKey, String corpId) throws AesExceptionV2 {
         if (encodingAesKey.length() != 43) {
-            throw new AesException(AesException.IllegalAesKey);
+            throw new AesExceptionV2(AesExceptionV2.IllegalAesKey);
         }
 
         this.token = token;
@@ -124,10 +122,10 @@ public class WXBizMsgCrypt {
      *
      * @param text 需要加密的明文
      * @return 加密后base64编码的字符串
-     * @throws AesException aes加密失败
+     * @throws AesExceptionV2 aes加密失败
      */
-    String encrypt(String randomStr, String text) throws AesException {
-        ByteGroup byteCollector = new ByteGroup();
+    String encrypt(String randomStr, String text) throws AesExceptionV2 {
+        ByteGroupV2 byteCollector = new ByteGroupV2();
         byte[] randomStrBytes = randomStr.getBytes(CHARSET);
         byte[] textBytes = text.getBytes(CHARSET);
         byte[] networkBytesOrder = getNetworkBytesOrder(textBytes.length);
@@ -140,7 +138,7 @@ public class WXBizMsgCrypt {
         byteCollector.addBytes(corpidBytes);
 
         // ... + pad: 使用自定义的填充方式对明文进行补位填充
-        byte[] padBytes = PKCS7Encoder.encode(byteCollector.size());
+        byte[] padBytes = PKCS7EncoderV2.encode(byteCollector.size());
         byteCollector.addBytes(padBytes);
 
         // 获得最终的字节流, 未加密
@@ -162,7 +160,7 @@ public class WXBizMsgCrypt {
             return base64Encrypted;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new AesException(AesException.EncryptAESError);
+            throw new AesExceptionV2(AesExceptionV2.EncryptAESError);
         }
     }
 
@@ -171,9 +169,9 @@ public class WXBizMsgCrypt {
      *
      * @param text 需要解密的密文
      * @return 解密得到的明文
-     * @throws AesException aes解密失败
+     * @throws AesExceptionV2 aes解密失败
      */
-    String decrypt(String text) throws AesException {
+    String decrypt(String text) throws AesExceptionV2 {
         byte[] original;
         try {
             // 设置解密模式为AES的CBC模式
@@ -189,13 +187,13 @@ public class WXBizMsgCrypt {
             original = cipher.doFinal(encrypted);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new AesException(AesException.DecryptAESError);
+            throw new AesExceptionV2(AesExceptionV2.DecryptAESError);
         }
 
         String xmlContent, from_corpid;
         try {
             // 去除补位字符
-            byte[] bytes = PKCS7Encoder.decode(original);
+            byte[] bytes = PKCS7EncoderV2.decode(original);
 
             // 分离16位随机字符串,网络字节序和corpId
             byte[] networkOrder = Arrays.copyOfRange(bytes, 16, 20);
@@ -207,12 +205,12 @@ public class WXBizMsgCrypt {
                 CHARSET);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new AesException(AesException.IllegalBuffer);
+            throw new AesExceptionV2(AesExceptionV2.IllegalBuffer);
         }
 
         // corpid不相同的情况
         if (!from_corpid.equals(corpId)) {
-            throw new AesException(AesException.ValidateCorpidError);
+            throw new AesExceptionV2(AesExceptionV2.ValidateCorpidError);
         }
         return xmlContent;
 
@@ -230,9 +228,9 @@ public class WXBizMsgCrypt {
      * @param timeStamp 时间戳，可以自己生成，也可以用URL参数的timestamp
      * @param nonce     随机串，可以自己生成，也可以用URL参数的nonce
      * @return 加密后的可以直接回复用户的密文，包括msg_signature, timestamp, nonce, encrypt的xml格式的字符串
-     * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
+     * @throws AesExceptionV2 执行失败，请查看该异常的错误码和具体的错误信息
      */
-    public String EncryptMsg(String replyMsg, String timeStamp, String nonce) throws AesException {
+    public String EncryptMsg(String replyMsg, String timeStamp, String nonce) throws AesExceptionV2 {
         // 加密
         String encrypt = encrypt(getRandomStr(), replyMsg);
 
@@ -241,11 +239,11 @@ public class WXBizMsgCrypt {
             timeStamp = Long.toString(System.currentTimeMillis());
         }
 
-        String signature = SHA1.getSHA1(token, timeStamp, nonce, encrypt);
+        String signature = SHA1V2.getSHA1(token, timeStamp, nonce, encrypt);
 
         // System.out.println("发送给平台的签名是: " + signature[1].toString());
         // 生成发送的xml
-        String result = XMLParse.generate(encrypt, signature, timeStamp, nonce);
+        String result = XMLParseV2.generate(encrypt, signature, timeStamp, nonce);
         return result;
     }
 
@@ -262,23 +260,23 @@ public class WXBizMsgCrypt {
      * @param nonce        随机串，对应URL参数的nonce
      * @param postData     密文，对应POST请求的数据
      * @return 解密后的原文
-     * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
+     * @throws AesExceptionV2 执行失败，请查看该异常的错误码和具体的错误信息
      */
     public String DecryptMsg(String msgSignature, String timeStamp, String nonce, String postData)
-        throws AesException {
+        throws AesExceptionV2 {
 
         // 密钥，公众账号的app secret
         // 提取密文
-        Object[] encrypt = XMLParse.extract(postData);
+        Object[] encrypt = XMLParseV2.extract(postData);
 
         // 验证安全签名
-        String signature = SHA1.getSHA1(token, timeStamp, nonce, encrypt[1].toString());
+        String signature = SHA1V2.getSHA1(token, timeStamp, nonce, encrypt[1].toString());
 
         // 和URL中的签名比较是否相等
         // System.out.println("第三方收到URL中的签名：" + msg_sign);
         // System.out.println("第三方校验签名：" + signature);
         if (!signature.equals(msgSignature)) {
-            throw new AesException(AesException.ValidateSignatureError);
+            throw new AesExceptionV2(AesExceptionV2.ValidateSignatureError);
         }
 
         // 解密
@@ -294,14 +292,14 @@ public class WXBizMsgCrypt {
      * @param nonce        随机串，对应URL参数的nonce
      * @param echoStr      随机串，对应URL参数的echostr
      * @return 解密之后的echostr
-     * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
+     * @throws AesExceptionV2 执行失败，请查看该异常的错误码和具体的错误信息
      */
     public String VerifyURL(String msgSignature, String timeStamp, String nonce, String echoStr)
-        throws AesException {
-        String signature = SHA1.getSHA1(token, timeStamp, nonce, echoStr);
+        throws AesExceptionV2 {
+        String signature = SHA1V2.getSHA1(token, timeStamp, nonce, echoStr);
         log.info("msgSignature:" + msgSignature + "|" + "signature:" + signature);
         if (!signature.equals(msgSignature)) {
-            throw new AesException(AesException.ValidateSignatureError);
+            throw new AesExceptionV2(AesExceptionV2.ValidateSignatureError);
         }
         String result = decrypt(echoStr);
         return result;
