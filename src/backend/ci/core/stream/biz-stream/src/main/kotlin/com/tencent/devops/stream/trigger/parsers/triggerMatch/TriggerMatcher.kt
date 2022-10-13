@@ -80,7 +80,7 @@ class TriggerMatcher @Autowired constructor(
                 return TriggerResult(
                     trigger = TriggerBody(false, "repo trigger delete yet"),
                     timeTrigger = false,
-                    startParams = emptyMap(),
+                    triggerOn = null,
                     deleteTrigger = false
                 )
             }
@@ -161,7 +161,7 @@ class TriggerMatcher @Autowired constructor(
                     TriggerResult(
                         trigger = TriggerBody(false),
                         timeTrigger = false,
-                        startParams = emptyMap(),
+                        triggerOn = null,
                         deleteTrigger = false
                     )
                 )

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class GithubMilestone(
     @JsonProperty("closed_at")
-    val closedAt: String,
+    val closedAt: String?,
     @JsonProperty("closed_issues")
     val closedIssues: Int,
     @JsonProperty("created_at")
@@ -26,6 +26,6 @@ data class GithubMilestone(
     val state: String,
     val title: String,
     @JsonProperty("updated_at")
-    val updatedAt: String,
+    val updatedAt: String?,
     val url: String
 )

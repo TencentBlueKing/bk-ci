@@ -36,6 +36,9 @@ const val PIPELINE_START_USER_ID = "BK_CI_START_USER_ID" // "pipeline.start.user
 const val PIPELINE_START_USER_NAME = "BK_CI_START_USER_NAME" // "pipeline.start.user.name"
 const val PIPELINE_START_WEBHOOK_USER_ID = "BK_CI_START_WEBHOOK_USER_ID" // "pipeline.start.webhook.user.id"
 const val PIPELINE_START_PIPELINE_USER_ID = "BK_CI_START_PIPELINE_USER_ID" // "pipeline.start.pipeline.user.id"
+const val PIPELINE_START_SERVICE_USER_ID = "BK_CI_START_SERVICE_USER_ID" // "pipeline.start.service.user.id"
+const val PIPELINE_START_MANUAL_USER_ID = "BK_CI_START_MANUAL_USER_ID" // "pipeline.start.manual.user.id"
+const val PIPELINE_START_TIME_TRIGGER_USER_ID = "BK_CI_START_TIME_TRIGGER_USER_ID"
 const val PIPELINE_START_REMOTE_USER_ID = "BK_CI_START_REMOTE_USER_ID"
 const val PIPELINE_START_TYPE = "BK_CI_START_TYPE" // "pipeline.start.type"
 const val PIPELINE_START_CHANNEL = "BK_CI_START_CHANNEL" // "pipeline.start.channel"
@@ -176,6 +179,11 @@ const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
  * 流水线设置-Stage内最大分裂后Job数量-最大值
  */
 const val PIPELINE_STAGE_CONTAINERS_COUNT_MAX = 256
+
+/**
+ * 入库VAR表，流水线变量最大长度
+ */
+const val PIPELINE_VARIABLES_STRING_LENGTH_MAX = 4000
 
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 
