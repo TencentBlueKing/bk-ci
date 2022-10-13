@@ -1,5 +1,6 @@
 package com.tencent.bk.codecc.openapi.filter
 
+import com.tencent.bk.codecc.openapi.config.ApiGatewayAuthProperties
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -10,6 +11,7 @@ import net.sf.json.JSONObject
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.util.io.pem.PemReader
 import org.slf4j.LoggerFactory
+import org.springframework.util.StringUtils
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 import java.security.Security
@@ -24,6 +26,10 @@ import javax.ws.rs.ext.Provider
 @RequestFilter
 class ApiFilter : ContainerRequestFilter {
     fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
+        val enabled = ApiGatewayAuthProperties.properties?.enabled ?: ""
+        if(!StringUtils.hasLength(enabled) || enabled == "false"){
+            return true
+        }
         val bkApiJwt = requestContext.getHeaderString("X-Bkapi-JWT")
         val apigwtType = requestContext.getHeaderString("X-DEVOPS-APIGW-TYPE")
         if (bkApiJwt.isNullOrBlank()) {

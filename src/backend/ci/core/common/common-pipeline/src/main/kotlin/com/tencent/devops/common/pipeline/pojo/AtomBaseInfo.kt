@@ -50,6 +50,8 @@ data class AtomBaseInfo(
     val osName: String? = null,
     @ApiModelProperty("支持的操作系统架构", required = false)
     val osArch: String? = null,
+    @ApiModelProperty("不支持的操作系统组合信息", required = false)
+    val invalidOsInfo: String? = null,
     @ApiModelProperty("运行时版本", required = false)
     val runtimeVersion: String? = null
 )

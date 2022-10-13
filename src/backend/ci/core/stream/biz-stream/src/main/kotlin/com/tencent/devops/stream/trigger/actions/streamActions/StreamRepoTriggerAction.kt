@@ -18,6 +18,7 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlContent
@@ -33,7 +34,8 @@ class StreamRepoTriggerAction(
     // 可能会包含stream action事件类似删除
     private val baseAction: BaseAction,
     private val client: Client,
-    private val streamGitConfig: StreamGitConfig
+    private val streamGitConfig: StreamGitConfig,
+    private val streamTriggerCache: StreamTriggerCache
 ) : BaseAction {
 
     companion object {
@@ -177,6 +179,11 @@ class StreamRepoTriggerAction(
             "StreamRepoTriggerActionafter|triggerCheckRepoTriggerCredentials" +
                 "|check repoTrigger credentials|repoTrigger|${this.data.context.repoTrigger}"
         )
+        data.context.repoTrigger?.triggerGitHttpUrl = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+            gitProjectKey = data.eventCommon.gitProjectId,
+            action = this,
+            getProjectInfo = api::getGitProjectInfo
+        )?.gitHttpUrl
         return repoTriggerUserId
     }
 

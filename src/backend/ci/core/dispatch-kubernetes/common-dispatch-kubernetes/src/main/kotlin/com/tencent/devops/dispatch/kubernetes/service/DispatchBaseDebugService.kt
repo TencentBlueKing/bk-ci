@@ -105,7 +105,7 @@ class DispatchBaseDebugService @Autowired constructor(
 
         // 检验权限
         if (needCheckPermission) {
-            checkPermission(userId, pipelineId, builderName, vmSeqId, dockerRoutingType)
+            checkPermission(projectId, userId, pipelineId)
         }
 
         // 查看当前容器的状态
@@ -214,7 +214,7 @@ class DispatchBaseDebugService @Autowired constructor(
 
         // 检验权限
         if (needCheckPermission) {
-            checkPermission(userId, pipelineId, debugBuilderName, vmSeqId, dockerRoutingType)
+            checkPermission(projectId, userId, pipelineId)
         }
 
         dslContext.transaction { configuration ->
@@ -321,20 +321,10 @@ class DispatchBaseDebugService @Autowired constructor(
     }
 
     private fun checkPermission(
+        projectId: String,
         userId: String,
-        pipelineId: String,
-        builderName: String,
-        vmSeqId: String,
-        dockerRoutingType: DockerRoutingType
+        pipelineId: String
     ) {
-        val builderInfo = dispatchKubernetesBuildDao.getBuilderStatus(
-            dslContext = dslContext,
-            dispatchType = dockerRoutingType.name,
-            pipelineId = pipelineId,
-            vmSeqId = vmSeqId,
-            builderName = builderName
-        )!!
-        val projectId = builderInfo.projectId
         // 检验权限
         if (!bkAuthPermissionApi.validateUserResourcePermission(
                 userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT,

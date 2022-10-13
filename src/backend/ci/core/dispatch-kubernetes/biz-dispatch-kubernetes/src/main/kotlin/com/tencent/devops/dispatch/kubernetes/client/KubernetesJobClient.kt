@@ -61,7 +61,7 @@ class KubernetesJobClient @Autowired constructor(
     ): KubernetesResult<TaskResp> {
         val url = "/api/jobs"
         val body = JsonUtil.toJson(job)
-        logger.info("createJob request url: $url, body: $body")
+        logger.info("Create job request url: $url, body: $body")
         val request = clientCommon.baseRequest(userId, url).post(
             RequestBody.create(
                 MediaType.parse("application/json; charset=utf-8"),
@@ -69,17 +69,17 @@ class KubernetesJobClient @Autowired constructor(
             )
         ).build()
         val responseBody = OkhttpUtils.doHttp(request).body()!!.string()
-        logger.info("createJob response: ${JsonUtil.toJson(responseBody)}")
+        logger.info("Create job response: ${JsonUtil.toJson(responseBody)}")
         return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 
     fun getJobStatus(userId: String, jobName: String): KubernetesResult<JobStatus> {
         val url = "/api/jobs/$jobName/status"
         val request = clientCommon.baseRequest(userId, url).get().build()
-        logger.info("getJobStatus request url: $url, staffName: $userId")
+        logger.info("Get job: $jobName status request url: $url, staffName: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
-            logger.info("response: $responseContent")
+            logger.info("Get job: $jobName status response: $responseContent")
             if (!response.isSuccessful) {
                 throw BuildFailureException(
                     ErrorCodeEnum.SYSTEM_ERROR.errorType,
@@ -100,10 +100,11 @@ class KubernetesJobClient @Autowired constructor(
             }
         }
         val request = clientCommon.baseRequest(userId, url).get().build()
-        logger.info("getJobLogs request url: $url, jobName: $jobName, sinceTime: $sinceTime, staffName: $userId")
+        logger.info("Get job: $jobName logs request url: $url, jobName: $jobName, " +
+                        "sinceTime: $sinceTime, staffName: $userId")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
-            logger.info("response: $responseContent")
+            logger.info("Get job: $jobName logs response: $responseContent")
             if (!response.isSuccessful) {
                 throw BuildFailureException(
                     ErrorCodeEnum.SYSTEM_ERROR.errorType,

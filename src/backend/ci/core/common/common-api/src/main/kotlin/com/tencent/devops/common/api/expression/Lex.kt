@@ -34,7 +34,7 @@ class Lex(var str: MutableList<Char>) {
     var syn = -1
     var state = 0
 
-    val chars = setOf('.', '\'', '[', ']', '_', '-', '+', '*', '/')
+    val chars = setOf('.', '\'', '[', ']', '_', '-', '+', '*', '/', ',')
 
     fun getToken(): List<Word> {
         val results = mutableListOf<Word>()

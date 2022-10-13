@@ -39,7 +39,7 @@ func ParseJsonToData(jsonData interface{}, targetData interface{}) error {
 		return err
 	}
 
-	err = json.Unmarshal([]byte(dataStr), targetData)
+	err = json.Unmarshal(dataStr, targetData)
 	if err != nil {
 		return err
 	} else {
@@ -59,6 +59,7 @@ func SplitAndTrimSpace(s string, sep string) []string {
 	}
 	return result
 }
+
 func Contains(s []string, subs string) bool {
 	if len(s) <= 0 {
 		return false
