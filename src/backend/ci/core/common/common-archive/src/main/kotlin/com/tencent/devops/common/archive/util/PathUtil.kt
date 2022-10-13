@@ -25,11 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo.bkrepo
+package com.tencent.devops.common.archive.util
 
-data class BkRepoFile(
-    val fullPath: String,
-    val displayPath: String,
-    val size: Long,
-    val folder: Boolean
-)
+object PathUtil {
+    fun getParentFolder(path: String): String {
+        val tmpPath = path.removeSuffix("/")
+        return tmpPath.removeSuffix(getFileName(tmpPath))
+    }
+
+    fun isFolder(path: String): Boolean {
+        return path.endsWith("/")
+    }
+
+    fun getFileName(path: String): String {
+        return path.removeSuffix("/").split("/").last()
+    }
+}
