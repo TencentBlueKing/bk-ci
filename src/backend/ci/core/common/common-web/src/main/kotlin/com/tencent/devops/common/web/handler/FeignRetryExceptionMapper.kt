@@ -25,44 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo.enums
+package com.tencent.devops.common.web.handler
 
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-enum class JobQuotaVmType(val displayName: String) {
-    DOCKER_VM("Docker on VM"),
-    KUBERNETES("kubernetes"),
-    DOCKER_DEVCLOUD("Docker on DevCloud"),
-    MACOS_DEVCLOUD("MacOS on DevCloud"),
-    WINDOWS_DEVCLOUD("Windows on DevCloud"),
-    OTHER("私有构建机或集群"),
-    AGENTLESS("无编译环境"),
-    DOCKER_GITCI("工蜂CI构建机"),
-    DOCKER_STREAM("STREAM构建机"),
-    DOCKER_BCS("Docker on Bcs"),
-    ALL("所有类型");
-
+@BkExceptionMapper
+class FeignRetryExceptionMapper : ExceptionMapper<feign.RetryableException> {
     companion object {
-        fun parse(vmType: String): JobQuotaVmType? {
-            values().forEach {
-                if (it.name == vmType) {
-                    return it
-                }
-            }
-            return null
-        }
+        val logger = LoggerFactory.getLogger(FeignRetryExceptionMapper::class.java)!!
+    }
 
-        fun parse(dispatchType: DispatchType): JobQuotaVmType? {
-            when (dispatchType) {
-                is DockerDispatchType -> {
-                    return DOCKER_VM
-                }
-                // 其他类型暂时不限制
-                else -> {
-                    return null
-                }
-            }
+    override fun toResponse(exception: feign.RetryableException): Response {
+        logger.warn("Failed with feign time out", exception)
+        val status = Response.Status.REQUEST_TIMEOUT
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.message
+        } else {
+            "请求超时"
         }
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = status.statusCode, message = message, data = message)).build()
     }
 }

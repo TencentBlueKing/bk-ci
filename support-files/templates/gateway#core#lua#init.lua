@@ -86,7 +86,7 @@ config = {
     },
     bkrepo = {domain = "__BK_REPO_FQDN__", authorization = "__BK_CI_BKREPO_AUTHORIZATION__"},
     bkci = {host = "__BK_CI_FQDN__", port = 80},
-    kubernetes = {domain = "kubernetes.demo.com"}
+    kubernetes = {domain = "kubernetes.demo.com", codecc = {domain = "kubernetes.demo.com"}}
 }
 
 require("init_common")
