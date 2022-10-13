@@ -66,7 +66,8 @@
                     </bk-option>
                 </bk-select>
                 <bk-select v-model="filterData[filter.id]"
-                    v-for="filter in filterList" :key="filter.id"
+                    v-for="filter in filterList"
+                    :key="filter.id"
                     class="filter-item"
                     :placeholder="filter.placeholder"
                     multiple
@@ -317,7 +318,7 @@
             const getFilterData = () => {
                 return {
                     commitMsg: commitMsg || '',
-                    triggerUser: triggerUser || '',
+                    triggerUser: (triggerUser && triggerUser.split(',')) || [],
                     branch: (branch && branch.split(',')) || [],
                     event: (event && event.split(',')) || [],
                     status: (status && status.split(',')) || [],
@@ -525,7 +526,7 @@
                 this.compactPaging.current = 1
                 this.filterData = {
                     commitMsg: '',
-                    triggerUser: '',
+                    triggerUser: [],
                     branch: [],
                     event: [],
                     status: [],
@@ -557,14 +558,11 @@
             },
 
             getBuildData () {
-                let { triggerUser } = this.filterData
-                triggerUser = triggerUser ? triggerUser.split(',') : []
                 const params = {
                     page: this.compactPaging.current,
                     pageSize: this.compactPaging.limit,
                     pipelineId: this.curPipeline.pipelineId,
                     ...this.filterData,
-                    triggerUser
                 }
                 return pipelines.getPipelineBuildList(this.projectId, params).then((res = {}) => {
                     this.buildList = (res.records || []).map((build) => {
@@ -779,7 +777,7 @@
             resetFilter () {
                 this.filterData = {
                     commitMsg: '',
-                    triggerUser: '',
+                    triggerUser: [],
                     branch: [],
                     event: [],
                     status: [],
