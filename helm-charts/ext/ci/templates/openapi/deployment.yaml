@@ -87,19 +87,19 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 270
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 30
             successThreshold: 1
           readinessProbe:
             httpGet:
               path: /management/health/readinessState
               port: http
-            initialDelaySeconds: 270
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 30
             successThreshold: 1
           volumeMounts:
             - name: mypvc
