@@ -1353,7 +1353,6 @@ class TemplateFacadeService @Autowired constructor(
         }
         val template = templateDao.getTemplate(
             dslContext = dslContext,
-            projectId = projectId,
             templateId = templateId,
             versionName = versionName,
             version = version

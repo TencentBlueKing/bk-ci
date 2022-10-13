@@ -96,13 +96,17 @@ task('build', async cb => {
     fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assetJson))
     const spinner = new Ora('building bk-ci frontend project').start()
     const scopeStr = getScopeStr(scope)
-    process.env = {
-        ...process.env,
+    const envConfMap = {
         dist,
         version: type,
         lsVersion
     }
-    require('child_process').exec(`lerna run public:master ${scopeStr}`, {
+    const envQueryStr = Object.keys(envConfMap).reduce((acc, key) => {
+        acc += ` --env ${key}=${envConfMap[key]}`
+        return acc
+    }, '')
+
+    require('child_process').exec(`lerna run public:master ${scopeStr} --${envQueryStr}`, {
         maxBuffer: 5000 * 1024
     }, (err, res) => {
         if (err) {

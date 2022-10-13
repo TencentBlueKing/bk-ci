@@ -289,7 +289,7 @@ data class GithubRepository(
 //    @JsonProperty("trees_url")
 //    val treesUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/git/trees{/sha}
     @JsonProperty("updated_at")
-    val updatedAt: String, // 2022-06-21T07:54:56Z
+    val updatedAt: String?, // 2022-06-21T07:54:56Z
     @JsonProperty("url")
     val url: String, // https://github.com/yongyiduan/webhook-test
     @JsonProperty("visibility")

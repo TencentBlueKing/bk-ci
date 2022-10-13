@@ -47,7 +47,18 @@ class NodeJsAtomBusHandleHandleServiceImpl : AtomBusHandleService {
     }
 
     override fun handleOsArch(osName: String, osArch: String): String {
-        return when (OSType.valueOf(osName.toUpperCase())) {
+        val osType = when (osName.toLowerCase()) {
+            "darwin" -> {
+                OSType.MAC_OS
+            }
+            "win" -> {
+                OSType.WINDOWS
+            }
+            else -> {
+                OSType.valueOf(osName.toUpperCase())
+            }
+        }
+        return when (osType) {
             OSType.LINUX, OSType.MAC_OS -> {
                 if (osArch.contains("arm")) {
                     "arm64"

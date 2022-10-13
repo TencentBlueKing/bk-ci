@@ -82,7 +82,7 @@ object WorkspaceUtils {
                     ReplacementUtils.replace(
                         workspace,
                         object : KeyReplacement {
-                            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+                            override fun getReplacement(key: String): String? {
                                 return variables[key]
                                     ?: throw IllegalArgumentException("工作空间未定义变量(undefined variable): $workspace")
                             }

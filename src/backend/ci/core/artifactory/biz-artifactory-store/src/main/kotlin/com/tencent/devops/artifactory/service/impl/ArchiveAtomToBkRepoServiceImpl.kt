@@ -1,6 +1,5 @@
 package com.tencent.devops.artifactory.service.impl
 
-import com.tencent.devops.artifactory.client.bkrepo.DefaultBkRepoClient
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
@@ -11,6 +10,7 @@ import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.archive.client.BkRepoClient
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -22,7 +22,7 @@ import javax.ws.rs.NotFoundException
 @Service
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
 class ArchiveAtomToBkRepoServiceImpl(
-    private val bkRepoClient: DefaultBkRepoClient
+    private val bkRepoClient: BkRepoClient
 ) : ArchiveAtomServiceImpl() {
 
     override fun getAtomArchiveBasePath(): String {

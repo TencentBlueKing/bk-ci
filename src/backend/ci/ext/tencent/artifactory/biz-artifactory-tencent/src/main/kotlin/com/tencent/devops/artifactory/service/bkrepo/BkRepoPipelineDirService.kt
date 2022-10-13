@@ -32,7 +32,6 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineDirService
 import com.tencent.devops.artifactory.service.PipelineService
-import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.util.timestamp
@@ -115,7 +114,7 @@ class BkRepoPipelineDirService @Autowired constructor(
                 )
             }
         }
-        return JFrogUtil.sort(fileInfoList)
+        return PathUtils.sort(fileInfoList)
     }
 
     fun getPipelinePathList(projectId: String, path: String, fileList: List<com.tencent.bkrepo.generic.pojo.FileInfo>): List<FileInfo> {
@@ -146,7 +145,7 @@ class BkRepoPipelineDirService @Autowired constructor(
                 )
             }
         }
-        return JFrogUtil.sort(fileInfoList)
+        return PathUtils.sort(fileInfoList)
     }
 
     fun getBuildPathList(projectId: String, path: String, fileList: List<com.tencent.bkrepo.generic.pojo.FileInfo>): List<FileInfo> {
@@ -170,7 +169,7 @@ class BkRepoPipelineDirService @Autowired constructor(
                 artifactoryType = ArtifactoryType.PIPELINE
             )
         }
-        return JFrogUtil.sort(fileInfoList)
+        return PathUtils.sort(fileInfoList)
     }
 
     override fun show(userId: String, projectId: String, path: String): FileDetail {

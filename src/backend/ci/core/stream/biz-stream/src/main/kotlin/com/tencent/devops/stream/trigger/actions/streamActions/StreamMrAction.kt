@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitMrInfo
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import org.slf4j.LoggerFactory
 
@@ -69,6 +70,11 @@ interface StreamMrAction : BaseAction {
      * 获取当前 mr/pr 上所配置的 reviewers
      */
     fun getMrReviewers(): List<String>
+
+    /**
+     * 尝试从已有缓存中拿数据，拿不到再调接口
+     */
+    fun tryGetMrInfoFromCache(): StreamGitMrInfo? = null
 
     override fun forkMrNeedReviewers(): List<String> {
         return if (!checkMrForkReview()) {

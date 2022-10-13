@@ -113,5 +113,7 @@ data class DataPlatBuildHistory(
     @ApiModelProperty("部门ID", required = false)
     val deptId: String,
     @ApiModelProperty("中心ID", required = false)
-    val centerId: String
+    val centerId: String,
+    @ApiModelProperty("非法变量名列表", required = false)
+    val invalidKeyList: List<String>?
 )
