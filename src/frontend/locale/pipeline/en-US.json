@@ -744,6 +744,7 @@
     "jobMatrix": "Matrix Job",
     "jobOption": " Control option",
     "atomOption": "Control option",
+    "customTriggerControl": "Custom Control option",
     "paramsTips": " You can use this variable from plugins",
     "addParams": "Add parameters",
     "paramsType": "Type",

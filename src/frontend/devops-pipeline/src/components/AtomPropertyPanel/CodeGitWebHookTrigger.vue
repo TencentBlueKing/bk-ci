@@ -12,6 +12,28 @@
                 </component>
             </form-field>
         </template>
+        <form-field v-if="Object.keys(customTriggerControlModel).length">
+            <accordion show-checkbox show-content key="customTriggerControl">
+                <header class="var-header" style="height: 16px;" slot="header">
+                    <span>{{ $t('editPage.customTriggerControl') }}</span>
+                    <i class="devops-icon icon-angle-down" style="display:block"></i>
+                </header>
+                <div slot="content" class="bk-form bk-form-vertical atom-control-option">
+                    <template v-for="(obj, key) in customTriggerControlModel">
+                        <form-field :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                            <component
+                                :is="obj.component"
+                                :name="key"
+                                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"
+                                :handle-change="key === 'eventType' ? handleBlockEnable : handleMethods"
+                                :value="element[key]"
+                                v-bind="obj">
+                            </component>
+                        </form-field>
+                    </template>
+                </div>
+            </accordion>
+        </form-field>
     </div>
 </template>
 
@@ -37,6 +59,14 @@
             }
         },
         created () {
+            this.customTriggerControlModel = {}
+            const { thirdUrl, thirdSecretToken } = this.atomPropsModel
+            if (thirdUrl && thirdSecretToken) {
+                this.customTriggerControlModel.thirdUrl = thirdUrl
+                this.customTriggerControlModel.thirdSecretToken = thirdSecretToken
+                this.atomPropsModel.thirdUrl.hidden = true
+                this.atomPropsModel.thirdSecretToken.hidden = true
+            }
             if (this.element.eventType === 'MERGE_REQUEST') {
                 this.atomPropsModel.webhookQueue.hidden = false
             } else {

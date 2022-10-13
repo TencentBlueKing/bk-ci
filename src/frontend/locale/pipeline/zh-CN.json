@@ -747,6 +747,7 @@
     "jobMatrix": "Matrix Job",
     "jobOption": "流程控制选项",
     "atomOption": "流程控制选项",
+    "customTriggerControl": "自定义触发控制",
     "paramsTips": "可以在插件中引用该变量",
     "addParams": "新增变量",
     "paramsType": "变量类型",
