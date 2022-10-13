@@ -32,35 +32,34 @@ import org.slf4j.LoggerFactory
 /**
  * TOF4秘钥信息
  */
-class TOF4SecurityInfo {
+class ExtTOF4SecurityInfo {
     var enable: Boolean = false
     var token: String = ""
     var passId: String = ""
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TOF4SecurityInfo::class.java)
+        private val logger = LoggerFactory.getLogger(ExtTOF4SecurityInfo::class.java)
 
-        fun get(message: BaseMessage, encryptKey: String?): TOF4SecurityInfo {
-            if (message.v2ExtInfo.isNullOrBlank()) {
-                return TOF4SecurityInfo()
+        fun get(message: BaseMessage, encryptKey: String?): ExtTOF4SecurityInfo {
+            if (message.v2ExtInfo.isBlank()) {
+                return ExtTOF4SecurityInfo()
             }
 
             if (encryptKey.isNullOrBlank()) {
                 logger.error("TOF error, decrypt notify v2 extension, encrypt key can not be empty")
-                return TOF4SecurityInfo()
+                return ExtTOF4SecurityInfo()
             }
 
             return try {
-                val securityArr = AESUtil.decrypt(encryptKey!!, message.v2ExtInfo)
-                    .split(":")
-                TOF4SecurityInfo().apply {
+                val securityArr = AESUtil.decrypt(encryptKey, message.v2ExtInfo).split(":")
+                ExtTOF4SecurityInfo().apply {
                     enable = true
                     passId = securityArr[0]
                     token = securityArr[1]
                 }
             } catch (e: Exception) {
                 logger.error("TOF error, decrypt notify v2 extension info fail", e)
-                TOF4SecurityInfo()
+                ExtTOF4SecurityInfo()
             }
         }
     }

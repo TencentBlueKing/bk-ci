@@ -50,8 +50,8 @@ import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
-import com.tencent.devops.notify.pojo.TOF4SecurityInfo
 import com.tencent.devops.notify.service.EmailService
+import com.tencent.devops.notify.utils.TofUtil
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,10 +75,11 @@ class EmailServiceImpl @Autowired constructor(
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, message)
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun sendMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
         val emailNotifyPost = generateEmailNotifyPost(emailNotifyMessageWithOperation)
         if (emailNotifyPost == null) {
-            logger.warn("EmailNotifyPost is empty after being processed, EmailNotifyMessageWithOperation: $emailNotifyMessageWithOperation")
+            logger.warn("EmailNotifyPost is empty after being processed, $emailNotifyMessageWithOperation")
             return
         }
 
@@ -87,104 +88,57 @@ class EmailServiceImpl @Autowired constructor(
             return
         }
 
-        val tof4SecurityInfo = TOF4SecurityInfo.get(emailNotifyMessageWithOperation, tof4EncryptKey)
-        if (!tof4SecurityInfo.enable && !emailNotifyMessageWithOperation.v2ExtInfo.isNullOrBlank()) {
+        val tofConfig = TofUtil.getTofConfig(emailNotifyMessageWithOperation, configuration)
+        if (tofConfig == null) {
+            logger.info("null tofConfig , $emailNotifyMessageWithOperation")
             return
         }
-
-        val retryCount = emailNotifyMessageWithOperation.retryCount
         val id = emailNotifyMessageWithOperation.id ?: UUIDUtil.generate()
-        val tofConfs = configuration.getConfigurations(emailNotifyMessageWithOperation.tofSysId)
-        val result = when (tof4SecurityInfo.enable) {
-            // TOF4可用时
-            true ->
-                // 若是带附件
-                if (emailNotifyPost.codeccAttachFileContent != null)
-                    tof4Service.postCodeccEmailFormData(
-                        TOF4_EMAIL_URL_WITH_ATTACH,
-                        emailNotifyPost,
-                        tof4SecurityInfo.passId,
-                        tof4SecurityInfo.token,
-                        tof4Host!!
-                    )
-                else tof4Service.post(
-                    TOF4_EMAIL_URL,
-                    emailNotifyPost,
-                    tof4SecurityInfo.passId,
-                    tof4SecurityInfo.token,
-                    tof4Host!!
-                )
-
-            false ->
-                if (emailNotifyPost.codeccAttachFileContent != null)
-                    tofService.postCodeccEmailFormData(
-                        EMAIL_URL,
-                        emailNotifyPost,
-                        tofConfs!!
-                    )
-                else tofService.post(EMAIL_URL, emailNotifyPost, tofConfs!!)
+        val retryCount = emailNotifyMessageWithOperation.retryCount
+        val result = if (tofConfig["tof4Enabled"] == "true") {
+            if (emailNotifyPost.codeccAttachFileContent != null) {
+                tof4Service.postCodeccEmailFormData(TOF4_EMAIL_URL_WITH_ATTACH, emailNotifyPost, tofConfig)
+            } else {
+                tof4Service.post(TOF4_EMAIL_URL, emailNotifyPost, tofConfig)
+            }
+        } else {
+            if (emailNotifyPost.codeccAttachFileContent != null) {
+                tofService.postCodeccEmailFormData(EMAIL_URL, emailNotifyPost, tofConfig)
+            } else {
+                tofService.post(EMAIL_URL, emailNotifyPost, tofConfig)
+            }
         }
 
-        if (result.Ret == 0) {
-            // 成功
-            emailNotifyDao.insertOrUpdateEmailNotifyRecord(
-                success = true,
+        emailNotifyDao.insertOrUpdateEmailNotifyRecord(
+            success = result.Ret == 0,
+            source = emailNotifyMessageWithOperation.source,
+            id = id,
+            retryCount = retryCount,
+            lastErrorMessage = if (result.Ret == 0) null else result.ErrMsg,
+            to = emailNotifyPost.to,
+            cc = emailNotifyPost.cc,
+            bcc = emailNotifyPost.bcc,
+            sender = emailNotifyPost.from,
+            title = emailNotifyPost.title,
+            body = emailNotifyPost.content,
+            type = emailNotifyPost.emailType,
+            format = emailNotifyPost.bodyFormat,
+            priority = emailNotifyPost.priority.toInt(),
+            contentMd5 = emailNotifyPost.contentMd5,
+            frequencyLimit = emailNotifyPost.frequencyLimit,
+            tofSysId = tofConfig["sys-id"],
+            fromSysId = emailNotifyPost.fromSysId
+        )
+
+        if (result.Ret != 0 && retryCount < 3) {
+            // 开始重试
+            reSendMessage(
+                post = emailNotifyPost,
                 source = emailNotifyMessageWithOperation.source,
+                retryCount = retryCount + 1,
                 id = id,
-                retryCount = retryCount,
-                lastErrorMessage = null,
-                to = emailNotifyPost.to,
-                cc = emailNotifyPost.cc,
-                bcc = emailNotifyPost.bcc,
-                sender = emailNotifyPost.from,
-                title = emailNotifyPost.title,
-                body = emailNotifyPost.content,
-                type = emailNotifyPost.emailType,
-                format = emailNotifyPost.bodyFormat,
-                priority = emailNotifyPost.priority.toInt(),
-                contentMd5 = emailNotifyPost.contentMd5,
-                frequencyLimit = emailNotifyPost.frequencyLimit,
-                tofSysId = when (tof4SecurityInfo.enable) {
-                    true -> tof4SecurityInfo.passId
-                    false -> tofConfs!!["sys-id"]
-                },
-                fromSysId = emailNotifyPost.fromSysId
+                v2ExtInfo = emailNotifyMessageWithOperation.v2ExtInfo
             )
-        } else {
-            // 写入失败记录
-            emailNotifyDao.insertOrUpdateEmailNotifyRecord(
-                success = false,
-                source = emailNotifyMessageWithOperation.source,
-                id = id,
-                retryCount = retryCount,
-                lastErrorMessage = result.ErrMsg,
-                to = emailNotifyPost.to,
-                cc = emailNotifyPost.cc,
-                bcc = emailNotifyPost.bcc,
-                sender = emailNotifyPost.from,
-                title = emailNotifyPost.title,
-                body = emailNotifyPost.content,
-                type = emailNotifyPost.emailType,
-                format = emailNotifyPost.bodyFormat,
-                priority = emailNotifyPost.priority.toInt(),
-                contentMd5 = emailNotifyPost.contentMd5,
-                frequencyLimit = emailNotifyPost.frequencyLimit,
-                tofSysId = when (tof4SecurityInfo.enable) {
-                    true -> tof4SecurityInfo.passId
-                    false -> tofConfs!!["sys-id"]
-                },
-                fromSysId = emailNotifyPost.fromSysId
-            )
-            if (retryCount < 3) {
-                // 开始重试
-                reSendMessage(
-                    post = emailNotifyPost,
-                    source = emailNotifyMessageWithOperation.source,
-                    retryCount = retryCount + 1,
-                    id = id,
-                    v2ExtInfo = emailNotifyMessageWithOperation.v2ExtInfo
-                )
-            }
         }
     }
 
@@ -276,6 +230,7 @@ class EmailServiceImpl @Autowired constructor(
         return post
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     private fun filterReceivers(
         receivers: Set<String>,
         contentMd5: String,
@@ -319,7 +274,8 @@ class EmailServiceImpl @Autowired constructor(
                 fromSysId = fromSysId,
                 createdTimeSortOrder = createdTimeSortOrder
             )
-            emailRecords.stream().map(this::parseFromTNotifyEmailToResponse)?.collect(Collectors.toList()) ?: listOf()
+            emailRecords.stream().map(this::parseFromTNotifyEmailToResponse)?.collect(Collectors.toList())
+                ?: listOf()
         }
         return NotificationResponseWithPage(
             count = count,
@@ -329,16 +285,21 @@ class EmailServiceImpl @Autowired constructor(
         )
     }
 
-    private fun parseFromTNotifyEmailToResponse(record: TNotifyEmailRecord): NotificationResponse<EmailNotifyMessageWithOperation> {
+    private fun parseFromTNotifyEmailToResponse(
+        record: TNotifyEmailRecord
+    ): NotificationResponse<EmailNotifyMessageWithOperation> {
         val receivers: MutableSet<String> = mutableSetOf()
-        if (!record.to.isNullOrEmpty())
+        if (!record.to.isNullOrEmpty()) {
             receivers.addAll(record.to.split(";"))
+        }
         val cc: MutableSet<String> = mutableSetOf()
-        if (!record.cc.isNullOrEmpty())
+        if (!record.cc.isNullOrEmpty()) {
             cc.addAll(record.cc.split(";"))
+        }
         val bcc: MutableSet<String> = mutableSetOf()
-        if (!record.bcc.isNullOrEmpty())
+        if (!record.bcc.isNullOrEmpty()) {
             bcc.addAll(record.bcc.split(";"))
+        }
 
         val message = EmailNotifyMessageWithOperation()
         message.apply {
@@ -362,8 +323,16 @@ class EmailServiceImpl @Autowired constructor(
         return NotificationResponse(
             id = record.id,
             success = record.success,
-            createdTime = if (record.createdTime == null) null else DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-            updatedTime = if (record.updatedTime == null) null else DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
+            createdTime = if (record.createdTime == null) {
+                null
+            } else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime)
+            },
+            updatedTime = if (record.updatedTime == null) {
+                null
+            } else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime)
+            },
             contentMD5 = record.contentMd5,
             notificationMessage = message
         )
