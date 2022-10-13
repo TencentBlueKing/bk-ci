@@ -97,23 +97,25 @@ class AuthCronManager @Autowired constructor(
      */
     @Scheduled(cron = "0 0 1 * * ?")
     fun checkExpiringManager() {
-        val redisLock = RedisLock(redisOperation, AUTH_EXPIRING_MANAGAER_APPROVAL, 60L)
-        try {
-            logger.info("AuthCronManager|checkExpiringManager|start")
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                authManagerApprovalService.checkExpiringManager()
-                logger.info("AuthCronManager|checkExpiringManager|finish")
-            } else {
-                logger.info("AuthCronManager|checkExpiringManager | running")
+        RedisLock(redisOperation, AUTH_EXPIRING_MANAGAER_APPROVAL, expiredTimeInSeconds).use { redisLock ->
+            try {
+                logger.info("AuthCronManager|checkExpiringManager|start")
+                val lockSuccess = redisLock.tryLock()
+                if (lockSuccess) {
+                    authManagerApprovalService.checkExpiringManager()
+                    logger.info("AuthCronManager|checkExpiringManager |finish")
+                } else {
+                    logger.info("AuthCronManager|checkExpiringManager | running")
+                }
+            } catch (e: Throwable) {
+                logger.warn("AuthCronManager|checkExpiringManager | error", e)
             }
-        } catch (e: Throwable) {
-            logger.warn("AuthCronManager|checkExpiringManager | error", e)
         }
     }
 
     companion object {
         val logger = LoggerFactory.getLogger(AuthCronManager::class.java)
         private const val AUTH_EXPIRING_MANAGAER_APPROVAL = "auth:expiring:manager:approval"
+        private const val expiredTimeInSeconds = 60L
     }
 }

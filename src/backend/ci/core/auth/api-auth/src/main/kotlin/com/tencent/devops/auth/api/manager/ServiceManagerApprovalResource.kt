@@ -45,7 +45,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceManagerApprovalResource {
     @POST
-    @Path("/user/renewal")
+    @Path("/user_renewal")
     @ApiOperation("用户续期权限")
     fun userRenewalAuth(
         @ApiParam(value = "审批单ID")
@@ -57,7 +57,7 @@ interface ServiceManagerApprovalResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/manager")
+    @Path("/manager_approval")
     @ApiOperation("审批人审批")
     fun managerApproval(
         @ApiParam(value = "审批单ID")
