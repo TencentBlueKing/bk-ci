@@ -25,14 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo.bkrepo
+package com.tencent.devops.common.archive.pojo
 
-import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.artifactory.pojo.Property
-import com.tencent.devops.artifactory.util.BkRepoUtils
-import com.tencent.devops.common.api.util.timestamp
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import com.tencent.bkrepo.generic.pojo.FileInfo
 
 data class QueryNodeInfo(
     var createdBy: String,
@@ -48,25 +43,21 @@ data class QueryNodeInfo(
     var md5: String? = null,
     var projectId: String,
     var repoName: String,
-    var metadata: Map<String, String>? = mapOf()
+    var metadata: Map<String, String>?
 ) {
-    fun toFileInfo(): FileInfo {
-        return FileInfo(
-            name = name,
-            fullName = name,
-            path = "$projectId/$repoName$fullPath",
-            fullPath = fullPath,
-            size = size,
-            folder = folder,
-            modifiedTime = LocalDateTime.parse(lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-            artifactoryType = BkRepoUtils.parseArtifactoryType(repoName),
-            properties = if (metadata == null) {
-                listOf()
-            } else {
-                metadata!!.map { Property(it.key, it.value) }
-            },
-            appVersion = "",
-            shortUrl = ""
-        )
-    }
+    fun toFileInfo() = FileInfo(
+        createdBy = createdBy,
+        createdDate = createdDate,
+        lastModifiedBy = lastModifiedBy,
+        lastModifiedDate = lastModifiedDate,
+        folder = folder,
+        path = path,
+        name = name,
+        fullPath = fullPath,
+        size = size,
+        sha256 = sha256,
+        md5 = md5,
+        projectId = projectId,
+        repoName = repoName
+    )
 }
