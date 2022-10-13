@@ -27,9 +27,11 @@
 
 package com.tencent.devops.artifactory.util
 
+import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import java.net.URLEncoder
 import java.nio.file.Paths
+import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 
 object PathUtils {
@@ -59,5 +61,61 @@ object PathUtils {
                         "utf-8"
                     )
                 }"
+    }
+
+    fun isFolder(path: String): Boolean {
+        return path.endsWith("/")
+    }
+
+    fun getParentFolder(path: String): String {
+        return if (isFolder(path)) path.removeSuffix("${getFileName(path)}/")
+        else path.removeSuffix(getFileName(path))
+    }
+
+    fun getFileName(path: String): String {
+        return path.removeSuffix("/").split("/").last()
+    }
+
+    /**
+     * 文件排序
+     * 文件夹在文件之上
+     * asc = true 文件名短在文件名长之上
+     * asc = false 文件名短在文件名长之下
+     */
+    fun sort(fileInfoList: List<FileInfo>, asc: Boolean = true): List<FileInfo> {
+        val ascInt = if (asc) 1 else -1
+        return fileInfoList.sortedWith(Comparator { file1, file2 ->
+            when {
+                // 文件夹排在文件之上
+                file1.folder && !file2.folder -> -1
+                !file1.folder && file2.folder -> 1
+
+                // 文件名短在文件名长之上
+//                file1.name.length < file2.name.length -> -ascInt
+//                file1.name.length > file2.name.length -> ascInt
+
+                // 根据最后修改时间倒叙
+                file1.modifiedTime < file2.modifiedTime -> ascInt
+                file1.modifiedTime > file2.modifiedTime -> -ascInt
+
+                // 类型相同长度相同，字母序排列
+                else -> {
+                    file1.name.compareTo(file2.name) * ascInt
+                }
+            }
+        })
+    }
+
+    /**
+     * 根据manifest文件路径解析镜像名称和版本
+     * eg: /jq/manifest/1.0.0/manifest.json
+     */
+    fun getImageNameAndVersion(manifestPath: String): Pair<String, String> {
+        val pattern = Pattern.compile("/(.*)/manifest/(.*)/manifest.json")
+        val matcher = pattern.matcher(manifestPath)
+        if (!matcher.find()) {
+            throw IllegalArgumentException("illegal manifestPath: $manifestPath")
+        }
+        return Pair(matcher.group(1), matcher.group(2))
     }
 }
