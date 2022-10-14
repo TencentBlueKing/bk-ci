@@ -28,11 +28,11 @@ class PathStreamFilter(
         for (i in prefixPathList.indices) {
             val pattern = Pattern.compile(prefixPathList[i].replace("*", "\\S*"))
             val matcher = pattern.matcher(fullPathList[i])
-            if (prefixPathList[i] == "*" || matcher.matches()) {
-                return true
+            if (prefixPathList[i] != "*" && !matcher.matches()) {
+                return false
             }
         }
 
-        return false
+        return true
     }
 }
