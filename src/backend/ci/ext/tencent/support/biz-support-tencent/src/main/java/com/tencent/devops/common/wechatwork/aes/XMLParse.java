@@ -43,6 +43,8 @@ import java.io.StringReader;
  *
  * 提供提取消息格式中的密文及生成回复消息格式的接口.
  */
+@Deprecated
+// 请使用XMLParseV2
 class XMLParse {
 
 	/**

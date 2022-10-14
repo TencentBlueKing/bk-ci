@@ -94,7 +94,8 @@ class YamlTemplateService @Autowired constructor(
                 val ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
                     gitProjectKey = targetRepo!!.repository,
                     action = extraParameters,
-                    getProjectInfo = extraParameters.api::getGitProjectInfo
+                    getProjectInfo = extraParameters.api::getGitProjectInfo,
+                    cred = extraParameters.getGitCred()
                 )!!.defaultBranch!!
                 val content = extraParameters.api.getFileContent(
                     cred = extraParameters.getGitCred(),
@@ -165,7 +166,8 @@ class YamlTemplateService @Autowired constructor(
             val acrossGitProjectId = streamTriggerCache.getAndSaveRequestGitProjectInfo(
                 gitProjectKey = nowRepoId!!,
                 action = extraParameters,
-                getProjectInfo = extraParameters.api::getGitProjectInfo
+                getProjectInfo = extraParameters.api::getGitProjectInfo,
+                cred = extraParameters.getGitCred()
             )!!.gitProjectId
             logger.info("YamlTemplateService|getTemplate|getTicket|acrossGitProjectId|$acrossGitProjectId")
             try {

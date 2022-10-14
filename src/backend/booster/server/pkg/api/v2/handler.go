@@ -85,7 +85,7 @@ func SendMessage(req *restful.Request, resp *restful.Response) {
 				blog.Infof("send message: request from client(%s) has null project id", ip)
 			}
 			blog.Infof("send message: got null project id, not sent")
-			api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: api.ServerErrSendMessageFailed, Message: err.Error()})
+			api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: api.ServerErrSendMessageFailed, Message: "null project id"})
 			return
 		}
 		if data, err = defaultManager.SendProjectMessage(param.ProjectID, []byte(param.Extra)); err != nil {

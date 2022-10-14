@@ -171,7 +171,7 @@ object PipelineVarUtil {
         "ci.workspace" to WORKSPACE,
         "ci.pipeline_id" to PIPELINE_ID,
         "ci.pipeline_name" to PIPELINE_NAME,
-        "ci.actor" to PIPELINE_START_USER_ID,
+        "ci.actor" to PIPELINE_START_USER_NAME,
         "ci.build_id" to PIPELINE_BUILD_ID,
         "ci.build_num" to PIPELINE_BUILD_NUM,
         "ci.pipeline_start_time" to PIPELINE_TIME_START,

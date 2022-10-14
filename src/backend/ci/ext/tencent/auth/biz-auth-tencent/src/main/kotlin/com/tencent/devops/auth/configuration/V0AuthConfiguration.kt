@@ -36,10 +36,12 @@ import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 
 @Configuration
 class V0AuthConfiguration {
     @Bean
+    @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
     fun defaultPermissionServiceImpl(
         authPermissionApi: AuthPermissionApi,
@@ -47,6 +49,7 @@ class V0AuthConfiguration {
     ) = V0AuthPermissionServiceImpl(authPermissionApi, serviceCodeService)
 
     @Bean
+    @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
     fun defaultPermissionProjectServiceImpl(
         authProjectApi: AuthProjectApi,

@@ -109,10 +109,10 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 90
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           readinessProbe:
             httpGet:
@@ -121,7 +121,7 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           volumeMounts:
             - name: storage

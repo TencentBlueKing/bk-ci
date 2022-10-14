@@ -28,7 +28,7 @@
 package com.tencent.devops.artifactory.service.bkrepo
 
 import com.tencent.devops.artifactory.service.ReportService
-import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.service.config.CommonConfig
@@ -56,7 +56,7 @@ class BkRepoReportService @Autowired constructor(
     ) {
         logger.info("get, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
             "elementId: $elementId, path: $path")
-        val normalizedPath = JFrogUtil.normalize(path)
+        val normalizedPath = PathUtils.normalize(path)
         val realPath = "/$pipelineId/$buildId/$elementId/${normalizedPath.removePrefix("/")}"
         bkRepoClient.getFileDetail(userId, projectId, RepoUtils.REPORT_REPO, realPath)
             ?: throw NotFoundException("文件($path)不存在")
