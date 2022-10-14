@@ -22,13 +22,13 @@ test-unit:
 	GO111MODULE=on go test $(GOFLAGS) -run $(TESTS) $(PKG) $(TESTFLAGS)
 
 .PHONY: build.amd64
-build.amd64: test
+build.amd64: test clean
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
  	go build -ldflags "-X main.configDir=$(CONFIG_DIR) -X main.outDir=$(OUT_DIR) -X main.debug=true" \
  	-o bin/kubernetes-manager-amd64 ./cmd/apiserver/apiserver.go
 
 .PHONY: build.arm64v8
-build.arm64v8: test
+build.arm64v8: test clean
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 \
 	go build -ldflags "-X main.configDir=$(CONFIG_DIR) -X main.outDir=$(OUT_DIR) -X main.debug=true" \
 	-o bin/kubernetes-manager-arm64v8 ./cmd/apiserver/apiserver.go
