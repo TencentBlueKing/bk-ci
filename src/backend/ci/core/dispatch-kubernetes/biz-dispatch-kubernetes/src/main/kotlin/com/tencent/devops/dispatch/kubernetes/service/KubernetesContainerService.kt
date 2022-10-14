@@ -86,6 +86,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.stream.Collectors
 
 @Service("kubernetesContainerService")
 class KubernetesContainerService @Autowired constructor(
@@ -125,6 +126,9 @@ class KubernetesContainerService @Autowired constructor(
     override val sleepEntrypoint: String = "sleep.sh"
 
     override val helpUrl: String? = ""
+
+    @Value("\${kubernetes.gateway.webConsoleProxy}")
+    val webConsoleProxy: String = ""
 
     override fun getBuilderStatus(
         buildId: String,
@@ -382,7 +386,21 @@ class KubernetesContainerService @Autowired constructor(
         staffName: String,
         builderName: String
     ): String {
-        return kubernetesBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
+        if (webConsoleProxy.isEmpty()) {
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorType,
+                errorCode = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorCode,
+                formatErrorMessage = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.formatErrorMessage,
+                errorMessage = "webConsoleProxy is empty"
+            )
+        }
+        val websocketUrl = kubernetesBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
+        val list = websocketUrl.split("/").toList()
+        val targetHost = list[2]
+        val newWsUrl = StringBuilder(webConsoleProxy)
+            .append(list.subList(3, list.size).stream().collect(Collectors.joining("/")))
+            .append("?targetHost=$targetHost")
+        return newWsUrl.toString()
     }
 
     override fun buildAndPushImage(
