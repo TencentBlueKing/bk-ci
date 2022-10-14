@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	corev1 "k8s.io/api/core/v1"
+	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -166,8 +167,8 @@ func DebugBuilderUrl(urlPerfix string, builderName string) (url string, err erro
 	return fmt.Sprintf("ws://%s%s/%s/%s", config.Config.Gateway.Url, urlPerfix, podName, containerName), nil
 }
 
-const defaultCols = 200
-const defaultRows = 40
+const defaultCols = 144
+const defaultRows = 24
 
 const (
 	stdin = iota
@@ -259,6 +260,9 @@ func DebugBuilder(ws *websocket.Conn, podName string, containerName string) {
 					}
 				}
 			}
+
+			// 去掉尾部的换行符方便页面展示
+			replyMsg = []byte(strings.TrimSuffix(string(replyMsg), "\n"))
 
 			//写入client数据
 			if err = ws.WriteMessage(websocket.TextMessage, replyMsg); err != nil {
