@@ -373,6 +373,12 @@
             }
         },
 
+        beforeRouteEnter (to, from, next) {
+            next((vm) => {
+                vm.initBuildData()
+            })
+        },
+
         computed: {
             ...mapState(['curPipeline', 'projectId', 'projectInfo', 'permission']),
 
