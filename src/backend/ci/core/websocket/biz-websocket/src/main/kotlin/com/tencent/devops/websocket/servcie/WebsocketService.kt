@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
-import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
 import com.tencent.devops.websocket.event.ClearSessionEvent
@@ -42,7 +41,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -57,9 +55,6 @@ class WebsocketService @Autowired constructor(
 
     @Value("\${transferData:false}")
     private val needTransfer: Boolean = false
-
-    @Value("\${session.timeout:5}")
-    private val sessionTimeOut: Long? = null
 
     @Value("\${session.maxCount:50}")
     private val cacheMaxSession: Int? = null
@@ -235,23 +230,6 @@ class WebsocketService @Autowired constructor(
 
     fun clearLongSessionPage() {
         longSessionList.clear()
-    }
-
-    fun createTimeoutSession(sessionId: String, userId: String) {
-        val timeout = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(sessionTimeOut!!)
-        val redisData = "$sessionId#$userId&$timeout"
-        // hash后对1000取模，将数据打散到1000个桶内
-        var bucket = redisData.hashCode().rem(WebsocketKeys.REDIS_MO)
-        if (bucket < 0) bucket *= -1
-        val redisHashKey = WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket
-        logger.info("redis hash sessionId[$sessionId] userId[$userId] redisHashKey[$redisHashKey]")
-        var timeoutData = redisOperation.get(redisHashKey)
-        if (timeoutData == null) {
-            redisOperation.set(redisHashKey, redisData, null, true)
-        } else {
-            timeoutData = "$timeoutData,$redisData"
-            redisOperation.set(redisHashKey, timeoutData, null, true)
-        }
     }
 
     fun getMaxSession(): Int? {
