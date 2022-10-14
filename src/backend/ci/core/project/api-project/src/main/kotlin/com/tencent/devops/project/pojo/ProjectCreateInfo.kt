@@ -67,5 +67,7 @@ data class ProjectCreateInfo(
     @ApiModelProperty("kind")
     val kind: Int = 0,
     @ApiModelProperty("项目相关配置")
-    val properties: ProjectProperties? = null
+    val properties: ProjectProperties? = null,
+    @ApiModelProperty("项目最大可授权人员范围")
+    val subjectScopes: List<SubjectScope>? = emptyList()
 )

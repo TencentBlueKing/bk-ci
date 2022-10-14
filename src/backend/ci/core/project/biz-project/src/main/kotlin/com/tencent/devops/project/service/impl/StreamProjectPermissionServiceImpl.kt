@@ -32,6 +32,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,7 +57,8 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        userDeptDetail: UserDeptDetail?,
+        subjectScopes: List<SubjectScope>?
     ): String {
         return ""
     }
