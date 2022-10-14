@@ -15,9 +15,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-]]
-
-_M = {}
+]] _M = {}
 
 function _M:get_staff_info(ckey)
     if ckey == nil then
@@ -32,15 +30,35 @@ function _M:get_staff_info(ckey)
     if itlogin_value == nil then
         --- 初始化HTTP连接
         local httpc = http.new()
+        if httpc == nil then
+            ngx.log(ngx.ERR, "get httpc failed")
+            ngx.exit(500)
+            return
+        end
         --- 开始连接
         httpc:set_timeout(3000)
-        httpc:connect(config.itlogin.ip, config.itlogin.port)
+        httpc:connect(config.itlogin.host, config.itlogin.port)
+
+        --- RIO鉴权
+        local timestamp = ngx.time()
+        local token = "f471eda88cd6107cd9eb3ea3c168a13d363a6fe63f310193f086"
+        local sn = timestamp .. token .. timestamp
+        local resty_sha256 = require "resty.sha256"
+        local resty_str = require "resty.string"
+        local sha256 = resty_sha256:new()
+        sha256:update(sn)
+        local digest = sha256:final()
+        local signature = resty_str.str_to_hex(digest)
+
         --- 发送请求
         local res, err = httpc:request({
-            path = "/devops/dm/api/user/credentialkey.php",
+            path = "/devops-itlogin/dm/api/user/credentialkey.php",
             method = "POST",
             headers = {
                 ["Host"] = config.itlogin.host,
+                ["Timestamp"] = tostring(timestamp),
+                ["Signature"] = signature,
+                ["x-rio-seq"] = "",
                 ["Accept"] = "application/json",
                 ["Content-Type"] = "application/x-www-form-urlencoded",
                 ["X-Protocol-Version"] = "ITLoginV1.1",
@@ -72,7 +90,7 @@ function _M:get_staff_info(ckey)
         local result = json.decode(responseBody)
 
         --- 判断JSON转换是否成功
-        if result == nil then 
+        if result == nil then
             ngx.log(ngx.ERR, "failed to parse ckey info response：", responseBody)
             ngx.exit(500)
             return
