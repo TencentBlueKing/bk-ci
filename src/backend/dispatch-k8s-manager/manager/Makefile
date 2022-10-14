@@ -47,11 +47,11 @@ release.arm64v8: test
 
 .PHONY: image.amd64
 image.amd64: clean release.amd64
-	docker build -f ./build/Dockerfile --build-arg ARCH="amd64" -t $(LOCAL_REGISTRY)/$(LOCAL_IMAGE) .
+	docker build -f ./docker/Dockerfile --build-arg ARCH="amd64" -t $(LOCAL_REGISTRY)/$(LOCAL_IMAGE) .
 
 .PHONY: image.arm64v8
 image.arm64v8: clean release.arm64v8
-	docker build -f ./build/Dockerfile --build-arg ARCH="arm64v8" -t $(LOCAL_REGISTRY)/$(LOCAL_IMAGE) .
+	docker build -f ./docker/Dockerfile --build-arg ARCH="arm64v8" -t $(LOCAL_REGISTRY)/$(LOCAL_IMAGE) .
 
 .PHONY: clean
 clean:
