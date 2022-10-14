@@ -32,13 +32,14 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.websocket.api.UserWebsocketResource
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 
 @RestResource
 class UserWebsocketResourceImpl @Autowired constructor(
-    val websocketService: WebsocketService
-
+    val websocketService: WebsocketService,
+    val streamBridge: StreamBridge
 ) : UserWebsocketResource {
     override fun clearSession(userId: String, sessionId: String): Result<Boolean> {
-        return websocketService.clearAllBySession(userId, sessionId)
+        return websocketService.clearAllBySession(streamBridge, userId, sessionId)
     }
 }

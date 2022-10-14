@@ -63,7 +63,7 @@ class SessionHandler @Autowired constructor(
             super.afterConnectionClosed(session, closeStatus)
         } else {
             logger.info("connection closed closeStatus[$closeStatus] user[$userId] page[$page], session[$sessionId]")
-            websocketService.clearAllBySession(userId, sessionId)
+            websocketService.removeCacheSession(sessionId)
         }
 
         super.afterConnectionClosed(session, closeStatus)

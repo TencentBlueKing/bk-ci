@@ -71,9 +71,7 @@ class WebsocketConfiguration {
     }
 
     @Bean
-    fun transferDispatch(
-        streamBridge: StreamBridge
-    ): TransferDispatch {
-        return TransferDispatch(streamBridge)
+    fun transferDispatch(): TransferDispatch {
+        return TransferDispatch()
     }
 }
