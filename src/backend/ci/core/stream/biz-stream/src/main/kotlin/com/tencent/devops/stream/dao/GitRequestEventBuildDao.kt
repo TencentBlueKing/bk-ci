@@ -626,6 +626,23 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun getProjectLocalBranches(
+        dslContext: DSLContext,
+        projectId: Long,
+        branchName: String?,
+        limit: Int,
+        offset: Int
+    ): List<String> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.select(BRANCH).from(this)
+                .where(GIT_PROJECT_ID.eq(projectId))
+            if (!branchName.isNullOrBlank()) {
+                dsl.and(BRANCH.like("%$branchName%"))
+            }
+            return dsl.groupBy(BRANCH).orderBy(ID).limit(limit).offset(offset).fetch().map { it.value1() }
+        }
+    }
+
     fun deleteBuildByPipelineIds(
         dslContext: DSLContext,
         pipelineIds: Set<String>
@@ -720,6 +737,7 @@ class GitRequestEventBuildDao {
                 .execute()
         }
     }
+
     fun getPipelinesLastBuild(
         dslContext: DSLContext,
         gitProjectId: Long,
@@ -732,6 +750,7 @@ class GitRequestEventBuildDao {
                 .fetch()
         }
     }
+
     fun getLastEventBuildIds(
         dslContext: DSLContext,
         pipelineIds: Set<String>
