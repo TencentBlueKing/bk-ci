@@ -36,11 +36,14 @@ import com.tencent.devops.websocket.event.ChangePageTransferEvent
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
 import com.tencent.devops.websocket.event.LoginOutTransferEvent
+import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.websocket.utils.PageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -56,6 +59,9 @@ class WebsocketService @Autowired constructor(
     @Value("\${transferData:false}")
     private val needTransfer: Boolean = false
 
+    @Value("\${session.timeout:5}")
+    private val sessionTimeOut: Long? = null
+
     @Value("\${session.maxCount:50}")
     private val cacheMaxSession: Int? = null
 
@@ -65,6 +71,7 @@ class WebsocketService @Autowired constructor(
 
     // 用户切换页面，需调整sessionId-page,page-sessionIdList两个map
     fun changePage(
+        streamBridge: StreamBridge,
         userId: String,
         sessionId: String,
         newPage: String,
@@ -101,6 +108,7 @@ class WebsocketService @Autowired constructor(
             logger.info("sessionPage[session:$sessionId,page:$normalPage]")
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
+                    streamBridge,
                     ChangePageTransferEvent(
                         userId = userId,
                         page = newPage,
@@ -114,6 +122,7 @@ class WebsocketService @Autowired constructor(
     }
 
     fun loginOut(
+        streamBridge: StreamBridge,
         userId: String,
         sessionId: String,
         oldPage: String?,
@@ -142,6 +151,7 @@ class WebsocketService @Autowired constructor(
 //            cleanUserSessionBySessionId(redisOperation, userId, sessionId)
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
+                    streamBridge,
                     LoginOutTransferEvent(
                         userId = userId,
                         page = oldPage,
@@ -154,7 +164,12 @@ class WebsocketService @Autowired constructor(
         }
     }
 
-    fun clearUserSession(userId: String, sessionId: String, transferData: Map<String, Any>?) {
+    fun clearUserSession(
+        streamBridge: StreamBridge,
+        userId: String,
+        sessionId: String,
+        transferData: Map<String, Any>?
+    ) {
         val redisLock = lockUser(sessionId)
         try {
             redisLock.lock()
@@ -165,6 +180,7 @@ class WebsocketService @Autowired constructor(
             removeCacheSession(sessionId)
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
+                    streamBridge,
                     ClearUserSessionTransferEvent(
                         userId = userId,
                         page = "",
@@ -177,16 +193,21 @@ class WebsocketService @Autowired constructor(
         }
     }
 
-    fun clearAllBySession(userId: String, sessionId: String): Result<Boolean> {
+    fun clearAllBySession(
+        streamBridge: StreamBridge,
+        userId: String,
+        sessionId: String
+    ): Result<Boolean> {
         logger.info("clearSession| $userId| $sessionId")
         val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
-        clearUserSession(userId, sessionId, null)
+        clearUserSession(streamBridge, userId, sessionId, null)
         if (page != null) {
             logger.info("$userId| $sessionId|$page clear when disconnection")
-            loginOut(userId, sessionId, page)
+            loginOut(streamBridge, userId, sessionId, page)
         }
         if (!isCacheSession(sessionId)) {
             transferDispatch.dispatch(
+                streamBridge,
                 ClearSessionEvent(
                     userId = userId,
                     sessionId = sessionId,
@@ -230,6 +251,23 @@ class WebsocketService @Autowired constructor(
 
     fun clearLongSessionPage() {
         longSessionList.clear()
+    }
+
+    fun createTimeoutSession(sessionId: String, userId: String) {
+        val timeout = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(sessionTimeOut!!)
+        val redisData = "$sessionId#$userId&$timeout"
+        // hash后对1000取模，将数据打散到1000个桶内
+        var bucket = redisData.hashCode().rem(WebsocketKeys.REDIS_MO)
+        if (bucket < 0) bucket *= -1
+        val redisHashKey = WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket
+        logger.info("redis hash sessionId[$sessionId] userId[$userId] redisHashKey[$redisHashKey]")
+        var timeoutData = redisOperation.get(redisHashKey)
+        if (timeoutData == null) {
+            redisOperation.set(redisHashKey, redisData, null, true)
+        } else {
+            timeoutData = "$timeoutData,$redisData"
+            redisOperation.set(redisHashKey, timeoutData, null, true)
+        }
     }
 
     fun getMaxSession(): Int? {

@@ -30,26 +30,21 @@ package com.tencent.devops.websocket.handler
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.utils.RedisUtlis
-import com.tencent.devops.websocket.keys.WebsocketKeys
+import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse
 import org.springframework.http.server.ServletServerHttpRequest
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.WebSocketHandler
 import org.springframework.web.socket.server.HandshakeInterceptor
-import java.util.concurrent.TimeUnit
 
 @Component
 class BKHandshakeInterceptor @Autowired constructor(
-    val redisOperation: RedisOperation
+    val redisOperation: RedisOperation,
+    val websocketService: WebsocketService
 ) : HandshakeInterceptor {
-
-    @Value("\${session.timeout:5}")
-    private val sessionTimeOut: Long? = null
-
     companion object {
         private val logger = LoggerFactory.getLogger(BKHandshakeInterceptor::class.java)
     }
@@ -71,25 +66,8 @@ class BKHandshakeInterceptor @Autowired constructor(
                         userId
                     )}"
                 )
-                createTimeoutSession(sessionId, userId)
+                websocketService.createTimeoutSession(sessionId, userId)
             }
-        }
-    }
-
-    private fun createTimeoutSession(sessionId: String, userId: String) {
-        val timeout = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(sessionTimeOut!!)
-        val redisData = "$sessionId#$userId&$timeout"
-        // hash后对1000取模，将数据打散到1000个桶内
-        var bucket = redisData.hashCode().rem(WebsocketKeys.REDIS_MO)
-        if (bucket < 0) bucket *= -1
-        val redisHashKey = WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket
-        logger.info("redis hash sessionId[$sessionId] userId[$userId] redisHashKey[$redisHashKey]")
-        var timeoutData = redisOperation.get(redisHashKey)
-        if (timeoutData == null) {
-            redisOperation.set(redisHashKey, redisData, null, true)
-        } else {
-            timeoutData = "$timeoutData,$redisData"
-            redisOperation.set(redisHashKey, timeoutData, null, true)
         }
     }
 

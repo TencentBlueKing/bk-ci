@@ -30,13 +30,14 @@ package com.tencent.devops.websocket.cron
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
-import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanPageSessionByPage
 import com.tencent.devops.websocket.event.ClearSessionEvent
+import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.websocket.lock.WebsocketCronLock
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -44,7 +45,8 @@ import org.springframework.stereotype.Component
 class ClearTimeoutCron(
     private val redisOperation: RedisOperation,
     private val websocketService: WebsocketService,
-    private val transferDispatch: TransferDispatch
+    private val transferDispatch: TransferDispatch,
+    private val streamBridge: StreamBridge
 ) {
 
     companion object {
@@ -144,13 +146,14 @@ class ClearTimeoutCron(
     }
 
     fun clearSessionByMq(userId: String, sessionId: String) {
-            transferDispatch.dispatch(
-                    ClearSessionEvent(
-                            userId = userId,
-                            sessionId = sessionId,
-                            page = null,
-                            transferData = mutableMapOf()
-                    )
+        transferDispatch.dispatch(
+            streamBridge,
+            ClearSessionEvent(
+                userId = userId,
+                sessionId = sessionId,
+                page = null,
+                transferData = mutableMapOf()
             )
-        }
+        )
+    }
 }

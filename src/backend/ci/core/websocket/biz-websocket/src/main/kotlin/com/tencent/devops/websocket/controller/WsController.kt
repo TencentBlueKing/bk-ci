@@ -32,17 +32,20 @@ import com.tencent.devops.websocket.pojo.ClearUserDTO
 import com.tencent.devops.websocket.pojo.LoginOutDTO
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.stereotype.Controller
 
 @Controller
 class WsController @Autowired constructor(
-    val websocketService: WebsocketService
+    val websocketService: WebsocketService,
+    val streamBridge: StreamBridge
 ) {
 
     @MessageMapping("/changePage")
     fun changePage(changePage: ChangePageDTO) {
         websocketService.changePage(
+            streamBridge = streamBridge,
             userId = changePage.userId,
             sessionId = changePage.sessionId,
             newPage = changePage.page,
@@ -53,11 +56,22 @@ class WsController @Autowired constructor(
 
     @MessageMapping("/loginOut")
     fun loginOut(loginOutDTO: LoginOutDTO) {
-        websocketService.loginOut(loginOutDTO.userId, loginOutDTO.sessionId, loginOutDTO.page, loginOutDTO.transferData)
+        websocketService.loginOut(
+            streamBridge = streamBridge,
+            userId = loginOutDTO.userId,
+            sessionId = loginOutDTO.sessionId,
+            oldPage = loginOutDTO.page,
+            transferData = loginOutDTO.transferData
+        )
     }
 
     @MessageMapping("/clearUserSession")
     fun clearUserSession(clearUserDTO: ClearUserDTO) {
-        websocketService.clearUserSession(clearUserDTO.userId, clearUserDTO.sessionId, clearUserDTO.transferData)
+        websocketService.clearUserSession(
+            streamBridge = streamBridge,
+            userId = clearUserDTO.userId,
+            sessionId = clearUserDTO.sessionId,
+            transferData = clearUserDTO.transferData
+        )
     }
 }

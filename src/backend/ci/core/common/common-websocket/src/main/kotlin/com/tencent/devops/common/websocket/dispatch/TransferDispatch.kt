@@ -27,20 +27,17 @@
 
 package com.tencent.devops.common.websocket.dispatch
 
-import com.tencent.devops.common.stream.dispatcher.EventDispatcher
 import com.tencent.devops.common.websocket.dispatch.push.TransferPush
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
 
-class TransferDispatch(
-    private val streamBridge: StreamBridge
-) : EventDispatcher<TransferPush> {
+class TransferDispatch {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TransferDispatch::class.java)
     }
 
-    override fun dispatch(vararg events: TransferPush) {
+    fun dispatch(streamBridge: StreamBridge, vararg events: TransferPush) {
         events.forEach { event ->
             try {
                 event.sendTo(streamBridge)
