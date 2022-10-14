@@ -37,13 +37,13 @@ import com.tencent.devops.stream.api.ExternalScmResource
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestDispatcher
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ExternalScmResourceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) : ExternalScmResource {
 
     companion object {

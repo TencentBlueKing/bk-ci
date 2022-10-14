@@ -40,13 +40,13 @@ import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceScmWebhookResourceImpl @Autowired constructor(
     private val pipelineBuildService: PipelineBuildWebhookService,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineWebhookBuildLogService: PipelineWebhookBuildLogService
 ) : ServiceScmWebhookResource {

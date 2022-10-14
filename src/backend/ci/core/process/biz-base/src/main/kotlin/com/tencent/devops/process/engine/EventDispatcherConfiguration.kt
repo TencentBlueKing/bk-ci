@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean

@@ -31,7 +31,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.mq.EXCHANGE_NOTIFY_MESSAGE
 import com.tencent.devops.common.web.mq.ROUTE_NOTIFY_MESSAGE
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 
 object AlertUtils {
 

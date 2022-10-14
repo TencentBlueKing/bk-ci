@@ -48,7 +48,7 @@ import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.common.notify.utils.Configuration
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.LinkedList
@@ -59,7 +59,7 @@ import java.util.stream.Collectors
 class SmsServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val smsNotifyDao: SmsNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val configuration: Configuration
 ) : SmsService {
 

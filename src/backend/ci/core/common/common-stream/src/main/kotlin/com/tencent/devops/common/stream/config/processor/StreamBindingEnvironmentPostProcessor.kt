@@ -25,8 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.config
+package com.tencent.devops.common.stream.config.processor
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.stream.annotation.StreamEvent
 import com.tencent.devops.common.stream.annotation.StreamEventConsumer
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
@@ -41,16 +42,28 @@ import org.springframework.boot.env.EnvironmentPostProcessor
 import org.springframework.core.Ordered
 import org.springframework.core.env.ConfigurableEnvironment
 import org.springframework.core.env.PropertiesPropertySource
+import org.springframework.core.env.StandardEnvironment
+import java.util.LinkedHashMap
 import java.util.Properties
 
+@Suppress("LongMethod", "MagicNumber")
 class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered {
 
     override fun postProcessEnvironment(environment: ConfigurableEnvironment, application: SpringApplication) {
-        environment.propertySources.addLast(createPropertySource())
+        environment.propertySources.addLast(createPropertySource(environment))
     }
 
-    private fun createPropertySource(): PropertiesPropertySource {
+    private fun createPropertySource(environment: ConfigurableEnvironment): PropertiesPropertySource {
         with(Properties()) {
+            val hostName = if (environment is StandardEnvironment) {
+                val springCloudClientHostInfo = environment.propertySources.find {
+                    it.name == "springCloudClientHostInfo"
+                }?.source as LinkedHashMap<*, *>
+                springCloudClientHostInfo["spring.cloud.client.hostname"].toString()
+            } else {
+                UUIDUtil.generate().substring(0, 8)
+            }
+
             // 如果未配置服务使用的binder类型，则使用全局默认binder类型
             // 如果均未配置则不进行注解的反射解析
             val definition = mutableListOf<String>()
@@ -80,16 +93,19 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
 
             // 反射扫描所有带有 StreamConsumer 注解的bean方法
             consumerMethodBeans.forEach { method ->
-                val streamEventConsumer = method.getAnnotation(StreamEventConsumer::class.java)
-                val bindingName = DefaultBindingUtils.getInBindingName(method)
+                val consumer = method.getAnnotation(StreamEventConsumer::class.java)
+                val bindingName = DefaultBindingUtils.getInBindingName(
+                    method = method,
+                    suffix = if (consumer.separately) hostName else null
+                )
                 logger.info(
                     "Found StreamConsumer method: ${method.name}, bindingName[$bindingName], " +
-                        "with destination[${streamEventConsumer.destination}], group[${streamEventConsumer.group}]"
+                        "with destination[${consumer.destination}], group[${consumer.group}]"
                 )
                 definition.add(bindingName)
                 // 如果注解中指定了订阅组，则直接设置
                 // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
-                setBindings(bindingName, streamEventConsumer)
+                setBindings(bindingName, consumer)
             }
 
             // 反射扫描所有带有 StreamConsumer 注解的bean类型
@@ -100,17 +116,20 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                     .setScanners(Scanners.MethodsAnnotated)
             ).getTypesAnnotatedWith(StreamEventConsumer::class.java)
             consumerClassBeans.forEach { clazz ->
-                val streamEventConsumer = clazz.getAnnotation(StreamEventConsumer::class.java)
-                val bindingName = DefaultBindingUtils.getInBindingName(clazz)
+                val consumer = clazz.getAnnotation(StreamEventConsumer::class.java)
+                val bindingName = DefaultBindingUtils.getInBindingName(
+                    clazz = clazz,
+                    suffix = if (consumer.separately) hostName else null
+                )
                 logger.info(
                     "Found StreamConsumer class: ${clazz.name}, bindingName[$bindingName], " +
-                        "with destination[${streamEventConsumer.destination}], " +
-                        "group[${streamEventConsumer.group}]"
+                        "with destination[${consumer.destination}], " +
+                        "group[${consumer.group}], separately[${consumer.separately}]"
                 )
                 definition.add(bindingName)
                 // 如果注解中指定了订阅组，则直接设置
                 // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
-                setBindings(bindingName, streamEventConsumer)
+                setBindings(bindingName, consumer)
             }
 
             // 声明所有扫描结果的函数式声明

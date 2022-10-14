@@ -29,7 +29,6 @@ package com.tencent.devops.websocket.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.dispatch.message.PipelineMessage
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
@@ -39,18 +38,19 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 
-@Component@Suppress("ALL")
+@Component
+@Suppress("NestedBlockDepth", "MagicNumber")
 class WebSocketListener @Autowired constructor(
     val objectMapper: ObjectMapper,
     val messagingTemplate: SimpMessagingTemplate,
     val websocketService: WebsocketService
-) : Listener<SendMessage> {
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WebSocketListener::class.java)
     }
 
-    override fun execute(event: SendMessage) {
+    fun handleWebsocketEvent(event: SendMessage) {
         logger.debug("WebSocketListener: user:${event.userId},page:${event.page},sessionList:${event.sessionList}")
         val watcher = Watcher(id = "websocketPush|${event.userId}|${event.page}|${event.sessionList?.size ?: 0}")
         try {
@@ -96,8 +96,10 @@ class WebSocketListener @Autowired constructor(
     private fun isPushTimeOut(event: SendMessage): Boolean {
         if (event is PipelineMessage) {
             if (System.currentTimeMillis() - event.startTime > 2 * 60 * 1000) {
-                logger.warn("websocket Consumers get message timeout | " +
-                    "${event.userId} | ${event.page} | ${event.buildId} | ${event.startTime}")
+                logger.warn(
+                    "websocket Consumers get message timeout | " +
+                        "${event.userId} | ${event.page} | ${event.buildId} | ${event.startTime}"
+                )
                 return true
             }
         }

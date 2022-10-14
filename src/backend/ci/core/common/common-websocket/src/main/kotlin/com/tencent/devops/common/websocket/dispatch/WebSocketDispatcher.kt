@@ -27,41 +27,27 @@
 
 package com.tencent.devops.common.websocket.dispatch
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.EventDispatcher
+import com.tencent.devops.common.stream.dispatcher.EventDispatcher
+import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
-import com.tencent.devops.common.websocket.utils.RedisUtlis
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 
 class WebSocketDispatcher(
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) : EventDispatcher<WebsocketPush> {
 
     companion object {
-        val logger = LoggerFactory.getLogger(WebSocketDispatcher::class.java)
+        private val logger = LoggerFactory.getLogger(WebSocketDispatcher::class.java)
     }
 
     override fun dispatch(vararg events: WebsocketPush) {
         events.forEach { event ->
             try {
-                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-                val routeKey = eventType.routeKey
                 val mqMessage = event.buildMqMessage()
                 if (mqMessage?.sessionList != null && mqMessage.sessionList!!.isNotEmpty()) {
                     event.buildNotifyMessage(mqMessage)
-//                    logger.info("[WebsocketDispatcher]:mqMessageType:${mqMessage.javaClass},page:
-//                   ${mqMessage.page}, sessionList:${mqMessage.sessionList}")
-                    rabbitTemplate.convertAndSend(eventType.exchange, routeKey, mqMessage) { message ->
-                        if (eventType.delayMills > 0) { // 事件类型固化默认值
-                            message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                        }
-                        message
-                    }
-                } else {
-                    val sessionList =
-                        RedisUtlis.getSessionListFormPageSessionByPage(event.redisOperation, event.page ?: "")
-//                    logger.debug("page:${event.page},sessionList:$sessionList,but nobody load page")
+                    streamBridge.send(DefaultBindingUtils.getOutBindingName(event::class.java), mqMessage)
                 }
             } catch (ignored: Exception) {
                 logger.error("[MQ_SEVERE]Fail to dispatch the event($events)", ignored)

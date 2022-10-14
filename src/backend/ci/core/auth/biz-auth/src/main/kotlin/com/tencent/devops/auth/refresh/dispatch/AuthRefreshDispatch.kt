@@ -28,17 +28,16 @@
 package com.tencent.devops.auth.refresh.dispatch
 
 import com.tencent.devops.auth.refresh.event.RefreshBroadCastEvent
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.EventDispatcher
+import com.tencent.devops.common.stream.dispatcher.EventDispatcher
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.lang.Exception
 
 @Component
 class AuthRefreshDispatch @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) : EventDispatcher<RefreshBroadCastEvent> {
 
     companion object {
@@ -48,15 +47,7 @@ class AuthRefreshDispatch @Autowired constructor(
     override fun dispatch(vararg events: RefreshBroadCastEvent) {
         try {
             events.forEach { event ->
-                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-                val routeKey = eventType.routeKey
-                logger.info("[${eventType.exchange}|$routeKey|${event.refreshType} dispatch the refresh event")
-                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
-                    if (eventType.delayMills > 0) { // 事件类型固化默认值
-                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                    }
-                    message
-                }
+                event.sendTo(streamBridge)
             }
         } catch (e: Exception) {
             logger.error("Fail to dispatch the event($events)", e)

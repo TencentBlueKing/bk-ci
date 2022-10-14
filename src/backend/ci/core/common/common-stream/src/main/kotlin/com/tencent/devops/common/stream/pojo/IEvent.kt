@@ -39,8 +39,8 @@ import org.springframework.messaging.support.MessageBuilder
  * 流水线事件
  */
 open class IEvent(
-    open var delayMills: Int,
-    open var retryTime: Int = 1
+    open var delayMills: Int = 0,
+    var retryTime: Int = 1
 ) {
 
     /**
