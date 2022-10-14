@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.dao
 
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.stream.tables.TGitPipelineRepoResource
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
@@ -626,6 +627,25 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun getProjectLocalBranches(
+        dslContext: DSLContext,
+        projectId: Long,
+        branchName: String?,
+        pageNotNull: Int,
+        pageSizeNotNull: Int
+    ): List<String> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = pageNotNull, pageSize = pageSizeNotNull)
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.select(BRANCH).from(this)
+                .where(GIT_PROJECT_ID.eq(projectId))
+            if (!branchName.isNullOrBlank()) {
+                dsl.and(BRANCH.like("%$branchName%"))
+            }
+            return dsl.groupBy(BRANCH).orderBy(ID).limit(sqlLimit.limit).offset(sqlLimit.offset).fetch()
+                .map { it.value1() }
+        }
+    }
+
     fun deleteBuildByPipelineIds(
         dslContext: DSLContext,
         pipelineIds: Set<String>
@@ -720,6 +740,7 @@ class GitRequestEventBuildDao {
                 .execute()
         }
     }
+
     fun getPipelinesLastBuild(
         dslContext: DSLContext,
         gitProjectId: Long,
@@ -732,6 +753,7 @@ class GitRequestEventBuildDao {
                 .fetch()
         }
     }
+
     fun getLastEventBuildIds(
         dslContext: DSLContext,
         pipelineIds: Set<String>

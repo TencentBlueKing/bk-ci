@@ -62,16 +62,21 @@ class V1StreamGitProjectInfoCache @Autowired constructor(
             gitProjectId: String,
             useAccessToken: Boolean
         ) -> GitCIProjectInfo
-    ): V1GitProjectCache {
+    ): V1GitProjectCache? {
         val cache = getRequestGitProjectInfo(gitProjectName = gitProjectId.toString())
         if (cache != null) {
             return cache
         }
-        val gitProjectInfo = getProjectInfo(
-            streamGitTokenService.getToken(gitProjectId),
-            gitProjectId.toString(),
-            useAccessToken
-        )
+        val gitProjectInfo = try {
+            getProjectInfo(
+                streamGitTokenService.getToken(gitProjectId),
+                gitProjectId.toString(),
+                useAccessToken
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("fail to get prject token ,may be it is delete ${ignored.message}", ignored)
+            return null
+        }
         val cacheData = V1GitProjectCache(
             gitProjectId = gitProjectInfo.gitProjectId,
             gitHttpUrl = gitProjectInfo.gitHttpUrl,
