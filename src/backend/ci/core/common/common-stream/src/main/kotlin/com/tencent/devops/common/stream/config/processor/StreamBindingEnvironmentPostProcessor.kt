@@ -142,10 +142,6 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         setProperty("$bindingPrefix.destination", consumer.destination)
         setProperty("$bindingPrefix.group", if (consumer.separately) hostName else consumer.group)
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")
-        setProperty(
-            "$rabbitPropPrefix.consumer.consumerTagPrefix",
-            "\${spring.application.name}-${consumer.group}-\${spring.cloud.stream.instance-index}"
-        )
     }
 
     override fun getOrder(): Int {
