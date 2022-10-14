@@ -651,8 +651,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 messageCode = StoreMessageCode.USER_INSTALL_TEMPLATE_CODE_IS_INVALID,
                 params = arrayOf(
                     template.templateName,
-                    projectCodeList.joinToString(","),
-                    template.templateName
+                    projectCodeList.joinToString(",")
                 ),
                 data = false
             )
