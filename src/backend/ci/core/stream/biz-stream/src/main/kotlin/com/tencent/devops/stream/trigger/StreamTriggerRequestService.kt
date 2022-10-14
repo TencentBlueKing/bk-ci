@@ -209,6 +209,17 @@ class StreamTriggerRequestService @Autowired constructor(
             )
         }
 
+        val projectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+            gitProjectKey = action.data.getGitProjectId(),
+            action = action,
+            getProjectInfo = action.api::getGitProjectInfo
+        ) ?: throw StreamTriggerException(
+            action = action,
+            triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
+            reasonParams = listOf("ci开启人${action.data.setting.enableUser} 无当前项目执行权限, 请重新授权")
+        )
+
+        action.data.context.defaultBranch = projectInfo.defaultBranch
         // 校验mr请求是否产生冲突
         if (!action.checkMrConflict(path2PipelineExists = path2PipelineExists)) {
             return false
@@ -222,11 +233,6 @@ class StreamTriggerRequestService @Autowired constructor(
         action: BaseAction,
         path2PipelineExists: Map<String, StreamTriggerPipeline>
     ): Boolean {
-        action.data.context.defaultBranch = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-            gitProjectKey = action.data.getGitProjectId(),
-            action = action,
-            getProjectInfo = action.api::getGitProjectInfo
-        )!!.defaultBranch
         logger.info(
             "StreamTriggerRequestService|matchAndTriggerPipeline" +
                 "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
