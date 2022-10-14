@@ -42,7 +42,8 @@
                 type: String
             },
             type: {
-                type: String
+                type: String,
+                default: 'input'
             },
             value: {
                 type: [String, Array]
