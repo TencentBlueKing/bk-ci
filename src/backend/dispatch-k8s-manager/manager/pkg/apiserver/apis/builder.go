@@ -9,8 +9,13 @@ import (
 	"time"
 )
 
+const (
+	builderPrefix   = "/builders"
+	builderDebugUrl = "/debug/:podName/:containerName"
+)
+
 func initBuilderApis(r *gin.RouterGroup) {
-	builders := r.Group("/builders")
+	builders := r.Group(builderPrefix)
 	{
 		builders.GET("/:builderName/status", getBuilderStatus)
 		builders.POST("", createBuilder)
@@ -18,7 +23,7 @@ func initBuilderApis(r *gin.RouterGroup) {
 		builders.PUT("/:builderName/start", startBuilder)
 		builders.DELETE("/:builderName", deleteBuilder)
 		builders.GET("/:builderName/terminal", debugBuilderUrl)
-		builders.GET("/debug/:podName/:containerName", debugBuilder)
+		builders.GET(builderDebugUrl, debugBuilder)
 	}
 }
 

@@ -13,6 +13,12 @@ import (
 	"net/http"
 )
 
+const ApiPrefix = "/api"
+
+var NoAuthUrls = []string{
+	builderPrefix + builderDebugUrl,
+}
+
 var Trans ut.Translator
 
 // InitApis 初始化Api
@@ -39,7 +45,7 @@ func InitApis(r *gin.Engine, handlers ...gin.HandlerFunc) {
 	}
 
 	// 只给api接口添加中间件
-	apis := r.Group("/api", handlers...)
+	apis := r.Group(ApiPrefix, handlers...)
 	initJobsApis(apis)
 	initBuilderApis(apis)
 	initTasksApis(apis)
