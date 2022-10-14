@@ -73,7 +73,7 @@ class BkRepoSearchService @Autowired constructor(
         val nodeList = bkRepoClient.queryByNameAndMetadata(
             userId,
             projectId,
-            emptyList(),
+            listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO, RepoUtils.IMAGE_REPO),
             fileNameSet.toList(),
             props.associate { it },
             page,
@@ -186,7 +186,7 @@ class BkRepoSearchService @Autowired constructor(
     ): Pair<Long, List<FileInfo>> {
         logger.info("serviceSearchFileAndProperty, projectId: $projectId, searchProps: $searchProps, customized: $customized")
         val repoNames = when (customized) {
-            null -> emptyList()
+            null -> listOf(RepoUtils.CUSTOM_REPO, RepoUtils.PIPELINE_REPO, RepoUtils.IMAGE_REPO)
             true -> listOf(RepoUtils.CUSTOM_REPO)
             false -> listOf(RepoUtils.PIPELINE_REPO)
         }
