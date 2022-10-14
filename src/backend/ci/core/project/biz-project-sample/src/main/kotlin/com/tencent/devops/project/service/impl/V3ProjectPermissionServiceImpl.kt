@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
@@ -66,7 +67,8 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        userDeptDetail: UserDeptDetail?,
+        subjectScopes: List<SubjectScope>?
     ): String {
         val validateCreatePermission = authPermissionApi.validateUserResourcePermission(
             user = userId,

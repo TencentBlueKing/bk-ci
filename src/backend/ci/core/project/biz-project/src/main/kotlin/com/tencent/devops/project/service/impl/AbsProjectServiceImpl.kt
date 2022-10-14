@@ -173,7 +173,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         resourceCode = projectCreateInfo.englishName,
                         resourceName = projectCreateInfo.projectName
                     ),
-                    userDeptDetail = userDeptDetail
+                    userDeptDetail = userDeptDetail,
+                    subjectScopes = projectCreateInfo.subjectScopes
                 )
             }
         } catch (e: PermissionForbiddenException) {

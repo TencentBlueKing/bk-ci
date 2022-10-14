@@ -29,6 +29,7 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 
 interface ProjectPermissionService {
@@ -43,7 +44,8 @@ interface ProjectPermissionService {
         userId: String,
         accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        userDeptDetail: UserDeptDetail?,
+        subjectScopes: List<SubjectScope>?
     ): String
 
     fun deleteResource(projectCode: String)
