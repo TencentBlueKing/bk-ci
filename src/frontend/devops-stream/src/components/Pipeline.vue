@@ -36,6 +36,7 @@
             <job-log
                 v-else-if="Number.isInteger(editingElementPos.jobIndex)"
                 v-bind="editingElementPos"
+                :job="getJob(editingElementPos)"
                 :stages="pipeline.stages"
                 @close="closeLog"
             />

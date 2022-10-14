@@ -119,9 +119,7 @@
                     memberNoNeedApproving: this.triggerSetting.memberNoNeedApproving,
                     whitelist
                 }
-                setting.saveTriggerSetting(this.projectId, data).then(() => {
-                    this.$bkMessage({ theme: 'success', message: 'Saved successfully' })
-                }).catch((err) => {
+                setting.saveTriggerSetting(this.projectId, data).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
                     this.isSavingTrigginSetting = false
