@@ -214,7 +214,7 @@ class UserStreamGitResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         return Result(
             streamHistoryService.getProjectLocalBranches(
-                projectId = gitProjectId, branchName = search, limit = page ?: 1, offset = pageSize ?: 20
+                projectId = gitProjectId, branchName = search, page = page ?: 1, pageSize = pageSize ?: 20
             )
         )
     }

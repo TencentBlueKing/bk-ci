@@ -173,11 +173,15 @@ class StreamHistoryService @Autowired constructor(
     fun getProjectLocalBranches(
         projectId: Long,
         branchName: String?,
-        limit: Int,
-        offset: Int
+        page: Int,
+        pageSize: Int
     ): List<String> {
         return gitRequestEventBuildDao.getProjectLocalBranches(
-            dslContext = dslContext, projectId = projectId, branchName = branchName, limit = limit, offset = offset
+            dslContext = dslContext,
+            projectId = projectId,
+            branchName = branchName,
+            pageNotNull = page,
+            pageSizeNotNull = pageSize
         )
     }
 
