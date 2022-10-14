@@ -29,7 +29,7 @@ object PathMatchUtils {
                 pathList.isNotEmpty() &&
                 response.getParam()[MATCH_PATHS] == null
             return if (includePathsMatch) {
-                TriggerBody().triggerFail("on.push.paths", "change path($fileChangeSet) not match")
+                TriggerBody().triggerFail("on.push.paths", "change path($pathList) not match")
             } else {
                 TriggerBody().triggerFail("on.push.paths-ignore", "change path($pathIgnoreList) match")
             }
