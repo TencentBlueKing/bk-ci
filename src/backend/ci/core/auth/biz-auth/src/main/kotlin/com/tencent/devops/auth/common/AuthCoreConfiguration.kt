@@ -60,7 +60,7 @@ class AuthCoreConfiguration {
 
     @StreamEventConsumer(StreamBinding.QUEUE_AUTH_REFRESH_EVENT, STREAM_CONSUMER_GROUP, true)
     fun pipelineWebSocketIn(
-        @Autowired refreshListener: AuthRefreshEventListener,
+        @Autowired refreshListener: AuthRefreshEventListener
     ): Consumer<Message<RefreshBroadCastEvent>> {
         return Consumer { event: Message<RefreshBroadCastEvent> ->
             refreshListener.handleAuthRefreshEvent(event.payload)

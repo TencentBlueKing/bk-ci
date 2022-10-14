@@ -35,7 +35,6 @@ import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.listener.CacheSessionListener
 import com.tencent.devops.websocket.listener.WebSocketListener
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
