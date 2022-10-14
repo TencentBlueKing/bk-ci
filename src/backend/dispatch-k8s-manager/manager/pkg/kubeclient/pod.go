@@ -88,15 +88,17 @@ func WebSocketExecPod(podName string, containerName string) (ws *websocket.Conn,
 		Name(podName).
 		Namespace(config.Config.Kubernetes.NameSpace).
 		SubResource("exec").
-		VersionedParams(&corev1.PodExecOptions{
-			Command:   []string{"sh", "-c", "(bash || ash || sh)"},
-			Stdin:     true,
-			Stdout:    true,
-			Stderr:    true,
-			TTY:       true,
-			Container: containerName,
-		}, scheme.ParameterCodec).
-		URL()
+		VersionedParams(
+			&corev1.PodExecOptions{
+				Command:   []string{"sh", "-c", "clear; (bash || ash || sh)"},
+				Stdin:     true,
+				Stdout:    true,
+				Stderr:    true,
+				TTY:       true,
+				Container: containerName,
+			},
+			scheme.ParameterCodec,
+		).URL()
 
 	switch url.Scheme {
 	case "https":

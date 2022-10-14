@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	corev1 "k8s.io/api/core/v1"
-	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -260,9 +259,6 @@ func DebugBuilder(ws *websocket.Conn, podName string, containerName string) {
 					}
 				}
 			}
-
-			// 去掉尾部的换行符方便页面展示
-			replyMsg = []byte(strings.TrimSuffix(string(replyMsg), "\n"))
 
 			//写入client数据
 			if err = ws.WriteMessage(websocket.TextMessage, replyMsg); err != nil {
