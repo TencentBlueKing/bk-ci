@@ -47,7 +47,9 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 @Configuration
 @EnableWebSocketMessageBroker
 class WebSocketConfig @Autowired constructor(
-    private val bkHandshake: BKHandshakeInterceptor
+    private val bkHandshake: BKHandshakeInterceptor,
+    private val websocketService: WebsocketService,
+    private val redisOperation: RedisOperation
 ) : AbstractWebSocketMessageBrokerConfigurer() {
 
     @Value("\${thread.min:8}")
@@ -96,10 +98,7 @@ class WebSocketConfig @Autowired constructor(
     }
 
     @Bean
-    fun wsHandlerDecoratorFactory(
-        @Autowired websocketService: WebsocketService,
-        @Autowired redisOperation: RedisOperation
-    ): SessionWebSocketHandlerDecoratorFactory {
+    fun wsHandlerDecoratorFactory(): SessionWebSocketHandlerDecoratorFactory {
         return SessionWebSocketHandlerDecoratorFactory(websocketService, redisOperation)
     }
 }
