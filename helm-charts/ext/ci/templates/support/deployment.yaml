@@ -1,72 +1,72 @@
-#stream Deployment
-{{ if .Values.stream.enabled -}}
+#support Deployment
+{{ if .Values.support.enabled -}}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
-  name: {{ include "bkci.names.fullname" . }}-stream
+  name: {{ include "bkci.names.fullname" . }}-support
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
     app.kubernetes.io/component: microservice
-    app.kubernetes.io/name: stream
+    app.kubernetes.io/name: support
 spec:
   selector:
     matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
       app.kubernetes.io/component: microservice
-      app.kubernetes.io/name: stream
-  {{- if not .Values.stream.autoscaling.enabled }}
-  replicas: {{ .Values.stream.replicas }}
+      app.kubernetes.io/name: support
+  {{- if not .Values.support.autoscaling.enabled }}
+  replicas: {{ .Values.support.replicas }}
   {{- end }}
   template:
     metadata:
       labels: {{- include "bkci.labels.standard" . | nindent 8 }}
-        {{- if .Values.stream.podLabels }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.stream.podLabels "context" $) | nindent 8 }}
+        {{- if .Values.support.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.support.podLabels "context" $) | nindent 8 }}
         {{- end }}
         app.kubernetes.io/component: microservice
-        app.kubernetes.io/name: stream
+        app.kubernetes.io/name: support
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
-      {{- if .Values.stream.hostAliases }}
-      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.stream.hostAliases "context" $) | nindent 8 }}
+      {{- if .Values.support.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.support.hostAliases "context" $) | nindent 8 }}
       {{- end }}
-      {{- if .Values.stream.affinity }}
-      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.stream.affinity "context" $) | nindent 8 }}
+      {{- if .Values.support.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.support.affinity "context" $) | nindent 8 }}
       {{- else }}
       affinity:
-        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.stream.podAffinityPreset  "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.stream.podAntiAffinityPreset  "context" $) | nindent 10 }}
-        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.stream.nodeAffinityPreset.type "key" .Values.stream.nodeAffinityPreset.key "values" .Values.stream.nodeAffinityPreset.values) | nindent 10 }}
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.support.podAffinityPreset  "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.support.podAntiAffinityPreset  "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.support.nodeAffinityPreset.type "key" .Values.support.nodeAffinityPreset.key "values" .Values.support.nodeAffinityPreset.values) | nindent 10 }}
       {{- end }}
-      {{- if .Values.stream.nodeSelector }}
-      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.stream.nodeSelector "context" $) | nindent 8 }}
+      {{- if .Values.support.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.support.nodeSelector "context" $) | nindent 8 }}
       {{- end }}
-      {{- if .Values.stream.tolerations }}
-      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.stream.tolerations "context" .) | nindent 8 }}
+      {{- if .Values.support.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.support.tolerations "context" .) | nindent 8 }}
       {{- end }}
-      {{- if .Values.stream.priorityClassName }}
-      priorityClassName: {{ .Values.stream.priorityClassName | quote }}
+      {{- if .Values.support.priorityClassName }}
+      priorityClassName: {{ .Values.support.priorityClassName | quote }}
       {{- end }}
-      {{- if .Values.stream.podSecurityContext.enabled }}
-      securityContext: {{- omit .Values.stream.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- if .Values.support.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.support.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}        
       containers:
-        - name: stream
+        - name: support
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
-          {{- if .Values.stream.containerSecurityContext.enabled }}
-          securityContext: {{- omit .Values.stream.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- if .Values.support.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.support.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
-          {{- if .Values.stream.resources }}
-          resources: {{- toYaml .Values.stream.resources | nindent 12 }}
+          {{- if .Values.support.resources }}
+          resources: {{- toYaml .Values.support.resources | nindent 12 }}
           {{- end }}
           ports:
             - name: http
               containerPort: 80
           env:
             - name: MS_NAME
-              value: stream
+              value: support
             - name: NAMESPACE
               value: {{ .Release.Namespace }}
             - name: RELEASE_NAME
@@ -82,7 +82,7 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.name
-          workingDir: /data/workspace/stream
+          workingDir: /data/workspace/support
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
@@ -102,7 +102,7 @@ spec:
             failureThreshold: 20
             successThreshold: 1
           volumeMounts:
-          - mountPath: /data/workspace/stream/jvm
+          - mountPath: /data/workspace/support/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
       volumes:
