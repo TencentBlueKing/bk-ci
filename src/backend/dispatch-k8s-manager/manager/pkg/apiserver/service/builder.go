@@ -166,7 +166,7 @@ func DebugBuilderUrl(urlPerfix string, builderName string) (url string, err erro
 	return fmt.Sprintf("ws://%s%s/%s/%s", config.Config.Gateway.Url, urlPerfix, podName, containerName), nil
 }
 
-const defaultCols = 80
+const defaultCols = 200
 const defaultRows = 40
 
 const (
