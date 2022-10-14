@@ -34,23 +34,23 @@ build.arm64v8: test
 	-o bin/kubernetes-manager-arm64v8 ./cmd/apiserver/apiserver.go
 
 .PHONY: release.amd64
-release.amd64: test
+release.amd64: test clean
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
  	go build -ldflags "-X main.configDir=$(CONFIG_DIR) -X main.outDir=$(OUT_DIR) -X main.debug=false" \
  	-o bin/kubernetes-manager-amd64 ./cmd/apiserver/apiserver.go
 
 .PHONY: release.arm64v8
-release.arm64v8: test
+release.arm64v8: test clean
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 \
 	go build -ldflags "-X main.configDir=$(CONFIG_DIR) -X main.outDir=$(OUT_DIR) -X main.debug=false" \
 	-o bin/kubernetes-manager-arm64v8 ./cmd/apiserver/apiserver.go
 
 .PHONY: image.amd64
-image.amd64: clean release.amd64
+image.amd64: release.amd64
 	docker build -f ./docker/Dockerfile --build-arg ARCH="amd64" -t $(LOCAL_REGISTRY)/$(LOCAL_IMAGE) .
 
 .PHONY: image.arm64v8
-image.arm64v8: clean release.arm64v8
+image.arm64v8: release.arm64v8
 	docker build -f ./docker/Dockerfile --build-arg ARCH="arm64v8" -t $(LOCAL_REGISTRY)/$(LOCAL_IMAGE) .
 
 .PHONY: clean
