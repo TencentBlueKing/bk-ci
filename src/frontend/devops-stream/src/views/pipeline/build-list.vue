@@ -36,11 +36,11 @@
                     :placeholder="$t('pipeline.branch')"
                     multiple
                     searchable
-                    :loading="isLoadingBranch"
-                    :remote-method="remoteGetBranchList"
-                    @toggle="toggleFilterBranch"
+                    :loading="isLoadingBuildBranch"
+                    :remote-method="remoteGetBuildBranchList"
+                    @toggle="toggleFilterBuildBranch"
                 >
-                    <bk-option v-for="option in branchList"
+                    <bk-option v-for="option in buildBranchList"
                         :key="option"
                         :id="option"
                         :name="option">
@@ -320,6 +320,7 @@
                     count: 0
                 },
                 filterData: getFilterData(),
+                buildBranchList: [],
                 branchList: [],
                 filterList: [
                     {
@@ -333,6 +334,7 @@
                     }
                 ],
                 isLoading: false,
+                isLoadingBuildBranch: false,
                 isLoadingBranch: false,
                 isLoadingCommit: false,
                 isLoadingYaml: false,
@@ -418,7 +420,7 @@
             this.loopGetList()
             this.setHtmlTitle()
             this.toggleFilterEvent(true)
-            this.toggleFilterBranch(true)
+            this.toggleFilterBuildBranch(true)
             this.toggleFilterPipeline(true)
         },
 
@@ -445,6 +447,27 @@
                         this.isLoadingBranch = false
                     })
                 }
+            },
+
+            toggleFilterBuildBranch (isOpen) {
+                if (isOpen) {
+                    this.isLoadingBuildBranch = true
+                    this.getPipelineBuildBranchApi().then((branchList) => {
+                        this.buildBranchList = branchList
+                        this.isLoadingBuildBranch = false
+                    })
+                }
+            },
+
+            remoteGetBuildBranchList (search) {
+                return new Promise((resolve) => {
+                    debounce(() => {
+                        this.getPipelineBuildBranchApi({ search }).then((branchList) => {
+                            this.buildBranchList = branchList
+                            resolve()
+                        })
+                    })
+                })
             },
 
             remoteGetBranchList (search) {
@@ -600,6 +623,23 @@
                 }
                 return new Promise((resolve, reject) => {
                     pipelines.getPipelineBranches(params).then((res) => {
+                        resolve(res || [])
+                    }).catch((err) => {
+                        resolve()
+                        this.$bkMessage({ theme: 'error', message: err.message || err })
+                    })
+                })
+            },
+
+            getPipelineBuildBranchApi (query = {}) {
+                const params = {
+                    page: 1,
+                    perPage: 100,
+                    projectId: this.projectId,
+                    ...query
+                }
+                return new Promise((resolve, reject) => {
+                    pipelines.getPipelineBuildBranches(params).then((res) => {
                         resolve(res || [])
                     }).catch((err) => {
                         resolve()
