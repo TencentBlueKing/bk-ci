@@ -30,7 +30,6 @@ package api
 import (
 	"fmt"
 	"io"
-	"net/http"
 	"runtime"
 	"strconv"
 	"strings"
@@ -162,21 +161,26 @@ func AddLogRedLine(buildId string, message *LogMessage) (*httputil.DevopsResult,
 		IntoDevopsResult()
 }
 
+// TODO: issue_7748
+const testShell = "echo 'log' > /data/landun/logs/test.log \n echo 'data' > /data/landun/workspace/test.txt \n echo $RUOTIAN \n"
+
 func DownloadDockerInitFile() (io.ReadCloser, error) {
 	// TODO: issue_7748
-	url := ""
-	headers := config.GAgentConfig.GetAuthHeaderMap()
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
+	//url := ""
+	//headers := config.GAgentConfig.GetAuthHeaderMap()
+	//req, err := http.NewRequest("GET", url, nil)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//for k, v := range headers {
+	//	req.Header.Set(k, v)
+	//}
+	//resp, err := http.DefaultClient.Do(req)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//return resp.Body, nil
 
-	return resp.Body, nil
+	return io.NopCloser(strings.NewReader(testShell)), nil
 }

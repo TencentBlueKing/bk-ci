@@ -35,6 +35,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
@@ -81,6 +82,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 val dispatchType = event.dispatchType as ThirdPartyAgentIDDispatchType
                 buildByAgentId(event, dispatchType)
             }
+
             is ThirdPartyDevCloudDispatchType -> {
                 val originDispatchType = event.dispatchType as ThirdPartyDevCloudDispatchType
                 buildByAgentId(
@@ -88,14 +90,17 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     dispatchType = ThirdPartyAgentIDDispatchType(
                         displayName = originDispatchType.displayName,
                         workspace = originDispatchType.workspace,
-                        agentType = originDispatchType.agentType
+                        agentType = originDispatchType.agentType,
+                        dockerInfo = null
                     )
                 )
             }
+
             is ThirdPartyAgentEnvDispatchType -> {
                 val dispatchType = event.dispatchType as ThirdPartyAgentEnvDispatchType
                 buildByEnvId(event, dispatchType)
             }
+
             else -> {
                 throw InvalidParamException("Unknown agent type - ${event.dispatchType}")
             }
@@ -179,7 +184,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             return
         }
 
-        if (!buildByAgentId(event, agentResult.data!!, dispatchType.workspace)) {
+        if (!buildByAgentId(event, agentResult.data!!, dispatchType.workspace, dispatchType.dockerInfo)) {
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
@@ -212,7 +217,12 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
     }
 
-    private fun buildByAgentId(event: PipelineAgentStartupEvent, agent: ThirdPartyAgent, workspace: String?): Boolean {
+    private fun buildByAgentId(
+        event: PipelineAgentStartupEvent,
+        agent: ThirdPartyAgent,
+        workspace: String?,
+        dockerInfo: ThirdPartyAgentDockerInfo?
+    ): Boolean {
         val redisLock = ThirdPartyAgentLock(redisOperation, event.projectId, agent.agentId)
         try {
             if (redisLock.tryLock()) {
@@ -223,7 +233,14 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 }
 
                 // #5806 入库失败就不再写Redis
-                inQueue(agent = agent, event = event, agentId = agent.agentId, workspace = workspace)
+                inQueue(
+                    agent = agent,
+                    event = event,
+                    agentId = agent.agentId,
+                    workspace = workspace,
+                    dockerInfo = dockerInfo
+                )
+
                 // 保存构建详情
                 saveAgentInfoToBuildDetail(event = event, agent = agent)
 
@@ -249,12 +266,19 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         )
     }
 
-    private fun inQueue(agent: ThirdPartyAgent, event: PipelineAgentStartupEvent, agentId: String, workspace: String?) {
-
+    private fun inQueue(
+        agent: ThirdPartyAgent,
+        event: PipelineAgentStartupEvent,
+        agentId: String,
+        workspace: String?,
+        dockerInfo: ThirdPartyAgentDockerInfo?
+    ) {
         thirdPartyAgentBuildService.queueBuild(
             agent = agent,
             thirdPartyAgentWorkspace = workspace ?: "",
-            event = event
+            event = event,
+            retryCount = 0,
+            dockerInfo = dockerInfo
         )
 
         thirdPartyAgentBuildRedisUtils.setThirdPartyBuild(
@@ -663,7 +687,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             return false
         }
         hasTryAgents.add(agent.agentId)
-        if (buildByAgentId(event, agent, dispatchType.workspace)) {
+        if (buildByAgentId(event, agent, dispatchType.workspace, dispatchType.dockerInfo)) {
             return true
         }
         return false

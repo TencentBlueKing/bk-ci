@@ -62,26 +62,30 @@ enum class PoolType {
                     envProjectId = null,
                     envName = pool.envName!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME
+                    agentType = AgentType.NAME,
+                    dockerInfo = null
                 )
             } else if (!pool.envId.isNullOrBlank()) {
                 return ThirdPartyAgentEnvDispatchType(
                     envProjectId = null,
                     envName = pool.envId!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.ID
+                    agentType = AgentType.ID,
+                    dockerInfo = null
                 )
             } else if (!pool.agentId.isNullOrBlank()) {
                 return ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentId!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.ID
+                    agentType = AgentType.ID,
+                    dockerInfo = null
                 )
             } else {
                 return ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentName!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME
+                    agentType = AgentType.NAME,
+                    dockerInfo = null
                 )
             }
         }

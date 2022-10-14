@@ -44,7 +44,6 @@ func init() {
 }
 
 const (
-	dockerHost                  = "https://index.docker.io/v1/"
 	entryPointCmd               = "/data/init.sh"
 	localDockerBuildTmpDirName  = "docker_build_tmp"
 	localDockerWorkSpaceDirName = "docker_workspace"
@@ -68,12 +67,7 @@ func DoDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		return
 	}
 
-	// 解析镜像信息
-	host, name, tag := parseImage(dockerBuildInfo.OriginImageName)
-	imageName := name + ":" + tag
-	if host != dockerHost {
-		imageName = host + "/" + imageName
-	}
+	imageName := dockerBuildInfo.Image
 
 	taskId := "startVM-" + buildInfo.VmSeqId
 
@@ -96,9 +90,9 @@ func DoDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 
 	// 本地没有镜像的需要拉取新的镜像
 	if !localExist {
-		postLog(buildInfo.BuildId, false, "开始拉取镜像，镜像名称："+imageName, taskId, dockerBuildInfo.ContainerHashId, buildInfo.ExecuteCount)
+		postLog(buildInfo.BuildId, false, "开始拉取镜像，镜像名称："+imageName, taskId, buildInfo.ContainerHashId, buildInfo.ExecuteCount)
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
-			RegistryAuth: generateDockerAuth(dockerBuildInfo.RegistryUser, dockerBuildInfo.RegistryPwd),
+			RegistryAuth: generateDockerAuth(dockerBuildInfo.Credential),
 		})
 		if err != nil {
 			logs.Error(fmt.Sprintf("DOCKER_JOB|pull new image %s error ", imageName), err)
@@ -110,12 +104,12 @@ func DoDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		_, err = io.Copy(buf, reader)
 		if err != nil {
 			logs.Error("DOCKER_JOB|write image message error ", err)
-			postLog(buildInfo.BuildId, true, "获取拉取镜像信息日志失败："+err.Error(), taskId, dockerBuildInfo.ContainerHashId, buildInfo.ExecuteCount)
+			postLog(buildInfo.BuildId, true, "获取拉取镜像信息日志失败："+err.Error(), taskId, buildInfo.ContainerHashId, buildInfo.ExecuteCount)
 		} else {
-			postLog(buildInfo.BuildId, false, buf.String(), taskId, dockerBuildInfo.ContainerHashId, buildInfo.ExecuteCount)
+			postLog(buildInfo.BuildId, false, buf.String(), taskId, buildInfo.ContainerHashId, buildInfo.ExecuteCount)
 		}
 	} else {
-		postLog(buildInfo.BuildId, false, "本地存在镜像，准备启动构建环境..."+imageName, taskId, dockerBuildInfo.ContainerHashId, buildInfo.ExecuteCount)
+		postLog(buildInfo.BuildId, false, "本地存在镜像，准备启动构建环境..."+imageName, taskId, buildInfo.ContainerHashId, buildInfo.ExecuteCount)
 	}
 
 	// 创建docker构建机运行准备空间，拉取docker构建机初始化文件
@@ -270,21 +264,15 @@ func saveDockerInitFile(buildInfo *api.ThirdPartyBuildInfo, tempDir string) (str
 	return fileName, nil
 }
 
-// parseImage 解析用户传入的镜像名称，使器满足格式
-func parseImage(imageNameInput string) (host, name, tag string) {
-	// TODO
-	return "", "", ""
-}
-
 // generateDockerAuth 创建拉取docker凭据
-func generateDockerAuth(username, password string) string {
-	if username == "" || password == "" {
+func generateDockerAuth(cred *api.Credential) string {
+	if cred == nil || cred.User == "" || cred.Password == "" {
 		return ""
 	}
 
 	authConfig := types.AuthConfig{
-		Username: username,
-		Password: password,
+		Username: cred.User,
+		Password: cred.Password,
 	}
 	encodedJSON, err := json.Marshal(authConfig)
 	if err != nil {
@@ -345,12 +333,12 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo, dockerInitFile str
 
 // parseContainerEnv 解析生成容器环境变量
 func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string {
-	if dockerBuildInfo.CustomBuildEnv == nil {
+	if dockerBuildInfo.Envs == nil {
 		return nil
 	}
 
 	var envs []string
-	for k, v := range dockerBuildInfo.CustomBuildEnv {
+	for k, v := range dockerBuildInfo.Envs {
 		envs = append(envs, k+"="+v)
 	}
 

@@ -36,24 +36,27 @@ type ThirdPartyAgentStartInfo struct {
 }
 
 type ThirdPartyBuildInfo struct {
-	ProjectId     string   `json:"projectId"`
-	BuildId       string   `json:"buildId"`
-	VmSeqId       string   `json:"vmSeqId"`
-	Workspace     string   `json:"workspace"`
-	PipelineId    string   `json:"pipelineId"`
-	ToDelTmpFiles []string `json:"-"` // #5806 增加异常时清理脚本文件列表, 不序列化
-	// TODO: issue_7748 docker构建相关，暂时不完全
-	DockerBuildInfo *ThirdPartyDockerBuildInfo
-	ExecuteCount    *int
+	ProjectId       string                     `json:"projectId"`
+	BuildId         string                     `json:"buildId"`
+	VmSeqId         string                     `json:"vmSeqId"`
+	Workspace       string                     `json:"workspace"`
+	PipelineId      string                     `json:"pipelineId"`
+	ToDelTmpFiles   []string                   `json:"-"` // #5806 增加异常时清理脚本文件列表, 不序列化
+	DockerBuildInfo *ThirdPartyDockerBuildInfo `json:"dockerBuildInfo"`
+	ExecuteCount    *int                       `json:"executeCount"`
+	ContainerHashId string                     `json:"containerHashId"`
 }
 
 type ThirdPartyDockerBuildInfo struct {
-	OriginImageName string
-	RegistryUser    string
-	RegistryPwd     string
-	ContainerHashId string
-	CustomBuildEnv  map[string]string
-	DockerResource  *DockerResourceOptions
+	Image          string            `json:"image"`
+	Credential     *Credential       `json:"credential"`
+	Envs           map[string]string `json:"envs"`
+	DockerResource *DockerResourceOptions
+}
+
+type Credential struct {
+	User     string `json:"user"`
+	Password string `json:"password"`
 }
 
 type DockerResourceOptions struct {
