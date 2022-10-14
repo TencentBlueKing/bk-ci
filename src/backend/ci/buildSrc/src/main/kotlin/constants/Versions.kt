@@ -3,7 +3,7 @@ object Versions {
     const val Jaxrs = "2.0"
     const val CommonExec = "1.3"
     const val CommonIo = "2.7"
-    const val CommonText = "1.9"
+    const val CommonText = "1.10.0"
     const val BouncyCastle = "1.70"
     const val Dom4j = "2.0.3"
     const val Compress = "1.21"
