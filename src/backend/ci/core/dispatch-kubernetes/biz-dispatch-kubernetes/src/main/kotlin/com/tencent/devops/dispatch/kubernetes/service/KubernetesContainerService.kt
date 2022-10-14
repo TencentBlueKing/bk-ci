@@ -398,6 +398,7 @@ class KubernetesContainerService @Autowired constructor(
         val list = websocketUrl.split("/").toList()
         val targetHost = list[2]
         val newWsUrl = StringBuilder(webConsoleProxy)
+            .append("/")
             .append(list.subList(3, list.size).stream().collect(Collectors.joining("/")))
             .append("?targetHost=$targetHost")
         return newWsUrl.toString()
