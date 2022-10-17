@@ -58,6 +58,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.utils.PIPELINE_ATOM_CODE
 import com.tencent.devops.process.utils.PIPELINE_ATOM_NAME
+import com.tencent.devops.process.utils.PIPELINE_ATOM_TIMEOUT
 import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_STEP_ID
@@ -219,7 +220,8 @@ open class MarketAtomTask : ITask() {
                 PIPELINE_ATOM_NAME to atomData.atomName,
                 PIPELINE_ATOM_CODE to atomData.atomCode,
                 PIPELINE_ATOM_VERSION to atomData.version,
-                PIPELINE_TASK_NAME to taskName
+                PIPELINE_TASK_NAME to taskName,
+                PIPELINE_ATOM_TIMEOUT to TaskUtil.getTimeOut(buildTask).toString()
             )
         )
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
