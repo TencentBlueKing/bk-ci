@@ -34,6 +34,7 @@ import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamRepoHookEvent
+import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
@@ -62,6 +63,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
     private val eventActionFactory: EventActionFactory,
     @org.springframework.context.annotation.Lazy
     private val streamTriggerRequestService: StreamTriggerRequestService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
@@ -113,7 +115,15 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             action.data.context.pipeline = gitProjectPipeline
             exHandler.handle(action) {
                 // 使用跨项目触发的action
-                triggerPerPipeline(StreamRepoTriggerAction(action, client, streamGitConfig, streamTriggerCache))
+                triggerPerPipeline(
+                    StreamRepoTriggerAction(
+                        baseAction = action,
+                        client = client,
+                        streamGitConfig = streamGitConfig,
+                        streamBasicSettingService = streamBasicSettingService,
+                        streamTriggerCache = streamTriggerCache
+                    )
+                )
             }
         }
 

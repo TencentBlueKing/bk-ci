@@ -8,6 +8,7 @@ import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.data.ActionData
@@ -35,6 +36,7 @@ class StreamRepoTriggerAction(
     private val baseAction: BaseAction,
     private val client: Client,
     private val streamGitConfig: StreamGitConfig,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val streamTriggerCache: StreamTriggerCache
 ) : BaseAction {
 
@@ -173,6 +175,15 @@ class StreamRepoTriggerAction(
                     "Permissions denied, master and above permissions are required. " +
                         "Repo: (${triggerOn.repoHook?.name})"
                 )
+            )
+        }
+        val setting = streamBasicSettingService.getStreamConf(data.eventCommon.gitProjectId.toLong())
+        if (setting == null && repoTriggerUserId != null) {
+            streamBasicSettingService.initStreamConf(
+                userId = repoTriggerUserId,
+                projectId = GitCommonUtils.getCiProjectId(data.eventCommon.gitProjectId, streamGitConfig.getScmType()),
+                gitProjectId = data.eventCommon.gitProjectId.toLong(),
+                enabled = false
             )
         }
         // 增加远程仓库时所使用权限的userId

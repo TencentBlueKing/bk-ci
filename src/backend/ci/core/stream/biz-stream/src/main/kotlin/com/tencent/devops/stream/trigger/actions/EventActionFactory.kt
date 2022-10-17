@@ -45,6 +45,7 @@ import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
@@ -98,6 +99,7 @@ class EventActionFactory @Autowired constructor(
     private val mrConflictCheck: MergeConflictCheck,
     private val streamGitConfig: StreamGitConfig,
     private val streamTriggerTokenService: StreamTriggerTokenService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val streamTriggerCache: StreamTriggerCache
 ) {
 
@@ -158,7 +160,13 @@ class EventActionFactory @Autowired constructor(
             action.data.setting = actionSetting
         }
         return if (actionContext.repoTrigger != null) {
-            StreamRepoTriggerAction(action, client, streamGitConfig, streamTriggerCache)
+            StreamRepoTriggerAction(
+                baseAction = action,
+                client = client,
+                streamGitConfig = streamGitConfig,
+                streamBasicSettingService = streamBasicSettingService,
+                streamTriggerCache = streamTriggerCache
+            )
         } else action
     }
 
