@@ -628,7 +628,7 @@
                 const innerHosts = ['dev.devops.oa.com', 'test.devops.oa.com', 'v2.dev.devops.oa.com', 'v2.test.devops.oa.com']
                 const index = innerHosts.findIndex(innerHost => innerHost === host)
                 const group = index > -1 ? 'bkdevops-plugins-test' : 'bkdevops-plugins'
-                return `${this.$t('store.提交后，系统将在工蜂自动创建代码库，地址示例')}：http://git.code.oa.com/${group}/${this.createAtomForm.atomCode}.git`
+                return `${this.$t('store.提交后，系统将在工蜂自动创建代码库，地址示例')}：http://git.code.woa.com/${group}/${this.createAtomForm.atomCode}.git`
             },
 
             isEnterprise () {

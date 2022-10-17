@@ -312,7 +312,7 @@
                 const devIndex = devHosts.findIndex(innerHost => innerHost === host)
                 const testIndex = testHosts.findIndex(innerHost => innerHost === host)
                 const group = devIndex > -1 ? 'dev-bkdevops-extension-service' : (testIndex > -1 ? 'test-bkdevops-extension-service' : 'bkdevops-extension-service')
-                return `${this.$t('store.提交后，系统将在工蜂自动创建代码库，地址示例')}：http://git.code.oa.com/${group}/${this.relateServiceData.form.serviceCode}.git`
+                return `${this.$t('store.提交后，系统将在工蜂自动创建代码库，地址示例')}：http://git.code.woa.com/${group}/${this.relateServiceData.form.serviceCode}.git`
             },
 
             isEnterprise () {
