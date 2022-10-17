@@ -307,8 +307,8 @@
         computed: {
             createTips () {
                 const host = location.host
-                const devHosts = ['dev.devops.oa.com', 'v2.dev.devops.oa.com']
-                const testHosts = ['test.devops.oa.com', 'v2.test.devops.oa.com']
+                const devHosts = ['dev.devops.woa.com', 'v2.dev.devops.woa.com']
+                const testHosts = ['test.devops.woa.com', 'v2.test.devops.woa.com']
                 const devIndex = devHosts.findIndex(innerHost => innerHost === host)
                 const testIndex = testHosts.findIndex(innerHost => innerHost === host)
                 const group = devIndex > -1 ? 'dev-bkdevops-extension-service' : (testIndex > -1 ? 'test-bkdevops-extension-service' : 'bkdevops-extension-service')
