@@ -280,6 +280,7 @@ func DebugBuilder(ws *websocket.Conn, podName string, containerName string) {
 			default:
 			}
 
+			err = ws.SetReadDeadline(time.Now().Add(30 * time.Minute))
 			//读取client的数据
 			mt, message, err := ws.ReadMessage()
 			if mt == websocket.CloseMessage {
