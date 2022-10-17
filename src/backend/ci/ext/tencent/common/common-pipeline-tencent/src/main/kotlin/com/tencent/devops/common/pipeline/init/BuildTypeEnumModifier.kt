@@ -85,5 +85,10 @@ class BuildTypeEnumModifier : EnumModifier {
             enumName = BuildType.THIRD_PARTY_DEVCLOUD.name,
             additionalValues = arrayOf("腾讯自研云（云devnet资源）", listOf(OS.LINUX), false, true, true)
         )
+        EnumUtil.addEnum(
+            enumType = BuildType::class.java,
+            enumName = BuildType.WINDOWS.name,
+            additionalValues = arrayOf("蓝盾WINDOWS公共构建资源", listOf(OS.WINDOWS), false, true, true)
+        )
     }
 }

@@ -110,6 +110,9 @@ object BatScriptUtil {
         }
     }
 
+    /**
+     * #5672 补充丢失的代码：feat: 对BatchScript脚本执行过程加锁，防止被系统清理掉 #5527
+     */
     private fun tryLock(file: File, shared: Boolean = true): FileLock? =
         try {
             logger.info("lock file ${file.absolutePath}")

@@ -74,7 +74,7 @@ import javax.ws.rs.core.Response
 @SuppressWarnings("LongParameterList")
 class TXManualTriggerService @Autowired constructor(
     actionFactory: EventActionFactory,
-    streamGitConfig: StreamGitConfig,
+    private val streamGitConfig: StreamGitConfig,
     streamEventService: StreamEventService,
     streamBasicSettingService: StreamBasicSettingService,
     streamYamlTrigger: StreamYamlTrigger,
@@ -178,7 +178,10 @@ class TXManualTriggerService @Autowired constructor(
                 userId = userId,
                 pipelineId = pipelineId,
                 triggerBuildReq = TriggerBuildReq(
-                    projectId = GitCommonUtils.getCiProjectId(v1TriggerBuildReq.gitProjectId),
+                    projectId = GitCommonUtils.getCiProjectId(
+                        v1TriggerBuildReq.gitProjectId,
+                        streamGitConfig.getScmType()
+                    ),
                     branch = v1TriggerBuildReq.branch,
                     customCommitMsg = v1TriggerBuildReq.customCommitMsg,
                     yaml = v1TriggerBuildReq.yaml,
@@ -297,7 +300,7 @@ class TXManualTriggerService @Autowired constructor(
                 "(${TriggerReason.PIPELINE_RUN_ERROR.detail})"
         )
         return TriggerBuildResult(
-            projectId = GitCommonUtils.getCiProjectId(v1TriggerBuildReq.gitProjectId),
+            projectId = GitCommonUtils.getCiProjectId(v1TriggerBuildReq.gitProjectId, streamGitConfig.getScmType()),
             branch = v1TriggerBuildReq.branch,
             customCommitMsg = v1TriggerBuildReq.customCommitMsg,
             description = v1TriggerBuildReq.description,

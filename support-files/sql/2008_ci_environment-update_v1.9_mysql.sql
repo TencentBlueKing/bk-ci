@@ -22,6 +22,26 @@ BEGIN
             ADD COLUMN `AGENT_PROPS` text COMMENT 'agent config 配置项Json';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ENV'
+                    AND COLUMN_NAME = 'ENV_HASH_ID') THEN
+
+        ALTER TABLE `T_ENV`
+            ADD COLUMN `ENV_HASH_ID` varchar(64) DEFAULT NULL COMMENT '环境哈希ID';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND COLUMN_NAME = 'NODE_HASH_ID') THEN
+
+        ALTER TABLE `T_NODE`
+            ADD COLUMN `NODE_HASH_ID` varchar(64) DEFAULT NULL COMMENT '节点哈希ID';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

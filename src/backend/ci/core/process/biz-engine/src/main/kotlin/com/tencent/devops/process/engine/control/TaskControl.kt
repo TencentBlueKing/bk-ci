@@ -230,6 +230,7 @@ class TaskControl @Autowired constructor(
         if (buildStatus == BuildStatus.CANCELED) {
             // 删除redis中取消构建操作标识
             redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
+            redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false))
             // 当task任务是取消状态时，把taskId存入redis供心跳接口获取
             val cancelTaskKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId)
             redisOperation.leftPush(cancelTaskKey, taskId)

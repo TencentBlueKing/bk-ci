@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
+import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 
 class TencentDispatchSubTypeFetcher : DispatchSubTypeFetcher {
 
@@ -45,7 +46,8 @@ class TencentDispatchSubTypeFetcher : DispatchSubTypeFetcher {
             "PUBLIC_BCS" to PublicBcsDispatchType::class.java,
             "IDC" to IDCDispatchType::class.java,
             "GIT_CI" to GitCIDispatchType::class.java,
-            "MACOS" to MacOSDispatchType::class.java
+            "MACOS" to MacOSDispatchType::class.java,
+            "WINDOWS" to WindowsDispatchType::class.java
         )
     }
 }

@@ -55,5 +55,7 @@ data class IndexAppInfoVO(
     @ApiModelProperty("外部链接", required = false)
     val externalUrl: String,
     @ApiModelProperty("版本体验版本号", required = true)
-    val version: String
+    val version: String,
+    @ApiModelProperty("下载次数", required = true)
+    val downloadTime: Int
 )

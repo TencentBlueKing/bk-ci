@@ -82,7 +82,7 @@ class OldWeworkServiceImpl @Autowired constructor(
         }
     }
 
-    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
+    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
 
         weworkNotifyTextMessage.receivers.forEach {
             val sendString = String.format(
@@ -110,5 +110,6 @@ class OldWeworkServiceImpl @Autowired constructor(
                 logger.error("Send wework  text failed.")
             }
         }
+        return true
     }
 }

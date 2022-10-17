@@ -40,11 +40,14 @@ import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.JS
 import com.tencent.devops.common.api.constant.KEY_BRANCH
 import com.tencent.devops.common.api.constant.KEY_COMMIT_ID
+import com.tencent.devops.common.api.constant.KEY_INVALID_OS_INFO
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
 import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_ARCH_FLAG
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_NAME_FLAG
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.NUM_FIVE
@@ -262,9 +265,23 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
     }
 
-    override fun asyncHandleUpdateAtom(context: DSLContext, atomId: String, userId: String, branch: String?) {
+    override fun asyncHandleUpdateAtom(
+        context: DSLContext,
+        atomId: String,
+        userId: String,
+        branch: String?,
+        validOsNameFlag: Boolean?,
+        validOsArchFlag: Boolean?
+    ) {
         // 执行构建流水线
-        runPipeline(context = context, atomId = atomId, userId = userId, branch = branch)
+        runPipeline(
+            context = context,
+            atomId = atomId,
+            userId = userId,
+            branch = branch,
+            validOsNameFlag = validOsNameFlag,
+            validOsArchFlag = validOsArchFlag
+        )
     }
 
     override fun validateUpdateMarketAtomReq(
@@ -513,7 +530,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
             // 执行构建流水线
-            runPipeline(context = context, atomId = atomId, userId = userId, branch = branch)
+            runPipeline(
+                context = context,
+                atomId = atomId,
+                userId = userId,
+                branch = branch,
+                validOsNameFlag = marketAtomCommonService.getValidOsNameFlag(atomEnvRequests),
+                validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(atomEnvRequests)
+            )
         }
         return Result(true)
     }
@@ -544,7 +568,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     @SuppressWarnings("ComplexMethod")
-    private fun runPipeline(context: DSLContext, atomId: String, userId: String, branch: String? = null): Boolean {
+    private fun runPipeline(
+        context: DSLContext,
+        atomId: String,
+        userId: String,
+        branch: String? = null,
+        validOsNameFlag: Boolean? = null,
+        validOsArchFlag: Boolean? = null
+    ): Boolean {
         val atomRecord = marketAtomDao.getAtomRecordById(context, atomId) ?: return false
         val atomCode = atomRecord.atomCode
         val atomPipelineRelRecord = storePipelineRelDao.getStorePipelineRel(context, atomCode, StoreTypeEnum.ATOM)
@@ -580,9 +611,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val language = buildInfo.value3()
         // 获取打包所需的操作系统名称和操作系统cpu架构
         val atomEnvRecords = marketAtomEnvInfoDao.getMarketAtomEnvInfosByAtomId(context, atomId)
-        val osNames = mutableSetOf(OSType.LINUX.name.toLowerCase())
-        val osArchs = mutableSetOf("amd64")
+        val osNames = mutableSetOf<String>()
+        val osArchs = mutableSetOf<String>()
         var runtimeVersion: String? = null
+        val validOsInfos = mutableSetOf<String>()
         atomEnvRecords?.forEach { atomEnvRecord ->
             if (runtimeVersion == null) {
                 runtimeVersion = atomEnvRecord.runtimeVersion
@@ -595,6 +627,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             if (!osArch.isNullOrBlank()) {
                 osArchs.add(osArch)
             }
+            validOsInfos.add("$osName-$osArch")
+        }
+        val invalidOsInfos = getInvalidOsInfos(osNames, osArchs, validOsInfos)
+        if (osNames.isEmpty()) {
+            osNames.add(OSType.LINUX.name.toLowerCase())
+        }
+        if (osArchs.isEmpty()) {
+            osArchs.add("amd64")
         }
         if (null == atomPipelineRelRecord) {
             // 为用户初始化构建流水线并触发执行
@@ -609,6 +649,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 branch = branch ?: MASTER,
                 osName = JsonUtil.toJson(osNames),
                 osArch = JsonUtil.toJson(osArchs),
+                invalidOsInfo = JsonUtil.toJson(invalidOsInfos),
                 runtimeVersion = runtimeVersion
             )
             val pipelineModelConfig = businessConfigDao.get(
@@ -618,7 +659,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 businessValue = "PIPELINE_MODEL"
             )
             var pipelineModel = pipelineModelConfig!!.configValue
-            var pipelineName = "am-$atomCode-${UUIDUtil.generate()}"
+            val pipelineName = "am-$atomCode-${UUIDUtil.generate()}"
             val paramMap = mapOf(
                 KEY_PIPELINE_NAME to pipelineName,
                 KEY_STORE_CODE to atomCode,
@@ -691,7 +732,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             startParams[KEY_BRANCH] = branch ?: MASTER
             startParams[KEY_OS_NAME] = JsonUtil.toJson(osNames)
             startParams[KEY_OS_ARCH] = JsonUtil.toJson(osArchs)
+            startParams[KEY_INVALID_OS_INFO] = JsonUtil.toJson(invalidOsInfos)
             runtimeVersion?.let { startParams[KEY_RUNTIME_VERSION] = it }
+            validOsNameFlag?.let {
+                startParams[KEY_VALID_OS_NAME_FLAG] = it.toString()
+            }
+            validOsArchFlag?.let {
+                startParams[KEY_VALID_OS_ARCH_FLAG] = it.toString()
+            }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, initProjectCode, atomPipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM
@@ -719,6 +767,25 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
         }
         return true
+    }
+
+    private fun getInvalidOsInfos(
+        osNames: MutableSet<String>,
+        osArchs: MutableSet<String>,
+        validOsInfos: MutableSet<String>
+    ): ArrayList<Map<String, String>> {
+        val invalidOsInfos = arrayListOf<Map<String, String>>()
+        if (osNames.isEmpty() && osArchs.isEmpty()) {
+            return invalidOsInfos
+        }
+        osNames.forEach { osName ->
+            osArchs.forEach { osArch ->
+                if (!validOsInfos.contains("$osName-$osArch")) {
+                    invalidOsInfos.add(mapOf(KEY_OS_NAME to osName, KEY_OS_ARCH to osArch))
+                }
+            }
+        }
+        return invalidOsInfos
     }
 
     private fun handleCodeccTask(

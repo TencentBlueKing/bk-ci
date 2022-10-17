@@ -247,10 +247,10 @@ log:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -285,10 +285,10 @@ auth:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -323,10 +323,10 @@ agentless:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -361,10 +361,10 @@ dockerhost:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -399,10 +399,10 @@ artifactory:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -437,10 +437,10 @@ dispatch:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -475,10 +475,10 @@ dispatchDocker:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -513,10 +513,10 @@ dispatchDevcloud:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -551,10 +551,10 @@ dispatchStream:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -589,10 +589,10 @@ dispatchPcg:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -627,10 +627,10 @@ dispatchMacos:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -656,7 +656,45 @@ dispatchMacos:
     minReplicas: 1
     maxReplicas: 3
     targetCPU: 80
-    targetMemory: 80
+    targetMemory: 80M
+
+  # dispatchWindows Deployment
+dispatchWindows:
+  enabled: false
+  replicas: 1
+  podLabels: { }
+  resources:
+    requests:
+      cpu: 100m
+      memory: 2000Mi
+    limits:
+      cpu: 500m
+      memory: 2500Mi
+  hostAliases: [ ]
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: [ ]
+  affinity: { }
+  nodeSelector: { }
+  tolerations: [ ]
+  podAnnotations: { }
+  priorityClassName: ""
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    targetMemory: 80M
 
 # dispatchCodecc Deployment
 dispatchCodecc:
@@ -665,10 +703,10 @@ dispatchCodecc:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -703,10 +741,10 @@ dispatchKubernetes:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -741,10 +779,10 @@ environment:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -779,10 +817,10 @@ image:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -817,10 +855,10 @@ misc:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -855,10 +893,10 @@ monitoring:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -893,10 +931,10 @@ notify:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -931,10 +969,10 @@ openapi:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -969,10 +1007,10 @@ plugin:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -1007,10 +1045,10 @@ process:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -1045,10 +1083,10 @@ project:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -1083,10 +1121,10 @@ quality:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -1121,10 +1159,10 @@ repository:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -1159,10 +1197,10 @@ sign:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -1197,10 +1235,10 @@ store:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -1235,10 +1273,10 @@ ticket:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -1273,10 +1311,10 @@ websocket:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
@@ -1311,10 +1349,10 @@ angetless:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 3000Mi
   hostAliases: []
   containerSecurityContext:
@@ -1395,10 +1433,10 @@ gateway:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 500Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 800Mi
   hostAliases: []
   containerSecurityContext:
@@ -1434,10 +1472,48 @@ experience:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
+      cpu: 1000m
+      memory: 3000Mi
+  hostAliases: []
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  podAnnotations: {}
+  priorityClassName: ""
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    targetMemory: 80
+
+# metrics Deployment
+metrics:
+  enabled: false
+  replicas: 1
+  podLabels: {}
+  resources:
+    requests:
       cpu: 500m
+      memory: 2000Mi
+    limits:
+      cpu: 1000m
       memory: 3000Mi
   hostAliases: []
   containerSecurityContext:
@@ -1510,10 +1586,10 @@ external:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 3000Mi
   hostAliases: []
   containerSecurityContext:
@@ -1548,10 +1624,10 @@ lambda:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 3000Mi
   hostAliases: []
   containerSecurityContext:
@@ -1586,10 +1662,10 @@ engine:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 3000Mi
   hostAliases: []
   containerSecurityContext:
@@ -1624,10 +1700,10 @@ monitoring:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 3000Mi
   hostAliases: []
   containerSecurityContext:
@@ -1662,10 +1738,10 @@ prebuild:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 3000Mi
   hostAliases: []
   containerSecurityContext:
@@ -1700,10 +1776,48 @@ statistics:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
+      cpu: 1000m
+      memory: 3000Mi
+  hostAliases: []
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  podAnnotations: {}
+  priorityClassName: ""
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    targetMemory: 80
+
+# support Deployment
+support:
+  enabled: false
+  replicas: 1
+  podLabels: {}
+  resources:
+    requests:
       cpu: 500m
+      memory: 2000Mi
+    limits:
+      cpu: 1000m
       memory: 3000Mi
   hostAliases: []
   containerSecurityContext:
@@ -1738,10 +1852,10 @@ stream:
   podLabels: {}
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
       memory: 2000Mi
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 3000Mi
   hostAliases: []
   containerSecurityContext:

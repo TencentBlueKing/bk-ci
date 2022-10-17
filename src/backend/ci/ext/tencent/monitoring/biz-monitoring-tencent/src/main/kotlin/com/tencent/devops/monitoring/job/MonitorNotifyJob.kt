@@ -36,7 +36,6 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.utils.HashUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.Profile
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.dao.SlaDailyDao
 import com.tencent.devops.monitoring.util.EmailModuleData
@@ -86,7 +85,6 @@ class MonitorNotifyJob @Autowired constructor(
     private val slaDailyDao: SlaDailyDao,
     private val dslContext: DSLContext,
     private val restHighLevelClient: RestHighLevelClient,
-    private val profile: Profile,
     private val redisOperation: RedisOperation
 ) {
 
@@ -194,11 +192,6 @@ class MonitorNotifyJob @Autowired constructor(
      */
     @Scheduled(cron = "0 0 2 * * ?")
     fun notifyDaily() {
-        if (profile.isProd() && !profile.isProdGray()) {
-            logger.info("profile is prod , no start")
-            return
-        }
-
         if (illegalConfig()) {
             logger.info("some params is null , notifyDaily no start")
             return

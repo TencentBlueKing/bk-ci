@@ -74,7 +74,7 @@ class GitCIPipelineUrlBeanImpl constructor(
                 url
             }
         } catch (ignore: Throwable) {
-            logger.info("[$buildId]|genGitCIBuildDetailUrl| failed with:", ignore)
+            logger.warn("[$buildId]|genGitCIBuildDetailUrl| failed with:", ignore)
             return ""
         }
     }

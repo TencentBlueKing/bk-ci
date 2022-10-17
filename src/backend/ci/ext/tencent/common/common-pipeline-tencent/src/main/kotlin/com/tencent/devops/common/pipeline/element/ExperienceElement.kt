@@ -31,7 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("版本体验", description = DelayElement.classType)
+@ApiModel("版本体验", description = ExperienceElement.classType)
 data class ExperienceElement(
     @ApiModelProperty("任务名称", required = true)
     override val name: String = "转体验",

@@ -273,4 +273,17 @@ CREATE TABLE IF NOT EXISTS `T_EXPERIENCE_PUSH_HISTORY`
     PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '推送消息记录';
 
+CREATE TABLE IF NOT EXISTS `T_EXPERIENCE_EXTEND_BANNER`
+(
+    `ID`          bigint(20)   NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+    `BANNER_URL`  varchar   (200) NOT NULL DEFAULT '' COMMENT '配置的BannerURL',
+    `TYPE`        int(2)       NOT NULL COMMENT '类型',
+    `LINK`        varchar(300) NOT NULL DEFAULT '' COMMENT '跳转链接',
+    `ONLINE`      bit(1)       NOT NULL COMMENT '是否上线',
+    `END_DATE`    datetime     NOT NULL COMMENT '结束日期',
+    `CREATE_TIME` datetime     NOT NULL COMMENT '创建日期',
+    `UPDATE_TIME` datetime     NOT NULL COMMENT '更新日期',
+    PRIMARY KEY (`ID`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='体验Banner扩展表';
+
 SET FOREIGN_KEY_CHECKS = 1;
