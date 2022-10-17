@@ -86,6 +86,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.stream.Collectors
 
 @Service("kubernetesContainerService")
 class KubernetesContainerService @Autowired constructor(
@@ -99,6 +100,11 @@ class KubernetesContainerService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(KubernetesContainerService::class.java)
+
+        // kubernetes构建机默认request配置
+        private const val DEFAULT_REQUEST_CPU = 1
+        private const val DEFAULT_REQUEST_MEM = 1024
+        private const val DEFAULT_REQUEST_DISK = 100
     }
 
     override val shutdownLockBaseKey = "dispatch_kubernetes_shutdown_lock_"
@@ -121,7 +127,13 @@ class KubernetesContainerService @Autowired constructor(
     @Value("\${kubernetes.entrypoint}")
     override val entrypoint: String = "kubernetes_init.sh"
 
+    @Value("\${kubernetes.sleepEntrypoint}")
+    override val sleepEntrypoint: String = "sleep.sh"
+
     override val helpUrl: String? = ""
+
+    @Value("\${kubernetes.gateway.webConsoleProxy}")
+    val webConsoleProxy: String = ""
 
     override fun getBuilderStatus(
         buildId: String,
@@ -170,7 +182,7 @@ class KubernetesContainerService @Autowired constructor(
                 DispatchBuildOperateBuilderType.STOP -> StopBuilderParams()
                 DispatchBuildOperateBuilderType.START_SLEEP -> StartBuilderParams(
                     env = param.env,
-                    command = listOf("/bin/sh", entrypoint)
+                    command = listOf("/bin/sh", sleepEntrypoint)
                 )
             }
         )
@@ -204,13 +216,13 @@ class KubernetesContainerService @Autowired constructor(
                     image = "$host/$name:$tag",
                     registry = registry,
                     resource = KubernetesResource(
-                        requestCPU = cpu.toString(),
-                        requestDisk = "${disk}G",
-                        requestDiskIO = "1",
-                        requestMem = "${memory}Mi",
+                        requestCPU = DEFAULT_REQUEST_CPU.toString(),
+                        requestDisk = "${DEFAULT_REQUEST_DISK}G",
+                        requestDiskIO = "0",
+                        requestMem = "${DEFAULT_REQUEST_MEM}Mi",
                         limitCpu = cpu.toString(),
                         limitDisk = "${disk}G",
-                        limitDiskIO = "1",
+                        limitDiskIO = "0",
                         limitMem = "${memory}Mi"
                     ),
                     env = mapOf(
@@ -379,7 +391,22 @@ class KubernetesContainerService @Autowired constructor(
         staffName: String,
         builderName: String
     ): String {
-        return kubernetesBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
+        if (webConsoleProxy.isEmpty()) {
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorType,
+                errorCode = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorCode,
+                formatErrorMessage = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.formatErrorMessage,
+                errorMessage = "webConsoleProxy is empty"
+            )
+        }
+        val websocketUrl = kubernetesBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
+        val list = websocketUrl.split("/").toList()
+        val targetHost = list[2]
+        val newWsUrl = StringBuilder(webConsoleProxy)
+            .append("/")
+            .append(list.subList(3, list.size).stream().collect(Collectors.joining("/")))
+            .append("?targetHost=$targetHost")
+        return newWsUrl.toString()
     }
 
     override fun buildAndPushImage(
