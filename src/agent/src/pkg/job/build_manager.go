@@ -40,7 +40,7 @@ import (
 
 // buildManager 当前构建对象管理
 type buildManager struct {
-	// Lock 多协诚修改时的执行锁
+	// Lock 多协程修改时的执行锁
 	Lock sync.Mutex
 	// preInstance 接取的构建任务但还没开始进行构建 [string]bool
 	preInstances sync.Map
