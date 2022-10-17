@@ -208,7 +208,7 @@ class ModelStage @Autowired(required = false) constructor(
                 os = StreamDispatchUtils.getBaseOs(job).name.toLowerCase()
             ).data ?: throw CustomException(
                 // 说明用户填写的name或version不对，直接抛错
-                Response.Status.BAD_REQUEST, "NFS挂载失败，请检查${env.key}:${env.value} 是否支持挂载"
+                Response.Status.BAD_REQUEST, "尚未支持 ${env.key} ${env.value}，请联系 DevOps-helper 添加对应版本"
             )
         }
     }

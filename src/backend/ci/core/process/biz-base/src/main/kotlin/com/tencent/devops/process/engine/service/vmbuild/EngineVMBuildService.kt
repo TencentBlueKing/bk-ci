@@ -231,7 +231,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 if (res == null) {
                                     buildLogPrinter.addYellowLine(
                                         buildId = buildId,
-                                        message = "NFS 挂载 ${env.key}:$version 不支持，已忽略",
+                                        message = "尚未支持 ${env.key} $version，请联系 DevOps-helper 添加对应版本",
                                         tag = VMUtils.genStartVMTaskId(vmSeqId),
                                         jobId = c.containerHashId,
                                         executeCount = c.executeCount ?: 1
