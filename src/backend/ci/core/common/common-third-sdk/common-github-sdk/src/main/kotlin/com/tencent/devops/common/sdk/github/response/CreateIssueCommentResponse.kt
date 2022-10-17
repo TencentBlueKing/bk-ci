@@ -49,7 +49,7 @@ data class CreateIssueCommentResponse(
     @JsonProperty("node_id")
     val nodeId: String,
     @JsonProperty("updated_at")
-    val updatedAt: String,
+    val updatedAt: String?,
     @JsonProperty("url")
     val url: String,
     @JsonProperty("user")

@@ -124,11 +124,11 @@
                             <span :title="artifactory.name" class="artifact-name">{{ artifactory.name }}</span>
                             <span class="artifact-size">{{ artifactory.size }}</span>
                         </p>
-                        <bk-popover ref="popover" placement="top" :content="$t('download')" transfer>
+                        <bk-popover v-if="artifactory.artifactoryType !== 'IMAGE'" ref="popover" placement="top" :content="$t('download')" transfer>
                             <i class="devops-icon icon-download download-link history-text-link" @click.stop="downloadFile(artifactory)" />
                         </bk-popover>
-                        <bk-popover ref="popover" placement="top" :content="$t('history.copyToCustomArtifactory')" transfer>
-                            <Logo class="icon-copy" name="copy" size="12" v-if="artifactory.artifactoryType === 'PIPELINE'" @click.stop.native="copyToCustom(artifactory)"></Logo>
+                        <bk-popover v-if="artifactory.artifactoryType === 'PIPELINE'" ref="popover" placement="top" :content="$t('history.copyToCustomArtifactory')" transfer>
+                            <Logo class="icon-copy" name="copy" size="12" @click.stop.native="copyToCustom(artifactory)"></Logo>
                         </bk-popover>
                     </li>
                     <footer v-if="needShowAll" @click.stop="showAllArtifactory" class="history-text-link">{{ $t('history.showAll') }}</footer>

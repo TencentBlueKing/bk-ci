@@ -214,6 +214,8 @@
         "filterByName": "Filter by name"
     },
     "setting": {
+        "save": "Save",
+        "cancel": "Cancel",
         "settings": "Settings",
         "baseSetting": "Basic Settings",
         "credentialSetting": "Credential Settings",

@@ -43,11 +43,9 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.v2.models.Resources
-import com.tencent.devops.process.yaml.v2.models.image.BuildType
-import com.tencent.devops.process.yaml.v2.models.image.Credential
-import com.tencent.devops.process.yaml.v2.models.image.Pool
 import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Container2
 import com.tencent.devops.process.yaml.v2.models.job.Job
@@ -160,39 +158,36 @@ object StreamDispatchUtils {
 
         // 公共docker构建机
         if (poolName == "docker") {
-            var containerPool = Pool(
-                container = defaultImage,
-                credential = Credential(
-                    user = "",
-                    password = ""
-                ),
-                third = null,
-                env = job.env,
-                buildType = BuildType.DOCKER_VM
-            )
+            var image = defaultImage
+            var credentialId = ""
+            var env: Map<String, String>?
 
             if (job.runsOn.container != null) {
-                val (image, userName, password) = parseRunsOnContainer(
-                    client = client,
-                    job = job,
-                    projectCode = projectCode,
-                    context = context,
-                    buildTemplateAcrossInfo = buildTemplateAcrossInfo
-                )
+                try {
+                    val container = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(job.runsOn.container!!),
+                        Container::class.java
+                    )
 
-                containerPool = Pool(
-                    container = image,
-                    credential = Credential(
-                        user = userName,
-                        password = password
-                    ),
-                    third = null,
-                    env = job.env,
-                    buildType = BuildType.DOCKER_VM
-                )
+                    image = EnvUtils.parseEnv(container.image, context ?: mapOf())
+                    env = job.env
+                } catch (e: Exception) {
+                    val container = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(job.runsOn.container!!),
+                        Container2::class.java
+                    )
+
+                    image = EnvUtils.parseEnv(container.image, context ?: mapOf())
+                    credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf())
+                    env = job.env
+                }
             }
 
-            return DockerDispatchType(objectMapper.writeValueAsString(containerPool))
+            return DockerDispatchType(
+                dockerBuildVersion = image,
+                credentialId = credentialId,
+                imageType = ImageType.THIRD
+            )
         }
 
         if (containsMatrix == true) {
@@ -246,7 +241,6 @@ object StreamDispatchUtils {
         }
     }
 
-
     private fun getTicket(
         client: Client,
         projectCode: String,
@@ -294,7 +288,7 @@ object StreamDispatchUtils {
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             throw RuntimeException(
                 "Fail to get the credential($credentialId) of project($projectId), " +
-                    "because of ${credentialResult.message}"
+                        "because of ${credentialResult.message}"
             )
         }
 
@@ -302,14 +296,14 @@ object StreamDispatchUtils {
         if (type != credential.credentialType) {
             throw ParamBlankException(
                 "Fail to get the credential($credentialId) of project($projectId), " +
-                    "expect:${type.name}, but real:${credential.credentialType.name}"
+                        "expect:${type.name}, but real:${credential.credentialType.name}"
             )
         }
 
         if (acrossProject && !credential.allowAcrossProject) {
             throw RuntimeException(
                 "Fail to get the credential($credentialId) of project($projectId), " +
-                    "not allow across project use"
+                        "not allow across project use"
             )
         }
 
