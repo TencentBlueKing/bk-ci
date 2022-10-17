@@ -95,11 +95,12 @@ func DoPollAndBuild() {
 			continue
 		}
 
-		if ok := checkParallelTaskCount(); !ok {
+		dockerCanRun, normalCanRun := checkParallelTaskCount()
+		if !dockerCanRun && !normalCanRun {
 			continue
 		}
 
-		// 在接取任务先获取锁，防止与其他任务产生干扰
+		// 在接取任务先获取锁，防止与其他操作产生干扰
 		GBuildManager.Lock.Lock()
 
 		buildInfo, err := getBuild()
@@ -115,13 +116,21 @@ func DoPollAndBuild() {
 			continue
 		}
 
-		// TODO: issue_7748 通过条件区分docker任务和agent任务，如果是docker任务，则直接调用docker接口
-		if true {
+		logs.Info("build info ", buildInfo, " dockerCanRun ", dockerCanRun)
+
+		if buildInfo.DockerBuildInfo != nil && dockerCanRun {
 			// 接取job任务之后才可以解除总任务锁解锁
 			GBuildDockerManager.AddCurrentJobs(1)
 			GBuildManager.Lock.Unlock()
 
 			go DoDockerJob(buildInfo)
+
+			continue
+		}
+
+		if !normalCanRun {
+			GBuildManager.Lock.Unlock()
+			continue
 		}
 
 		// 接取任务之后解锁
@@ -136,28 +145,29 @@ func DoPollAndBuild() {
 }
 
 // checkParallelTaskCount 检查当前运行的最大任务数
-func checkParallelTaskCount() bool {
-	// TODO: issue_7748 通过条件区分docker任务和agent任务
-	if true {
-		instanceCount := GBuildDockerManager.GetCurrentJobsCount()
-		if GBuildDockerManager.MaxJob != 0 && instanceCount >= GBuildDockerManager.MaxJob {
-			logs.Info(fmt.Sprintf("DOCKER_JOB|parallel docker task count exceed , wait job done, "+
-				"maxJob config: %d, instance count: %d",
-				GBuildDockerManager.MaxJob, instanceCount))
-			return false
-		}
-		return true
+func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
+	// 检查docker任务
+	dockerInstanceCount := GBuildDockerManager.GetCurrentJobsCount()
+	if GBuildDockerManager.MaxJob != 0 && dockerInstanceCount >= GBuildDockerManager.MaxJob {
+		logs.Info(fmt.Sprintf("DOCKER_JOB|parallel docker task count exceed , wait job done, "+
+			"maxJob config: %d, instance count: %d",
+			GBuildDockerManager.MaxJob, dockerInstanceCount))
+		dockerCanRun = false
 	}
+	dockerCanRun = true
 
+	// 检查普通任务
 	instanceCount := GBuildManager.GetInstanceCount()
 	if config.GAgentConfig.ParallelTaskCount != 0 && instanceCount >= config.GAgentConfig.ParallelTaskCount {
 		logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, "+
 			"ParallelTaskCount config: %d, instance count: %d",
 			config.GAgentConfig.ParallelTaskCount, instanceCount))
-		return false
+		normalCanRun = false
 	}
 
-	return true
+	normalCanRun = true
+
+	return dockerCanRun, normalCanRun
 }
 
 // getBuild 从服务器认领要构建的信息

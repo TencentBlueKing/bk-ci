@@ -40,7 +40,11 @@ func (b *buildDockerManager) AddCurrentJobs(num int32) int32 {
 var GBuildDockerManager *buildDockerManager
 
 func init() {
-	GBuildDockerManager = new(buildDockerManager)
+	GBuildDockerManager = &buildDockerManager{
+		// TODO: issue_7748 临时写死
+		MaxJob:           4,
+		currentJobsCount: 0,
+	}
 }
 
 const (
