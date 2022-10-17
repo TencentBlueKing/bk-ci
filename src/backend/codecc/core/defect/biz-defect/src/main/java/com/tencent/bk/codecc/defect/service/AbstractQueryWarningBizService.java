@@ -720,7 +720,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 
             content = pipelineScmService.getFileContentOauth(oauthUserId, GitUtil.INSTANCE.getProjectName(url),
                 relPath, (revision != null ? revision : branch));
-        } else if(projectId.startsWith("git_") || projectId.startsWith("github_")){
+        } else if (projectId != null && (projectId.startsWith("git_") || projectId.startsWith("github_"))) {
             content = pipelineScmService.getStreamFileContent(projectId, userId, url, relPath, revision, branch);
         }else {
             content = pipelineScmService.getFileContent(taskId, repoId, relPath, revision, branch, subModule, createFrom);
