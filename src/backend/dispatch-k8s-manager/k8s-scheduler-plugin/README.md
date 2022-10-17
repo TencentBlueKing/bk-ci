@@ -23,7 +23,7 @@
 
 总体流程参考 scheduler-plugin 对应kubernetes大版本tag的 /doc/install.md 中描述的打包流程
 
-目前插件打包流程如下：
+目前插件打包部署流程如下：
 
 1. makefile release-image 打包镜像
 2. 仿照 scheduler-plugin 修改 /etc/manifests/kube-scheduler.yaml
