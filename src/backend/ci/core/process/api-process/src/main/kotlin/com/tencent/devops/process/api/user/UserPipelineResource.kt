@@ -441,22 +441,6 @@ interface UserPipelineResource {
         favor: Boolean
     ): Result<Boolean>
 
-    @ApiOperation("删除流水线编排")
-    @DELETE
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/forceDelete")
-    @Path("/{projectId}/{pipelineId}/true")
-    fun trueDelete(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String
-    ): Result<Boolean>
-
     @ApiOperation("还原流水线编排")
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/restore")

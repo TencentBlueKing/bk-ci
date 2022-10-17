@@ -133,6 +133,7 @@
     import 'echarts/lib/chart/line'
     import 'echarts/lib/component/tooltip'
     import 'echarts/lib/component/legend'
+    import 'echarts/lib/component/grid'
     import { nodeOverview } from '@/utils/chart-option'
     import { bus } from '@/utils/bus'
     import { setting } from '@/http'

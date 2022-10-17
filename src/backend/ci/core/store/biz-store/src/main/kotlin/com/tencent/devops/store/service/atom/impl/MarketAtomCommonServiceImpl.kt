@@ -29,9 +29,11 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.COMPONENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -64,6 +66,7 @@ import com.tencent.devops.store.pojo.common.KEY_DEFAULT
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_DEMANDS
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
+import com.tencent.devops.store.pojo.common.KEY_FINISH_KILL_FLAG
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_MINIMUM_VERSION
@@ -129,6 +132,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         version: String
     ): Result<Boolean> {
         val dbVersion = atomRecord.version
+        val atomStatus = atomRecord.atomStatus
+        // 判断插件首个版本对应的请求是否合法
+        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
+            atomStatus != AtomStatusEnum.INIT.status.toByte()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
+        }
         val dbOsList = if (!atomRecord.os.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
             atomRecord.os,
             List::class.java
@@ -138,7 +147,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             if (null != dbOsList && !osList.containsAll(dbOsList)) {
                 ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE // 最近的版本处于上架中止状态，重新升级版本号不变
             } else releaseType
-        val cancelFlag = atomRecord.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
+        val cancelFlag = atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val requireVersionList =
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                 listOf(dbVersion)
@@ -173,7 +182,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
                 AtomStatusEnum.UNDERCARRIAGED.status.toByte()
             )
-            if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
+            if (!atomFinalStatusList.contains(atomStatus)) {
                 return MessageCodeUtil.generateResponseDataObject(
                     StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
                     arrayOf(atomRecord.name, atomRecord.version)
@@ -384,6 +393,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         }
         val atomEnvRequests = mutableListOf<AtomEnvRequest>()
         val osList = executionInfoMap[KEY_OS] as? List<Map<String, Any>>
+        val finishKillFlag = executionInfoMap[KEY_FINISH_KILL_FLAG] as? Boolean
+        val runtimeVersion = executionInfoMap[KEY_RUNTIME_VERSION] as? String
+        val finalRuntimeVersion = if (runtimeVersion.isNullOrBlank() && language == NODEJS) {
+            // 如果nodejs插件未配置runtimeVersion，则给runtimeVersion赋默认值10.*
+            "10.*"
+        } else {
+            runtimeVersion
+        }
         if (null != osList) {
             val osDefaultEnvNumMap = mutableMapOf<String, Int>()
             osList.forEach { osExecutionInfoMap ->
@@ -425,8 +442,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     atomPostInfo = atomPostInfo,
                     osName = osName,
                     osArch = osArch,
-                    runtimeVersion = executionInfoMap[KEY_RUNTIME_VERSION] as? String,
-                    defaultFlag = defaultFlag
+                    runtimeVersion = finalRuntimeVersion,
+                    defaultFlag = defaultFlag,
+                    finishKillFlag = finishKillFlag
                 )
                 atomEnvRequests.add(atomEnvRequest)
             }
@@ -459,8 +477,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 shaContent = null,
                 preCmd = JsonUtil.toJson(executionInfoMap[KEY_DEMANDS] ?: ""),
                 atomPostInfo = atomPostInfo,
-                runtimeVersion = executionInfoMap[KEY_RUNTIME_VERSION] as? String,
-                defaultFlag = true
+                runtimeVersion = finalRuntimeVersion,
+                defaultFlag = true,
+                finishKillFlag = finishKillFlag
             )
             atomEnvRequests.add(atomEnvRequest)
         }
@@ -652,5 +671,29 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         }
         // 判断是否是默认插件
         return redisOperation.isMember(storePublicFlagKey, atomCode)
+    }
+
+    override fun getValidOsNameFlag(atomEnvRequests: List<AtomEnvRequest>): Boolean {
+        // 判断task.json的配置是否有根据操作系统名称来配
+        var validOsNameFlag = false
+        for (atomEnvRequest in atomEnvRequests) {
+            if (!atomEnvRequest.osName.isNullOrBlank()) {
+                validOsNameFlag = true
+                break
+            }
+        }
+        return validOsNameFlag
+    }
+
+    override fun getValidOsArchFlag(atomEnvRequests: List<AtomEnvRequest>): Boolean {
+        // 判断task.json的配置是否有根据操作系统cpu架构名称来配
+        var validOsArchFlag = false
+        for (atomEnvRequest in atomEnvRequests) {
+            if (!atomEnvRequest.osArch.isNullOrBlank()) {
+                validOsArchFlag = true
+                break
+            }
+        }
+        return validOsArchFlag
     }
 }

@@ -450,17 +450,6 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun trueDelete(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
-        checkParam(userId, projectId)
-        pipelineInfoFacadeService.deletePipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            delete = true
-        )
-        return Result(true)
-    }
-
     override fun getCount(userId: String, projectId: String): Result<PipelineCount> {
         checkParam(userId, projectId)
         return Result(pipelineListFacadeService.getCount(userId, projectId))

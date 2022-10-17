@@ -57,8 +57,8 @@ const (
 	templateVarInstance         = "__crm_instance__"
 	templateVarCPU              = "__crm_cpu__"
 	templateVarMem              = "__crm_mem__"
-	templateRequestVarCPU       = "__crm_request_cpu__"
-	templateRequestVarMem       = "__crm_request_mem__"
+	templateLimitVarCPU         = "__crm_limit_cpu__"
+	templateLimitVarMem         = "__crm_limit_mem__"
 	templateVarEnv              = "__crm_env__"
 	templateVarEnvKey           = "__crm_env_key__"
 	templateVarEnvValue         = "__crm_env_value__"
@@ -267,7 +267,7 @@ func (o *operator) getDeployments(clusterID, namespace, name string, info *op.Se
 
 	info.Status = op.ServiceStatusRunning
 	info.RequestInstances = int(deploy.Status.Replicas)
-	if deploy.Status.UnavailableReplicas > 0 {
+	if deploy.Status.UnavailableReplicas > 0 || deploy.Status.Replicas == 0 {
 		info.Status = op.ServiceStatusStaging
 	}
 
@@ -460,32 +460,39 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 
 	varCPU := o.conf.BcsCPUPerInstance
 	varMem := o.conf.BcsMemPerInstance
-	varRequestCPU := o.conf.BcsCPUPerInstance
-	varRequestMem := o.conf.BcsMemPerInstance
+	varLimitCPU := o.conf.BcsCPUPerInstance
+	varLimitMem := o.conf.BcsMemPerInstance
+	if o.conf.BcsCPULimitPerInstance > 0.0 {
+		varLimitCPU = o.conf.BcsCPULimitPerInstance
+	}
+	if o.conf.BcsMemLimitPerInstance > 0.0 {
+		varLimitMem = o.conf.BcsMemLimitPerInstance
+	}
+
 	for _, istItem := range o.conf.InstanceType {
 		if !param.CheckQueueKey(istItem) {
 			continue
 		}
 		if istItem.CPUPerInstance > 0.0 {
 			varCPU = istItem.CPUPerInstance
-			varRequestCPU = istItem.CPUPerInstance
+			varLimitCPU = istItem.CPUPerInstance
 		}
 		if istItem.MemPerInstance > 0.0 {
 			varMem = istItem.MemPerInstance
-			varRequestMem = istItem.MemPerInstance
+			varLimitMem = istItem.MemPerInstance
 		}
-		if istItem.CPURequestPerInstance > 0.0 {
-			varRequestCPU = istItem.CPURequestPerInstance
+		if istItem.CPULimitPerInstance > 0.0 {
+			varLimitCPU = istItem.CPULimitPerInstance
 		}
-		if istItem.MemRequestPerInstance > 0.0 {
-			varRequestMem = istItem.MemRequestPerInstance
+		if istItem.MemLimitPerInstance > 0.0 {
+			varLimitMem = istItem.MemLimitPerInstance
 		}
 		break
 	}
 	data = strings.ReplaceAll(data, templateVarCPU, fmt.Sprintf("%.2f", varCPU*1000))
 	data = strings.ReplaceAll(data, templateVarMem, fmt.Sprintf("%.2f", varMem))
-	data = strings.ReplaceAll(data, templateRequestVarCPU, fmt.Sprintf("%.2f", varRequestCPU*1000))
-	data = strings.ReplaceAll(data, templateRequestVarMem, fmt.Sprintf("%.2f", varRequestMem))
+	data = strings.ReplaceAll(data, templateLimitVarCPU, fmt.Sprintf("%.2f", varLimitCPU*1000))
+	data = strings.ReplaceAll(data, templateLimitVarMem, fmt.Sprintf("%.2f", varLimitMem))
 	return data, nil
 }
 
@@ -532,6 +539,9 @@ func (o *operator) getClientSetFromCache(clusterID string) (*clusterClientSet, b
 
 func (o *operator) generateClient(clusterID string) (*clusterClientSet, error) {
 	address := o.conf.BcsAPIPool.GetAddress()
+	if o.conf.EnableBCSApiGw {
+		EnableBCSApiGw = "1"
+	}
 	host := fmt.Sprintf(getBcsK8SBaseUri(), address, clusterID)
 
 	blog.Infof("k8s-operator: try generate client with host(%s) token(%s)", host, o.conf.BcsAPIToken)

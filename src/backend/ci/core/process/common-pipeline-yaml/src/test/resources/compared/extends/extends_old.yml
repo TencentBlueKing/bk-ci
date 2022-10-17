@@ -1,0 +1,666 @@
+---
+version: "v2.0"
+name: ""
+label: []
+triggerOn:
+  push:
+    branches:
+    - "*"
+  tag:
+    tags:
+    - "*"
+  mr:
+    target-branches:
+    - "*"
+    action:
+    - "open"
+    - "reopen"
+    - "push-update"
+variables:
+  DEPLOY_TYPE:
+    value: "dev"
+  APPROVE:
+    value: "${{ sss }}_${{ approve22 }}"
+  GIT_USERNAME:
+    value: "user1"
+    readonly: true
+  RES_REPOA_VAR1_USERNAME:
+    value: "RES_VARIABLE"
+  RES_REPOA_VAR2_USERNAME:
+    value: "aaa"
+stages:
+- name: "root_stage_id_1"
+  label: []
+  if: "world == world"
+  fast-kill: false
+  jobs:
+  - id: "root_job_id_1"
+    name: "root_job_id_1"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "[docker-on-vm]"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services:
+    - serviceId: "mysql1"
+      image: "mysql:8.0"
+      with:
+        password: "123456"
+    if: "world == world"
+    steps:
+    - name: "root_step_1"
+      id: "root_step_1"
+      if: "world == world"
+      if-modify: null
+      uses: "UploadArtifactory@1.*"
+      with:
+        path: "test.txt"
+      timeout-minutes: 480
+      continue-on-error: false
+      retry-times: 0
+      env: null
+      run: null
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    - name: null
+      id: null
+      if: "steps.world1.xxx.outputs == world"
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"root_step_1\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: 480
+    env: null
+    continue-on-error: false
+    strategy: null
+    depend-on:
+    - "job1"
+    - "job2"
+  - id: "root_job_id_2"
+    name: "root_job_id_2"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: "steps.world1.outputs.xxx == world"
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"root_stage_id_1, root_job_id_2\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on:
+    - "job_id_1"
+  - id: "res_repoA_job_id_1"
+    name: "res_repoA_job_id_1"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoA_job_id_1\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  - id: "res_repoB_job_id_2"
+    name: "res_repoB_job_id_2"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoB_job_id_2\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  - id: "res_repoB_job_id_3"
+    name: "res_repoB_job_id_3"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoB_job_id_3 username RES_REPOB_JOB3\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  - id: "res_repoA_job_id_3"
+    name: "res_repoA_job_id_3"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoA_job_id_3\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  - id: "res_repoA_job_id_2"
+    name: "res_repoA_job_id_2"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoA_job_id_2 username RES_JOB!\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoA_job_id_2 jobname JOBNAME again!\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  if-modify: null
+  check-in:
+    reviews:
+      flows:
+      - name: "审批组1"
+        reviewers:
+        - "${{ci.actor}}"
+      - name: "审批组2"
+        reviewers:
+        - "${{ci.actor}}"
+      variables: null
+      description: null
+    gates:
+    - name: "gate-1"
+      rule:
+      - "CodeccCheckAtomDebug.coverity_serious_defect <= 3"
+      - "CodeccCheckAtomDebug.sensitive_defect < 2"
+      notify-on-fail:
+      - type: "wework-message"
+        receivers:
+        - "ruotiantang"
+      continue-on-fail: null
+    timeout-hours: null
+  check-out: null
+- name: "res_stage_id_1"
+  label: []
+  if: null
+  fast-kill: false
+  jobs:
+  - id: "res_repoA_stage_id_1_job_id_1"
+    name: "res_repoA_stage_id_1_job_id_1"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoA_stage_id_1_job_id_1 username RES_STAGE\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  - id: "res_repoA_stage_id_1_job_id_2"
+    name: "res_repoA_stage_id_1_job_id_2"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoA_stage_id_1_job_id_2 stagename STAGENAME\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    - name: null
+      id: null
+      if: null
+      if-modify:
+      - "asd/**"
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoA_step_id_4 username RES_REPOA_STAGE1_JOB2_STEP3!\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  if-modify: null
+  check-in:
+    reviews: null
+    gates:
+    - name: "gate-1"
+      rule:
+      - "CodeccCheckAtomDebug.coverity_serious_defect <= 2"
+      - "CodeccCheckAtomDebug.sensitive_defect < 1"
+      notify-on-fail:
+      - type: "wework-message"
+        receivers:
+        - "${{ ci.actor }}"
+      continue-on-fail: null
+    timeout-hours: null
+  check-out: null
+- name: "res_stage_id_2"
+  label: []
+  if: null
+  fast-kill: false
+  jobs:
+  - id: "res_repoA_stage_id_2_job_id_1"
+    name: "res_repoA_stage_id_2_job_id_1"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoA_stage_id_2_job_id_1 username RES_PEPOA_STAGE1\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  - id: "res_repoA_stage_id_2_job_id_2"
+    name: "res_repoA_stage_id_2_job_id_2"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoA_stage_id_2_job_id_2 stagename STAGENAME\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    - name: null
+      id: null
+      if: null
+      if-modify:
+      - "asd/**"
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoA_step_id_4 username RES_REPOA_STAGE2_JOB2_STEP3!\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  if-modify: null
+  check-in: null
+  check-out: null
+- name: "res_repoB_stage_id_1"
+  label: []
+  if: null
+  fast-kill: false
+  jobs:
+  - id: "res_repoB_stage_id_1_job_id_1"
+    name: "res_repoB_stage_id_1_job_id_1"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoB_stage_id_1_job_id_1 username RES_PEPOA_STAGE1\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  if-modify: null
+  check-in: null
+  check-out: null
+- name: "res_repoB_stage_id_2"
+  label: []
+  if: null
+  fast-kill: false
+  jobs:
+  - id: "res_repoB_stage_id_2_job_id_1"
+    name: "res_repoB_stage_id_2_job_id_1"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"res_repoB_stage_id_2_job_id_1 username RES_PEPOB_STAGE2\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  if-modify: null
+  check-in: null
+  check-out: null
+notices:
+- type: "email"
+  receivers:
+  - "user1"
+  - "user2"
+  title: "this is a email notice"
+  content: "this is a email notice,content is hello."
+  ccs:
+  - "user3"
+  if: "SUCCESS"
+- type: "wework-message"
+  receivers:
+  - "user1"
+  - "user2"
+  title: "this is a wework-message notice"
+  content: "this is a wework-message notice,content is hello."
+- type: "wework-chat"
+  content: "this is a wework-chat notice,content is hello."
+  chat-id:
+  - "xxxxxxxx"
+- type: "email"
+  receivers:
+  - "ruotiantang"
+  - "${{ci.actor}}"
+  title: "${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败"
+  content: "${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败"
+  ccs:
+  - "ruotiantang"
+  - "${{ci.actor}}"
+  if: "FAILURE"
+- type: "wework-message"
+  receivers:
+  - "${{ci.actor}}"
+  content: "${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败"
+  if: "FAILURE"
+- type: "wework-chat"
+  content: "${{ variables.EVENT }}触发 STREAM-TEST环境-全部语法测试(模板) 测试失败"
+  if: "FAILURE"
+  chat-id:
+  - "${{ci.actor}}"
+finally: []

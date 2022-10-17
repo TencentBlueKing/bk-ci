@@ -28,22 +28,31 @@
 package systemutil
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"net"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"testing"
 )
 
-func Test_IP(t *testing.T) {
-	a := net.IPv4(192, 168, 1, 1)
-	println(a.IsGlobalUnicast())
-
-	a = net.IPv4(10, 10, 1, 1)
-	println(a.IsGlobalUnicast())
-
-	a = net.IPv4(127, 0, 0, 1)
-	println(a.IsGlobalUnicast())
-}
-
-func Test_GetAgentIp(t *testing.T) {
-	t.Log(systemutil.GetAgentIp([]string{}))
+func TestGetAgentIp(t *testing.T) {
+	logs.DebugInit()
+	type args struct {
+		ignoreIps []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "测试获取agentIP默认值",
+			args: args{[]string{}},
+			want: "127.0.0.1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetAgentIp(tt.args.ignoreIps); got == tt.want {
+				t.Errorf("GetAgentIp() = %v, no want %v", got, tt.want)
+			}
+		})
+	}
 }

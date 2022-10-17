@@ -50,5 +50,19 @@ class Literal(v: Any?) : ExpressionNode() {
 
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> = Pair(null, value)
 
-    override fun subNameValueEvaluateCore(context: EvaluationContext) = ExpressionUtility.formatValue(value, kind)
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
+        val v = when (kind) {
+            ValueKind.Null -> null
+
+            ValueKind.Boolean -> value as Boolean
+
+            ValueKind.Number -> value as Double
+
+            ValueKind.String -> ExpressionUtility.stringEscape(value as String)
+
+            ValueKind.Array, ValueKind.Object -> kind.toString()
+        }
+
+        return Pair(v, true)
+    }
 }

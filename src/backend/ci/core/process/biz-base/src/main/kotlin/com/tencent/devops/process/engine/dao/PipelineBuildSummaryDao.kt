@@ -403,7 +403,7 @@ class PipelineBuildSummaryDao {
                     T_PIPELINE_INFO.LATEST_START_TIME.desc()
                 }
             }
-            baseStep.orderBy(sortTypeField)
+            baseStep.orderBy(sortTypeField, T_PIPELINE_INFO.PIPELINE_ID)
         }
         return if (null != offset && null != limit && offset >= 0 && limit > 0) {
             baseStep.limit(limit).offset(offset).fetch()

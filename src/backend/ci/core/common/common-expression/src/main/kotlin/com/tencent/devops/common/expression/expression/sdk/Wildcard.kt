@@ -41,5 +41,5 @@ class Wildcard : ExpressionNode() {
         return Pair(null, ExpressionConstants.WILDCARD)
     }
 
-    override fun subNameValueEvaluateCore(context: EvaluationContext) = ExpressionConstants.WILDCARD
+    override fun subNameValueEvaluateCore(context: EvaluationContext) = Pair(ExpressionConstants.WILDCARD, true)
 }

@@ -39,6 +39,7 @@ enum class BuildType(
 ) {
     ESXi("蓝盾公共构建资源", listOf(OS.MACOS), false, false, false),
     MACOS("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), false, false, false),
+    WINDOWS("蓝盾WINDOWS公共构建资源", listOf(OS.WINDOWS), false, false, false),
     KUBERNETES(
         "Kubernetes构建资源",
         listOf(OS.LINUX),
