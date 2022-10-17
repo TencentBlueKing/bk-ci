@@ -13,12 +13,16 @@
             </form-field>
         </template>
         <form-field v-if="Object.keys(customTriggerControlModel).length">
-            <accordion show-checkbox show-content key="customTriggerControl">
+            <accordion show-checkbox :show-content="enableCustomTrigger" key="customTriggerControl" :is-version="true">
                 <header class="var-header" style="height: 16px;" slot="header">
-                    <span>{{ $t('editPage.customTriggerControl') }}</span>
-                    <i class="devops-icon icon-angle-down" style="display:block"></i>
+                    <span>
+                        {{ $t('editPage.customTriggerControl') }}
+                        <i class="bk-icon icon-info-circle ml5" v-bk-tooltips="$t('editPage.customTriggerControlTips')"></i>
+                        <a class="title-link" target="blink" :href="customTriggerDocsLink">{{ $t('editPage.customTriggerLinkDesc') }}</a>
+                    </span>
+                    <input class="accordion-checkbox" :disabled="disabled" :checked="enableCustomTrigger" type="checkbox" @click.stop @change="toggleCustomTrigger" />
                 </header>
-                <div slot="content" class="bk-form bk-form-vertical atom-control-option">
+                <div slot="content" class="bk-form bk-form-vertical" v-if="enableCustomTrigger">
                     <template v-for="(obj, key) in customTriggerControlModel">
                         <form-field :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
                             <component
@@ -43,6 +47,13 @@
     export default {
         name: 'code-git-web-hook-trigger',
         mixins: [atomMixin, validMixins],
+        data () {
+            return {
+                customTriggerControlModel: {},
+                enableCustomTrigger: false,
+                customTriggerDocsLink: 'https://github.com/Tencent/bk-ci/issues/7743#issue-1391717634'
+            }
+        },
         watch: {
             'element.enableCheck': {
                 // git事件触发选中commit check ， 同时锁定提交才显示
@@ -64,6 +75,7 @@
             if (thirdUrl && thirdSecretToken) {
                 this.customTriggerControlModel.thirdUrl = thirdUrl
                 this.customTriggerControlModel.thirdSecretToken = thirdSecretToken
+                this.enableCustomTrigger = Boolean(this.element.thirdSecretToken || this.element.thirdUrl)
                 this.atomPropsModel.thirdUrl.hidden = true
                 this.atomPropsModel.thirdSecretToken.hidden = true
             }
@@ -105,7 +117,18 @@
                     this.atomPropsModel.repositoryName.hidden = false
                 }
                 this.handleUpdateElement(name, value)
+            },
+            toggleCustomTrigger () {
+                this.enableCustomTrigger = !this.enableCustomTrigger
             }
         }
     }
 </script>
+
+<style lang="scss">
+    .title-link {
+        cursor: pointer;
+        margin-left: 10px;
+        color: #3c96ff;
+    }
+</style>
