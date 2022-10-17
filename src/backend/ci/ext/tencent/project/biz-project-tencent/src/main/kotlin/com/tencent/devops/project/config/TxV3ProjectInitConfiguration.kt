@@ -29,6 +29,7 @@ package com.tencent.devops.project.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -77,6 +78,7 @@ class TxV3ProjectInitConfiguration {
         dslContext: DSLContext,
         projectDispatcher: ProjectDispatcher,
         client: Client,
+        strategyService: StrategyService,
         userDao: UserDao
     ) = IamV3Service(
         iamManagerService = iamManagerService,
@@ -85,6 +87,7 @@ class TxV3ProjectInitConfiguration {
         dslContext = dslContext,
         projectDispatcher = projectDispatcher,
         client = client,
+        strategyService = strategyService,
         userDao = userDao
     )
 

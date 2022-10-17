@@ -56,6 +56,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import com.tencent.devops.project.pojo.SubjectScope
@@ -71,7 +72,8 @@ class IamV3Service @Autowired constructor(
     val dslContext: DSLContext,
     val projectDispatcher: ProjectDispatcher,
     val client: Client,
-    val strategyService: StrategyService
+    val strategyService: StrategyService,
+    val userDao: UserDao
 ) {
     fun createIamV3Project(event: TxIamV3CreateEvent) {
         val watcher = Watcher(id = "IAM|CreateProject|${event.projectId}|${event.userId}")
