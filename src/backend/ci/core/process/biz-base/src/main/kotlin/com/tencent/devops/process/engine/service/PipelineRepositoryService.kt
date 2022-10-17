@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -71,10 +72,11 @@ import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
+import com.tencent.devops.process.pojo.PipelineCollation
+import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -1131,9 +1133,19 @@ class PipelineRepositoryService constructor(
         projectId: String,
         days: Long?,
         offset: Int? = null,
-        limit: Int? = null
+        limit: Int? = null,
+        sortType: PipelineSortType,
+        collation: PipelineCollation
     ): List<PipelineInfo> {
-        val result = pipelineInfoDao.listDeletePipelineIdByProject(dslContext, projectId, days, offset, limit)
+        val result = pipelineInfoDao.listDeletePipelineIdByProject(
+            dslContext = dslContext,
+            projectId = projectId,
+            days = days,
+            offset = offset,
+            limit = limit,
+            sortType = sortType,
+            collation = collation
+        )
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
             if (it != null) {

@@ -37,6 +37,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryReco
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineFilterParam
+import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
@@ -187,7 +188,8 @@ class PipelineBuildSummaryDao {
         page: Int? = null,
         pageSize: Int? = null,
         pageOffsetNum: Int? = 0,
-        includeDelete: Boolean? = false
+        includeDelete: Boolean? = false,
+        collation: PipelineCollation = PipelineCollation.DEFAULT
     ): Result<TPipelineInfoRecord> {
         val conditions = generatePipelineFilterCondition(
             projectId = projectId,
@@ -207,7 +209,8 @@ class PipelineBuildSummaryDao {
             favorPipelines = favorPipelines,
             authPipelines = authPipelines,
             offset = page?.let { (it - 1) * (pageSize ?: 10) + (pageOffsetNum ?: 0) },
-            limit = if (pageSize == -1) null else pageSize
+            limit = if (pageSize == -1) null else pageSize,
+            collation = collation
         )
     }
 
@@ -382,25 +385,50 @@ class PipelineBuildSummaryDao {
         favorPipelines: List<String> = emptyList(),
         authPipelines: List<String> = emptyList(),
         offset: Int? = null,
-        limit: Int? = null
+        limit: Int? = null,
+        collation: PipelineCollation
     ): Result<TPipelineInfoRecord> {
         val baseStep = dslContext.selectFrom(T_PIPELINE_INFO).where(conditions)
         if (sortType != null) {
             val sortTypeField = when (sortType) {
                 PipelineSortType.NAME -> {
-                    T_PIPELINE_INFO.PIPELINE_NAME_PINYIN.asc()
+                    T_PIPELINE_INFO.PIPELINE_NAME_PINYIN.let {
+                        if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.ASC) {
+                            it.asc()
+                        } else {
+                            it.desc()
+                        }
+                    }
                 }
 
                 PipelineSortType.CREATE_TIME -> {
-                    T_PIPELINE_INFO.CREATE_TIME.desc()
+                    T_PIPELINE_INFO.CREATE_TIME.let {
+                        if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.DESC) {
+                            it.desc()
+                        } else {
+                            it.asc()
+                        }
+                    }
                 }
 
                 PipelineSortType.UPDATE_TIME -> {
-                    T_PIPELINE_INFO.UPDATE_TIME.desc()
+                    T_PIPELINE_INFO.UPDATE_TIME.let {
+                        if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.DESC) {
+                            it.desc()
+                        } else {
+                            it.asc()
+                        }
+                    }
                 }
 
                 PipelineSortType.LAST_EXEC_TIME -> {
-                    T_PIPELINE_INFO.LATEST_START_TIME.desc()
+                    T_PIPELINE_INFO.LATEST_START_TIME.let {
+                        if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.DESC) {
+                            it.desc()
+                        } else {
+                            it.asc()
+                        }
+                    }
                 }
             }
             baseStep.orderBy(sortTypeField, T_PIPELINE_INFO.PIPELINE_ID)

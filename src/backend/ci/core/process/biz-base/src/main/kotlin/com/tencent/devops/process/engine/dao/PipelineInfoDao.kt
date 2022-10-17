@@ -33,6 +33,8 @@ import com.tencent.devops.common.util.PinyinUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.PipelineCollation
+import com.tencent.devops.process.pojo.PipelineSortType
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
@@ -317,7 +319,9 @@ class PipelineInfoDao {
         projectId: String,
         days: Long?,
         offset: Int? = null,
-        limit: Int? = null
+        limit: Int? = null,
+        sortType: PipelineSortType,
+        collation: PipelineCollation
     ): Result<TPipelineInfoRecord>? {
         with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -329,6 +333,19 @@ class PipelineInfoDao {
             return dslContext
                 .selectFrom(this)
                 .where(conditions)
+                .let {
+                    val st = if (sortType == PipelineSortType.CREATE_TIME) {
+                        CREATE_TIME
+                    } else {
+                        UPDATE_TIME
+                    }
+                    val c = if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.DESC) {
+                        st.desc()
+                    } else {
+                        st.asc()
+                    }
+                    it.orderBy(c)
+                }
                 .let { if (offset != null && limit != null) it.limit(offset, limit) else it }
                 .fetch()
         }

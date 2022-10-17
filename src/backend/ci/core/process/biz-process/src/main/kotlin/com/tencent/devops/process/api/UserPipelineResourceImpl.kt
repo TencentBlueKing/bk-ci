@@ -48,6 +48,7 @@ import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
@@ -471,13 +472,18 @@ class UserPipelineResourceImpl @Autowired constructor(
         projectId: String,
         page: Int?,
         pageSize: Int?,
-        sortType: PipelineSortType?
+        sortType: PipelineSortType?,
+        collation: PipelineCollation
     ): Result<PipelineViewPipelinePage<PipelineInfo>> {
         checkParam(userId, projectId)
         return Result(
             pipelineListFacadeService.listDeletePipelineIdByProject(
-                userId, projectId, page,
-                pageSize, sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                sortType = sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS,
+                collation = collation
             )
         )
     }
@@ -503,7 +509,8 @@ class UserPipelineResourceImpl @Autowired constructor(
         filterByCreator: String?,
         filterByLabels: String?,
         filterByViewIds: String?,
-        viewId: String
+        viewId: String,
+        collation: PipelineCollation
     ): Result<PipelineViewPipelinePage<Pipeline>> {
         checkParam(userId, projectId)
         return Result(
@@ -519,7 +526,8 @@ class UserPipelineResourceImpl @Autowired constructor(
                 filterByPipelineName = filterByPipelineName,
                 filterByCreator = filterByCreator,
                 filterByLabels = filterByLabels,
-                filterByViewIds = filterByViewIds
+                filterByViewIds = filterByViewIds,
+                collation = collation
             )
         )
     }

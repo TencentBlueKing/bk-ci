@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
@@ -383,7 +384,10 @@ interface UserPipelineResource {
         filterByViewIds: String? = null,
         @ApiParam("用户视图ID,表示用户当前所在视图", required = true)
         @QueryParam("viewId")
-        viewId: String
+        viewId: String,
+        @ApiParam("排序规则", required = false)
+        @QueryParam("collation")
+        collation: PipelineCollation = PipelineCollation.DEFAULT
     ): Result<PipelineViewPipelinePage<Pipeline>>
 
     @ApiOperation("有权限流水线编排列表")
@@ -475,7 +479,10 @@ interface UserPipelineResource {
         pageSize: Int?,
         @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
         @QueryParam("sortType")
-        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME
+        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
+        @ApiParam("排序规则", required = false)
+        @QueryParam("collation")
+        collation: PipelineCollation = PipelineCollation.DEFAULT
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
 
     @ApiOperation("流水线重命名")
