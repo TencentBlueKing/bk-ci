@@ -29,7 +29,6 @@ package com.tencent.devops.stream.trigger
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -142,14 +141,14 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             } catch (triggerException: StreamTriggerException) {
                 return false
             }
-            val targetProjectInfo = try {
-                // 这里把第一个访问工蜂项目的接口异常抓住,主要是为了兼容项目被删除之后触发异常.待删除项目闭环处理之后.可去除该限制
-                streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                    gitProjectKey = pipeline.gitProjectId,
-                    action = action,
-                    getProjectInfo = action.api::getGitProjectInfo
-                )
-            } catch (error: ErrorCodeException) {
+            val targetProjectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                gitProjectKey = pipeline.gitProjectId,
+                action = action,
+                getProjectInfo = action.api::getGitProjectInfo
+            )
+
+            // 这里把第一个访问工蜂项目的接口异常抓住,主要是为了兼容项目被删除之后触发异常.待删除项目闭环处理之后.可去除该限制
+            if (targetProjectInfo == null) {
                 logger.warn(
                     "StreamTriggerRequestRepoService|triggerPerPipeline" +
                         "|may be deleted, repo trigger error|project[${pipeline.gitProjectId}]"
@@ -158,7 +157,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             }
 
             action.data.context.repoTrigger = action.data.context.repoTrigger!!.copy(
-                branch = targetProjectInfo!!.defaultBranch!!
+                branch = targetProjectInfo.defaultBranch!!
             )
             action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
 

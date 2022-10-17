@@ -217,16 +217,28 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 EnvReplacementParser.getCustomExecutionContextByMap(contextMap)
                             } else null
                             c.buildEnv?.forEach { env ->
-                                containerAppResource.getBuildEnv(
+                                val version = EnvReplacementParser.parse(
+                                    value = env.value,
+                                    contextMap = contextMap,
+                                    onlyExpression = asCodeEnabled,
+                                    contextPair = contextPair
+                                )
+                                val res = containerAppResource.getBuildEnv(
                                     name = env.key,
-                                    version = EnvReplacementParser.parse(
-                                        value = env.value,
-                                        contextMap = contextMap,
-                                        onlyExpression = asCodeEnabled,
-                                        contextPair = contextPair
-                                    ),
+                                    version = version,
                                     os = c.baseOS.name.toLowerCase()
-                                ).data?.let { self -> envList.add(self) }
+                                ).data
+                                if (res == null) {
+                                    buildLogPrinter.addYellowLine(
+                                        buildId = buildId,
+                                        message = "NFS 挂载 ${env.key}:$version 不支持，已忽略",
+                                        tag = VMUtils.genStartVMTaskId(vmSeqId),
+                                        jobId = c.containerHashId,
+                                        executeCount = c.executeCount ?: 1
+                                    )
+                                    return@forEach
+                                }
+                                envList.add(res)
                             }
 
                             // 设置Job环境变量customBuildEnv到variablesWithType和variables中
@@ -892,10 +904,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     (
                         errorCode?.let {
                             "\n${
-                            MessageCodeUtil.getCodeLanMessage(
-                                messageCode = errorCode.toString(),
-                                checkUrlDecoder = true
-                            )
+                                MessageCodeUtil.getCodeLanMessage(
+                                    messageCode = errorCode.toString(),
+                                    checkUrlDecoder = true
+                                )
                             }\n"
                         }
                             ?: ""

@@ -28,7 +28,9 @@
 package com.tencent.devops.process.yaml.modelCreate
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.container.Container
@@ -48,7 +50,9 @@ import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.pojo.QualityElementInfo
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.utils.PathMatchUtils
+import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
 import com.tencent.devops.process.yaml.v2.models.Resources
+import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v2.stageCheck.ReviewVariable
 import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
@@ -56,10 +60,12 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
+import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
+import javax.ws.rs.core.Response
 import com.tencent.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 
 @Component
@@ -99,6 +105,7 @@ class ModelStage @Autowired(required = false) constructor(
         val stageEnable = PathMatchUtils.isIncludePathMatch(stage.ifModify, event.changeSet)
 
         stage.jobs.forEachIndexed { jobIndex, job ->
+            doSomeCheck(job)
             val jobEnable = stageEnable && PathMatchUtils.isIncludePathMatch(job.ifModify, event.changeSet)
             val elementList = modelElement.makeElementList(
                 job = job,
@@ -190,6 +197,21 @@ class ModelStage @Autowired(required = false) constructor(
                 )
             }
         )
+    }
+
+    private fun doSomeCheck(job: Job) {
+        // 检查挂载版本是否支持(此处只检查未使用上下文的方式, 使用了上下文就将在引擎执行时检查)
+        job.runsOn.needs?.forEach { env ->
+            if (env.value.startsWith("$")) return@forEach
+            client.get(ServiceContainerAppResource::class).getBuildEnv(
+                name = env.key,
+                version = env.value,
+                os = StreamDispatchUtils.getBaseOs(job).name.toLowerCase()
+            ).data ?: throw CustomException(
+                // 说明用户填写的name或version不对，直接抛错
+                Response.Status.BAD_REQUEST, "NFS挂载失败，请检查${env.key}:${env.value} 是否支持挂载"
+            )
+        }
     }
 
     private fun createStagePauseCheck(
