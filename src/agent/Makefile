@@ -44,7 +44,7 @@ build_linux_mips64: test
 	ls -la $(BINDIR)
 
 # Telegraf 的 cpu和diskio 插件采集使用的 shirou 包需要开启cgo才可以在darwin情况下采集成功
-build_macos: test
+build_macos: test clean
 	mkdir -p $(BINDIR)
 	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_macos $(CMDDIR)/daemon/main.go
 	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos $(CMDDIR)/agent/main.go

@@ -101,7 +101,8 @@ func DoUpgradeOperation(agentChanged bool, workAgentChanged bool, jdkChanged boo
 	defer func() {
 		job.GBuildManager.Lock.Unlock()
 	}()
-	if job.GBuildManager.GetPreInstancesCount() > 0 && job.GBuildManager.GetInstanceCount() > 0 {
+	if job.GBuildManager.GetPreInstancesCount() > 0 && job.GBuildManager.GetInstanceCount() > 0 ||
+		job.GBuildDockerManager.GetCurrentJobsCount() > 0 {
 		return nil
 	}
 

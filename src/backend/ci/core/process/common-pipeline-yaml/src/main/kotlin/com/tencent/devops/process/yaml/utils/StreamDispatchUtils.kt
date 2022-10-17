@@ -201,7 +201,7 @@ object StreamDispatchUtils {
      * 解析 jobs.runsOn.container
      * @return image,username,password
      */
-    fun parseRunsOnContainer(
+    private fun parseRunsOnContainer(
         client: Client,
         job: Job,
         projectCode: String,
