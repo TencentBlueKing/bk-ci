@@ -145,10 +145,14 @@ object TXStreamDispatchUtils {
 
             val dockerInfo = ThirdPartyAgentDockerInfo(
                 image = image,
-                credential = thirdPartDockerCredential(
-                    user = userName,
-                    password = password
-                ),
+                credential = if (userName.isBlank() || password.isBlank()) {
+                    null
+                } else {
+                    thirdPartDockerCredential(
+                        user = userName,
+                        password = password
+                    )
+                },
                 envs = job.env
             )
 
