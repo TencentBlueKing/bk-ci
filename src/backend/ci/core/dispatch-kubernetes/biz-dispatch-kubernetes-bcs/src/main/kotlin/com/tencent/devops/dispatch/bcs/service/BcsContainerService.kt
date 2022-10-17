@@ -110,6 +110,9 @@ class BcsContainerService @Autowired constructor(
     @Value("\${bcs.entrypoint}")
     override val entrypoint: String = "bcs_init.sh"
 
+    @Value("\${bcs.sleepEntrypoint}")
+    override val sleepEntrypoint: String = "sleep.sh"
+
     override val helpUrl: String? = ""
 
     override fun getBuilderStatus(
@@ -157,7 +160,7 @@ class BcsContainerService @Autowired constructor(
             param = when (param.type) {
                 DispatchBuildOperateBuilderType.START_SLEEP -> BcsStartBuilderParams(
                     env = param.env,
-                    command = listOf("/bin/sh", entrypoint)
+                    command = listOf("/bin/sh", sleepEntrypoint)
                 )
                 DispatchBuildOperateBuilderType.DELETE -> BcsDeleteBuilderParams()
                 DispatchBuildOperateBuilderType.STOP -> BcsStopBuilderParams()

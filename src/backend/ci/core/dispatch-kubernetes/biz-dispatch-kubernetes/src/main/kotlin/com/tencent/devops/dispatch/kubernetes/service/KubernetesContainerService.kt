@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
@@ -44,12 +45,14 @@ import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImageInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
@@ -78,21 +81,30 @@ import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
 import com.tencent.devops.dispatch.kubernetes.pojo.readyToStart
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.apache.commons.lang3.RandomStringUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.stream.Collectors
 
 @Service("kubernetesContainerService")
 class KubernetesContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
+    private val dslContext: DSLContext,
     private val kubernetesTaskClient: KubernetesTaskClient,
     private val kubernetesBuilderClient: KubernetesBuilderClient,
-    private val kubernetesJobClient: KubernetesJobClient
+    private val kubernetesJobClient: KubernetesJobClient,
+    private val dispatchKubernetesBuildDao: DispatchKubernetesBuildDao
 ) : ContainerService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(KubernetesContainerService::class.java)
+
+        // kubernetes构建机默认request配置
+        private const val DEFAULT_REQUEST_CPU = 1
+        private const val DEFAULT_REQUEST_MEM = 1024
+        private const val DEFAULT_REQUEST_DISK = 100
     }
 
     override val shutdownLockBaseKey = "dispatch_kubernetes_shutdown_lock_"
@@ -115,7 +127,13 @@ class KubernetesContainerService @Autowired constructor(
     @Value("\${kubernetes.entrypoint}")
     override val entrypoint: String = "kubernetes_init.sh"
 
+    @Value("\${kubernetes.sleepEntrypoint}")
+    override val sleepEntrypoint: String = "sleep.sh"
+
     override val helpUrl: String? = ""
+
+    @Value("\${kubernetes.gateway.webConsoleProxy}")
+    val webConsoleProxy: String = ""
 
     override fun getBuilderStatus(
         buildId: String,
@@ -164,7 +182,7 @@ class KubernetesContainerService @Autowired constructor(
                 DispatchBuildOperateBuilderType.STOP -> StopBuilderParams()
                 DispatchBuildOperateBuilderType.START_SLEEP -> StartBuilderParams(
                     env = param.env,
-                    command = listOf("/bin/sh", entrypoint)
+                    command = listOf("/bin/sh", sleepEntrypoint)
                 )
             }
         )
@@ -198,13 +216,13 @@ class KubernetesContainerService @Autowired constructor(
                     image = "$host/$name:$tag",
                     registry = registry,
                     resource = KubernetesResource(
-                        requestCPU = cpu.toString(),
-                        requestDisk = "${disk}G",
-                        requestDiskIO = "1",
-                        requestMem = "${memory}Mi",
+                        requestCPU = DEFAULT_REQUEST_CPU.toString(),
+                        requestDisk = "${DEFAULT_REQUEST_DISK}G",
+                        requestDiskIO = "0",
+                        requestMem = "${DEFAULT_REQUEST_MEM}Mi",
                         limitCpu = cpu.toString(),
                         limitDisk = "${disk}G",
-                        limitDiskIO = "1",
+                        limitDiskIO = "0",
                         limitMem = "${memory}Mi"
                     ),
                     env = mapOf(
@@ -241,7 +259,7 @@ class KubernetesContainerService @Autowired constructor(
                 logsPrinter.printLogs(this, "构建机创建成功，等待机器启动...")
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲
-                clearExceptionBuilder(builderName)
+                clearExceptionBuilder(builderName, poolNo)
                 throw BuildFailureException(
                     ErrorCodeEnum.CREATE_VM_ERROR.errorType,
                     ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
@@ -283,10 +301,20 @@ class KubernetesContainerService @Autowired constructor(
         }
     }
 
-    private fun DispatchMessage.clearExceptionBuilder(builderName: String) {
+    private fun DispatchMessage.clearExceptionBuilder(builderName: String, poolNo: Int) {
         try {
             // 下发删除，不管成功失败
             logger.info("[$buildId]|[$vmSeqId] Delete builder, userId: $userId, builderName: $builderName")
+
+            dispatchKubernetesBuildDao.updateStatus(
+                dslContext = dslContext,
+                dispatchType = dockerRoutingType ?: DockerRoutingType.KUBERNETES.name,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                poolNo = poolNo,
+                status = DispatchBuilderStatus.IDLE.status
+            )
+
             kubernetesBuilderClient.operateBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
@@ -363,7 +391,22 @@ class KubernetesContainerService @Autowired constructor(
         staffName: String,
         builderName: String
     ): String {
-        return kubernetesBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
+        if (webConsoleProxy.isEmpty()) {
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorType,
+                errorCode = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorCode,
+                formatErrorMessage = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.formatErrorMessage,
+                errorMessage = "webConsoleProxy is empty"
+            )
+        }
+        val websocketUrl = kubernetesBuilderClient.getWebsocketUrl(projectId, pipelineId, staffName, builderName).data!!
+        val list = websocketUrl.split("/").toList()
+        val targetHost = list[2]
+        val newWsUrl = StringBuilder(webConsoleProxy)
+            .append("/")
+            .append(list.subList(3, list.size).stream().collect(Collectors.joining("/")))
+            .append("?targetHost=$targetHost")
+        return newWsUrl.toString()
     }
 
     override fun buildAndPushImage(
@@ -379,7 +422,7 @@ class KubernetesContainerService @Autowired constructor(
 
         val info = with(dispatchBuildImageReq) {
             BuildAndPushImage(
-                name = getOnlyName(userId),
+                name = jobName,
                 resource = KubernetesResource(
                     requestCPU = cpu.toString(),
                     requestDisk = "${disk}G",
@@ -417,7 +460,7 @@ class KubernetesContainerService @Autowired constructor(
         } else {
             userId
         }
-        return "${subUserId}${System.currentTimeMillis()}-" +
+        return "${subUserId.replace("_", "-")}${System.currentTimeMillis()}-" +
             RandomStringUtils.randomAlphabetic(8).toLowerCase()
     }
 }

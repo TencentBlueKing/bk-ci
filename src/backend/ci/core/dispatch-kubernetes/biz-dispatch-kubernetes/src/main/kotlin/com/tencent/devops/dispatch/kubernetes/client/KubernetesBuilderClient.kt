@@ -70,12 +70,12 @@ class KubernetesBuilderClient @Autowired constructor(
         retryTime: Int = 3
     ): KubernetesResult<KubernetesBuilderStatus> {
         val url = "/api/builders/$name/status"
-        logger.info("[$buildId]|[$vmSeqId] request url: $url")
+        logger.info("[$buildId]|[$vmSeqId] Get detail builderName: $name request url: $url")
         val request = clientCommon.baseRequest(userId, url).get().build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
-                logger.info("[$buildId]|[$vmSeqId] builderName: $name response: $responseContent")
+                logger.info("[$buildId]|[$vmSeqId] Get detail builderName: $name response: $responseContent")
                 if (response.isSuccessful) {
                     return objectMapper.readValue(responseContent)
                 }
@@ -146,8 +146,8 @@ class KubernetesBuilderClient @Autowired constructor(
 
             else -> return ""
         }
-        logger.info("[$buildId]|[$vmSeqId] request url: $url")
-        logger.info("[$buildId]|[$vmSeqId] request body: $body")
+        logger.info("[$buildId]|[$vmSeqId] operator builder: $name request url: $url")
+        logger.info("[$buildId]|[$vmSeqId] operator builder: $name request body: $body")
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
@@ -160,7 +160,7 @@ class KubernetesBuilderClient @Autowired constructor(
                             "（Fail to $action docker, http response code: ${response.code()}"
                     )
                 }
-                logger.info("[$buildId]|[$vmSeqId] response: $responseContent")
+                logger.info("[$buildId]|[$vmSeqId] operator builder: $name response: $responseContent")
                 val responseData: KubernetesResult<TaskResp> = objectMapper.readValue(responseContent)
                 if (responseData.isOk()) {
                     return responseData.data!!.taskId
@@ -193,8 +193,8 @@ class KubernetesBuilderClient @Autowired constructor(
     ): String {
         val url = "/api/builders"
         val body = ObjectMapper().writeValueAsString(builder)
-        logger.info("[$buildId]|[$vmSeqId] request url: $url")
-        logger.info("[$buildId]|[$vmSeqId] request body: $body")
+        logger.info("[$buildId]|[$vmSeqId] create builder request url: $url")
+        logger.info("[$buildId]|[$vmSeqId] create builder request body: $body")
         val request = clientCommon.baseRequest(userId, url)
             .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
             .build()
@@ -202,7 +202,7 @@ class KubernetesBuilderClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
-                logger.info("[$buildId]|[$vmSeqId] http code is ${response.code()}, $responseContent")
+                logger.info("[$buildId]|[$vmSeqId] create builder response: ${response.code()}, $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
@@ -251,7 +251,7 @@ class KubernetesBuilderClient @Autowired constructor(
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
-                logger.error("dev cloud container start timeout")
+                logger.error("$buildId|$vmSeqId|$containerName start builder running timeout")
                 return KubernetesBuilderStatusEnum.FAILED
             }
             Thread.sleep(1 * 1000)
@@ -288,7 +288,7 @@ class KubernetesBuilderClient @Autowired constructor(
         builderName: String
     ): KubernetesResult<String> {
         val url = "/api/builders/$builderName/terminal"
-        logger.info("request url: $url, staffName: $staffName")
+        logger.info("$projectId|$staffName|$builderName Get websocketUrl request url: $url, staffName: $staffName")
 
         val request = clientCommon.baseRequest(staffName, url)
             .get()
@@ -297,7 +297,7 @@ class KubernetesBuilderClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
-                logger.info("response: $responseContent")
+                logger.info("$projectId|$staffName|$builderName Get websocketUrl response: $responseContent")
                 if (!response.isSuccessful) {
                     // throw OperationException("Fail to get container websocket")
                     throw BuildFailureException(

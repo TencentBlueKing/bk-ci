@@ -85,12 +85,14 @@ class UserDockerDebugResourceImpl @Autowired constructor(
             buildId = debugStartParam.buildId,
             dockerRoutingType = formatDispatchType.second
         )
+
         return Result(
             DebugResponse(
-            websocketUrl = debugUrl,
-            containerName = null,
-            dispatchType = formatDispatchType.first.name
-        )
+                websocketUrl = debugUrl,
+                containerName = null,
+                dispatchType = formatDispatchType.first.name,
+                dockerRoutingType = formatDispatchType.second.name
+            )
         )
     }
 
@@ -117,7 +119,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
         }
 
         val formatDispatchType = formatDispatchType(projectId)
-        return Result(DebugServiceEnum.valueOf(formatDispatchType.first.name!!).instance().stopDebug(
+        return Result(DebugServiceEnum.valueOf(formatDispatchType.first.name).instance().stopDebug(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,

@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.kubernetes.pojo.base
 
 data class DispatchBuildImageReq(
+    val jobName: String,
     val imageName: List<String>,
     val registry: List<Registry>,
     val fromRegistry: List<Registry>,
