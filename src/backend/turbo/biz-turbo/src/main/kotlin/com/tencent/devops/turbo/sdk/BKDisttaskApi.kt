@@ -6,18 +6,18 @@ import com.tencent.devops.web.util.SpringContextHolder
 import org.slf4j.LoggerFactory
 
 
-object BKDistccApi {
+object BKDisttaskApi {
 
-    private val logger = LoggerFactory.getLogger(BKDistccApi::class.java)
+    private val logger = LoggerFactory.getLogger(BKDisttaskApi::class.java)
 
 
     /**
      * 查询编译加速工具版本清单
      */
-    fun queryBkdistccVersion(): String {
+    fun queryVersionResStr(): String {
         val properties = SpringContextHolder.getBean<TBSProperties>()
         val url = "${properties.rootPath}/api/v1/disttask/resource/version"
-        logger.info("queryBkdistccVersion url: [$url]")
+        logger.info("queryBkdisttaskVersion url: [$url]")
         return OkhttpUtil.doGet(url = url)
     }
 }

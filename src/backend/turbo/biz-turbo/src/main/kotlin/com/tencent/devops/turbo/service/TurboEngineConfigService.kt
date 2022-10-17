@@ -22,7 +22,7 @@ import com.tencent.devops.turbo.pojo.ParamEnumSimpleModel
 import com.tencent.devops.turbo.pojo.TurboDisplayFieldModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigPriorityModel
-import com.tencent.devops.turbo.sdk.BKDistccApi
+import com.tencent.devops.turbo.sdk.BKDisttaskApi
 import com.tencent.devops.turbo.vo.TurboEngineConfigVO
 import org.quartz.CronScheduleBuilder
 import org.quartz.JobBuilder
@@ -53,6 +53,8 @@ class TurboEngineConfigService @Autowired constructor(
         private const val triggerGroup = "turboTriggerGroup"
         private const val jobGroup = "turboJobGroup"
         private const val cronExpressionSubfix = " * * * * ?"
+
+        private const val latestVersion = "latest"
     }
 
     private val spelExpressionCache = Caffeine.newBuilder()
@@ -740,13 +742,18 @@ class TurboEngineConfigService @Autowired constructor(
      * 获取编译加速工具的版本清单
      */
     fun getDistTaskVersion(): List<String> {
-        val responseString = BKDistccApi.queryBkdistccVersion()
-        logger.info("queryBkdistccVersion responseString: $responseString")
+        val responseString = BKDisttaskApi.queryVersionResStr()
+        logger.info("queryBkdisttaskVersion responseString: $responseString")
         return if (responseString.isBlank()) {
             logger.warn("getDistTaskVersion response string is blank!")
             emptyList()
         } else {
-            JsonUtil.to(responseString, object : TypeReference<DistccResponse<List<String>>>() {}).data
+            val versionList = JsonUtil.to(responseString,
+                object : TypeReference<DistccResponse<MutableList<String>>>() {}).data
+            if (versionList.isNotEmpty()) {
+                versionList.add(0, latestVersion)
+            }
+            versionList
         }
     }
 }
