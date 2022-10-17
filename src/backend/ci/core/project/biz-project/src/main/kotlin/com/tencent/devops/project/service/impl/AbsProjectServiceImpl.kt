@@ -227,6 +227,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: DuplicateKeyException) {
             logger.warn("Duplicate project $projectCreateInfo", e)
             if (createExtInfo.needAuth) {
+                // todo 待确定，是否需要删除
                 deleteAuth(projectId, accessToken)
             }
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))

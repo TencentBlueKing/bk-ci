@@ -28,6 +28,7 @@
 dependencies {
     api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":core:project:biz-project"))
+    api(project(":core:auth:biz-auth"))
     api(project(":core:project:api-project"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:store:api-store-service"))

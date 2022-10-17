@@ -304,7 +304,7 @@ class TxProjectServiceImpl @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.warn(
                     "Fail to request($request) with code ${response.code()}, " +
-                            "message ${response.message()} and response $responseContent"
+                        "message ${response.message()} and response $responseContent"
                 )
                 throw OperationException(errorMessage)
             }

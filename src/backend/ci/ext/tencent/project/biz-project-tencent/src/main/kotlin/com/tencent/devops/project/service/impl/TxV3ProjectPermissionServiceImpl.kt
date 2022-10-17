@@ -50,6 +50,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.SubjectScope
 import okhttp3.MediaType
 import org.springframework.beans.factory.annotation.Value
 
@@ -79,9 +80,10 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        userDeptDetail: UserDeptDetail?,
+        subjectScopes: List<SubjectScope>?
     ): String {
-        // TODO: (V3创建项目未完全迁移完前，需双写V0,V3)
+        // TODO: 是否干掉
         // 同步创建V0项目
         val projectId = createResourcesToV0(userId, accessToken, resourceRegisterInfo, userDeptDetail)
         // 异步创建V3项目
@@ -92,7 +94,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
                 delayMills = 1000,
                 resourceRegisterInfo = resourceRegisterInfo,
                 projectId = projectId,
-                iamProjectId = null
+                iamProjectId = null,
+                subjectScopes = subjectScopes
             )
         )
         return projectId
@@ -178,8 +181,10 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} , " +
-                    "message ${response.message()} and response $responseContent")
+                logger.warn(
+                    "Fail to request($request) with code ${response.code()} , " +
+                        "message ${response.message()} and response $responseContent"
+                )
                 throw OperationException(errorMessage)
             }
             return responseContent

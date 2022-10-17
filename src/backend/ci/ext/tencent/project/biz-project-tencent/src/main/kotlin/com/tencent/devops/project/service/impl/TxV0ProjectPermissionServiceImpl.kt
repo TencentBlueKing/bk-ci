@@ -43,6 +43,7 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import okhttp3.MediaType
@@ -69,7 +70,8 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         projectCreateInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        userDeptDetail: UserDeptDetail?,
+        subjectScopes: List<SubjectScope>?
     ): String {
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
         // 创建AUTH项目
