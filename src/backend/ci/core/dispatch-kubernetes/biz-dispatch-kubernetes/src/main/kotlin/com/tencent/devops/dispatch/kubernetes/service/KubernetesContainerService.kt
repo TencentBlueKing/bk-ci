@@ -100,6 +100,11 @@ class KubernetesContainerService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(KubernetesContainerService::class.java)
+
+        // kubernetes构建机默认request配置
+        private const val DEFAULT_REQUEST_CPU = 1
+        private const val DEFAULT_REQUEST_MEM = 1024
+        private const val DEFAULT_REQUEST_DISK = 100
     }
 
     override val shutdownLockBaseKey = "dispatch_kubernetes_shutdown_lock_"
@@ -211,13 +216,13 @@ class KubernetesContainerService @Autowired constructor(
                     image = "$host/$name:$tag",
                     registry = registry,
                     resource = KubernetesResource(
-                        requestCPU = cpu.toString(),
-                        requestDisk = "${disk}G",
-                        requestDiskIO = "1",
-                        requestMem = "${memory}Mi",
+                        requestCPU = DEFAULT_REQUEST_CPU.toString(),
+                        requestDisk = "${DEFAULT_REQUEST_DISK}G",
+                        requestDiskIO = "0",
+                        requestMem = "${DEFAULT_REQUEST_MEM}Mi",
                         limitCpu = cpu.toString(),
                         limitDisk = "${disk}G",
-                        limitDiskIO = "1",
+                        limitDiskIO = "0",
                         limitMem = "${memory}Mi"
                     ),
                     env = mapOf(
