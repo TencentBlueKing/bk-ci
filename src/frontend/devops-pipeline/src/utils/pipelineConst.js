@@ -95,3 +95,14 @@ export function pluginUrlParse (originUrl, query) {
     return new Function('ctx', `return '${originUrl.replace(PLUGIN_URL_PARAM_REG, '\'\+ (ctx.hasOwnProperty(\'$1\') ? ctx[\'$1\'] : "") \+\'')}'`)(query)
     /* eslint-enable */
 }
+
+export const ORDER_ENUM = {
+    ASC: 'ascending',
+    DESC: 'descending'
+}
+export const PIPELINE_SORT_FILED = {
+    pipelineName: 'NAME',
+    createTime: 'CREATE_TIME',
+    latestBuildStartDate: 'LAST_EXEC_TIME',
+    updateTime: 'UPDATE_TIME'
+}

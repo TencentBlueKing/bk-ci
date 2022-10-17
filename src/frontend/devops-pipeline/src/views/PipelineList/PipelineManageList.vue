@@ -128,6 +128,7 @@
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import Logo from '@/components/Logo'
+    import { PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
 
     const TABLE_LAYOUT = 'table'
     const CARD_LAYOUT = 'card'
@@ -189,16 +190,16 @@
             sortList () {
                 return [
                     {
-                        id: 'NAME',
+                        id: PIPELINE_SORT_FILED.piplineName,
                         name: this.$t('newlist.orderByAlpha')
                     }, {
-                        id: 'CREATE_TIME',
+                        id: PIPELINE_SORT_FILED.createTime,
                         name: this.$t('newlist.orderByCreateTime')
                     }, {
-                        id: 'UPDATE_TIME',
+                        id: PIPELINE_SORT_FILED.updateTime,
                         name: this.$t('newlist.orderByUpdateTime')
                     }, {
-                        id: 'LAST_EXEC_TIME',
+                        id: PIPELINE_SORT_FILED.latestBuildStartDate,
                         name: this.$t('newlist.orderByExecuteTime')
                     }
                 ]

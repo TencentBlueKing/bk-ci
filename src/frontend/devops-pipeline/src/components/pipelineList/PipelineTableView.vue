@@ -10,10 +10,13 @@
         @page-change="handlePageChange"
         @page-limit-change="handlePageLimitChange"
         :row-class-name="setRowCls"
+        @sort-change="handleSort"
+        :default-sort="sortField"
         v-on="$listeners"
     >
+        <PipelineListEmpty slot="empty"></PipelineListEmpty>
         <bk-table-column v-if="isPatchView" type="selection" width="60"></bk-table-column>
-        <bk-table-column width="250" sortable :label="$t('pipelineName')" prop="pipelineName">
+        <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <span @click="goHistory(props.row.pipelineId)">{{props.row.pipelineName}}</span>
             </template>
@@ -28,16 +31,16 @@
             </div>
         </bk-table-column>
         <template v-if="isPatchView">
-            <bk-table-column width="250" sortable :label="$t('latestExec')" prop="latestBuildNum">
+            <bk-table-column width="250" :label="$t('latestExec')" prop="latestBuildNum">
                 <span slot-scope="props">{{ props.row.latestBuildNum ? `#${props.row.latestBuildNum}` : '--' }}</span>
             </bk-table-column>
-            <bk-table-column width="150" :label="$t('lastExecTime')" prop="latestBuildStartDate" />
-            <bk-table-column width="250" sortable :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
-            <bk-table-column width="250" sortable :label="$t('creator')" prop="creator" />
+            <bk-table-column width="150" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate" />
+            <bk-table-column width="250" sortable="custom" :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
+            <bk-table-column width="250" :label="$t('creator')" prop="creator" />
         </template>
         <template v-else-if="isDeleteView">
-            <bk-table-column :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
-            <bk-table-column :label="$t('restore.deleteTime')" prop="updateTime" :formatter="formatTime" />
+            <bk-table-column :label="$t('restore.createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
+            <bk-table-column :label="$t('restore.deleteTime')" sortable="custom" prop="updateTime" :formatter="formatTime" />
             <bk-table-column :label="$t('restore.deleter')" prop="lastModifyUser" column-key="lastModifyUser">
                 <span slot-scope="props">
                     {{ props.row.lastModifyUser }}
@@ -125,18 +128,21 @@
 <script>
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import Logo from '@/components/Logo'
+    import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import {
         ALL_PIPELINE_VIEW_ID
     } from '@/store/constants'
     import { convertTime } from '@/utils/util'
+    import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
 
     export default {
         components: {
             Logo,
             ExtMenu,
-            PipelineStatusIcon
+            PipelineStatusIcon,
+            PipelineListEmpty
         },
         mixins: [piplineActionMixin],
         props: {
@@ -151,6 +157,7 @@
             }
         },
         data () {
+            console.log(this.sortType)
             return {
                 isLoading: false,
                 pipelineList: [],
@@ -158,6 +165,10 @@
                     current: 1,
                     limit: 20,
                     count: 0
+                },
+                sortField: {
+                    prop: this.sortType,
+                    order: ORDER_ENUM.ASC
                 },
                 activePipeline: null
             }
@@ -174,6 +185,7 @@
                 })
             },
             sortType: function (newSort) {
+                this.sortField.prop = newSort
                 this.requestList({
                     sortType: newSort
                 })
@@ -207,12 +219,21 @@
                 this.pagination.current = page
                 this.$nextTick(this.requestList)
             },
+            handleSort ({ prop, order }) {
+                console.log('sort change', prop, order)
+                Object.assign(this.sortField, {
+                    order,
+                    prop: PIPELINE_SORT_FILED[prop]
+                })
+                this.$nextTick(this.requestList)
+            },
             async requestList (query = {}) {
                 this.isLoading = true
                 const { count, page, records } = await this.getPipelines({
                     page: this.pagination.current,
                     pageSize: this.pagination.limit,
-                    sortType: this.sortType,
+                    sortType: this.sortField.prop,
+                    sortOrder: this.sortField.order,
                     viewId: this.$route.params.viewId,
                     ...this.filterParams,
                     ...query

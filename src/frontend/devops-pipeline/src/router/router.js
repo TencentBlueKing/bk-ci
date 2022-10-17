@@ -55,6 +55,10 @@ const routes = [
     {
         path: '/pipeline/:projectId',
         component: pipelines,
+        name: 'pipelineRoot',
+        redirect: {
+            name: 'pipelineListEntry'
+        },
         children: [
             {
                 path: 'list',
