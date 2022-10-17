@@ -153,7 +153,7 @@
                 showContent: false,
                 isEmptyRule: false,
                 totalInterceptRecor: 0,
-                docsUrl: `${DOCS_URL_PREFIX}/x/MYbm`,
+                docsUrl: `${DOCS_URL_PREFIX}/Intro/README.md`,
                 pipelineListLabel: [],
                 pipelineListValue: [],
                 trendList: [],
