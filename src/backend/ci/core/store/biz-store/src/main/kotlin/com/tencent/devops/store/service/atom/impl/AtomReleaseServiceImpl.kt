@@ -58,6 +58,7 @@ import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE
 import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
@@ -553,10 +554,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
                 val errorCodeInfos = storeErrorCodeInfo.errorCodeInfos
                 if (errorCodeInfos.isNotEmpty()) {
-                    val errorCodes = errorCodeInfos.map { it.errorCode }
+                    val errorCodes = errorCodeInfos.map { "${it.errorCode}" }
+                    val duplicateData = getDuplicateData(errorCodes)
+                    if (duplicateData.isNotEmpty()) {
+                        throw ErrorCodeException(
+                            errorCode = USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE,
+                            params = arrayOf(duplicateData.joinToString(","))
+                        )
+                    }
                     errorCodes.forEach {
-                        val errorCode = "$it"
-                        if (errorCode.length != 6 && (!errorCode.startsWith("8"))) {
+                        if (it.length != 6 && (!it.startsWith("8"))) {
                             throw ErrorCodeException(
                                 errorCode = USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
                             )
@@ -573,6 +580,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         } catch (ignored: Throwable) {
             logger.error("syncAtomErrorCodeConfig fail $atomCode|error=${ignored.message}", ignored)
         }
+    }
+
+    private fun getDuplicateData(strList: List<String>): List<String> {
+        val set = strList.toSet()
+        val duplicateData = mutableListOf<String>()
+        strList.forEach { if (set.contains(it)) duplicateData.add(it) }
+        return duplicateData
     }
 
     @Suppress("UNCHECKED_CAST")
