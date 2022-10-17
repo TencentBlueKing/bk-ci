@@ -473,7 +473,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         sortType: PipelineSortType?,
-        collation: PipelineCollation
+        collation: PipelineCollation?
     ): Result<PipelineViewPipelinePage<PipelineInfo>> {
         checkParam(userId, projectId)
         return Result(
@@ -483,7 +483,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize,
                 sortType = sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS,
-                collation = collation
+                collation = collation ?: PipelineCollation.DEFAULT
             )
         )
     }
@@ -510,7 +510,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         filterByLabels: String?,
         filterByViewIds: String?,
         viewId: String,
-        collation: PipelineCollation
+        collation: PipelineCollation?
     ): Result<PipelineViewPipelinePage<Pipeline>> {
         checkParam(userId, projectId)
         return Result(
@@ -527,7 +527,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 filterByCreator = filterByCreator,
                 filterByLabels = filterByLabels,
                 filterByViewIds = filterByViewIds,
-                collation = collation
+                collation = collation ?: PipelineCollation.DEFAULT
             )
         )
     }

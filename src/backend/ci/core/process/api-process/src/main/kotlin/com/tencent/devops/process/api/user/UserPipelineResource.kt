@@ -387,7 +387,7 @@ interface UserPipelineResource {
         viewId: String,
         @ApiParam("排序规则", required = false)
         @QueryParam("collation")
-        collation: PipelineCollation = PipelineCollation.DEFAULT
+        collation: PipelineCollation?
     ): Result<PipelineViewPipelinePage<Pipeline>>
 
     @ApiOperation("有权限流水线编排列表")
@@ -482,7 +482,7 @@ interface UserPipelineResource {
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
         @ApiParam("排序规则", required = false)
         @QueryParam("collation")
-        collation: PipelineCollation = PipelineCollation.DEFAULT
+        collation: PipelineCollation?
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
 
     @ApiOperation("流水线重命名")
