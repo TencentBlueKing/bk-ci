@@ -13,8 +13,10 @@ import (
 	"github.com/go-playground/validator/v10"
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/pkg/errors"
+	"net/http"
 	"reflect"
 	"strings"
+	"time"
 )
 
 func InitApiServer(accessLogFile string) error {
@@ -53,7 +55,15 @@ func InitApiServer(accessLogFile string) error {
 		})
 	}
 
-	if err := r.Run(":" + config.Config.Server.Port); err != nil {
+	s := &http.Server{
+		Addr:           ":" + config.Config.Server.Port,
+		Handler:        r,
+		ReadTimeout:    3600 * time.Second,
+		WriteTimeout:   3600 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	if err := s.ListenAndServe(); err != nil {
 		return err
 	}
 
