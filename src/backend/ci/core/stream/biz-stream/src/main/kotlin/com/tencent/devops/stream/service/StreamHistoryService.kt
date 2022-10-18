@@ -170,6 +170,7 @@ class StreamHistoryService @Autowired constructor(
         )
     }
 
+    @Suppress("LongMethod")
     fun getAllBuildBranchList(
         userId: String,
         gitProjectId: Long,
