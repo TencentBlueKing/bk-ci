@@ -445,16 +445,15 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun dict(userId: String, projectId: String): PipelineViewDict {
+        //流水线信息
+        val pipelineInfoMap = allPipelineInfos(projectId, true).associateBy { it.pipelineId }
+        if (pipelineInfoMap.isEmpty()) {
+            return PipelineViewDict.EMPTY
+        }
         // 流水线组信息
         val viewInfoMap = pipelineViewDao.list(dslContext, projectId).associateBy { it.id }
-        if (viewInfoMap.isEmpty()) {
-            return PipelineViewDict.EMPTY
-        }
         // 流水线组映射关系
         val viewGroups = pipelineViewGroupDao.listByProjectId(dslContext, projectId)
-        if (viewGroups.isEmpty()) {
-            return PipelineViewDict.EMPTY
-        }
         val viewGroupMap = mutableMapOf<Long/*viewId*/, MutableList<String>/*pipelineIds*/>()
         val classifiedPipelineIds = mutableSetOf<String>()
         viewGroups.forEach {
@@ -466,11 +465,6 @@ class PipelineViewGroupService @Autowired constructor(
             if (viewInfoMap[it.viewId]?.isProject == true) {
                 classifiedPipelineIds.add(it.pipelineId)
             }
-        }
-        //流水线信息
-        val pipelineInfoMap = allPipelineInfos(projectId, true).associateBy { it.pipelineId }
-        if (pipelineInfoMap.isEmpty()) {
-            return PipelineViewDict.EMPTY
         }
         val personalViewList = mutableListOf<PipelineViewDict.ViewInfo>()
         val projectViewList = mutableListOf<PipelineViewDict.ViewInfo>()
