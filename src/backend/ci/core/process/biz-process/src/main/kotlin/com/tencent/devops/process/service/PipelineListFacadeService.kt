@@ -495,6 +495,10 @@ class PipelineListFacadeService @Autowired constructor(
                     pipelineIds.retainAll(pipelineIdsByFilterViewIds)
                 }
             }
+            // 避免过滤器为空的情况
+            if (pipelineIds.isEmpty()) {
+                pipelineIds.add("##NONE##")
+            }
             pipelineViewService.addUsingView(userId = userId, projectId = projectId, viewId = viewId)
 
             // 查询有权限查看的流水线总数
