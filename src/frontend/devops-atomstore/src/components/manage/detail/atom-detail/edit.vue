@@ -46,7 +46,9 @@
                 />
             </bk-form-item>
             <bk-form-item :label="$t('store.发布者')" :rules="[requireRule($t('store.发布者'))]" :required="true" property="publisher" error-display-type="normal">
-                <bk-input v-model="formData.publisher" :placeholder="$t('store.请输入')"></bk-input>
+                <bk-select v-model="formData.publisher">
+                    <bk-option v-for="publisher in publishersList" :key="publisher.id" :id="publisher.publisherCode" :name="publisher.publisherName"></bk-option>
+                </bk-select>
             </bk-form-item>
             <bk-form-item :required="true" property="logoUrl" error-display-type="normal" class="edit-logo">
                 <select-logo :form="formData" type="ATOM" :is-err="false" ref="logoUrlError"></select-logo>
@@ -86,7 +88,14 @@
                     validator: (val) => (/^[\u4e00-\u9fa5a-zA-Z0-9-]+$/.test(val)),
                     message: this.$t('store.由汉字、英文字母、数字、连字符(-)组成，长度小于20个字符'),
                     trigger: 'blur'
-                }
+                },
+                publishersList: []
+            }
+        },
+
+        computed: {
+            userName () {
+                return this.$store.state.user.username
             }
         },
 
@@ -101,7 +110,7 @@
 
         created () {
             this.hackData()
-            Promise.all([this.requestAtomlabels(true), this.requestAtomClassify(true)]).finally(() => {
+            Promise.all([this.requestAtomlabels(true), this.requestAtomClassify(true), this.fetchPublishersList(this.detail.atomCode)]).finally(() => {
                 this.isLoading = false
             })
         },
@@ -198,6 +207,19 @@
                     })
                     this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
                 }
+            },
+
+            fetchPublishersList (atomCode) {
+                this.$store.dispatch('store/getPublishersList', { atomCode }).then(res => {
+                    this.publishersList = res
+                    const result = this.publishersList.find(i => i.publisherCode === this.userName)
+                    if (!result) {
+                        this.publishersList.push({
+                            publisherCode: this.userName,
+                            publisherName: this.userName
+                        })
+                    }
+                }).catch(() => [])
             }
         }
     }
