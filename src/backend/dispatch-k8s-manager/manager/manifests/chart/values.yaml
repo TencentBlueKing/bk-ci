@@ -4,7 +4,18 @@ configmap:
 
 # 初始化配置
 init:
+  # 初始化数据库
   sql: true
+
+# 多集群开关
+multiCluster:
+  enabled: false
+  # 兜底策略, 为空则不用兜底
+  defaultNamespace: ""
+
+# 镜像配置
+backendImage:
+  pullPolicy: IfNotPresent
 
 # 内部数据源配置
 mysql:
@@ -64,7 +75,6 @@ service:
   serviceType: LoadBalancer
   # 部署的service的annotations:
   serviceAnnotations:
-    service.kubernetes.io/qcloud-loadbalancer-internal-subnetid: 
 
 # kubernetesManager Deployment
 kubernetesManager:
@@ -95,9 +105,7 @@ kubernetesManager:
     targetCPU: 80
     targetMemory: 80
   # 使用的镜像
-  image: 
-  # 是否使用配置的kubeConfig文件而不使用当前默认集群的client
-  useKubeConfig: false
+  image: bkci/kubernetes-manager:0.0.25
   # 决定每次helm部署时的构建机所在的命名空间，同时dockerInitSh也在那里，为空时默认为 {{ .Release.Namespace }}
   builderNamespace: dev-base
   # dataSourceName mysql链接配置
@@ -132,3 +140,11 @@ kubernetesManager:
 dockerInit:
   # 是否使用当前chart的 dockerinit.sh
   useDockerInit: true
+
+  
+kubeConfig:
+  # 是否使用配置的kubeConfig文件而不使用当前默认集群的client
+  useKubeConfig: false
+  # 配置的kubeConfig文件内容
+  content: |
+    # useKubeConfig开启时，这里需要填写kubeconfig

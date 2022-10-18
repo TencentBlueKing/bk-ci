@@ -100,7 +100,7 @@ spec:
             items:
               - key: config.yaml
                 path: config.yaml
-              {{- if .Values.kubernetesManager.useKubeConfig}}
+              {{- if .Values.kubeConfig.useKubeConfig}}
               - key: kubeConfig.yaml
                 path: kubeConfig.yaml
       {{- end}}

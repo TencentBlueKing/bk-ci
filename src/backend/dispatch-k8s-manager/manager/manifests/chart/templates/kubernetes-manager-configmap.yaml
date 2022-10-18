@@ -103,9 +103,9 @@ data:
         username: {{ .Values.kubernetesManager.buildAndPushImage.username }}
         password: {{ .Values.kubernetesManager.buildAndPushImage.password }}
 
-  {{ if .Values.kubernetesManager.useKubeConfig -}}
-  kubeConfig.yaml: |-
-    # useKubeConfig开启时，这里需要填写kubeconfig
+  {{ if .Values.kubeConfig.useKubeConfig -}}
+  kubeConfig.yaml: |
+    {{ .Values.kubeConfig.content | nindent 4 }}
   {{- end -}}
 {{- end -}}
 {{- end -}}
