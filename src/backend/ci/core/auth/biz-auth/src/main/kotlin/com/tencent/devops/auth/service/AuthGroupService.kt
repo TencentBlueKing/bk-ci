@@ -53,7 +53,7 @@ class AuthGroupService @Autowired constructor(
         projectCode: String,
         groupInfo: GroupDTO
     ): Int {
-        logger.info("createGroup |$userId|$projectCode||$groupInfo")
+        logger.info("createGroup : userId = $userId| projectCode = $projectCode | groupInfo = $groupInfo")
         val groupRecord = groupDao.getGroup(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -61,7 +61,10 @@ class AuthGroupService @Autowired constructor(
         )
         if (groupRecord != null) {
             // 项目下分组已存在,不能重复创建
-            logger.warn("createGroup |$userId| $projectCode| $groupInfo is exsit")
+            logger.warn(
+                "group is exsit, don't create repeatedly : userId = $userId | " +
+                    "projectCode = $projectCode | groupInfo = $groupInfo "
+            )
             throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_EXIST))
         }
         val groupCreateInfo = GroupCreateInfo(
@@ -89,7 +92,10 @@ class AuthGroupService @Autowired constructor(
         )
         if (groupRecord.isNotEmpty) {
             // 项目下分组已存在,不能重复创建
-            logger.warn("createGroup |$userId| $projectCode| $groupCodes is exsit")
+            logger.warn(
+                "group is exsit, don't create repeatedly : userId = $userId | " +
+                    "projectCode = $projectCode | groupInfo = $groupCodes "
+            )
             throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_EXIST))
         }
         val groupCreateInfos = mutableListOf<GroupCreateInfo>()
@@ -111,7 +117,7 @@ class AuthGroupService @Autowired constructor(
 
     fun updateGroupName(userId: String, groupId: Int, groupInfo: ProjectRoleDTO): Int {
         val groupEntity = groupDao.getGroupById(dslContext, groupId)
-            ?: throw ParamBlankException("group $groupId not exist")
+            ?: throw ParamBlankException("group not exist : groupId = $groupId")
 
         if (DefaultGroupType.contains(groupEntity.groupCode)) {
             throw ParamBlankException(AuthMessageCode.DEFAULT_GROUP_UPDATE_NAME_ERROR)

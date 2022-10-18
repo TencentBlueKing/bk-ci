@@ -19,7 +19,7 @@ import (
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 )
 
-// ServerConfig
+// ServerConfig define
 type ServerConfig struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -89,28 +89,31 @@ type DirectResourceConfig struct {
 
 //InstanceType define type of an instance
 type InstanceType struct {
-	Platform              string  `json:"platform"`
-	Group                 string  `json:"group"`
-	CPUPerInstance        float64 `json:"cpu_per_instance"`
-	MemPerInstance        float64 `json:"mem_per_instance"`
-	CPURequestPerInstance float64 `json:"cpu_request_per_instance,omitempty"`
-	MemRequestPerInstance float64 `json:"mem_request_per_instance,omitempty"`
+	Platform            string  `json:"platform"`
+	Group               string  `json:"group"`
+	CPUPerInstance      float64 `json:"cpu_per_instance"`
+	MemPerInstance      float64 `json:"mem_per_instance"`
+	CPULimitPerInstance float64 `json:"cpu_limit_per_instance,omitempty"`
+	MemLimitPerInstance float64 `json:"mem_limit_per_instance,omitempty"`
 }
 
 // ContainerResourceConfig defines configs for resource from bcs.
 type ContainerResourceConfig struct {
-	Enable              bool           `json:"crm_enable"`
-	Operator            string         `json:"crm_operator"`
-	BcsAPIToken         string         `json:"crm_bcs_api_token"`
-	BcsAPIAddress       string         `json:"crm_bcs_api_address"`
-	BcsCPUPerInstance   float64        `json:"crm_bcs_cpu_per_instance"`
-	BcsMemPerInstance   float64        `json:"crm_bcs_mem_per_instance"`
-	InstanceType        []InstanceType `json:"instance_type"`
-	BcsClusterID        string         `json:"crm_bcs_cluster_id"`
-	BcsAppTemplate      string         `json:"crm_bcs_template_file"`
-	BcsGroupLabelKey    string         `json:"crm_bcs_group_label_key"`
-	BcsPlatformLabelKey string         `json:"crm_bcs_platform_label_key"`
-	BcsDisableWinHostNW bool           `json:"crm_bcs_disable_win_host_network"`
+	Enable                 bool           `json:"crm_enable"`
+	Operator               string         `json:"crm_operator"`
+	BcsAPIToken            string         `json:"crm_bcs_api_token"`
+	BcsAPIAddress          string         `json:"crm_bcs_api_address"`
+	BcsCPUPerInstance      float64        `json:"crm_bcs_cpu_per_instance"`
+	BcsMemPerInstance      float64        `json:"crm_bcs_mem_per_instance"`
+	BcsCPULimitPerInstance float64        `json:"crm_bcs_cpu_limit_per_instance,omitempty"`
+	BcsMemLimitPerInstance float64        `json:"crm_bcs_mem_limit_per_instance,omitempty"`
+	InstanceType           []InstanceType `json:"instance_type"`
+	BcsClusterID           string         `json:"crm_bcs_cluster_id"`
+	BcsAppTemplate         string         `json:"crm_bcs_template_file"`
+	BcsGroupLabelKey       string         `json:"crm_bcs_group_label_key"`
+	BcsPlatformLabelKey    string         `json:"crm_bcs_platform_label_key"`
+	EnableBCSApiGw         bool           `json:"crm_bcs_apigw_enable" value:"false"`
+	BcsDisableWinHostNW    bool           `json:"crm_bcs_disable_win_host_network"`
 
 	MySQLStorage     string `json:"crm_resource_mysql"`
 	MySQLDatabase    string `json:"crm_resource_mysql_db"`
@@ -124,8 +127,11 @@ type ContainerResourceConfig struct {
 }
 
 const (
+	//CRMOperatorMesos define
 	CRMOperatorMesos = "mesos"
-	CRMOperatorK8S   = "k8s"
+	//CRMOperatorK8S define
+	CRMOperatorK8S = "k8s"
+	//CRMOperatorDCMac define
 	CRMOperatorDCMac = "dc_mac"
 )
 
@@ -173,7 +179,7 @@ type EngineDisttaskConfig struct {
 	BrokerConfig           []EngineDisttaskBrokerConfig `json:"disttask_broker_config"`
 }
 
-// ResourceAllocater
+// ResourceAllocater define
 type ResourceAllocater struct {
 	AllocateByTimeMap map[string]float64 `json:"allocate_by_time_map"`
 	TimeSlot          []TimeSlot         `json:"time_slot"`
@@ -199,7 +205,7 @@ type EngineDisttaskBrokerVolumes struct {
 	ContainerDir string `json:"container_dir"`
 }
 
-// EngineDisttaskQueueInstanceConfig define the specific config for some queue.
+// EngineDisttaskQueueConfig define the specific config for some queue.
 type EngineDisttaskQueueConfig struct {
 	QueueName      string  `json:"queue_name"`
 	CPUPerInstance float64 `json:"cpu_per_instance"`
@@ -260,7 +266,7 @@ type CertConfig struct {
 	IsSSL    bool
 }
 
-// resource ratio Value from StartTime to EndTime
+// TimeSlot define resource ratio Value from StartTime to EndTime
 type TimeSlot struct {
 	StartTime string
 	EndTime   string

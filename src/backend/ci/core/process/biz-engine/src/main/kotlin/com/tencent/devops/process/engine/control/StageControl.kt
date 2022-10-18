@@ -118,7 +118,8 @@ class StageControl @Autowired constructor(
                 return
             }
 
-        if (stage.status.isReadyToRun()) { // #5048 首次运行时，先检查之前的Stage是否已经结束，防止串流
+        // #5048 首次运行时，先检查之前的Stage是否已经结束，防止串流
+        if (stage.status.isReadyToRun() && stage.controlOption?.finally != true) {
             pipelineStageService.getPrevStage(projectId, buildId, stage.seq)
                 ?.let { prevStage ->
                     if (!prevStage.status.isFinish()) { // 打回前一个未完成的Stage重走流程
@@ -128,14 +129,14 @@ class StageControl @Autowired constructor(
                 }
         }
 
-        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         val containers = pipelineContainerService.listContainers(
             projectId = projectId,
             buildId = buildId,
             stageId = stageId,
             containsMatrix = false
         )
-        val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
+        val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
         val stageContext = StageContext(
             buildStatus = stage.status, // 初始状态为Stage状态，中间流转会切换状态，并最终赋值Stage状态
             event = this,

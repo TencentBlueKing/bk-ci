@@ -29,14 +29,14 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
@@ -46,7 +46,7 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
     }
 
     override fun getUrl(event: GithubCreateEvent): String {
-        return event.repository.ssh_url
+        return event.repository.sshUrl
     }
 
     override fun getUsername(event: GithubCreateEvent): String {
@@ -58,7 +58,7 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
     }
 
     override fun getRepoName(event: GithubCreateEvent): String {
-        return GitUtils.getProjectName(event.repository.ssh_url)
+        return GitUtils.getProjectName(event.repository.sshUrl)
     }
 
     override fun getBranchName(event: GithubCreateEvent): String {

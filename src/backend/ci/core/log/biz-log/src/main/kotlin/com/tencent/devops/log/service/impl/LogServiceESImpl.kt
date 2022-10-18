@@ -249,11 +249,11 @@ class LogServiceESImpl constructor(
             e.status()
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
-                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (ignore: Exception) {
-            logger.error(
+            logger.warn(
                 "Query more logs between lines failed because of ${ignore.javaClass}. buildId: $buildId",
                 ignore
             )
@@ -475,11 +475,11 @@ class LogServiceESImpl constructor(
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
-                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (ignore: Exception) {
-            logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
+            logger.warn("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
         }
 
@@ -639,11 +639,11 @@ class LogServiceESImpl constructor(
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
-                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (ignore: Exception) {
-            logger.error("Query end logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
+            logger.warn("Query end logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
@@ -707,11 +707,11 @@ class LogServiceESImpl constructor(
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
-                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (ignore: Exception) {
-            logger.error("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
+            logger.warn("Query init logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
@@ -800,11 +800,11 @@ class LogServiceESImpl constructor(
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
-                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (ignore: Exception) {
-            logger.error("Query after logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
+            logger.warn("Query after logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
@@ -882,11 +882,11 @@ class LogServiceESImpl constructor(
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
-                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                logger.warn("[$buildId] Can't search because of index_closed_exception", e)
                 queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (ignore: Exception) {
-            logger.error("Query before logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
+            logger.warn("Query before logs failed because of ${ignore.javaClass}. buildId: $buildId", ignore)
             queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
@@ -1020,7 +1020,7 @@ class LogServiceESImpl constructor(
         } catch (ignore: Exception) {
             val exString = ignore.toString()
             if (exString.contains("circuit_breaking_exception")) {
-                logger.error(
+                logger.warn(
                     "$buildId|Add bulk lines failed|$exString, attempting to add index. [$logMessages]",
                     ignore
                 )
@@ -1036,7 +1036,7 @@ class LogServiceESImpl constructor(
                     bulkLines
                 }
             } else {
-                logger.error("[$buildId] Add bulk lines failed because of unknown Exception. [$logMessages]", ignore)
+                logger.warn("[$buildId] Add bulk lines failed because of unknown Exception. [$logMessages]", ignore)
                 throw ignore
             }
         } finally {
@@ -1158,7 +1158,7 @@ class LogServiceESImpl constructor(
             success = true
             response.isShardsAcknowledged
         } catch (e: IOException) {
-            logger.error("[${createClient.clusterName}] Create index $index failure", e)
+            logger.error("BKSystemErrorMonitor|[${createClient.clusterName}] Create index $index failure", e)
             return false
         } finally {
             createIndexBean.execute(System.currentTimeMillis() - startEpoch, success)

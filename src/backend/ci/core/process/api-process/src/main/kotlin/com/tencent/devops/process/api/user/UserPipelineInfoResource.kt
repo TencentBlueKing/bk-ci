@@ -31,12 +31,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.process.pojo.PipelineIdAndName
+import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineDetailInfo
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -80,6 +80,10 @@ interface UserPipelineInfoResource {
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
+        @ApiParam("渠道号", required = true)
+        @QueryParam("channelCodes")
+        @BkField(required = true)
+        channelCodes: String,
         @ApiParam("keyword", required = false)
         @QueryParam("keyword")
         keyword: String?,

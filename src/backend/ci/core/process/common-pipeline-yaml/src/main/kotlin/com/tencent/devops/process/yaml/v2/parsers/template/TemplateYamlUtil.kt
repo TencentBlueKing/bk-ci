@@ -36,6 +36,7 @@ import com.tencent.devops.process.yaml.v2.parsers.template.models.NoReplaceTempl
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 object TemplateYamlUtil {
 
     private val logger = LoggerFactory.getLogger(TemplateYamlUtil::class.java)
@@ -52,14 +53,14 @@ object TemplateYamlUtil {
             true
         } else {
             if (toPath == null) {
-                error(
+                throw error(
                     Constants.TEMPLATE_ROOT_ID_DUPLICATE.format(
                         filePath,
                         interSet.filter { it != Constants.TEMPLATE_KEY }
                     )
                 )
             } else {
-                error(
+                throw error(
                     Constants.TEMPLATE_ID_DUPLICATE.format(
                         interSet.filter { it != Constants.TEMPLATE_KEY },
                         filePath,
@@ -67,7 +68,6 @@ object TemplateYamlUtil {
                     )
                 )
             }
-            false
         }
     }
 
@@ -99,15 +99,18 @@ object TemplateYamlUtil {
         throw YamlFormatException(Constants.REPO_NOT_FOUND_ERROR.format(fromPath, repoName))
     }
 
+    private fun error(content: String) = YamlFormatException(content)
+
     /**
-     * 为模板中的变量赋值
+     * 为模板中的变量赋值(旧版本只是为了兼容，非必要不要使用)
      * @param fromPath 来自哪个文件
      * @param path 读取的哪个模板文件
      * @param template 被读取的模板文件内容
      * @param templateParameters 被读取的模板文件自带的参数
      * @param parameters 引用模板文件时传入的参数
      */
-    fun parseTemplateParameters(
+    @Deprecated("旧版本，只是为了兼容，非必要不要使用")
+    fun parseTemplateParametersOld(
         fromPath: String,
         path: String,
         template: String,
@@ -119,14 +122,10 @@ object TemplateYamlUtil {
                 if (parameters != null) {
                     val valueName = param.name
 
-                    if (param.name.contains(".")) {
-                        logger.info("PARAMETERS|NAME|WARNING|${param.name}")
-                    }
-
                     val newValue = parameters[param.name]
                     if (parameters.keys.contains(valueName)) {
                         if (!param.values.isNullOrEmpty() && !param.values!!.contains(newValue)) {
-                            error(
+                            throw error(
                                 Constants.VALUE_NOT_IN_ENUM.format(
                                     fromPath,
                                     valueName,

@@ -22,7 +22,7 @@ export default defineComponent({
     title: String,
   },
 
-  emits: ['point-click'],
+  emits: ['point-click', 'point-hover'],
 
   setup(props, { emit }) {
     const canvasRef = ref(null);
@@ -45,6 +45,13 @@ export default defineComponent({
             borderSkipped: 'bottom',
             borderWidth: 1,
             data: [...item.list],
+            datalabels: {
+              listeners: {
+                leave: function(context) {
+                  document.getElementsByClassName('bar-canvas')[0]['style']['cursor'] = 'auto';
+                }
+              },
+            },
           })),
         },
         options: {
@@ -100,7 +107,12 @@ export default defineComponent({
             if (datasets.length > 0) {
               emit('point-click', datasets)
             }
-          }
+          },
+          onHover (_, datasets) {
+            if (datasets.length > 0) {
+              emit('point-hover', datasets)
+            }
+          },
         },
       });
     };
@@ -116,7 +128,7 @@ export default defineComponent({
 
     return () => (
       <div class="canvas-wrapper">
-        <canvas class="bar" ref={canvasRef}></canvas>
+        <canvas class="bar bar-canvas" ref={canvasRef}></canvas>
       </div>
     );
   },

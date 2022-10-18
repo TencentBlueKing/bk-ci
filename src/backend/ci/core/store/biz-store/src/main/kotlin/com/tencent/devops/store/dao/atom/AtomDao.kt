@@ -138,9 +138,9 @@ class AtomDao : AtomBaseDao() {
                     atomRequest.name,
                     atomRequest.atomCode,
                     classType,
-                    JsonUtil.getObjectMapper().writeValueAsString(atomRequest.serviceScope),
+                    JsonUtil.toJson(atomRequest.serviceScope, formatted = false),
                     atomRequest.jobType.name,
-                    JsonUtil.getObjectMapper().writeValueAsString(atomRequest.os),
+                    JsonUtil.toJson(atomRequest.os, formatted = false),
                     atomRequest.classifyId,
                     atomRequest.docsLink,
                     atomRequest.atomType.type.toByte(),
@@ -968,9 +968,9 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(NAME, atomUpdateRequest.name)
-                .set(SERVICE_SCOPE, JsonUtil.getObjectMapper().writeValueAsString(atomUpdateRequest.serviceScope))
+                .set(SERVICE_SCOPE, JsonUtil.toJson(atomUpdateRequest.serviceScope, formatted = false))
                 .set(JOB_TYPE, atomUpdateRequest.jobType.name)
-                .set(OS, JsonUtil.getObjectMapper().writeValueAsString(atomUpdateRequest.os))
+                .set(OS, JsonUtil.toJson(atomUpdateRequest.os, formatted = false))
                 .set(CLASS_TYPE, classType)
                 .set(CLASSIFY_ID, atomUpdateRequest.classifyId)
                 .set(DOCS_LINK, atomUpdateRequest.docsLink)

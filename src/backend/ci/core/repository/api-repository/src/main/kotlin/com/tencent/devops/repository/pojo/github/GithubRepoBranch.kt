@@ -33,14 +33,14 @@ import io.swagger.annotations.ApiModelProperty
 
 /**
  * github获取分支列表:/repos/{owner}/{repo}/branches
-     {
-    "name": "release-1.2",
-    "commit": {
-    "sha": "7dcca23c12383c18d4b1710c42fe97adb44c7c8b",
-    "url": "https://api.github.com/repos/Tencent/bk-ci/commits/7dcca23c12383c18d4b1710c42fe97adb44c7c8b"
-    },
-    "protected": true
-    }
+ {
+ "name": "release-1.2",
+ "commit": {
+ "sha": "7dcca23c12383c18d4b1710c42fe97adb44c7c8b",
+ "url": "https://api.github.com/repos/Tencent/bk-ci/commits/7dcca23c12383c18d4b1710c42fe97adb44c7c8b"
+ },
+ "protected": true
+ }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("仓库分支信息")

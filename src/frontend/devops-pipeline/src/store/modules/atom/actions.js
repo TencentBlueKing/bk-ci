@@ -229,7 +229,7 @@ export default {
             Object.assign(atomClassifyMap, {
                 all: {
                     classifyCode: 'all',
-                    classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('all')) || 'all'
+                    classifyName: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('All')) || 'All'
                 },
                 rdStore: {
                     classifyCode: 'rdStore',
@@ -358,10 +358,10 @@ export default {
         commit(CLEAR_ATOM_DATA)
     },
 
-    fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container }) => {
+    fetchAtomModal: async ({ commit, dispatch }, { projectCode, atomCode, version, atomIndex, container, queryOfflineFlag = false }) => {
         try {
             commit(SET_ATOM_MODAL_FETCHING, true)
-            const { data: atomModal } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}`)
+            const { data: atomModal } = await request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
             commit(SET_ATOM_MODAL, {
                 atomCode,
                 version,
@@ -593,12 +593,19 @@ export default {
     },
 
     getMacSysVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions`)
+        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
     },
 
-    getMacXcodeVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions`)
+    getMacXcodeVersion (_, systemVersion = '') {
+        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2?systemVersion=${systemVersion}`)
     },
+
+    getWinVersion () {
+        return request.get('/dispatch-windows/api/user/systemVersions').then((res) => {
+            return res.data
+        })
+    },
+
     setImportedPipelineJson ({ commit }, importedJson) {
         commit(SET_IMPORTED_JSON, importedJson)
     },

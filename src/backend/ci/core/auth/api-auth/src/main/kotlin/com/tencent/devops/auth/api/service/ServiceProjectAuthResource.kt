@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -58,6 +59,9 @@ interface ServiceProjectAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String,
@@ -97,6 +101,9 @@ interface ServiceProjectAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
         @PathParam("userId")
         @ApiParam("用户Id", required = true)
         userId: String,
@@ -115,6 +122,9 @@ interface ServiceProjectAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
         @PathParam("userId")
         @ApiParam("用户Id", required = true)
         userId: String,

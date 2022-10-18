@@ -37,7 +37,9 @@ import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.trigger.ScheduleTriggerService
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
+import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimerBranch
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
@@ -61,7 +63,8 @@ class StreamTimerBuildListener @Autowired constructor(
     private val scheduleTriggerService: ScheduleTriggerService,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val streamGitConfig: StreamGitConfig,
-    private val tGitApiService: TGitApiService
+    private val tGitApiService: TGitApiService,
+    private val githubApiService: GithubApiService
 ) : BaseListener<StreamTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: StreamTimerBuildEvent) {
@@ -84,6 +87,15 @@ class StreamTimerBuildListener @Autowired constructor(
                             listOf(
                                 tGitApiService.getGitProjectInfo(
                                     cred = TGitCred(record.enableUserId),
+                                    gitProjectId = event.gitProjectId.toString(),
+                                    retry = ApiRequestRetryInfo(true)
+                                )!!.defaultBranch!!
+                            )
+                        }
+                        ScmType.GITHUB -> {
+                            listOf(
+                                githubApiService.getGitProjectInfo(
+                                    cred = GithubCred(record.enableUserId),
                                     gitProjectId = event.gitProjectId.toString(),
                                     retry = ApiRequestRetryInfo(true)
                                 )!!.defaultBranch!!
@@ -123,6 +135,15 @@ class StreamTimerBuildListener @Autowired constructor(
                 ScmType.CODE_GIT -> tGitApiService.getLatestRevision(
                     pipelineId = pipelineId,
                     projectName = GitUtils.getProjectName(gitUrl),
+                    gitUrl = gitUrl,
+                    branch = branch,
+                    userName = userId,
+                    enableUserId = enableUserId,
+                    retry = ApiRequestRetryInfo(true)
+                )
+                ScmType.GITHUB -> githubApiService.getLatestRevision(
+                    pipelineId = pipelineId,
+                    projectName = gitProjectId.toString(),
                     gitUrl = gitUrl,
                     branch = branch,
                     userName = userId,

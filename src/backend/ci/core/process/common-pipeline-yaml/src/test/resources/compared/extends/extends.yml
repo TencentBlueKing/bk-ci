@@ -31,7 +31,7 @@ variables:
 stages:
 - name: "root_stage_id_1"
   label: []
-  if: "world == world"
+  if: "('world' == world)"
   fast-kill: false
   jobs:
   - id: "root_job_id_1"
@@ -43,6 +43,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services:
@@ -50,11 +51,11 @@ stages:
       image: "mysql:8.0"
       with:
         password: "123456"
-    if: "world == world"
+    if: "('world' == world)"
     steps:
     - name: "root_step_1"
       id: "root_step_1"
-      if: "world == world"
+      if: "('world' == world)"
       if-modify: null
       uses: "UploadArtifactory@1.*"
       with:
@@ -69,7 +70,7 @@ stages:
       checkout: null
     - name: null
       id: null
-      if: "steps.world1.xxx.outputs == world"
+      if: "(steps.world1.xxx.outputs == world)"
       if-modify: null
       uses: null
       with: null
@@ -98,6 +99,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -105,7 +107,7 @@ stages:
     steps:
     - name: null
       id: null
-      if: "steps.world1.outputs.xxx == world"
+      if: "${{steps.world1.outputs.xxx == world}}"
       if-modify: null
       uses: null
       with: null
@@ -133,6 +135,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -167,6 +170,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -201,6 +205,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -235,6 +240,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -269,6 +275,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -314,10 +321,10 @@ stages:
       flows:
       - name: "审批组1"
         reviewers:
-        - "${{ci.actor}}"
+        - "${{ ci.actor }}"
       - name: "审批组2"
         reviewers:
-        - "${{ci.actor}}"
+        - "${{ ci.actor }}"
       variables: null
       description: null
     gates:
@@ -346,6 +353,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -380,6 +388,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -449,6 +458,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -483,6 +493,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -540,6 +551,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -582,6 +594,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
