@@ -217,28 +217,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 EnvReplacementParser.getCustomExecutionContextByMap(contextMap)
                             } else null
                             c.buildEnv?.forEach { env ->
-                                val version = EnvReplacementParser.parse(
-                                    value = env.value,
-                                    contextMap = contextMap,
-                                    onlyExpression = asCodeEnabled,
-                                    contextPair = contextPair
-                                )
-                                val res = containerAppResource.getBuildEnv(
+                                containerAppResource.getBuildEnv(
                                     name = env.key,
-                                    version = version,
+                                    version = EnvReplacementParser.parse(
+                                        value = env.value,
+                                        contextMap = contextMap,
+                                        onlyExpression = asCodeEnabled,
+                                        contextPair = contextPair
+                                    ),
                                     os = c.baseOS.name.toLowerCase()
-                                ).data
-                                if (res == null) {
-                                    buildLogPrinter.addYellowLine(
-                                        buildId = buildId,
-                                        message = "尚未支持 ${env.key} $version，请联系 DevOps-helper 添加对应版本",
-                                        tag = VMUtils.genStartVMTaskId(vmSeqId),
-                                        jobId = c.containerHashId,
-                                        executeCount = c.executeCount ?: 1
-                                    )
-                                    return@forEach
-                                }
-                                envList.add(res)
+                                ).data?.let { self -> envList.add(self) }
                             }
 
                             // 设置Job环境变量customBuildEnv到variablesWithType和variables中
