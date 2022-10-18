@@ -57,10 +57,6 @@ var moduleNames = when (moduleName) {
     else -> listOf(moduleName)
 }
 
-if (name == "model-dispatch-bcs") {
-    moduleNames = listOf("dispatch_bcs")
-}
-
 if (name == "model-dispatch-kubernetes") {
     moduleNames = listOf("dispatch_kubernetes")
 }
