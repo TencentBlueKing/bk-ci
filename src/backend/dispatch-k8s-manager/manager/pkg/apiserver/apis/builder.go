@@ -202,11 +202,6 @@ func debugBuilder(c *gin.Context) {
 	}
 	defer ws.Close()
 
-	err = ws.SetReadDeadline(time.Now().Add(30 * time.Minute))
-	if err != nil {
-		fail(c, http.StatusInternalServerError, errors.Wrap(err, "登录调试设置websocket超时时间错误"))
-	}
-
 	service.DebugBuilder(ws, podName, containerName)
 }
 
