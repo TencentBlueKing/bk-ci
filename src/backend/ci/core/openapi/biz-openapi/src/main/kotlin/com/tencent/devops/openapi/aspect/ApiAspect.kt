@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.aspect
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
@@ -41,6 +42,7 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import javax.ws.rs.core.Response
 
 @Aspect
 @Component
@@ -118,15 +120,16 @@ class ApiAspect(
             }
         }
 
-        if (projectId != null && appCode != null && (apigwType == "apigw-app")) {
-            if (!appCodeService.validAppCode(appCode, projectId)) {
+        if (projectId != null) {
+            if (appCodeService.validProjectInfo(projectId) == null) {
+                throw CustomException(Response.Status.NOT_FOUND, "ProjectId [$projectId] not find, please check it.")
+            }
+
+            if (appCode != null && apigwType == "apigw-app" && !appCodeService.validAppCode(appCode, projectId)) {
                 throw PermissionForbiddenException(
                     message = "Permission denied: apigwType[$apigwType],appCode[$appCode],ProjectId[$projectId]"
                 )
             }
-        }
-
-        if (projectId != null) {
             // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
             val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
             if (!projectConsulTag.isNullOrEmpty()) {
