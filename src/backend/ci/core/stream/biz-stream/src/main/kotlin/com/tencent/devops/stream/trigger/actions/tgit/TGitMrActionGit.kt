@@ -41,6 +41,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.isMrMergeEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -126,7 +127,7 @@ class TGitMrActionGit(
                 search = this.data.eventCommon.userId
             ).find { it.userId == this.data.eventCommon.userId }?.accessLevel
 
-            accessLevel != null && accessLevel >= 30
+            accessLevel != null && accessLevel >= GitAccessLevelEnum.DEVELOPER.level
         } catch (error: ErrorCodeException) {
             false
         }
