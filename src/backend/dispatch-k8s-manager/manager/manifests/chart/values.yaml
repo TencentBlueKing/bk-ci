@@ -6,24 +6,6 @@ configmap:
 init:
   sql: true
 
-# 多集群开关
-multiCluster:
-  enabled: false
-  # 兜底策略, 为空则不用兜底
-  defaultNamespace: ""
-
-# 镜像 ENTRYPOINT 覆盖
-entrypoint:
-  override: true
-
-# 镜像配置
-backendImage:
-  registry: hub.bktencent.com
-  repository: blueking/bkci-backend
-  tag: 1.8.0-beta17
-  pullPolicy: IfNotPresent
-  pullSecrets: []
-
 # 内部数据源配置
 mysql:
   enabled: true
@@ -88,7 +70,6 @@ service:
 kubernetesManager:
   enabled: true
   replicas: 1
-  podLabels: {}
   resources:
     requests:
       cpu: 100m
@@ -104,16 +85,8 @@ kubernetesManager:
   podSecurityContext:
     enabled: false
     fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
   nodeSelector: {}
   tolerations: []
-  podAnnotations: {}
   priorityClassName: ""
   autoscaling:
     enabled: false
@@ -140,9 +113,9 @@ kubernetesManager:
     password: bluking
     db: 0
   gateway:
-    # manager api服务的访问地址
+    # manager api服务的访问地址，给客户端返回登录调试地址需要使用
     url: 9.135.247.52:30004
-  # 真实调度资源相关
+  # 真实调度资源相关，依赖 scheduler-plugin
   realResource:
     # 监控构建机容器资源使用的 prometheus api地址， 字段为空则不开启realResource优化
     # 注：集群内为 <service>.<namespace>.svc.cluster.local:<port>

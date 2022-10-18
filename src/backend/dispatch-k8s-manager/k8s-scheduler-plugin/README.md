@@ -26,7 +26,18 @@
 目前插件打包部署流程如下：
 
 1. makefile release-image 打包镜像
-2. 仿照 scheduler-plugin 修改 /etc/manifests/kube-scheduler.yaml
+2. 仿照 scheduler-plugin 修改 /etc/kubernetes/manifests/kube-scheduler.yaml。例如如下所示，其中image替换为当前kuberentes版本的插件镜像。--config替换为当前目录manifests下bkdevops-scheduler-plugin.yaml。
+    ```diff
+    16d15
+    <     - --config=/etc/kubernetes/sched-cc.yaml
+    17a17,18
+    >     - --kubeconfig=/etc/kubernetes/scheduler.conf
+    >     - --leader-elect=true
+    19,20c20
+    <     image: k8s.gcr.io/scheduler-plugins/kube-scheduler:v0.23.10
+    ---
+    >     image: k8s.gcr.io/kube-scheduler:v1.23.10
+    ```
 
 ### 参考插件：
 
