@@ -213,7 +213,7 @@ func DebugBuilder(ws *websocket.Conn, podName string, containerName string) {
 		for {
 			select {
 			case <-ctx.Done():
-				logs.Debug("DEBUG|K8S CTX DONE")
+				logs.Warn("DEBUG|K8S CTX DONE")
 				break
 			default:
 			}
@@ -221,7 +221,7 @@ func DebugBuilder(ws *websocket.Conn, podName string, containerName string) {
 			// 将写回的数据处理后返回
 			rt, reply, err := kubeWs.ReadMessage()
 			if rt == websocket.CloseMessage {
-				logs.Debug("DEBUG|K8S CLOSE MESSAGE DONE")
+				logs.Warn("DEBUG|K8S CLOSE MESSAGE DONE")
 				return
 			}
 			if err != nil {
@@ -278,7 +278,7 @@ func DebugBuilder(ws *websocket.Conn, podName string, containerName string) {
 		for {
 			select {
 			case <-ctx.Done():
-				logs.Debug("DEBUG|CLIENT CTX DONE")
+				logs.Warn("DEBUG|CLIENT CTX DONE")
 				break
 			default:
 			}
@@ -287,7 +287,7 @@ func DebugBuilder(ws *websocket.Conn, podName string, containerName string) {
 			//读取client的数据
 			mt, message, err := ws.ReadMessage()
 			if mt == websocket.CloseMessage {
-				logs.Debug("DEBUG|CLIENT CLOSE MESSAGE DONE")
+				logs.Warn("DEBUG|CLIENT CLOSE MESSAGE DONE")
 				return
 			}
 			if err != nil {
