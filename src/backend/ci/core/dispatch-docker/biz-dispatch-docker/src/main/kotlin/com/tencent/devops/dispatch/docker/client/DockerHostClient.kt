@@ -177,11 +177,7 @@ class DockerHostClient @Autowired constructor(
             vmSeqId = event.vmSeqId.toInt(),
             secretKey = secretKey,
             status = PipelineTaskStatus.RUNNING,
-            zone = if (null == event.zone) {
-                Zone.SHENZHEN.name
-            } else {
-                event.zone!!.name
-            },
+            zone = Zone.SHENZHEN.name,
             dockerIp = agentLessDockerIp,
             poolNo = 0
         )
