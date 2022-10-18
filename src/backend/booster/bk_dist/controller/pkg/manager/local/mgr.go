@@ -130,38 +130,19 @@ func (m *Mgr) ExecuteTask(
 	// 没有申请到资源(或资源已释放) || 申请到资源但都失效了
 	if !m.work.Resource().HasAvailableWorkers() ||
 		m.work.Remote().TotalSlots() <= 0 {
-		needremote := false
-		runremote := false
 		// check whether this task need remote worker,
 		// apply resource when need, if not in appling, apply then
 		if e.needRemoteResource() {
-			needremote = true
 			_, err := m.work.Resource().Apply(nil, false)
-			if err == nil {
-				// wait until apply finished
-				// 发起apply并定时检查apply状态，直到变成 非 appling 状态
-				// 实时通知的方式实现比较复杂，且意义不大，用定时器实现了
-				err = m.waitApplyFinish()
-				if err == nil {
-					// check remote resource again
-					if m.work.Resource().HasAvailableWorkers() &&
-						m.work.Remote().TotalSlots() > 0 {
-						runremote = true
-					}
-				}
+			if err != nil {
+				blog.Warnf("local: execute task for work(%s) from pid(%d) failed to apply resource with err:%v",
+					m.work.ID(), req.Pid, err)
 			}
 		}
 
-		if !runremote {
-			if !needremote {
-				blog.Infof("local: execute task for work(%s) from pid(%d) degrade to local for do not need remote",
-					m.work.ID(), req.Pid)
-			} else {
-				blog.Warnf("local: execute task for work(%s) from pid(%d) degrade to local for no remote workers",
-					m.work.ID(), req.Pid)
-			}
-			return e.executeLocalTask(), nil
-		}
+		blog.Infof("local: execute task for work(%s) from pid(%d) degrade to local for no remote workers",
+			m.work.ID(), req.Pid)
+		return e.executeLocalTask(), nil
 	}
 
 	// TODO : check whether need more resource

@@ -176,7 +176,7 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 	}
 	nodeList, err := client.clientSet.CoreV1().Nodes().List(context.TODO(), metaV1.ListOptions{})
 	if err != nil {
-		blog.Errorf("k8s-operator: get node resource from k8s failed clusterID(%s): %v", clusterID, err)
+		blog.Errorf("k8s-operator: get node list from k8s failed clusterID(%s): %v", clusterID, err)
 		return nil, err
 	}
 
@@ -188,6 +188,10 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 	}
 	nodeNonTerminatedPodsList, err := client.clientSet.CoreV1().Pods("").
 		List(context.TODO(), metaV1.ListOptions{FieldSelector: fieldSelector.String()})
+	if err != nil {
+		blog.Errorf("k8s-operator: get pod list from k8s failed clusterID(%s): %v", clusterID, err)
+		return nil, err
+	}
 
 	nodeInfoList := make([]*op.NodeInfo, 0, 1000)
 	for _, node := range nodeList.Items {
