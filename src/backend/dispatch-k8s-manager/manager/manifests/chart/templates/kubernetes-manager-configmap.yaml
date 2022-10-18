@@ -19,14 +19,14 @@ data:
       port: 80
     
     mysql:
-      dataSourceName: {{ .Values.kubernetesManager.mysql.dataSourceName }}
+      dataSourceName: {{ include "bkci.mysqlUsername" . }}:{{- include "bkci.mysqlPassword" . }}@tcp({{- include "bkci.mysqlAddr" . }})/devops_ci_kubernetes_manager?parseTime=true&loc=Local
       connMaxLifetime: 3
       maxOpenConns: 10
       maxIdleConns: 10
     
     redis:
-      addr: {{ .Values.kubernetesManager.redis.addr }}
-      password: {{ .Values.kubernetesManager.redis.password }}
+      addr: {{ include "bkci.redisHost" . }}:{{ include "bkci.redisPort" . }}
+      password: {{ include "bkci.redisPassword" . }}
       db: {{ .Values.kubernetesManager.redis.db }}
     
     kubernetes:
@@ -98,6 +98,7 @@ data:
         label: bkci.dispatch.kubenetes/private-builder
     buildAndPushImage:
       image: {{ .Values.kubernetesManager.buildAndPushImage.image }}
+      # 拉取kaniko需要的凭据，如果不填视为没有
       pullImageRegistry: 
         server: {{ .Values.kubernetesManager.buildAndPushImage.server }}
         username: {{ .Values.kubernetesManager.buildAndPushImage.username }}

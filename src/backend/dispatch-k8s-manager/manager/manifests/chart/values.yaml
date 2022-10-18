@@ -69,10 +69,21 @@ redis:
     persistence:
       size: 10Gi
 
+#外部数据库
+externalMysql:
+  host: localhost
+  port: 3306
+  username: bkci
+  password: bkci
+externalRedis:
+  host: localhost
+  port: 6379
+  password: bkci
+
 # kubernetesManager service
 service:
   # 部署的service的类型: ClusterIP|NodePort|LoadBalancer
-  serviceType: LoadBalancer
+  serviceType: NodePort
   # 部署的service的annotations:
   serviceAnnotations:
 
@@ -105,24 +116,15 @@ kubernetesManager:
     targetCPU: 80
     targetMemory: 80
   # 使用的镜像
-  image: bkci/kubernetes-manager:0.0.25
+  image: bkci/kubernetes-manager:0.0.26
   # 决定每次helm部署时的构建机所在的命名空间，同时dockerInitSh也在那里，为空时默认为 {{ .Release.Namespace }}
-  builderNamespace: dev-base
+  builderNamespace:
   # dataSourceName mysql链接配置
-  mysql:
-    dataSourceName: root:blueking@tcp(kubernetes-manager-mysql:3306)/devops_kubernetes_manager?parseTime=true&loc=Local
-    # 容器版mysql初始化时需要的配置
-    name: kubernetes-manager-mysql
-    username: root
-    password: blueking
-    port: 3306
   redis:
-    addr: kubernetes-manager-redis-master:6379
-    password: bluking
     db: 0
   gateway:
     # manager api服务的访问地址，给客户端返回登录调试地址需要使用
-    url: 9.135.247.52:30004
+    url: 127.0.0.1:30004
   # 真实调度资源相关，依赖 scheduler-plugin
   realResource:
     # 监控构建机容器资源使用的 prometheus api地址， 字段为空则不开启realResource优化

@@ -1,9 +1,9 @@
-CREATE DATABASE IF NOT EXISTS `devops_kubernetes_manager` DEFAULT CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS `devops_ci_kubernetes_manager` DEFAULT CHARACTER SET utf8mb4;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-USE devops_kubernetes_manager;
+USE devops_ci_kubernetes_manager;
 
 -- ----------------------------
 -- Table structure for T_KUBERNETES_MANAGER_TASK

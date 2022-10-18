@@ -25,9 +25,9 @@ spec:
             - "/bin/sh"
             - "-c"
             - |
-              until getent hosts {{ .Values.kubernetesManager.mysql.name }}
+              until getent hosts {{ include "bkci.mysql.fullname" . }}
               do 
-                echo waiting for {{ .Values.kubernetesManager.mysql.name }}
+                echo waiting for {{ include "bkci.mysql.fullname" . }};
                 sleep 2;
               done
               echo "MySQL is available";
@@ -37,11 +37,11 @@ spec:
           image: {{ .Values.kubernetesManager.image }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/support-files/sql
-
+          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
           command:
             - "/bin/sh"
             - "-c"
             - |
-              for SQL in *.sql; do mysql -u{{ .Values.kubernetesManager.mysql.username }} -p{{ .Values.kubernetesManager.mysql.password }} -h{{ .Values.kubernetesManager.mysql.name }} -P{{ .Values.kubernetesManager.mysql.port }}< $SQL; done ;
+              for SQL in *.sql; do mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}< $SQL; done ;
       restartPolicy: OnFailure
 {{- end -}}
