@@ -41,7 +41,7 @@ class BlueKingWeworkServiceImpl @Autowired constructor() : WeworkService {
         TODO("Not yet implemented")
     }
 
-    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
+    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
         TODO("Not yet implemented")
     }
 }

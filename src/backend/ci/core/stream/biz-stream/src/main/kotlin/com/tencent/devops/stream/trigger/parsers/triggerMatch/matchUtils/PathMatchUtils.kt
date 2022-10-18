@@ -1,11 +1,41 @@
 package com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils
 
+import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
+import com.tencent.devops.common.webhook.service.code.filter.PathStreamFilter
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
 object PathMatchUtils {
 
     private val logger = LoggerFactory.getLogger(PathMatchUtils::class.java)
+
+    fun isPathMatch(
+        fileChangeSet: Set<String>,
+        pathList: List<String>,
+        pathIgnoreList: List<String>
+    ): TriggerBody {
+        val response = WebhookFilterResponse()
+        if (!PathStreamFilter(
+                pipelineId = "",
+                triggerOnPath = fileChangeSet.toList(),
+                includedPaths = pathList,
+                excludedPaths = pathIgnoreList
+            ).doFilter(response)
+        ) {
+            // 包含匹配失败
+            val includePathsMatch = pathIgnoreList.isEmpty() &&
+                pathList.isNotEmpty() &&
+                response.getParam()[MATCH_PATHS] == null
+            return if (includePathsMatch) {
+                TriggerBody().triggerFail("on.push.paths", "change path($pathList) not match")
+            } else {
+                TriggerBody().triggerFail("on.push.paths-ignore", "change path($pathIgnoreList) match")
+            }
+        }
+        return TriggerBody(true)
+    }
 
     fun isIgnorePathMatch(pathIgnoreList: List<String>?, fileChangeSet: Set<String>?): Boolean {
         if (pathIgnoreList.isNullOrEmpty()) {
