@@ -187,6 +187,7 @@ class StreamRepoTriggerAction(
                 lockKey = "REPO_HOOK_INIT_SETTING_${data.eventCommon.gitProjectId}",
                 expiredTimeInSeconds = 5
             ).use {
+                it.lock()
                 // 锁后再读，避免并发线程重复去初始化导致报错
                 if (streamBasicSettingService.getStreamConf(data.eventCommon.gitProjectId.toLong()) == null) {
                     streamBasicSettingService.initStreamConf(
