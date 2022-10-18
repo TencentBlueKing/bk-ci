@@ -114,7 +114,8 @@ class GithubPRActionGit(
                 userId = this.data.eventCommon.userId
             ).accessLevel
 
-            accessLevel >= 30
+            // >= TRIAGE
+            accessLevel >= 20
         } catch (error: ErrorCodeException) {
             false
         }
