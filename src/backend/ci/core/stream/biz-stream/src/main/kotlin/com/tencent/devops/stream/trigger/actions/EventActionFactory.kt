@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
@@ -100,6 +101,7 @@ class EventActionFactory @Autowired constructor(
     private val streamGitConfig: StreamGitConfig,
     private val streamTriggerTokenService: StreamTriggerTokenService,
     private val streamBasicSettingService: StreamBasicSettingService,
+    private val redisOperation: RedisOperation,
     private val streamTriggerCache: StreamTriggerCache
 ) {
 
@@ -165,6 +167,7 @@ class EventActionFactory @Autowired constructor(
                 client = client,
                 streamGitConfig = streamGitConfig,
                 streamBasicSettingService = streamBasicSettingService,
+                redisOperation = redisOperation,
                 streamTriggerCache = streamTriggerCache
             )
         } else action

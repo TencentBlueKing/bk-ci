@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -64,6 +65,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
     @org.springframework.context.annotation.Lazy
     private val streamTriggerRequestService: StreamTriggerRequestService,
     private val streamBasicSettingService: StreamBasicSettingService,
+    private val redisOperation: RedisOperation,
     private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
@@ -121,6 +123,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
                         client = client,
                         streamGitConfig = streamGitConfig,
                         streamBasicSettingService = streamBasicSettingService,
+                        redisOperation = redisOperation,
                         streamTriggerCache = streamTriggerCache
                     )
                 )

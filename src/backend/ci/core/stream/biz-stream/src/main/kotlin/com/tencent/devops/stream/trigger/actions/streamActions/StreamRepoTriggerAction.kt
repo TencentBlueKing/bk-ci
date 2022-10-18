@@ -2,6 +2,8 @@ package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
@@ -37,6 +39,7 @@ class StreamRepoTriggerAction(
     private val client: Client,
     private val streamGitConfig: StreamGitConfig,
     private val streamBasicSettingService: StreamBasicSettingService,
+    private val redisOperation: RedisOperation,
     private val streamTriggerCache: StreamTriggerCache
 ) : BaseAction {
 
@@ -179,12 +182,24 @@ class StreamRepoTriggerAction(
         }
         val setting = streamBasicSettingService.getStreamConf(data.eventCommon.gitProjectId.toLong())
         if (setting == null && repoTriggerUserId != null) {
-            streamBasicSettingService.initStreamConf(
-                userId = repoTriggerUserId,
-                projectId = GitCommonUtils.getCiProjectId(data.eventCommon.gitProjectId, streamGitConfig.getScmType()),
-                gitProjectId = data.eventCommon.gitProjectId.toLong(),
-                enabled = false
-            )
+            RedisLock(
+                redisOperation = redisOperation,
+                lockKey = "REPO_HOOK_INIT_SETTING_${data.eventCommon.gitProjectId}",
+                expiredTimeInSeconds = 5
+            ).use {
+                // 锁后再读，避免并发线程重复去初始化导致报错
+                if (streamBasicSettingService.getStreamConf(data.eventCommon.gitProjectId.toLong()) == null) {
+                    streamBasicSettingService.initStreamConf(
+                        userId = repoTriggerUserId,
+                        projectId = GitCommonUtils.getCiProjectId(
+                            data.eventCommon.gitProjectId,
+                            streamGitConfig.getScmType()
+                        ),
+                        gitProjectId = data.eventCommon.gitProjectId.toLong(),
+                        enabled = false
+                    )
+                }
+            }
         }
         // 增加远程仓库时所使用权限的userId
         this.data.context.repoTrigger?.buildUserID = repoTriggerUserId
