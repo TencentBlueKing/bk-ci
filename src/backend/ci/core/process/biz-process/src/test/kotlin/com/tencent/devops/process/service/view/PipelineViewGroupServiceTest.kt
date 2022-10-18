@@ -611,29 +611,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     @Nested
     inner class Dict {
         @Test
-        @DisplayName("ViewInfo列表 为空")
-        fun test_1() {
-            every { pipelineViewDao.list(anyDslContext(), any()) } returns dslContext.mockResult(T_PIPELINE_VIEW)
-            self.dict("test", "test").let {
-                Assertions.assertEquals(it, PipelineViewDict.EMPTY)
-            }
-        }
-
-        @Test
-        @DisplayName("ViewInfo列表 不为空 , viewInfoGroup列表为空")
-        fun test_2() {
-            every { pipelineViewDao.list(anyDslContext(), any()) } returns dslContext.mockResult(T_PIPELINE_VIEW, pv)
-            every {
-                pipelineViewGroupDao.listByProjectId(anyDslContext(), any())
-            } returns dslContext.mockResult(T_PIPELINE_VIEW_GROUP)
-            self.dict("test", "test").let {
-                Assertions.assertEquals(it, PipelineViewDict.EMPTY)
-            }
-        }
-
-        @Test
         @DisplayName("ViewInfo列表 不为空 , viewInfoGroup列表不为空, pipelineInfo列表为空")
-        fun test_3() {
+        fun test_1() {
             every { pipelineViewDao.list(anyDslContext(), any()) } returns dslContext.mockResult(T_PIPELINE_VIEW, pv)
             every {
                 pipelineViewGroupDao.listByProjectId(anyDslContext(), any())
@@ -651,7 +630,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
 
         @Test
         @DisplayName("ViewInfo列表 不为空 , viewInfoGroup列表不为空, pipelineInfo列表不为空")
-        fun test_4() {
+        fun test_2() {
             every { pipelineViewDao.list(anyDslContext(), any()) } returns dslContext.mockResult(T_PIPELINE_VIEW, pv)
             every {
                 pipelineViewGroupDao.listByProjectId(anyDslContext(), any())
