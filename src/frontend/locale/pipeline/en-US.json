@@ -580,6 +580,7 @@
     "repoType": "Type",
     "customRepo": "Custom Artifactory",
     "pipelineRepo": "Pipeline Artifactory",
+    "imageRepo": "Image Artifactory",
     "noArtifact": " No artifacts yet",
     "noDownloadPermTips": " Download failed because you don't have permission to download the artifacts in this pipeline",
     "qrcode": "QR code",

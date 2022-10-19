@@ -214,6 +214,8 @@
         "filterByName": "通过项目名称过滤"
     },
     "setting": {
+        "save": "保存",
+        "cancel": "取消",
         "settings": "设置",
         "baseSetting": "基本设置",
         "credentialSetting": "凭据设置",

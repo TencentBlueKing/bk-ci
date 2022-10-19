@@ -13,7 +13,8 @@ LDFLAG=-s -w -X github.com/Tencent/bk-ci/src/booster/common/static.EncryptionKey
  -X github.com/Tencent/bk-ci/src/booster/common/version.GitHash=${GITHASH} \
  -X github.com/Tencent/bk-ci/src/booster/common/version.Tag=${GITTAG} \
  -X github.com/Tencent/bk-ci/src/booster/common/encrypt.Disabled=${disable_encrypt} \
- -X github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator/k8s.EnableBCSApiGw=${enable_bcs_gateway}
+ -X github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator/k8s.EnableBCSApiGw=${enable_bcs_gateway} \
+ -X github.com/Tencent/bk-ci/src/booster/common/version.DisttaskRepo=${gateway_repo_url}
 
 DISTCC_LDFLAG=-X github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/client/pkg.ProdDistCCServerDomain=${distcc_server_prod_domain} \
  -X github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/client/pkg.ProdDistCCServerPort=${distcc_server_prod_port} \

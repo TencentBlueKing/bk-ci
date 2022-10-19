@@ -25,12 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo.bkrepo
+package com.tencent.devops.notify.pojo
 
-data class QueryData(
-    var count: Int,
-    var page: Int,
-    var pageSize: Int,
-    var totalPages: Int,
-    var records: List<QueryNodeInfo>
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("企业微信机器人attachment事件消息")
+data class WeworkMarkdownAttachment(
+    @ApiModelProperty("回调id", required = true)
+    @JsonProperty("callback_id")
+    val callbackId: String,
+    @ApiModelProperty("动作集合", required = true)
+    val actions: List<WeworkMarkdownAction>
 )

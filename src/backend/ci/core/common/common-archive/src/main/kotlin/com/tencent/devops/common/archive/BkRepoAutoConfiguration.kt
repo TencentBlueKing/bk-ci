@@ -25,25 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.common.archive
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.client.DirectBkRepoClient
+import com.tencent.devops.common.archive.config.BkRepoClientConfig
+import com.tencent.devops.common.service.config.CommonConfig
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+import org.springframework.core.Ordered
 
-@ApiModel("版本仓库-构建信息")
-data class ArtifactoryCreateInfo(
-    @ApiModelProperty("流水线号", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("项目ID", required = true)
-    val projectId: String,
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("构建号", required = true)
-    val buildNum: Int,
-    @ApiModelProperty("产物信息", required = true)
-    val fileInfo: FileInfo?,
-    @ApiModelProperty("数据来源：0-自然数据 1-补偿数据", required = true)
-    val dataForm: Int,
-    @ApiModelProperty("添加时间", required = true)
-    val modifiedTime: Long
-)
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class BkRepoAutoConfiguration {
+
+    @Bean
+    fun bkRepoClientConfig() = BkRepoClientConfig()
+
+    @Bean
+    @Primary
+    fun bkRepoClient(
+        @Autowired objectMapper: ObjectMapper,
+        @Autowired commonConfig: CommonConfig,
+        @Autowired bkRepoClientConfig: BkRepoClientConfig
+    ) = BkRepoClient(objectMapper, commonConfig, bkRepoClientConfig)
+
+    @Bean
+    fun directBkRepoClient() = DirectBkRepoClient()
+}
