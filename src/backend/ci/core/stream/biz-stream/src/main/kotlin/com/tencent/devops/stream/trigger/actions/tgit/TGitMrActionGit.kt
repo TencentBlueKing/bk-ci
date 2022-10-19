@@ -275,7 +275,7 @@ class TGitMrActionGit(
         if (event().object_attributes.action == TGitMergeActionKind.MERGE.value) {
             return true
         }
-        return mrConflictCheck.checkMrConflict(this, path2PipelineExists)
+        return true
     }
 
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {
