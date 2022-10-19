@@ -115,7 +115,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
         try {
             atomResponse = if (!checkBeforeStart(task, param, context)) {
-                AtomResponse(BuildStatus.FAILED)
+                AtomResponse(
+                    BuildStatus.FAILED,
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
+                    errorMsg = "check job start fail"
+                )
             } else {
                 execute(task, fixParam)
             }
@@ -255,6 +260,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         )
     }
 
+    /**
+     * job启动做一些特别参数的检查，检查失败时直接不启动容器
+     */
     private fun checkBeforeStart(
         task: PipelineBuildTask,
         param: VMBuildContainer,
