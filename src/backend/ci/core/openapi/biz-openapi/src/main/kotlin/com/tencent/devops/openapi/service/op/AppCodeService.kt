@@ -133,6 +133,8 @@ class AppCodeService(
 
     fun validProjectInfo(projectId: String) = projectInfoCache.get(projectId).second
 
+    fun invalidProjectInfo(projectId: String) = projectInfoCache.invalidate(projectId)
+
     fun validAppCode(appCode: String, projectId: String): Boolean {
         val appCodeProject = appCodeProjectCache.get(appCode)
         logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache|$appCodeProject.")

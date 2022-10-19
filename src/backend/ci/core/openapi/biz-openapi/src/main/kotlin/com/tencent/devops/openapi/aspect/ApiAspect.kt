@@ -122,6 +122,7 @@ class ApiAspect(
 
         if (projectId != null) {
             if (appCodeService.validProjectInfo(projectId) == null) {
+                appCodeService.invalidProjectInfo(projectId)
                 throw CustomException(Response.Status.NOT_FOUND, "ProjectId [$projectId] not find, please check it.")
             }
 
