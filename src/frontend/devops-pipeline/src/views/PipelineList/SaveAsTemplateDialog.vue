@@ -1,6 +1,6 @@
 <template>
     <bk-dialog
-        width="800"
+        width="600"
         v-model="isSaveAsTemplateShow"
         :title="$t('newlist.saveAsTemp')"
         :close-icon="false"
@@ -9,7 +9,7 @@
         header-position="left"
         @confirm="submit"
         @cancel="cancel">
-        <bk-form v-if="isSaveAsTemplateShow" v-bkloading="{ isLoading: isSubmiting }" :model="formModel">
+        <bk-form v-if="isSaveAsTemplateShow" v-bkloading="{ isLoading: isSubmiting }" :model="formModel" label-width="120">
             <bk-form-item
                 v-for="item in formModel"
                 :key="item.name"
@@ -28,6 +28,7 @@
                         v-for="(entry, key) in optionGroups"
                         :key="key"
                         :value="entry.value"
+                        class="template-copy-setting-radio"
                     >
                         {{ entry.label }}
                     </bk-radio>
@@ -135,3 +136,9 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .template-copy-setting-radio {
+        margin-right: 12px;
+    }
+</style>

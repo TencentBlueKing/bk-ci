@@ -26,7 +26,7 @@
         <ul class="operate-pipeline-list">
             <li v-for="(pipeline, index) in removedPipelines" :key="pipeline.pipelineId">
                 <span>{{ pipeline.name }}</span>
-                <div v-if="!isRemoveType" class="belongs-pipeline-group" ref="belongsGroupBox">
+                <div v-if="!isRemoveType" v-show="pipeline.groups.length > 0" class="belongs-pipeline-group" ref="belongsGroupBox">
                     <bk-tag v-for="name in pipeline.groups" :key="name" :ref="`groupName_${index}`">
                         {{name}}
                     </bk-tag>
@@ -87,12 +87,13 @@
             },
             removedPipelines () {
                 return this.pipelineList.map((pipeline, index) => {
-                    const visibleTagCount = this.visibleTagCountList[index] ?? pipeline.viewNames.length
-                    const overflowCount = pipeline.viewNames.length - visibleTagCount
+                    const viewNames = pipeline.viewNames ?? []
+                    const visibleTagCount = this.visibleTagCountList[index] ?? viewNames.length
+                    const overflowCount = viewNames.length - visibleTagCount
                     return {
                         name: pipeline.pipelineName,
-                        groups: pipeline.viewNames.slice(0, visibleTagCount),
-                        hiddenGroups: pipeline.viewNames.slice(visibleTagCount).join(';'),
+                        groups: viewNames.slice(0, visibleTagCount),
+                        hiddenGroups: viewNames.slice(visibleTagCount).join(';'),
                         overflowCount,
                         showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0)
                     }
@@ -101,7 +102,7 @@
         },
         updated () {
             setTimeout(() => {
-                if (this.visibleTagCountList.length === 0) {
+                if (this.visibleTagCountList.length === 0 && this.pipelineList.length > 0) {
                     this.calcOverPos()
                 }
             }, 100)
@@ -112,24 +113,31 @@
                 'patchDeletePipelines'
             ]),
             async handleSubmit () {
-                const params = {
-                    projectId: this.$route.params.projectId,
-                    pipelineIds: this.pipelineList.map(pipeline => pipeline.pipelineId)
+                try {
+                    const params = {
+                        projectId: this.$route.params.projectId,
+                        pipelineIds: this.pipelineList.map(pipeline => pipeline.pipelineId)
 
-                }
-                if (this.isRemoveType) {
-                    await this.removePipelineFromGroup({
-                        ...params,
-                        viewId: this.groupId
+                    }
+                    if (this.isRemoveType) {
+                        await this.removePipelineFromGroup({
+                            ...params,
+                            viewId: this.groupId
+                        })
+                    } else {
+                        await this.patchDeletePipelines(params)
+                    }
+                    this.$showTips({
+                        message: this.$t(this.isRemoveType ? 'removeSuc' : 'deleteSuc'),
+                        theme: 'success'
                     })
-                } else {
-                    await this.patchDeletePipelines(params)
+                    this.$emit('done')
+                } catch (e) {
+                    this.$showTips({
+                        message: e.message ?? e,
+                        theme: 'error'
+                    })
                 }
-                this.$showTips({
-                    message: this.$t(this.isRemoveType ? 'removeSuc' : 'deleteSuc'),
-                    theme: 'success'
-                })
-                this.$emit('done')
             },
             handleClose () {
                 this.visibleTagCountList = []
@@ -137,21 +145,24 @@
             },
             calcOverPos () {
                 const tagMargin = 6
-                this.visibleTagCountList = this.$refs.belongsGroupBox?.map((_, index) => {
-                    const moreTag = this.$refs.groupNameMore?.[index]?.$el
-                    const moreTagWidth = (moreTag?.offsetWidth ?? 0) + tagMargin
-                    const viewPortWidth = this.groupNameBoxWidth - moreTagWidth
-                    let sumTagWidth = 0
-                    let tagVisbleCount = 0
+                if (this.$refs.belongsGroupBox?.length > 0) {
+                    console.log('up')
+                    this.visibleTagCountList = this.$refs.belongsGroupBox?.map((_, index) => {
+                        const moreTag = this.$refs.groupNameMore?.[index]?.$el
+                        const moreTagWidth = (moreTag?.offsetWidth ?? 0) + tagMargin
+                        const viewPortWidth = this.groupNameBoxWidth - moreTagWidth
+                        let sumTagWidth = 0
+                        let tagVisbleCount = 0
 
-                    this.$refs[`groupName_${index}`].every((groupName) => {
-                        sumTagWidth += groupName.$el.offsetWidth + tagMargin
-                        const isOverSize = sumTagWidth < viewPortWidth
-                        isOverSize && tagVisbleCount++
-                        return isOverSize
+                        this.$refs[`groupName_${index}`]?.every((groupName) => {
+                            sumTagWidth += groupName.$el.offsetWidth + tagMargin
+                            const isOverSize = sumTagWidth < viewPortWidth
+                            isOverSize && tagVisbleCount++
+                            return isOverSize
+                        })
+                        return tagVisbleCount
                     })
-                    return tagVisbleCount
-                })
+                }
             }
         }
     }

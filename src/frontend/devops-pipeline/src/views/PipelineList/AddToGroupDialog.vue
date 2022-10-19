@@ -50,7 +50,11 @@
                     {{ $t('resultPreview') }}
                 </header>
                 <p>
-                    <span>{{$t('selectedGroup', [selectedGroups.length])}}</span>
+                    <span>
+                        {{$t('selectedGroup')}}
+                        <i class="add-group-count">{{selectedGroups.length}}</i>
+                        {{$t('selectedGroupSuffix')}}
+                    </span>
                     <bk-button size="small" v-if="selectedGroups.length > 0" text @click="emptySelectedGroups">{{$t('newlist.reset')}}</bk-button>
                 </p>
                 <ul class="add-group-result-preview-list">
@@ -214,10 +218,11 @@
                 this.isLoading = true
                 let message = this.$t(this.isPatch ? 'patchAddToSuc' : 'addToSuc')
                 let theme = 'success'
+                const pipelineIds = this.isPatch ? this.pipelineList.map(pipeline => pipeline.pipelineId) : [this.pipeline.pipelineId]
                 try {
                     await this.addPipelineToGroup({
                         projectId: this.$route.params.projectId,
-                        pipelineIds: this.isPatch ? this.pipelineList.map(pipeline => pipeline.pipelineId) : [this.pipeline.pipelineId],
+                        pipelineIds,
                         viewIds: this.selectedGroups.map(group => group.id)
                     })
 
@@ -225,7 +230,7 @@
                         this.$store.commit('pipelines/UPDATE_PIPELINE_GROUP', {
                             id: group.id,
                             body: {
-                                pipelineCount: this.groupMap[group.id].pipelineCount + 1
+                                pipelineCount: this.groupMap[group.id].pipelineCount + pipelineIds.length ?? 0
                             }
                         })
                     })
@@ -248,6 +253,7 @@
 </script>
 
 <style lang="scss">
+    @import '@/scss/conf';
     @import '@/scss/mixins/ellipsis';
     .add-group-dialog {
         .bk-dialog-tool {
@@ -303,6 +309,11 @@
                     > span {
                         padding-right: 10px;
                         font-size: 12px;
+                        .add-group-count {
+                            color: $primaryColor;
+                            font-weight: bold;
+                            font-style: normal;
+                        }
                     }
                 }
                 .add-group-result-preview-list {

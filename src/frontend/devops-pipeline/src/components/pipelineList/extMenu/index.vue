@@ -10,7 +10,13 @@
             <i class="devops-icon icon-more"></i>
         </div>
         <ul v-if="config.length > 0" class="dot-menu-list" slot="content">
-            <li :class="[{ 'is-disable': item.disable }, 'dot-menu-item']" v-for="(item, index) of config" :key="index" @click.stop="clickMenuItem(item)">{{ item.text }}</li>
+            <li
+                :class="[{ 'is-disable': item.disable }, 'dot-menu-item']"
+                v-for="(item, index) of config"
+                :key="index"
+                @click.stop="clickMenuItem(item)">
+                {{ item.text }}
+            </li>
         </ul>
     </bk-popover>
 
@@ -43,6 +49,7 @@
                 }
 
                 this.$refs.dotMenuRef.hideHandler()
+                console.log(this.data)
                 item.handler(this.data, item)
             }
         }

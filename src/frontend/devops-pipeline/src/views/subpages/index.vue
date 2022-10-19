@@ -199,7 +199,7 @@
                     }
                 }, {
                     name: 'desc',
-                    label: this.$t('pipelineDesc'),
+                    label: this.$t('desc'),
                     rules: [],
                     component: 'bk-input',
                     bindData: {

@@ -12,7 +12,7 @@
                 <header class="pipeline-group-edit-header">{{ title }}</header>
                 <div class="group-form-item">
                     <label class="group-form-label">{{$t('groupStrategy')}}</label>
-                    <bk-radio-group class="group-form-radio-group" v-model="model.viewType">
+                    <bk-radio-group class="group-form-radio-group" v-model="model.viewType" @change="handleViewTypeChange">
                         <bk-radio :value="2">{{$t('staticGroup')}}</bk-radio>
                         <bk-radio :value="1">{{$t('dynamicGroup')}}</bk-radio>
                     </bk-radio-group>
@@ -96,12 +96,24 @@
                                 ref="pipelineGroupTree"
                                 :data="pipleinGroupTree"
                                 node-key="id"
+                                :default-expanded-nodes="defaultExpandedNodes"
                                 :show-icon="false"
                             >
                                 <div class="pipeline-group-tree-node" slot-scope="{ node, data }">
                                     <span @click.stop>
-                                        <bk-checkbox v-if="Array.isArray(data.children)" v-bind="parentCheckStatusMap[data.id]" @change="(checked) => handleRootCheck(checked, data)" />
-                                        <bk-checkbox v-else :value="model.pipelineIds.has(data.id)" @change="(checked) => handleCheck(checked, data)" />
+                                        <bk-checkbox
+                                            v-if="Array.isArray(data.children)"
+                                            v-bind="parentCheckStatusMap[data.id]"
+                                            @change="(checked) => handleRootCheck(checked, data)"
+                                        />
+                                        <bk-checkbox
+                                            v-else
+                                            :value="model.pipelineIds.has(data.id)"
+                                            :class="{
+                                                'last-checked': savedPipelineInfos.has(data.id)
+                                            }"
+                                            @change="(checked) => handleCheck(checked, data)"
+                                        />
                                     </span>
                                     <span class="pipeline-group-tree-node-name">{{data.name}}</span>
                                 </div>
@@ -113,6 +125,7 @@
             <aside class="pipeline-group-edit-preview">
                 <header>
                     {{$t('resultPreview')}}
+                    <span class="pipeline-preview-time" v-if="previewTime">{{$t('previewTime', [previewTime])}}</span>
                 </header>
                 <article v-bkloading="{ isLoading: loading }">
                     <header class="preview-pipeline-title">
@@ -138,39 +151,43 @@
                     </header>
                     <ul v-if="preAddedPipelineList.length > 0" class="preview-pipeline-ul">
                         <li
-                            v-for="pipeline in preAddedPipelineList"
+                            v-for="(pipeline, index) in preAddedPipelineList"
                             :key="pipeline.pipelineId"
-
                         >
-                            <main>
-                                <p>
-                                    <bk-tag
-                                        ext-cls="pipeline-classify-tag"
-                                        v-if="pipeline.tag"
-                                        :theme="pipeline.theme"
-                                    >
-                                        {{ $t(pipeline.tag) }}
-                                    </bk-tag>
-                                    {{ pipeline.pipelineName }}
-                                </p>
-                                <footer v-bk-tooltips="{ content: pipeline.groups, extCls: 'pipeline-group-tooltips' }">
-                                    {{pipeline.groups}}
-                                </footer>
-                            </main>
-                            <bk-button
-                                text
-                                v-if="!isDynamicGroup"
-                                size="small"
+                            <bk-popover class="pipeline-group-tooltips">
+                                <main class="pipeline-group-left-side">
+                                    <p>
+                                        <bk-tag
+                                            ext-cls="pipeline-classify-tag"
+                                            v-if="pipeline.tag"
+                                            :theme="pipeline.theme"
+                                        >
+                                            {{ $t(pipeline.tag) }}
+                                        </bk-tag>
+                                        {{ pipeline.pipelineName }}
+                                    </p>
+                                    <footer>
+                                        {{pipeline.groups}}
+                                    </footer>
+                                </main>
+                                <div slot="content">
+                                    <p>{{pipeline.pipelineName}}</p>
+                                    <p>
+                                        {{pipeline.groups}}
+                                    </p>
+                                </div>
+                            </bk-popover>
+                            <span
+                                v-if="!isDynamicGroup && pipeline.isRemoved || pipeline.isAdded"
+                                v-bk-tooltips="pipeline.tooltips"
+                                class="pipeline-operate-btn"
                                 @click="togglePipeline(pipeline, index)"
                             >
                                 <logo
-                                    v-if="pipeline.isRemoved"
-                                    name="undo"
-                                    size="14"
-                                    v-bk-tooltips="$t('restore.restore')"
+                                    :name="pipeline.isAdded ? 'close' : 'undo'"
+                                    size="18"
                                 />
-                                <i v-else-if="pipeline.isAdded" class="devops-icon icon-close" />
-                            </bk-button>
+                            </span>
                         </li>
                     </ul>
                 </article>
@@ -184,7 +201,7 @@
                     @click="handleSubmit"
                     :disabled="isFilterChange"
                 >
-                    {{$t('confirm')}}
+                    {{$t('save')}}
                 </bk-button>
             </bk-popover>
             <bk-button @click="handleClose">
@@ -196,6 +213,7 @@
 
 <script>
     import { mapState, mapGetters, mapActions } from 'vuex'
+    import moment from 'moment'
     import Logo from '@/components/Logo'
     import {
         NAME_FILTER_TYPE,
@@ -237,8 +255,9 @@
                     removedPipelineInfos: [],
                     reservePipelineInfos: []
                 },
-                savedPipelineInfos: [],
+                preTypePreview: {},
                 inited: false,
+                previewTime: null,
                 model: {
                     viewType: this.group?.viewType ?? 2,
                     pipelineIds: new Set(this.group?.pipelineIds),
@@ -256,7 +275,10 @@
             ...mapGetters('pipelines', [
                 'groupMap'
             ]),
-
+            defaultExpandedNodes () {
+                console.log(this.group?.id)
+                return this.group?.id ? [this.group?.id] : []
+            },
             title () {
                 return `${this.group?.name} - ${this.$t('pipelineCountEdit')}`
             },
@@ -267,7 +289,6 @@
                 return this.model.viewType === 1
             },
             filterTypes () {
-                console.log(this.tagGroupList)
                 return [
                     {
                         id: NAME_FILTER_TYPE,
@@ -318,7 +339,6 @@
             parentCheckStatusMap () {
                 const res = this.pipleinGroupTree.reduce((acc, root) => {
                     let checkedNum = 0
-                    console.log(root.children)
                     root.children.forEach(pipeline => {
                         if (this.model.pipelineIds.has(pipeline.id)) {
                             checkedNum++
@@ -330,7 +350,6 @@
                     }
                     return acc
                 }, {})
-                console.log(res)
                 return res
             },
             saveDisableTips () {
@@ -341,6 +360,9 @@
             },
             totalPreviewCount () {
                 return this.preAddedPipelineList.length - this.preview.removedPipelineInfos.length
+            },
+            savedPipelineInfos () {
+                return new Set(this.preview.reservePipelineInfos.map(pipeline => pipeline.pipelineId))
             }
         },
         watch: {
@@ -368,10 +390,33 @@
                 'previewGroupResult'
             ]),
             changeFilterChangeFlag () {
-                if (this.inited) {
-                    this.isFilterChange = true
+                if (this.model.viewType === 1) {
+                    if (this.inited) {
+                        this.isFilterChange = true
+                    }
+                    this.inited = true
                 }
-                this.inited = true
+            },
+            handleViewTypeChange (viewType) {
+                this.isFilterChange = viewType === 1
+                if (viewType === 1) {
+                    this.preTypePreview = {
+                        ...this.preview
+                    }
+                    this.preview = {
+                        addedPipelineInfos: [],
+                        removedPipelineInfos: [],
+                        reservePipelineInfos: []
+                    }
+                } else if (viewType === 2) {
+                    this.previewTime = null
+                    if (Object.keys(this.preTypePreview).length > 0) {
+                        this.preview = {
+                            ...this.preTypePreview
+                        }
+                        this.preTypePreview = {}
+                    }
+                }
             },
             async init (group) {
                 if (this.isLoading || !group?.id) return
@@ -399,17 +444,18 @@
                     return {
                         id: groupItem.viewId,
                         name: groupItem.viewName,
-                        children: groupItem.pipelineList.map(pipeline => ({
-                            id: pipeline.pipelineId,
-                            name: pipeline.pipelineName
-                        }))
+                        children: groupItem.pipelineList
+                            .filter(pipeline => !pipeline.delete || pipeline.viewId === group.id)
+                            .map(pipeline => ({
+                                id: pipeline.pipelineId,
+                                name: pipeline.pipelineName
+                            }))
                     }
                 }, [])
                 this.pipelineGroupMap = pipelineGroupMap
                 this.preview.reservePipelineInfos = groupDetail.pipelineIds.map(pipelineId => this.generatePreviewPipeline({
                     pipelineId
                 }))
-                this.savedPipelineInfos = this.preview.reservePipelineInfos.map(pipeline => pipeline.pipelineId)
                 this.isLoading = false
             },
             handleSearch () {
@@ -441,27 +487,32 @@
                     pipelineId,
                     pipelineName: pipelineName ?? pipelingGroup?.pipelineName,
                     ...metaData,
-                    groups: (pipelingGroup.groupIds ?? []).map(groupId => this.groupMap[groupId]?.name).join(';')
+                    groups: (pipelingGroup.groupIds ?? []).map(groupId => this.groupMap[groupId]?.name).join(';'),
+                    tooltips: {
+                        content: this.$t(isAdded ? 'cancelAdd' : 'restore.restore'),
+                        delay: [500, 0],
+                        disabled: !(isAdded || isRemoved)
+                    }
                 }
             },
             handleRootCheck (checked, root) {
                 root.children.forEach(child => this.handleCheck(checked, child))
             },
             async handleCheck (checked, data) {
-                this.updatePipelineIds(data.id)
+                this.updatePipelineIds(data.id, checked)
                 const previewPipeline = this.generatePreviewPipeline({
                     pipelineId: data.id,
                     pipelineName: data.name
                 })
                 if (checked) {
-                    if (this.savedPipelineInfos.includes(data.id)) {
+                    if (this.savedPipelineInfos.has(data.id)) {
                         this.preview.reservePipelineInfos.push(previewPipeline)
                         this.preview.removedPipelineInfos = this.preview.removedPipelineInfos.filter(pip => pip.pipelineId !== data.id)
                     } else {
                         this.preview.addedPipelineInfos.push(previewPipeline)
                     }
                 } else {
-                    if (this.savedPipelineInfos.includes(data.id)) {
+                    if (this.savedPipelineInfos.has(data.id)) {
                         this.preview.removedPipelineInfos.push(previewPipeline)
                         this.preview.reservePipelineInfos = this.preview.reservePipelineInfos.filter(pip => pip.pipelineId !== data.id)
                     } else {
@@ -471,20 +522,22 @@
             },
             togglePipeline (pipeline, index) {
                 const { isRemoved, isAdded, pipelineId } = pipeline
+                let checked = true
                 if (isRemoved) {
                     const originPipeline = this.generatePreviewPipeline(pipeline)
                     this.preview.reservePipelineInfos.push(originPipeline)
                     this.preview.removedPipelineInfos.splice(index, 1)
                 } else if (isAdded) {
                     this.preview.addedPipelineInfos.splice(index, 1)
+                    checked = false
                 }
-                this.updatePipelineIds(pipelineId)
+                this.updatePipelineIds(pipelineId, checked)
             },
-            updatePipelineIds (id) {
-                if (!this.model.pipelineIds.has(id)) {
-                    this.model.pipelineIds.add(id)
-                } else {
+            updatePipelineIds (id, checked) {
+                if (this.model.pipelineIds.has(id) && !checked) {
                     this.model.pipelineIds.delete(id)
+                } else if (!this.model.pipelineIds.has(id)) {
+                    this.model.pipelineIds.add(id)
                 }
                 this.model.pipelineIds = new Set(this.model.pipelineIds)
             },
@@ -500,6 +553,7 @@
                         pipelineIds: Array.from(this.model.pipelineIds)
                     })
                     this.preview = data
+                    this.previewTime = moment().format('HH:MM:SS')
                     this.isFilterChange = false
                 } catch (error) {
                     console.log(error)
@@ -574,6 +628,7 @@
                     }],
                     logic: 'AND'
                 }
+                this.inited = false
                 this.isFilterChange = false
                 this.preview = {
                     addedPipelineInfos: [],
@@ -616,9 +671,14 @@
                 > header {
                     display: flex;
                     align-items: center;
-                    justify-content: space-between;
                     color: #313238;
                     padding: 16px 0;
+                    .pipeline-preview-time {
+                        display: flex;
+                        color: #979BA5;
+                        font-size: 12px;
+                        margin-left: 10px;
+                    }
                 }
 
                 > article {
@@ -654,6 +714,13 @@
                             align-items: center;
                             justify-content: space-between;
                             font-size: 12px;
+                            // TODO: ugly overwrite
+                            .last-checked.is-checked {
+                                .bk-checkbox {
+                                    border-color: #8F9DF6;
+                                    background-color: #8F9DF6;
+                                }
+                            }
                             .pipeline-group-tree-node-name {
                                 padding-left: 8px;
                                 flex: 1;
@@ -698,7 +765,15 @@
                         border-bottom: 1px solid #DCDEE5;
                         padding: 0 16px;
                         background: white;
-                        > main {
+                        .pipeline-group-tooltips {
+                            display: flex;
+                            flex: 1;
+                            overflow: hidden;
+                            > div {
+                                width: 100%;
+                            }
+                        }
+                        .pipeline-group-left-side {
                             display: flex;
                             flex-direction: column;
                             flex: 1;
@@ -717,11 +792,18 @@
                                 color: #979BA5;
                             }
                         }
+                        .pipeline-operate-btn {
+                            display: none;
+                            cursor: pointer;
+                        }
                         &:last-child {
                             border: 0;
                         }
                         &:hover {
                             background-color: #E1ECFF;
+                            .pipeline-operate-btn {
+                                display: flex;
+                            }
                         }
                     }
 
@@ -742,7 +824,5 @@
             }
         }
     }
-    .pipeline-group-tooltips {
-        max-width: 420px;
-    }
+
 </style>

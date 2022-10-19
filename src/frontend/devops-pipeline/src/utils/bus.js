@@ -23,5 +23,6 @@
 
 import Vue from 'vue'
 
+export const ADD_TO_PIPELINE_GROUP = 'showAddToPipelineGroup'
 // Use a bus for components communication,
 export const bus = new Vue()

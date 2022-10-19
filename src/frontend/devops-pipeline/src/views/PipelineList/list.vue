@@ -60,6 +60,7 @@
                     display: flex;
                     .search-pipeline-input {
                         flex: 1;
+                        background: white;
                     }
                 }
             }
@@ -86,6 +87,21 @@
                         @include ellipsis();
                         flex: 1;
                     }
+                    .pipeline-exec-msg-desc {
+                        display: grid;
+                        column-gap: 16px;
+                        grid-template-columns: auto auto auto;
+                        > span {
+                            display: flex;
+                            align-items: center;
+                            overflow: hidden;
+                            > span {
+                                display: flex;
+                                @include ellipsis();
+                                min-width: 0;
+                            }
+                        }
+                    }
                 }
             }
             .hidden {
@@ -96,6 +112,7 @@
                 align-items: center;
                 .pipeline-exec-btn {
                     width: 60px;
+                    text-align: left;
                 }
                 .more-action-menu {
                     font-size: 0;

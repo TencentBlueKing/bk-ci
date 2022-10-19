@@ -22,6 +22,7 @@ import {
     PROCESS_API_URL_PREFIX,
     MY_PIPELINE_VIEW_ID,
     COLLECT_VIEW_ID,
+    COLLECT_VIEW_ID_NAME,
     ALL_PIPELINE_VIEW_ID,
     DELETED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
@@ -53,13 +54,13 @@ const state = {
     hardViews: [
         {
             id: COLLECT_VIEW_ID,
-            name: 'myCollect',
+            i18nKey: COLLECT_VIEW_ID_NAME,
             icon: 'star-shape',
             hideMore: true
         },
         {
             id: MY_PIPELINE_VIEW_ID,
-            name: MY_PIPELINE_VIEW_ID,
+            i18nKey: MY_PIPELINE_VIEW_ID,
             icon: 'user-shape',
             hideMore: true
         }
@@ -88,14 +89,18 @@ const getters = {
     },
     dynamicPipelineGroups: state => state.allPipelineGroup.filter(group => group.viewType === 1),
     staticPipelineGroups: state => state.allPipelineGroup.filter(group => group.viewType === 2),
-    groupMap: state => state.allPipelineGroup.reduce((acc, item) => {
+    hardViewsMap: state => state.hardViews.reduce((acc, item) => {
         acc[item.id] = item
         return acc
     }, {
         allPipeline: {
-            name: ALL_PIPELINE_VIEW_ID
+            i18nKey: ALL_PIPELINE_VIEW_ID
         }
     }),
+    groupMap: (state, getters) => state.allPipelineGroup.reduce((acc, item) => {
+        acc[item.id] = item
+        return acc
+    }, getters.hardViewsMap),
     getTagList: (state) => { // 标签分组集
         const list = state.tagGroupList || []
         return list.map((item) => {

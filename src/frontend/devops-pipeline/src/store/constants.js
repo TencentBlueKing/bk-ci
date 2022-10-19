@@ -34,6 +34,7 @@ export const AUTH_URL_PREFIX = 'auth/api'
 
 export const ALL_PIPELINE_VIEW_ID = 'allPipeline'
 export const MY_PIPELINE_VIEW_ID = 'myPipeline'
+export const COLLECT_VIEW_ID_NAME = 'myCollect'
 export const COLLECT_VIEW_ID = 'collect'
 export const DELETED_VIEW_ID = 'recycleBin'
 export const UNCLASSIFIED_PIPELINE_VIEW_ID = 'unclassified'

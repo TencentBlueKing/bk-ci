@@ -10,13 +10,14 @@
         @confirm="submit"
         @cancel="cancel"
     >
-        <bk-form :model="model" form-type="vertical" v-bkloading="{ isLoading: isSubmiting }" ver>
+        <bk-form :model="model" form-type="vertical" v-bkloading="{ isLoading: isSubmiting }" ref="copyForm">
             <bk-form-item
                 v-for="item in formModel"
                 :key="item.name"
                 :label="$t(item.name)"
                 :rules="item.rules"
                 :property="item.name"
+
             >
                 <bk-input
                     :placeholder="$t(item.placeholder)"
@@ -33,10 +34,11 @@
 
             <bk-form-item :label="$t('dynamicPipelineGroup')">
                 <bk-select
-                    :value="dynamicGroup"
                     disabled
-                    :loading="isMatching"
                     multiple
+                    :value="dynamicGroup"
+                    :loading="isMatching"
+                    :placeholder="$t('pipelineDynamicMatchPlaceholder')"
                 >
                     <bk-option
                         v-for="group in dynamicPipelineGroups"
@@ -89,7 +91,7 @@
                 dynamicGroup: [],
                 isMatching: false,
                 model: {
-                    name: `${this.pipeline?.pipelineName}_copy`,
+                    name: this.initName(),
                     labels: [],
                     staticViews: [],
                     desc: ''
@@ -116,7 +118,7 @@
                             {
                                 max: 40,
                                 message: this.$t('pipelineNameInputTips'),
-                                trigger: 'blur'
+                                trigger: 'change'
                             }
                         ],
                         handleInput: (val) => {
@@ -125,7 +127,7 @@
                     },
                     {
                         name: 'label',
-                        placeholder: 'pipelineDescInputTips',
+                        placeholder: 'desc',
                         value: this.model.desc,
                         rules: [
                             {
@@ -143,13 +145,19 @@
         },
         watch: {
             'pipeline.pipelineId': function () {
-                this.model.name = `${this.pipeline?.pipelineName}_copy`
+                this.model.name = this.initName()
+                this.$nextTick(() => {
+                    this.$refs.copyForm?.validate()
+                })
             }
         },
         methods: {
             ...mapActions('pipelines', [
                 'matchDynamicView'
             ]),
+            initName () {
+                return this.pipeline?.pipelineName ? `${this.pipeline?.pipelineName}_copy` : ''
+            },
             async updateDynamicGroup (tags) {
                 this.isMatching = true
                 this.model.labels = Object.values(tags).flat()
@@ -174,10 +182,12 @@
             async submit () {
                 this.isSubmiting = true
 
-                this.copy(this.model, this.pipeline)
+                const res = await this.copy(this.model, this.pipeline)
                 this.isSubmiting = false
-                this.cancel()
-                this.$emit('done')
+                if (res) {
+                    this.cancel()
+                    this.$emit('done')
+                }
             },
             reset () {
                 this.initTags = {}
@@ -189,6 +199,7 @@
                     staticViews: [],
                     desc: ''
                 }
+                this.$refs.copyForm?.clearError?.()
             },
             cancel () {
                 this.reset()

@@ -67,6 +67,11 @@ export default {
         ]),
         async checkHasTemplatePermission () {
             this.hasTemplatePermission = await this.requestTemplatePermission(this.$route.params.projectId)
+            this.$nextTick(() => {
+                Object.keys(this.pipelineMap).forEach(pipelineId => {
+                    this.pipelineMap[pipelineId].pipelineActions = this.getPipelineActions(this.pipelineMap[pipelineId])
+                })
+            })
         },
         async getPipelines (query = {}) {
             try {
@@ -101,7 +106,6 @@ export default {
                             [item.pipelineId]: item
                         }
                     }, {})
-
                     return {
                         page,
                         count,
@@ -229,7 +233,7 @@ export default {
         },
         closeCopyDialog () {
             this.updatePipelineActionState({
-                isCopyDialogShow: true,
+                isCopyDialogShow: false,
                 activePipeline: null
             })
         },
@@ -295,6 +299,7 @@ export default {
                     pipelineId,
                     isCollect
                 })
+                return true
             } catch (err) {
                 message = err.message || err
                 theme = 'error'
@@ -318,6 +323,7 @@ export default {
                     message: this.$t('deleteSuc'),
                     theme: 'success'
                 })
+                return true
             } catch (err) {
                 this.handleError(err, [{
                     actionId: this.$permissionActionMap.delete,
@@ -352,6 +358,7 @@ export default {
                     message: this.$t('copySuc'),
                     theme: 'success'
                 })
+                return true
             } catch (err) {
                 this.handleError(err, [{
                     actionId: this.$permissionActionMap.create,

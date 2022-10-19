@@ -5,6 +5,7 @@
         :show-condition="false"
         :filter="true"
         :data="dropList"
+
         :placeholder="$t('searchPipelinePlaceholder')"
         :value="value"
         :values="initValues"

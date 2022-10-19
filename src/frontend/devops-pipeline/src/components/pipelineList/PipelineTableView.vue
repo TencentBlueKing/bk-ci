@@ -18,7 +18,9 @@
         <bk-table-column v-if="isPatchView" type="selection" width="60"></bk-table-column>
         <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
-                <span @click="goHistory(props.row.pipelineId)">{{props.row.pipelineName}}</span>
+                <span class="pipeline-name-cell-link primary" @click="goHistory(props.row.pipelineId)">
+                    {{props.row.pipelineName}}
+                </span>
             </template>
         </bk-table-column>
         <bk-table-column v-if="isAllPipelineView || isPatchView || isDeleteView" width="250" :label="$t('ownGroupName')" prop="viewNames">
@@ -58,14 +60,18 @@
                                 |
                                 <span>{{ props.row.lastBuildMsg }}</span>
                             </p>
-                            <p class="flex-row">
-                                <span class="desc flex-row">
-                                    <logo name="manualTrigger" size="16" />
-                                    {{ props.row.latestBuildUserId }}
-                                </span>
-                                <span v-if="props.row.webhookRepoUrl" class="desc flex-row">
+                            <p class="pipeline-exec-msg-desc">
+                                <span class="desc">
                                     <logo :name="props.row.trigger" size="16" />
-                                    {{ props.row.webhookRepoUrl }}
+                                    <span>{{ props.row.latestBuildUserId }}</span>
+                                </span>
+                                <span v-if="props.row.webhookAliasName" class="desc">
+                                    <logo name="branch" size="16" />
+                                    <span>{{ props.row.webhookAliasName }}</span>
+                                </span>
+                                <span v-if="props.row.webhookMessage" class="desc">
+                                    <logo name="branch" size="16" />
+                                    <span>{{ props.row.webhookMessage }}</span>
                                 </span>
                             </p>
                         </template>
@@ -157,7 +163,6 @@
             }
         },
         data () {
-            console.log(this.sortType)
             return {
                 isLoading: false,
                 pipelineList: [],
@@ -168,7 +173,7 @@
                 },
                 sortField: {
                     prop: this.sortType,
-                    order: ORDER_ENUM.ASC
+                    order: this.$route.query.collation ?? ORDER_ENUM.ascending
                 },
                 activePipeline: null
             }
@@ -222,7 +227,7 @@
             handleSort ({ prop, order }) {
                 console.log('sort change', prop, order)
                 Object.assign(this.sortField, {
-                    order,
+                    order: prop ? ORDER_ENUM[order] : undefined,
                     prop: PIPELINE_SORT_FILED[prop]
                 })
                 this.$nextTick(this.requestList)
@@ -233,7 +238,7 @@
                     page: this.pagination.current,
                     pageSize: this.pagination.limit,
                     sortType: this.sortField.prop,
-                    sortOrder: this.sortField.order,
+                    collation: this.sortField.order,
                     viewId: this.$route.params.viewId,
                     ...this.filterParams,
                     ...query
@@ -243,7 +248,7 @@
                     current: page
                 })
                 this.pipelineList = records
-
+                console.log(records)
                 this.isLoading = false
             },
             refresh () {
@@ -265,6 +270,9 @@
 
 <style lang="scss">
     @import '@/scss/conf.scss';
+    .pipeline-name-cell-link {
+        cursor: pointer;
+    }
     .primary {
         color: $primaryColor;
     }

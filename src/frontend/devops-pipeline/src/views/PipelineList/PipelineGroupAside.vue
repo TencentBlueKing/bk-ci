@@ -1,5 +1,5 @@
 <template>
-    <aside class="pipeline-group-aside">
+    <aside v-bkloading="{ isLoading }" class="pipeline-group-aside">
         <header class="pipeline-group-aside-header">
             <div v-for="item in sumViews" :key="item.id" :class="{
                 'pipeline-group-item': true,
@@ -15,7 +15,10 @@
         <article class="pipeline-group-container">
             <div class="pipeline-group-classify-block" v-for="block in pipelineGroupTree" :key="block.title">
                 <h3 @click="toggle(block.id)" class="pipeline-group-classify-header">
-                    <i class="devops-icon icon-down-shape pipeline-group-item-icon" />
+                    <i :class="['devops-icon', 'pipeline-group-item-icon', {
+                        'icon-down-shape': block.show,
+                        'icon-right-shape': !block.show
+                    }]" />
                     {{block.title}}
                 </h3>
                 <div
@@ -39,7 +42,7 @@
                         v-model="newViewName"
                     />
                     <span v-else class="pipeline-group-item-name">
-                        {{$t(item.name)}}
+                        {{item.name}}
                     </span>
                     <span class="pipeline-group-item-sum">{{item.pipelineCount}}</span>
                     <ext-menu :class="{ hidden: item.actions.length <= 0 }" :data="item" :config="item.actions"></ext-menu>
@@ -86,6 +89,7 @@
         ALL_PIPELINE_VIEW_ID,
         DELETED_VIEW_ID
     } from '@/store/constants'
+    import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
@@ -138,6 +142,7 @@
                     show: this.showClassify.personalViewList,
                     children: this.pipelineGroupDict.personalViewList.map((view) => ({
                         ...view,
+                        name: view.i18nKey ? this.$t(view.i18nKey) : view.name,
                         actions: this.pipelineGroupActions(view)
                     }))
                 }, {
@@ -154,7 +159,13 @@
         created () {
             this.refreshPipelineGroup()
         },
-
+        mounted () {
+            bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+            bus.$on(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+        },
+        beforeDestroy () {
+            bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+        },
         methods: {
             ...mapActions('pipelines', [
                 'requestGetGroupLists',
@@ -163,8 +174,11 @@
                 'deletePipelineGroup',
                 'toggleStickyTop'
             ]),
-            refreshPipelineGroup () {
-                return this.requestGetGroupLists(this.$route.params)
+            async refreshPipelineGroup () {
+                this.isLoading = true
+                const res = await this.requestGetGroupLists(this.$route.params)
+                this.isLoading = false
+                return res
             },
             pipelineGroupActions (group) {
                 if (this.hideActionGroups.includes(group.id)) return []
@@ -179,21 +193,19 @@
                     },
                     {
                         text: this.$t('pipelineCountEdit'),
-                        handler: () => {
-                            this.activeGroup = group
-                        }
+                        handler: () => this.handleAddToGroup(group.id)
                     },
-                    {
-                        text: this.$t('pipelineGroupAuth'),
-                        handler: () => {
-                            this.$router.push({
-                                name: 'pipelineListAuth',
-                                params: {
-                                    viewId: group.id
-                                }
-                            })
-                        }
-                    },
+                    // {
+                    //     text: this.$t('pipelineGroupAuth'),
+                    //     handler: () => {
+                    //         this.$router.push({
+                    //             name: 'pipelineListAuth',
+                    //             params: {
+                    //                 viewId: group.id
+                    //             }
+                    //         })
+                    //     }
+                    // },
                     {
                         text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
                         disabled: this.isSticking,
@@ -216,8 +228,13 @@
                     }
                 ]
             },
+            handleAddToGroup (groupId) {
+                const group = this.groupMap[groupId]
+                if (group) {
+                    this.activeGroup = group
+                }
+            },
             toggle (id) {
-                console.log(id)
                 this.showClassify[id] = !this.showClassify[id]
             },
             resetEditing () {
@@ -340,9 +357,13 @@
                         pipelineCount: 0
                     })
                     this.isAddPipelineGroupDialogShow = false
+                    Object.assign(this.newPipelineGroup, {
+                        name: '',
+                        projected: false
+                    })
                 } catch (e) {
                     message = e.message || e
-                    theme = 'danger'
+                    theme = 'error'
                 } finally {
                     this.isAdding = false
                     this.$bkMessage({
@@ -378,7 +399,7 @@
         }
 
         .pipeline-group-classify-block {
-            padding-bottom: 24px;
+            padding-bottom: 12px;
             transition: all 0.3s ease;
             &:not(:last-child) {
                 border-bottom: 1px solid #DCDEE5;

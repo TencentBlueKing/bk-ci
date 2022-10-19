@@ -53,7 +53,7 @@
         },
         watch: {
             value (newVal) {
-                this.labelIdMap = newVal
+                this.updateValue(newVal)
             }
         },
         created () {
@@ -66,11 +66,14 @@
             async init () {
                 this.isLoading = true
                 await this.requestTagList(this.$route.params)
+                this.updateValue()
+                this.isLoading = false
+            },
+            updateValue (val = {}) {
                 this.labelIdMap = this.tagGroupList.reduce((acc, tag) => {
-                    acc[tag.id] = []
+                    acc[tag.id] = val[tag.id] ?? []
                     return acc
                 }, {})
-                this.isLoading = false
             },
             handleChange (groupId, labelIds) {
                 this.labelIdMap[groupId] = labelIds

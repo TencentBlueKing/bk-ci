@@ -97,8 +97,8 @@ export function pluginUrlParse (originUrl, query) {
 }
 
 export const ORDER_ENUM = {
-    ASC: 'ascending',
-    DESC: 'descending'
+    ascending: 'ASC',
+    descending: 'DESC'
 }
 export const PIPELINE_SORT_FILED = {
     pipelineName: 'NAME',

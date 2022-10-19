@@ -18,6 +18,7 @@
 
 <script>
     import Logo from '@/components/Logo'
+    import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
     export default {
         components: {
             Logo
@@ -57,7 +58,7 @@
                         btns: [
                             {
                                 btnProps,
-                                handler: () => this.createPipeline(),
+                                handler: () => bus.$emit(ADD_TO_PIPELINE_GROUP, this.$route.params.viewId),
                                 text: this.$t('newlist.addPipelineToGroup')
                             }
                         ]

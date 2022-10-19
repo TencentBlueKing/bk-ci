@@ -178,14 +178,15 @@
                 return this.layout === CARD_LAYOUT
             },
             currentGroup () {
+                console.log(this.$route.params.viewId)
                 return this.groupMap?.[this.$route.params.viewId]
             },
             currentViewName () {
-                return this.$t(this.currentGroup?.name ?? '')
+                return this.currentGroup?.i18nKey ? this.$t(this.currentGroup.i18nKey) : (this.currentGroup?.name ?? '')
             },
             pipelineGroupType () {
                 const typeAlias = ['', 'dynamic', 'static']
-                return this.$t(typeAlias[this.currentGroup?.viewType ?? 1])
+                return this.$t(typeAlias[this.currentGroup?.viewType ?? 0])
             },
             sortList () {
                 return [
