@@ -1307,9 +1307,11 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineBuildMap[pipelineId]?.let { lastBuild ->
                 it.lastBuildMsg = lastBuild.buildMsg
                 it.trigger = lastBuild.trigger
-                it.webhookRepoUrl = lastBuild.webhookInfo?.let { self ->
-                    JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {})?.webhookRepoUrl
+                val webhookInfo = lastBuild.webhookInfo?.let { self ->
+                    JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {})
                 }
+                it.webhookAliasName = webhookInfo?.webhookAliasName?:webhookInfo?.webhookRepoUrl
+                it.webhookMessage = webhookInfo?.webhookMessage
             }
             it.lastBuildFinishCount = buildTaskFinishCountMap.getOrDefault(pipelineId, 0)
             it.lastBuildTotalCount = buildTaskTotalCountMap.getOrDefault(pipelineId, 0)

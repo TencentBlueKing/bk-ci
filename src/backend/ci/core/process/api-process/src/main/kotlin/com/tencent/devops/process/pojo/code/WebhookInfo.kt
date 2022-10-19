@@ -34,6 +34,8 @@ data class WebhookInfo(
     val webhookRepoUrl: String?,
     @ApiModelProperty("分支名", required = false)
     val webhookBranch: String?,
+    @ApiModelProperty("别名", required = false)
+    val webhookAliasName: String?,
     @ApiModelProperty("webhook类型", required = false)
     val webhookType: String?,
     @ApiModelProperty("事件类型", required = false)
