@@ -34,7 +34,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
@@ -54,6 +53,7 @@ import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.service.StreamWebsocketService
@@ -69,6 +69,7 @@ import com.tencent.devops.stream.trigger.pojo.StreamBuildLock
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
@@ -82,6 +83,7 @@ class StreamYamlBaseBuild @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
+    private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val streamEventSaveService: StreamEventService,
     private val websocketService: StreamWebsocketService,
@@ -325,6 +327,11 @@ class StreamYamlBaseBuild @Autowired constructor(
             model = modelAndSetting.model,
             yamlTransferData = yamlTransferData
         )
+        // 更新yaml变更列表到db
+        val forkMrYamlList = action.forkMrYamlList()
+        if (forkMrYamlList.isNotEmpty()) {
+            gitRequestEventDao.updateChangeYamlList(dslContext, action.data.context.requestEventId!!, forkMrYamlList)
+        }
 
         // 修改流水线并启动构建，需要加锁保证事务性
         val buildLock = StreamBuildLock(
@@ -350,20 +357,37 @@ class StreamYamlBaseBuild @Autowired constructor(
             )
             val pipelineParams = modelParameters.webHookParams.toMutableMap()
             buildId = client.get(ServiceWebhookBuildResource::class).webhookTrigger(
-                userId = action.data.getUserId(),
+                // #7700 此处传入userid 为权限人。同一为用ci开启人做权限校验
+                userId = action.data.setting.enableUser,
                 projectId = action.getProjectCode(),
                 pipelineId = pipeline.pipelineId,
                 params = WebhookTriggerParams(
                     params = pipelineParams,
                     userParams = manualValues,
-                    startValues = mutableMapOf(PIPELINE_NAME to pipeline.displayName)
+                    startValues = mutableMapOf(PIPELINE_NAME to pipeline.displayName),
+                    triggerReviewers = action.forkMrNeedReviewers()
                 ),
                 channelCode = channelCode,
-                startType = StartType.SERVICE
+                startType = action.getStartType()
             ).data!!
             logger.info(
                 "StreamYamlBaseBuild|startBuild|success|gitProjectId|${action.data.getGitProjectId()}|" +
                     "pipelineId|${pipeline.pipelineId}|gitBuildId|$gitBuildId|buildId|$buildId"
+            )
+        } catch (e: StreamTriggerException) {
+            errorStartBuild(
+                action = action,
+                pipeline = pipeline,
+                gitBuildId = gitBuildId,
+                ignore = Throwable(
+                    message = try {
+                        // format在遇到不可解析的问题可能会报错
+                        e.triggerReason.detail.format(e.reasonParams)
+                    } catch (ignore: Throwable) {
+                        e.triggerReason.detail
+                    }, e
+                ),
+                yamlTransferData = yamlTransferData
             )
         } catch (ignore: Throwable) {
             errorStartBuild(
@@ -513,7 +537,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                     gitProjectKey = remoteProjectString,
                     action = action,
                     getProjectInfo = action.api::getGitProjectInfo
-                )?.gitProjectId?.let { "git_$it" } ?: return@forEach
+                )?.gitProjectId?.let { GitCommonUtils.getCiProjectId(it, streamGitConfig.getScmType()) }
+                    ?: return@forEach
 
                 remoteProjectIdMap[remoteProjectString] = TemplateAcrossInfoType.values().associateWith {
                     BuildTemplateAcrossInfo(
@@ -578,7 +603,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                             url = action.data.setting.gitHttpUrl,
                             eventType = it.eventType,
                             mrId = it.mrId,
-                            channel = ChannelCode.GIT.name
+                            channel = ChannelCode.GIT.name,
+                            action = it.action
                         )
                     }
                 )

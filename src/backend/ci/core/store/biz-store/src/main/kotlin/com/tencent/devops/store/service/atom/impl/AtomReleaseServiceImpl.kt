@@ -119,7 +119,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
 
 @Suppress("ALL")
@@ -169,9 +168,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
     }
-
-    @Value("\${store.atomDetailBaseUrl}")
-    protected lateinit var atomDetailBaseUrl: String
 
     private fun validateAddMarketAtomReq(
         marketAtomCreateRequest: MarketAtomCreateRequest
@@ -229,7 +225,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 id = id,
                 repositoryHashId = handleAtomPackageMap?.get(KEY_REPOSITORY_HASH_ID) ?: "",
                 codeSrc = handleAtomPackageMap?.get(KEY_CODE_SRC) ?: "",
-                docsLink = atomDetailBaseUrl + atomCode,
+                docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.ATOM, atomCode),
                 marketAtomCreateRequest = marketAtomCreateRequest
             )
             // 添加插件与项目关联关系，type为0代表新增插件时关联的初始化项目
@@ -465,8 +461,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 userId = userId,
                 atomFeatureRequest = AtomFeatureRequest(atomCode = atomCode, qualityFlag = qualityFlag)
             )
-
-            asyncHandleUpdateAtom(context = context, atomId = atomId, userId = userId, branch = branch)
+            asyncHandleUpdateAtom(
+                context = context,
+                atomId = atomId,
+                userId = userId,
+                branch = branch,
+                validOsNameFlag = marketAtomCommonService.getValidOsNameFlag(atomEnvRequests),
+                validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(atomEnvRequests)
+            )
         }
         return Result(atomId)
     }
@@ -487,7 +489,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         context: DSLContext,
         atomId: String,
         userId: String,
-        branch: String? = null
+        branch: String? = null,
+        validOsNameFlag: Boolean? = null,
+        validOsArchFlag: Boolean? = null
     )
 
     private fun updateMarketAtom(
@@ -519,6 +523,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         val atomPackageSourceType = getAtomPackageSourceType()
         if (atomPackageSourceType != AtomPackageSourceTypeEnum.UPLOAD) {
+            if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE.releaseType.toByte()) {
+                marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
+            }
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
         // 通过websocket推送状态变更消息

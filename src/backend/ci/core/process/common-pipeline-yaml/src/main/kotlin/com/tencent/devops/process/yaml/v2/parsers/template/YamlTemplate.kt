@@ -723,7 +723,7 @@ class YamlTemplate<T>(
                 parameters = parameters
             )
         } else {
-            TemplateYamlUtil.parseTemplateParameters(
+            ParametersExpressionParse.parseTemplateParameters(
                 fromPath = fromPath,
                 path = path,
                 template = template,

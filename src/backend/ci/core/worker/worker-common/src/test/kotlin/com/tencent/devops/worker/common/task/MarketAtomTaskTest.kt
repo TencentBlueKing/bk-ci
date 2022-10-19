@@ -2,13 +2,16 @@ package com.tencent.devops.worker.common.task
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.expression.ExecutionContext
-import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.context.DictionaryContextData
+import com.tencent.devops.common.expression.context.PipelineContextData
+import com.tencent.devops.common.expression.context.RuntimeNamedValue
+import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -35,6 +38,22 @@ internal class MarketAtomTaskTest {
         )
     }
 
+    @Test
+    fun credentialTest() {
+        val variables = mapOf(
+            "host1" to "127.0.0.1",
+            "service" to "process",
+            "port" to "8080"
+        )
+        val r = EnvReplacementParser.getCustomExecutionContextByMap(
+            variables, listOf(CredentialRuntimeNamedValue())
+        )
+        Assertions.assertEquals(
+            "1234",
+            EnvReplacementParser.parse("\${{ settings.a.password }}", variables, true, r)
+        )
+    }
+
     private fun originReplacement(
         inputMap: Map<String, Any>,
         variables: Map<String, String>
@@ -57,26 +76,38 @@ internal class MarketAtomTaskTest {
         val context = ExecutionContext(DictionaryContextData())
         val nameValue = mutableListOf<NamedValueInfo>()
         ExpressionParser.fillContextByMap(variables, context, nameValue)
-        val replacement = object : KeyReplacement {
-            override fun getReplacement(key: String): String? {
-                return try {
-                    ExpressionParser.evaluateByContext(key, context, nameValue, true)?.let {
-                        JsonUtil.toJson(it, false)
-                    }
-                } catch (ignore: ExpressionParseException) {
-                    println("Expression evaluation failed: ")
-                    ignore.printStackTrace()
-                    null
-                }
-            }
-        }
         inputMap.forEach { (name, value) ->
             atomParams[name] = EnvReplacementParser.parse(
-                obj = JsonUtil.toJson(value),
+                value = JsonUtil.toJson(value),
                 contextMap = variables,
-                replacement = replacement
+                contextPair = Pair(context, nameValue)
             )
         }
         return atomParams
+    }
+
+    class CredentialRuntimeNamedValue(
+        override val key: String = "settings"
+    ) : RuntimeNamedValue {
+        override fun getValue(key: String): PipelineContextData? {
+            return DictionaryContextData().apply {
+                try {
+//                    val pair = DHUtil.initKey()
+//                    val credentialInfo = requestCredential(key, pair, targetProjectId).data!!
+//                    val credentialList = getDecodedCredentialList(credentialInfo, pair)
+                    val credentialInfo = CredentialInfo("", CredentialType.PASSWORD, "123")
+                    val credentialList = listOf("1234")
+                    val keyMap = CredentialType.Companion.getKeyMap(credentialInfo.credentialType.name)
+                    println("[$key]|credentialInfo=$credentialInfo|credentialList=$credentialList|$keyMap")
+                    credentialList.forEachIndexed { index, credential ->
+                        val token = keyMap["v${index + 1}"] ?: return@forEachIndexed
+                        add(token, StringContextData(credential))
+                    }
+                } catch (ignore: Throwable) {
+                    ignore.printStackTrace()
+                    return null
+                }
+            }
+        }
     }
 }

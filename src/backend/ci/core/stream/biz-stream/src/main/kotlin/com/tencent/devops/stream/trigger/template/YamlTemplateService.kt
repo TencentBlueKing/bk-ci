@@ -33,6 +33,7 @@ import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.exception.YamlBlankException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -50,7 +51,8 @@ import org.springframework.stereotype.Service
 class YamlTemplateService @Autowired constructor(
     private val client: Client,
     private val yamlSchemaCheck: YamlSchemaCheck,
-    private val streamTriggerCache: StreamTriggerCache
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamGitConfig: StreamGitConfig
 ) {
 
     companion object {
@@ -92,11 +94,12 @@ class YamlTemplateService @Autowired constructor(
                 val ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
                     gitProjectKey = targetRepo!!.repository,
                     action = extraParameters,
-                    getProjectInfo = extraParameters.api::getGitProjectInfo
+                    getProjectInfo = extraParameters.api::getGitProjectInfo,
+                    cred = extraParameters.getGitCred()
                 )!!.defaultBranch!!
                 val content = extraParameters.api.getFileContent(
                     cred = extraParameters.getGitCred(),
-                    gitProjectId = targetRepo!!.repository,
+                    gitProjectId = extraParameters.getGitProjectIdOrName(targetRepo!!.repository),
                     fileName = templateDirectory + path,
                     ref = ref,
                     retry = ApiRequestRetryInfo(true)
@@ -131,7 +134,7 @@ class YamlTemplateService @Autowired constructor(
             )!!.defaultBranch!!
             val content = extraParameters.api.getFileContent(
                 cred = extraParameters.getGitCred(personToken = personToken),
-                gitProjectId = targetRepo?.repository!!,
+                gitProjectId = extraParameters.getGitProjectIdOrName(),
                 fileName = templateDirectory + path,
                 ref = ref,
                 retry = ApiRequestRetryInfo(true)
@@ -163,13 +166,17 @@ class YamlTemplateService @Autowired constructor(
             val acrossGitProjectId = streamTriggerCache.getAndSaveRequestGitProjectInfo(
                 gitProjectKey = nowRepoId!!,
                 action = extraParameters,
-                getProjectInfo = extraParameters.api::getGitProjectInfo
+                getProjectInfo = extraParameters.api::getGitProjectInfo,
+                cred = extraParameters.getGitCred()
             )!!.gitProjectId
             logger.info("YamlTemplateService|getTemplate|getTicket|acrossGitProjectId|$acrossGitProjectId")
             try {
                 return CommonCredentialUtils.getCredential(
                     client = client,
-                    projectId = GitCommonUtils.getCiProjectId(acrossGitProjectId.toLong()),
+                    projectId = GitCommonUtils.getCiProjectId(
+                        acrossGitProjectId.toLong(),
+                        streamGitConfig.getScmType()
+                    ),
                     credentialId = key,
                     type = CredentialType.ACCESSTOKEN,
                     acrossProject = true
