@@ -37,5 +37,6 @@ data class StoreErrorCodeInfo(
     val storeCode: String,
     @ApiModelProperty("store组件类型")
     val storeType: StoreTypeEnum,
+    @ApiModelProperty("错误码信息")
     val errorCodeInfos: List<ErrorCodeInfo>
 )
