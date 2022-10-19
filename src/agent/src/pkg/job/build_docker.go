@@ -53,7 +53,7 @@ const (
 	localDockerBuildTmpDirName  = "docker_build_tmp"
 	localDockerWorkSpaceDirName = "docker_workspace"
 	dockerDataDir               = "/data/landun/workspace"
-	dockerLogDir                = "/data/landun/logs"
+	dockerLogDir                = "/data/logs"
 )
 
 // DoDockerJob 使用docker启动构建
@@ -152,7 +152,6 @@ func DoDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		}
 	}
 	hostConfig := &container.HostConfig{
-		Binds:       parseContainerBinds(dockerBuildInfo),
 		CapAdd:      []string{"SYS_PTRACE"},
 		Mounts:      mounts,
 		NetworkMode: container.NetworkMode("bridge"),
@@ -172,7 +171,7 @@ func DoDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 
 	// 启动容器
 	if err := cli.ContainerStart(ctx, creatResp.ID, types.ContainerStartOptions{}); err != nil {
-		logs.Error(fmt.Sprintf("DOCKER_JOB|start container %s error ", containerName), err)
+		logs.Error(fmt.Sprintf("DOCKER_JOB|start container %s error ", creatResp.ID), err)
 		dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: fmt.Sprintf("启动容器 %s 失败|", containerName) + err.Error()})
 		return
 	}
@@ -182,14 +181,20 @@ func DoDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	select {
 	case err := <-errCh:
 		if err != nil {
-			logs.Error(fmt.Sprintf("DOCKER_JOB|wait container %s over error ", containerName), err)
+			logs.Error(fmt.Sprintf("DOCKER_JOB|wait container %s over error ", creatResp.ID), err)
 			dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: fmt.Sprintf("等待容器 %s 结束错误|", containerName) + err.Error()})
+			if err = cli.ContainerRemove(ctx, creatResp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
+				logs.Error(fmt.Sprintf("DOCKER_JOB|remove container %s error ", creatResp.ID), err)
+			}
 			return
 		}
 	case <-statusCh:
 	}
 
 	dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Success: true, Message: ""})
+	if err = cli.ContainerRemove(ctx, creatResp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
+		logs.Error(fmt.Sprintf("DOCKER_JOB|remove container %s error ", creatResp.ID), err)
+	}
 }
 
 // dockerBuildFinish docker构建结束相关
@@ -287,12 +292,6 @@ func generateDockerAuth(cred *api.Credential) string {
 	return base64.URLEncoding.EncodeToString(encodedJSON)
 }
 
-// parseContainerBinds 解析生成容器binds
-func parseContainerBinds(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string {
-	// TODO
-	return nil
-}
-
 // parseContainerMounts 解析生成容器挂载内容
 func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo, dockerInitFile string) ([]mount.Mount, error) {
 	var mounts []mount.Mount
@@ -303,7 +302,7 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo, dockerInitFile str
 		mounts = append(mounts, mount.Mount{
 			Type:     mount.TypeBind,
 			Source:   javaDir,
-			Target:   "/data/bkdevops/apps/jdk",
+			Target:   "/usr/local/jre",
 			ReadOnly: true,
 		})
 	}
@@ -342,18 +341,25 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo, dockerInitFile str
 		ReadOnly: false,
 	})
 
-	// TODO
+	// TODO: issue_7748
 
 	return mounts, nil
 }
 
 // parseContainerEnv 解析生成容器环境变量
 func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string {
+	var envs []string
+
+	// 默认传入环境变量用来构建
+	envs = append(envs, "devops_project_id="+config.GAgentConfig.ProjectId)
+	envs = append(envs, "devops_agent_id="+dockerBuildInfo.AgentId)
+	envs = append(envs, "devops_agent_secret_key="+dockerBuildInfo.SecretKey)
+	envs = append(envs, "devops_gateway="+config.GetGateWay())
+
 	if dockerBuildInfo.Envs == nil {
-		return nil
+		return envs
 	}
 
-	var envs []string
 	for k, v := range dockerBuildInfo.Envs {
 		envs = append(envs, k+"="+v)
 	}

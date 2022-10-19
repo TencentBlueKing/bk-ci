@@ -40,11 +40,7 @@ import (
 )
 
 func buildUrl(url string) string {
-	if strings.HasPrefix(config.GAgentConfig.Gateway, "http") {
-		return config.GAgentConfig.Gateway + url
-	} else {
-		return "http://" + config.GAgentConfig.Gateway + url
-	}
+	return config.GetGateWay() + url
 }
 
 func Heartbeat(buildInfos []ThirdPartyBuildInfo, jdkVersion []string) (*httputil.DevopsResult, error) {
@@ -161,8 +157,18 @@ func AddLogRedLine(buildId string, message *LogMessage) (*httputil.DevopsResult,
 		IntoDevopsResult()
 }
 
-// TODO: issue_7748
-const testShell = "echo 'log' > /data/landun/logs/test.log \n echo 'data' > /data/landun/workspace/test.txt \n echo $RUOTIAN \n"
+const testShell = "#!/bin/bash\n" +
+	"set -x\n" +
+	"mkdir  -p /data/devops\n" +
+	"cd /data/devops\n" +
+	"mkdir -p logs\n" +
+	"echo \"start to download the docker_init.sh...\" > /data/logs/docker.log\n" +
+	"curl -k -s -H \"X-DEVOPS-BUILD-TYPE: DOCKER\" -H \"X-DEVOPS-PROJECT-ID: ${devops_project_id}\" -H \"X-DEVOPS-AGENT-ID: ${devops_agent_id}\" -H \"X-DEVOPS-AGENT-SECRET-KEY: ${devops_agent_secret_key}\" -o  docker_init.sh \"${devops_gateway}/static/bkrepo/files/docker_init.sh\" -L\n" +
+	"echo docker_init\n" +
+	"cat docker_init.sh\n" +
+	"echo \"download docker_init.sh success, start it...\" >> /data/logs/docker.log\n" +
+	"cat docker_init.sh >> /data/logs/docker.log\n" +
+	"sh docker_init.sh $@"
 
 func DownloadDockerInitFile() (io.ReadCloser, error) {
 	// TODO: issue_7748

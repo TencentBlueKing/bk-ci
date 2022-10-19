@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentPreBuildAgents
@@ -78,7 +79,7 @@ class ThirdPartyAgentService @Autowired constructor(
         thirdPartyAgentWorkspace: String,
         event: PipelineAgentStartupEvent,
         retryCount: Int = 0,
-        dockerInfo: ThirdPartyAgentDockerInfo?
+        dockerInfo: ThirdPartyAgentDockerInfoDispatch?
     ) {
         with(event) {
             try {
@@ -204,7 +205,7 @@ class ThirdPartyAgentService @Autowired constructor(
                         } else {
                             JsonUtil.getObjectMapper().readValue(
                                 build.dockerInfo.data(),
-                                object : TypeReference<ThirdPartyAgentDockerInfo>() {}
+                                object : TypeReference<ThirdPartyAgentDockerInfoDispatch>() {}
                             )
                         },
                         executeCount = build.executeCount,

@@ -383,6 +383,14 @@ func GetJavaDir() string {
 	return workDir + "/jdk"
 }
 
+func GetGateWay() string {
+	if strings.HasPrefix(GAgentConfig.Gateway, "http") || strings.HasPrefix(GAgentConfig.Gateway, "https") {
+		return GAgentConfig.Gateway
+	} else {
+		return "http://" + GAgentConfig.Gateway
+	}
+}
+
 // initCert 初始化证书
 func initCert() {
 	AbsCertFilePath := systemutil.GetWorkDir() + "/" + CertFilePath
