@@ -81,4 +81,19 @@ class StoreErrorCodeInfoDao {
                 .fetchInto(ErrorCodeInfo::class.java)
         }
     }
+
+    fun batchDeleteErrorCodeInfo(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        errorCodes: List<Int>
+    ) {
+        with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(ERROR_CODE.`in`(errorCodes))
+                .execute()
+        }
+    }
 }
