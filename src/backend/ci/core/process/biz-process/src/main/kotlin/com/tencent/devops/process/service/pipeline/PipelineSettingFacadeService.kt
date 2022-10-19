@@ -54,6 +54,7 @@ import com.tencent.devops.process.pojo.setting.TaskComponentCommonSetting
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.PipelineSettingVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.view.PipelineViewGroupService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -64,6 +65,7 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineSettingVersionService: PipelineSettingVersionService,
+    private val pipelineViewGroupService: PipelineViewGroupService,
     private val pipelineCommonSettingConfig: PipelineCommonSettingConfig,
     private val stageCommonSettingConfig: StageCommonSettingConfig,
     private val jobCommonSettingConfig: JobCommonSettingConfig,
@@ -110,6 +112,10 @@ class PipelineSettingFacadeService @Autowired constructor(
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
+
+        // 刷新流水线组
+        pipelineViewGroupService.updateGroupAfterPipelineUpdate(setting.projectId, setting.pipelineId, userId)
+
         if (dispatchPipelineUpdateEvent) {
             pipelineEventDispatcher.dispatch(
                 PipelineUpdateEvent(

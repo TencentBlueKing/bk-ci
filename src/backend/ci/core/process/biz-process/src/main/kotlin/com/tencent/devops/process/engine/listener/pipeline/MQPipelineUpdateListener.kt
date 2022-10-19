@@ -54,7 +54,6 @@ class MQPipelineUpdateListener @Autowired constructor(
     private val callBackControl: CallBackControl,
     private val agentPipelineRefService: AgentPipelineRefService,
     private val pipelineWebhookService: PipelineWebhookService,
-    private val pipelineViewGroupService: PipelineViewGroupService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
 
@@ -88,12 +87,6 @@ class MQPipelineUpdateListener @Autowired constructor(
                 version = event.version,
                 userId = event.userId
             )
-        }
-
-        watcher.safeAround("updateViewGroup") {
-            with(event) {
-                pipelineViewGroupService.updateGroupAfterPipelineUpdate(projectId, pipelineId, userId)
-            }
         }
 
         LogUtils.printCostTimeWE(watcher)
