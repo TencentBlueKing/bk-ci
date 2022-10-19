@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
@@ -72,7 +73,7 @@ class ThirdPartyAgentBuildDao {
         taskName: String,
         agentIp: String,
         nodeId: Long,
-        dockerInfo: ThirdPartyAgentDockerInfo?,
+        dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
         executeCount: Int?,
         containerHashId: String?
     ): Int {
