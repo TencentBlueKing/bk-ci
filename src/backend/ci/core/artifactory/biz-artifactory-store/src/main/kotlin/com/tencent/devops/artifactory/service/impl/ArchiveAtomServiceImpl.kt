@@ -27,7 +27,6 @@
 
 package com.tencent.devops.artifactory.service.impl
 
-import com.tencent.devops.artifactory.client.bkrepo.DefaultBkRepoClient
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
 import com.tencent.devops.artifactory.dao.FileDao
@@ -41,6 +40,7 @@ import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.ZipUtil
@@ -82,7 +82,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
     lateinit var fileDao: FileDao
 
     @Autowired
-    lateinit var bkRepoClient: DefaultBkRepoClient
+    lateinit var bkRepoClient: BkRepoClient
 
     override fun archiveAtom(
         userId: String,
