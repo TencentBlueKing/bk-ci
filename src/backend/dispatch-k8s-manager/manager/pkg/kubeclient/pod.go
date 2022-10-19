@@ -76,10 +76,7 @@ func WatchPod(labelName string) (watch.Interface, error) {
 }
 
 var protocols = []string{
-	"v4.channel.k8s.io",
-	"v3.channel.k8s.io",
-	"v2.channel.k8s.io",
-	"channel.k8s.io",
+	"base64.channel.k8s.io",
 }
 
 func WebSocketExecPod(podName string, containerName string) (ws *websocket.Conn, err error) {
@@ -90,7 +87,7 @@ func WebSocketExecPod(podName string, containerName string) (ws *websocket.Conn,
 		SubResource("exec").
 		VersionedParams(
 			&corev1.PodExecOptions{
-				Command:   []string{"sh", "-c", "clear; (bash || ash || sh)"},
+				Command:   []string{"sh", "-c", "(bash || ash || sh)"},
 				Stdin:     true,
 				Stdout:    true,
 				Stderr:    true,

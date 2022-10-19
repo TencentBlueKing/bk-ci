@@ -15,7 +15,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sync"
 	"time"
-	"unsafe"
 )
 
 func GetBuilderStatus(workloadName string) (*BuilderStatus, error) {
@@ -169,12 +168,6 @@ func DebugBuilderUrl(urlPerfix string, builderName string) (url string, err erro
 const defaultCols = 144
 const defaultRows = 24
 
-const (
-	stdin = iota
-	stdout
-	stderr
-)
-
 // DebugBuilder
 // websocket报文内容的第一个字节，用来表示“频道”
 // 0 标准输入
@@ -217,7 +210,7 @@ func DebugBuilder(ws *websocket.Conn, podName string, containerName string) {
 			default:
 			}
 
-			// 将写回的数据处理后返回
+			// 将写回的数据返回
 			rt, reply, err := kubeWs.ReadMessage()
 			if rt == websocket.CloseMessage {
 				return
@@ -231,37 +224,8 @@ func DebugBuilder(ws *websocket.Conn, podName string, containerName string) {
 				continue
 			}
 
-			var rType string
-			if rt == websocket.TextMessage {
-				rType = toString(reply[0:1])
-			} else {
-				switch reply[0] {
-				case stdout:
-					rType = "2"
-				case stderr:
-					rType = "3"
-				}
-			}
-
-			var replyMsg []byte
-			switch rType {
-			case "1", "2", "3":
-				{
-					if rt == websocket.TextMessage {
-						replyMsg, err = base64.StdEncoding.DecodeString(toString(reply[1:]))
-						if err != nil {
-							logs.Error(fmt.Sprintf("WebSocketExecPod|%s|%s| decode kube ws reply error. ", podName, containerName), err)
-							_ = ws.WriteMessage(websocket.CloseMessage, []byte("解码kube reply信息失败，请联系管理员"))
-							return
-						}
-					} else {
-						replyMsg = reply[1:]
-					}
-				}
-			}
-
 			//写入client数据
-			if err = ws.WriteMessage(websocket.TextMessage, replyMsg); err != nil {
+			if err = ws.WriteMessage(websocket.TextMessage, reply); err != nil {
 				logs.Error(fmt.Sprintf("WebSocketExecPod|%s|%s| write ws message error. ", podName, containerName), err)
 				_ = ws.WriteMessage(websocket.CloseMessage, []byte("写入websocket信息失败，请联系管理员"))
 				return
@@ -294,10 +258,8 @@ func DebugBuilder(ws *websocket.Conn, podName string, containerName string) {
 				continue
 			}
 
-			// 处理读取的数据后写入kube的websocket
-			sendMsg := []byte{stdin}
-			sendMsg = append(sendMsg, message...)
-			if err = kubeWs.WriteMessage(websocket.TextMessage, sendMsg); err != nil {
+			// 读取的数据写入kube的websocket
+			if err = kubeWs.WriteMessage(websocket.TextMessage, message); err != nil {
 				logs.Error(fmt.Sprintf("WebSocketExecPod|%s|%s| write kube ws message error. ", podName, containerName), err)
 				_ = ws.WriteMessage(websocket.CloseMessage, []byte("写入kube websocket信息失败，请联系管理员"))
 				return
@@ -306,8 +268,4 @@ func DebugBuilder(ws *websocket.Conn, podName string, containerName string) {
 	}()
 
 	wg.Wait()
-}
-
-func toString(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
 }
