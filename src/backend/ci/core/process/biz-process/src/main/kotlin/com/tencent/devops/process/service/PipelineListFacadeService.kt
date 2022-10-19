@@ -99,6 +99,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Result
@@ -1310,8 +1311,11 @@ class PipelineListFacadeService @Autowired constructor(
                 val webhookInfo = lastBuild.webhookInfo?.let { self ->
                     JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {})
                 }
-                it.webhookAliasName = webhookInfo?.webhookAliasName?:webhookInfo?.webhookRepoUrl
-                it.webhookMessage = webhookInfo?.webhookMessage
+                if (webhookInfo != null) {
+                    it.webhookAliasName = webhookInfo.webhookAliasName ?: getProjectName(webhookInfo.webhookRepoUrl)
+                    it.webhookMessage = webhookInfo.webhookMessage
+                    it.webhookRepoUrl = webhookInfo.webhookRepoUrl
+                }
             }
             it.lastBuildFinishCount = buildTaskFinishCountMap.getOrDefault(pipelineId, 0)
             it.lastBuildTotalCount = buildTaskTotalCountMap.getOrDefault(pipelineId, 0)
@@ -1322,6 +1326,17 @@ class PipelineListFacadeService @Autowired constructor(
                 it.lock = PipelineRunLockType.checkLock(pipelineSettingRecord.get(tSetting.RUN_LOCK_TYPE))
                 it.buildNumRule = pipelineSettingRecord.get(tSetting.BUILD_NUM_RULE)
             }
+        }
+    }
+
+    private fun getProjectName(webhookRepoUrl: String?): String {
+        if (null == webhookRepoUrl) {
+            return ""
+        }
+        return try {
+            GitUtils.getProjectName(webhookRepoUrl)
+        } catch (e: Exception) {
+            webhookRepoUrl
         }
     }
 
