@@ -630,7 +630,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     override fun updateAtomErrorCodeInfo(
         userId: String,
         projectCode: String,
-        storeErrorCodeInfo: StoreErrorCodeInfo,
+        storeErrorCodeInfo: StoreErrorCodeInfo
     ): Result<Boolean> {
         val atomCode = storeErrorCodeInfo.storeCode
         // 插件管理员才可修改
