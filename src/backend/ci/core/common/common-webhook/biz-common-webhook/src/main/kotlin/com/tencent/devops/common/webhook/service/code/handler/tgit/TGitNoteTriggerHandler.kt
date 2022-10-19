@@ -167,12 +167,12 @@ class TGitNoteTriggerHandler(
             }
             // MR提交人
             val mrInfo = eventCacheService.getMergeRequestInfo(projectId, mrRequestId, repository)
-            val reviewers =
-                eventCacheService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)?.reviewers
+            val reviewInfo =
+                eventCacheService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)
             startParams.putAll(
                 WebhookUtils.mrStartParam(
                     mrInfo = mrInfo,
-                    reviewers = reviewers,
+                    reviewInfo = reviewInfo,
                     mrRequestId = mrRequestId,
                     homepage = event.repository.homepage
                 )
