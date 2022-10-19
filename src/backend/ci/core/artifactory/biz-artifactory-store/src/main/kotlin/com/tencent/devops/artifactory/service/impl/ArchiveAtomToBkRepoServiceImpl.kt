@@ -21,9 +21,7 @@ import javax.ws.rs.NotFoundException
 
 @Service
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
-class ArchiveAtomToBkRepoServiceImpl(
-    private val bkRepoClient: DefaultBkRepoClient
-) : ArchiveAtomServiceImpl() {
+class ArchiveAtomToBkRepoServiceImpl() : ArchiveAtomServiceImpl() {
 
     override fun getAtomArchiveBasePath(): String {
         return System.getProperty("java.io.tmpdir")
