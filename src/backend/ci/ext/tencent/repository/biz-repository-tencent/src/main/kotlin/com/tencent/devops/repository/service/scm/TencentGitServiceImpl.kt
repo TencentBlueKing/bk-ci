@@ -643,7 +643,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
                 repoName = repoName,
                 token = token,
                 gitOperationFile = gitOperationFile,
-                tokenType =tokenType
+                tokenType = tokenType
         )
     }
 

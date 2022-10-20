@@ -360,7 +360,7 @@ class RepoFileService @Autowired constructor(
     fun updateTGitFileContent(
         repositoryConfig: RepositoryConfig,
         userId: String,
-        gitOperationFile: GitOperationFile,
+        gitOperationFile: GitOperationFile
     ): Result<Boolean> {
         val repo = repositoryService.serviceGet("", repositoryConfig)
         return updateTGitSingleFile(
