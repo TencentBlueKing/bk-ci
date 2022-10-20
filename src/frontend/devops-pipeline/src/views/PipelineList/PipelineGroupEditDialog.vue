@@ -255,6 +255,7 @@
                     removedPipelineInfos: [],
                     reservePipelineInfos: []
                 },
+                savedPipelineInfos: new Set(),
                 preTypePreview: {},
                 inited: false,
                 previewTime: null,
@@ -360,9 +361,6 @@
             },
             totalPreviewCount () {
                 return this.preAddedPipelineList.length - this.preview.removedPipelineInfos.length
-            },
-            savedPipelineInfos () {
-                return new Set(this.preview.reservePipelineInfos.map(pipeline => pipeline.pipelineId))
             }
         },
         watch: {
@@ -430,10 +428,10 @@
                     this.requestGroupListsDict(params),
                     this.requestTagList(params)
                 ])
-                const pipelineIdsSet = new Set(groupDetail.pipelineIds)
+                this.savedPipelineInfos = new Set(groupDetail.pipelineIds)
                 this.model = {
                     viewType: groupDetail.viewType ?? group.viewType,
-                    pipelineIds: pipelineIdsSet,
+                    pipelineIds: new Set(groupDetail.pipelineIds),
                     filters: groupDetail.filters.length > 0 ? groupDetail.filters : this.model.filters,
                     logic: groupDetail.logic
                 }
