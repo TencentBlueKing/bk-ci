@@ -11,7 +11,7 @@
             <bk-breadcrumb slot="title" separator-class="devops-icon icon-angle-right">
                 <bk-breadcrumb-item
                     class="pipeline-breadcrumb-item"
-                    :to="{ name: 'PipelineManageList' }"
+                    :to="pipelineListRoute"
                 >
                     {{$t('pipeline')}}
                 </bk-breadcrumb-item>
@@ -69,6 +69,8 @@
     import { mapState } from 'vuex'
     import pipelineHeader from '@/components/devops/pipeline-header'
     import Logo from '@/components/Logo'
+    import { ALL_PIPELINE_VIEW_ID } from '@/store/constants'
+    import { VIEW_ID_LS_KEY } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -96,6 +98,18 @@
             },
             dropTitle () {
                 return this.dropdownMenus.find(menu => menu.routeName === this.routeName)?.label ?? 'more'
+            },
+            pipelineListRoute () {
+                return {
+                    name: 'PipelineManageList',
+                    params: {
+                        viewId: this.viewId,
+                        ...this.$route.params
+                    }
+                }
+            },
+            viewId () {
+                return localStorage.getItem(VIEW_ID_LS_KEY) ?? ALL_PIPELINE_VIEW_ID
             },
             dropdownMenus () {
                 return [
@@ -125,7 +139,7 @@
                     ...this.$route,
                     params: {
                         ...this.$route.params,
-                        viewId: 'allPipeline'
+                        viewId: this.viewId
                     }
                 })
             }

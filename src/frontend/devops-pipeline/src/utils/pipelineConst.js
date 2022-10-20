@@ -106,3 +106,5 @@ export const PIPELINE_SORT_FILED = {
     latestBuildStartDate: 'LAST_EXEC_TIME',
     updateTime: 'UPDATE_TIME'
 }
+
+export const VIEW_ID_LS_KEY = 'BK_DEVOPS_VIEW_ID_LS_KEY'

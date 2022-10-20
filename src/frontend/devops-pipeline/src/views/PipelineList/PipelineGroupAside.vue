@@ -89,6 +89,7 @@
         ALL_PIPELINE_VIEW_ID,
         DELETED_VIEW_ID
     } from '@/store/constants'
+    import { VIEW_ID_LS_KEY } from '@/utils/pipelineConst'
     import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
@@ -334,6 +335,7 @@
                 }
             },
             switchViewId (id) {
+                localStorage.setItem(VIEW_ID_LS_KEY, id)
                 this.$router.push({
                     params: {
                         ...this.$route.params,
@@ -416,6 +418,7 @@
         }
         .pipeline-group-container {
             flex: 1;
+            overflow: auto;
         }
         .add-pipeline-group-footer {
             display: flex;

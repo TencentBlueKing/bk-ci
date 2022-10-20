@@ -553,7 +553,7 @@
                         pipelineIds: Array.from(this.model.pipelineIds)
                     })
                     this.preview = data
-                    this.previewTime = moment().format('HH:MM:SS')
+                    this.previewTime = moment().format('HH:mm:ss')
                     this.isFilterChange = false
                 } catch (error) {
                     console.log(error)
@@ -630,6 +630,7 @@
                 }
                 this.inited = false
                 this.isFilterChange = false
+                this.previewTime = null
                 this.preview = {
                     addedPipelineInfos: [],
                     removedPipelineInfos: [],

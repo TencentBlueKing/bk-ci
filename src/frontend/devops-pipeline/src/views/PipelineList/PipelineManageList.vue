@@ -326,8 +326,7 @@
         }
     }
     .pipeline-list-box {
-        // height: 100%;
         flex: 1;
-        overflow: auto;
+        overflow: hidden;
     }
 </style>
