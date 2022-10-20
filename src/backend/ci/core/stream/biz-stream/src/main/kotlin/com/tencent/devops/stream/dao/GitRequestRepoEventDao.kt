@@ -53,7 +53,7 @@ class GitRequestRepoEventDao {
                 event.pipelineId,
                 event.buildId,
                 event.targetGitProjectId,
-                event.sourceGitProjectId,
+                event.sourceGitProjectId
             ).returning(ID)
                 .fetchOne()!!
             return record.id
