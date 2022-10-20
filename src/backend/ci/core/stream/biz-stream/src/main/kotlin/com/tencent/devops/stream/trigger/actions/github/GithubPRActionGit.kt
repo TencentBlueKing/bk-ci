@@ -248,7 +248,7 @@ class GithubPRActionGit(
         if (event().pullRequest.merged == true) {
             return true
         }
-        return mrConflictCheck.checkMrConflict(this, path2PipelineExists)
+        return true
     }
 
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {
