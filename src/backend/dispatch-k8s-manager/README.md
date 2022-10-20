@@ -18,7 +18,7 @@ kubernetes-manager可以使用二进制方式启动，也可以使用容器方�
 3. 补充说明：
     - **如何链接不同的kubernetes集群**通过修改 values中的 useKubeConfig 参数即可开启使用指定的kubeconfig，同时修改 chart/template/kubernetes-manager-configmap.yaml 中 kubeConfig.yaml 即可。
     - **登录调试相关** 因为登录调试需要将https链接转为wss与kuberntes通信，所以需要 **指定需要登录调试集群的kubeconfig**，指定方式参考 **如何链接不同的kubernetes集群**。
-    - **realResource优化** 优化使用了kubernetes-scheduler-pluign和prometheus的特性，所以需要配置 prometheus同时需要安装同一父级目录下的k8s-scheduler-plugin插件。
+    - **realResource优化** 优化使用了kubernetes-scheduler-pluign和prometheus的特性，所以需要配置 prometheus同时需要安装 [ci-dispatch-k8s-manager-plugin](https://github.com/TencentBlueKing/ci-dispatch-k8s-manager-plugin) 插件。
 
 #### 以二进制的方式启动
 
