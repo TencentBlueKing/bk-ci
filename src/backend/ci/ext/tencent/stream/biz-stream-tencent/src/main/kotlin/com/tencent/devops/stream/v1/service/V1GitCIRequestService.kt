@@ -144,7 +144,7 @@ class V1GitCIRequestService @Autowired constructor(
             )
 
             // 已触发的所有记录
-            val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
+            val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!, gitProjectId)
             logger.info("Get build list requestBuildsList: $buildsList, gitProjectId: $gitProjectId")
             val builds = buildsList.map { it.buildId }.toSet()
             val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(
@@ -186,7 +186,11 @@ class V1GitCIRequestService @Autowired constructor(
             // -------
 
             // 未触发的所有记录
-            val noBuildList = gitRequestEventNotBuildDao.getRequestNoBuildsByEventId(dslContext, event.id!!)
+            val noBuildList = gitRequestEventNotBuildDao.getRequestNoBuildsByEventId(
+                dslContext = dslContext,
+                eventId = event.id!!,
+                gitProjectId = gitProjectId
+            )
             logger.info("Get no build list requestBuildsList: $noBuildList, gitProjectId: $gitProjectId")
             val records = mutableListOf<V1GitCIBuildHistory>()
 

@@ -117,7 +117,11 @@ class V1GitCIMergeService @Autowired constructor(
                 userId = realEvent.userId,
                 description = realEvent.description
             )
-            val mergeBuildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
+            val mergeBuildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(
+                dslContext = dslContext,
+                eventId = realEvent.id!!,
+                gitProjectId = gitProjectId
+            )
             logger.info("Get merge build list mergeBuildsList: $mergeBuildsList, gitProjectId: $gitProjectId")
             val builds = mergeBuildsList.map { it.buildId }.toSet()
             val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(
