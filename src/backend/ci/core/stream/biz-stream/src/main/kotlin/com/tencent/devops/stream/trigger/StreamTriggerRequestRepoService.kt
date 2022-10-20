@@ -33,7 +33,9 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
+import com.tencent.devops.stream.dao.GitRequestRepoEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.pojo.GitRequestRepoEvent
 import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
@@ -58,6 +60,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val streamSettingDao: StreamBasicSettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
+    private val gitRequestRepoEventDao: GitRequestRepoEventDao,
     private val streamTriggerCache: StreamTriggerCache,
     private val exHandler: StreamTriggerExceptionHandler,
     private val eventActionFactory: EventActionFactory,
@@ -161,6 +164,18 @@ class StreamTriggerRequestRepoService @Autowired constructor(
                 branch = targetProjectInfo!!.defaultBranch!!
             )
             action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
+
+            gitRequestRepoEventDao.saveGitRequest(
+                dslContext,
+                GitRequestRepoEvent(
+                    eventId = action.data.context.requestEventId!!,
+                    pipelineId = pipeline.pipelineId,
+                    buildId = null,
+                    targetGitProjectId = pipeline.gitProjectId.toLong(),
+                    sourceGitProjectId = action.data.eventCommon.gitProjectId.toLong(),
+                    createTime = null
+                )
+            )
 
             // 校验mr请求是否产生冲突
             if (!action.checkMrConflict(path2PipelineExists = mapOf(pipeline.filePath to pipeline))) {
