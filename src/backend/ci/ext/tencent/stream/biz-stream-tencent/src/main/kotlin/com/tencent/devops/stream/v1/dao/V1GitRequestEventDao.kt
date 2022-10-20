@@ -330,7 +330,11 @@ class V1GitRequestEventDao {
                             it.description
                         },
                         mrTitle = it.mrTitle,
-                        gitEvent = null,
+                        gitEvent = try {
+                            JsonUtil.to(it.event, GitEvent::class.java)
+                        } catch (e: Exception) {
+                            null
+                        },
                         commitAuthorName = null,
                         gitProjectName = null
                     )
