@@ -1314,7 +1314,7 @@ class PipelineListFacadeService @Autowired constructor(
                 if (webhookInfo != null) {
                     it.webhookAliasName = webhookInfo.webhookAliasName ?: getProjectName(webhookInfo.webhookRepoUrl)
                     it.webhookMessage = webhookInfo.webhookMessage
-                    it.webhookRepoUrl = webhookInfo.webhookRepoUrl,
+                    it.webhookRepoUrl = webhookInfo.webhookRepoUrl
                     it.webhookType = it.webhookType
                 }
             }
