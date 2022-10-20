@@ -454,12 +454,13 @@ class PipelineViewGroupService @Autowired constructor(
         val viewInfoMap = pipelineViewDao.list(dslContext, projectId).associateBy { it.id }
         // 流水线组映射关系
         val viewGroups = pipelineViewGroupDao.listByProjectId(dslContext, projectId)
-        val viewGroupMap = mutableMapOf<Long/*viewId*/, MutableList<String>/*pipelineIds*/>()
+        val viewGroupMap = viewInfoMap.map { it.key to mutableListOf<String>() }.toMap().toMutableMap()
         val classifiedPipelineIds = mutableSetOf<String>()
+
         viewGroups.forEach {
             val viewId = it.viewId
-            if (!viewGroupMap.containsKey(viewId)) {
-                viewGroupMap[viewId] = mutableListOf()
+            if (!viewInfoMap.containsKey(viewId)) {
+                return@forEach
             }
             viewGroupMap[viewId]!!.add(it.pipelineId)
             if (viewInfoMap[it.viewId]?.isProject == true) {

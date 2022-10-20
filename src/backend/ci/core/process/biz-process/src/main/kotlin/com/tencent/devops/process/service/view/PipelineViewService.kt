@@ -407,12 +407,22 @@ class PipelineViewService @Autowired constructor(
             }
         }
 
-        if (pipelineView.projected && pipelineViewDao.countByName(
+        val hasSameName = if (pipelineView.projected) {
+            pipelineViewDao.countByName(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
                 name = pipelineView.name
             ) > if (isCreate) 0 else 1
-        ) {
+        } else {
+            pipelineViewDao.countByName(
+                dslContext = context ?: dslContext,
+                projectId = projectId,
+                name = pipelineView.name,
+                creator = userId
+            ) > if (isCreate) 0 else 1
+        }
+
+        if (hasSameName) {
             logger.warn("duplicate name , project:$projectId , user:$userId , view:$pipelineView")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_VIEW_DUPLICATE_NAME,
