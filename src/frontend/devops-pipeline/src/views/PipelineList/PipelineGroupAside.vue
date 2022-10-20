@@ -62,10 +62,9 @@
             header-position="left"
             :title="$t('addPipelineGroup')"
             :loading="isAdding || checkingPermission"
-            @confirm="submitPipelineAdd"
         >
-            <bk-form v-bkloading="{ isLoading: checkingPermission || isAdding }" form-type="vertical" :model="newPipelineGroup">
-                <bk-form-item property="name" required :label="$t('pipelineGroupName')">
+            <bk-form ref="newPipelineGroupForm" v-bkloading="{ isLoading: checkingPermission || isAdding }" form-type="vertical" :model="newPipelineGroup">
+                <bk-form-item property="name" :rules="groupNameRules" :label="$t('pipelineGroupName')">
                     <bk-input v-model="newPipelineGroup.name" />
                 </bk-form-item>
                 <bk-form-item required property="projected" :label="$t('visibleRange')">
@@ -75,7 +74,17 @@
                     </bk-radio-group>
                 </bk-form-item>
             </bk-form>
-
+            <footer slot="footer">
+                <bk-button
+                    theme="primary"
+                    @click="submitPipelineAdd"
+                >
+                    {{$t('confirm')}}
+                </bk-button>
+                <bk-button @click="closeAddPipelineGroupDialog">
+                    {{$t('cancel')}}
+                </bk-button>
+            </footer>
         </bk-dialog>
         <pipeline-group-edit-dialog @close="handleCloseEditCount" :group="activeGroup" />
     </aside>
@@ -136,6 +145,20 @@
                 'groupMap',
                 'hideActionGroups'
             ]),
+            groupNamesSet () {
+                return new Set(Object.keys(this.groupMap).map(id => this.groupMap[id].name))
+            },
+            groupNameRules () {
+                return [{
+                    validator: (val) => !this.groupNamesSet.has(val),
+                    message: (val) => this.$t('pipelineGroupRepeatTips', [val]),
+                    trigger: 'blur'
+                }, {
+                    required: true,
+                    message: '',
+                    trigger: 'blur'
+                }]
+            },
             pipelineGroupTree () {
                 return [{
                     title: `${this.$t('personalViewList')}(${this.pipelineGroupDict.personalViewList.length})`,
@@ -322,6 +345,15 @@
                 this.isAddPipelineGroupDialogShow = true
                 this.checkHasProjectedGroupPermission()
             },
+            closeAddPipelineGroupDialog () {
+                this.isAddPipelineGroupDialogShow = false
+                this.isAddPipelineGroupDialogShow = false
+                Object.assign(this.newPipelineGroup, {
+                    name: '',
+                    projected: false
+                })
+                    this.$refs.newPipelineGroupForm?.clearError?.()
+            },
             async checkHasProjectedGroupPermission () {
                 try {
                     this.checkingPermission = true
@@ -344,7 +376,11 @@
                 })
             },
             async submitPipelineAdd () {
-                if (this.isAdding) return
+                if (this.isAdding) return false
+                const formValid = await this.$refs.newPipelineGroupForm?.validate?.()
+                console.log('formValid', formValid)
+                if (!formValid) return false
+                console.log('formValid,.', formValid)
                 let message = this.$t('addPipelineGroupSuc')
                 let theme = 'success'
                 try {
@@ -358,11 +394,7 @@
                         pipelineIds: [],
                         pipelineCount: 0
                     })
-                    this.isAddPipelineGroupDialogShow = false
-                    Object.assign(this.newPipelineGroup, {
-                        name: '',
-                        projected: false
-                    })
+                    this.closeAddPipelineGroupDialog()
                 } catch (e) {
                     message = e.message || e
                     theme = 'error'

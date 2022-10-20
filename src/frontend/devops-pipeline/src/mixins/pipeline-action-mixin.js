@@ -245,8 +245,8 @@ export default {
         },
         closeRemoveConfirmDialog () {
             this.updatePipelineActionState({
-                confirmType: '',
                 isConfirmShow: false,
+                confirmType: '',
                 activePipelineList: []
             })
         },

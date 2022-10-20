@@ -9,10 +9,9 @@
         @cancel="handleClose"
         @confirm="handleSubmit"
     >
-        <p class="remove-confirm-desc" v-if="isRemoveType">
-            {{$t('removeConfirmTips', [groupName])}}
+        <p class="remove-confirm-desc" v-if="isRemoveType" v-html="$t('removeConfirmTips', [groupName])">
         </p>
-        <template v-else>
+        <template v-else-if="isDeleteType">
             <span class="delete-pipeline-warning-icon">
                 <i class="devops-icon icon-exclamation" />
             </span>
@@ -26,8 +25,8 @@
         <ul class="operate-pipeline-list">
             <li v-for="(pipeline, index) in removedPipelines" :key="pipeline.pipelineId">
                 <span>{{ pipeline.name }}</span>
-                <div v-if="!isRemoveType" v-show="pipeline.groups.length > 0" class="belongs-pipeline-group" ref="belongsGroupBox">
-                    <bk-tag v-for="name in pipeline.groups" :key="name" :ref="`groupName_${index}`">
+                <div v-if="!isRemoveType" class="belongs-pipeline-group" ref="belongsGroupBox">
+                    <bk-tag ext-cls="pipeline-group-name-tag" v-for="name in pipeline.groups" :key="name" :ref="`groupName_${index}`">
                         {{name}}
                     </bk-tag>
                     <bk-popover ref="groupNameMore" v-if="pipeline.showMoreTag" :disabled="!pipeline.hiddenGroups" :content="pipeline.hiddenGroups">
@@ -79,17 +78,18 @@
             isRemoveType () {
                 return this.type === 'remove'
             },
+            isDeleteType () {
+                return this.type === 'delete'
+            },
             title () {
                 return this.isRemoveType ? this.$t('removeFrom') : ''
-            },
-            groupNameBoxWidth () {
-                return ((this.width - 2 - (this.padding * 2)) * 5 / 7).toFixed(2)
             },
             removedPipelines () {
                 return this.pipelineList.map((pipeline, index) => {
                     const viewNames = pipeline.viewNames ?? []
                     const visibleTagCount = this.visibleTagCountList[index] ?? viewNames.length
                     const overflowCount = viewNames.length - visibleTagCount
+
                     return {
                         name: pipeline.pipelineName,
                         groups: viewNames.slice(0, visibleTagCount),
@@ -145,19 +145,20 @@
             },
             calcOverPos () {
                 const tagMargin = 6
+                const groupNameBoxWidth = 200
                 if (this.$refs.belongsGroupBox?.length > 0) {
-                    console.log('up')
                     this.visibleTagCountList = this.$refs.belongsGroupBox?.map((_, index) => {
+                        const groupNameLength = this.$refs[`groupName_${index}`]?.length ?? 0
                         const moreTag = this.$refs.groupNameMore?.[index]?.$el
-                        const moreTagWidth = (moreTag?.offsetWidth ?? 0) + tagMargin
-                        const viewPortWidth = this.groupNameBoxWidth - moreTagWidth
+                        const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
+                        const viewPortWidth = groupNameBoxWidth - (groupNameLength > 1 ? moreTagWidth : 0)
                         let sumTagWidth = 0
                         let tagVisbleCount = 0
 
-                        this.$refs[`groupName_${index}`]?.every((groupName) => {
+                        this.$refs[`groupName_${index}`]?.every((groupName, index) => {
                             sumTagWidth += groupName.$el.offsetWidth + tagMargin
-                            const isOverSize = sumTagWidth < viewPortWidth
-                            isOverSize && tagVisbleCount++
+                            const isOverSize = sumTagWidth > viewPortWidth
+                            !isOverSize && tagVisbleCount++
                             return isOverSize
                         })
                         return tagVisbleCount
@@ -193,6 +194,7 @@
         }
         .remove-confirm-desc {
             font-size: 14px;
+            text-align: left
         }
         .operate-pipeline-list {
             border: 1px solid #DCDEE5;
@@ -207,11 +209,12 @@
                 overflow: hidden;
                 text-align: left;
                 > span {
-                    flex: 2;
+                    flex: 1;
                     @include ellipsis();
                 }
                 .belongs-pipeline-group {
-                    flex: 5;
+                    display: flex;
+                    width: 200px;
                     height: 22px;
                     overflow: hidden;
                 }

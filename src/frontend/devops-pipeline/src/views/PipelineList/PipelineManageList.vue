@@ -320,10 +320,10 @@
     }
     .pipeline-group-box-cell {
         display: flex;
-        .group-name-tag {
-            @include ellipsis();
-            max-width: 100px;
-        }
+    }
+    .pipeline-group-name-tag {
+        @include ellipsis();
+        max-width: 100px;
     }
     .pipeline-list-box {
         flex: 1;

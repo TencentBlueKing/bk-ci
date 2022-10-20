@@ -26,7 +26,7 @@
         <bk-table-column v-if="isAllPipelineView || isPatchView || isDeleteView" width="250" :label="$t('ownGroupName')" prop="viewNames">
             <div class="pipeline-group-box-cell" slot-scope="props">
                 <div class="group-name-tag-box">
-                    <bk-tag v-bk-tooltips="viewName" ext-cls="group-name-tag" v-for="viewName in props.row.viewNames" :key="viewName">
+                    <bk-tag v-bk-tooltips="viewName" ext-cls="pipeline-group-name-tag" v-for="viewName in props.row.viewNames" :key="viewName">
                         {{viewName}}
                     </bk-tag>
                 </div>
