@@ -268,33 +268,40 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         param: VMBuildContainer,
         variables: Map<String, String>
     ): Boolean {
-
-        val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(task.projectId, task.pipelineId)
-        val asCodeEnabled = asCodeSettings?.enable == true
-        val contextPair = if (asCodeEnabled) {
-            EnvReplacementParser.getCustomExecutionContextByMap(variables)
-        } else null
-        param.buildEnv?.forEach { env ->
-            val version = EnvReplacementParser.parse(
-                value = env.value,
-                contextMap = variables,
-                onlyExpression = asCodeEnabled,
-                contextPair = contextPair
-            )
-            val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
-                name = env.key,
-                version = version,
-                os = param.baseOS.name.toLowerCase()
-            ).data
-            if (res == null) {
-                buildLogPrinter.addRedLine(
-                    buildId = task.buildId,
-                    message = "尚未支持 ${env.key} $version，请联系 DevOps-helper 添加对应版本",
-                    tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+        param.buildEnv?.let { buildEnv ->
+            val asCode by lazy {
+                val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(task.projectId, task.pipelineId)
+                val asCodeEnabled = asCodeSettings?.enable == true
+                val contextPair = if (asCodeEnabled) {
+                    EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                } else null
+                Pair(asCodeEnabled, contextPair)
+            }
+            buildEnv.forEach { env ->
+                if (!env.value.startsWith("$")) {
+                    return@forEach
+                }
+                val version = EnvReplacementParser.parse(
+                    value = env.value,
+                    contextMap = variables,
+                    onlyExpression = asCode.first,
+                    contextPair = asCode.second
                 )
-                return false
+                val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
+                    name = env.key,
+                    version = version,
+                    os = param.baseOS.name.toLowerCase()
+                ).data
+                if (res == null) {
+                    buildLogPrinter.addRedLine(
+                        buildId = task.buildId,
+                        message = "尚未支持 ${env.key} $version，请联系 DevOps-helper 添加对应版本",
+                        tag = task.taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
+                    return false
+                }
             }
         }
         return true
