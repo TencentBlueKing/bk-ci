@@ -25,14 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.message
+package com.tencent.devops.stream.pojo
 
-/**
- * 用户消息通知的类型
- */
-enum class UserMessageType {
-    // 有失败的消息组
-    REQUEST,
-    // 只有成功的消息组
-    ONLY_SUCCESS
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("repo hook 构建信息")
+data class GitRequestRepoEvent(
+    @ApiModelProperty("EVENT_ID")
+    val eventId: Long,
+    @ApiModelProperty("流水线id")
+    val pipelineId: String,
+    @ApiModelProperty("构建id")
+    val buildId: String?,
+    @ApiModelProperty("流水线主库projectId")
+    val targetGitProjectId: Long,
+    @ApiModelProperty("触发库projectId")
+    val sourceGitProjectId: Long,
+    @ApiModelProperty("创建时间")
+    val createTime: Long?
+)

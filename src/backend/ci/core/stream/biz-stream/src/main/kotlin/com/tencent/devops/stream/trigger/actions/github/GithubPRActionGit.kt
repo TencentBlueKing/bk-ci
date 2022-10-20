@@ -38,6 +38,7 @@ import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.pojo.ChangeYamlList
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
@@ -56,6 +57,7 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubFileInfo
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubMrInfo
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
@@ -63,8 +65,6 @@ import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
-import com.tencent.devops.stream.pojo.ChangeYamlList
-import com.tencent.devops.stream.trigger.git.pojo.github.GithubMrInfo
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
@@ -129,9 +129,11 @@ class GithubPRActionGit(
             this.data.setting.triggerReviewSetting.whitelist
         val checkProjectInWhiteList = this.data.eventCommon.gitProjectId in
             this.data.setting.triggerReviewSetting.whitelist
-        return ((checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
-            checkUserInWhiteList ||
-            checkProjectInWhiteList) && forkMrYamlList().isEmpty()
+        return (
+            (checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
+                checkUserInWhiteList ||
+                checkProjectInWhiteList
+            ) && forkMrYamlList().isEmpty()
     }
 
     override fun getMrId() = event().pullRequest.number.toLong()
