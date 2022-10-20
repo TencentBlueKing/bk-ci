@@ -384,7 +384,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                         e.triggerReason.detail.format(e.reasonParams)
                     } catch (ignore: Throwable) {
                         e.triggerReason.detail
-                    }, e
+                    },
+                    e
                 ),
                 yamlTransferData = yamlTransferData
             )
