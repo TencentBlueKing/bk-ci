@@ -84,15 +84,16 @@ type PipelineResponse struct {
 }
 
 type AgentHeartbeatInfo struct {
-	MasterVersion     string                `json:"masterVersion"`
-	SlaveVersion      string                `json:"slaveVersion"`
-	HostName          string                `json:"hostName"`
-	AgentIp           string                `json:"agentIp"`
-	ParallelTaskCount int                   `json:"parallelTaskCount"`
-	AgentInstallPath  string                `json:"agentInstallPath"`
-	StartedUser       string                `json:"startedUser"`
-	TaskList          []ThirdPartyBuildInfo `json:"taskList"`
-	Props             AgentPropsInfo        `json:"props"`
+	MasterVersion           string                `json:"masterVersion"`
+	SlaveVersion            string                `json:"slaveVersion"`
+	HostName                string                `json:"hostName"`
+	AgentIp                 string                `json:"agentIp"`
+	ParallelTaskCount       int                   `json:"parallelTaskCount"`
+	AgentInstallPath        string                `json:"agentInstallPath"`
+	StartedUser             string                `json:"startedUser"`
+	TaskList                []ThirdPartyBuildInfo `json:"taskList"`
+	Props                   AgentPropsInfo        `json:"props"`
+	DockerParallelTaskCount int                   `json:"dockerParallelTaskCount"`
 }
 
 type AgentPropsInfo struct {
@@ -101,14 +102,15 @@ type AgentPropsInfo struct {
 }
 
 type AgentHeartbeatResponse struct {
-	MasterVersion     string            `json:"masterVersion"`
-	SlaveVersion      string            `json:"slaveVersion"`
-	AgentStatus       string            `json:"agentStatus"`
-	ParallelTaskCount int               `json:"parallelTaskCount"`
-	Envs              map[string]string `json:"envs"`
-	Gateway           string            `json:"gateway"`
-	FileGateway       string            `json:"fileGateway"`
-	Props             AgentPropsResp    `json:"props"`
+	MasterVersion           string            `json:"masterVersion"`
+	SlaveVersion            string            `json:"slaveVersion"`
+	AgentStatus             string            `json:"agentStatus"`
+	ParallelTaskCount       int               `json:"parallelTaskCount"`
+	Envs                    map[string]string `json:"envs"`
+	Gateway                 string            `json:"gateway"`
+	FileGateway             string            `json:"fileGateway"`
+	Props                   AgentPropsResp    `json:"props"`
+	DockerParallelTaskCount int               `json:"dockerParallelTaskCount"`
 }
 
 type AgentPropsResp struct {

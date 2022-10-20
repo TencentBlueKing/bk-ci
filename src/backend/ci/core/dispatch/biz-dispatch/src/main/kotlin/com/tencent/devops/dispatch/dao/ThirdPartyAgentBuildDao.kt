@@ -223,6 +223,20 @@ class ThirdPartyAgentBuildDao {
             return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+                .and(DOCKER_INFO.eq(null))
+                .fetch()
+        }
+    }
+
+    fun getDockerRunningAndQueueBuilds(
+        dslContext: DSLContext,
+        agentId: String
+    ): Result<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
+                .where(AGENT_ID.eq(agentId))
+                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+                .and(DOCKER_INFO.ne(null))
                 .fetch()
         }
     }

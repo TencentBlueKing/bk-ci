@@ -148,10 +148,10 @@ func DoPollAndBuild() {
 func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 	// 检查docker任务
 	dockerInstanceCount := GBuildDockerManager.GetCurrentJobsCount()
-	if GBuildDockerManager.MaxJob != 0 && dockerInstanceCount >= GBuildDockerManager.MaxJob {
+	if config.GAgentConfig.DockerParallelTaskCount != 0 && int(dockerInstanceCount) >= config.GAgentConfig.DockerParallelTaskCount {
 		logs.Info(fmt.Sprintf("DOCKER_JOB|parallel docker task count exceed , wait job done, "+
 			"maxJob config: %d, instance count: %d",
-			GBuildDockerManager.MaxJob, dockerInstanceCount))
+			config.GAgentConfig.DockerParallelTaskCount, dockerInstanceCount))
 		dockerCanRun = false
 	}
 	dockerCanRun = true

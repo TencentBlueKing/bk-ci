@@ -131,6 +131,10 @@ class ThirdPartyAgentService @Autowired constructor(
         return thirdPartyAgentBuildDao.getRunningAndQueueBuilds(dslContext, agentId).size
     }
 
+    fun getDockerRunningBuilds(agentId: String): Int {
+        return thirdPartyAgentBuildDao.getDockerRunningAndQueueBuilds(dslContext, agentId).size
+    }
+
     fun startBuild(projectId: String, agentId: String, secretKey: String): AgentResult<ThirdPartyBuildInfo?> {
         // Get the queue status build by buildId and agentId
         logger.debug("Start the third party agent($agentId) of project($projectId)")

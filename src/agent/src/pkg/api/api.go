@@ -29,14 +29,13 @@ package api
 
 import (
 	"fmt"
-	"io"
-	"runtime"
-	"strconv"
-	"strings"
-
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"io"
+	"net/http"
+	"runtime"
+	"strconv"
 )
 
 func buildUrl(url string) string {
@@ -59,6 +58,7 @@ func Heartbeat(buildInfos []ThirdPartyBuildInfo, jdkVersion []string) (*httputil
 			Arch:       runtime.GOARCH,
 			JdkVersion: jdkVersion,
 		},
+		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
 	}
 
 	return httputil.NewHttpClient().Post(url).Body(agentHeartbeatInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
@@ -157,36 +157,20 @@ func AddLogRedLine(buildId string, message *LogMessage) (*httputil.DevopsResult,
 		IntoDevopsResult()
 }
 
-const testShell = "#!/bin/bash\n" +
-	"set -x\n" +
-	"mkdir  -p /data/devops\n" +
-	"cd /data/devops\n" +
-	"mkdir -p logs\n" +
-	"echo \"start to download the docker_init.sh...\" > /data/logs/docker.log\n" +
-	"curl -k -s -H \"X-DEVOPS-BUILD-TYPE: DOCKER\" -H \"X-DEVOPS-PROJECT-ID: ${devops_project_id}\" -H \"X-DEVOPS-AGENT-ID: ${devops_agent_id}\" -H \"X-DEVOPS-AGENT-SECRET-KEY: ${devops_agent_secret_key}\" -o  docker_init.sh \"${devops_gateway}/static/bkrepo/files/docker_init.sh\" -L\n" +
-	"echo docker_init\n" +
-	"cat docker_init.sh\n" +
-	"echo \"download docker_init.sh success, start it...\" >> /data/logs/docker.log\n" +
-	"cat docker_init.sh >> /data/logs/docker.log\n" +
-	"sh docker_init.sh $@"
-
 func DownloadDockerInitFile() (io.ReadCloser, error) {
-	// TODO: issue_7748
-	//url := ""
-	//headers := config.GAgentConfig.GetAuthHeaderMap()
-	//req, err := http.NewRequest("GET", url, nil)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//for k, v := range headers {
-	//	req.Header.Set(k, v)
-	//}
-	//resp, err := http.DefaultClient.Do(req)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//return resp.Body, nil
+	url := buildUrl("/static/local/files/thirdpart_docker_init.sh")
+	headers := config.GAgentConfig.GetAuthHeaderMap()
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
 
-	return io.NopCloser(strings.NewReader(testShell)), nil
+	return resp.Body, nil
 }

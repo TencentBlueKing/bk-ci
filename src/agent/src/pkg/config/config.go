@@ -63,25 +63,27 @@ const (
 	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
 	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
+	KeyDockerTaskCount   = "devops.docker.parallel.task.count"
 )
 
 // AgentConfig Agent 配置
 type AgentConfig struct {
-	Gateway           string
-	FileGateway       string
-	BuildType         string
-	ProjectId         string
-	AgentId           string
-	SecretKey         string
-	ParallelTaskCount int
-	EnvType           string
-	SlaveUser         string
-	CollectorOn       bool
-	TimeoutSec        int64
-	DetectShell       bool
-	IgnoreLocalIps    string
-	BatchInstallKey   string
-	LogsKeepHours     int
+	Gateway                 string
+	FileGateway             string
+	BuildType               string
+	ProjectId               string
+	AgentId                 string
+	SecretKey               string
+	ParallelTaskCount       int
+	EnvType                 string
+	SlaveUser               string
+	CollectorOn             bool
+	TimeoutSec              int64
+	DetectShell             bool
+	IgnoreLocalIps          string
+	BatchInstallKey         string
+	LogsKeepHours           int
+	DockerParallelTaskCount int
 }
 
 // AgentEnv Agent 环境配置
@@ -279,6 +281,11 @@ func LoadAgentConfig() error {
 		logsKeepHours = 96
 	}
 
+	dockerParallelTaskCount, err := conf.Section("").Key(KeyDockerTaskCount).Int()
+	if err != nil || dockerParallelTaskCount < 0 {
+		return errors.New("invalid dockerParallelTaskCount")
+	}
+
 	GAgentConfig.LogsKeepHours = logsKeepHours
 
 	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
@@ -312,6 +319,8 @@ func LoadAgentConfig() error {
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
 	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
 	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)
+	GAgentConfig.DockerParallelTaskCount = dockerParallelTaskCount
+	logs.Info("DockerParallelTaskCount: ", GAgentConfig.DockerParallelTaskCount)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -333,6 +342,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyDetectShell + "=" + strconv.FormatBool(GAgentConfig.DetectShell) + "\n")
 	content.WriteString(KeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
 	content.WriteString(KeyLogsKeepHours + "=" + strconv.Itoa(GAgentConfig.LogsKeepHours) + "\n")
+	content.WriteString(KeyDockerTaskCount + "=" + strconv.Itoa(GAgentConfig.DockerParallelTaskCount) + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {

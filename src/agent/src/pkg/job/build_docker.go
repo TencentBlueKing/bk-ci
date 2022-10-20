@@ -24,8 +24,6 @@ import (
 
 // buildDockerManager docker构建机构建对象管理
 type buildDockerManager struct {
-	// MaxJob 最多运行的任务数
-	MaxJob int32
 	// CurrentJobsCount 使用时需要进行原子操作防止出现并发问题
 	currentJobsCount int32
 }
@@ -42,8 +40,6 @@ var GBuildDockerManager *buildDockerManager
 
 func init() {
 	GBuildDockerManager = &buildDockerManager{
-		// TODO: issue_7748 临时写死
-		MaxJob:           4,
 		currentJobsCount: 0,
 	}
 }
@@ -355,6 +351,8 @@ func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string 
 	envs = append(envs, "devops_agent_id="+dockerBuildInfo.AgentId)
 	envs = append(envs, "devops_agent_secret_key="+dockerBuildInfo.SecretKey)
 	envs = append(envs, "devops_gateway="+config.GetGateWay())
+	// 通过环境变量区分agent docker
+	envs = append(envs, "agent_build_env=DOCKER")
 
 	if dockerBuildInfo.Envs == nil {
 		return envs
