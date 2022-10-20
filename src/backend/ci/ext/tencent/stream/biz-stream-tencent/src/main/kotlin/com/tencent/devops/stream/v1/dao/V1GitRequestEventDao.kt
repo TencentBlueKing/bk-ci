@@ -32,6 +32,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.v1.pojo.V1GitRequestEvent
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -285,6 +286,58 @@ class V1GitRequestEventDao {
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .orderBy(ID.desc())
                 .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    /**
+     * 根据ID批量查询
+     */
+    fun getRequestsById(
+        dslContext: DSLContext,
+        requestIds: Set<Int>,
+        hasEvent: Boolean
+    ): List<V1GitRequestEvent> {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            val records = dslContext.selectFrom(this)
+                .where(ID.`in`(requestIds))
+                .orderBy(ID.desc())
+                .fetch()
+            val result = mutableListOf<V1GitRequestEvent>()
+            records.forEach {
+                result.add(
+                    V1GitRequestEvent(
+                        id = it.id,
+                        objectKind = it.objectKind,
+                        operationKind = it.operationKind,
+                        extensionAction = it.extensionAction,
+                        gitProjectId = it.gitProjectId,
+                        sourceGitProjectId = it.sourceGitProjectId,
+                        branch = it.branch,
+                        targetBranch = it.targetBranch,
+                        commitId = it.commitId,
+                        commitMsg = it.commitMessage,
+                        commitTimeStamp = it.commitTimestamp,
+                        userId = it.userName,
+                        totalCommitCount = it.totalCommitCount,
+                        mergeRequestId = it.mergeRequestId,
+                        event = if (hasEvent) {
+                            it.event
+                        } else {
+                            ""
+                        },
+                        description = if (it.description.isNullOrBlank()) {
+                            it.commitMessage
+                        } else {
+                            it.description
+                        },
+                        mrTitle = it.mrTitle,
+                        gitEvent = null,
+                        commitAuthorName = null,
+                        gitProjectName = null
+                    )
+                )
+            }
+            return result
         }
     }
 }
