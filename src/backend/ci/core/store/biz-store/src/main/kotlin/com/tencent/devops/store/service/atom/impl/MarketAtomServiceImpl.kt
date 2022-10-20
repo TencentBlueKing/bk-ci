@@ -1296,6 +1296,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         tokenType: TokenTypeEnum
     ): Result<Boolean>
 
+    abstract fun updateAtomFileContent(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        content: String,
+        filePath: String
+    ): Result<Boolean>
+
     @Suppress("UNCHECKED_CAST")
     private fun addParamComment(
         builder: StringBuilder,

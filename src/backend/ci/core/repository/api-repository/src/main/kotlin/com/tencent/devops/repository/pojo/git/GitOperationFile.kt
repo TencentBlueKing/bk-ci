@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
 import io.swagger.annotations.ApiModelProperty
 
-data class GitCreateFile(
+data class GitOperationFile(
     @JsonProperty("file_path")
     @ApiModelProperty(name = "file_path")
     val filePath: String,
