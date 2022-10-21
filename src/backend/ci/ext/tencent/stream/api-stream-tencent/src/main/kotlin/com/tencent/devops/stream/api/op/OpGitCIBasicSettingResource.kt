@@ -78,7 +78,7 @@ interface OpGitCIBasicSettingResource {
         limitNumber: Int
     ): Result<Boolean>
 
-    @ApiOperation("修改git.code.oa.com域名")
+    @ApiOperation("修改工蜂老域名")
     @POST
     @Path("/updateGitDomain")
     fun updateGitDomain(
