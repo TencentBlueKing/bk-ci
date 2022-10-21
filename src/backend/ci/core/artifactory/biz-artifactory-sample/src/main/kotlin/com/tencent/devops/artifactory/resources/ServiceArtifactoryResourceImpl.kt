@@ -146,53 +146,12 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun searchFile(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        regexPath: String,
-        customized: Boolean,
-        page: Int?,
-        pageSize: Int?
-    ): Result<FileInfoPage<FileInfo>> {
-        TODO("not implemented")
-    }
-
-    override fun searchFileAndPropertyByAnd(
-        userId: String,
-        projectId: String,
-        page: Int?,
-        pageSize: Int?,
-        searchProps: List<Property>
-    ): Result<FileInfoPage<FileInfo>> {
-        TODO("not implemented")
-    }
-
-    override fun searchFileAndPropertyByOr(
-        userId: String,
-        projectId: String,
-        page: Int?,
-        pageSize: Int?,
-        searchProps: List<Property>
-    ): Result<FileInfoPage<FileInfo>> {
-        TODO("not implemented")
-    }
-
     override fun searchCustomFiles(
         userId: String,
         projectId: String,
         condition: CustomFileSearchCondition
     ): Result<List<String>> {
         TODO("not implemented")
-    }
-
-    override fun getReportRootUrl(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        taskId: String
-    ): Result<String> {
-        return Result(archiveFileService.getReportRootUrl(projectId, pipelineId, buildId, taskId))
     }
 
     override fun searchFile(
