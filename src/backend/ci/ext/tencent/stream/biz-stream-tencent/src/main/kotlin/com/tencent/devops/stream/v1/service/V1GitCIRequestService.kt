@@ -114,16 +114,29 @@ class V1GitCIRequestService @Autowired constructor(
         val resultList = mutableListOf<V1GitRequestHistory>()
         requestList.forEach { event ->
             // 如果是来自fork库的分支，单独标识
-            val gitProjectInfoCache = event.sourceGitProjectId?.let {
-                lazy {
-                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                        gitProjectId = it,
-                        useAccessToken = true,
-                        getProjectInfo = streamScmService::getProjectInfoRetry
-                    )
+            val realEvent =
+                if (gitProjectId == event.gitProjectId) {
+                    val gitProjectInfoCache = event.sourceGitProjectId?.let {
+                        lazy {
+                            streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                                gitProjectId = it,
+                                useAccessToken = true,
+                                getProjectInfo = streamScmService::getProjectInfoRetry
+                            )
+                        }
+                    }
+                    V1GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
+                } else {
+                    // 当gitProjectId与event的不同时，说明是远程仓库触发的
+                    val gitProjectInfoCache = lazy {
+                        streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                            gitProjectId = event.gitProjectId,
+                            useAccessToken = true,
+                            getProjectInfo = streamScmService::getProjectInfoRetry
+                        )
+                    }
+                    V1GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
                 }
-            }
-            val realEvent = V1GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
 
             val requestHistory = V1GitRequestHistory(
                 id = realEvent.id ?: return@forEach,
