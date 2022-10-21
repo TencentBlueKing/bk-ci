@@ -84,16 +84,30 @@ type PipelineResponse struct {
 }
 
 type AgentHeartbeatInfo struct {
-	MasterVersion           string                `json:"masterVersion"`
-	SlaveVersion            string                `json:"slaveVersion"`
-	HostName                string                `json:"hostName"`
-	AgentIp                 string                `json:"agentIp"`
-	ParallelTaskCount       int                   `json:"parallelTaskCount"`
-	AgentInstallPath        string                `json:"agentInstallPath"`
-	StartedUser             string                `json:"startedUser"`
-	TaskList                []ThirdPartyBuildInfo `json:"taskList"`
-	Props                   AgentPropsInfo        `json:"props"`
-	DockerParallelTaskCount int                   `json:"dockerParallelTaskCount"`
+	MasterVersion           string                     `json:"masterVersion"`
+	SlaveVersion            string                     `json:"slaveVersion"`
+	HostName                string                     `json:"hostName"`
+	AgentIp                 string                     `json:"agentIp"`
+	ParallelTaskCount       int                        `json:"parallelTaskCount"`
+	AgentInstallPath        string                     `json:"agentInstallPath"`
+	StartedUser             string                     `json:"startedUser"`
+	TaskList                []ThirdPartyTaskInfo       `json:"taskList"`
+	Props                   AgentPropsInfo             `json:"props"`
+	DockerParallelTaskCount int                        `json:"dockerParallelTaskCount"`
+	DockerTaskList          []ThirdPartyDockerTaskInfo `json:"dockerTaskList"`
+}
+
+type ThirdPartyTaskInfo struct {
+	ProjectId string `json:"projectId"`
+	BuildId   string `json:"buildId"`
+	VmSeqId   string `json:"vmSeqId"`
+	Workspace string `json:"workspace"`
+}
+
+type ThirdPartyDockerTaskInfo struct {
+	ProjectId string `json:"projectId"`
+	BuildId   string `json:"buildId"`
+	VmSeqId   string `json:"vmSeqId"`
 }
 
 type AgentPropsInfo struct {
@@ -119,15 +133,22 @@ type AgentPropsResp struct {
 }
 
 type UpgradeInfo struct {
-	WorkerVersion  string   `json:"workerVersion"`
-	GoAgentVersion string   `json:"goAgentVersion"`
-	JdkVersion     []string `json:"jdkVersion"`
+	WorkerVersion      string             `json:"workerVersion"`
+	GoAgentVersion     string             `json:"goAgentVersion"`
+	JdkVersion         []string           `json:"jdkVersion"`
+	DockerInitFileInfo DockerInitFileInfo `json:"dockerInitFileInfo"`
+}
+
+type DockerInitFileInfo struct {
+	FileMd5     string `json:"fileMd5"`
+	NeedUpgrade bool   `json:"needUpgrade"`
 }
 
 type UpgradeItem struct {
-	Agent  bool `json:"agent"`
-	Worker bool `json:"worker"`
-	Jdk    bool `json:"jdk"`
+	Agent          bool `json:"agent"`
+	Worker         bool `json:"worker"`
+	Jdk            bool `json:"jdk"`
+	DockerInitFile bool `json:"dockerInitFile"`
 }
 
 func NewPipelineResponse(seqId string, status string, response string) *PipelineResponse {

@@ -671,7 +671,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     if (dockerBuilder) {
                         if (agent.dockerParallelTaskCount != null &&
                             agent.dockerParallelTaskCount!! > 0 &&
-                            agent.dockerParallelTaskCount!! > runningCnt
+                            agent.dockerParallelTaskCount!! > dockerRunningCnt
                         ) {
                             return true
                         }
@@ -754,12 +754,12 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     }
 
     private fun getDockerRunningCnt(agentId: String, runningBuildsMapper: HashMap<String, Int>): Int {
-        var runningCnt = runningBuildsMapper[agentId]
-        if (runningCnt == null) {
-            runningCnt = thirdPartyAgentBuildService.getDockerRunningBuilds(agentId)
-            runningBuildsMapper[agentId] = runningCnt
+        var dockerRunningCnt = runningBuildsMapper[agentId]
+        if (dockerRunningCnt == null) {
+            dockerRunningCnt = thirdPartyAgentBuildService.getDockerRunningBuilds(agentId)
+            runningBuildsMapper[agentId] = dockerRunningCnt
         }
-        return runningCnt
+        return dockerRunningCnt
     }
 
     interface AgentMatcher {

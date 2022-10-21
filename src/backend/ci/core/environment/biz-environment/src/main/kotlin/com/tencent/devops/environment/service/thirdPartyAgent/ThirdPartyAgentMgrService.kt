@@ -160,6 +160,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val heartBeatInfo = thirdPartyAgentHeartbeatUtils.getNewHeartbeat(agentRecord.projectId, agentRecord.id)
         val lastHeartbeatTime = heartBeatInfo?.heartbeatTime
         val parallelTaskCount = (agentRecord.parallelTaskCount ?: "").toString()
+        val dockerParallelTaskCount = (agentRecord.dockerParallelTaskCount ?: "").toString()
         val agentHostInfo = try {
             if (needHeartbeatInfo) {
                 AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
@@ -187,6 +188,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             agentInstallPath = agentRecord.agentInstallPath ?: "",
             maxParallelTaskCount = MAX_PARALLEL_TASK_COUNT,
             parallelTaskCount = parallelTaskCount,
+            dockerParallelTaskCount = dockerParallelTaskCount,
             startedUser = agentRecord.startedUser ?: "",
             agentUrl = agentUrlService.genAgentUrl(agentRecord),
             agentScript = agentUrlService.genAgentInstallScript(agentRecord),

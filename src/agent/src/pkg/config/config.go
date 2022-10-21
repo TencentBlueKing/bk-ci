@@ -40,6 +40,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
@@ -64,6 +65,7 @@ const (
 	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
 	KeyDockerTaskCount   = "devops.docker.parallel.task.count"
+	keyEnableDockerBuild = "devops.docker.enable"
 )
 
 // AgentConfig Agent 配置
@@ -84,6 +86,7 @@ type AgentConfig struct {
 	BatchInstallKey         string
 	LogsKeepHours           int
 	DockerParallelTaskCount int
+	EnableDockerBuild       bool
 }
 
 // AgentEnv Agent 环境配置
@@ -281,10 +284,16 @@ func LoadAgentConfig() error {
 		logsKeepHours = 96
 	}
 
-	dockerParallelTaskCount, err := conf.Section("").Key(KeyDockerTaskCount).Int()
-	if err != nil || dockerParallelTaskCount < 0 {
-		return errors.New("invalid dockerParallelTaskCount")
+	// 兼容旧版本 .agent.properties 没有这个键
+	dockerParallelTaskCount := 0
+	if conf.Section("").HasKey(KeyDockerTaskCount) {
+		dockerParallelTaskCount, err = conf.Section("").Key(KeyDockerTaskCount).Int()
+		if err != nil || dockerParallelTaskCount < 0 {
+			return errors.New("invalid dockerParallelTaskCount")
+		}
 	}
+
+	enableDocker := conf.Section("").Key(keyEnableDockerBuild).MustBool(false)
 
 	GAgentConfig.LogsKeepHours = logsKeepHours
 
@@ -321,12 +330,22 @@ func LoadAgentConfig() error {
 	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)
 	GAgentConfig.DockerParallelTaskCount = dockerParallelTaskCount
 	logs.Info("DockerParallelTaskCount: ", GAgentConfig.DockerParallelTaskCount)
+	GAgentConfig.EnableDockerBuild = enableDocker
+	logs.Info("EnableDockerBuild: ", GAgentConfig.EnableDockerBuild)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
 
+// 可能存在不同协诚写入文件的操作，加上锁保险些
+var saveConfigLock = sync.Mutex{}
+
 // SaveConfig 将配置回写到agent.properties文件保存
 func (a *AgentConfig) SaveConfig() error {
+	saveConfigLock.Lock()
+	defer func() {
+		saveConfigLock.Unlock()
+	}()
+
 	filePath := systemutil.GetWorkDir() + "/.agent.properties"
 
 	content := bytes.Buffer{}
@@ -343,6 +362,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
 	content.WriteString(KeyLogsKeepHours + "=" + strconv.Itoa(GAgentConfig.LogsKeepHours) + "\n")
 	content.WriteString(KeyDockerTaskCount + "=" + strconv.Itoa(GAgentConfig.DockerParallelTaskCount) + "\n")
+	content.WriteString(keyEnableDockerBuild + "=" + strconv.FormatBool(GAgentConfig.EnableDockerBuild) + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {
@@ -391,6 +411,10 @@ func GetJavaDir() string {
 		return workDir + "/jre"
 	}
 	return workDir + "/jdk"
+}
+
+func GetDockerInitFilePath() string {
+	return systemutil.GetWorkDir() + "/" + DockerInitFile
 }
 
 func GetGateWay() string {

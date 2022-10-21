@@ -10,5 +10,15 @@ data class ThirdPartyAgentUpgradeByVersionInfo(
     @ApiModelProperty("go agent 版本")
     val goAgentVersion: String?,
     @ApiModelProperty("jdk版本")
-    val jdkVersion: List<String>?
+    val jdkVersion: List<String>?,
+    @ApiModelProperty("docker init 文件升级信息")
+    val dockerInitFileInfo: DockerInitFileInfo?
+)
+
+@ApiModel("docker init 文件升级信息")
+data class DockerInitFileInfo(
+    @ApiModelProperty("文件md5值")
+    val fileMd5: String,
+    @ApiModelProperty("目前只支持linux机器，所以其他系统不需要检查")
+    val needUpgrade: Boolean
 )

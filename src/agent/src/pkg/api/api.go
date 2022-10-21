@@ -32,8 +32,6 @@ import (
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"io"
-	"net/http"
 	"runtime"
 	"strconv"
 )
@@ -42,9 +40,18 @@ func buildUrl(url string) string {
 	return config.GetGateWay() + url
 }
 
-func Heartbeat(buildInfos []ThirdPartyBuildInfo, jdkVersion []string) (*httputil.DevopsResult, error) {
+func Heartbeat(buildInfos []ThirdPartyBuildInfo, jdkVersion []string, dockerTaskList []ThirdPartyDockerTaskInfo) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/newHeartbeat")
 
+	var taskList []ThirdPartyTaskInfo
+	for _, info := range buildInfos {
+		taskList = append(taskList, ThirdPartyTaskInfo{
+			ProjectId: info.ProjectId,
+			BuildId:   info.BuildId,
+			VmSeqId:   info.VmSeqId,
+			Workspace: info.Workspace,
+		})
+	}
 	agentHeartbeatInfo := &AgentHeartbeatInfo{
 		MasterVersion:     config.AgentVersion,
 		SlaveVersion:      config.GAgentEnv.SlaveVersion,
@@ -53,24 +60,26 @@ func Heartbeat(buildInfos []ThirdPartyBuildInfo, jdkVersion []string) (*httputil
 		ParallelTaskCount: config.GAgentConfig.ParallelTaskCount,
 		AgentInstallPath:  systemutil.GetExecutableDir(),
 		StartedUser:       systemutil.GetCurrentUser().Username,
-		TaskList:          buildInfos,
+		TaskList:          taskList,
 		Props: AgentPropsInfo{
 			Arch:       runtime.GOARCH,
 			JdkVersion: jdkVersion,
 		},
 		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
+		DockerTaskList:          dockerTaskList,
 	}
 
 	return httputil.NewHttpClient().Post(url).Body(agentHeartbeatInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
-func CheckUpgrade(jdkVersion []string) (*httputil.AgentResult, error) {
+func CheckUpgrade(jdkVersion []string, dockerInitFileMd5 DockerInitFileInfo) (*httputil.AgentResult, error) {
 	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/upgradeNew")
 
 	info := &UpgradeInfo{
-		WorkerVersion:  config.GAgentEnv.SlaveVersion,
-		GoAgentVersion: config.AgentVersion,
-		JdkVersion:     jdkVersion,
+		WorkerVersion:      config.GAgentEnv.SlaveVersion,
+		GoAgentVersion:     config.AgentVersion,
+		JdkVersion:         jdkVersion,
+		DockerInitFileInfo: dockerInitFileMd5,
 	}
 
 	return httputil.NewHttpClient().Post(url).Body(info).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
@@ -137,40 +146,27 @@ func DownloadAgentInstallBatchZip(saveFile string) error {
 }
 
 // AuthHeaderDevopsBuildId log需要的buildId的header
-const AuthHeaderDevopsBuildId = "X-DEVOPS-BUILD-ID"
+const (
+	AuthHeaderDevopsBuildId = "X-DEVOPS-BUILD-ID"
+	AuthHeaderDevopsVmSeqId = "X-DEVOPS-VM-SID"
+)
 
-func AddLogLine(buildId string, message *LogMessage) (*httputil.DevopsResult, error) {
+func AddLogLine(buildId string, message *LogMessage, vmSeqId string) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/log/api/build/logs")
 	headers := config.GAgentConfig.GetAuthHeaderMap()
 	headers[AuthHeaderDevopsBuildId] = buildId
+	headers[AuthHeaderDevopsVmSeqId] = vmSeqId
 	return httputil.NewHttpClient().
-		Post(url).Body(message).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().
+		Post(url).Body(message).SetHeaders(headers).Execute().
 		IntoDevopsResult()
 }
 
-func AddLogRedLine(buildId string, message *LogMessage) (*httputil.DevopsResult, error) {
+func AddLogRedLine(buildId string, message *LogMessage, vmSeqId string) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/log/api/build/logs/red")
 	headers := config.GAgentConfig.GetAuthHeaderMap()
 	headers[AuthHeaderDevopsBuildId] = buildId
+	headers[AuthHeaderDevopsVmSeqId] = vmSeqId
 	return httputil.NewHttpClient().
-		Post(url).Body(message).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().
+		Post(url).Body(message).SetHeaders(headers).Execute().
 		IntoDevopsResult()
-}
-
-func DownloadDockerInitFile() (io.ReadCloser, error) {
-	url := buildUrl("/static/local/files/thirdpart_docker_init.sh")
-	headers := config.GAgentConfig.GetAuthHeaderMap()
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Body, nil
 }
