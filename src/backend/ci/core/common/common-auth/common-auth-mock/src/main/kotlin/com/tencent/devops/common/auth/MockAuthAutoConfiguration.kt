@@ -35,25 +35,15 @@ import com.tencent.devops.common.auth.api.MockAuthPermissionApi
 import com.tencent.devops.common.auth.api.MockAuthProjectApi
 import com.tencent.devops.common.auth.api.MockAuthResourceApi
 import com.tencent.devops.common.auth.api.MockAuthTokenApi
-import com.tencent.devops.common.auth.code.MockArtifactoryAuthServiceCode
-import com.tencent.devops.common.auth.code.MockBcsAuthServiceCode
-import com.tencent.devops.common.auth.code.MockCodeAuthServiceCode
-import com.tencent.devops.common.auth.code.MockEnvironmentAuthServiceCode
-import com.tencent.devops.common.auth.code.MockPipelineAuthServiceCode
-import com.tencent.devops.common.auth.code.MockProjectAuthServiceCode
-import com.tencent.devops.common.auth.code.MockQualityAuthServiceCode
-import com.tencent.devops.common.auth.code.MockRepoAuthServiceCode
-import com.tencent.devops.common.auth.code.MockTicketAuthServiceCode
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
 @Configuration
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample", matchIfMissing = true)
+// @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class MockAuthAutoConfiguration {
@@ -77,31 +67,4 @@ class MockAuthAutoConfiguration {
 //    @Primary
     @ConditionalOnMissingBean(AuthProjectApi::class)
     fun authProjectApi(bkAuthPermissionApi: MockAuthPermissionApi) = MockAuthProjectApi(bkAuthPermissionApi)
-
-    @Bean
-    fun bcsAuthServiceCode() = MockBcsAuthServiceCode()
-
-    @Bean
-    fun pipelineAuthServiceCode() = MockPipelineAuthServiceCode()
-
-    @Bean
-    fun codeAuthServiceCode() = MockCodeAuthServiceCode()
-
-    @Bean
-    fun projectAuthServiceCode() = MockProjectAuthServiceCode()
-
-    @Bean
-    fun environmentAuthServiceCode() = MockEnvironmentAuthServiceCode()
-
-    @Bean
-    fun repoAuthServiceCode() = MockRepoAuthServiceCode()
-
-    @Bean
-    fun ticketAuthServiceCode() = MockTicketAuthServiceCode()
-
-    @Bean
-    fun qualityAuthServiceCode() = MockQualityAuthServiceCode()
-
-    @Bean
-    fun artifactoryAuthServiceCode() = MockArtifactoryAuthServiceCode()
 }
