@@ -509,7 +509,7 @@ class StreamBasicSettingDao {
     ): Result<Record1<Long>> {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             return dslContext.select(ID).from(this)
-                .where(HOME_PAGE.like(gitDomain))
+                .where(HOME_PAGE.like("%$gitDomain%"))
                 .limit(limit)
                 .fetch()
         }
