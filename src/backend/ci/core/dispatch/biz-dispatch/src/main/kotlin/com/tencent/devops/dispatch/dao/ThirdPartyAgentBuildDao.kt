@@ -223,7 +223,7 @@ class ThirdPartyAgentBuildDao {
             return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
-                .and(DOCKER_INFO.eq(null))
+                .and(DOCKER_INFO.isNull)
                 .fetch()
         }
     }
@@ -236,7 +236,7 @@ class ThirdPartyAgentBuildDao {
             return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
-                .and(DOCKER_INFO.ne(null))
+                .and(DOCKER_INFO.isNotNull)
                 .fetch()
         }
     }
