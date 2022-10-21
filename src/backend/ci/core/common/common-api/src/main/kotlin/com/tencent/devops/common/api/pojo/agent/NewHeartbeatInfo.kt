@@ -57,7 +57,9 @@ data class NewHeartbeatInfo(
     @ApiModelProperty("心跳时间戳")
     var heartbeatTime: Long?,
     @ApiModelProperty("忙碌运行中任务数量")
-    var busyTaskSize: Int = 0
+    var busyTaskSize: Int = 0,
+    @ApiModelProperty("docker并行任务计数")
+    val dockerParallelTaskCount: Int?,
 ) {
     companion object {
         fun dummyHeartbeat(projectId: String, agentId: Long): NewHeartbeatInfo {
@@ -73,7 +75,8 @@ data class NewHeartbeatInfo(
                 props = AgentPropsInfo("", null),
                 agentId = agentId,
                 projectId = projectId,
-                heartbeatTime = System.currentTimeMillis()
+                heartbeatTime = System.currentTimeMillis(),
+                dockerParallelTaskCount = 0
             )
         }
     }

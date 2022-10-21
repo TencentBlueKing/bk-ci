@@ -379,7 +379,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         if (agentsResult.isNotOk()) {
             logger.warn(
                 "${event.buildId}|START_AGENT_FAILED|" +
-                    "j(${event.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}"
+                        "j(${event.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}"
             )
             retry(
                 client = client,
@@ -633,7 +633,15 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             hasTryAgents = hasTryAgents,
             runningBuildsMapper = runningBuildsMapper,
             agentMatcher = object : AgentMatcher {
-                override fun match(runningCnt: Int, agent: ThirdPartyAgent): Boolean {
+                override fun match(
+                    runningCnt: Int,
+                    agent: ThirdPartyAgent,
+                    dockerBuilder: Boolean,
+                    dockerRunningCnt: Int
+                ): Boolean {
+                    if (dockerBuilder) {
+                        return dockerRunningCnt == 0
+                    }
                     return runningCnt == 0
                 }
             }
@@ -654,7 +662,21 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             hasTryAgents = hasTryAgents,
             runningBuildsMapper = runningBuildsMapper,
             agentMatcher = object : AgentMatcher {
-                override fun match(runningCnt: Int, agent: ThirdPartyAgent): Boolean {
+                override fun match(
+                    runningCnt: Int,
+                    agent: ThirdPartyAgent,
+                    dockerBuilder: Boolean,
+                    dockerRunningCnt: Int
+                ): Boolean {
+                    if (dockerBuilder) {
+                        if (agent.dockerParallelTaskCount != null &&
+                            agent.dockerParallelTaskCount!! > 0 &&
+                            agent.dockerParallelTaskCount!! > runningCnt
+                        ) {
+                            return true
+                        }
+                        return false
+                    }
                     if (agent.parallelTaskCount != null &&
                         agent.parallelTaskCount!! > 0 &&
                         agent.parallelTaskCount!! > runningCnt
@@ -681,7 +703,18 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     return@forEach
                 }
                 val runningCnt = getRunningCnt(it.agentId, runningBuildsMapper)
-                if (agentMatcher.match(runningCnt, it)) {
+                val dockerRunningCnt = if (dispatchType.dockerInfo == null) {
+                    0
+                } else {
+                    getDockerRunningCnt(it.agentId, runningBuildsMapper)
+                }
+                if (agentMatcher.match(
+                        runningCnt = runningCnt,
+                        agent = it,
+                        dockerBuilder = dispatchType.dockerInfo != null,
+                        dockerRunningCnt = dockerRunningCnt
+                    )
+                ) {
                     if (startEnvAgentBuild(event, it, dispatchType, hasTryAgents)) {
                         logger.info(
                             "[${it.projectId}|$[${event.pipelineId}|${event.buildId}|${it.agentId}] " +
@@ -720,8 +753,17 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         return runningCnt
     }
 
+    private fun getDockerRunningCnt(agentId: String, runningBuildsMapper: HashMap<String, Int>): Int {
+        var runningCnt = runningBuildsMapper[agentId]
+        if (runningCnt == null) {
+            runningCnt = thirdPartyAgentBuildService.getDockerRunningBuilds(agentId)
+            runningBuildsMapper[agentId] = runningCnt
+        }
+        return runningCnt
+    }
+
     interface AgentMatcher {
-        fun match(runningCnt: Int, agent: ThirdPartyAgent): Boolean
+        fun match(runningCnt: Int, agent: ThirdPartyAgent, dockerBuilder: Boolean, dockerRunningCnt: Int): Boolean
     }
 
     companion object {

@@ -90,6 +90,10 @@ func agentHeartbeat() error {
 		config.GAgentConfig.FileGateway = heartbeatResponse.FileGateway
 		configChanged = true
 	}
+	if config.GAgentConfig.DockerParallelTaskCount != heartbeatResponse.DockerParallelTaskCount {
+		config.GAgentConfig.DockerParallelTaskCount = heartbeatResponse.DockerParallelTaskCount
+		configChanged = true
+	}
 
 	if heartbeatResponse.Props.KeepLogsHours > 0 &&
 		config.GAgentConfig.LogsKeepHours != heartbeatResponse.Props.KeepLogsHours {
