@@ -128,14 +128,12 @@ class V1GitCIRequestService @Autowired constructor(
                     V1GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
                 } else {
                     // 当gitProjectId与event的不同时，说明是远程仓库触发的
-                    val gitProjectInfoCache = lazy {
-                        streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                            gitProjectId = event.gitProjectId,
-                            useAccessToken = true,
-                            getProjectInfo = streamScmService::getProjectInfoRetry
-                        )
-                    }
-                    V1GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
+                    val pathWithNamespace = streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = event.gitProjectId,
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    )?.pathWithNamespace
+                    V1GitCommonUtils.checkAndGetRepoBranch(event, pathWithNamespace)
                 }
 
             val requestHistory = V1GitRequestHistory(
