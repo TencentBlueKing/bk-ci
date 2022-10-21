@@ -387,7 +387,10 @@ interface UserPipelineResource {
         viewId: String,
         @ApiParam("排序规则", required = false)
         @QueryParam("collation")
-        collation: PipelineCollation?
+        collation: PipelineCollation?,
+        @ApiParam("是否展示已删除流水线", required = false)
+        @QueryParam("showDelete")
+        showDelete: Boolean? = false
     ): Result<PipelineViewPipelinePage<Pipeline>>
 
     @ApiOperation("有权限流水线编排列表")

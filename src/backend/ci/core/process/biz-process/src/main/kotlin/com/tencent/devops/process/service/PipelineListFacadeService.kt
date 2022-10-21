@@ -135,9 +135,6 @@ class PipelineListFacadeService @Autowired constructor(
     @Value("\${process.deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Int = 30
 
-    @Value("\${process.includeDelete:true}")
-    private val processIncludeDelete: Boolean = true
-
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineListFacadeService::class.java)
     }
@@ -437,7 +434,8 @@ class PipelineListFacadeService @Autowired constructor(
         filterByLabels: String? = null,
         filterInvalid: Boolean = false,
         filterByViewIds: String? = null,
-        collation: PipelineCollation = PipelineCollation.DEFAULT
+        collation: PipelineCollation = PipelineCollation.DEFAULT,
+        showDelete: Boolean = false
     ): PipelineViewPipelinePage<Pipeline> {
         val watcher = Watcher(id = "listViewPipelines|$projectId|$userId")
         watcher.start("perm_r_perm")
@@ -476,7 +474,7 @@ class PipelineListFacadeService @Autowired constructor(
                 PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES,
                 PIPELINE_VIEW_UNCLASSIFIED
             )
-            val includeDelete = processIncludeDelete && !viewIdList.contains(viewId)
+            val includeDelete = showDelete && !viewIdList.contains(viewId)
 
             if (!viewIdList.contains(viewId)) {// 已分组的视图
                 pipelineIds.addAll(pipelineViewGroupService.listPipelineIdsByViewId(projectId, viewId))

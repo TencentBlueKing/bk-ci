@@ -510,7 +510,8 @@ class UserPipelineResourceImpl @Autowired constructor(
         filterByLabels: String?,
         filterByViewIds: String?,
         viewId: String,
-        collation: PipelineCollation?
+        collation: PipelineCollation?,
+        showDelete: Boolean?
     ): Result<PipelineViewPipelinePage<Pipeline>> {
         checkParam(userId, projectId)
         return Result(
@@ -527,7 +528,8 @@ class UserPipelineResourceImpl @Autowired constructor(
                 filterByCreator = filterByCreator,
                 filterByLabels = filterByLabels,
                 filterByViewIds = filterByViewIds,
-                collation = collation ?: PipelineCollation.DEFAULT
+                collation = collation ?: PipelineCollation.DEFAULT,
+                showDelete = showDelete ?: false
             )
         )
     }
