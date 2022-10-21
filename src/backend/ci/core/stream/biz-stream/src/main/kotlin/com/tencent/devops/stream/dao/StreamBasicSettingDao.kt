@@ -523,10 +523,10 @@ class StreamBasicSettingDao {
     ): Int {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             return dslContext.update(this)
-                .set(URL, URL.replace(oldGitDomain,newGitDomain))
+                .set(URL, URL.replace(oldGitDomain, newGitDomain))
                 .set(HOME_PAGE, HOME_PAGE.replace(oldGitDomain, newGitDomain))
-                .set(GIT_HTTP_URL,GIT_HTTP_URL.replace(oldGitDomain, newGitDomain))
-                .set(GIT_SSH_URL,GIT_SSH_URL.replace(oldGitDomain, newGitDomain))
+                .set(GIT_HTTP_URL, GIT_HTTP_URL.replace(oldGitDomain, newGitDomain))
+                .set(GIT_SSH_URL, GIT_SSH_URL.replace(oldGitDomain, newGitDomain))
                 .where(ID.`in`(idList)).execute()
         }
     }

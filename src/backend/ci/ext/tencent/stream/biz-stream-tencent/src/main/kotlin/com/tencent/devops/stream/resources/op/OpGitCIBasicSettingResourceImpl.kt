@@ -57,10 +57,12 @@ class OpGitCIBasicSettingResourceImpl @Autowired constructor(
         newGitDomain: String,
         limitNumber: Int
     ): Result<Boolean> {
-        return Result(txStreamBasicSettingService.updateGitDomain(
+        return Result(
+            txStreamBasicSettingService.updateGitDomain(
                 oldGitDomain = oldGitDomain,
                 newGitDomain = newGitDomain,
                 limitNumber = limitNumber
-        ))
+            )
+        )
     }
 }
