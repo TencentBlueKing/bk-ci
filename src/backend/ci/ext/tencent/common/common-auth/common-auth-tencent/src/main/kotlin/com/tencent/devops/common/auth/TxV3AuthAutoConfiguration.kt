@@ -41,6 +41,7 @@ import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -54,6 +55,7 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+@AutoConfigureBefore(name = ["mockAuthAutoConfiguration"])
 class TxV3AuthAutoConfiguration {
 
     @Bean
