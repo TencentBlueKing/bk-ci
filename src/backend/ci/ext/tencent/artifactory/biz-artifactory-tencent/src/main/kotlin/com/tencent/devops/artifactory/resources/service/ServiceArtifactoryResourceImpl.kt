@@ -186,54 +186,6 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
     }
 
-    override fun searchFile(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        regexPath: String,
-        customized: Boolean,
-        page: Int?,
-        pageSize: Int?
-    ): Result<FileInfoPage<FileInfo>> {
-        checkParam(projectId)
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 10000
-        val result = bkRepoSearchService.serviceSearchFileByRegex(projectId, pipelineId, buildId, regexPath, customized)
-        return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
-    }
-
-    override fun searchFileAndPropertyByAnd(
-        userId: String,
-        projectId: String,
-        page: Int?,
-        pageSize: Int?,
-        searchProps: List<Property>
-    ): Result<FileInfoPage<FileInfo>> {
-        checkParam(projectId)
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
-        val result = bkRepoSearchService.serviceSearchFileAndProperty(userId, projectId, searchProps)
-        return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
-    }
-
-    override fun searchFileAndPropertyByOr(
-        userId: String,
-        projectId: String,
-        page: Int?,
-        pageSize: Int?,
-        searchProps: List<Property>
-    ): Result<FileInfoPage<FileInfo>> {
-        logger.info(
-            "searchFileAndPropertyByOr, projectId: $projectId, " +
-                    "page: $page, pageSize: $pageSize, searchProps: $searchProps"
-        )
-        checkParam(projectId)
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
-        val result = bkRepoSearchService.serviceSearchFileAndPropertyByOr(userId, projectId, searchProps)
-        return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
-    }
-
     override fun searchCustomFiles(
         userId: String,
         projectId: String,
@@ -268,18 +220,6 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
-    }
-
-    override fun getReportRootUrl(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        taskId: String
-    ): Result<String> {
-        val url =
-            "${HomeHostUtil.innerApiHost()}/ms/artifactory/api-html/user/reports/" +
-                    "$projectId/$pipelineId/$buildId/$taskId"
-        return Result(url)
     }
 
     override fun searchFile(

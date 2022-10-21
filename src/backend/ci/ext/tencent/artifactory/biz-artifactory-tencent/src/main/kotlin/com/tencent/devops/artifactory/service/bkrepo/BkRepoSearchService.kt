@@ -69,8 +69,7 @@ class BkRepoSearchService @Autowired constructor(
                 props.add(Pair(it.key, it.value))
             }
         }
-
-        val nodeList = bkRepoClient.queryByNameAndMetadata(
+        val queryData = bkRepoClient.queryByNameAndMetadata(
             userId,
             projectId,
             listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO, RepoUtils.IMAGE_REPO),
@@ -79,12 +78,13 @@ class BkRepoSearchService @Autowired constructor(
             page,
             pageSize
         )
+        val nodeList = queryData.records
 
         val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId)
         logger.info("pipelineHasPermissionList is $pipelineHasPermissionList")
         logger.info("nodeList is $nodeList")
         val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, pipelineHasPermissionList)
-        return Pair(LocalDateTime.now().timestamp(), fileInfoList)
+        return Pair(queryData.totalRecords, fileInfoList)
     }
 
     fun serviceSearch(
@@ -106,7 +106,7 @@ class BkRepoSearchService @Autowired constructor(
             }
         }
 
-        val nodeList = bkRepoClient.queryByNameAndMetadata(
+        val queryData = bkRepoClient.queryByNameAndMetadata(
             userId ?: "",
             projectId,
             listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
@@ -115,9 +115,10 @@ class BkRepoSearchService @Autowired constructor(
             page,
             pageSize
         )
+        val nodeList = queryData.records
 
         val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, emptyList(), false)
-        return Pair(LocalDateTime.now().timestamp(), fileInfoList)
+        return Pair(queryData.totalRecords, fileInfoList)
     }
 
     override fun searchFileAndProperty(userId: String, projectId: String, searchProps: SearchProps): Pair<Long, List<FileInfo>> {
@@ -136,7 +137,7 @@ class BkRepoSearchService @Autowired constructor(
             }
         }
 
-        val nodeList = bkRepoClient.queryByNameAndMetadata(
+        val queryData = bkRepoClient.queryByNameAndMetadata(
             userId,
             projectId,
             listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
@@ -145,11 +146,12 @@ class BkRepoSearchService @Autowired constructor(
             0,
             10000
         )
+        val nodeList = queryData.records
 
         val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId)
         val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, pipelineHasPermissionList)
             .sortedWith(Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) })
-        return Pair(LocalDateTime.now().timestamp(), fileInfoList)
+        return Pair(queryData.totalRecords, fileInfoList)
     }
 
     override fun serviceSearchFileByRegex(
@@ -171,7 +173,7 @@ class BkRepoSearchService @Autowired constructor(
             if (customized) listOf(RepoUtils.CUSTOM_REPO) else listOf(RepoUtils.PIPELINE_REPO),
             listOf(queryPath),
             mapOf()
-        )
+        ).records
 
         val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, emptyList(), false)
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
@@ -209,7 +211,7 @@ class BkRepoSearchService @Autowired constructor(
             props.associate { it },
             0,
             10000
-        )
+        ).records
 
         val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, emptyList(), false, generateShortUrl)
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
