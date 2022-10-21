@@ -158,31 +158,31 @@ class IamV3Service @Autowired constructor(
             userId = userId,
             gradeManagerId = gradeManagerId,
             projectCode = projectCode,
-            bkAuthGroup = BkAuthGroup.DEVELOPER
+            defaultGroupType = DefaultGroupType.DEVELOPER
         )
         createDefaultGroup(
             userId = userId,
             gradeManagerId = gradeManagerId,
             projectCode = projectCode,
-            bkAuthGroup = BkAuthGroup.MAINTAINER
+            defaultGroupType = DefaultGroupType.MAINTAINER
         )
         createDefaultGroup(
             userId = userId,
             gradeManagerId = gradeManagerId,
             projectCode = projectCode,
-            bkAuthGroup = BkAuthGroup.TESTER
+            defaultGroupType = DefaultGroupType.TESTER
         )
         createDefaultGroup(
             userId = userId,
             gradeManagerId = gradeManagerId,
             projectCode = projectCode,
-            bkAuthGroup = BkAuthGroup.QC
+            defaultGroupType = DefaultGroupType.QC
         )
         createDefaultGroup(
             userId = userId,
             gradeManagerId = gradeManagerId,
             projectCode = projectCode,
-            bkAuthGroup = BkAuthGroup.PM
+            defaultGroupType = DefaultGroupType.PM
         )
     }
 
@@ -197,7 +197,7 @@ class IamV3Service @Autowired constructor(
             iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), "*"))
         } else {
             subjectScopes!!.forEach {
-                if (it.type == "department") {
+                if (it.type == DEPARTMENT) {
                     iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT), it.id))
                 } else {
                     iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.USER), it.id))
@@ -222,12 +222,12 @@ class IamV3Service @Autowired constructor(
         val defaultGroup = ManagerRoleGroup(
             IamGroupUtils.buildIamGroup(projectCode, DefaultGroupType.MANAGER.displayName),
             IamGroupUtils.buildDefaultDescription(projectCode, DefaultGroupType.MANAGER.displayName, userId),
-            // todo 确定一下
             false
         )
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
         defaultGroups.add(defaultGroup)
         val managerRoleGroup = ManagerRoleGroupDTO.builder().groups(defaultGroups).build()
+        // 创建组
         val roleId = iamManagerService.batchCreateRoleGroup(gradeManagerId, managerRoleGroup)
         val groupMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
         val groupMembers = mutableListOf<ManagerMember>()
@@ -270,11 +270,11 @@ class IamV3Service @Autowired constructor(
         userId: String,
         gradeManagerId: Int,
         projectCode: String,
-        bkAuthGroup: BkAuthGroup
+        defaultGroupType: DefaultGroupType
     ) {
         val defaultGroup = ManagerRoleGroup(
-            IamGroupUtils.buildIamGroup(projectCode, DefaultGroupType.DEVELOPER.displayName),
-            IamGroupUtils.buildDefaultDescription(projectCode, DefaultGroupType.DEVELOPER.displayName, userId),
+            IamGroupUtils.buildIamGroup(projectCode, defaultGroupType.displayName),
+            IamGroupUtils.buildDefaultDescription(projectCode, defaultGroupType.displayName, userId),
             false
         )
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
@@ -284,18 +284,18 @@ class IamV3Service @Autowired constructor(
         val roleId = iamManagerService.batchCreateRoleGroup(gradeManagerId, managerRoleGroup)
         // 赋予权限
         try {
-            when (bkAuthGroup) {
-                BkAuthGroup.DEVELOPER -> addDevelopPermission(roleId, projectCode)
-                BkAuthGroup.MAINTAINER -> addMaintainerPermission(roleId, projectCode)
-                BkAuthGroup.TESTER -> addTestPermission(roleId, projectCode)
-                BkAuthGroup.QC -> addQCPermission(roleId, projectCode)
-                BkAuthGroup.PM -> addPMPermission(roleId, projectCode)
+            when (defaultGroupType) {
+                DefaultGroupType.DEVELOPER -> addDevelopPermission(roleId, projectCode)
+                DefaultGroupType.MAINTAINER -> addMaintainerPermission(roleId, projectCode)
+                DefaultGroupType.TESTER -> addTestPermission(roleId, projectCode)
+                DefaultGroupType.QC -> addQCPermission(roleId, projectCode)
+                DefaultGroupType.PM -> addPMPermission(roleId, projectCode)
             }
         } catch (e: Exception) {
             iamManagerService.deleteRoleGroup(roleId)
             logger.warn(
                 "create iam group permission fail : projectCode = $projectCode |" +
-                    " iamRoleId = $roleId | groupInfo = ${bkAuthGroup.value}"
+                    " iamRoleId = $roleId | groupInfo = ${defaultGroupType.value}"
             )
             throw e
         }
@@ -475,6 +475,7 @@ class IamV3Service @Autowired constructor(
     companion object {
         private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
         private const val SYSTEM_DEFAULT_NAME = "蓝盾"
+        private const val DEPARTMENT = "department"
         val logger = LoggerFactory.getLogger(IamV3Service::class.java)
     }
 }
