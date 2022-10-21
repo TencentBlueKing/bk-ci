@@ -30,9 +30,9 @@ package com.tencent.devops.process.plugin.trigger.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.stream.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_TIMER
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SAVE_PIPELINE_TIMER

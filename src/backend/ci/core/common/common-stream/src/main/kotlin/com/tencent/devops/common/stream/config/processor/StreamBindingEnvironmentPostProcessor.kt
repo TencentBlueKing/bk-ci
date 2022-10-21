@@ -28,8 +28,8 @@
 package com.tencent.devops.common.stream.config.processor
 
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.stream.annotation.StreamEvent
-import com.tencent.devops.common.stream.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners
@@ -73,16 +73,16 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 ConfigurationBuilder()
                     .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
                     .setExpandSuperTypes(true)
-            ).getTypesAnnotatedWith(StreamEvent::class.java)
+            ).getTypesAnnotatedWith(Event::class.java)
             eventClasses.forEach { clazz ->
-                val streamEvent = clazz.getAnnotation(StreamEvent::class.java)
+                val event = clazz.getAnnotation(Event::class.java)
                 val bindingName = DefaultBindingUtils.getOutBindingName(clazz)
                 logger.info(
                     "Found StreamEvent class: ${clazz.name}, bindingName[$bindingName], " +
-                        "with destination[${streamEvent.destination}, delayMills[${streamEvent.delayMills}]"
+                        "with destination[${event.destination}, delayMills[${event.delayMills}]"
                 )
                 val prefix = "spring.cloud.stream.bindings.$bindingName"
-                setProperty("$prefix.destination", streamEvent.destination)
+                setProperty("$prefix.destination", event.destination)
             }
             val consumerMethodBeans = Reflections(
                 ConfigurationBuilder()

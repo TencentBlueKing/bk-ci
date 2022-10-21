@@ -57,14 +57,14 @@ import java.util.stream.Collectors
 class WechatServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val wechatNotifyDao: WechatNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val configuration: Configuration
 ) : WechatService {
 
     private val logger = LoggerFactory.getLogger(WechatServiceImpl::class.java)
 
     override fun sendMqMsg(message: WechatNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WECHAT, message)
+        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WECHAT, message)
     }
 
     /**
@@ -138,7 +138,7 @@ class WechatServiceImpl @Autowired constructor(
             fromSysId = post.fromSysId
         }
 
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WECHAT, wechatNotifyMessageWithOperation) { message ->
+        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WECHAT, wechatNotifyMessageWithOperation) { message ->
             var delayTime = 0
             when (retryCount) {
                 1 -> delayTime = 30000

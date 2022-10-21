@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.websocket.dispatch.push
 
-import com.tencent.devops.common.stream.pojo.IEvent
+import com.tencent.devops.common.event.pojo.IEvent
 
 open class TransferPush(
     open val eventName: String?,

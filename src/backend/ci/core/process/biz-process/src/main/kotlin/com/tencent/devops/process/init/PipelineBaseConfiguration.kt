@@ -28,11 +28,16 @@
 package com.tencent.devops.process.init
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineCreateListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineDeleteListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineRestoreListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineUpdateListener
+import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -47,6 +52,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 /**
  * 流水线构建核心配置
@@ -54,185 +61,57 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class PipelineBaseConfiguration {
 
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
+    companion object {
+        private const val STREAM_CONSUMER_GROUP = "process-service"
     }
-
-    @Bean
-    @ConditionalOnMissingBean(name = ["pipelineCoreExchange"])
-    fun pipelineCoreExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Value("\${queueConcurrency.pipelineCreate:5}")
-    private val pipelineCreateConcurrency: Int? = null
 
     /**
      * 流水线创建队列--- 并发小
      */
-    @Bean
-    fun pipelineCreateQueue() = Queue(MQ.QUEUE_PIPELINE_CREATE)
-
-    @Bean
-    fun pipelineCreateQueueBind(
-        @Autowired pipelineCreateQueue: Queue,
-        @Autowired pipelineCoreExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineCreateQueue)
-            .to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_CREATE)
+    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_CREATE, STREAM_CONSUMER_GROUP)
+    fun pipelineCreateListener(
+        @Autowired createListener: MQPipelineCreateListener
+    ): Consumer<Message<PipelineCreateEvent>> {
+        return Consumer { event: Message<PipelineCreateEvent> ->
+            createListener.run(event.payload)
+        }
     }
-
-    @Bean
-    fun pipelineCreateListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineCreateQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired createListener: MQPipelineCreateListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineCreateQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = createListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = pipelineCreateConcurrency!!,
-            maxConcurrency = 50
-        )
-    }
-
-    @Value("\${queueConcurrency.pipelineDelete:2}")
-    private val pipelineDeleteConcurrency: Int? = null
 
     /**
      * 流水线删除队列--- 并发小
      */
-    @Bean
-    fun pipelineDeleteQueue() = Queue(MQ.QUEUE_PIPELINE_DELETE)
-
-    @Bean
-    fun pipelineDeleteQueueBind(
-        @Autowired pipelineDeleteQueue: Queue,
-        @Autowired pipelineCoreExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineDeleteQueue)
-            .to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_DELETE)
+    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_DELETE, STREAM_CONSUMER_GROUP)
+    fun pipelineDeleteListener(
+        @Autowired deleteListener: MQPipelineDeleteListener
+    ): Consumer<Message<PipelineDeleteEvent>> {
+        return Consumer { event: Message<PipelineDeleteEvent> ->
+            deleteListener.run(event.payload)
+        }
     }
-
-    @Bean
-    fun pipelineDeleteListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineDeleteQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired deleteListener: MQPipelineDeleteListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineDeleteQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = deleteListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = pipelineDeleteConcurrency!!,
-            maxConcurrency = 50
-        )
-    }
-
-    @Value("\${queueConcurrency.pipelineUpdate:5}")
-    private val pipelineUpdateConcurrency: Int? = null
 
     /**
-     * 流水线更新队列--- 并发一般
+     * 流水线更新队列--- 并发小
      */
-    @Bean
-    fun pipelineUpdateQueue() = Queue(MQ.QUEUE_PIPELINE_UPDATE)
-
-    @Bean
-    fun pipelineUpdateQueueBind(
-        @Autowired pipelineUpdateQueue: Queue,
-        @Autowired pipelineCoreExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineUpdateQueue).to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_UPDATE)
+    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_UPDATE, STREAM_CONSUMER_GROUP)
+    fun pipelineUpdateListener(
+        @Autowired updateListener: MQPipelineUpdateListener
+    ): Consumer<Message<PipelineUpdateEvent>> {
+        return Consumer { event: Message<PipelineUpdateEvent> ->
+            updateListener.run(event.payload)
+        }
     }
-
-    @Bean
-    fun pipelineUpdateListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineUpdateQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired updateListener: MQPipelineUpdateListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineUpdateQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = updateListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = pipelineUpdateConcurrency!!,
-            maxConcurrency = 50
-        )
-    }
-
-    @Value("\${queueConcurrency.pipelineRestoreUpdate:2}")
-    private val pipelineRestoreConcurrency: Int? = null
 
     /**
      * 流水线恢复队列--- 并发一般
      */
-    @Bean
-    fun pipelineRestoreQueue() = Queue(MQ.QUEUE_PIPELINE_RESTORE)
-
-    @Bean
-    fun pipelineRestoreQueueBind(
-        @Autowired pipelineRestoreQueue: Queue,
-        @Autowired pipelineCoreExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineRestoreQueue).to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_RESTORE)
+    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_RESTORE, STREAM_CONSUMER_GROUP)
+    fun pipelineRestoreListener(
+        @Autowired restoreListener: MQPipelineRestoreListener
+    ): Consumer<Message<PipelineRestoreEvent>> {
+        return Consumer { event: Message<PipelineRestoreEvent> ->
+            restoreListener.run(event.payload)
+        }
     }
 
-    @Bean
-    fun pipelineRestoreListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineRestoreQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired restoreListener: MQPipelineRestoreListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
 
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineRestoreQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = restoreListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = pipelineRestoreConcurrency!!,
-            maxConcurrency = 50
-        )
-    }
-
-    /**
-     * 声明 流水线设置变更 事件交换机
-     */
-    @Bean
-    @ConditionalOnMissingBean(name = ["pipelineSettingChangeExchange"])
-    fun pipelineSettingChangeExchange(): FanoutExchange {
-        val pipelineSettingChangeExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_SETTING_CHANGE_FANOUT, true, false)
-        pipelineSettingChangeExchange.isDelayed = true
-        return pipelineSettingChangeExchange
-    }
 }

@@ -59,13 +59,13 @@ import java.util.stream.Collectors
 class RtxServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val rtxNotifyDao: RtxNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val configuration: Configuration
 ) : RtxService {
     private val logger = LoggerFactory.getLogger(RtxServiceImpl::class.java)
 
     override fun sendMqMsg(message: RtxNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, message)
+        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, message)
     }
 
     /**
@@ -134,7 +134,7 @@ class RtxServiceImpl @Autowired constructor(
             this.fromSysId = post.fromSysId
         }
 
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, rtxNotifyMessageWithOperation) { message ->
+        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, rtxNotifyMessageWithOperation) { message ->
             var delayTime = 0
             when (retryCount) {
                 1 -> delayTime = 30000

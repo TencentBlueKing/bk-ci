@@ -41,10 +41,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.stream.function.StreamBridge
 
 @RestResource
 class ExternalScmResourceImpl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) : ExternalScmResource {
 
     @Value("\${scm.external.tGit.hookSecret:}")
@@ -53,7 +54,7 @@ class ExternalScmResourceImpl @Autowired constructor(
     private val enableTGitWebhookSecret: Boolean = false
 
     override fun webHookCodeSvnCommit(event: String) =
-            Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, SvnWebhookEvent(requestContent = event)))
+            Result(CodeWebhookEventDispatcher.dispatchEvent(streamBridge, SvnWebhookEvent(requestContent = event)))
 
     override fun webHookCodeGitCommit(
         event: String,
@@ -63,7 +64,7 @@ class ExternalScmResourceImpl @Autowired constructor(
     ) =
         Result(
             CodeWebhookEventDispatcher.dispatchEvent(
-                rabbitTemplate = rabbitTemplate,
+                streamBridge = streamBridge,
                 event = GitWebhookEvent(
                     requestContent = body,
                     event = event,
@@ -73,7 +74,7 @@ class ExternalScmResourceImpl @Autowired constructor(
         )
 
     override fun webHookGitlabCommit(event: String) =
-        Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, GitlabWebhookEvent(requestContent = event)))
+        Result(CodeWebhookEventDispatcher.dispatchEvent(streamBridge, GitlabWebhookEvent(requestContent = event)))
 
     override fun webHookCodeTGitCommit(
         event: String,
@@ -94,7 +95,7 @@ class ExternalScmResourceImpl @Autowired constructor(
         }
         return Result(
             CodeWebhookEventDispatcher.dispatchEvent(
-                rabbitTemplate = rabbitTemplate,
+                streamBridge = streamBridge,
                 event = TGitWebhookEvent(
                     requestContent = body,
                     event = event,
@@ -108,7 +109,7 @@ class ExternalScmResourceImpl @Autowired constructor(
         logger.info("p4 webhook|$body")
         return Result(
             CodeWebhookEventDispatcher.dispatchEvent(
-                rabbitTemplate = rabbitTemplate,
+                streamBridge = streamBridge,
                 event = P4WebhookEvent(
                     requestContent = body
                 )

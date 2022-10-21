@@ -34,10 +34,10 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 object StreamRequestDispatcher {
     private val logger = LoggerFactory.getLogger(StreamRequestDispatcher::class.java)
 
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: StreamRequestEvent) {
+    fun dispatch(streamBridge: StreamBridge, event: StreamRequestEvent) {
         try {
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
+            streamBridge.convertAndSend(eventType.exchange, eventType.routeKey, event)
         } catch (e: Throwable) {
             logger.error("BKSystemErrorMonitor|StreamRequestDispatcher|error", e)
         }

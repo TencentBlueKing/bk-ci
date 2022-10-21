@@ -28,7 +28,7 @@
 package com.tencent.devops.store.configuration
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.store.listener.StorePipelineBuildFinishListener
 import org.springframework.amqp.core.Binding
@@ -82,7 +82,7 @@ class StoreMQConfiguration {
     }
 
     @Bean
-    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
     @Bean
     fun pipelineBuildStoreListenerContainer(

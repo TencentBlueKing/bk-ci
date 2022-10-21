@@ -27,7 +27,7 @@
 
 dependencies {
     api(project(":core:common:common-api"))
-    api(project(":core:common:common-event"))
+    api(project(":core:common:common-stream"))
     api(project(":core:common:common-pipeline"))
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-auth:common-auth-api"))

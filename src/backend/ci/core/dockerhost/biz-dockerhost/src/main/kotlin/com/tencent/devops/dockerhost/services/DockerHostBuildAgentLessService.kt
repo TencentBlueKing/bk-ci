@@ -34,11 +34,9 @@ import com.github.dockerjava.api.model.BlkioRateDevice
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Volume
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.DockerEnv
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
@@ -65,8 +63,7 @@ import org.springframework.stereotype.Service
 class DockerHostBuildAgentLessService(
     dockerHostBuildApi: DockerHostBuildResourceApi,
     private val dockerHostConfig: DockerHostConfig,
-    private val dockerHostWorkSpaceService: DockerHostWorkSpaceService,
-    private val alertApi: AlertApi
+    private val dockerHostWorkSpaceService: DockerHostWorkSpaceService
 ) : AbstractDockerHostBuildService(dockerHostConfig, dockerHostBuildApi) {
 
     override fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String {
@@ -89,10 +86,6 @@ class DockerHostBuildAgentLessService(
             )
         } catch (ignored: Throwable) {
             logger.error("[${dockerHostBuildInfo.buildId}]| create Container failed ", ignored)
-            alertApi.alert(
-                AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
-                        "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${ignored.message}"
-            )
             throw ContainerException(
                 errorCodeEnum = ErrorCodeEnum.CREATE_CONTAINER_ERROR,
                 message = "[${dockerHostBuildInfo.buildId}]|Create container failed"

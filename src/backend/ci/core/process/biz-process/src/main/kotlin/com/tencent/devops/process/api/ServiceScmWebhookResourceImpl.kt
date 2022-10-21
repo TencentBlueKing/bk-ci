@@ -52,7 +52,7 @@ class ServiceScmWebhookResourceImpl @Autowired constructor(
 ) : ServiceScmWebhookResource {
     override fun webHookCodeGithubCommit(webhook: GithubWebhook): Result<Boolean> {
         return Result(CodeWebhookEventDispatcher.dispatchGithubEvent(
-            rabbitTemplate = rabbitTemplate,
+            streamBridge = streamBridge,
             event = GithubWebhookEvent(githubWebhook = webhook)
         ))
     }

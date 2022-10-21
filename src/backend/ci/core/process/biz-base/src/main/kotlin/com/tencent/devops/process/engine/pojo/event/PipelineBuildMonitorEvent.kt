@@ -27,11 +27,11 @@
 
 package com.tencent.devops.process.engine.pojo.event
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.stream.enums.ActionType
 
 /**
  * 构建任务监视： 状态，进度等，如发现卡死做一定策略停止
@@ -39,7 +39,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
  * @version 1.0
  */
 @Suppress("MagicNumber")
-@Event(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, MQ.ROUTE_PIPELINE_BUILD_MONITOR, 20000)
+@Event(StreamBinding.EXCHANGE_PIPELINE_MONITOR_DIRECT, 20000)
 data class PipelineBuildMonitorEvent(
     override val source: String,
     override val projectId: String,

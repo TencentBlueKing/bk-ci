@@ -46,7 +46,7 @@ import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
-import com.tencent.devops.process.service.measure.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.process.template.service.TemplateService
 import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
@@ -63,7 +63,7 @@ class MeasureServiceImpl constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val atomMonitorSwitch: String,
     private val maxMonitorDataSize: String = "1677216",
-    private val measureEventDispatcher: MeasureEventDispatcher
+    private val measureEventDispatcher: SampleEventDispatcher
 ) : MeasureService {
 
     override fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String) {

@@ -29,13 +29,13 @@ package com.tencent.devops.plugin.api.pojo
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.enums.ActionType
 
 /**
  * webhook锁事件
  */
-@Event(MQ.EXCHANGE_GIT_WEBHOOK_UNLOCK_EVENT, MQ.ROUTE_GIT_WEBHOOK_UNLOCK_EVENT)
+@Event(MQ.ROUTE_GIT_WEBHOOK_UNLOCK_EVENT)
 data class GitWebhookUnlockEvent(
     override val projectId: String = "",
     override val pipelineId: String = "",

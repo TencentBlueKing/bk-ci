@@ -27,12 +27,12 @@
 
 package com.tencent.devops.process.pojo.mq
 
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.stream.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.event.annotation.Event
 
-@Event(MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT, MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
+@Event(MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
 data class PipelineBuildLessShutdownDispatchEvent(
     override val source: String,
     override val projectId: String,

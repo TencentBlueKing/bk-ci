@@ -45,7 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.dao.PipelineStageTagDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.process.service.measure.MeasureEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit
 @RefreshScope
 class MetricsServiceImpl constructor(
     private val pipelineInfoDao: PipelineInfoDao,
-    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val measureEventDispatcher: SampleEventDispatcher,
     private val dslContext: DSLContext,
     private val pipelineStageTagDao: PipelineStageTagDao
 ) : MetricsService {

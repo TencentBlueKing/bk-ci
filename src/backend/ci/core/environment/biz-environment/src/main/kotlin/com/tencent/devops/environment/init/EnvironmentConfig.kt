@@ -44,5 +44,5 @@ class EnvironmentConfig {
     fun agentUrlService(commonConfig: CommonConfig) = BluekingAgentUrlServiceImpl(commonConfig)
 
     @Bean
-    fun webSocketDispatcher(rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
+    fun webSocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
 }

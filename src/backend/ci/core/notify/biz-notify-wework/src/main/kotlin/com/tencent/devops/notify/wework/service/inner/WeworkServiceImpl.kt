@@ -71,7 +71,7 @@ import java.util.concurrent.TimeUnit
 class WeworkServiceImpl(
     private val weWorkConfiguration: WeworkConfiguration,
     private val weworkNotifyDao: WeworkNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val redisOperation: RedisOperation
 ) : WeworkService {
 
@@ -84,7 +84,7 @@ class WeworkServiceImpl(
     }
 
     override fun sendMqMsg(message: WeworkNotifyMessageWithOperation) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WEWORK, message)
+        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WEWORK, message)
     }
 
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {

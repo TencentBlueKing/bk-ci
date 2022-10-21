@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 dependencies {
-    api(project(":core:common:common-event"))
+    api(project(":core:common:common-stream"))
     api(project(":core:common:common-client"))
     api(project(":core:process:api-process"))
     api(project(":core:monitoring:api-monitoring"))

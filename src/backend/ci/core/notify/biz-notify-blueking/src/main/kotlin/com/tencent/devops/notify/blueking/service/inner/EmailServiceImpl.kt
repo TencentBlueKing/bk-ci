@@ -59,14 +59,14 @@ import java.util.stream.Collectors
 class EmailServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val emailNotifyDao: EmailNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val configuration: Configuration
 ) : EmailService {
 
     private val logger = LoggerFactory.getLogger(EmailServiceImpl::class.java)
 
     override fun sendMqMsg(message: EmailNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, message)
+        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, message)
     }
 
     override fun sendMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
@@ -142,7 +142,7 @@ class EmailServiceImpl @Autowired constructor(
             tofSysId = post.tofSysId
             fromSysId = post.fromSysId
         }
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, emailNotifyMessageWithOperation) { message ->
+        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, emailNotifyMessageWithOperation) { message ->
             var delayTime = 0
             when (retryCount) {
                 1 -> delayTime = 30000

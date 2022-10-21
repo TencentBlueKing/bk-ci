@@ -28,10 +28,10 @@
 package com.tencent.devops.auth.refresh.event
 
 import com.tencent.devops.auth.entity.UserChangeType
-import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.stream.constants.StreamBinding
 
-@StreamEvent(destination = StreamBinding.EXCHANGE_AUTH_REFRESH_FANOUT)
+@Event(destination = StreamBinding.EXCHANGE_AUTH_REFRESH_FANOUT)
 data class ManagerUserChangeEvent(
     override val refreshType: String,
     val userChangeType: UserChangeType,

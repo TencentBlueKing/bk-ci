@@ -27,11 +27,11 @@
 
 package com.tencent.devops.websocket.event
 
-import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.dispatch.push.TransferPush
 
-@StreamEvent(destination = StreamBinding.BINDING_WEBSOCKET_SESSION_CLEAR_DESTINATION)
+@Event(destination = StreamBinding.BINDING_WEBSOCKET_SESSION_CLEAR_DESTINATION)
 class ClearSessionEvent(
     val sessionId: String,
     override val eventName: String? = "clearSession",

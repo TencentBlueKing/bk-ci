@@ -64,7 +64,7 @@ import org.springframework.stereotype.Service
 class StreamTriggerRequestService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val actionFactory: EventActionFactory,
     private val streamGitConfig: StreamGitConfig,
     private val streamTriggerCache: StreamTriggerCache,
@@ -322,7 +322,7 @@ class StreamTriggerRequestService @Autowired constructor(
         trigger: String?
     ) = when (streamGitConfig.getScmType()) {
         ScmType.CODE_GIT -> StreamTriggerDispatch.dispatch(
-            rabbitTemplate = rabbitTemplate,
+            streamBridge = streamBridge,
             event = StreamTriggerEvent(
                 eventStr = if (action.metaData.streamObjectKind == StreamObjectKind.REVIEW) {
                     objectMapper.writeValueAsString(

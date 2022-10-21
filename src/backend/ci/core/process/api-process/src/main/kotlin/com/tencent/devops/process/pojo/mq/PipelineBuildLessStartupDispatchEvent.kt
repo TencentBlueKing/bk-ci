@@ -28,13 +28,13 @@
 package com.tencent.devops.process.pojo.mq
 
 import com.tencent.devops.common.api.pojo.Zone
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.stream.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.event.annotation.Event
 
-@Event(MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT, MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
+@Event(MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
 data class PipelineBuildLessStartupDispatchEvent(
     override val source: String,
     override val projectId: String,

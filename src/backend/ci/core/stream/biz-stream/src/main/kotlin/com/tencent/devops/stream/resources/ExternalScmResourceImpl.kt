@@ -60,7 +60,7 @@ class ExternalScmResourceImpl @Autowired constructor(
             event
         }
         StreamRequestDispatcher.dispatch(
-            rabbitTemplate = rabbitTemplate,
+            streamBridge = streamBridge,
             event = StreamRequestEvent(
                 eventType = eventType,
                 event = body

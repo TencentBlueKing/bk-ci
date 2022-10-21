@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.websocket.dispatch
 
-import com.tencent.devops.common.stream.dispatcher.EventDispatcher
+import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import org.slf4j.LoggerFactory

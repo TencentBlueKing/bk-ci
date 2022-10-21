@@ -27,112 +27,47 @@
 
 package com.tencent.devops.process.engine.init
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.listener.run.PipelineWebHookQueueListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class PipelineWebHookQueueConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean(name = ["pipelineBuildStartFanoutExchange"])
-    fun pipelineBuildStartFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_START_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
+    companion object {
+        private const val STREAM_CONSUMER_GROUP = "process-service"
     }
 
-    @Bean
-    fun webHookQueueBuildStartQueue(): Queue {
-        return Queue(MQ.QUEUE_PIPELINE_BUILD_START_WEBHOOK_QUEUE)
+    /**
+     * webhook构建触发广播监听
+     */
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_START_FANOUT, STREAM_CONSUMER_GROUP)
+    fun webHookQueueBuildStartListener(
+        @Autowired buildListener: PipelineWebHookQueueListener
+    ): Consumer<Message<PipelineBuildStartBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildStartBroadCastEvent> ->
+            buildListener.onBuildStart(event.payload)
+        }
     }
 
-    @Bean
-    fun webHookQueueBuildStartBind(
-        @Autowired webHookQueueBuildStartQueue: Queue,
-        @Autowired pipelineBuildStartFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(webHookQueueBuildStartQueue).to(pipelineBuildStartFanoutExchange)
-    }
-
-    @Bean
-    fun webHookQueueBuildStartListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired webHookQueueBuildStartQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: PipelineWebHookQueueListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildListener, PipelineWebHookQueueListener::onBuildStart.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = webHookQueueBuildStartQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 10
-        )
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(name = ["pipelineBuildFanoutExchange"])
-    fun pipelineBuildFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun webHookQueueBuildFinishQueue(): Queue {
-        return Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_WEBHOOK_QUEUE)
-    }
-
-    @Bean
-    fun webHookQueueBuildFinishBind(
-        @Autowired webHookQueueBuildFinishQueue: Queue,
-        @Autowired pipelineBuildFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(webHookQueueBuildFinishQueue).to(pipelineBuildFanoutExchange)
-    }
-
-    @Bean
-    fun webHookQueueBuildFinishListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired webHookQueueBuildFinishQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: PipelineWebHookQueueListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildListener, PipelineWebHookQueueListener::onBuildFinish.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = webHookQueueBuildFinishQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 10
-        )
+    /**
+     * webhook构建结束广播监听
+     */
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    fun webHookQueueBuildFinishListener(
+        @Autowired buildListener: PipelineWebHookQueueListener
+    ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildFinishBroadCastEvent> ->
+            buildListener.onBuildFinish(event.payload)
+        }
     }
 }

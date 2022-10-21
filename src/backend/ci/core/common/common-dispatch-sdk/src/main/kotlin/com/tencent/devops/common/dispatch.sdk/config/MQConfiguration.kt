@@ -69,11 +69,6 @@ class MQConfiguration @Autowired constructor() {
     @Value("\${dispatch.agentStartQueue.maxConcurrency:100}")
     private val agentStartQueueMaxConcurrency: Int = 100
 
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
     /**
      * 构建启动广播交换机
      */

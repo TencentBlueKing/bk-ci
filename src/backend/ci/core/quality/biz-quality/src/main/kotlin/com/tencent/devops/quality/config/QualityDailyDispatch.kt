@@ -38,7 +38,7 @@ import javax.annotation.Resource
 
 @Component
 class QualityDailyDispatch constructor(
-    @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME) private val rabbitTemplate: RabbitTemplate
+    @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME) private val streamBridge: StreamBridge
 ) : EventDispatcher<QualityReportEvent> {
 
     companion object {
@@ -51,7 +51,7 @@ class QualityDailyDispatch constructor(
                 val eventType = event::class.java.annotations.find { s -> s is Event } as Event
                 val routeKey = eventType.routeKey
                 logger.info("[${eventType.exchange}|$routeKey|${event.projectId} dispatch the refresh event")
-                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
+                streamBridge.convertAndSend(eventType.exchange, routeKey, event) { message ->
                     if (eventType.delayMills > 0) { // 事件类型固化默认值
                         message.messageProperties.setHeader("x-delay", eventType.delayMills)
                     }

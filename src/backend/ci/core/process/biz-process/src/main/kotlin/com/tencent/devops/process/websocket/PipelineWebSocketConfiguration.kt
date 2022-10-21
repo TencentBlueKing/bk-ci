@@ -27,22 +27,13 @@
 
 package com.tencent.devops.process.websocket
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.websocket.listener.PipelineWebSocketListener
 import com.tencent.devops.process.websocket.page.DefaultDetailPageBuild
 import com.tencent.devops.process.websocket.page.DefaultHistoryPageBuild
 import com.tencent.devops.process.websocket.page.DefaultStatusPageBuild
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -50,6 +41,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 /**
  * 流水线websocket扩展配置
@@ -59,51 +52,20 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class PipelineWebSocketConfiguration {
 
-    @Bean
-    fun webSocketDispatcher(@Autowired rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
-
-    @Bean
-    @ConditionalOnMissingBean(name = ["pipelineMonitorExchange"])
-    fun pipelineMonitorExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
+    companion object {
+        private const val STREAM_CONSUMER_GROUP = "process-service"
     }
 
-    @Bean
-    fun pipelineBuildWebSocketQueue(): Queue {
-        return Queue(MQ.QUEUE_PIPELINE_BUILD_WEBSOCKET)
-    }
-
-    @Bean
-    fun pipelineBuildWebSocketQueueBind(
-        @Autowired pipelineBuildWebSocketQueue: Queue,
-        @Autowired pipelineMonitorExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildWebSocketQueue)
-            .to(pipelineMonitorExchange).with(MQ.ROUTE_PIPELINE_BUILD_WEBSOCKET)
-    }
-
-    @Bean
-    fun pipelineWebSocketListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildWebSocketQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired pipelineWebSocketListener: PipelineWebSocketListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildWebSocketQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = pipelineWebSocketListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 20
-        )
+    /**
+     * webhook构建触发广播监听
+     */
+    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_WEBSOCKET, STREAM_CONSUMER_GROUP)
+    fun notifyQueueBuildFinishListener(
+        @Autowired pipelineWebSocketListener: PipelineWebSocketListener
+    ): Consumer<Message<PipelineBuildWebSocketPushEvent>> {
+        return Consumer { event: Message<PipelineBuildWebSocketPushEvent> ->
+            pipelineWebSocketListener.run(event.payload)
+        }
     }
 
     @Bean

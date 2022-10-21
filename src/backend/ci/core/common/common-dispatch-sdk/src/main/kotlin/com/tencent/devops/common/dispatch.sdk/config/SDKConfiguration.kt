@@ -29,7 +29,7 @@ package com.tencent.devops.common.dispatch.sdk.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -67,7 +67,7 @@ class SDKConfiguration {
         JobQuotaService(client, buildLogPrinter)
 
     @Bean
-    fun pipelineEventDispatcher(@Autowired rabbitTemplate: RabbitTemplate): PipelineEventDispatcher {
-        return MQEventDispatcher(rabbitTemplate)
+    fun pipelineEventDispatcher(@Autowired streamBridge: StreamBridge): PipelineEventDispatcher {
+        return MQEventDispatcher(streamBridge)
     }
 }

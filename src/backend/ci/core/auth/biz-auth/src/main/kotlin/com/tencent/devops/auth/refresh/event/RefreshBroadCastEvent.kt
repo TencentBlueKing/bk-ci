@@ -28,7 +28,7 @@
 package com.tencent.devops.auth.refresh.event
 
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.common.stream.pojo.IEvent
+import com.tencent.devops.common.event.pojo.IEvent
 import org.slf4j.MDC
 
 open class RefreshBroadCastEvent(

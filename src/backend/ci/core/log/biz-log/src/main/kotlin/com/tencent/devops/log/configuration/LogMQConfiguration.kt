@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.configuration
 
-import com.tencent.devops.common.stream.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent

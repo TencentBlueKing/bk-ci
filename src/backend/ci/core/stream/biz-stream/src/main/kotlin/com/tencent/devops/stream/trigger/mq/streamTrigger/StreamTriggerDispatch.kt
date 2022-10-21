@@ -32,14 +32,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 object StreamTriggerDispatch {
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: StreamTriggerEvent) {
+    fun dispatch(streamBridge: StreamBridge, event: StreamTriggerEvent) {
         try {
             logger.info(
                 "StreamTriggerDispatch|${event.actionContext.pipeline?.pipelineId}" +
                     "|${event.actionContext.pipeline?.filePath}"
             )
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
+            streamBridge.convertAndSend(eventType.exchange, eventType.routeKey, event)
         } catch (e: Throwable) {
             logger.error("BKSystemErrorMonitor|StreamTriggerDispatch|error:", e)
         }

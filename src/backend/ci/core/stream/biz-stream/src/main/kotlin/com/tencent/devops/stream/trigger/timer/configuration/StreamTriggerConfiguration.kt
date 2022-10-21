@@ -28,10 +28,9 @@
 package com.tencent.devops.stream.trigger.timer.configuration
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.timer.SchedulerManager
 import com.tencent.devops.stream.trigger.timer.listener.StreamTimerBuildListener
@@ -83,7 +82,7 @@ class StreamTriggerConfiguration {
     fun schedulerManager() = QuartzSchedulerManager()
 
     @Bean
-    fun streamEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
+    fun streamEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
     @Value("\${queueConcurrency.timerTrigger:5}")
     private val timerConcurrency: Int? = null

@@ -36,15 +36,15 @@ class StoreWebsocketConfiguration {
 
 /*    @Bean
     fun getWebsocketPushDispatcher(
-        rabbitTemplate: RabbitTemplate
+        streamBridge: StreamBridge
     ): WebsocketPushDispatcher {
-        return WebsocketPushDispatcher(rabbitTemplate)
+        return WebsocketPushDispatcher(streamBridge)
     }*/
 
     @Bean
     fun getWebSocketDispatcher(
-        rabbitTemplate: RabbitTemplate
+        streamBridge: StreamBridge
     ): WebSocketDispatcher {
-        return WebSocketDispatcher(rabbitTemplate)
+        return WebSocketDispatcher(streamBridge)
     }
 }

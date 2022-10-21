@@ -28,7 +28,7 @@
 package com.tencent.devops.common.websocket.dispatch.push
 
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.stream.pojo.IEvent
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType

@@ -39,7 +39,7 @@ import java.lang.Exception
 
 @Component
 class ProjectDispatcher @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
+    private val streamBridge: StreamBridge
 ) : EventDispatcher<ProjectBroadCastEvent> {
 
     companion object {
@@ -56,7 +56,7 @@ class ProjectDispatcher @Autowired constructor(
                     } else {
                         eventType.routeKey
                     }
-                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
+                streamBridge.convertAndSend(eventType.exchange, routeKey, event) { message ->
                     when {
                         event.delayMills > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
                         eventType.delayMills > 0 -> // 事件类型固化默认值
@@ -64,6 +64,7 @@ class ProjectDispatcher @Autowired constructor(
                     }
                     message
                 }
+
             } catch (ignored: Exception) {
                 logger.error("Fail to dispatch the event($events)", ignored)
             }

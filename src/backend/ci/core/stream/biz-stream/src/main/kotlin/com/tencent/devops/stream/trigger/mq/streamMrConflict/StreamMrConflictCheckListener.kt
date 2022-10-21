@@ -48,7 +48,7 @@ class StreamMrConflictCheckListener @Autowired
 constructor(
     private val mergeConflictCheck: MergeConflictCheck,
     private val streamTriggerRequestService: StreamTriggerRequestService,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val exHandler: StreamTriggerExceptionHandler,
     private val actionFactory: EventActionFactory
 ) {
@@ -98,7 +98,7 @@ constructor(
                         "event [${action.data.eventCommon}|${checkEvent.retryTime}]"
                 )
                 checkEvent.retryTime--
-                StreamMrConflictCheckDispatcher.dispatch(rabbitTemplate, checkEvent)
+                StreamMrConflictCheckDispatcher.dispatch(streamBridge, checkEvent)
             } else {
                 if (isTrigger) {
                     exHandler.handle(action) {

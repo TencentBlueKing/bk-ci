@@ -31,7 +31,7 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
+@Event(destination = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
 data class ProjectCreateBroadCastEvent(
     override val userId: String,
     override val projectId: String,

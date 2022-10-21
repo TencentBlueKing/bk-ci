@@ -1,8 +1,8 @@
 package com.tencent.devops.log.util
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.common.stream.annotation.StreamEventConsumer
-import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.Event
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.reflections.Reflections
@@ -46,12 +46,12 @@ class IndexNameUtilsTest {
             ConfigurationBuilder()
                 .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
                 .setExpandSuperTypes(true)
-        ).getTypesAnnotatedWith(StreamEvent::class.java)
+        ).getTypesAnnotatedWith(Event::class.java)
         eventClasses.forEach { clazz ->
-            val streamEvent = clazz.getAnnotation(StreamEvent::class.java)
+            val event = clazz.getAnnotation(Event::class.java)
             println(
                 "Found StreamEvent class: ${clazz.name}, " +
-                    "with destination[${streamEvent.destination}]"
+                    "with destination[${event.destination}]"
             )
             val bindingName = "${clazz.simpleName.decapitalize()}Out"
             definition.add(bindingName)

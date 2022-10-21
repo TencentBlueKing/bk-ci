@@ -53,7 +53,7 @@ import org.springframework.stereotype.Component
 class MergeConflictCheck @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val streamEventService: StreamEventService,
     private val streamGitConfig: StreamGitConfig
@@ -198,6 +198,6 @@ class MergeConflictCheck @Autowired constructor(
     }
 
     private fun dispatchMrConflictCheck(event: StreamMrConflictCheckEvent) {
-        StreamMrConflictCheckDispatcher.dispatch(rabbitTemplate, event)
+        StreamMrConflictCheckDispatcher.dispatch(streamBridge, event)
     }
 }

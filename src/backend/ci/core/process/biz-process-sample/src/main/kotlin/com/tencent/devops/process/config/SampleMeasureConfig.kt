@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.config
 
-import com.tencent.devops.process.service.measure.MeasureEventDispatcher
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -36,5 +36,5 @@ import org.springframework.context.annotation.Configuration
 class SampleMeasureConfig {
 
     @Bean
-    fun measureEventDispatcher(rabbitTemplate: RabbitTemplate) = MeasureEventDispatcher(rabbitTemplate)
+    fun measureEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
 }

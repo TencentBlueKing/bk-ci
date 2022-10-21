@@ -66,7 +66,7 @@ class SmsServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(SmsServiceImpl::class.java)
 
     override fun sendMqMsg(message: SmsNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, message)
+        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, message)
     }
 
     override fun sendMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
@@ -148,7 +148,7 @@ class SmsServiceImpl @Autowired constructor(
             tofSysId = post.tofSysId
             fromSysId = post.fromSysId
         }
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, smsNotifyMessageWithOperation) { message ->
+        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, smsNotifyMessageWithOperation) { message ->
             var delayTime = 0
             when (retryCount) {
                 1 -> delayTime = 30000

@@ -27,9 +27,9 @@
 
 package com.tencent.devops.process.websocket.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent

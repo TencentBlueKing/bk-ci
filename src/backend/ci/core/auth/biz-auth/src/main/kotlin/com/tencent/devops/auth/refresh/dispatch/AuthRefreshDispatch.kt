@@ -28,7 +28,7 @@
 package com.tencent.devops.auth.refresh.dispatch
 
 import com.tencent.devops.auth.refresh.event.RefreshBroadCastEvent
-import com.tencent.devops.common.stream.dispatcher.EventDispatcher
+import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.beans.factory.annotation.Autowired

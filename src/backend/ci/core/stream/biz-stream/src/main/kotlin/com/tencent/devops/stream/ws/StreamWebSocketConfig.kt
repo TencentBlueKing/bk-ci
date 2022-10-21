@@ -36,5 +36,5 @@ import org.springframework.context.annotation.Configuration
 class StreamWebSocketConfig {
 
     @Bean
-    fun webSocketDispatcher(rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
+    fun webSocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
 }

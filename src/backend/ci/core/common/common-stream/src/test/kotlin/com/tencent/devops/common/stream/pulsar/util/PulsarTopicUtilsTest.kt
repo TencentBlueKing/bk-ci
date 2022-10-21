@@ -1,6 +1,6 @@
 package com.tencent.devops.common.stream.pulsar.util
 
-import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.event.annotation.Event
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.reflections.Reflections
@@ -37,13 +37,13 @@ internal class PulsarTopicUtilsTest {
                 .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
                 .setExpandSuperTypes(true)
         )
-        val re = reflections.getTypesAnnotatedWith(StreamEvent::class.java)
+        val re = reflections.getTypesAnnotatedWith(Event::class.java)
         println(re)
         re.forEach { clazz ->
-            val streamEvent = clazz.getAnnotation(StreamEvent::class.java)
+            val event = clazz.getAnnotation(Event::class.java)
             println(
                 "Found StreamEvent class: ${clazz.canonicalName}, " +
-                    "with destination[${streamEvent.destination}]"
+                    "with destination[${event.destination}]"
             )
         }
     }

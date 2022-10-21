@@ -28,8 +28,12 @@
 package com.tencent.devops.process.engine.init
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.listener.run.finish.SubPipelineBuildFinishListener
+import com.tencent.devops.process.engine.listener.run.monitor.PipelineBuildMonitorListener
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -43,121 +47,28 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 /**
  * 流水线构建扩展配置
  */
 @Configuration
-@SuppressWarnings("TooManyFunctions")
 class BuildEngineExtendConfiguration {
 
-    /**
-     * 流水线扩展行为订阅广播
-     */
-    @Bean
-    fun pipelineExtendsFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_EXTENDS_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
+    companion object {
+        private const val STREAM_CONSUMER_GROUP = "engine-service"
     }
 
     /**
-     * 构建排队广播交换机
+     * 子流水线完成事件监听
      */
-    @Bean
-    fun pipelineBuildQueueFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    /**
-     * 构建启动广播交换机
-     */
-    @Bean
-    fun pipelineBuildStartFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_START_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    /**
-     * 插件构建完成广播交换机
-     */
-    @Bean
-    fun pipelineBuildElementFinishFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun measureExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_MEASURE_REQUEST_EVENT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    /**
-     * 构建结束广播交换机
-     */
-    @Bean
-    fun pipelineBuildFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    /**
-     * 构建构建回调广播交换机
-     */
-    @Bean
-    @ConditionalOnMissingBean(name = ["pipelineBuildStatusCallbackFanoutExchange"])
-    fun pipelineBuildStatusCallbackFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun pipelineBuildCommitFinishFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_COMMIT_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun subPipelineBuildStatusQueue(): Queue {
-        return Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_SUBPIPEINE)
-    }
-
-    @Bean
-    fun subPipelineBuildFinishQueueBind(
-        @Autowired subPipelineBuildStatusQueue: Queue,
-        @Autowired pipelineBuildFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(subPipelineBuildStatusQueue).to(pipelineBuildFanoutExchange)
-    }
-
-    @Bean
-    fun subPipelineBuildFinishListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired subPipelineBuildStatusQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: SubPipelineBuildFinishListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = subPipelineBuildStatusQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = buildListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 10
-        )
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    fun subPipelineBuildFinishListener(
+        @Autowired buildListener: SubPipelineBuildFinishListener
+    ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildFinishBroadCastEvent> ->
+            buildListener.run(event.payload)
+        }
     }
 }

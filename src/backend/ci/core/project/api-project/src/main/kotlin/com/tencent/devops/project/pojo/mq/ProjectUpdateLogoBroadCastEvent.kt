@@ -30,7 +30,7 @@ package com.tencent.devops.project.pojo.mq
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_UPDATE_LOGO_FANOUT)
+@Event(destination = MQ.EXCHANGE_PROJECT_UPDATE_LOGO_FANOUT)
 data class ProjectUpdateLogoBroadCastEvent(
     override val userId: String,
     override val projectId: String,

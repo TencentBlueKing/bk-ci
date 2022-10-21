@@ -26,7 +26,7 @@
  */
 package com.tencent.devops.stream.trigger.mq.streamTrigger
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.stream.constant.MQ
 import org.springframework.amqp.core.Binding
@@ -52,7 +52,7 @@ class StreamTriggerMQConfig {
     }
 
     @Bean
-    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
     /**
      * 构建结束广播交换机

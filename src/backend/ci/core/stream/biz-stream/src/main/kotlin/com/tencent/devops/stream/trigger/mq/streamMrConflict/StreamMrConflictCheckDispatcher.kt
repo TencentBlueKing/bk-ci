@@ -33,11 +33,11 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 object StreamMrConflictCheckDispatcher {
 
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: StreamMrConflictCheckEvent) {
+    fun dispatch(streamBridge: StreamBridge, event: StreamMrConflictCheckEvent) {
         try {
             logger.info("StreamMrConflictCheckDispatcher|dispatch|event|${event.actionCommonData}")
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
+            streamBridge.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
                 message.messageProperties.setHeader("x-delay", event.delayMills)
                 message
             }

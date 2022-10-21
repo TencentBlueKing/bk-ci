@@ -27,20 +27,13 @@
 
 package com.tencent.devops.process.notify
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 /**
  * 流水线扩展通知配置
@@ -48,46 +41,19 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class PipelineExtendsNotifyConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean(name = ["pipelineMonitorExchange"])
-    fun pipelineMonitorExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
+    companion object {
+        private const val STREAM_CONSUMER_GROUP = "process-service"
     }
 
-    @Bean
-    fun pipelineBuildNotifyQueue(): Queue {
-        return Queue(MQ.QUEUE_PIPELINE_BUILD_NOTIFY)
-    }
-
-    @Bean
-    fun pipelineBuildNotifyQueueBind(
-        @Autowired pipelineBuildNotifyQueue: Queue,
-        @Autowired pipelineMonitorExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildNotifyQueue).to(pipelineMonitorExchange)
-            .with(MQ.ROUTE_PIPELINE_BUILD_NOTIFY)
-    }
-
-    @Bean
-    fun pipelineBuildNotifyListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildNotifyQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired pipelineBuildNotifyListener: PipelineBuildNotifyListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildNotifyQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = pipelineBuildNotifyListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 10
-        )
+    /**
+     * webhook构建触发广播监听
+     */
+    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_NOTIFY, STREAM_CONSUMER_GROUP)
+    fun pipelineBuildNotifyListener(
+        @Autowired pipelineBuildNotifyListener: PipelineBuildNotifyListener
+    ): Consumer<Message<PipelineBuildNotifyEvent>> {
+        return Consumer { event: Message<PipelineBuildNotifyEvent> ->
+            pipelineBuildNotifyListener.run(event.payload)
+        }
     }
 }
