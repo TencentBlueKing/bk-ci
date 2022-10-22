@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Bean
  * 这个类应该在最后加载,所以放到AutoConfiguration中初始化
  */
 @Suppress("ALL")
-class MockAuthConfiguration {
+class MockAuthCoreAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(DeptService::class)
     fun defaultDeptServiceImpl() = DefaultDeptServiceImpl()
