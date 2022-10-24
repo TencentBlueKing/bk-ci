@@ -169,7 +169,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Value("\${store.defaulAtomErrorCodoLength:6}")
     private var defaulAtomErrorCodoLength: Int = 6
 
-
     private var defaulAtomErrorCodoPrefix: String = "8"
 
     companion object {
