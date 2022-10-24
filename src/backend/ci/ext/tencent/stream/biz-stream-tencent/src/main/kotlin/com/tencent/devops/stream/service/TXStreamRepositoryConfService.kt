@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service
 class TXStreamRepositoryConfService @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamRepositoryConfDao: StreamRepositoryConfDao,
-)  {
+) {
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamRepositoryConfService::class.java)
     }
@@ -49,8 +49,10 @@ class TXStreamRepositoryConfService @Autowired constructor(
         newGitDomain: String,
         limitNumber: Int
     ): Int {
-        logger.info("TXStreamRepositoryConfService|updateGitDomain|oldGitDomain|$oldGitDomain"
-            + "|newGitDomain|$newGitDomain|limitNumber|$limitNumber")
+        logger.info(
+            "TXStreamRepositoryConfService|updateGitDomain|oldGitDomain|$oldGitDomain" +
+                "|newGitDomain|$newGitDomain|limitNumber|$limitNumber"
+        )
         val idList = streamRepositoryConfDao.getRepoByGitDomain(
             dslContext = dslContext,
             gitDomain = oldGitDomain,

@@ -27,22 +27,11 @@
 
 package com.tencent.devops.stream.dao
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.model.stream.tables.TGitBasicSetting
 import com.tencent.devops.model.stream.tables.TRepositoryConf
-import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
-import com.tencent.devops.stream.pojo.StreamBasicSetting
-import com.tencent.devops.stream.pojo.StreamCIInfo
-import com.tencent.devops.stream.pojo.TriggerReviewSetting
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class StreamRepositoryConfDao {

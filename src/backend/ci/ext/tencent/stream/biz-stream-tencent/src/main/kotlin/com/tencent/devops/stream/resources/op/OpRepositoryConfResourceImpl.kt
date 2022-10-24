@@ -2,10 +2,7 @@ package com.tencent.devops.stream.resources.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.op.OpGitCIBasicSettingResource
 import com.tencent.devops.stream.api.op.OpRepositoryConfResource
-import com.tencent.devops.stream.pojo.StreamBasicSetting
-import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.service.TXStreamRepositoryConfService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -28,6 +25,4 @@ class OpRepositoryConfResourceImpl @Autowired constructor(
             )
         )
     }
-
-
 }
