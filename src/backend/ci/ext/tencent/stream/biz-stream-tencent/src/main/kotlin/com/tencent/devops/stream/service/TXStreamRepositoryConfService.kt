@@ -38,7 +38,7 @@ import org.springframework.stereotype.Service
 @Service
 class TXStreamRepositoryConfService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val streamRepositoryConfDao: StreamRepositoryConfDao,
+    private val streamRepositoryConfDao: StreamRepositoryConfDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamRepositoryConfService::class.java)
