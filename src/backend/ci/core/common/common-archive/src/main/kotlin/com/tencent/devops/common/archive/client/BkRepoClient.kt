@@ -68,7 +68,6 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
-import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
 import com.tencent.devops.common.archive.util.closeQuietly
