@@ -267,6 +267,24 @@ interface ServiceArtifactoryResource {
         condition: CustomFileSearchCondition
     ): Result<List<String>>
 
+    @ApiOperation("获取自定义报告根目录Url")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/tasks/{taskId}/report/root")
+    @GET
+    fun getReportRootUrl(
+        @ApiParam("项目的英文名", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam(value = "任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String
+    ): Result<String>
+
     @ApiOperation("根据元数据获取文件")
     @Path("/projects/{projectId}/search")
     @POST

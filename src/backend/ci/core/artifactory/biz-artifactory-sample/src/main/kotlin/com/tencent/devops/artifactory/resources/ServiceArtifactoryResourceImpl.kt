@@ -154,6 +154,15 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
+    override fun getReportRootUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ): Result<String> {
+        return Result(archiveFileService.getReportRootUrl(projectId, pipelineId, buildId, taskId))
+    }
+
     override fun searchFile(
         userId: String,
         projectId: String,
