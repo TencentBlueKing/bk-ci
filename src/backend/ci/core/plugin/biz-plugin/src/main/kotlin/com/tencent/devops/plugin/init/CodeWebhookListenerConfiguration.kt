@@ -27,8 +27,14 @@
 
 package com.tencent.devops.plugin.init
 
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
+import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.plugin.listener.CodeWebhookListener
 import com.tencent.devops.plugin.listener.GitHubPullRequestListener
 import com.tencent.devops.plugin.listener.TGitCommitListener
@@ -48,6 +54,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 /**
  * 流水线监控配置
@@ -59,185 +67,54 @@ class CodeWebhookListenerConfiguration {
     companion object {
         private const val BUILD_MAX_CONCURRENT = 10
         private const val CHECK_MAX_CONCURRENT = 5
-    }
-
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
+        const val STREAM_CONSUMER_GROUP = "plugin-service"
     }
 
     @Bean
     fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
-    /**
-     * 构建结束广播交换机
-     */
-    @Bean
-    fun pipelineBuildFinishFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
     @Value("\${queueConcurrency.webhook:2}")
     private val webhookConcurrency: Int? = null
 
-    /**
-     * 构建结束的webhook队列--- 并发小
-     */
-    @Bean
-    fun buildFinishCodeWebhookQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_CODE_WEBHOOK)
-
-    @Bean
-    fun buildFinishCodeWebhookQueueBind(
-        @Autowired buildFinishCodeWebhookQueue: Queue,
-        @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(buildFinishCodeWebhookQueue).to(pipelineBuildFinishFanoutExchange)
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    fun codeWebhookFinishListener(
+        @Autowired listener: CodeWebhookListener
+    ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildFinishBroadCastEvent> ->
+            listener.onBuildFinished(event.payload)
+        }
     }
 
-    @Bean
-    fun codeWebhookFinishListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildFinishCodeWebhookQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: CodeWebhookListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, CodeWebhookListener::onBuildFinished.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = buildFinishCodeWebhookQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = webhookConcurrency!!,
-            maxConcurrency = BUILD_MAX_CONCURRENT
-        )
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, STREAM_CONSUMER_GROUP)
+    fun codeWebhookQueueListener(
+        @Autowired listener: CodeWebhookListener
+    ): Consumer<Message<PipelineBuildQueueBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildQueueBroadCastEvent> ->
+            listener.onBuildQueue(event.payload)
+        }
     }
-
-    @Bean
-    fun buildQueueCodeWebhookQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_QUEUE_CODE_WEBHOOK)
-
-    @Bean
-    fun buildQueueCodeWebhookQueueBind(
-        @Autowired buildQueueCodeWebhookQueue: Queue,
-        @Autowired pipelineBuildQueueFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(buildQueueCodeWebhookQueue).to(pipelineBuildQueueFanoutExchange)
-    }
-
-    @Bean
-    fun codeWebhookBuildQueueListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildQueueCodeWebhookQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: CodeWebhookListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, CodeWebhookListener::onBuildQueue.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = buildQueueCodeWebhookQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = webhookConcurrency!!,
-            maxConcurrency = BUILD_MAX_CONCURRENT
-        )
-    }
-
-    /**
-     * Git事件交换机
-     */
-    @Bean
-    fun gitCommitCheckExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_GIT_COMMIT_CHECK, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Value("\${queueConcurrency.webhook:1}")
-    private val gitCommitCheckConcurrency: Int? = null
 
     /**
      * gitcommit队列--- 并发小
      */
-    @Bean
-    fun gitCommitCheckQueue() = Queue(MQ.QUEUE_GIT_COMMIT_CHECK)
-
-    @Bean
-    fun gitCommitCheckQueueBind(
-        @Autowired gitCommitCheckQueue: Queue,
-        @Autowired gitCommitCheckExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(gitCommitCheckQueue).to(gitCommitCheckExchange)
-            .with(MQ.ROUTE_GIT_COMMIT_CHECK)
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, STREAM_CONSUMER_GROUP)
+    fun gitCommitCheckListener(
+        @Autowired listener: TGitCommitListener
+    ): Consumer<Message<GitCommitCheckEvent>> {
+        return Consumer { event: Message<GitCommitCheckEvent> ->
+            listener.execute(event.payload)
+        }
     }
-
-    @Bean
-    fun gitCommitCheckListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired gitCommitCheckQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: TGitCommitListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = gitCommitCheckQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = gitCommitCheckConcurrency!!,
-            maxConcurrency = CHECK_MAX_CONCURRENT
-        )
-    }
-
-    @Value("\${queueConcurrency.githubPr:1}")
-    private val githubPrConcurrency: Int? = null
 
     /**
      * github pr队列--- 并发小
      */
-    @Bean
-    fun githubPrQueue() = Queue(MQ.QUEUE_GITHUB_PR)
-
-    @Bean
-    fun githubPrQueueBind(
-        @Autowired githubPrQueue: Queue,
-        @Autowired gitCommitCheckExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(githubPrQueue).to(gitCommitCheckExchange)
-            .with(MQ.ROUTE_GITHUB_PR)
-    }
-
-    @Bean
-    fun githubPrQueueListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired githubPrQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: GitHubPullRequestListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = githubPrQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = githubPrConcurrency!!,
-            maxConcurrency = CHECK_MAX_CONCURRENT
-        )
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, STREAM_CONSUMER_GROUP)
+    fun githubPrQueueListener(
+        @Autowired listener: GitHubPullRequestListener
+    ): Consumer<Message<GithubPrEvent>> {
+        return Consumer { event: Message<GithubPrEvent> ->
+            listener.execute(event.payload)
+        }
     }
 }

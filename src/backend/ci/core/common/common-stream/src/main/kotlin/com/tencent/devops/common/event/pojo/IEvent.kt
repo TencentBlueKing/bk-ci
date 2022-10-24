@@ -59,7 +59,7 @@ open class IEvent(
         }
     }
 
-    private fun buildMessage(defaultMills: Int = 0): Message<com.tencent.devops.common.event.pojo.IEvent> {
+    private fun buildMessage(defaultMills: Int = 0): Message<IEvent> {
         val builder = MessageBuilder
             .withPayload(this)
         // 事件中的变量指定
