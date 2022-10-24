@@ -46,6 +46,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.REPO_CUSTOM
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -228,6 +229,18 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
+    }
+
+    override fun getReportRootUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ): Result<String> {
+        val url =
+            "${HomeHostUtil.innerApiHost()}/ms/artifactory/api-html/user/reports/" +
+                    "$projectId/$pipelineId/$buildId/$taskId"
+        return Result(url)
     }
 
     override fun searchFile(
