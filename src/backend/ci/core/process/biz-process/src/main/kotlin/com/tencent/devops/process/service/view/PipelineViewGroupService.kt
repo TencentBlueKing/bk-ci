@@ -642,6 +642,24 @@ class PipelineViewGroupService @Autowired constructor(
         return summaries
     }
 
+    fun listViewByPipelineId(userId: String, projectId: String, pipelineId: String): List<PipelineNewViewSummary> {
+        val viewGroupRecords = pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId)
+        val viewRecords = pipelineViewDao.list(dslContext, projectId, viewGroupRecords.map { it.viewId }.toSet())
+        return viewRecords.filter { it.isProject || it.createUser == userId }.map {
+            PipelineNewViewSummary(
+                id = HashUtil.encodeLongId(it.id),
+                projectId = it.projectId,
+                name = it.name,
+                projected = it.isProject,
+                createTime = it.createTime.timestamp(),
+                updateTime = it.updateTime.timestamp(),
+                creator = it.createUser,
+                viewType = it.viewType,
+                pipelineCount = 0
+            )
+        }
+    }
+
     private fun sortViews2Summary(
         projectId: String,
         userId: String,
