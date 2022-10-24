@@ -1320,7 +1320,11 @@ class PipelineListFacadeService @Autowired constructor(
                         null
                     }
                     it.webhookMessage = when (eventType) {
-                        CodeEventType.PUSH -> webhookInfo.webhookCommitId?.let { e -> "Commit [$e] pushed" }
+                        CodeEventType.PUSH -> webhookInfo.webhookCommitId?.let { e ->
+                            val endIndex = e.length.coerceAtLeast(7)
+                            "Commit [${e.substring(0, endIndex)}] pushed"
+                        }
+
                         CodeEventType.MERGE_REQUEST -> webhookInfo.mrIid?.let { e -> "Merge requests [!$e] open" }
                         CodeEventType.TAG_PUSH -> webhookInfo.tagName?.let { e -> "Tag [$e] pushed" }
                         CodeEventType.ISSUES -> webhookInfo.issueIid?.let { e -> "Issue [$e] opened" }
