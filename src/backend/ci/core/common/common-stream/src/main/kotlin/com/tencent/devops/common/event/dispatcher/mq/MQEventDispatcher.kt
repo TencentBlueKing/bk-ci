@@ -54,7 +54,7 @@ class MQEventDispatcher constructor(
                     } else {
                         eventType.destination
                     }
-                event.sendTo(bridge = streamBridge)
+                event.sendTo(bridge = streamBridge, destination)
             } catch (ignored: Exception) {
                 logger.error("[ENGINE_MQ_SEVERE] Fail to dispatch the event($event)", ignored)
             }

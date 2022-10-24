@@ -47,11 +47,11 @@ open class IEvent(
      * Stream事件发送
      * @param bridge 传入一个自动加载的StreamBridge单例
      */
-    fun sendTo(bridge: StreamBridge) {
+    fun sendTo(bridge: StreamBridge, destination: String? = null) {
         try {
             val eventType = this::class.java.annotations.find { s -> s is Event } as Event
             bridge.send(
-                DefaultBindingUtils.getOutBindingName(this::class.java),
+                destination ?: DefaultBindingUtils.getOutBindingName(this::class.java),
                 buildMessage(eventType.delayMills)
             )
         } catch (ignored: Exception) {
