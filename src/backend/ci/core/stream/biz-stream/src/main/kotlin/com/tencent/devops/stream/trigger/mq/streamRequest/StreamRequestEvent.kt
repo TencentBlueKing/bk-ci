@@ -28,13 +28,14 @@
 package com.tencent.devops.stream.trigger.mq.streamRequest
 
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.stream.constant.MQ
 import org.slf4j.MDC
 
-@Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
+@Event(MQ.QUEUE_STREAM_REQUEST_EVENT)
 data class StreamRequestEvent(
     val event: String,
     val eventType: String? = null,
     val traceId: String? = MDC.get(TraceTag.BIZID)
-)
+) : IEvent()

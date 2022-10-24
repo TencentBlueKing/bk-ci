@@ -37,7 +37,7 @@ import com.tencent.devops.stream.constant.MQ
  *
  * @version 1.0
  */
-@Event(MQ.EXCHANGE_STREAM_TIMER_CHANGE_FANOUT, MQ.QUEUE_STREAM_TIMER)
+@Event(MQ.QUEUE_STREAM_TIMER)
 data class StreamChangeEvent(
     override val source: String,
     override val projectId: String,

@@ -29,11 +29,13 @@ package com.tencent.devops.project.dispatch
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
+import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Component
 import java.lang.Exception
 
@@ -50,23 +52,16 @@ class ProjectDispatcher @Autowired constructor(
         events.forEach { event ->
             try {
                 val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-                val routeKey = // 根据 routeKey+后缀 实现动态变换路由Key
+                val destination = // 根据 routeKey+后缀 实现动态变换路由Key
+                    // TODO 定向路由
                     if (event is IPipelineRoutableEvent && !event.routeKeySuffix.isNullOrBlank()) {
-                        eventType.routeKey + event.routeKeySuffix
+                        eventType.destination + event.routeKeySuffix
                     } else {
-                        eventType.routeKey
+                        eventType.destination
                     }
-                streamBridge.convertAndSend(eventType.exchange, routeKey, event) { message ->
-                    when {
-                        event.delayMills > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
-                        eventType.delayMills > 0 -> // 事件类型固化默认值
-                            message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                    }
-                    message
-                }
-
+                event.sendTo(bridge = streamBridge)
             } catch (ignored: Exception) {
-                logger.error("Fail to dispatch the event($events)", ignored)
+                logger.error("[ENGINE_MQ_SEVERE] Fail to dispatch the event($event)", ignored)
             }
         }
     }

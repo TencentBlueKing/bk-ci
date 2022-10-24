@@ -38,7 +38,7 @@ import com.tencent.devops.stream.constant.MQ
  *
  * @version 1.0
  */
-@Event(MQ.ENGINE_STREAM_LISTENER_EXCHANGE, MQ.ROUTE_STREAM_TIMER)
+@Event(MQ.QUEUE_STREAM_TIMER)
 data class StreamTimerBuildEvent(
     override val source: String,
     override val projectId: String,

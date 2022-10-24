@@ -11,7 +11,7 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 
 @Suppress("LongParameterList")
-@Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
+@Event(MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT)
 class StreamPipelineWebsocketPush(
     val pipelineId: String,
     val projectId: String,

@@ -42,22 +42,7 @@ import org.springframework.stereotype.Service
 class StreamRequestListener @Autowired constructor(
     private val steamRequestService: StreamTriggerRequestService
 ) {
-    @RabbitListener(
-        bindings = [
-            (
-                QueueBinding(
-                    key = [MQ.ROUTE_STREAM_REQUEST_EVENT],
-                    value = Queue(value = MQ.QUEUE_STREAM_REQUEST_EVENT, durable = "true"),
-                    exchange = Exchange(
-                        value = MQ.EXCHANGE_STREAM_REQUEST_EVENT,
-                        durable = "true",
-                        delayed = "true",
-                        type = ExchangeTypes.DIRECT
-                    )
-                )
-                )
-        ]
-    )
+
     fun listenStreamRequestEvent(streamRequestEvent: StreamRequestEvent) {
         try {
             steamRequestService.externalCodeGitBuild(

@@ -34,7 +34,7 @@ import com.tencent.devops.stream.constant.MQ as StreamMQ
 
 @Suppress("ALL")
 @Service
-class StreamBuildQualityCheckistener @Autowired constructor(
+class StreamBuildQualityCheckListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val actionFactory: EventActionFactory,
@@ -47,24 +47,9 @@ class StreamBuildQualityCheckistener @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StreamBuildQualityCheckistener::class.java)
+        private val logger = LoggerFactory.getLogger(StreamBuildQualityCheckListener::class.java)
     }
 
-    @RabbitListener(
-        bindings = [
-            (
-                QueueBinding(
-                    value = Queue(value = StreamMQ.QUEUE_PIPELINE_BUILD_QUALITY_CHECK_STREAM, durable = "true"),
-                    exchange = Exchange(
-                        value = MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT,
-                        durable = "true",
-                        delayed = "true",
-                        type = ExchangeTypes.FANOUT
-                    )
-                )
-                )
-        ]
-    )
     fun buildQualityCheckListener(buildQualityEvent: PipelineBuildQualityCheckBroadCastEvent) {
         try {
             logger.info("buildQualityCheckListener buildQualityEvent: $buildQualityEvent")
