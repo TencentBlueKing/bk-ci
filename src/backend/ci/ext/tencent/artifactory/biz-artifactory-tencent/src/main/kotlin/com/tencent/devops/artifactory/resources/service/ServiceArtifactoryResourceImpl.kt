@@ -44,12 +44,14 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.REPO_CUSTOM
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 import javax.ws.rs.BadRequestException
+import kotlin.math.ceil
 
 @RestResource
 class ServiceArtifactoryResourceImpl @Autowired constructor(
@@ -183,7 +185,13 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10000
         val result = bkRepoSearchService.serviceSearch(userId, projectId, searchProps, pageNotNull, pageSizeNotNull)
-        return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
+        return Result(FileInfoPage(
+            count = result.first,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            records = result.second,
+            timestamp = LocalDateTime.now().timestamp()
+        ))
     }
 
     override fun searchCustomFiles(
@@ -239,7 +247,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
                 count = result.first,
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
-                totalPages = (result.first / pageSizeNotNull).toInt(),
+                totalPages = ceil(result.first / pageSizeNotNull.toDouble()).toInt(),
                 records = result.second
             )
         )
