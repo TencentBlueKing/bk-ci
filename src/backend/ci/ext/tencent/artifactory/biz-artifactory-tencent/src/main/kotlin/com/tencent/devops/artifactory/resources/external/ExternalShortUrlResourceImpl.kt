@@ -41,7 +41,7 @@ class ExternalShortUrlResourceImpl @Autowired constructor(
     override fun visitShortUrl(urlId: String, request: HttpServletRequest, response: HttpServletResponse) {
         val redirectUrl = shortUrlService.getRedirectUrl(urlId)
         val link = if (redirectUrl.contains("?")) "&" else "?"
-        val tail = request.parameterNames.asSequence().joinToString("&") { request.getParameter(it) }
+        val tail = request.parameterNames.asSequence().joinToString("&") { it + "=" + request.getParameter(it) }
         response.sendRedirect(redirectUrl + (if (tail.isNotEmpty()) (link + tail) else ""))
     }
 }
