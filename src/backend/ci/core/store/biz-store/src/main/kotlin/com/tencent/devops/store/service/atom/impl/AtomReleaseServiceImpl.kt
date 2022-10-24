@@ -169,8 +169,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Value("\${store.defaulAtomErrorCodoLength:6}")
     private var defaulAtomErrorCodoLength: Int = 6
 
-    @Value("\${store.defaulAtomErrorCodoPrefix}")
-    private var defaulAtomErrorCodoPrefix: String = ""
+
+    private var defaulAtomErrorCodoPrefix: String = "8"
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
