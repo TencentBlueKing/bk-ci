@@ -26,6 +26,7 @@
  */
 
 package com.tencent.devops.stream.dao
+
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
