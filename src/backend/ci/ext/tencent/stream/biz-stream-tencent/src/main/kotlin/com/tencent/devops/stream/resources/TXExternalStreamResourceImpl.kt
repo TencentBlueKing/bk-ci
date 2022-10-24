@@ -25,18 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.common
+package com.tencent.devops.stream.resources
 
-enum class StreamPipelineBadgeType(val labelColor: String, val text: String, val color: String, val logo: String) {
-    // 没有找到
-    NOT_FOUND("#182132", "not found", "#FF9C01", "stream"),
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.stream.api.TXExternalStreamResource
+import com.tencent.devops.stream.service.TXStreamBasicSettingService
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
-    // 从来没有构建
-    NEVER_BUILD("#182132", "never build", "#FF9C01", "stream"),
+@RestResource
+class TXExternalStreamResourceImpl(
+    private val basicSettingService: TXStreamBasicSettingService,
+    private val client: Client
+) : TXExternalStreamResource {
 
-    // 构建成功
-    SUCCEEDED("#182132", "succeeded", "#2DCB56", "stream"),
+    override fun gitCallback(code: String, state: String): Response {
+        val gitOauthCallback = client.get(ServiceOauthResource::class).gitCallback(code = code, state = state).data!!
+        with(gitOauthCallback) {
+            if (gitOauthCallback.gitProjectId != null) {
+                basicSettingService.updateOauthSetting(
+                    gitProjectId = gitProjectId!!,
+                    userId = userId,
+                    oauthUserId = oauthUserId
+                )
 
-    // 构建失败
-    FAILED("#182132", "failed", "#EA3636", "stream");
+                // 更新项目信息
+                basicSettingService.updateProjectOrganizationInfo(
+                    projectId = gitProjectId!!.toString(),
+                    userId = oauthUserId
+                )
+            }
+            return Response.temporaryRedirect(UriBuilder.fromUri(gitOauthCallback.redirectUrl).build()).build()
+        }
+    }
 }
