@@ -1321,7 +1321,7 @@ class PipelineListFacadeService @Autowired constructor(
                     }
                     it.webhookMessage = when (eventType) {
                         CodeEventType.PUSH -> webhookInfo.webhookCommitId?.let { e ->
-                            val endIndex = e.length.coerceAtLeast(7)
+                            val endIndex = e.length.coerceAtMost(7)
                             "Commit [${e.substring(0, endIndex)}] pushed"
                         }
 
