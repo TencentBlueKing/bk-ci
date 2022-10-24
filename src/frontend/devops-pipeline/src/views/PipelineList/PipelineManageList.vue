@@ -115,7 +115,7 @@
     </main>
 </template>
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     import webSocketMessage from '@/utils/webSocketMessage'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
@@ -167,9 +167,6 @@
         computed: {
             ...mapState('pipelines', [
                 'pipelineActionState'
-            ]),
-            ...mapGetters('pipelines', [
-                'groupMap'
             ]),
             isTableLayout () {
                 return this.isDeleteView || this.layout === TABLE_LAYOUT

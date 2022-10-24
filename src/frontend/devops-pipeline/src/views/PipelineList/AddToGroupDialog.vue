@@ -91,11 +91,13 @@
             return {
                 isLoading: false,
                 selectedGroups: [],
+                savedPipelineGroups: [],
                 filterKeyword: ''
             }
         },
         computed: {
             ...mapState('pipelines', [
+                'requestGetGroupLists',
                 'allPipelineGroup'
             ]),
             ...mapGetters('pipelines', [
@@ -125,23 +127,11 @@
                     children: []
                 }])
             },
-            groupIdMap () {
-                return this.pipelineGroups.reduce((acc, group) => ({
-                    ...acc,
-                    [group.name]: group.id
-                }), {})
-            },
             selectedGroupIdMap () {
                 return this.selectedGroups.reduce((acc, group) => ({
                     ...acc,
                     [group.id]: true
                 }), {})
-            },
-            savedPipelineGroups () {
-                return this.pipeline?.viewNames?.map(name => ({
-                    id: this.groupIdMap[name],
-                    name
-                })) ?? []
             },
             savedPipelineGroupMap () {
                 return this.savedPipelineGroups.reduce((acc, group) => ({
@@ -150,10 +140,34 @@
                 }), {})
             }
         },
+        watch: {
+            addToDialogShow (val) {
+                if (val) {
+                    !this.isPatch && this.init()
+                }
+            }
+        },
+
         methods: {
             ...mapActions('pipelines', [
-                'addPipelineToGroup'
+                'addPipelineToGroup',
+                'fetchPipelineGroups'
             ]),
+            async init () {
+                try {
+                    this.isLoading = true
+                    const res = await this.fetchPipelineGroups({
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.pipeline.pipelineId
+                    })
+                    console.log('init', res)
+                    this.savedPipelineGroups = res
+                } catch (e) {
+                    console.error(e)
+                } finally {
+                    this.isLoading = false
+                }
+            },
             handleClose () {
                 this.selectedGroups = []
                 this.filterKeyword = ''
@@ -219,21 +233,25 @@
                 let message = this.$t(this.isPatch ? 'patchAddToSuc' : 'addToSuc')
                 let theme = 'success'
                 const pipelineIds = this.isPatch ? this.pipelineList.map(pipeline => pipeline.pipelineId) : [this.pipeline.pipelineId]
+                const viewIds = this.selectedGroups.map(group => group.id)
                 try {
                     await this.addPipelineToGroup({
                         projectId: this.$route.params.projectId,
                         pipelineIds,
-                        viewIds: this.selectedGroups.map(group => group.id)
+                        viewIds
                     })
-
-                    this.selectedGroups.forEach(group => {
-                        this.$store.commit('pipelines/UPDATE_PIPELINE_GROUP', {
-                            id: group.id,
-                            body: {
-                                pipelineCount: this.groupMap[group.id].pipelineCount + pipelineIds.length ?? 0
-                            }
+                    if (!this.isPatch) {
+                        this.requestGetGroupLists(this.$route.params)
+                    } else {
+                        viewIds.forEach(id => {
+                            this.$store.commit('pipelines/UPDATE_PIPELINE_GROUP', {
+                                id,
+                                body: {
+                                    pipelineCount: this.groupMap[id].pipelineCount + pipelineIds.length ?? 0
+                                }
+                            })
                         })
-                    })
+                    }
                     this.handleClose()
                     this.$emit('done')
                 } catch (e) {

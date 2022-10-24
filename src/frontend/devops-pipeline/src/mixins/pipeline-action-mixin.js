@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { mapActions, mapMutations } from 'vuex'
+import { mapActions, mapMutations, mapGetters } from 'vuex'
 import moment from 'moment'
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
@@ -39,9 +39,14 @@ export default {
         }
     },
     computed: {
+        ...mapGetters('pipelines', [
+            'groupMap'
+        ]),
         isDeleteView () {
-            console.log(this.$route.params.viewId, DELETED_VIEW_ID)
             return this.$route.params.viewId === DELETED_VIEW_ID
+        },
+        currentGroup () {
+            return this.groupMap?.[this.$route.params.viewId]
         }
     },
     created () {
@@ -90,6 +95,7 @@ export default {
                         }
                     })
                     const { page, count, records } = await this.requestAllPipelinesListByFilter({
+                        showDelete: true,
                         projectId: this.$route.params.projectId,
                         ...query
                     })
@@ -168,6 +174,8 @@ export default {
                 ...(isShowRemovedAction
                     ? [{
                         text: this.$t('removeFrom'),
+                        disable: this.currentGroup.viewType === 1,
+                        tooltips: this.$t('dynamicGroupRemoveDisableTips'),
                         handler: this.removeHandler
                     }]
                     : []),

@@ -339,6 +339,18 @@ const actions = {
     },
     matchDynamicView (_ctx, { projectId, ...body }) {
         return ajax.post(`${prefix}/${projectId}/matchDynamicView`, body)
+    },
+    async fetchPipelineGroups (_ctx, { projectId, pipelineId }) {
+        try {
+            const { data } = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/pipelineViews/listViews/projects/${projectId}/pipelines/${pipelineId}`)
+            return data.map(({ id, name }) => ({
+                id,
+                name
+            }))
+        } catch (error) {
+            console.error(error)
+            return []
+        }
     }
 }
 

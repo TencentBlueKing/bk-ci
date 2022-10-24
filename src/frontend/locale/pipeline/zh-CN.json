@@ -1072,5 +1072,6 @@
   "dynamic": "动态",
   "cancelAdd": "取消添加",
   "previewTime": "以下结果生成于 {0}",
-  "pipelineGroupRepeatTips": "【{0}】已存在，请更换名称"
+  "pipelineGroupRepeatTips": "【{0}】已存在，请更换名称",
+  "dynamicGroupRemoveDisableTips": "动态流水线组不可以手动移出"
 }

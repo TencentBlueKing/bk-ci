@@ -15,7 +15,7 @@
         v-on="$listeners"
     >
         <PipelineListEmpty slot="empty"></PipelineListEmpty>
-        <bk-table-column v-if="isPatchView" type="selection" width="60"></bk-table-column>
+        <bk-table-column v-if="isPatchView" type="selection" width="60" :selectable="checkSelecteable"></bk-table-column>
         <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <span class="pipeline-name-cell-link primary" @click="goHistory(props.row.pipelineId)">
@@ -70,7 +70,6 @@
                                     <span>{{ props.row.webhookAliasName }}</span>
                                 </span>
                                 <span v-if="props.row.webhookMessage" class="desc">
-                                    <logo name="branch" size="16" />
                                     <span>{{ props.row.webhookMessage }}</span>
                                 </span>
                             </p>
@@ -212,6 +211,9 @@
                     'no-permission': !row.hasPermission
                 }
                 return Object.keys(clsObj).filter(key => clsObj[key]).join(' ')
+            },
+            checkSelecteable (row) {
+                return !row.delete
             },
             clearSelection () {
                 this.$refs.pipelineTable?.clearSelection?.()

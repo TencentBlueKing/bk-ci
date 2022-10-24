@@ -19,6 +19,7 @@
 <script>
     import Logo from '@/components/Logo'
     import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
+    import { UNCLASSIFIED_PIPELINE_VIEW_ID } from '@/store/constants'
     export default {
         components: {
             Logo
@@ -40,6 +41,7 @@
                     theme: 'primary',
                     size: 'normal'
                 }
+                const isUnclassified = this.$route.params.viewId === UNCLASSIFIED_PIPELINE_VIEW_ID
                 return this.hasFilter
                     ? {
                         desc: this.$t('newlist.knowMore'),
@@ -53,15 +55,17 @@
                         ]
                     }
                     : {
-                        desc: this.$t('newlist.otherEmptyDesc'),
+                        desc: this.$t(isUnclassified ? 'empty' : 'newlist.otherEmptyDesc'),
                         imgType: '',
-                        btns: [
-                            {
-                                btnProps,
-                                handler: () => bus.$emit(ADD_TO_PIPELINE_GROUP, this.$route.params.viewId),
-                                text: this.$t('newlist.addPipelineToGroup')
-                            }
-                        ]
+                        btns: isUnclassified
+                            ? []
+                            : [
+                                {
+                                    btnProps,
+                                    handler: () => bus.$emit(ADD_TO_PIPELINE_GROUP, this.$route.params.viewId),
+                                    text: this.$t('newlist.addPipelineToGroup')
+                                }
+                            ]
                     }
             }
         }

@@ -55,11 +55,14 @@
                 <p class="bk-pipeline-card-info-row bk-pipeline-card-desc-row">
                     <span>
                         <logo size="16" :name="pipeline.trigger" />
-                        {{ pipeline.latestBuildUserId }}
+                        <span>{{ pipeline.latestBuildUserId }}</span>
                     </span>
-                    <span v-if="pipeline.webhookRepoUrl">
-                        <logo size="16" name="manualTrigger" />
-                        {{ pipeline.webhookRepoUrl }}
+                    <span v-if="pipeline.webhookAliasName">
+                        <logo name="branch" size="16" />
+                        <span>{{ pipeline.webhookAliasName }}</span>
+                    </span>
+                    <span v-if="pipeline.webhookMessage" class="desc">
+                        <span>{{ pipeline.webhookMessage }}</span>
                     </span>
                 </p>
             </template>
@@ -269,10 +272,18 @@
                     @include ellipsis();
                 }
                 &.bk-pipeline-card-desc-row {
+                    display: grid;
+                    column-gap: 16px;
+                    grid-template-columns: auto auto auto;
                     > span {
                         display: flex;
                         align-items: center;
-                        color: #979BA5;
+                        overflow: hidden;
+                        > span {
+                            display: flex;
+                            @include ellipsis();
+                            min-width: 0;
+                        }
                     }
                 }
                 > b {

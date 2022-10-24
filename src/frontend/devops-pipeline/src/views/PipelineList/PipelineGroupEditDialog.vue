@@ -542,6 +542,8 @@
             async updatePreview () {
                 try {
                     this.loading = true
+
+                    console.log(this.model, this.group)
                     const { data } = await this.previewGroupResult({
                         projectId: this.$route.params.projectId,
                         name: this.group.name,

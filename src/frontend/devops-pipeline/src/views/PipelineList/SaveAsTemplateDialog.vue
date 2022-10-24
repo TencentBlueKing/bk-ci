@@ -61,8 +61,8 @@
         computed: {
             optionGroups () {
                 return [
-                    { label: 'true', value: true },
-                    { label: 'false', value: false }
+                    { label: this.$t('true'), value: true },
+                    { label: this.$t('false'), value: false }
                 ]
             },
             formModel () {

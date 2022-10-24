@@ -6,6 +6,7 @@
         :title="title"
         header-position="left"
         :draggable="false"
+        :loading="isBusy"
         @cancel="handleClose"
         @confirm="handleSubmit"
     >
@@ -41,8 +42,8 @@
 </template>
 
 <script>
+    import { mapState, mapActions, mapGetters } from 'vuex'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
-    import { mapState, mapActions } from 'vuex'
     export default {
         mixins: [piplineActionMixin],
         props: {
@@ -67,6 +68,7 @@
         data () {
             return {
                 visibleTagCountList: [],
+                isBusy: false,
                 width: 480,
                 padding: 40
             }
@@ -74,6 +76,9 @@
         computed: {
             ...mapState('pipelines', [
                 'allPipelineGroup'
+            ]),
+            ...mapGetters('pipelines', [
+                'groupMap'
             ]),
             isRemoveType () {
                 return this.type === 'remove'
@@ -113,7 +118,10 @@
                 'patchDeletePipelines'
             ]),
             async handleSubmit () {
+                if (this.isBusy) return
+
                 try {
+                    this.isBusy = true
                     const params = {
                         projectId: this.$route.params.projectId,
                         pipelineIds: this.pipelineList.map(pipeline => pipeline.pipelineId)
@@ -124,6 +132,13 @@
                             ...params,
                             viewId: this.groupId
                         })
+
+                        this.$store.commit('pipelines/UPDATE_PIPELINE_GROUP', {
+                            id: this.groupId,
+                            body: {
+                                pipelineCount: this.groupMap[this.groupId].pipelineCount - (this.pipelineList.length ?? 0)
+                            }
+                        })
                     } else {
                         await this.patchDeletePipelines(params)
                     }
@@ -131,12 +146,15 @@
                         message: this.$t(this.isRemoveType ? 'removeSuc' : 'deleteSuc'),
                         theme: 'success'
                     })
+                    this.handleClose()
                     this.$emit('done')
                 } catch (e) {
                     this.$showTips({
                         message: e.message ?? e,
                         theme: 'error'
                     })
+                } finally {
+                    this.isBusy = false
                 }
             },
             handleClose () {

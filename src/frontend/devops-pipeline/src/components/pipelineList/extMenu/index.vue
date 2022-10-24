@@ -13,6 +13,7 @@
             <li
                 :class="[{ 'is-disable': item.disable }, 'dot-menu-item']"
                 v-for="(item, index) of config"
+                v-bk-tooltips="getTooltips(item)"
                 :key="index"
                 @click.stop="clickMenuItem(item)">
                 {{ item.text }}
@@ -39,6 +40,12 @@
             }
         },
         methods: {
+            getTooltips (item) {
+                return {
+                    content: item?.tooltips,
+                    disabled: !item?.tooltips
+                }
+            },
             clickMenuItem (item) {
                 if (item.disable) return
 

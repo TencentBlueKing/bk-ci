@@ -145,12 +145,16 @@
                 'groupMap',
                 'hideActionGroups'
             ]),
-            groupNamesSet () {
-                return new Set(Object.keys(this.groupMap).map(id => this.groupMap[id].name))
+            groupNamesMap () {
+                return Object.keys(this.groupMap).reduce((acc, id) => {
+                    const item = this.groupMap[id]
+                    acc[item.name] = item.projected
+                    return acc
+                }, {})
             },
             groupNameRules () {
                 return [{
-                    validator: (val) => !this.groupNamesSet.has(val),
+                    validator: this.checkGroupNameValid,
                     message: (val) => this.$t('pipelineGroupRepeatTips', [val]),
                     trigger: 'blur'
                 }, {
@@ -198,6 +202,9 @@
                 'deletePipelineGroup',
                 'toggleStickyTop'
             ]),
+            checkGroupNameValid (name) {
+                return this.newPipelineGroup.projected !== this.groupNamesMap[name]
+            },
             async refreshPipelineGroup () {
                 this.isLoading = true
                 const res = await this.requestGetGroupLists(this.$route.params)
@@ -378,9 +385,7 @@
             async submitPipelineAdd () {
                 if (this.isAdding) return false
                 const formValid = await this.$refs.newPipelineGroupForm?.validate?.()
-                console.log('formValid', formValid)
                 if (!formValid) return false
-                console.log('formValid,.', formValid)
                 let message = this.$t('addPipelineGroupSuc')
                 let theme = 'success'
                 try {

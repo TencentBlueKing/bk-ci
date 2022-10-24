@@ -111,28 +111,6 @@
             toggleDeleteConfirm () {
                 this.isConfirmShow = !this.isConfirmShow
             },
-            async getPipelines () {
-                try {
-                    const { viewId } = this.$route.params
-                    const result = await this.requestAllPipelinesListByFilter({
-                        projectId: this.$route.params.projectId,
-                        viewId
-                    })
-
-                    return {
-                        ...result,
-                        records: result.records.map(item => ({
-                            ...item,
-                            latestBuildStartDate: item.latestBuildStartTime ? moment(item.latestBuildStartTime).fromNow() : '--'
-                        }))
-                    }
-                } catch (e) {
-                    this.$showTips({
-                        message: e.message || e,
-                        theme: 'error'
-                    })
-                }
-            },
             refreshList () {
                 this.$refs.pipelineTable?.refresh?.()
             }
