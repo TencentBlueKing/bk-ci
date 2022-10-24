@@ -84,10 +84,10 @@ interface ServiceArchiveAtomResource {
         @PathParam("atomCode")
         atomCode: String,
         @ApiParam("插件版本号", required = true)
-        @QueryParam("projectCode")
+        @QueryParam("version")
         version: String,
         @ApiParam("文件名", required = true)
-        @QueryParam("projectCode")
+        @QueryParam("fileName")
         fileName: String,
         @ApiParam("文件内容", required = true)
         content: String

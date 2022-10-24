@@ -119,6 +119,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
 
 @Suppress("ALL")
@@ -164,6 +165,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var client: Client
     @Autowired
     lateinit var storeWebsocketService: StoreWebsocketService
+
+    @Value("\${store.defaulAtomErrorCodoLength:6}")
+    private var defaulAtomErrorCodoLength: Int = 6
+
+    @Value("\${store.defaulAtomErrorCodoPrefix}")
+    private lateinit var defaulAtomErrorCodoPrefix: String
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
@@ -545,6 +552,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             StoreTypeEnum.ATOM.type.toByte()
         )
         try {
+            // 获取插件error.json文件内容
             val errorJsonStr = getFileStr(
                 projectCode = projectCode!!,
                 atomCode = atomCode,
@@ -563,14 +571,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 if (errorCodeInfos.isNotEmpty()) {
                     val errorCodes = errorCodeInfos.map { "${it.errorCode}" }
                     val duplicateData = getDuplicateData(errorCodes)
+                    // 存在重复code码则报错提示哪些code码重复
                     if (duplicateData.isNotEmpty()) {
                         throw ErrorCodeException(
                             errorCode = USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE,
                             params = arrayOf(duplicateData.joinToString(","))
                         )
                     }
+                    // 校验code码是否符合插件自定义错误码规范
                     errorCodes.forEach {
-                        if (it.length != 6 && (!it.startsWith("8"))) {
+                        if (it.length != defaulAtomErrorCodoLength && (!it.startsWith(defaulAtomErrorCodoPrefix))) {
                             throw ErrorCodeException(
                                 errorCode = USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
                             )
