@@ -344,12 +344,14 @@ class PipelineViewDao {
         projectId: String,
         name: String,
         creator: String? = null,
+        isProject: Boolean
     ): Int {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NAME.eq(name))
+                .and(IS_PROJECT.eq(isProject))
                 .let { if (null != creator) it.and(CREATE_USER.eq(creator)) else it }
                 .fetchOne()?.component1() ?: 0
         }

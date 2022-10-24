@@ -411,14 +411,16 @@ class PipelineViewService @Autowired constructor(
             pipelineViewDao.countByName(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
-                name = pipelineView.name
+                name = pipelineView.name,
+                isProject = true
             ) > if (isCreate) 0 else 1
         } else {
             pipelineViewDao.countByName(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
                 name = pipelineView.name,
-                creator = userId
+                creator = userId,
+                isProject = false
             ) > if (isCreate) 0 else 1
         }
 
