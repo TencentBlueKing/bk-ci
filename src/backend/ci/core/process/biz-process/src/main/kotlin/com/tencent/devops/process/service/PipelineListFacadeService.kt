@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
@@ -1311,9 +1312,22 @@ class PipelineListFacadeService @Autowired constructor(
                 }
                 if (webhookInfo != null) {
                     it.webhookAliasName = webhookInfo.webhookAliasName ?: getProjectName(webhookInfo.webhookRepoUrl)
-                    it.webhookMessage = webhookInfo.webhookMessage
                     it.webhookRepoUrl = webhookInfo.webhookRepoUrl
                     it.webhookType = it.webhookType
+                    val eventType = try {
+                        webhookInfo.webhookEventType?.let { e -> CodeEventType.valueOf(e) }
+                    } catch (e: Exception) {
+                        null
+                    }
+                    it.webhookMessage = when (eventType) {
+                        CodeEventType.PUSH -> webhookInfo.webhookCommitId?.let { e -> "Commit [$e] pushed" }
+                        CodeEventType.MERGE_REQUEST -> webhookInfo.mrIid?.let { e -> "Merge requests [!$e] open" }
+                        CodeEventType.TAG_PUSH -> webhookInfo.tagName?.let { e -> "Tag [$e] pushed" }
+                        CodeEventType.ISSUES -> webhookInfo.issueIid?.let { e -> "Issue [$e] opened" }
+                        CodeEventType.NOTE -> webhookInfo.noteId?.let { e -> "Note [$e] submitted" }
+                        CodeEventType.REVIEW -> webhookInfo.reviewId?.let { e -> "Review [$e] created" }
+                        else -> null
+                    }
                 }
             }
             it.lastBuildFinishCount = buildTaskFinishCountMap.getOrDefault(pipelineId, 0)
