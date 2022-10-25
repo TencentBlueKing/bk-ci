@@ -31,11 +31,11 @@ package com.tencent.devops.stream.resources.external
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.external.ExternalGithubResource
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.service.StreamLoginService
-import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestDispatcher
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -47,7 +47,7 @@ import javax.ws.rs.core.UriBuilder
 class ExternalGithubResourceImpl @Autowired constructor(
     private val streamLoginService: StreamLoginService,
     private val streamGitConfig: StreamGitConfig,
-    private val rabbitTemplate: RabbitTemplate
+    private val eventDispatcher: SampleEventDispatcher
 ) : ExternalGithubResource {
 
     companion object {
@@ -65,9 +65,8 @@ class ExternalGithubResourceImpl @Autowired constructor(
                 return Result(false)
             }
 
-            StreamRequestDispatcher.dispatch(
-                rabbitTemplate = rabbitTemplate,
-                event = StreamRequestEvent(
+            eventDispatcher.dispatch(
+                StreamRequestEvent(
                     eventType = event,
                     webHookType = ScmType.GITHUB.name,
                     event = body

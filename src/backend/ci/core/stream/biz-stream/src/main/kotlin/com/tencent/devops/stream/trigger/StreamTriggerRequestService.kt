@@ -364,9 +364,8 @@ class StreamTriggerRequestService @Autowired constructor(
                 trigger = trigger
             )
         )
-        ScmType.GITHUB -> StreamTriggerDispatch.dispatch(
-            rabbitTemplate = rabbitTemplate,
-            event = StreamTriggerEvent(
+        ScmType.GITHUB -> eventDispatcher.dispatch(
+            StreamTriggerEvent(
                 eventStr = objectMapper.writeValueAsString(action.data.event as GithubEvent),
                 actionCommonData = action.data.eventCommon,
                 actionContext = action.data.context,
