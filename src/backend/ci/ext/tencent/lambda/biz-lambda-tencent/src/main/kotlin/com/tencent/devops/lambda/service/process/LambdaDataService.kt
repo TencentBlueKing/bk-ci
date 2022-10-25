@@ -61,6 +61,7 @@ import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineLabelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineTemplateDao
+import com.tencent.devops.lambda.dao.store.LambdaStoreDao
 import com.tencent.devops.lambda.pojo.DataPlatBuildCommits
 import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
 import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
@@ -99,7 +100,8 @@ class LambdaDataService @Autowired constructor(
     private val lambdaPipelineLabelDao: LambdaPipelineLabelDao,
     private val kafkaClient: KafkaClient,
     private val lambdaKafkaTopicConfig: LambdaKafkaTopicConfig,
-    private val lambdaBuildCommitDao: LambdaBuildCommitDao
+    private val lambdaBuildCommitDao: LambdaBuildCommitDao,
+    private val lambdaStoreDao: LambdaStoreDao
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
@@ -229,7 +231,13 @@ class LambdaDataService @Autowired constructor(
             val startTime = task.startTime?.timestampmilli() ?: 0
             val endTime = task.endTime?.timestampmilli() ?: 0
             val taskAtom = task.taskAtom
+            val platformCode = task.platformCode
+            val platformErrorCode = task.platformErrorCode
             val taskParamMap = JsonUtil.toMap(task.taskParams)
+            val platformName = lambdaStoreDao.getPlatformName(
+                dslContext = dslContext,
+                platformCode = platformCode
+            )
 
             if (task.taskType == "VM" || task.taskType == "NORMAL") {
                 if (taskAtom == "dispatchVMShutdownTaskAtom") {
@@ -338,7 +346,10 @@ class LambdaDataService @Autowired constructor(
                     centerId = projectInfo.centerId,
                     bgName = projectInfo.bgName,
                     deptName = projectInfo.deptName,
-                    centerName = projectInfo.centerName
+                    centerName = projectInfo.centerName,
+                    platformCode = platformCode,
+                    platformErrorCode = platformErrorCode,
+                    platformName = platformName
                 )
                 logger.info("pushTaskDetail buildId: ${dataPlatTaskDetail.buildId}| taskId: ${dataPlatTaskDetail.itemId}")
                 val taskDetailTopic = checkParamBlank(lambdaKafkaTopicConfig.taskDetailTopic, "taskDetailTopic")
