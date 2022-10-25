@@ -2,27 +2,33 @@ package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.util.CommonCredentialUtils
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 
@@ -30,7 +36,11 @@ import org.slf4j.LoggerFactory
 class StreamRepoTriggerAction(
     // 可能会包含stream action事件类似删除
     private val baseAction: BaseAction,
-    private val client: Client
+    private val client: Client,
+    private val streamGitConfig: StreamGitConfig,
+    private val streamBasicSettingService: StreamBasicSettingService,
+    private val redisOperation: RedisOperation,
+    private val streamTriggerCache: StreamTriggerCache
 ) : BaseAction {
 
     companion object {
@@ -49,6 +59,7 @@ class StreamRepoTriggerAction(
     override fun needAddWebhookParams() = true
 
     override fun getProjectCode(gitProjectId: String?) = baseAction.getProjectCode(gitProjectId)
+    override fun getGitProjectIdOrName(gitProjectId: String?) = baseAction.getGitProjectIdOrName(gitProjectId)
 
     override fun getGitCred(personToken: String?): StreamGitCred = baseAction.getGitCred(personToken)
 
@@ -68,9 +79,9 @@ class StreamRepoTriggerAction(
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         val changeSet = getChangeSet()
-        return TGitActionCommon.getYamlPathList(
+        return GitActionCommon.getYamlPathList(
             action = baseAction,
-            gitProjectId = data.getGitProjectId(),
+            gitProjectId = getGitProjectIdOrName(),
             ref = data.context.repoTrigger!!.branch
         ).map { (name, blobId) ->
             YamlPathListEntry(name, CheckType.NO_NEED_CHECK, data.context.repoTrigger!!.branch, blobId)
@@ -82,7 +93,7 @@ class StreamRepoTriggerAction(
             ref = data.context.repoTrigger!!.branch,
             content = api.getFileContent(
                 cred = baseAction.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
+                gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
                 ref = data.context.repoTrigger!!.branch,
                 retry = ApiRequestRetryInfo(true)
@@ -104,6 +115,8 @@ class StreamRepoTriggerAction(
     override fun needSaveOrUpdateBranch() = false
 
     override fun needSendCommitCheck() = baseAction.needSendCommitCheck()
+
+    override fun needUpdateLastModifyUser(filePath: String) = false
 
     override fun sendCommitCheck(
         buildId: String,
@@ -167,12 +180,39 @@ class StreamRepoTriggerAction(
                 )
             )
         }
+        val setting = streamBasicSettingService.getStreamConf(data.eventCommon.gitProjectId.toLong())
+        if (setting == null && repoTriggerUserId != null) {
+            RedisLock(
+                redisOperation = redisOperation,
+                lockKey = "REPO_HOOK_INIT_SETTING_${data.eventCommon.gitProjectId}",
+                expiredTimeInSeconds = 5
+            ).use {
+                it.lock()
+                // 锁后再读，避免并发线程重复去初始化导致报错
+                if (streamBasicSettingService.getStreamConf(data.eventCommon.gitProjectId.toLong()) == null) {
+                    streamBasicSettingService.initStreamConf(
+                        userId = repoTriggerUserId,
+                        projectId = GitCommonUtils.getCiProjectId(
+                            data.eventCommon.gitProjectId,
+                            streamGitConfig.getScmType()
+                        ),
+                        gitProjectId = data.eventCommon.gitProjectId.toLong(),
+                        enabled = false
+                    )
+                }
+            }
+        }
         // 增加远程仓库时所使用权限的userId
         this.data.context.repoTrigger?.buildUserID = repoTriggerUserId
         logger.info(
             "StreamRepoTriggerActionafter|triggerCheckRepoTriggerCredentials" +
                 "|check repoTrigger credentials|repoTrigger|${this.data.context.repoTrigger}"
         )
+        data.context.repoTrigger?.triggerGitHttpUrl = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+            gitProjectKey = data.eventCommon.gitProjectId,
+            action = this,
+            getProjectInfo = api::getGitProjectInfo
+        )?.gitHttpUrl
         return repoTriggerUserId
     }
 
@@ -182,7 +222,10 @@ class StreamRepoTriggerAction(
                 try {
                     CommonCredentialUtils.getCredential(
                         client = client,
-                        projectId = "git_${this.data.getGitProjectId()}",
+                        projectId = GitCommonUtils.getCiProjectId(
+                            this.data.getGitProjectId(),
+                            streamGitConfig.getScmType()
+                        ),
                         credentialId = repoHook.credentialsForTicketId!!,
                         type = CredentialType.ACCESSTOKEN
                     )["v1"] ?: return Pair(false, null)
@@ -222,7 +265,7 @@ class StreamRepoTriggerAction(
             this.api.getProjectUserInfo(
                 cred = this.data.context.repoTrigger?.repoTriggerCred as TGitCred,
                 userId = userInfo.id,
-                gitProjectId = this.data.eventCommon.gitProjectId
+                gitProjectId = getGitProjectIdOrName(this.data.eventCommon.gitProjectId)
             ).accessLevel >= 40
         } catch (e: Throwable) {
             throw StreamTriggerException(

@@ -6,9 +6,7 @@ import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionGrantServiceImpl
 import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
 class BkAuthGrantPermissionServiceImpl @Autowired constructor(
     override val grantServiceImpl: GrantServiceImpl,
     override val iamConfiguration: IamConfiguration,

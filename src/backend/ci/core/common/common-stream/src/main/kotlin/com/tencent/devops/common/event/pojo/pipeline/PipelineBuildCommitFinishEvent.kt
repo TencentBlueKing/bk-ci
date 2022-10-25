@@ -28,7 +28,6 @@
 package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.stream.enums.ActionType
 

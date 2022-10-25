@@ -138,16 +138,6 @@ class UpdateStateContainerCmdFinally(
             endTime = LocalDateTime.now()
         }
 
-        pipelineContainerService.updateContainerStatus(
-            projectId = event.projectId,
-            buildId = event.buildId,
-            stageId = event.stageId,
-            containerId = event.containerId,
-            buildStatus = buildStatus,
-            startTime = startTime,
-            endTime = endTime
-        )
-
         if (buildStatus == BuildStatus.SKIP) {
             commandContext.containerTasks.forEach { task ->
                 pipelineTaskService.updateTaskStatus(task = task, userId = task.starter, buildStatus = buildStatus)
@@ -166,6 +156,16 @@ class UpdateStateContainerCmdFinally(
                 executeCount = commandContext.executeCount
             )
         }
+
+        pipelineContainerService.updateContainerStatus(
+            projectId = event.projectId,
+            buildId = event.buildId,
+            stageId = event.stageId,
+            containerId = event.containerId,
+            buildStatus = buildStatus,
+            startTime = startTime,
+            endTime = endTime
+        )
     }
 
     /**

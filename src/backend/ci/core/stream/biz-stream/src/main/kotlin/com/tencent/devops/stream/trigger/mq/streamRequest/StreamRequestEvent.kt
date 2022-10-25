@@ -36,6 +36,7 @@ import org.slf4j.MDC
 @Event(MQ.QUEUE_STREAM_REQUEST_EVENT)
 data class StreamRequestEvent(
     val event: String,
+    val webHookType: String,
     val eventType: String? = null,
     val traceId: String? = MDC.get(TraceTag.BIZID)
 ) : IEvent()

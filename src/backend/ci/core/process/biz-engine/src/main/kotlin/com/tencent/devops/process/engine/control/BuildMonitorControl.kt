@@ -56,6 +56,7 @@ import com.tencent.devops.process.engine.service.PipelineSettingService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
@@ -79,7 +80,8 @@ class BuildMonitorControl @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineStageService: PipelineStageService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
 
     companion object {
@@ -101,15 +103,15 @@ class BuildMonitorControl @Autowired constructor(
         return when {
             buildInfo.status.isReadyToRun() -> monitorQueueBuild(event, buildInfo)
             else -> {
-                monitorPipeline(event)
+                monitorPipeline(event, buildInfo)
             }
         }
     }
 
-    private fun monitorPipeline(event: PipelineBuildMonitorEvent): Boolean {
+    private fun monitorPipeline(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Boolean {
 
         // 由于30天对应的毫秒数值过大，以Int的上限值作为下一次monitor时间
-        val stageMinInt = monitorStage(event)
+        val stageMinInt = monitorStage(event, buildInfo)
         val jobMinInt = monitorContainer(event)
 
         val minInterval = min(jobMinInt, stageMinInt)
@@ -149,7 +151,7 @@ class BuildMonitorControl @Autowired constructor(
         return minInterval
     }
 
-    private fun monitorStage(event: PipelineBuildMonitorEvent): Long {
+    private fun monitorStage(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Long {
 
         val stages = pipelineStageService.listStages(event.projectId, event.buildId)
             .filter {
@@ -170,7 +172,8 @@ class BuildMonitorControl @Autowired constructor(
             val interval = stage.checkNextStageMonitorIntervals(
                 userId = event.userId,
                 startTime = stage.startTime,
-                endTime = stage.endTime
+                endTime = stage.endTime,
+                buildInfo = buildInfo
             )
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
@@ -231,17 +234,29 @@ class BuildMonitorControl @Autowired constructor(
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(
         userId: String,
         startTime: LocalDateTime?,
-        endTime: LocalDateTime?
+        endTime: LocalDateTime?,
+        buildInfo: BuildInfo
     ): Long {
-        val checkInIntervals = checkInOutMonitorIntervals(userId, true, startTime)
-        val checkOutIntervals = checkInOutMonitorIntervals(userId, false, endTime)
+        val checkInIntervals = checkInOutMonitorIntervals(
+            userId = userId,
+            inOrOut = true,
+            checkTime = startTime,
+            buildInfo = buildInfo
+        )
+        val checkOutIntervals = checkInOutMonitorIntervals(
+            userId = userId,
+            inOrOut = false,
+            checkTime = endTime,
+            buildInfo = buildInfo
+        )
         return min(checkInIntervals, checkOutIntervals)
     }
 
     private fun PipelineBuildStage.checkInOutMonitorIntervals(
         userId: String,
         inOrOut: Boolean,
-        checkTime: LocalDateTime?
+        checkTime: LocalDateTime?,
+        buildInfo: BuildInfo
     ): Long {
 
         val pauseCheck = if (inOrOut) checkIn else checkOut
@@ -288,13 +303,18 @@ class BuildMonitorControl @Autowired constructor(
             }
             // #5654 如果是待人工审核则取消人工审核
             else if (pauseCheck?.groupToReview() != null) {
+                val pipelineInfo =
+                    pipelineRepositoryService.getPipelineInfo(buildInfo.projectId, buildInfo.pipelineId)
                 pipelineStageService.cancelStage(
                     userId = userId,
+                    triggerUserId = buildInfo.triggerUser,
+                    pipelineName = pipelineInfo?.pipelineName,
+                    buildNum = buildInfo.buildNum,
                     buildStage = this,
                     reviewRequest = StageReviewRequest(
                         reviewParams = listOf(),
                         id = pauseCheck.groupToReview()?.id,
-                        suggest = null
+                        suggest = "TIMEOUT"
                     ),
                     timeout = true
                 )

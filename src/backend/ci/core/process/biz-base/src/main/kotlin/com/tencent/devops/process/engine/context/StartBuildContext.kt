@@ -89,9 +89,10 @@ data class StartBuildContext(
     }
 
     fun needSkipContainerWhenFailRetry(stage: Stage, container: Container): Boolean {
+        val containerStatus = BuildStatus.parse(container.status)
         return if (needRerun(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过，不会跳过
             false
-        } else if (!BuildStatus.parse(container.status).isFailure()) { // 非失败不会跳过
+        } else if (!containerStatus.isFailure() && !containerStatus.isCancel()) { // 跳过失败和被取消的其他job
             false
         } else { // 插件失败重试的，会跳过
             !retryStartTaskId.isNullOrBlank()

@@ -88,5 +88,7 @@ data class BuildInfo(
 
     fun isStageSuccess() = status == BuildStatus.STAGE_SUCCESS
 
+    fun isTriggerReviewing() = status == BuildStatus.TRIGGER_REVIEWING
+
     fun isReadyToRun() = status.isReadyToRun()
 }

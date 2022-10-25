@@ -53,11 +53,5 @@ enum class ErrorCodeEnum(
     ),
     TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129014, "Dispatcher-kubernetes 异常，异常信息 - 获取TASK状态接口异常"),
     WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129015, "Dispatcher-kubernetes 异常，异常信息 - 获取websocket接口异常"),
-    WEBSOCKET_URL_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2129016, "Dispatcher-kubernetes 异常，异常信息 - 获取websocket接口返回失败"),
-    RETRY_STATUS_FAIL(ErrorType.USER, 2129017, "重试频率过快，请稍后重试"),
-    KUBERNETES_INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2129018, "Dispatcher-kubernetes 异常，异常信息 - 接口请求超时"),
-    CREATE_VM_USER_ERROR(ErrorType.USER, 2129003, "Dispatcher-kubernetes 异常，异常信息 - 用户操作异常"),
-    GET_CREDENTIAL_FAIL(ErrorType.USER, 2129020, "Get credential failed"),
-    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2129050, "已超过 Dispatcher-kubernetes 创建Job容器上限."),
-    CREATE_JOB_ERROR(ErrorType.SYSTEM, 2129051, "Dispatcher-kubernetes 异常, 创建Job容器失败")
+    WEBSOCKET_NO_GATEWAY_PROXY(ErrorType.SYSTEM, 2129016, "请检查webConsole网关代理配置"),
 }

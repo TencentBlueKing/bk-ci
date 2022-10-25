@@ -325,7 +325,7 @@ const val QUEUE_KAFKA_DATA_CLOC_DEFECT = "queue.kafka.data.cloc.defect"
 
 const val EXCHANGE_TASKLOG_DEFECT_WEBSOCKET = "exchange.tasklog.defect.websocket"
 const val ROUTE_TASKLOG_DEFECT_WEBSOCKET = "route.tasklog.defect.websocket"
-const val QUEUE_TASKLOG_DEFECT_WEBSOCKET = "queue.tasklog.defect.websocket"
+const val QUEUE_TASKLOG_DEFECT_WEBSOCKET = "queue.tasklog.defect.websocket."
 
 
 const val ROUTE_KAFKA_DATA_TRIGGER_TASK = "route.kafka.data.trigger.task"

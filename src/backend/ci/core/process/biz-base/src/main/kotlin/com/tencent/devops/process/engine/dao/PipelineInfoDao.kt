@@ -281,7 +281,7 @@ class PipelineInfoDao {
             conditions.add(CHANNEL.eq(channelCode!!.name))
             dslContext.selectFrom(this)
                 .where(conditions)
-                .orderBy(CREATE_TIME.desc())
+                .orderBy(CREATE_TIME.desc(), PIPELINE_ID)
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -583,7 +583,7 @@ class PipelineInfoDao {
             conditions.add(CHANNEL.`in`(channelCodes))
             dslContext.selectFrom(this)
                 .where(conditions)
-                .orderBy(CREATE_TIME.desc())
+                .orderBy(CREATE_TIME.desc(), PIPELINE_ID)
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -647,7 +647,8 @@ class PipelineInfoDao {
         var fetchSize = 0
         do {
             with(T_PIPELINE_INFO) {
-                val fetch = dslContext.select(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME).from(this).orderBy(CREATE_TIME)
+                val fetch = dslContext.select(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME).from(this)
+                    .orderBy(CREATE_TIME, PIPELINE_ID)
                     .limit(offset, limit).fetch()
                 fetch.map {
                     dslContext.update(this).set(PIPELINE_NAME_PINYIN, nameToPinyin(it[PIPELINE_NAME]))

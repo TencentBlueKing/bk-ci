@@ -28,6 +28,9 @@
 package com.tencent.devops.stream.trigger.actions.data.context
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
@@ -58,7 +61,11 @@ data class StreamTriggerContext(
     var parsedYaml: String? = null,
     var normalizedYaml: String? = null,
     var finishData: BuildFinishData? = null,
-    var pipelineAsCodeSettings: PipelineAsCodeSettings? = null
+    var pipelineAsCodeSettings: PipelineAsCodeSettings? = null,
+    // 缓存
+    var gitMrReviewInfo: GitMrReviewInfo? = null,
+    var gitMrInfo: GitMrInfo? = null,
+    var gitDefaultBranchLatestCommitInfo: Pair<String?, GitCommit?>? = null
 )
 
 /**

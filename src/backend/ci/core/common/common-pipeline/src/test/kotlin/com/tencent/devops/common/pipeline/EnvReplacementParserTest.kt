@@ -150,8 +150,7 @@ internal class EnvReplacementParserTest {
 
         val data = mapOf(
             "variables.abc" to "variables.value",
-            "variables.hello" to "hahahahaha",
-            "{variables.abc" to "jacky"
+            "variables.hello" to "hahahahaha"
         )
 
         Assertions.assertEquals("hello variables.value world", EnvReplacementParser.parse(command1, data))

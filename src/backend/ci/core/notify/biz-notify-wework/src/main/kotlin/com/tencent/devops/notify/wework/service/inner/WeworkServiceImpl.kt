@@ -107,7 +107,7 @@ class WeworkServiceImpl(
         }
     }
 
-    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
+    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
         with(weworkNotifyTextMessage) {
             kotlin.runCatching {
                 val (toUser, toParty) =
@@ -135,6 +135,7 @@ class WeworkServiceImpl(
                 saveResult(receivers, "type:$textType\n$message", false, it.message)
             })
         }
+        return true
     }
 
     private fun doSendRequest(requestBodies: List<Optional<AbstractSendMessageRequest>>) {
