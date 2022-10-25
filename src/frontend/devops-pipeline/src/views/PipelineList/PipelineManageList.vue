@@ -217,6 +217,7 @@
                         this.refresh()
                     }
                     this.checkHasCreatePermission()
+                    this.checkHasTemplatePermission()
                 })
             },
             '$route.params.viewId': function () {
@@ -226,6 +227,7 @@
         created () {
             this.goList()
             this.checkHasCreatePermission()
+            this.checkHasTemplatePermission()
         },
 
         mounted () {

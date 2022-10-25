@@ -51,7 +51,6 @@ export default {
     },
     created () {
         moment.locale(this.$i18n.locale)
-        this.checkHasTemplatePermission()
     },
     methods: {
         ...mapMutations('pipelines', [
