@@ -32,7 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.bcs.client.BcsBuilderClient
@@ -85,7 +85,7 @@ class BuilderAction @Autowired constructor(
     private val builderPoolNoDao: BuildBuilderPoolNoDao,
     private val logsPrinter: LogsPrinter,
     private val bcsJobRedisUtils: BcsJobRedisUtils,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: MQRoutableEventDispatcher,
     private val bcsBuilderClient: BcsBuilderClient,
     private val bcsTaskClient: BcsTaskClient
 ) {

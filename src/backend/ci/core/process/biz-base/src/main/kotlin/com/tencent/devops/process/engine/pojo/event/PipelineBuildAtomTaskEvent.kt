@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.engine.pojo.event
 
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.stream.enums.ActionType
 
@@ -62,4 +62,4 @@ data class PipelineBuildAtomTaskEvent(
      */
     var errorTypeName: String? = null,
     val executeCount: Int = 1
-) : IPipelineRoutableEvent(null, actionType, source, projectId, pipelineId, userId, delayMills)
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

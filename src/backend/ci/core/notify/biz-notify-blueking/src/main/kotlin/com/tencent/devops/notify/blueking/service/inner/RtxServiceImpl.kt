@@ -37,8 +37,7 @@ import com.tencent.devops.common.notify.utils.ChineseStringUtil
 import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.Configuration
 import com.tencent.devops.model.notify.tables.records.TNotifyRtxRecord
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_RTX
+import com.tencent.devops.notify.QUEUE_NOTIFY_RTX
 import com.tencent.devops.notify.blueking.utils.NotifyService
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.RTX_URL
 import com.tencent.devops.notify.dao.RtxNotifyDao
@@ -49,6 +48,7 @@ import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.service.RtxService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 import java.util.LinkedList
 import java.util.stream.Collectors
@@ -64,7 +64,7 @@ class RtxServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(RtxServiceImpl::class.java)
 
     override fun sendMqMsg(message: RtxNotifyMessage) {
-        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, message)
+        message.sendTo(streamBridge, QUEUE_NOTIFY_RTX)
     }
 
     /**
@@ -132,19 +132,16 @@ class RtxServiceImpl @Autowired constructor(
             this.tofSysId = post.tofSysId
             this.fromSysId = post.fromSysId
         }
-
-        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, rtxNotifyMessageWithOperation) { message ->
-            var delayTime = 0
-            when (retryCount) {
-                1 -> delayTime = 30000
-                2 -> delayTime = 120000
-                3 -> delayTime = 300000
-            }
-            if (delayTime > 0) {
-                message.messageProperties.setHeader("x-delay", delayTime)
-            }
-            message
+        var delayTime = 0
+        when (retryCount) {
+            1 -> delayTime = 30000
+            2 -> delayTime = 120000
+            3 -> delayTime = 300000
         }
+        if (delayTime > 0) {
+            rtxNotifyMessageWithOperation.delayMills = delayTime
+        }
+        rtxNotifyMessageWithOperation.sendTo(streamBridge, QUEUE_NOTIFY_RTX)
     }
 
     private fun generateRtxNotifyPost(rtxNotifyMessage: RtxNotifyMessage): List<RtxNotifyPost> {

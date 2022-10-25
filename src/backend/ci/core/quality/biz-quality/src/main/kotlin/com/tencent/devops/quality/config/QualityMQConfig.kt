@@ -98,7 +98,7 @@ class QualityMQConfig {
     }
 
     @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT, STREAM_CONSUMER_GROUP)
-    fun pipelineReviewQualityListener(
+    fun pipelineQualityReviewListener(
         @Autowired listener: PipelineBuildQualityListener
     ): Consumer<Message<PipelineBuildQualityReviewBroadCastEvent>> {
         return Consumer { event: Message<PipelineBuildQualityReviewBroadCastEvent> ->

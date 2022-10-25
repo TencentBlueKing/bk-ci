@@ -29,14 +29,10 @@ package com.tencent.devops.common.dispatch.sdk.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.Tools
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_AGENT_LISTENER_DIRECT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_SHUTDOWN
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_STARTUP
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
-import com.tencent.devops.common.stream.constants.StreamBinding
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -53,8 +49,6 @@ import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
-import org.springframework.messaging.Message
-import java.util.function.Consumer
 
 @Suppress("ALL")
 @Configuration
@@ -62,7 +56,6 @@ import java.util.function.Consumer
 class MQConfiguration @Autowired constructor() {
 
     companion object {
-        const val STREAM_CONSUMER_GROUP = "dispatch-service"
         private val logger = LoggerFactory.getLogger(MQConfiguration::class.java)
     }
 
@@ -77,30 +70,6 @@ class MQConfiguration @Autowired constructor() {
 
     @Value("\${dispatch.agentStartQueue.maxConcurrency:100}")
     private val agentStartQueueMaxConcurrency: Int = 100
-
-    /**
-     * 构建启动广播交换机
-     */
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
-    fun buildStartupListener(
-        @Autowired buildListener: BuildListener
-    ): Consumer<Message<PipelineBuildStartBroadCastEvent>> {
-        return Consumer { event: Message<PipelineBuildStartBroadCastEvent> ->
-            buildListener.onPipelineStartup(event.payload)
-        }
-    }
-
-    /**
-     * 构建广播交换机
-     */
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
-    fun buildFinishListener(
-        @Autowired buildListener: BuildListener
-    ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
-        return Consumer { event: Message<PipelineBuildFinishBroadCastEvent> ->
-            buildListener.onPipelineShutdown(event.payload)
-        }
-    }
 
     @Bean
     fun exchange(): DirectExchange {

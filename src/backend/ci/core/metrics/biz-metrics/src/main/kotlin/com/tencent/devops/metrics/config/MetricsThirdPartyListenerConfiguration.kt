@@ -27,150 +27,49 @@
 
 package com.tencent.devops.metrics.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
-import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.metrics.listener.CodeCheckDailyMessageListener
 import com.tencent.devops.metrics.listener.QualityReportDailyMessageListener
 import com.tencent.devops.metrics.listener.TurboDailyReportMessageListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.lang.Integer.max
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 @Configuration
 class MetricsThirdPartyListenerConfiguration {
 
-    @Bean
-    fun receiveCodeCheckDailyMessageQueue() = Queue(QUEUE_METRICS_STATISTIC_CODECC_DAILY)
-
-    @Bean
-    fun receiveCodeCheckDailyMessageFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(EXCHANGE_METRICS_STATISTIC_CODECC_DAILY, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
+    @StreamEventConsumer(EXCHANGE_METRICS_STATISTIC_CODECC_DAILY, STREAM_CONSUMER_GROUP)
+    fun codeCheckDailyMessageListener(
+        @Autowired listener: CodeCheckDailyMessageListener
+    ): Consumer<Message<String>> {
+        return Consumer { event: Message<String> ->
+            listener.execute(event.payload)
+        }
     }
 
-    @Bean
-    fun receiveCodeCheckDailyMessageQueueBind(
-        @Autowired receiveCodeCheckDailyMessageQueue: Queue,
-        @Autowired receiveCodeCheckDailyMessageFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(receiveCodeCheckDailyMessageQueue)
-            .to(receiveCodeCheckDailyMessageFanoutExchange)
+    @StreamEventConsumer(StreamBinding.EXCHANGE_QUALITY_DAILY_FANOUT, STREAM_CONSUMER_GROUP)
+    fun metricsQualityDailyReportListener(
+        @Autowired listener: QualityReportDailyMessageListener
+    ): Consumer<Message<QualityReportEvent>> {
+        return Consumer { event: Message<QualityReportEvent> ->
+            listener.execute(event.payload)
+        }
     }
 
-    @Bean
-    fun metricsMessageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
-
-    @Bean
-    fun receiveCodeCheckDailyMessageListenerContainer(
-        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory,
-        @Autowired receiveCodeCheckDailyMessageQueue: Queue,
-        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: CodeCheckDailyMessageListener,
-        @Autowired metricsMessageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(metricsMessageConverter)
-        val container = getContainer(connectionFactory, rabbitAdmin, adapter)
-        container.setQueueNames(receiveCodeCheckDailyMessageQueue.name)
-        return container
-    }
-
-    fun getContainer(
-        connectionFactory: ConnectionFactory,
-        rabbitAdmin: RabbitAdmin,
-        adapter: MessageListenerAdapter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(max(10, 1))
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(10)
-        container.setMismatchedQueuesFatal(true)
-        container.setMessageListener(adapter)
-        return container
-    }
-
-    @Bean
-    fun metricsQualityDailyReportQueue() = Queue(QUEUE_QUALITY_DAILY_EVENT)
-
-    @Bean
-    fun metricsQualityDailyReportExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(EXCHANGE_QUALITY_DAILY_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun metricsQualityDailyQueueBind(
-        @Autowired metricsQualityDailyReportQueue: Queue,
-        @Autowired metricsQualityDailyReportExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(metricsQualityDailyReportQueue).to(metricsQualityDailyReportExchange)
-    }
-
-    @Bean
-    fun metricsQualityDailyReportListenerContainer(
-        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory,
-        @Autowired metricsQualityDailyReportQueue: Queue,
-        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: QualityReportDailyMessageListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        val container = getContainer(connectionFactory, rabbitAdmin, adapter)
-        container.setQueueNames(metricsQualityDailyReportQueue.name)
-        return container
-    }
-
-    @Bean
-    fun metricsTurboDailyReportQueue() = Queue(QUEUE_METRICS_STATISTIC_TURBO_DAILY)
-
-    @Bean
-    fun metricsTurboDailyReportExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(EXCHANGE_METRICS_STATISTIC_TURBO_DAILY, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun metricsTurboDailyReportQueueBind(
-        @Autowired metricsTurboDailyReportQueue: Queue,
-        @Autowired metricsTurboDailyReportExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(metricsTurboDailyReportQueue).to(metricsTurboDailyReportExchange)
-    }
-
-    @Bean
-    fun metricsTurboDailyReportListenerContainer(
-        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory,
-        @Autowired metricsTurboDailyReportQueue: Queue,
-        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: TurboDailyReportMessageListener,
-        @Autowired metricsMessageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(metricsMessageConverter)
-        val container = getContainer(connectionFactory, rabbitAdmin, adapter)
-        container.setQueueNames(metricsTurboDailyReportQueue.name)
-        return container
+    @StreamEventConsumer(EXCHANGE_METRICS_STATISTIC_TURBO_DAILY, STREAM_CONSUMER_GROUP)
+    fun metricsTurboDailyReportListener(
+        @Autowired listener: TurboDailyReportMessageListener
+    ): Consumer<Message<String>> {
+        return Consumer { event: Message<String> ->
+            listener.execute(event.payload)
+        }
     }
 
     companion object {
+        const val STREAM_CONSUMER_GROUP = "metrics-service"
         private const val QUEUE_QUALITY_DAILY_EVENT = "q.metrics.quality.daily.exchange.queue"
         private const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.metrics.quality.daily.exchange.fanout"
         private const val QUEUE_METRICS_STATISTIC_CODECC_DAILY = "q.metrics.statistic.codecc.daily"

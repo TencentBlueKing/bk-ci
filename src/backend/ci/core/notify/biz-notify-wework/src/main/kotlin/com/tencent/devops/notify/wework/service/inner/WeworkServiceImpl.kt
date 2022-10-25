@@ -35,8 +35,7 @@ import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_WEWORK
+import com.tencent.devops.notify.QUEUE_NOTIFY_WEWORK
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
@@ -56,6 +55,7 @@ import com.tencent.devops.notify.wework.pojo.VideoSendMessageRequest
 import com.tencent.devops.notify.wework.pojo.VoiceSendMessageRequest
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Configuration
 import java.io.InputStream
 import java.nio.file.Files
@@ -83,7 +83,7 @@ class WeworkServiceImpl(
     }
 
     override fun sendMqMsg(message: WeworkNotifyMessageWithOperation) {
-        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WEWORK, message)
+        message.sendTo(streamBridge, QUEUE_NOTIFY_WEWORK)
     }
 
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {

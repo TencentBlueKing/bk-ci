@@ -28,6 +28,7 @@
 package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.annotations.ApiModelProperty
 
@@ -41,4 +42,4 @@ data class QualityReportEvent(
     val interceptedCount: Int,
     @ApiModelProperty("红线执行总次数")
     val totalCount: Int
-)
+) : IEvent()

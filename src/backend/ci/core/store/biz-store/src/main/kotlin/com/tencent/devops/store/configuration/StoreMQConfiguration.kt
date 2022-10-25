@@ -27,22 +27,17 @@
 
 package com.tencent.devops.store.configuration
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.store.listener.StorePipelineBuildFinishListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 /**
  * 流水线构建扩展配置
@@ -50,57 +45,19 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class StoreMQConfiguration {
 
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
-    @Value("\${queueConcurrency.market:3}")
-    private val marketConcurrency: Int? = null
-
-    @Bean
-    fun pipelineBuildAtomMarketQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_ATOM_MARKET)
-
-    /**
-     * 构建结束广播交换机
-     */
-    @Bean
-    fun pipelineBuildFinishFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun pipelineBuildAtomMarketQueueBind(
-        @Autowired pipelineBuildAtomMarketQueue: Queue,
-        @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildAtomMarketQueue)
-            .to(pipelineBuildFinishFanoutExchange)
+    companion object {
+        const val STREAM_CONSUMER_GROUP = "store-service"
     }
 
     @Bean
     fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
-    @Bean
-    fun pipelineBuildStoreListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildAtomMarketQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: StorePipelineBuildFinishListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildAtomMarketQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = listener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 120000,
-            consecutiveActiveTrigger = 10,
-            concurrency = marketConcurrency!!,
-            maxConcurrency = 10
-        )
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    fun buildFinishListener(
+        @Autowired listener: StorePipelineBuildFinishListener
+    ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildFinishBroadCastEvent> ->
+            listener.run(event.payload)
+        }
     }
 }

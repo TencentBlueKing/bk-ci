@@ -29,12 +29,12 @@ package com.tencent.devops.quality.cron
 
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.quality.config.QualityDailyDispatch
 import com.tencent.devops.quality.dao.HistoryDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -43,7 +43,7 @@ import java.time.format.DateTimeFormatter
 @Component
 class QualityDailyReportJob @Autowired constructor(
     private val historyDao: HistoryDao,
-    private val qualityDailyDispatch: QualityDailyDispatch,
+    private val streamBridge: StreamBridge,
     private val dslContext: DSLContext
 ) {
 
@@ -81,14 +81,12 @@ class QualityDailyReportJob @Autowired constructor(
                     startTime = startTime,
                     endTime = endTime
                 )
-                qualityDailyDispatch.dispatch(
-                    QualityReportEvent(
-                        statisticsTime = startTime.format(DateTimeFormatter.ISO_DATE),
-                        projectId = it.value1(),
-                        interceptedCount = interceptCount.toInt(),
-                        totalCount = it.value2()
-                    )
-                )
+                QualityReportEvent(
+                    statisticsTime = startTime.format(DateTimeFormatter.ISO_DATE),
+                    projectId = it.value1(),
+                    interceptedCount = interceptCount.toInt(),
+                    totalCount = it.value2()
+                ).sendTo(streamBridge)
             }
             logger.info("finish to send quality daily data.")
         }

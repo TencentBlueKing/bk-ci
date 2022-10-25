@@ -36,8 +36,6 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.SmsNotifyPost
 import com.tencent.devops.model.notify.tables.records.TNotifySmsRecord
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_SMS
 import com.tencent.devops.notify.dao.SmsNotifyDao
 import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
 import com.tencent.devops.notify.service.SmsService
@@ -47,6 +45,7 @@ import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.common.notify.utils.Configuration
+import com.tencent.devops.notify.QUEUE_NOTIFY_SMS
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.beans.factory.annotation.Autowired
@@ -66,7 +65,7 @@ class SmsServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(SmsServiceImpl::class.java)
 
     override fun sendMqMsg(message: SmsNotifyMessage) {
-        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, message)
+        message.sendTo(streamBridge, QUEUE_NOTIFY_SMS)
     }
 
     override fun sendMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
@@ -148,18 +147,16 @@ class SmsServiceImpl @Autowired constructor(
             tofSysId = post.tofSysId
             fromSysId = post.fromSysId
         }
-        streamBridge.convertAndSend(EXCHANGE_NOTIFY, ROUTE_SMS, smsNotifyMessageWithOperation) { message ->
-            var delayTime = 0
-            when (retryCount) {
-                1 -> delayTime = 30000
-                2 -> delayTime = 120000
-                3 -> delayTime = 300000
-            }
-            if (delayTime > 0) {
-                message.messageProperties.setHeader("x-delay", delayTime)
-            }
-            message
+        var delayTime = 0
+        when (retryCount) {
+            1 -> delayTime = 30000
+            2 -> delayTime = 120000
+            3 -> delayTime = 300000
         }
+        if (delayTime > 0) {
+            smsNotifyMessageWithOperation.delayMills = delayTime
+        }
+        smsNotifyMessageWithOperation.sendTo(streamBridge, QUEUE_NOTIFY_SMS)
     }
 
     private fun generateSmsNotifyPost(smsNotifyMessage: SmsNotifyMessage): List<SmsNotifyPost> {

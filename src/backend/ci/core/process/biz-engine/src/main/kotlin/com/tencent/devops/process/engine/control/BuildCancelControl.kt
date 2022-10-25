@@ -343,7 +343,7 @@ class BuildCancelControl @Autowired constructor(
     }
 
     private fun NormalContainer.shutdown(event: PipelineBuildCancelEvent, executeCount: Int) {
-        pipelineMQEventDispatcher.dispatch(
+        routeEventDispatcher.dispatch(
             PipelineBuildLessShutdownDispatchEvent(
                 source = "BuildCancelControl",
                 projectId = event.projectId,
