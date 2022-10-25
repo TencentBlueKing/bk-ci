@@ -94,6 +94,8 @@ data class CodeGitWebHookTriggerElement(
     val includeMrAction: List<String>? = null,
     @ApiModelProperty("push事件action")
     val includePushAction: List<String>? = null,
+    @ApiModelProperty("是否启用第三方过滤")
+    val enableThirdFilter: Boolean? = false,
     @ApiModelProperty("第三方应用地址")
     val thirdUrl: String? = null,
     @ApiModelProperty("第三方应用鉴权token")
