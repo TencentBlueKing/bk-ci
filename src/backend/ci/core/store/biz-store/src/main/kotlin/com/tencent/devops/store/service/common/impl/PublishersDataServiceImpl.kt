@@ -207,8 +207,7 @@ class PublishersDataServiceImpl @Autowired constructor(
     private fun createPublisherMemberRel(
         publisherId: String,
         memberId: String,
-        userId: String,
-
+        userId: String
     ): TStorePublisherMemberRelRecord {
         val storePublisherMemberRel = TStorePublisherMemberRelRecord()
         storePublisherMemberRel.id = UUIDUtil.generate()

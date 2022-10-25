@@ -33,17 +33,13 @@ import com.tencent.devops.store.api.atom.UserAtomReleaseResource
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
-import com.tencent.devops.store.pojo.common.PublisherInfo
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomReleaseService
-import com.tencent.devops.store.service.common.PublishersDataService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAtomReleaseResourceImpl @Autowired constructor(
-    private val atomReleaseService: AtomReleaseService,
-    private val publishersDataService: PublishersDataService
+    private val atomReleaseService: AtomReleaseService
 ) : UserAtomReleaseResource {
 
     override fun updateMarketAtom(
