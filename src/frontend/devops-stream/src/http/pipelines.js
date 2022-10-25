@@ -104,6 +104,10 @@ export default {
         return api.get(`${STREAM_PERFIX}/user/gitcode/projects/repository/branches`, { params })
     },
 
+    getPipelineBuildBranches (params) {
+        return api.get(`${STREAM_PERFIX}/user/gitcode/projects/repository/local_branches`, { params })
+    },
+
     getPipelineCommits (params) {
         return api.get(`${STREAM_PERFIX}/user/gitcode/projects/commits`, { params })
     },
@@ -139,6 +143,11 @@ export default {
 
     cancelBuildPipeline (projectId, pipelineId, buildId) {
         return api.delete(`${STREAM_PERFIX}/user/builds/${projectId}/${pipelineId}/${buildId}`)
+    },
+
+    reviewTrigger (projectId, pipelineId, buildId, approve) {
+        const queryStr = `?pipelineId=${pipelineId}&buildId=${buildId}&approve=${approve}`
+        return api.post(`${STREAM_PERFIX}/user/current/build/detail/${projectId}/review${queryStr}`)
     },
 
     getContainerInfoByBuildId (projectId, pipelineId, buildId, vmSeqId) {
@@ -188,5 +197,9 @@ export default {
 
     getPipelineDirList (projectId, params) {
         return api.get(`${STREAM_PERFIX}/user/pipelines/${projectId}/dir_list`, { params })
+    },
+
+    getPipelineParamJson (projectId, pipelineId, params) {
+        return api.get(`${STREAM_PERFIX}/user/trigger/build/${projectId}/${pipelineId}/manual`, { params })
     }
 }

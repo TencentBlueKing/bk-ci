@@ -27,10 +27,12 @@
 
 package com.tencent.devops.dispatch.docker.service
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.docker.client.BuildLessClient
 import com.tencent.devops.dispatch.docker.client.DockerHostClient
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
@@ -39,7 +41,8 @@ import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
-import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.jooq.DSLContext
@@ -65,20 +68,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         val vmSeqId = event.vmSeqId
         LOG.info("[$buildId]|BUILD_LESS| pipelineId=$pipelineId, seq($vmSeqId)")
         // Check if the pipeline is running
-        val record = client.get(ServicePipelineResource::class).isPipelineRunning(
-            projectId = event.projectId,
-            buildId = buildId,
-            channelCode = ChannelCode.valueOf(event.channelCode)
-        )
-        if (record.isNotOk() || record.data == null) {
-            LOG.warn("[$buildId]|BUILD_LESS| Fail to check if pipeline is running because of ${record.message}")
-            return
-        }
-
-        if (!record.data!!) {
-            LOG.warn("[$buildId]|BUILD_LESS| The build is not running")
-            return
-        }
+        checkPipelineRunning(event)
 
         if (event.retryTime == 0) {
             buildLogPrinter.addLine(
@@ -115,7 +105,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
 
     fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {
         try {
-            LOG.info("[${event.buildId}]| Start to finish the pipeline build($event)")
+            LOG.info("${event.buildId}|${event.vmSeqId} Start to finish the pipeline build($event)")
             val executeCount = event.executeCount
             if (event.vmSeqId.isNullOrBlank()) {
                 val records = pipelineDockerBuildDao
@@ -128,10 +118,42 @@ class PipelineAgentLessDispatchService @Autowired constructor(
                     .getBuild(dslContext, event.buildId, event.vmSeqId!!.toInt())
                 if (record != null) {
                     finishBuild(record, event.buildResult, executeCount)
+                } else {
+                    LOG.warn("${event.buildId}|${event.vmSeqId}|${event.executeCount} no record.")
                 }
             }
         } finally {
             buildLogPrinter.stopLog(buildId = event.buildId, tag = "", jobId = null)
+        }
+    }
+
+    private fun checkPipelineRunning(event: PipelineBuildLessStartupDispatchEvent) {
+        // 判断流水线当前container是否在运行中
+        val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
+            projectId = event.projectId,
+            buildId = event.buildId,
+            taskId = VMUtils.genStartVMTaskId(event.containerId)
+        )
+
+        if (statusResult.isNotOk() || statusResult.data == null) {
+            LOG.warn("The build event($event) fail to check if pipeline task is running " +
+                            "because of ${statusResult.message}")
+            throw BuildFailureException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
+                formatErrorMessage = "无法获取流水线JOB状态，构建停止",
+                errorMessage = "无法获取流水线JOB状态，构建停止"
+            )
+        }
+
+        if (!statusResult.data!!.isRunning()) {
+            LOG.warn("The build event($event) is not running")
+            throw BuildFailureException(
+                errorType = ErrorType.USER,
+                errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
+                formatErrorMessage = "流水线JOB已经不再运行，构建停止",
+                errorMessage = "流水线JOB已经不再运行，构建停止"
+            )
         }
     }
 
@@ -140,10 +162,10 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         success: Boolean,
         executeCount: Int? = null
     ) {
-        LOG.info("Finish the docker buildless (${record.buildId}) with result($success)")
+        LOG.info("${record.buildId}|${record.vmSeqId} Finish the docker buildless with result($success)")
         try {
             if (record.dockerIp.isNotEmpty()) {
-                if (buildLessWhitelistService.checkBuildLessWhitelist(record.projectId)) {
+                if (!buildLessWhitelistService.checkBuildLessWhitelist(record.projectId)) {
                     buildLessClient.endBuild(
                         projectId = record.projectId,
                         pipelineId = record.pipelineId,
@@ -171,13 +193,13 @@ class PipelineAgentLessDispatchService @Autowired constructor(
                 record.buildId,
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-
-            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString(), executeCount)
-
-            // 无编译环境清除redisAuth
-            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
         } catch (e: Exception) {
-            LOG.warn("Finish the docker buildless (${record.buildId}) error.", e)
+            LOG.warn("${record.buildId}|${record.vmSeqId} Finish the docker buildless error.", e)
+        } finally {
+            // 无编译环境清除redisAuth
+            val decryptSecretKey = SecurityUtil.decrypt(record.secretKey)
+            LOG.info("${record.buildId}|${record.vmSeqId} delete dockerBuildKey ${record.id}|$decryptSecretKey")
+            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
         }
     }
 

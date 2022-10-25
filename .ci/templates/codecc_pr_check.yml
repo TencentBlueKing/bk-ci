@@ -1,0 +1,14 @@
+gates:
+  - name: GithubPR检查质量红线
+    rule:
+      - CodeCCCheckAtom.sensitive_defect <= 0
+      - CodeCCCheckAtom.dupc_average <= 5
+      - CodeCCCheckAtom.dupc_filemax <= 1.1
+      - CodeCCCheckAtom.ccn_average <= 10
+      - CodeCCCheckAtom.ccn_funcmax <= 70
+      - CodeCCCheckAtom.checkstyle_all_defect <= 0
+      - CodeCCCheckAtom.go_all_defect <= 0
+      - CodeCCCheckAtom.detekt_all_defect <= 0
+    notify-on-fail:
+      - type: email
+        receivers: [ mingshewhe@tencent.com ]

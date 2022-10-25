@@ -82,6 +82,7 @@
   "applyPermission": "Apply for permission",
   "buildTrigger": "Trigger build",
   "manualTrigger": "Trigger build",
+  "All": "All",
   "store": "Store",
   "buildNum": "BuildNo.",
   "propertyBar": "Property",
@@ -244,7 +245,8 @@
     "createTime": "Create time",
     "restoreSuc": "Restored successfully",
     "emptyTitle": "No pipeline can be restored",
-    "emptyDesc": "You can restore the pipeline deleted in last a month"
+    "emptyDesc": "You can restore the pipeline deleted in last a month",
+    "restoreSearchTips": "Enter pipeline name to search"
   },
   "atomManage": {
     "installedAtom": "Installed plugins",
@@ -538,7 +540,10 @@
     "fileUnit": "{0} files",
     "completedLog": "full-log",
     "artifactList": "Artifacts",
-    "showAll": "Show all"
+    "showAll": "Show all",
+    "copyToCustomArtifactory": "Copy to custom artifactory",
+    "downloading": "Downloading ",
+    "copySuc": " Copy {0} to custom artifactory successfully"
   },
   "preview": {
     "build": "Build",
@@ -575,6 +580,7 @@
     "repoType": "Type",
     "customRepo": "Custom Artifactory",
     "pipelineRepo": "Pipeline Artifactory",
+    "imageRepo": "Image Artifactory",
     "noArtifact": " No artifacts yet",
     "noDownloadPermTips": " Download failed because you don't have permission to download the artifacts in this pipeline",
     "qrcode": "QR code",
@@ -648,6 +654,7 @@
     "manualReviewSuggestNameSpaceTip": "Audit suggest",
     "atomHelpDoc": "Help documentation",
     "macSystemVersion": "MacOS system version",
+    "winSystemVersion": "Windows system version",
     "xcodeVersion": "XCode version",
     "notRecomendPlugin": "This plugin is not recommended",
     "notRecomendImage": "This image is not recommended",
@@ -830,7 +837,7 @@
     "githubAppTips": "Need to install xxx before enabling this plugin",
     "paramInputTips": " Please enter parameters",
     "paramEmptyTips": " No parameters exist in this sub-pipeline",
-    "remoteCurlTips": " After this plugin is added, the current pipeline can be triggered for building through specific URL ( the person who activate it is the one who last edited the pipeline) ",
+    "remoteCurlTips": " After this plugin is added, the current pipeline can be triggered for building through specific URL ( the person who activate it is the one who last edited the pipeline, the trigger person can be passed in via X-DEVOPS-UID ) ",
     "example": "Example",
     "confirmMsg": " If leave, the data of new edition will be lost",
     "confirmTitle": "Confirm exit",

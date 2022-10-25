@@ -33,6 +33,7 @@ enum class StreamObjectKind(val value: String) {
     PUSH("push"),
     TAG_PUSH("tag_push"),
     MERGE_REQUEST("merge_request"),
+    PULL_REQUEST("pull_request"),
     MANUAL("manual"),
     SCHEDULE("schedule"),
     DELETE("delete"),
@@ -41,6 +42,8 @@ enum class StreamObjectKind(val value: String) {
     REVIEW("review"),
     NOTE("note");
 }
+
+fun StreamObjectKind.needInput() = this == StreamObjectKind.MANUAL || this == StreamObjectKind.OPENAPI
 
 enum class StreamPushActionType(val value: String) {
     NEW_BRANCH("new-branch"),

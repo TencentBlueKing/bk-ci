@@ -33,7 +33,6 @@ import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.service.common.LabelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -43,13 +42,11 @@ class ImageLabelService @Autowired constructor(
     private val imageLabelRelDao: ImageLabelRelDao,
     private val labelService: LabelService
 ) {
-    private val logger = LoggerFactory.getLogger(ImageLabelService::class.java)
 
     /**
      * 查找镜像标签
      */
     fun getLabelsByImageId(imageId: String): Result<List<Label>?> {
-        logger.info("the imageId is :$imageId")
         val imageLabelList = mutableListOf<Label>()
         val imageLabelRecords = imageLabelRelDao.getLabelsByImageId(dslContext, imageId) // 查询镜像标签信息
         imageLabelRecords?.forEach {

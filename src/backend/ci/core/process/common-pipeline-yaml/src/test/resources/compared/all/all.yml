@@ -31,6 +31,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -55,7 +56,7 @@ stages:
       checkout: null
     - name: "腾讯代码分析(官方-代码分析工作组)"
       id: "check"
-      if: "true == true"
+      if: "(true == true)"
       if-modify: null
       uses: "CodeccCheckAtomDebug@4.*"
       with:
@@ -64,7 +65,7 @@ stages:
         toolScanType: "1"
         languages:
         - "C_CPP"
-        tools: "${{ parameters.tools }}"
+        tools: ""
         languageRuleSetMap:
           C_CPP_RULE:
           - "standard_cpp"
@@ -109,6 +110,118 @@ stages:
     timeout-minutes: null
     env: null
     continue-on-error: null
+    strategy: null
+    depend-on: null
+  - id: "all-job-1"
+    name: "all-job-1"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "123"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env:
+      output_content: "all-job-1 [基本语法] 执行完成"
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  - id: "all-job-1-2"
+    name: "互斥组放弃测试"
+    mutex:
+      label: "mutex-1"
+      queue-length: null
+      timeout-minutes: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo 123\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: true
+    strategy: null
+    depend-on: null
+  - id: "all-job-1-3"
+    name: "互斥组等待测试"
+    mutex:
+      label: "mutex-2"
+      queue-length: 3
+      timeout-minutes: 10
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo 123\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: true
     strategy: null
     depend-on: null
   if-modify: null

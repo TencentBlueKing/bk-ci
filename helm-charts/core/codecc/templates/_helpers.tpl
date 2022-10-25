@@ -21,11 +21,15 @@ Create a default fully qualified mongodb subchart.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
 {{- define "codecc.mongodb.fullname" -}}
+{{- if eq .Values.mongodb.enabled true -}}
 {{- if .Values.mongodb.fullnameOverride -}}
 {{- .Values.mongodb.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- $name := default "mongodb" .Values.mongodb.nameOverride -}}
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- else -}}
+{{- .Values.externalMongodb.host -}}
 {{- end -}}
 {{- end -}}
 
@@ -48,33 +52,96 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 {{- end -}}
 
+
+{{/*
+Return the mongodb username
+*/}}
+{{- define "codecc.mongodb.username" -}}
+{{- if eq .Values.mongodb.enabled true -}}
+{{- .Values.mongodb.auth.username -}}
+{{- else -}}
+{{- .Values.externalMongodb.username -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the mongodb password
+*/}}
+{{- define "codecc.mongodb.password" -}}
+{{- if eq .Values.mongodb.enabled true -}}
+{{- .Values.mongodb.auth.password -}}
+{{- else -}}
+{{- .Values.externalMongodb.password -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the mongodb port
+*/}}
+{{- define "codecc.mongodb.port" -}}
+{{- if eq .Values.mongodb.enabled true -}}
+27017
+{{- else -}}
+{{- .Values.externalMongodb.port -}}
+{{- end -}}
+{{- end -}}
+
 {{/*
 Return the mongodb connection uri
 */}}
 {{- define "codecc.defect.mongodbUri" -}}
 {{- if eq .Values.mongodb.enabled true -}}
-{{- printf "mongodb://%s:%s@%s:27017/db_defect" .Values.mongodb.auth.username .Values.mongodb.auth.password (include "codecc.mongodb.fullname" .) -}}
+{{- printf "mongodb://%s:%s@%s:%s/db_defect" .Values.mongodb.auth.username .Values.mongodb.auth.password (include "codecc.mongodb.fullname" .) (include "codecc.mongodb.port" .) -}}
 {{- else -}}
-{{- .Values.externalMongodb.defectUrl -}}
+{{- printf "mongodb://%s:%s@%s:%s/db_defect?%s" .Values.externalMongodb.username (.Values.externalMongodb.password | urlquery) (include "codecc.mongodb.fullname" .) (include "codecc.mongodb.port" .) .Values.externalMongodb.extraUrlParams -}}
 {{- end -}}
 {{- end -}}
 
 
 {{- define "codecc.task.mongodbUri" -}}
 {{- if eq .Values.mongodb.enabled true -}}
-{{- printf "mongodb://%s:%s@%s:27017/db_task" .Values.mongodb.auth.username .Values.mongodb.auth.password (include "codecc.mongodb.fullname" .) -}}
+{{- printf "mongodb://%s:%s@%s:%s/db_task" .Values.mongodb.auth.username .Values.mongodb.auth.password (include "codecc.mongodb.fullname" .) (include "codecc.mongodb.port" .) -}}
 {{- else -}}
-{{- .Values.externalMongodb.taskUrl -}}
+{{- printf "mongodb://%s:%s@%s:%s/db_task?%s" .Values.externalMongodb.username (.Values.externalMongodb.password | urlquery) (include "codecc.mongodb.fullname" .) (include "codecc.mongodb.port" .) .Values.externalMongodb.extraUrlParams -}}
 {{- end -}}
 {{- end -}}
 
 {{- define "codecc.quartz.mongodbUri" -}}
 {{- if eq .Values.mongodb.enabled true -}}
-{{- printf "mongodb://%s:%s@%s:27017/db_quartz" .Values.mongodb.auth.username .Values.mongodb.auth.password (include "codecc.mongodb.fullname" .) -}}
+{{- printf "mongodb://%s:%s@%s:%s/db_quartz" .Values.mongodb.auth.username .Values.mongodb.auth.password (include "codecc.mongodb.fullname" .) (include "codecc.mongodb.port" .) -}}
 {{- else -}}
-{{- .Values.externalMongodb.quartzUrl -}}
+{{- printf "mongodb://%s:%s@%s:%s/db_quartz?%s" .Values.externalMongodb.username (.Values.externalMongodb.password | urlquery) (include "codecc.mongodb.fullname" .) (include "codecc.mongodb.port" .) .Values.externalMongodb.extraUrlParams -}}
 {{- end -}}
 {{- end -}}
+
+
+{{/*
+Return the mongodb auth ab
+*/}}
+{{- define "codecc.mongodb.defectAuthDB" -}}
+{{- if eq .Values.mongodb.enabled true -}}
+db_defect
+{{- else -}}
+{{- .Values.externalRedis.authDB -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "codecc.mongodb.taskAuthDB" -}}
+{{- if eq .Values.mongodb.enabled true -}}
+db_task
+{{- else -}}
+{{- .Values.externalRedis.authDB -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "codecc.mongodb.quartzAuthDB" -}}
+{{- if eq .Values.mongodb.enabled true -}}
+db_quartz
+{{- else -}}
+{{- .Values.externalRedis.authDB -}}
+{{- end -}}
+{{- end -}}
+
 
 {{- define "codecc.redis.host" -}}
 {{- if eq .Values.redis.enabled true -}}

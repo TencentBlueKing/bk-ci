@@ -89,6 +89,7 @@ class YamlSchemaCheck @Autowired constructor() {
         val loadYaml = try {
             YamlUtil.toYaml(Yaml().load(originYaml))
         } catch (ignored: Throwable) {
+            logger.warn("YAML_SCHEMA_CHECK|originYaml=$originYaml", ignored)
             throw YamlFormatException("There may be a problem with your yaml syntax ${ignored.message}")
         }
         // 解析锚点
@@ -133,7 +134,11 @@ class YamlSchemaCheck @Autowired constructor() {
         try {
             f()
         } catch (e: Throwable) {
-            logger.info("gitRequestEvent ${action.data.context.requestEventId} git ci yaml is invalid", e)
+            logger.info(
+                "YamlSchemaCheck|schemaExceptionHandle" +
+                    "|git ci yaml is invalid|requestEventId|${action.data.context.requestEventId}",
+                e
+            )
             val (block, message, reason) = when (e) {
                 is YamlFormatException, is CustomException -> {
                     Triple(action.metaData.isStreamMr(), e.message, TriggerReason.CI_YAML_INVALID)
@@ -146,7 +151,7 @@ class YamlSchemaCheck @Autowired constructor() {
                     throw e
                 }
                 else -> {
-                    logger.error("YamlSchemaCheck event: ${action.data.context.requestEventId}unknow error", e)
+                    logger.warn("YamlSchemaCheck|requestEventId|${action.data.context.requestEventId}|error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
@@ -166,7 +171,7 @@ class YamlSchemaCheck @Autowired constructor() {
         return getSchemaFromGit(file)
     }
 
-    private fun getSchemaFromGit(file: String): JsonSchema {
+    fun getSchemaFromGit(file: String): JsonSchema {
         if (schemaMap[file] != null) {
             return schemaMap[file]!!
         }

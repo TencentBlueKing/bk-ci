@@ -306,7 +306,6 @@ class TemplateDao {
 
     fun getTemplate(
         dslContext: DSLContext,
-        projectId: String? = null,
         templateId: String,
         versionName: String?,
         version: Long? = null
@@ -319,9 +318,6 @@ class TemplateDao {
             }
             if (!versionName.isNullOrBlank()) {
                 conditions.add(VERSION_NAME.eq(versionName))
-            }
-            if (!projectId.isNullOrBlank()) {
-                conditions.add(PROJECT_ID.eq(projectId))
             }
             return dslContext.selectFrom(this)
                 .where(conditions)

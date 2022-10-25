@@ -64,7 +64,7 @@ object Constants {
     const val BK_ERROR_COUNT = "errorCount"
     const val BK_TOTAL_EXECUTE_COUNT_SUM = "totalExecuteCountSum"
     const val BK_SUCCESS_EXECUTE_COUNT_SUM = "successExecuteCountSum"
-    const val BK_TOTAL_AVG_COST_TIME_SUM = "totalAvgCostTimeSum"
+    const val BK_TOTAL_COST_TIME_SUM = "totalCostTimeSum"
 
     const val ERROR_TYPE_NAME_PREFIX = "METRICS_ERROR_TYPE_"
 

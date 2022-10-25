@@ -28,12 +28,12 @@
 package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_INCLUDE_PATHS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_P4PORT
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.repository.pojo.Repository
 import org.springframework.stereotype.Service
 
 @Service

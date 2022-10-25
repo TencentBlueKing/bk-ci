@@ -127,4 +127,34 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_USER_BLACKLIST` (
    KEY `bk_userId` (`USER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `T_AUTH_MANAGER_APPROVAL`
+(
+    `ID`           int(11)                             NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `USER_ID`      varchar(64)                         NOT NULL COMMENT '用户ID',
+    `MANAGER_ID`   int                                 NOT NULL COMMENT '管理员权限ID',
+    `EXPIRED_TIME` timestamp                           NOT NULL COMMENT '权限过期时间',
+    `START_TIME`   timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '审批单生效时间',
+    `END_TIME`     timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '审批单失效时间',
+    `STATUS`       int(2)                              NOT NULL COMMENT '发送状态 0-审核流程中 ,1-用户拒绝续期,2-用户同意续期,3-审批人拒绝续期，4-审批人同意续期',
+    `CREATE_TIME`  timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+    `UPDATE_TIME`  timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+    INDEX `IDX_USER_ID` (`USER_ID`),
+    INDEX `IDX_MANAGER_ID` (`MANAGER_ID`),
+    PRIMARY KEY (`ID`)
+) ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4 COMMENT '蓝盾超级管理员权限续期审核表';
+
+CREATE TABLE IF NOT EXISTS `T_AUTH_USER_INFO`  (
+   `ID` int NOT NULL AUTO_INCREMENT,
+   `userId` varchar(255) NOT NULL COMMENT '用户ID',
+   `email` varchar(255) NULL COMMENT '邮箱',
+   `phone` varchar(32) NULL COMMENT '手机号',
+   `create_time` datetime NOT NULL COMMENT '注册时间',
+   `user_type` int NOT NULL COMMENT '用户类型 0.页面注册 1.GitHub 2.Gitlab',
+   `last_login_time` datetime NULL COMMENT '最后登陆时间',
+  `user_status` int NOT NULL COMMENT '用户状态,0--正常,1--冻结',
+   PRIMARY KEY (`ID`),
+   UNIQUE INDEX `bk_user`(`userId`, `user_type`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='账号信息表';
+
 SET FOREIGN_KEY_CHECKS = 1;

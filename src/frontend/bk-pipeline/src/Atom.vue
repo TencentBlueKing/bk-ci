@@ -448,8 +448,13 @@
                 if (this.hasReviewPerm) {
                     try {
                         this.isBusy = true
+                        const { stageIndex, containerIndex, containerGroupIndex, atomIndex } = this
                         const data = {
                             elementId: this.atom.id,
+                            stageIndex,
+                            containerIndex,
+                            containerGroupIndex,
+                            atomIndex,
                             action
                         }
                         await this.asyncEvent(ATOM_QUALITY_CHECK_EVENT_NAME, data)

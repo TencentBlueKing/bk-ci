@@ -37,7 +37,9 @@ import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.trigger.ScheduleTriggerService
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
+import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimerBranch
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
@@ -61,7 +63,8 @@ class StreamTimerBuildListener @Autowired constructor(
     private val scheduleTriggerService: ScheduleTriggerService,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val streamGitConfig: StreamGitConfig,
-    private val tGitApiService: TGitApiService
+    private val tGitApiService: TGitApiService,
+    private val githubApiService: GithubApiService
 ) : BaseListener<StreamTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: StreamTimerBuildEvent) {
@@ -73,7 +76,7 @@ class StreamTimerBuildListener @Autowired constructor(
                     hasLastInfo = false
                 )
                 if (record == null) {
-                    logger.warn("[$pipelineId]|git config not exist")
+                    logger.warn("StreamTimerBuildListener|run|git config not exist|pipelineiId|$pipelineId")
                     return
                 }
 
@@ -84,6 +87,15 @@ class StreamTimerBuildListener @Autowired constructor(
                             listOf(
                                 tGitApiService.getGitProjectInfo(
                                     cred = TGitCred(record.enableUserId),
+                                    gitProjectId = event.gitProjectId.toString(),
+                                    retry = ApiRequestRetryInfo(true)
+                                )!!.defaultBranch!!
+                            )
+                        }
+                        ScmType.GITHUB -> {
+                            listOf(
+                                githubApiService.getGitProjectInfo(
+                                    cred = GithubCred(record.enableUserId),
                                     gitProjectId = event.gitProjectId.toString(),
                                     retry = ApiRequestRetryInfo(true)
                                 )!!.defaultBranch!!
@@ -103,9 +115,12 @@ class StreamTimerBuildListener @Autowired constructor(
                     )
                 }
             } catch (t: OperationException) {
-                logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
+                logger.info("StreamTimerBuildListener|run|no start|pipelineId|$pipelineId|msg|${t.message}")
             } catch (ignored: Throwable) {
-                logger.warn("[$pipelineId]|TimerTrigger fail event=$event| error=${ignored.message}")
+                logger.warn(
+                    "StreamTimerBuildListener|run|TimerTrigger fail" +
+                        "|pipelineId|$pipelineId|event|$event|error|${ignored.message}"
+                )
             }
         }
     }
@@ -126,6 +141,15 @@ class StreamTimerBuildListener @Autowired constructor(
                     enableUserId = enableUserId,
                     retry = ApiRequestRetryInfo(true)
                 )
+                ScmType.GITHUB -> githubApiService.getLatestRevision(
+                    pipelineId = pipelineId,
+                    projectName = gitProjectId.toString(),
+                    gitUrl = gitUrl,
+                    branch = branch,
+                    userName = userId,
+                    enableUserId = enableUserId,
+                    retry = ApiRequestRetryInfo(true)
+                )
                 else -> TODO("对接其他Git平台时需要补充")
             } ?: return
 
@@ -135,7 +159,11 @@ class StreamTimerBuildListener @Autowired constructor(
                 scheduleTriggerService.triggerBuild(this, branch, latestRevisionInfo)
             }
         } catch (ignored: Throwable) {
-            logger.warn("[$pipelineId]|branch:$branch|TimerTrigger fail|", ignored)
+            logger.warn(
+                "StreamTimerBuildListener|timerTrigger|fail" +
+                    "|pipelineId|$pipelineId|branch|$branch|error",
+                ignored
+            )
         }
     }
 
@@ -150,7 +178,8 @@ class StreamTimerBuildListener @Autowired constructor(
         ) {
             val buildId = scheduleTriggerService.triggerBuild(this, branch, latestRevisionInfo)
             logger.info(
-                "[$pipelineId]|branch:$branch|revision:$latestRevision|TimerTrigger start| buildId=${buildId?.id}"
+                "StreamTimerBuildListener|branchChangeTimerTrigger|start" +
+                    "|pipelineId|$pipelineId|branch|$branch|revision|$latestRevision|buildId|${buildId?.id}"
             )
             if (buildId != null) {
                 streamTimerBranchService.save(
@@ -164,7 +193,10 @@ class StreamTimerBuildListener @Autowired constructor(
                 )
             }
         } else {
-            logger.info("$pipelineId|branch:$branch|revision:${timerBranch.revision}|revision not change")
+            logger.info(
+                "StreamTimerBuildListener|branchChangeTimerTrigger|revision not change" +
+                    "|pipelineId|$pipelineId|branch:$branch|revision:${timerBranch.revision}"
+            )
         }
     }
 }

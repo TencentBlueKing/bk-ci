@@ -38,8 +38,8 @@ spec:
       affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.turbo.affinity "context" $) | nindent 8 }}
       {{- else }}
       affinity:
-        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.turbo.podAffinityPreset "component" "microservice-turbo" "extraMatchLabels" (dict "app.kubernetes.io/name" "turbo") "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.turbo.podAntiAffinityPreset "component" "microservice-turbo" "extraMatchLabels" (dict "app.kubernetes.io/name" "turbo") "context" $) | nindent 10 }}
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.turbo.podAffinityPreset "component" "microservice-turbo" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.turbo.podAntiAffinityPreset "component" "microservice-turbo" "context" $) | nindent 10 }}
         nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.turbo.nodeAffinityPreset.type "key" .Values.turbo.nodeAffinityPreset.key "values" .Values.turbo.nodeAffinityPreset.values) | nindent 10 }}
       {{- end }}
       {{- if .Values.turbo.nodeSelector }}
@@ -83,7 +83,7 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           readinessProbe:
             httpGet:
@@ -92,7 +92,7 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           volumeMounts:
             - name: quartz-config

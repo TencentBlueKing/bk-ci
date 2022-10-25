@@ -20,12 +20,15 @@ variables:
   VAR1:
     value: "123"
     readonly: false
+    allow-modify-at-startup: false
   VAR2:
     value: "local-VAR2"
     readonly: false
+    allow-modify-at-startup: false
   VAR3:
     value: "intput-VAR3"
     readonly: false
+    allow-modify-at-startup: false
 stages:
 - name: "stage-1"
   label: []
@@ -41,6 +44,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -98,7 +102,7 @@ stages:
       continue-on-error: null
       retry-times: null
       env: null
-      run: "${{ parameters.STEP3 }}"
+      run: ""
       runAdditionalOptions:
         shell: null
       checkout: null

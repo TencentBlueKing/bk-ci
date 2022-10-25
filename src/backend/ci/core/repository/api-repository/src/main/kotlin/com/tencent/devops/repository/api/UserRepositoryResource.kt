@@ -183,7 +183,13 @@ interface UserRepositoryResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("排序字段", required = false)
+        @QueryParam("sortBy")
+        sortBy: String? = null,
+        @ApiParam("排序方式，升序降序", required = false)
+        @QueryParam("sortType")
+        sortType: String? = null
     ): Result<RepositoryPage<RepositoryInfoWithPermission>>
 
     @ApiOperation("代码库列表")
@@ -266,7 +272,8 @@ interface UserRepositoryResource {
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
-//
+
+    //
 //
 //    @ApiOperation("是否拥有创建代码库权限")
 // //    @Path("/{projectId}/hasCreatePermission")

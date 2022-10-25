@@ -27,10 +27,11 @@
 
 package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.github.GithubPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -77,11 +78,13 @@ data class GitRequestEvent(
     @ApiModelProperty("合并请求标题")
     var mrTitle: String?,
     @ApiModelProperty("Git事件对象")
-    var gitEvent: GitEvent?,
+    var gitEvent: CodeWebhookEvent?,
     @ApiModelProperty("去掉头部url的homepage")
     var gitProjectName: String?,
     @ApiModelProperty("远程仓库触发时得到的主库流水线列表")
-    var repoTriggerPipelineList: List<StreamRepoHookEvent>? = null
+    var repoTriggerPipelineList: List<StreamRepoHookEvent>? = null,
+    @ApiModelProperty("变更的yaml文件")
+    var changeYamlList: List<ChangeYamlList> = emptyList()
 ) {
     companion object {
         // 对应client下删除分支的场景，after=0000000000000000000000000000000000000000，表示删除分支。
@@ -98,13 +101,14 @@ data class GitRequestEvent(
     }
 
     // 当人工触发时不推送CommitCheck消息
-    fun sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value
+    fun sendCommitCheck() = objectKind != StreamGitObjectKind.MANUAL.value
 }
 
-fun GitRequestEvent.isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
+fun GitRequestEvent.isMr() = objectKind == StreamGitObjectKind.MERGE_REQUEST.value
 
 fun GitRequestEvent.isFork(): Boolean {
-    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
+    return (objectKind == StreamGitObjectKind.MERGE_REQUEST.value ||
+        objectKind == StreamGitObjectKind.PULL_REQUEST.value) &&
         sourceGitProjectId != null &&
         sourceGitProjectId != gitProjectId
 }
@@ -112,16 +116,27 @@ fun GitRequestEvent.isFork(): Boolean {
 /**
  * 判断是否是删除分支的event这个Event不做构建只做删除逻辑
  */
-fun GitRequestEvent.isDeleteBranch(): Boolean {
-    return objectKind == TGitObjectKind.PUSH.value &&
-        operationKind == TGitPushOperationKind.DELETE.value &&
-        (
-            extensionAction == TGitPushActionKind.DELETE_BRANCH.value ||
-                commitId == GitRequestEvent.DELETE_BRANCH_COMMITID_FROM_CLIENT
-            )
+fun GitRequestEvent.isDeleteBranch() = checkGithubDeleteBranch() || checkTGitDeleteBranch()
+
+fun GitRequestEvent.isDeleteTag() = checkGithubDeleteTag() || checkTGitDeleteTag()
+
+fun GitRequestEvent.checkTGitDeleteBranch() = objectKind == StreamGitObjectKind.PUSH.value &&
+    operationKind == TGitPushOperationKind.DELETE.value &&
+    (
+        extensionAction == TGitPushActionKind.DELETE_BRANCH.value ||
+            commitId == GitRequestEvent.DELETE_BRANCH_COMMITID_FROM_CLIENT
+        )
+
+fun GitRequestEvent.checkGithubDeleteBranch() = objectKind == StreamGitObjectKind.PUSH.value &&
+    operationKind == GithubPushOperationKind.DELETE.value &&
+    commitId == GitRequestEvent.DELETE_BRANCH_COMMITID_FROM_CLIENT
+
+fun GitRequestEvent.checkTGitDeleteTag(): Boolean {
+    return objectKind == StreamGitObjectKind.TAG_PUSH.value &&
+        operationKind == TGitPushOperationKind.DELETE.value
 }
 
-fun GitRequestEvent.isDeleteTag(): Boolean {
-    return objectKind == TGitObjectKind.TAG_PUSH.value &&
-        operationKind == TGitPushOperationKind.DELETE.value
+fun GitRequestEvent.checkGithubDeleteTag(): Boolean {
+    return objectKind == StreamGitObjectKind.TAG_PUSH.value &&
+        operationKind == GithubPushOperationKind.DELETE.value
 }

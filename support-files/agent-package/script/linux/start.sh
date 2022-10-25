@@ -17,9 +17,9 @@ function isPidExists()
 
 function start()
 {
-  if [[ ! -d  "jre" ]]; then
-    echo "unzipping the jre "
-    unzip -q -o jre.zip -d jre
+  if [[ ! -d  "jdk" ]]; then
+    echo "unzipping the jdk "
+    unzip -q -o jre.zip -d jdk
   fi
 
   if [[ ! -d  "${workspace}/workspace" ]]; then

@@ -108,8 +108,8 @@ class StoreLogServiceImpl @Autowired constructor(
                 start = start,
                 debug = debug,
                 tag = tag,
-                    jobId = null,
-                    executeCount = executeCount
+                jobId = null,
+                executeCount = executeCount
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)
@@ -147,8 +147,8 @@ class StoreLogServiceImpl @Autowired constructor(
                 start = start,
                 end = end,
                 tag = tag,
-                    jobId = null,
-                    executeCount = executeCount
+                jobId = null,
+                executeCount = executeCount
             )
         if (queryLogsResult.isNotOk()) {
             return Result(status = queryLogsResult.status, message = queryLogsResult.message, data = null)

@@ -29,8 +29,10 @@ package com.tencent.devops.store.service.image
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.LATEST
 import com.tencent.devops.common.api.exception.DataConsistencyException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -95,7 +97,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 import java.util.Base64
 
@@ -177,8 +178,7 @@ abstract class ImageReleaseService {
         marketImageRelRequest: MarketImageRelRequest,
         needAuth: Boolean = true
     ): Result<String> {
-        logger.info("addMarketImage accessToken is :$accessToken, userId is :$userId")
-        logger.info("addMarketImage imageCode is :$imageCode, marketImageRelRequest is :$marketImageRelRequest")
+        logger.info("addMarketImage params:[$accessToken|$userId|$imageCode|$marketImageRelRequest|$needAuth]")
         // 判断镜像代码是否存在
         val codeCount = imageDao.countByCode(dslContext, imageCode)
         if (codeCount > 0) {
@@ -201,16 +201,17 @@ abstract class ImageReleaseService {
             )
         }
         if (needAuth) {
+            val projectCode = marketImageRelRequest.projectCode
             val validateFlag: Boolean?
             try {
                 // 判断用户是否项目的成员
                 validateFlag = client.get(ServiceProjectResource::class)
-                    .verifyUserProjectPermission(accessToken, marketImageRelRequest.projectCode, userId).data
-            } catch (e: Exception) {
-                logger.error("verifyUserProjectPermission error is :$e")
+                    .verifyUserProjectPermission(accessToken, projectCode, userId).data
+            } catch (ignored: Throwable) {
+                logger.warn("verifyUserProjectPermission error, params[$userId|$projectCode]", ignored)
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
-            logger.info("the validateFlag is :$validateFlag")
+            logger.info("verifyUserProjectPermission validateFlag is :$validateFlag")
             if (null == validateFlag || !validateFlag) {
                 // 抛出错误提示
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
@@ -285,7 +286,7 @@ abstract class ImageReleaseService {
         sendCheckResultNotify: Boolean = true,
         runCheckPipeline: Boolean = true
     ): Result<String?> {
-        logger.info("updateMarketImage userId is :$userId, marketImageUpdateRequest is :$marketImageUpdateRequest")
+        logger.info("updateMarketImage params:[$userId|$marketImageUpdateRequest|$checkLatest|$sendCheckResultNotify]")
         if (marketImageUpdateRequest.category.equals(CATEGORY_PIPELINE_JOB) &&
             marketImageUpdateRequest.agentTypeScope.isEmpty()) {
             throw InvalidParamException(
@@ -329,7 +330,6 @@ abstract class ImageReleaseService {
                 projectId = projectCode,
                 searchKey = imageRepoName
             )
-            logger.info("the listProjectImagesResult is :$listProjectImagesResult")
             if (listProjectImagesResult.isNotOk()) {
                 return Result(listProjectImagesResult.status, listProjectImagesResult.message, null)
             }
@@ -341,7 +341,7 @@ abstract class ImageReleaseService {
                     userId = userId,
                     searchKey = imageRepoName
                 )
-                logger.info("the listPublicImagesResult is :$listPublicImagesResult")
+                logger.info("$imageRepoName listPublicImagesResult is :$listPublicImagesResult")
                 if (listPublicImagesResult.isNotOk()) {
                     return Result(listPublicImagesResult.status, listPublicImagesResult.message, null)
                 }
@@ -370,8 +370,14 @@ abstract class ImageReleaseService {
         val releaseType = marketImageUpdateRequest.releaseType
         val version = marketImageUpdateRequest.version
         val dbVersion = imageRecord.version
+        val imageStatus = imageRecord.imageStatus
+        // 判断镜像首个版本对应的请求是否合法
+        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
+            imageStatus != ImageStatusEnum.INIT.status.toByte()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
+        }
         // 最近的版本处于上架中止状态，重新升级版本号不变
-        val cancelFlag = imageRecord.imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
+        val cancelFlag = imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val requireVersionList =
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                 listOf(dbVersion)
@@ -409,7 +415,7 @@ abstract class ImageReleaseService {
             // 如果是首次发布，处于初始化的镜像状态也允许添加新的版本
             imageFinalStatusList.add(ImageStatusEnum.INIT.status.toByte())
         }
-        if (!imageFinalStatusList.contains(imageRecord.imageStatus)) {
+        if (!imageFinalStatusList.contains(imageStatus)) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
                 arrayOf(imageRecord.imageName, imageRecord.version)
@@ -418,7 +424,7 @@ abstract class ImageReleaseService {
         var imageId = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            if (StringUtils.isEmpty(imageRecord.version) ||
+            if (imageRecord.version.isNullOrBlank() ||
                 (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
                 imageId = imageRecord.id
@@ -479,7 +485,7 @@ abstract class ImageReleaseService {
         imageId: String,
         validateUserFlag: Boolean = true
     ): Result<Boolean> {
-        logger.info("recheck userId is:$userId,imageId is:$imageId, validateUserFlag:$validateUserFlag")
+        logger.info("recheck params:[$userId|$imageId|$validateUserFlag]")
         // 判断是否可以重新验证镜像
         val status = ImageStatusEnum.CHECKING.status.toByte()
         val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, status, validateUserFlag)
@@ -497,7 +503,7 @@ abstract class ImageReleaseService {
         imageId: String,
         validateUserFlag: Boolean = true
     ): Result<Boolean> {
-        logger.info("passTest, userId:$userId, imageId:$imageId, validateUserFlag:$validateUserFlag")
+        logger.info("passTest params:[$userId|$imageId|$validateUserFlag]")
         val imageRecord = imageDao.getImage(dslContext, imageId)
             ?: return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
@@ -578,7 +584,7 @@ abstract class ImageReleaseService {
         userId: String,
         imageId: String
     ) {
-        logger.info("runCheckImagePipeline userId is:$userId,imageId is:$imageId")
+        logger.info("runCheckImagePipeline params:[$userId|$imageId|$sendCheckResultNotify]")
         val imageRecord = imageDao.getImage(context, imageId)!!
         val imageCode = imageRecord.imageCode
         val version = imageRecord.version
@@ -620,7 +626,6 @@ abstract class ImageReleaseService {
                 )
             }
         }
-        logger.info("runCheckImagePipeline:$imageId,username=$userName,password=$password")
         val dockerImageName = if (imageRecord.imageRepoUrl.isNullOrBlank()) {
             "${imageRecord.imageRepoName}:${imageRecord.imageTag}"
         } else {
@@ -652,7 +657,7 @@ abstract class ImageReleaseService {
             )
             val checkImageInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initCheckImagePipeline(userId, projectCode!!, checkImageInitPipelineReq).data
-            logger.info("the checkImageInitPipelineResp is:$checkImageInitPipelineResp")
+            logger.info("runCheckImagePipeline checkImageInitPipelineResp is:$checkImageInitPipelineResp")
             if (null != checkImageInitPipelineResp) {
                 storePipelineRelDao.add(context, imageCode, StoreTypeEnum.IMAGE, checkImageInitPipelineResp.pipelineId)
                 marketImageDao.updateImageStatusById(
@@ -771,7 +776,7 @@ abstract class ImageReleaseService {
      * 获取发布进度
      */
     fun getProcessInfo(userId: String, imageId: String): Result<StoreProcessInfo> {
-        logger.info("getProcessInfo imageId: $imageId")
+        logger.info("getProcessInfo params: [$userId|$imageId]")
         val record = imageDao.getImage(dslContext, imageId)
         if (null == record) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(imageId))
@@ -806,7 +811,7 @@ abstract class ImageReleaseService {
      * 取消发布
      */
     fun cancelRelease(userId: String, imageId: String): Result<Boolean> {
-        logger.info("cancelRelease userId is:$userId, imageId is:$imageId")
+        logger.info("cancelRelease params:[$userId|$imageId]")
         val status = ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         // 判断用户是否有权限
         val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, status)
@@ -846,7 +851,6 @@ abstract class ImageReleaseService {
         ) {
             return Triple(false, CommonMessageCode.PERMISSION_DENIED, null)
         }
-        logger.info("imageRecord status=$imageStatus, status=$status")
         val allowReleaseStatus = getAllowReleaseStatus(isNormalUpgrade)
         var validateFlag = true
         if (status == ImageStatusEnum.COMMITTING.status.toByte() &&

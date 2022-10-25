@@ -33,8 +33,9 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.log.api.ServiceLogResource
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
-import com.tencent.devops.stream.util.StreamPipelineUtils
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,7 +48,8 @@ import javax.ws.rs.core.Response
 class StreamLogService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitPipelineResourceDao: GitPipelineResourceDao
+    private val gitPipelineResourceDao: GitPipelineResourceDao,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamLogService::class.java)
@@ -66,11 +68,11 @@ class StreamLogService @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("get init logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
+        logger.info("StreamLogService|getInitLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         return client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
-            projectId = StreamPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
+            projectId = GitCommonUtils.getCiProjectId(pipeline.gitProjectId, streamGitConfig.getScmType()),
             pipelineId = pipeline.pipelineId,
             buildId = buildId,
             tag = tag,
@@ -91,11 +93,11 @@ class StreamLogService @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("get after logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
+        logger.info("StreamLogServic|getAfterLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         return client.get(ServiceLogResource::class).getAfterLogs(
             userId = userId,
-            projectId = StreamPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
+            projectId = GitCommonUtils.getCiProjectId(pipeline.gitProjectId, streamGitConfig.getScmType()),
             pipelineId = pipeline.pipelineId,
             buildId = buildId,
             start = start,
@@ -115,10 +117,10 @@ class StreamLogService @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Response {
-        logger.info("download logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
+        logger.info("StreamLogServic|downloadLogs|gitProjectId|$gitProjectId|pipelineId|$pipelineId|build|$buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         val path = StringBuilder("http://$gatewayUrl/log/api/service/logs/")
-        path.append(StreamPipelineUtils.genGitProjectCode(pipeline.gitProjectId))
+        path.append(GitCommonUtils.getCiProjectId(pipeline.gitProjectId, streamGitConfig.getScmType()))
         path.append("/${pipeline.pipelineId}/$buildId/download?executeCount=${executeCount ?: 1}")
 
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")

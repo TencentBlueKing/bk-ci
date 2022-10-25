@@ -33,18 +33,18 @@ import org.springframework.stereotype.Component
 @Component
 class StoreDetailUrlConfig {
 
-    @Value("\${store.atomDetailBaseUrl}")
+    @Value("\${store.atomDetailBaseUrl:}")
     val atomDetailBaseUrl: String? = null
 
-    @Value("\${store.templateDetailBaseUrl}")
+    @Value("\${store.templateDetailBaseUrl:}")
     val templateDetailBaseUrl: String? = null
 
-    @Value("\${store.ideAtomDetailBaseUrl}")
+    @Value("\${store.ideAtomDetailBaseUrl:}")
     val ideAtomDetailBaseUrl: String? = null
 
-    @Value("\${store.imageDetailBaseUrl}")
+    @Value("\${store.imageDetailBaseUrl:}")
     val imageDetailBaseUrl: String? = null
 
-    @Value("\${store.serviceDetailBaseUrl}")
+    @Value("\${store.serviceDetailBaseUrl:}")
     val serviceDetailBaseUrl: String? = null
 }

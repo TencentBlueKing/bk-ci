@@ -27,11 +27,17 @@
 
 package com.tencent.devops.stream.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.stream.pojo.ChangeYamlList
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -93,6 +99,7 @@ class GitRequestEventDao {
     fun get(
         dslContext: DSLContext,
         id: Long,
+        scmType: ScmType? = ScmType.CODE_GIT,
         commitMsg: String? = null
     ): GitRequestEvent? {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
@@ -128,12 +135,39 @@ class GitRequestEventDao {
                     },
                     mrTitle = record.mrTitle,
                     gitEvent = try {
-                        JsonUtil.to(record.event, GitEvent::class.java)
+                        when (scmType) {
+                            ScmType.CODE_GIT -> JsonUtil.to(record.event, GitEvent::class.java)
+                            ScmType.GITHUB -> {
+                                when (record.objectKind) {
+                                    StreamObjectKind.PULL_REQUEST.value -> JsonUtil.to(
+                                        record.event,
+                                        GithubPullRequestEvent::class.java
+                                    )
+                                    StreamObjectKind.PUSH.value -> JsonUtil.to(
+                                        record.event,
+                                        GithubPushEvent::class.java
+                                    )
+                                    StreamObjectKind.TAG_PUSH.value -> JsonUtil.to(
+                                        record.event,
+                                        GithubPushEvent::class.java
+                                    )
+                                    else -> throw IllegalArgumentException(
+                                        "${record.objectKind} in github load action not support yet"
+                                    )
+                                }
+                            }
+                            else -> TODO("对接其他Git平台时需要补充")
+                        }
                     } catch (e: Exception) {
                         null
                     },
                     commitAuthorName = null,
-                    gitProjectName = null
+                    gitProjectName = null,
+                    changeYamlList = try {
+                        JsonUtil.to(record.changeYamlList, object : TypeReference<List<ChangeYamlList>>() {})
+                    } catch (ignore: Throwable) {
+                        emptyList()
+                    }
                 )
             }
         }
@@ -231,6 +265,19 @@ class GitRequestEventDao {
         }
     }
 
+    fun updateChangeYamlList(
+        dslContext: DSLContext,
+        id: Long,
+        changeYamlList: List<ChangeYamlList>
+    ) {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            dslContext.update(this)
+                .set(CHANGE_YAML_LIST, JsonUtil.toJson(changeYamlList, false))
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
     fun getMergeRequestList(
         dslContext: DSLContext,
         gitProjectId: Long,
@@ -240,7 +287,7 @@ class GitRequestEventDao {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             val records = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(OBJECT_KIND.eq(TGitObjectKind.MERGE_REQUEST.value))
+                .and(OBJECT_KIND.eq(StreamGitObjectKind.MERGE_REQUEST.value))
                 .orderBy(ID.desc())
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()

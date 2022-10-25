@@ -4,7 +4,7 @@
         :status="job.status"
     >
         <!-- <section v-if="showDebugBtn" class="web-console" :style="{ right: executeCount > 1 ? '390px' : '280px' }">
-            <span>
+            <span onclick="startDebug">
                 {{$t('pipeline.webConsole')}}
             </span>
         </section> -->
@@ -56,7 +56,7 @@
 
             downLoadJobLink () {
                 const fileName = encodeURI(encodeURI(`${this.stageIndex + 1}-${this.jobIndex + 1}-${this.job.name}`))
-                const jobId = this.job.containerHashid
+                const jobId = this.job.containerHashId
                 const { pipelineId, buildId } = this.$route.params
                 return `/log/api/user/logs/${this.projectId}/${pipelineId}/${buildId}/download?jobId=${jobId}&fileName=${fileName}`
             },
