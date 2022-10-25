@@ -244,6 +244,8 @@ func (m *Mgr) handleUnregisteredProcess(config *types.WorkUnregisterConfig) {
 // Start do start work
 func (m *Mgr) Start() error {
 	if m.info.IsWorking() {
+		blog.Infof("basic: workinfo(%s) is working now, do nothing now",
+			m.info.WorkID())
 		return nil
 	}
 
@@ -346,6 +348,11 @@ func (m *Mgr) GetDetails(jobIndex int) *types.WorkStatsDetail {
 // AnalysisStatus return the analysis status
 func (m *Mgr) AnalysisStatus() *types.WorkAnalysisStatus {
 	return m.analysisStatus
+}
+
+// ResetStat reset stat
+func (m *Mgr) ResetStat() error {
+	return m.analysisStatus.Reset()
 }
 
 // SetToolChain : save the ToolChain if local file list changed, do not care remote path change now

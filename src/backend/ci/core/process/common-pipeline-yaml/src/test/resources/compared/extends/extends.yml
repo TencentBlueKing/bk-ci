@@ -43,6 +43,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services:
@@ -69,7 +70,7 @@ stages:
       checkout: null
     - name: null
       id: null
-      if: "(steps.parameters.username1.xxx.outputs == world)"
+      if: "(steps.world1.xxx.outputs == world)"
       if-modify: null
       uses: null
       with: null
@@ -98,6 +99,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -105,7 +107,7 @@ stages:
     steps:
     - name: null
       id: null
-      if: "(steps.parameters.username1.outputs.xxx == world)"
+      if: "${{steps.world1.outputs.xxx == world}}"
       if-modify: null
       uses: null
       with: null
@@ -133,6 +135,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -167,6 +170,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -201,6 +205,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -235,6 +240,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -269,6 +275,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -346,6 +353,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -380,6 +388,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -449,6 +458,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -483,6 +493,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -540,6 +551,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -582,6 +594,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []

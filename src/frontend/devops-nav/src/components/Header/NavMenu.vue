@@ -67,6 +67,7 @@
                             :services="services"
                             :current-page="currentPage"
                             :toggle-collect="toggleCollect"
+                            :get-document-title="getDocumentTitle"
                         />
                     </div>
                 </div>
@@ -162,6 +163,35 @@
             return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
         }
 
+        getDocumentTitle (linkNew) {
+            const title = linkNew.split('/')[1]
+            const titlesMap = {
+                pipeline: this.$t('documentTitlePipeline'),
+                codelib: this.$t('documentTitleCodelib'),
+                artifactory: this.$t('documentTitleArtifactory'),
+                codecc: this.$t('documentTitleCodecc'),
+                experience: this.$t('documentTitleExperience'),
+                turbo: this.$t('documentTitleTurbo'),
+                repo: this.$t('documentTitleRepo'),
+                preci: this.$t('documentTitlePreci'),
+                stream: this.$t('documentTitleStream'),
+                wetest: this.$t('documentTitleWetest'),
+                quality: this.$t('documentTitleQuality'),
+                xinghai: this.$t('documentTitleXinghai'),
+                bcs: this.$t('documentTitleBcs'),
+                job: this.$t('documentTitleJob'),
+                environment: this.$t('documentTitleEnvironment'),
+                vs: this.$t('documentTitleVs'),
+                apk: this.$t('documentTitleApk'),
+                monitor: this.$t('documentTitleMonitor'),
+                perm: this.$t('documentTitlePerm'),
+                ticket: this.$t('documentTitleTicket'),
+                store: this.$t('documentTitleStore'),
+                metrics: this.$t('documentTitleMetrics')
+            }
+            return titlesMap[title]
+        }
+
         gotoPage ({ link_new: linkNew }) {
             const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
             const nAlias = getServiceAliasByPath(linkNew)
@@ -172,6 +202,7 @@
                 return
             }
             this.$router.push(destUrl)
+            document.title = this.getDocumentTitle(linkNew)
         }
 
         created () {

@@ -100,7 +100,7 @@ interface UserStreamUserMessageResource {
         id: Int,
         @ApiParam(value = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
-        projectId: String?
+        projectCode: String?
     ): Result<Boolean>
 
     @ApiOperation("读取所有消息")
@@ -112,6 +112,6 @@ interface UserStreamUserMessageResource {
         userId: String,
         @ApiParam(value = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
-        projectId: String?
+        projectCode: String?
     ): Result<Boolean>
 }

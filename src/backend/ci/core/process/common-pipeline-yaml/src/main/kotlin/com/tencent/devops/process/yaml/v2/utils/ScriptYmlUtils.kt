@@ -37,6 +37,9 @@ import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
+import com.tencent.devops.common.api.expression.ExpressionException
+import com.tencent.devops.common.api.expression.Lex
+import com.tencent.devops.common.api.expression.Word
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
@@ -73,10 +76,12 @@ import com.tencent.devops.process.yaml.v2.models.stage.Stage
 import com.tencent.devops.process.yaml.v2.models.stage.StageLabel
 import com.tencent.devops.process.yaml.v2.models.step.PreStep
 import com.tencent.devops.process.yaml.v2.models.step.Step
+import com.tencent.devops.process.yaml.v2.parameter.ParametersType
 import com.tencent.devops.process.yaml.v2.stageCheck.Flow
 import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.StageReviews
+import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
@@ -121,7 +126,6 @@ object ScriptYmlUtils {
             val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
             YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         } catch (e: Exception) {
-            logger.warn("Check yaml version failed. return null")
             null
         }
     }
@@ -136,7 +140,6 @@ object ScriptYmlUtils {
             val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
             YamlUtil.getObjectMapper().readValue(obj, YmlName::class.java)
         } catch (e: Exception) {
-            logger.warn("get yaml name failed. return null")
             null
         }
     }
@@ -151,12 +154,12 @@ object ScriptYmlUtils {
             val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
             version != null && version.version == "v2.0"
         } catch (e: Exception) {
-            logger.error("Check yaml version failed. Set default v2.0")
             true
         }
     }
 
     fun parseVariableValue(value: String?, settingMap: Map<String, String?>): String? {
+
         if (value == null || value.isEmpty()) {
             return ""
         }
@@ -168,8 +171,102 @@ object ScriptYmlUtils {
             val realValue = settingMap[matcher.group(1).trim()] ?: continue
             newValue = newValue!!.replace(matcher.group(), realValue)
         }
-        logger.info("STREAM|parseVariableValue value :$value; settingMap: $settingMap;newValue: $newValue")
+
         return newValue
+    }
+
+    fun parseParameterValue(value: String?, settingMap: Map<String, Any?>, paramType: ParametersType): String {
+        if (value.isNullOrBlank()) {
+            return ""
+        }
+        var newValue = value
+        // ScriptUtils.formatYaml会将所有的带上 "" 但替换时数组不需要"" 所以数组单独匹配
+        val pattern = when (paramType) {
+            ParametersType.ARRAY -> {
+                Pattern.compile("\"\\$\\{\\{([^{}]+?)}}\"")
+            }
+            else -> {
+                Pattern.compile("\\$\\{\\{([^{}]+?)}}")
+            }
+        }
+        val matcher = pattern.matcher(value)
+        while (matcher.find()) {
+            if (settingMap.containsKey(matcher.group(1).trim())) {
+                val realValue = settingMap[matcher.group(1).trim()]
+                if (realValue is List<*>) {
+                    newValue = newValue!!.replace(matcher.group(), JsonUtil.toJson(realValue))
+                } else {
+                    newValue = newValue!!.replace(matcher.group(), StringEscapeUtils.escapeJava(realValue.toString()))
+                }
+            }
+        }
+        // 替换if中没有加括号的，只替换string
+        val resultValue = if (paramType == ParametersType.STRING) {
+            replaceIfParameters(newValue, settingMap)
+        } else {
+            newValue
+        }
+        return resultValue.toString()
+    }
+
+    @Suppress("NestedBlockDepth")
+    private fun replaceIfParameters(
+        newValue: String?,
+        settingMap: Map<String, Any?>
+    ): StringBuffer {
+        val newValueLines = BufferedReader(StringReader(newValue!!))
+        val resultValue = StringBuffer()
+        var line = newValueLines.readLine()
+        while (line != null) {
+            val startString = line.trim().replace("\\s".toRegex(), "")
+            if (startString.startsWith("if:") || startString.startsWith("-if:")) {
+                val ifPrefix = line.substring(0 until line.indexOfFirst { it == ':' } + 1)
+                val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
+                    .removeSuffix("\"")
+
+                // 去掉花括号
+                val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()
+                val originItems: List<Word>
+                // 先语法分析
+                try {
+                    originItems = Lex(baldExpress.toList().toMutableList()).getToken()
+                } catch (e: Exception) {
+                    throw ExpressionException("expression=$baldExpress|reason=Grammar Invalid: ${e.message}")
+                }
+                // 替换变量
+                val items = mutableListOf<Word>()
+                originItems.forEach {
+                    if (it.symbol == "ident") {
+                        items.add(Word(replaceParameters(it, settingMap), it.symbol))
+                    } else {
+                        items.add(Word(it.str, it.symbol))
+                    }
+                }
+                val itemsStr = items.joinToString(" ") { it.str }
+                resultValue.append("$ifPrefix \"${itemsStr}\"").append("\n")
+            } else {
+                resultValue.append(line).append("\n")
+            }
+            line = newValueLines.readLine()
+        }
+        return resultValue
+    }
+
+    private fun replaceParameters(
+        it: Word,
+        settingMap: Map<String, Any?>
+    ) = if (it.str.startsWith("parameters.")) {
+        val realValue = settingMap[it.str] ?: it.str
+        if (realValue is List<*>) {
+            // ["test"]->[test]
+            JsonUtil.toJson(realValue).replace("\"", "")
+                .replace("[ ", "[")
+                .replace(" ]", "]")
+        } else {
+            StringEscapeUtils.escapeJava(realValue.toString())
+        }
+    } else {
+        it.str
     }
 
     private fun formatYamlCustom(yamlStr: String): String {
@@ -479,7 +576,6 @@ object ScriptYmlUtils {
 
     fun formatRepoHookTriggerOn(preTriggerOn: PreTriggerOn?, name: String?): TriggerOn? {
         if (preTriggerOn?.repoHook == null) {
-            logger.info("流水线已不存在远程触发配置，不做处理，返回null进行相关检查")
             return null
         }
 
@@ -489,7 +585,6 @@ object ScriptYmlUtils {
                 object : TypeReference<List<PreRepositoryHook>>() {}
             )
         } catch (e: MismatchedInputException) {
-            logger.error("Format triggerOn repoHook failed.", e)
             return null
         }
         repositoryHookList.find { it.name == name }?.let { repositoryHook ->
@@ -518,7 +613,6 @@ object ScriptYmlUtils {
                     PreTriggerOn::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn repoHook events failed.", e)
                 return null
             }
 
@@ -643,7 +737,6 @@ object ScriptYmlUtils {
                     NoteRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn noteRule failed.", e)
                 null
             }
         }
@@ -661,7 +754,6 @@ object ScriptYmlUtils {
                     ReviewRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn reviewRule failed.", e)
                 null
             }
         }
@@ -679,7 +771,6 @@ object ScriptYmlUtils {
                     IssueRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn issueRule failed.", e)
                 null
             }
         }
@@ -697,7 +788,6 @@ object ScriptYmlUtils {
                     DeleteRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn schedulesRule failed.", e)
                 null
             }
         }
@@ -715,7 +805,6 @@ object ScriptYmlUtils {
                     SchedulesRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn schedulesRule failed.", e)
                 null
             }
         }
@@ -748,7 +837,6 @@ object ScriptYmlUtils {
                         usersIgnore = null
                     )
                 } catch (e: Exception) {
-                    logger.error("Format triggerOn mrRule failed.", e)
                     null
                 }
             }
@@ -781,7 +869,6 @@ object ScriptYmlUtils {
                         usersIgnore = null
                     )
                 } catch (e: Exception) {
-                    logger.error("Format triggerOn tagRule failed.", e)
                     null
                 }
             }
@@ -815,7 +902,6 @@ object ScriptYmlUtils {
                         usersIgnore = null
                     )
                 } catch (e: Exception) {
-                    logger.error("Format triggerOn pushRule failed.", e)
                     null
                 }
             }
@@ -884,8 +970,7 @@ object ScriptYmlUtils {
         } catch (e: MismatchedInputException) {
             listOf(value.toString())
         } catch (e: Exception) {
-            logger.error("Format label  failed.", e)
-            listOf<String>()
+            emptyList()
         }
     }
 

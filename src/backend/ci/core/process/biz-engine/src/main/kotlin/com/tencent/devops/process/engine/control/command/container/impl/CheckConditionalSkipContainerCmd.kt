@@ -126,7 +126,8 @@ class CheckConditionalSkipContainerCmd constructor(
                     buildId = container.buildId,
                     runCondition = jobControlOption.runCondition,
                     customCondition = jobControlOption.customCondition,
-                    message = message
+                    message = message,
+                    asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
                 )
             }
 

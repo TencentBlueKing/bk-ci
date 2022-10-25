@@ -32,14 +32,15 @@ import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.pojo.WeworkRobotNotifyMessage
 import com.tencent.devops.notify.service.EmailService
-import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.notify.service.WechatService
 import com.tencent.devops.notify.service.WeworkService
@@ -51,7 +52,6 @@ import java.io.InputStream
 @Suppress("ALL")
 class ServiceNotifyResourceImpl @Autowired constructor(
     private val emailService: EmailService,
-    private val rtxService: RtxService,
     private val smsService: SmsService,
     private val wechatService: WechatService,
     private val weworkService: WeworkService
@@ -59,7 +59,10 @@ class ServiceNotifyResourceImpl @Autowired constructor(
 
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkRtxMessage(message)
-        rtxService.sendMqMsg(message)
+        val wechatNotifyMessage = WeworkNotifyMessageWithOperation()
+        wechatNotifyMessage.addAllReceivers(message.getReceivers())
+        wechatNotifyMessage.body = "${message.title}\n\n${message.body}"
+        weworkService.sendMqMsg(wechatNotifyMessage)
         return Result(true)
     }
 
@@ -113,5 +116,16 @@ class ServiceNotifyResourceImpl @Autowired constructor(
         )
         weworkService.sendTextMessage(weworkNotifyTextMessage)
         return Result(true)
+    }
+
+    override fun sendWeworkRobotNotify(weworkRobotNotifyMessage: WeworkRobotNotifyMessage): Result<Boolean> {
+        val weworkNotifyTextMessage = WeworkNotifyTextMessage(
+            receivers = weworkRobotNotifyMessage.receivers.split(",|;".toRegex()),
+            receiverType = weworkRobotNotifyMessage.receiverType,
+            textType = weworkRobotNotifyMessage.textType,
+            message = weworkRobotNotifyMessage.message,
+            attachments = weworkRobotNotifyMessage.attachments
+        )
+        return Result(weworkService.sendTextMessage(weworkNotifyTextMessage))
     }
 }

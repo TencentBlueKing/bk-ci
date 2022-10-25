@@ -27,6 +27,7 @@
 
 package com.tencent.devops.quality.dao.v2
 
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.model.quality.tables.TQualityControlPoint
 import com.tencent.devops.model.quality.tables.records.TQualityControlPointRecord
@@ -40,7 +41,8 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository@Suppress("ALL")
+@Repository
+@Suppress("ALL")
 class QualityControlPointDao {
 
     fun list(
@@ -126,13 +128,13 @@ class QualityControlPointDao {
         }
     }
 
-    fun setTestControlPoint(dslContext: DSLContext, userId: String, controlPoint: QualityControlPoint): Int {
+    fun setTestControlPoint(dslContext: DSLContext, userId: String, controlPoint: QualityControlPoint): Long {
+        var pointId = 0L
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             val testControlPoint = dslContext.selectFrom(this)
                 .where(ELEMENT_TYPE.eq(controlPoint.type).and(TAG.eq("IN_READY_TEST")))
                 .fetchOne()
-
-            return if (testControlPoint != null) {
+            if (testControlPoint != null) {
                 dslContext.update(this)
                     .set(ELEMENT_TYPE, controlPoint.type)
                     .set(NAME, controlPoint.name)
@@ -145,7 +147,7 @@ class QualityControlPointDao {
                     .where(ID.eq(testControlPoint.id))
                     .execute()
             } else {
-                dslContext.insertInto(
+                pointId = dslContext.insertInto(
                     this,
                     ELEMENT_TYPE,
                     NAME,
@@ -175,10 +177,15 @@ class QualityControlPointDao {
                         controlPoint.atomVersion,
                         controlPoint.testProject,
                         "IN_READY_TEST"
-                    )
+                    ).returning(ID).fetchOne()!!.id
+                val hashId = HashUtil.encodeLongId(pointId)
+                dslContext.update(this)
+                    .set(CONTROL_POINT_HASH_ID, hashId)
+                    .where(ID.eq(pointId))
                     .execute()
             }
         }
+        return pointId
     }
 
     fun refreshControlPoint(dslContext: DSLContext, elementType: String): Int {
@@ -231,6 +238,33 @@ class QualityControlPointDao {
         return with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             dslContext.deleteFrom(this)
                 .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+    fun getAllControlPoint(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<Record1<Long>>? {
+        with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
+            return dslContext.select(ID).from(this)
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateHashId(
+        dslContext: DSLContext,
+        id: Long,
+        hashId: String
+    ) {
+        with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
+            dslContext.update(this)
+                .set(CONTROL_POINT_HASH_ID, hashId)
+                .where(ID.eq(id))
+                .and(CONTROL_POINT_HASH_ID.isNull)
                 .execute()
         }
     }

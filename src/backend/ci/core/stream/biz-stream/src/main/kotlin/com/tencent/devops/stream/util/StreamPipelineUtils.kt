@@ -35,9 +35,8 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 
+@Suppress("LongParameterList", "ReturnCount")
 object StreamPipelineUtils {
-
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
 
     fun genStreamV2BuildUrl(
         homePage: String,
