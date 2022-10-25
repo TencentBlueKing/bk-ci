@@ -20,6 +20,7 @@ class ThirdFilter(
     private val pipelineId: String,
     private val event: CodeWebhookEvent,
     private val changeFiles: Set<String>?,
+    private val enableThirdFilter: Boolean?,
     private val thirdUrl: String?,
     private val thirdSecretToken: String? = null,
     private val gitScmService: GitScmService,
@@ -33,7 +34,7 @@ class ThirdFilter(
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
-        if (thirdUrl.isNullOrBlank() || !OkhttpUtils.validUrl(thirdUrl)) {
+        if (enableThirdFilter == false || thirdUrl.isNullOrBlank() || !OkhttpUtils.validUrl(thirdUrl)) {
             return true
         }
         logger.info("$pipelineId|thirdUrl:$thirdUrl|third filter")

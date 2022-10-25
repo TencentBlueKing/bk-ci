@@ -240,6 +240,7 @@ class TGitMrTriggerHandler(
                 pipelineId = pipelineId,
                 event = event,
                 changeFiles = mrChangeFiles,
+                enableThirdFilter = enableThirdFilter,
                 thirdUrl = thirdUrl,
                 thirdSecretToken = thirdSecretToken,
                 gitScmService = gitScmService,

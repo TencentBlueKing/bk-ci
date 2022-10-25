@@ -204,6 +204,7 @@ class TGitPushTriggerHandler(
                 pipelineId = pipelineId,
                 event = event,
                 changeFiles = pushChangeFiles,
+                enableThirdFilter = enableThirdFilter,
                 thirdUrl = thirdUrl,
                 thirdSecretToken = thirdSecretToken,
                 gitScmService = gitScmService,
