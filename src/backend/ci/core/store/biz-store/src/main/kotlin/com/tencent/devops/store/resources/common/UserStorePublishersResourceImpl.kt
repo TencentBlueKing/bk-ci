@@ -28,11 +28,13 @@
 package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStorePublishersResource
 import com.tencent.devops.store.pojo.common.PublisherInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.PublishersDataService
 
+@RestResource
 class UserStorePublishersResourceImpl constructor(
     private val publishersDataService: PublishersDataService
 ) : UserStorePublishersResource {
