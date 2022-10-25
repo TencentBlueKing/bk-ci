@@ -33,7 +33,6 @@ import com.tencent.bk.codecc.defect.service.IConfigCheckerPkgBizService;
 import com.tencent.bk.codecc.defect.vo.*;
 import com.tencent.bk.codecc.defect.vo.checkerset.*;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerListSortType;
-import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.pojo.external.CodeCCAuthAction;
 import com.tencent.devops.common.web.RestResource;

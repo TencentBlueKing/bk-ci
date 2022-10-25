@@ -83,7 +83,8 @@
         DEBUG_CONTAINER,
         STATUS_MAP,
         DOCKER_BUILD_TYPE,
-        PUBLIC_DEVCLOUD_BUILD_TYPE
+        PUBLIC_DEVCLOUD_BUILD_TYPE,
+        PUBLIC_BCS_BUILD_TYPE
     } from './constants'
     import ContainerType from './ContainerType'
     import AtomList from './AtomList'
@@ -231,8 +232,8 @@
             },
             showDebugBtn () {
                 const { isLatestBuild, isExecDetail, container: { baseOS, status } } = this
-                const isDockerOrDevcloud = [DOCKER_BUILD_TYPE, PUBLIC_DEVCLOUD_BUILD_TYPE].includes(this.buildResourceType)
-                return baseOS === 'LINUX' && isDockerOrDevcloud && isExecDetail && isLatestBuild && status === STATUS_MAP.FAILED
+                const isshowDebugType = [DOCKER_BUILD_TYPE, PUBLIC_DEVCLOUD_BUILD_TYPE, PUBLIC_BCS_BUILD_TYPE].includes(this.buildResourceType)
+                return baseOS === 'LINUX' && isshowDebugType && isExecDetail && isLatestBuild && status === STATUS_MAP.FAILED
             }
         },
         watch: {
@@ -310,9 +311,7 @@
                     stageIndex: this.stageIndex,
                     containerIndex: this.containerIndex,
                     containerGroupIndex: this.containerGroupIndex,
-                    container: this.container,
-                    isDocker: this.buildResourceType === DOCKER_BUILD_TYPE,
-                    isPubDevcloud: this.buildResourceType === PUBLIC_DEVCLOUD_BUILD_TYPE
+                    container: this.container
                 })
             }
         }

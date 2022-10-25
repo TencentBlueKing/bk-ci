@@ -192,6 +192,8 @@ open class DefaultModelCheckPlugin constructor(
                 params = arrayOf(stage.name!!, group.name)
             )
         }
+        PipelineUtils.checkStageReviewParam(stage.checkIn?.reviewParams)
+
         stage.checkIn?.timeout = if (stage.checkIn?.timeout in 1..(Timeout.DEFAULT_STAGE_TIMEOUT_HOURS * 30)) {
             stage.checkIn?.timeout
         } else {
@@ -310,6 +312,7 @@ open class DefaultModelCheckPlugin constructor(
                 val dispatchType = vmBuildContainer.dispatchType ?: return true
                 return when (dispatchType.buildType()) {
                     BuildType.THIRD_PARTY_AGENT_ID, BuildType.THIRD_PARTY_AGENT_ENV -> dispatchType.value.isBlank()
+                    BuildType.WINDOWS -> false
                     else -> true
                 }
             }

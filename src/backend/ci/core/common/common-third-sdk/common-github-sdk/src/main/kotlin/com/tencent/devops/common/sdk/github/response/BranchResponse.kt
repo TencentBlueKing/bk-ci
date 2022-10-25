@@ -29,12 +29,12 @@ package com.tencent.devops.common.sdk.github.response
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.sdk.github.pojo.BranchCommit
+import com.tencent.devops.common.sdk.github.pojo.GithubSha
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class BranchResponse(
     val name: String,
-    val commit: BranchCommit,
+    val commit: GithubSha,
     val protected: Boolean,
     @JsonProperty("protection_url")
     val protectionUrl: String?

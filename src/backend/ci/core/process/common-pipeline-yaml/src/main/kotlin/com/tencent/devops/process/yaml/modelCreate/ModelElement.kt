@@ -118,7 +118,6 @@ class ModelElement @Autowired(required = false) constructor(
                 elementList.add(element)
 
                 if (element is MarketBuildAtomElement) {
-                    logger.info("install market atom: ${element.getAtomCode()}")
                     ModelCommon.installMarketAtom(client, event.projectCode, event.userId, element.getAtomCode())
                 }
             }

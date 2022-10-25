@@ -15,7 +15,8 @@
             <div class="table-body">
                 <div class="table-row" v-for="(row, index) of partList" :key="index">
                     <div class="table-part-item part-item-name" @click.stop="showDetail(row)">
-                        <i :class="['devops-icon', `icon-${extForFile(row.name)}`]"></i>
+                        <Logo v-if="row.artifactoryType === 'IMAGE'" class="image-icon" name="docker-svgrepo-com" size="30" />
+                        <i v-else :class="['devops-icon', `icon-${extForFile(row.name)}`]"></i>
                         <span :title="row.name">{{ row.name }}</span>
                     </div>
                     <div class="table-part-item part-item-path">
@@ -25,12 +26,11 @@
                         <span>{{ convertInfoItem('size', row.size) }}</span>
                     </div>
                     <div class="table-part-item part-item-type">
-                        <span v-if="row.artifactoryType === 'CUSTOM_DIR'">{{ $t('details.customRepo') }}</span>
-                        <span v-if="row.artifactoryType === 'PIPELINE'">{{ $t('details.pipelineRepo') }}</span>
+                        {{ repoTypeNameMap[row.artifactoryType] }}
                     </div>
                     <div class="table-part-item part-item-handler">
                         <!-- <i @click.stop="gotoArtifactory" class="devops-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i> -->
-                        <i class="devops-icon icon-new-download handler-btn" v-if="hasPermission" :title="$t('download')"
+                        <i class="devops-icon icon-new-download handler-btn" v-if="hasPermission && row.artifactoryType !== 'IMAGE'" :title="$t('download')"
                             @click="requestUrl(row, 'download')"></i>
                         <!-- <i class="devops-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('details.mofDownload')"
                             @click="requestUrl(row, 'download', null, 'MoF')"></i> -->
@@ -133,11 +133,13 @@
 
 <script>
     import qrcode from '@/components/devops/qrcode'
+    import Logo from '@/components/Logo'
     import { convertFileSize, convertTime } from '@/utils/util'
 
     export default {
         components: {
-            qrcode
+            qrcode,
+            Logo
         },
         data () {
             return {
@@ -172,6 +174,11 @@
                         ]
                     },
                     isLoading: false
+                },
+                repoTypeNameMap: {
+                    CUSTOM_DIR: this.$t('details.customRepo'),
+                    PIPELINE: this.$t('details.pipelineRepo'),
+                    IMAGE: this.$t('details.imageRepo')
                 }
             }
         },
@@ -343,7 +350,7 @@
                 } = this
                 try {
                     sideSliderConfig.isLoading = true
-                    const type = row.artifactoryType === 'PIPELINE' ? 'PIPELINE' : 'CUSTOM_DIR'
+                    const type = row.artifactoryType
                     const res = await this.$store.dispatch('common/requestFileInfo', {
                         projectId: projectId,
                         type: type,
@@ -484,6 +491,13 @@
                 font-size: 30px;
                 width: 38px;
                 color: $fontLighterColor;
+            }
+            .image-icon {
+                position: absolute;
+                top: 14px;
+                left: -4px;
+                font-size: 30px;
+                width: 38px;
             }
         }
         .part-item-path {

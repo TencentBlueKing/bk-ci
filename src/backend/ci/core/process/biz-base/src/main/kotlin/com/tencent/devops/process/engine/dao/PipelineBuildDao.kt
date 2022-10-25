@@ -248,8 +248,8 @@ class PipelineBuildDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
             when (updateTimeDesc) {
-                true -> select.orderBy(UPDATE_TIME.desc())
-                false -> select.orderBy(UPDATE_TIME.asc())
+                true -> select.orderBy(UPDATE_TIME.desc(), BUILD_ID)
+                false -> select.orderBy(UPDATE_TIME.asc(), BUILD_ID)
                 null -> select.orderBy(BUILD_NUM.desc())
             }
             select.limit(offset, limit)
@@ -308,7 +308,7 @@ class PipelineBuildDao {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(STATUS.eq(BuildStatus.QUEUE.ordinal))
+                .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny()
         }
@@ -317,14 +317,18 @@ class PipelineBuildDao {
     fun getOneConcurrencyQueueBuild(
         dslContext: DSLContext,
         projectId: String,
-        concurrencyGroup: String
+        concurrencyGroup: String,
+        pipelineId: String? = null
     ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
                 .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
-                .orderBy(QUEUE_TIME.asc()).limit(1)
+            if (pipelineId != null) {
+                select.and(PIPELINE_ID.eq(pipelineId))
+            }
+            select.orderBy(QUEUE_TIME.asc()).limit(1)
             select.fetchAny()
         }
     }
@@ -467,14 +471,24 @@ class PipelineBuildDao {
         projectId: String,
         buildId: String,
         oldBuildStatus: BuildStatus,
-        newBuildStatus: BuildStatus
+        newBuildStatus: BuildStatus,
+        startTime: LocalDateTime? = null,
+        errorInfoList: List<ErrorInfo>? = null
     ): Boolean {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val update = dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
-                .where(BUILD_ID.eq(buildId)).and(PROJECT_ID.eq(projectId)).and(STATUS.eq(oldBuildStatus.ordinal))
-                .execute()
-        } == 1
+            startTime?.let {
+                update.set(START_TIME, it)
+            }
+            errorInfoList?.let {
+                update.set(ERROR_INFO, JsonUtil.toJson(it, formatted = false))
+            }
+            return update.where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(STATUS.eq(oldBuildStatus.ordinal))
+                .execute() == 1
+        }
     }
 
     fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
@@ -639,8 +653,8 @@ class PipelineBuildDao {
             )
 
             when (updateTimeDesc) {
-                true -> where.orderBy(UPDATE_TIME.desc())
-                false -> where.orderBy(UPDATE_TIME.asc())
+                true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
+                false -> where.orderBy(UPDATE_TIME.asc(), BUILD_ID)
                 null -> where.orderBy(BUILD_NUM.desc())
             }
 
@@ -857,12 +871,14 @@ class PipelineBuildDao {
         buildId: String,
         stageStatus: List<BuildStageStatus>,
         oldBuildStatus: BuildStatus? = null,
-        newBuildStatus: BuildStatus? = null
+        newBuildStatus: BuildStatus? = null,
+        errorInfoList: List<ErrorInfo>? = null
     ): Int {
         with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
-            newBuildStatus?.let { update.set(STATUS, newBuildStatus.ordinal) }
+            newBuildStatus?.let { update.set(STATUS, it.ordinal) }
+            errorInfoList?.let { update.set(ERROR_INFO, JsonUtil.toJson(it, formatted = false)) }
             return if (oldBuildStatus == null) {
                 update.where(BUILD_ID.eq(buildId))
                     .and(PROJECT_ID.eq(projectId))

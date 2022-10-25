@@ -39,8 +39,8 @@ import java.lang.StringBuilder
 
 class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
 
-    override fun addLogMultiLine(logMessages: List<LogMessage>): Result<Boolean> {
-        val path = "/log/api/build/logs/multi"
+    override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
+        val path = "/log/api/build/logs/multi?buildId=$buildId"
         val requestBody = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             objectMapper.writeValueAsString(logMessages)

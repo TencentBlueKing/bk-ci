@@ -27,7 +27,7 @@
 
 package config
 
-const AgentVersion = "v1.9.6"
+const AgentVersion = "v1.9.11"
 
 var (
 	GitCommit string

@@ -52,7 +52,7 @@ data class CommitCheckRequest(
     val region: CodeSvnRegion?,
     @ApiParam("CommitId", required = false)
     val commitId: String,
-    @ApiParam("详情链接", required = true)
+    @ApiParam("状态", required = true)
     val state: String,
     @ApiParam("详情链接", required = true)
     val targetUrl: String,
@@ -60,7 +60,7 @@ data class CommitCheckRequest(
     val context: String,
     @ApiParam("详情链接", required = true)
     val description: String,
-    @ApiParam("详情链接", required = true)
+    @ApiParam("是否锁mr", required = true)
     val block: Boolean,
     @ApiParam("mr对应的requestId", required = true)
     val mrRequestId: Long?,

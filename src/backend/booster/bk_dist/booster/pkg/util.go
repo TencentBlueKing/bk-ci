@@ -16,6 +16,8 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -173,4 +175,46 @@ func getHosts(hostList []string) []*protocol.Host {
 
 	blog.Debugf("booster: got host: %+v", hosts)
 	return hosts
+}
+
+type ByModTime []os.FileInfo
+
+func (fis ByModTime) Len() int {
+	return len(fis)
+}
+
+func (fis ByModTime) Swap(i, j int) {
+	fis[i], fis[j] = fis[j], fis[i]
+}
+
+func (fis ByModTime) Less(i, j int) bool {
+	return fis[i].ModTime().Before(fis[j].ModTime())
+}
+
+func cleanDirByTime(dir string, limitsize int64) {
+	f, err := os.Open(dir)
+	if err != nil {
+		blog.Warnf("booster: failed to open dir %s with error:%v", dir, err)
+		return
+	}
+	fis, _ := f.Readdir(-1)
+	f.Close()
+	sort.Sort(ByModTime(fis))
+
+	var totalsize int64
+	for _, fi := range fis {
+		totalsize += fi.Size()
+	}
+
+	blog.Infof("booster: dir %s total size:%d, limit size:%d", dir, totalsize, limitsize)
+	fullpath := ""
+	for _, fi := range fis {
+		if totalsize < limitsize {
+			break
+		}
+		fullpath = filepath.Join(dir, fi.Name())
+		blog.Infof("booster: ready remove file:%s", fullpath)
+		os.Remove(fullpath)
+		totalsize -= fi.Size()
+	}
 }

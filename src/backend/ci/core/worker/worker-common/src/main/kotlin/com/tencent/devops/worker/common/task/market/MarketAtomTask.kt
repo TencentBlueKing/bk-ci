@@ -48,6 +48,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -57,6 +58,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.utils.PIPELINE_ATOM_CODE
 import com.tencent.devops.process.utils.PIPELINE_ATOM_NAME
+import com.tencent.devops.process.utils.PIPELINE_ATOM_TIMEOUT
 import com.tencent.devops.process.utils.PIPELINE_ATOM_VERSION
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_STEP_ID
@@ -88,6 +90,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
+import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
@@ -129,9 +132,10 @@ open class MarketAtomTask : ITask() {
         val workspacePath = workspace.absolutePath
         // 输出参数的用户命名空间：防止重名窘况
         val namespace: String? = map["namespace"] as String?
+        val asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable == true
         logger.info(
             "${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
-                "|workspace=$workspacePath"
+                "|workspace=$workspacePath|asCodeEnabled=$asCodeEnabled"
         )
 
         // 获取插件基本信息
@@ -166,12 +170,16 @@ open class MarketAtomTask : ITask() {
         // 将Job传入的流水线变量先进行凭据替换
         // 插件接收的流水线参数 = Job级别参数 + Task调度时参数 + 本插件上下文 + 编译机环境参数
         val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
-        var variables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).map {
-            it.key to it.value.parseCredentialValue(
-                context = buildTask.buildVariable,
-                acrossProjectId = acrossInfo?.targetProjectId
-            )
-        }.toMap()
+        var variables = buildVariables.variables.plus(buildTask.buildVariable ?: emptyMap()).let { vars ->
+            if (!asCodeEnabled) {
+                vars.map {
+                    it.key to it.value.parseCredentialValue(
+                        context = buildTask.buildVariable,
+                        acrossProjectId = acrossInfo?.targetProjectId
+                    )
+                }.toMap()
+            } else vars
+        }
 
         // 解析输入输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
@@ -183,7 +191,8 @@ open class MarketAtomTask : ITask() {
             parseInputParams(
                 inputMap = input as Map<String, Any>,
                 variables = variables.plus(getContainerVariables(buildTask, buildVariables, workspacePath)),
-                acrossInfo = acrossInfo
+                acrossInfo = acrossInfo,
+                asCodeEnabled = asCodeEnabled
             )
         } ?: emptyMap()
         printInput(atomData, inputParams, inputTemplate)
@@ -211,7 +220,8 @@ open class MarketAtomTask : ITask() {
                 PIPELINE_ATOM_NAME to atomData.atomName,
                 PIPELINE_ATOM_CODE to atomData.atomCode,
                 PIPELINE_ATOM_VERSION to atomData.version,
-                PIPELINE_TASK_NAME to taskName
+                PIPELINE_TASK_NAME to taskName,
+                PIPELINE_ATOM_TIMEOUT to TaskUtil.getTimeOut(buildTask).toString()
             )
         )
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
@@ -353,6 +363,7 @@ open class MarketAtomTask : ITask() {
             error = e
         } finally {
             output(buildTask, atomTmpSpace, File(bkWorkspacePath), buildVariables, outputTemplate, namespace, atomCode)
+            atomData.finishKillFlag?.let { addFinishKillFlag(it) }
             if (error != null) {
                 val defaultMessage = StringBuilder("Market atom env load exit with StackTrace:\n")
                 defaultMessage.append(error.toString())
@@ -375,16 +386,35 @@ open class MarketAtomTask : ITask() {
     private fun parseInputParams(
         inputMap: Map<String, Any>,
         variables: Map<String, String>,
-        acrossInfo: BuildTemplateAcrossInfo?
+        acrossInfo: BuildTemplateAcrossInfo?,
+        asCodeEnabled: Boolean
     ): Map<String, String> {
         val atomParams = mutableMapOf<String, String>()
         try {
-            inputMap.forEach { (name, value) ->
-                // 修复插件input环境变量替换问题 #5682
-                atomParams[name] = EnvUtils.parseEnv(
-                    command = JsonUtil.toJson(value),
-                    data = variables
-                ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+            if (asCodeEnabled) {
+                val customReplacement = EnvReplacementParser.getCustomExecutionContextByMap(
+                    variables = variables,
+                    extendNamedValueMap = listOf(
+                        CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossInfo?.targetProjectId)
+                    )
+                )
+                inputMap.forEach { (name, value) ->
+                    logger.info("parseInputParams|name=$name|value=$value")
+                    atomParams[name] = EnvReplacementParser.parse(
+                        value = JsonUtil.toJson(value),
+                        contextMap = variables,
+                        onlyExpression = true,
+                        contextPair = customReplacement
+                    )
+                }
+            } else {
+                inputMap.forEach { (name, value) ->
+                    // 修复插件input环境变量替换问题 #5682
+                    atomParams[name] = EnvUtils.parseEnv(
+                        command = JsonUtil.toJson(value),
+                        data = variables
+                    ).parseCredentialValue(null, acrossInfo?.targetProjectId)
+                }
             }
         } catch (e: Throwable) {
             logger.error("plugin input illegal! ", e)
@@ -699,8 +729,8 @@ open class MarketAtomTask : ITask() {
                 ) {
                     val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
                     env[contextKey] = value
-                    // TODO 待定：是否进行原变量名输出，暂时保留
-                    // env.remove(key)
+                    // 原变量名输出只在未开启 pipeline as code 的逻辑中保留
+                    if (buildVariables.pipelineAsCodeSettings?.enable == true) env.remove(key)
                 }
 
                 TaskUtil.removeTaskId()
