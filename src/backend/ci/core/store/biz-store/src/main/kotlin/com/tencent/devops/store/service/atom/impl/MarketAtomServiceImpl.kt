@@ -128,6 +128,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.concurrent.Callable
@@ -217,6 +218,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var client: Client
+
+    @Value("\${store.defaulAtomErrorCodoLength:6}")
+    private var defaulAtomErrorCodoLength: Int = 6
+
+    @Value("\${store.defaulAtomErrorCodoPrefix:}")
+    private var defaulAtomErrorCodoPrefix: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(MarketAtomServiceImpl::class.java)
@@ -633,6 +640,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         storeErrorCodeInfo: StoreErrorCodeInfo
     ): Result<Boolean> {
         val atomCode = storeErrorCodeInfo.storeCode
+        val errorCodeInfoList = storeErrorCodeInfo.errorCodeInfos
         val isStoreMember = storeMemberDao.isStoreMember(
             dslContext = dslContext,
             userId = userId,
@@ -641,6 +649,25 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         )
         if (!isStoreMember) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
+        if (errorCodeInfoList.isNotEmpty()) {
+            val errorCodes = errorCodeInfoList.map { "${it.errorCode}" }
+            val duplicateData = getDuplicateData(errorCodes)
+            // 存在重复code码则报错提示哪些code码重复
+            if (duplicateData.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE,
+                    params = arrayOf(duplicateData.joinToString(","))
+                )
+            }
+            // 校验code码是否符合插件自定义错误码规范
+            errorCodes.forEach {
+                if (it.length != defaulAtomErrorCodoLength || (!it.startsWith(defaulAtomErrorCodoPrefix))) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
+                    )
+                }
+            }
         }
         val errorJsonStr = JsonUtil.toJson(storeErrorCodeInfo.errorCodeInfos)
         // 修改插件error.json文件内容
@@ -674,6 +701,15 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             )
         }
         return Result(true)
+    }
+
+    private fun getDuplicateData(strList: List<String>): List<String> {
+        val set = mutableSetOf<String>()
+        val duplicateData = mutableListOf<String>()
+        strList.forEach {
+            if (set.contains(it)) duplicateData.add(it) else set.add(it)
+        }
+        return duplicateData
     }
 
     @Suppress("UNCHECKED_CAST")

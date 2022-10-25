@@ -169,7 +169,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Value("\${store.defaulAtomErrorCodoLength:6}")
     private var defaulAtomErrorCodoLength: Int = 6
 
-    private var defaulAtomErrorCodoPrefix: String = "8"
+    @Value("\${store.defaulAtomErrorCodoPrefix:}")
+    private var defaulAtomErrorCodoPrefix: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
@@ -579,7 +580,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     }
                     // 校验code码是否符合插件自定义错误码规范
                     errorCodes.forEach {
-                        if (it.length != defaulAtomErrorCodoLength && (!it.startsWith(defaulAtomErrorCodoPrefix))) {
+                        if (it.length != defaulAtomErrorCodoLength || (!it.startsWith(defaulAtomErrorCodoPrefix))) {
                             throw ErrorCodeException(
                                 errorCode = USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
                             )
@@ -599,9 +600,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     }
 
     private fun getDuplicateData(strList: List<String>): List<String> {
-        val set = strList.toSet()
+        val set = mutableSetOf<String>()
         val duplicateData = mutableListOf<String>()
-        strList.forEach { if (set.contains(it)) duplicateData.add(it) }
+        strList.forEach {
+            if (set.contains(it)) duplicateData.add(it) else set.add(it)
+        }
         return duplicateData
     }
 
