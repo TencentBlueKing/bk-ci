@@ -41,13 +41,12 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.api.service.ServiceGroupStrategyResource
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamGroupUtils
@@ -72,7 +71,6 @@ class IamV3Service @Autowired constructor(
     val dslContext: DSLContext,
     val projectDispatcher: ProjectDispatcher,
     val client: Client,
-    val strategyService: StrategyService,
     val userDao: UserDao
 ) {
     fun createIamV3Project(event: TxIamV3CreateEvent) {
@@ -340,7 +338,7 @@ class IamV3Service @Autowired constructor(
     }
 
     private fun getGroupStrategy(defaultGroup: DefaultGroupType): Pair<List<String>, Map<String, List<String>>> {
-        val strategyInfo = strategyService.getStrategyByName(defaultGroup.displayName)
+        val strategyInfo = client.get(ServiceGroupStrategyResource::class).getGroupStrategy(defaultGroup.displayName)
             ?: throw ErrorCodeException(
                 errorCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
                 defaultMessage = MessageCodeUtil.getCodeMessage(
