@@ -584,7 +584,7 @@ abstract class ImageReleaseService {
         userId: String,
         imageId: String
     ) {
-        logger.info("runCheckImagePipeline params:[$userId|$imageId|$sendCheckResultNotify]")
+        logger.info("runCheckImagePipeline params:[$userId|$imageId]")
         val imageRecord = imageDao.getImage(context, imageId)!!
         val imageCode = imageRecord.imageCode
         val version = imageRecord.version
