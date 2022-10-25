@@ -39,7 +39,7 @@ data class PublisherInfo(
     @ApiModelProperty("实体组织架构")
     val organizationName: String,
     @ApiModelProperty("所属工作组BG")
-    val BgName: String,
+    val bgName: String,
     @ApiModelProperty("是否认证")
     val certificationFlag: Boolean,
     @ApiModelProperty("组件类型")

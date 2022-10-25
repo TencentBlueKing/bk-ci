@@ -53,5 +53,5 @@ data class PublishersRequest(
     @ApiModelProperty("实体组织架构", required = true)
     val organization: String,
     @ApiModelProperty("所属工作组BG", required = true)
-    val BgName: String
+    val bgName: String
 )

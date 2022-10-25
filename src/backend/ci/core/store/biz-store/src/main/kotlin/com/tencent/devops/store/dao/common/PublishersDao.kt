@@ -63,7 +63,7 @@ class PublishersDao {
                     .set(FOURTH_LEVEL_DEPT_ID, publisherInfo.fourthLevelDeptId?.toLong())
                     .set(FOURTH_LEVEL_DEPT_NAME, publisherInfo.fourthLevelDeptName)
                     .set(ORGANIZATION_NAME, publisherInfo.organizationName)
-                    .set(BG_NAME, publisherInfo.BgName)
+                    .set(BG_NAME, publisherInfo.bgName)
                     .set(CERTIFICATION_FLAG, publisherInfo.certificationFlag)
                     .set(STORE_TYPE, publisherInfo.storeType.type.toByte())
                     .set(CREATOR, publisherInfo.creator)
@@ -81,7 +81,7 @@ class PublishersDao {
                     .where(PUBLISHER_CODE.eq(it.publishersCode)
                         .and(PUBLISHER_TYPE.eq(it.publishersType.name))
                         .and(STORE_TYPE.eq(it.storeType.type.toByte())))
-                        .and(OWNER_DEPT_NAME.eq(it.BgName))
+                        .and(OWNER_DEPT_NAME.eq(it.bgName))
                 }
             ).execute().size
         }
@@ -102,7 +102,7 @@ class PublishersDao {
                     .set(OWNERS, it.owners)
                     .set(CERTIFICATION_FLAG, it.certificationFlag)
                     .set(ORGANIZATION_NAME, it.organizationName)
-                    .set(BG_NAME, it.BgName)
+                    .set(BG_NAME, it.bgName)
                     .set(HELPER, it.helper)
                     .set(UPDATE_TIME, it.updateTime)
                     .set(MODIFIER, it.modifier)
@@ -199,7 +199,7 @@ class PublishersDao {
                     fourthLevelDeptId = it.fourthLevelDeptId?.toInt(),
                     fourthLevelDeptName = it.fourthLevelDeptName,
                     organizationName = it.organizationName,
-                    BgName = it.BgName,
+                    bgName = it.bgName,
                     certificationFlag = it.certificationFlag,
                     storeType = StoreTypeEnum.getStoreTypeObj(it.storeType.toInt())!!,
                     creator = it.creator,
@@ -233,7 +233,7 @@ class PublishersDao {
                     fourthLevelDeptId = it.fourthLevelDeptId.toInt(),
                     fourthLevelDeptName = it.fourthLevelDeptName,
                     organizationName = it.organizationName,
-                    BgName = it.BgName,
+                    bgName = it.bgName,
                     certificationFlag = it.certificationFlag,
                     storeType = StoreTypeEnum.getStoreTypeObj(it.storeType.toInt())!!,
                     creator = it.creator,
