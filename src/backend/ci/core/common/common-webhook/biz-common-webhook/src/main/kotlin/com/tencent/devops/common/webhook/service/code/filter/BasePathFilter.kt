@@ -57,16 +57,18 @@ abstract class BasePathFilter(
     private fun hashPathSpecs(response: WebhookFilterResponse): Boolean {
         val matchIncludePaths = mutableSetOf<String>()
         if (includedPaths.isNotEmpty()) {
+            val matchUserPaths = mutableSetOf<String>()
             triggerOnPath.forEach eventPath@{ eventPath ->
                 includedPaths.forEach userPath@{ userPath ->
                     if (isPathMatch(eventPath, userPath)) {
                         matchIncludePaths.add(eventPath)
+                        matchUserPaths.add(userPath)
                         return@eventPath
                     }
                 }
             }
-            if (matchIncludePaths.isNotEmpty()) {
-                response.addParam(MATCH_PATHS, matchIncludePaths.joinToString(","))
+            if (matchUserPaths.isNotEmpty()) {
+                response.addParam(MATCH_PATHS, matchUserPaths.joinToString(","))
             }
         } else {
             matchIncludePaths.addAll(triggerOnPath)
