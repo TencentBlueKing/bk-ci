@@ -346,7 +346,7 @@
                         }
                     })
                     acc[root.id] = {
-                        checked: checkedNum === root.children.length,
+                        checked: checkedNum > 0 && checkedNum === root.children.length,
                         indeterminate: checkedNum > 0 && checkedNum < root.children.length
                     }
                     return acc

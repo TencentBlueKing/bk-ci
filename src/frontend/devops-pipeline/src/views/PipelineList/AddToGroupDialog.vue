@@ -97,7 +97,6 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'requestGetGroupLists',
                 'allPipelineGroup'
             ]),
             ...mapGetters('pipelines', [
@@ -151,7 +150,8 @@
         methods: {
             ...mapActions('pipelines', [
                 'addPipelineToGroup',
-                'fetchPipelineGroups'
+                'fetchPipelineGroups',
+                'requestGetGroupLists'
             ]),
             async init () {
                 try {

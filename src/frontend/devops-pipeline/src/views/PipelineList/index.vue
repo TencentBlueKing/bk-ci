@@ -69,8 +69,7 @@
     import { mapState } from 'vuex'
     import pipelineHeader from '@/components/devops/pipeline-header'
     import Logo from '@/components/Logo'
-    import { ALL_PIPELINE_VIEW_ID } from '@/store/constants'
-    import { VIEW_ID_LS_KEY } from '@/utils/pipelineConst'
+    import { getCacheViewId } from '@/utils/util'
 
     export default {
         components: {
@@ -109,7 +108,7 @@
                 }
             },
             viewId () {
-                return localStorage.getItem(VIEW_ID_LS_KEY) ?? ALL_PIPELINE_VIEW_ID
+                return getCacheViewId(this.$route.params.projectId)
             },
             dropdownMenus () {
                 return [

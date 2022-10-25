@@ -68,10 +68,6 @@ const state = {
 }
 
 const getters = {
-    hideActionGroups: state => [
-        ...state.hardViews.map(item => item.id),
-        UNCLASSIFIED_PIPELINE_VIEW_ID
-    ],
     pipelineGroupDict: state => {
         return state.allPipelineGroup.reduce((acc, item) => {
             if (item.projected) {
@@ -97,6 +93,11 @@ const getters = {
             i18nKey: ALL_PIPELINE_VIEW_ID
         }
     }),
+    fixedGroupIdSet: (state, getters) => new Set([
+        UNCLASSIFIED_PIPELINE_VIEW_ID,
+        ...state.sumViews.map(view => view.id),
+        ...Object.keys(getters.hardViewsMap)
+    ]),
     groupMap: (state, getters) => state.allPipelineGroup.reduce((acc, item) => {
         acc[item.id] = item
         return acc
@@ -178,7 +179,7 @@ const actions = {
                 ajax.get(`${prefix}/${projectId}/list`),
                 dispatch('requestPipelineCount', { projectId })
             ])
-            console.log(groupCounts.data)
+
             state.sumViews[0].pipelineCount = groupCounts.data.totalCount
             state.hardViews[0].pipelineCount = groupCounts.data.myFavoriteCount
             state.hardViews[1].pipelineCount = groupCounts.data.myPipelineCount

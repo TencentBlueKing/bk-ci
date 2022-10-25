@@ -98,7 +98,7 @@
         ALL_PIPELINE_VIEW_ID,
         DELETED_VIEW_ID
     } from '@/store/constants'
-    import { VIEW_ID_LS_KEY } from '@/utils/pipelineConst'
+    import { cacheViewId } from '@/utils/util'
     import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
@@ -143,7 +143,7 @@
             ...mapGetters('pipelines', [
                 'pipelineGroupDict',
                 'groupMap',
-                'hideActionGroups'
+                'fixedGroupIdSet'
             ]),
             groupNamesMap () {
                 return Object.keys(this.groupMap).reduce((acc, id) => {
@@ -184,6 +184,11 @@
                 }]
             }
         },
+        watch: {
+            '$route.params.projectId': function () {
+                this.$nextTick(this.refreshPipelineGroup)
+            }
+        },
         created () {
             this.refreshPipelineGroup()
         },
@@ -212,7 +217,7 @@
                 return res
             },
             pipelineGroupActions (group) {
-                if (this.hideActionGroups.includes(group.id)) return []
+                if (this.fixedGroupIdSet.has(group.id)) return []
                 return [
                     {
                         text: this.$t('rename'),
@@ -374,8 +379,9 @@
                 }
             },
             switchViewId (id) {
-                localStorage.setItem(VIEW_ID_LS_KEY, id)
+                cacheViewId(this.$route.params.projectId, id)
                 this.$router.push({
+                    name: 'PipelineManageList',
                     params: {
                         ...this.$route.params,
                         viewId: id

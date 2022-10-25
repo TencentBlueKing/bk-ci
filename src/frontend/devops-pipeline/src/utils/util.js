@@ -18,6 +18,9 @@
  */
 
 import { v4 as uuidv4 } from 'uuid'
+import {
+    ALL_PIPELINE_VIEW_ID
+} from '@/store/constants'
 
 export function isVNode (node) {
     return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
@@ -654,4 +657,15 @@ export class HttpError extends Error {
 
 export function bkVarWrapper (name) {
     return '${{' + name + '}}'
+}
+
+export function cacheViewIdKey (projectId) {
+    return `BK_DEVOPS_VIEW_ID_LS_PREFIX_${projectId}`
+}
+export function cacheViewId (projectId, viewId) {
+    localStorage.setItem(cacheViewIdKey(projectId), viewId)
+}
+
+export function getCacheViewId (projectId) {
+    return localStorage.getItem(cacheViewIdKey(projectId)) ?? ALL_PIPELINE_VIEW_ID
 }

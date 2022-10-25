@@ -14,7 +14,7 @@
         :default-sort="sortField"
         v-on="$listeners"
     >
-        <PipelineListEmpty slot="empty"></PipelineListEmpty>
+        <PipelineListEmpty slot="empty" :is-patch="isPatchView"></PipelineListEmpty>
         <bk-table-column v-if="isPatchView" type="selection" width="60" :selectable="checkSelecteable"></bk-table-column>
         <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
@@ -172,7 +172,7 @@
                 },
                 sortField: {
                     prop: this.sortType,
-                    order: this.$route.query.collation ?? ORDER_ENUM.ascending
+                    order: this.$route.query.collation ?? ORDER_ENUM.descending
                 },
                 activePipeline: null
             }
@@ -236,22 +236,27 @@
             },
             async requestList (query = {}) {
                 this.isLoading = true
-                const { count, page, records } = await this.getPipelines({
-                    page: this.pagination.current,
-                    pageSize: this.pagination.limit,
-                    sortType: this.sortField.prop,
-                    collation: this.sortField.order,
-                    viewId: this.$route.params.viewId,
-                    ...this.filterParams,
-                    ...query
-                })
-                Object.assign(this.pagination, {
-                    count,
-                    current: page
-                })
-                this.pipelineList = records
-                console.log(records)
-                this.isLoading = false
+
+                try {
+                    const { count, page, records } = await this.getPipelines({
+                        page: this.pagination.current,
+                        pageSize: this.pagination.limit,
+                        sortType: this.sortField.prop,
+                        collation: this.sortField.order,
+                        viewId: this.$route.params.viewId,
+                        ...this.filterParams,
+                        ...query
+                    })
+                    Object.assign(this.pagination, {
+                        count,
+                        current: page
+                    })
+                    this.pipelineList = records
+                } catch (e) {
+                    console.error(e)
+                } finally {
+                    this.isLoading = false
+                }
             },
             refresh () {
                 this.requestList()

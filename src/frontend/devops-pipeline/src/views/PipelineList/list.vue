@@ -7,6 +7,7 @@
 
 <script>
     import PipelineGroupAside from './PipelineGroupAside'
+
     export default {
         components: {
             PipelineGroupAside

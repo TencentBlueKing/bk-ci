@@ -2,10 +2,10 @@
     <bk-search-select
         class="search-pipeline-input"
         right-icon="bk-icon icon-search"
+        clearable
         :show-condition="false"
         :filter="true"
         :data="dropList"
-
         :placeholder="$t('searchPipelinePlaceholder')"
         :value="value"
         :values="initValues"
@@ -195,6 +195,9 @@
                 })
                 this.$emit('input', formatVal)
                 this.$emit('update:value', formatVal)
+            },
+            clear () {
+                this.initValues = []
             }
         }
     }

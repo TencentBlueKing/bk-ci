@@ -129,6 +129,10 @@
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import Logo from '@/components/Logo'
     import { PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+    import { getCacheViewId } from '@/utils/util'
+    import {
+        ALL_PIPELINE_VIEW_ID
+    } from '@/store/constants'
 
     const TABLE_LAYOUT = 'table'
     const CARD_LAYOUT = 'card'
@@ -175,7 +179,6 @@
                 return this.layout === CARD_LAYOUT
             },
             currentGroup () {
-                console.log(this.$route.params.viewId)
                 return this.groupMap?.[this.$route.params.viewId]
             },
             currentViewName () {
@@ -204,16 +207,23 @@
             }
 
         },
-        created () {
-            if (!this.$route.params.viewId) {
-                this.$router.replace({
-                    ...this.$route,
-                    params: {
-                        ...this.$route.params,
-                        viewId: 'allPipeline'
+        watch: {
+            '$route.params.projectId': function () {
+                this.filters = []
+                this.$nextTick(() => {
+                    if (this.$route.params.viewId !== ALL_PIPELINE_VIEW_ID) {
+                        this.goList()
+                    } else {
+                        this.refresh()
                     }
                 })
+            },
+            '$route.params.viewId': function () {
+                this.filters = []
             }
+        },
+        created () {
+            this.goList()
             this.checkHasCreatePermission()
         },
 
@@ -229,6 +239,16 @@
             ...mapActions('pipelines', [
                 'requestHasCreatePermission'
             ]),
+            goList () {
+                const viewId = getCacheViewId(this.$route.params.projectId)
+                this.$router.replace({
+                    name: 'PipelineManageList',
+                    params: {
+                        ...this.$route.params,
+                        viewId
+                    }
+                })
+            },
             goPatchManage () {
                 this.$router.push({
                     name: 'patchManageList'

@@ -22,15 +22,43 @@
             <p class="remove-confirm-desc">
                 {{$t('deletePipelineConfirmDesc')}}
             </p>
+            <bk-alert
+                v-if="noPermissionPipelineLength > 0"
+                type="warning"
+                class="no-permission-pipeline-alert"
+                :title="$t('hasNoPermissionPipelineTips', [noPermissionPipelineLength])"
+                closable
+                :close-text="$t('removeNoPermissionPipeline')"
+                @close="removeNoPermissionPipeline"
+            >
+            </bk-alert>
         </template>
-        <ul class="operate-pipeline-list">
-            <li v-for="(pipeline, index) in removedPipelines" :key="pipeline.pipelineId">
+
+        <ul v-if="removedPipelines.length" class="operate-pipeline-list">
+            <li
+                v-for="(pipeline, index) in removedPipelines"
+                :key="pipeline.pipelineId"
+                :class="{
+                    'no-permission-pipeline': !pipeline.hasPermission
+                }"
+            >
                 <span>{{ pipeline.name }}</span>
                 <div v-if="!isRemoveType" class="belongs-pipeline-group" ref="belongsGroupBox">
-                    <bk-tag ext-cls="pipeline-group-name-tag" v-for="name in pipeline.groups" :key="name" :ref="`groupName_${index}`">
+                    <bk-tag
+
+                        ext-cls="pipeline-group-name-tag"
+                        v-for="name in pipeline.groups"
+                        :key="name"
+                        :ref="`groupName_${index}`"
+                    >
                         {{name}}
                     </bk-tag>
-                    <bk-popover ref="groupNameMore" v-if="pipeline.showMoreTag" :disabled="!pipeline.hiddenGroups" :content="pipeline.hiddenGroups">
+                    <bk-popover
+                        v-if="pipeline.showMoreTag"
+                        ref="groupNameMore"
+                        class="pipeline-group-name-tag"
+                        :content="pipeline.hiddenGroups"
+                    >
                         <bk-tag>
                             +{{pipeline.overflowCount}}
                         </bk-tag>
@@ -67,6 +95,7 @@
         },
         data () {
             return {
+                hideNoPermissionPipeline: false,
                 visibleTagCountList: [],
                 isBusy: false,
                 width: 480,
@@ -89,14 +118,23 @@
             title () {
                 return this.isRemoveType ? this.$t('removeFrom') : ''
             },
+            hasPermissionPipelines () {
+                return this.pipelineList.filter(pipeline => pipeline.hasPermission)
+            },
+            noPermissionPipelineLength () {
+                return this.pipelineList.length - this.hasPermissionPipelines.length
+            },
             removedPipelines () {
-                return this.pipelineList.map((pipeline, index) => {
+                console.log('this.hideNoPermissionPipeline', this.hideNoPermissionPipeline)
+                const list = this.hideNoPermissionPipeline ? this.hasPermissionPipelines : this.pipelineList
+                return list.map((pipeline, index) => {
                     const viewNames = pipeline.viewNames ?? []
                     const visibleTagCount = this.visibleTagCountList[index] ?? viewNames.length
                     const overflowCount = viewNames.length - visibleTagCount
 
                     return {
                         name: pipeline.pipelineName,
+                        hasPermission: pipeline.hasPermission,
                         groups: viewNames.slice(0, visibleTagCount),
                         hiddenGroups: viewNames.slice(visibleTagCount).join(';'),
                         overflowCount,
@@ -105,28 +143,46 @@
                 })
             }
         },
-        updated () {
-            setTimeout(() => {
-                if (this.visibleTagCountList.length === 0 && this.pipelineList.length > 0) {
-                    this.calcOverPos()
+        watch: {
+            isShow (val) {
+                if (!val) {
+                    this.visibleTagCountList = []
+                } else {
+                    setTimeout(() => {
+                        if (this.visibleTagCountList.length === 0 && this.pipelineList.length > 0) {
+                            this.calcOverPos()
+                        }
+                    }, 200)
                 }
-            }, 100)
+            }
         },
         methods: {
             ...mapActions('pipelines', [
                 'removePipelineFromGroup',
                 'patchDeletePipelines'
             ]),
+            removeNoPermissionPipeline () {
+                console.log('123')
+                this.hideNoPermissionPipeline = true
+            },
             async handleSubmit () {
                 if (this.isBusy) return
 
                 try {
                     this.isBusy = true
+                    const list = this.isRemoveType ? this.pipelineList : this.hasPermissionPipelines
+                    if (list.length === 0) {
+                        this.$showTips({
+                            message: 'ssss',
+                            theme: 'error'
+                        })
+                        return
+                    }
                     const params = {
                         projectId: this.$route.params.projectId,
-                        pipelineIds: this.pipelineList.map(pipeline => pipeline.pipelineId)
-
+                        pipelineIds: list.map(pipeline => pipeline.pipelineId)
                     }
+
                     if (this.isRemoveType) {
                         await this.removePipelineFromGroup({
                             ...params,
@@ -158,7 +214,7 @@
                 }
             },
             handleClose () {
-                this.visibleTagCountList = []
+                this.hideNoPermissionPipeline = false
                 this.$emit('close')
             },
             calcOverPos () {
@@ -173,11 +229,14 @@
                         let sumTagWidth = 0
                         let tagVisbleCount = 0
 
-                        this.$refs[`groupName_${index}`]?.every((groupName, index) => {
+                        console.log(viewPortWidth, moreTagWidth)
+
+                        this.$refs[`groupName_${index}`]?.every((groupName) => {
                             sumTagWidth += groupName.$el.offsetWidth + tagMargin
+                            console.log(index, sumTagWidth, groupName.$el.offsetWidth)
                             const isOverSize = sumTagWidth > viewPortWidth
                             !isOverSize && tagVisbleCount++
-                            return isOverSize
+                            return !isOverSize
                         })
                         return tagVisbleCount
                     })
@@ -209,29 +268,40 @@
         .remove-confirm-title {
             font-size: 20px;
             color: #313238;
+            margin: 8px 0;
         }
         .remove-confirm-desc {
             font-size: 14px;
-            text-align: left
+            margin-bottom: 25px;
+        }
+        .no-permission-pipeline-alert {
+            text-align: left;
         }
         .operate-pipeline-list {
             border: 1px solid #DCDEE5;
             border-radius: 2px;
             margin-top: 16px;
-            padding: 0 16px;
             overflow: auto;
             > li {
                 height: 40px;
+                padding: 0 16px;
                 display: flex;
                 align-items: center;
                 overflow: hidden;
                 text-align: left;
+                border-bottom: 1px solid #DCDEE5;
+                &:last-child {
+                    border-bottom: 0;
+                }
+                &.no-permission-pipeline {
+                    background: #FFF3E1;
+                }
                 > span {
                     flex: 1;
                     @include ellipsis();
                 }
                 .belongs-pipeline-group {
-                    display: flex;
+                    vertical-align: top;
                     width: 200px;
                     height: 22px;
                     overflow: hidden;
