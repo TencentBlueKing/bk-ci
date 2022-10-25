@@ -37,7 +37,7 @@ import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 
-@Event(destination = StreamBinding.BINDING_WEBSOCKET_TMP_EVENT_DESTINATION)
+@Event(destination = StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT)
 data class WebHookWebsocketPush(
     val buildId: String?,
     val pipelineId: String,

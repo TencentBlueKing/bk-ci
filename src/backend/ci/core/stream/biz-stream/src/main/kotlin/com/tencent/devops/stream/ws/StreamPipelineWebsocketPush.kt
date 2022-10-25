@@ -3,6 +3,7 @@ package com.tencent.devops.stream.ws
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.dispatch.message.NotifyMessage
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
@@ -11,7 +12,7 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 
 @Suppress("LongParameterList")
-@Event(MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT)
+@Event(StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT)
 class StreamPipelineWebsocketPush(
     val pipelineId: String,
     val projectId: String,

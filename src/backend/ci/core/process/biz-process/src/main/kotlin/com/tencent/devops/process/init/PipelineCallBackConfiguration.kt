@@ -69,7 +69,7 @@ class PipelineCallBackConfiguration {
     /**
      * 构建构建回调广播交换机
      */
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT, STREAM_CONSUMER_GROUP)
+    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_STREAM_ENABLED, STREAM_CONSUMER_GROUP)
     fun pipelineStreamEnabledListener(
         @Autowired streamEnabledListener: MQPipelineStreamEnabledListener
     ): Consumer<Message<PipelineStreamEnabledEvent>> {

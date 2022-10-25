@@ -49,21 +49,6 @@ class StreamBuildReviewListener @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StreamBuildReviewListener::class.java)
     }
 
-    @RabbitListener(
-        bindings = [
-            (
-                QueueBinding(
-                    value = Queue(value = StreamMQ.QUEUE_PIPELINE_BUILD_REVIEW_STREAM, durable = "true"),
-                    exchange = Exchange(
-                        value = MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT,
-                        durable = "true",
-                        delayed = "true",
-                        type = ExchangeTypes.FANOUT
-                    )
-                )
-                )
-        ]
-    )
     fun buildReviewListener(buildReviewEvent: PipelineBuildReviewBroadCastEvent) {
         try {
             // stream目前没有人工审核插件

@@ -52,24 +52,6 @@ class QualityMQConfig {
         const val STREAM_CONSUMER_GROUP = "quality-service"
     }
 
-    @Bean
-    fun qualityDailyQueue() = Queue(MQ.QUEUE_QUALITY_DAILY_EVENT)
-
-    @Bean
-    fun qualityDailyExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_QUALITY_DAILY_FANOUT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun qualityQueueBind(
-        @Autowired qualityDailyQueue: Queue,
-        @Autowired qualityDailyExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(qualityDailyQueue).to(qualityDailyExchange).with(MQ.ROUTE_QUALITY_DAILY_FANOUT)
-    }
-
     @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT, STREAM_CONSUMER_GROUP)
     fun pipelineCancelQualityListener(
         @Autowired listener: PipelineBuildQualityListener

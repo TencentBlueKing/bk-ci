@@ -218,7 +218,7 @@ object StreamBinding {
     const val QUEUE_PIPELINE_SETTING_CHANGE = "q.engine.pipeline.setting.change"
 
     // webSocket消息
-    const val BINDING_WEBSOCKET_TMP_EVENT_DESTINATION = "e.websocket.fanout"
+    const val EXCHANGE_WEBSOCKET_TMP_FANOUT = "e.websocket.fanout"
     const val ROUTE_WEBSOCKET_TMP_EVENT = "r.websocket.file"
     const val QUEUE_WEBSOCKET_TMP_EVENT = "q.websocket.file"
     const val EXCHANGE_WEBSOCKET_TRANSFER_FANOUT = "e.websocket.transfer.fanout"

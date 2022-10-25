@@ -43,7 +43,7 @@ import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.service.pipeline.PipelineStatusService
 import org.slf4j.LoggerFactory
 
-@Event(destination = StreamBinding.BINDING_WEBSOCKET_TMP_EVENT_DESTINATION)
+@Event(destination = StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT)
 data class StatusWebsocketPush(
     val buildId: String?,
     val pipelineId: String,

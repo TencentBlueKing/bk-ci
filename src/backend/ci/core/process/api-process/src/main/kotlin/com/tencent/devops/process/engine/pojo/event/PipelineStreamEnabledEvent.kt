@@ -1,8 +1,8 @@
 package com.tencent.devops.process.engine.pojo.event
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.stream.enums.ActionType
 
 /**
@@ -10,7 +10,7 @@ import com.tencent.devops.common.stream.enums.ActionType
  *
  * @version 1.0
  */
-@Event(MQ.QUEUE_PIPELINE_STREAM_ENABLED)
+@Event(StreamBinding.QUEUE_PIPELINE_STREAM_ENABLED)
 data class PipelineStreamEnabledEvent(
     override val source: String,
     override val projectId: String,

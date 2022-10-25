@@ -31,13 +31,14 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.stream.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.stream.constants.StreamBinding
 
 /**
  * 广播定时规则变化的事件
  *
  * @version 1.0
  */
-@Event(MQ.EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT)
+@Event(StreamBinding.EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT)
 data class PipelineTimerChangeEvent(
     override val source: String,
     override val projectId: String,

@@ -36,7 +36,7 @@ import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 
-@Event(StreamBinding.BINDING_WEBSOCKET_TMP_EVENT_DESTINATION)
+@Event(StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT)
 data class MiscNodeWebsocketPush(
     val projectId: String,
     override val userId: String,

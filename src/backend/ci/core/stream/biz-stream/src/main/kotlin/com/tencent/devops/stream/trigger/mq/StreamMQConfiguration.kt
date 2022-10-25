@@ -30,10 +30,12 @@ import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.listener.StreamBuildFinishListenerService
 import com.tencent.devops.stream.trigger.listener.StreamBuildQualityCheckListener
+import com.tencent.devops.stream.trigger.listener.StreamBuildReviewListener
 import com.tencent.devops.stream.trigger.mq.streamMrConflict.StreamMrConflictCheckEvent
 import com.tencent.devops.stream.trigger.mq.streamMrConflict.StreamMrConflictCheckListener
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestEvent
@@ -122,6 +124,15 @@ class StreamMQConfiguration {
     ): Consumer<Message<StreamChangeEvent>> {
         return Consumer { event: Message<StreamChangeEvent> ->
             buildListener.run(event.payload)
+        }
+    }
+
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, STREAM_CONSUMER_GROUP)
+    fun buildFinishListener(
+        @Autowired listener: StreamBuildReviewListener
+    ): Consumer<Message<PipelineBuildReviewBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildReviewBroadCastEvent> ->
+            listener.buildReviewListener(event.payload)
         }
     }
 }

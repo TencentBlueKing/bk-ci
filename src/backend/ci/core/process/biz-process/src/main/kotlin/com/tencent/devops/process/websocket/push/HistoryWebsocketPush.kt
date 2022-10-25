@@ -38,7 +38,7 @@ import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import org.slf4j.LoggerFactory
 
-@Event(destination = StreamBinding.BINDING_WEBSOCKET_TMP_EVENT_DESTINATION)
+@Event(destination = StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT)
 data class HistoryWebsocketPush(
     val buildId: String?,
     val pipelineId: String,

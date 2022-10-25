@@ -41,7 +41,7 @@ import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import org.slf4j.LoggerFactory
 
-@Event(StreamBinding.BINDING_WEBSOCKET_TMP_EVENT_DESTINATION)
+@Event(StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT)
 data class StoreWebsocketPush(
     val atomId: String,
     override val userId: String,

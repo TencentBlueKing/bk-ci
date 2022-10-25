@@ -52,7 +52,7 @@ class WebsocketConfiguration {
     @Bean
     fun websocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
 
-    @StreamEventConsumer(StreamBinding.BINDING_WEBSOCKET_TMP_EVENT_DESTINATION, STREAM_CONSUMER_GROUP, true)
+    @StreamEventConsumer(StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT, STREAM_CONSUMER_GROUP, true)
     fun pipelineWebSocketIn(
         @Autowired webSocketListener: WebSocketListener
     ): Consumer<Message<SendMessage>> {
