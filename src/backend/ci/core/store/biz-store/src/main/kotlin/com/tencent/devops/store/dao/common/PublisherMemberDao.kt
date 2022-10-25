@@ -1,9 +1,11 @@
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStorePublisherMemberRel
 import com.tencent.devops.model.store.tables.records.TStorePublisherMemberRelRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class PublisherMemberDao {
@@ -53,5 +55,21 @@ class PublisherMemberDao {
                 .where(PUBLISHER_ID.eq(publisherId))
                 .fetchInto(String::class.java)
         }
+    }
+
+    fun createPublisherMemberRel(
+        publisherId: String,
+        memberId: String,
+        userId: String
+    ): TStorePublisherMemberRelRecord {
+        val storePublisherMemberRel = TStorePublisherMemberRelRecord()
+        storePublisherMemberRel.id = UUIDUtil.generate()
+        storePublisherMemberRel.publisherId = publisherId
+        storePublisherMemberRel.memberId = memberId
+        storePublisherMemberRel.creator = userId
+        storePublisherMemberRel.createTime = LocalDateTime.now()
+        storePublisherMemberRel.modifier = userId
+        storePublisherMemberRel.updateTime = LocalDateTime.now()
+        return storePublisherMemberRel
     }
 }

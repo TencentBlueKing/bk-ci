@@ -105,7 +105,9 @@ class PublishersDataServiceImpl @Autowired constructor(
             if (it.publishersType == PublisherType.ORGANIZATION) {
                 //  生成可使用组织发布者进行发布的成员关联
                 it.members.forEach { memberId ->
-                    storePublisherMemberRelRecords.add(createPublisherMemberRel(storePublisherInfoId, memberId, userId))
+                    storePublisherMemberRelRecords.add(
+                        publisherMemberDao.createPublisherMemberRel(storePublisherInfoId, memberId, userId)
+                    )
                 }
             }
         }
@@ -202,25 +204,9 @@ class PublishersDataServiceImpl @Autowired constructor(
         }
         newMembers.forEach { newMember ->
             if (!intersection.contains(newMember)) {
-                addRecords.add(createPublisherMemberRel(publisherId, newMember, userId))
+                addRecords.add(publisherMemberDao.createPublisherMemberRel(publisherId, newMember, userId))
             }
         }
-    }
-
-    private fun createPublisherMemberRel(
-        publisherId: String,
-        memberId: String,
-        userId: String
-    ): TStorePublisherMemberRelRecord {
-        val storePublisherMemberRel = TStorePublisherMemberRelRecord()
-        storePublisherMemberRel.id = UUIDUtil.generate()
-        storePublisherMemberRel.publisherId = publisherId
-        storePublisherMemberRel.memberId = memberId
-        storePublisherMemberRel.creator = userId
-        storePublisherMemberRel.createTime = LocalDateTime.now()
-        storePublisherMemberRel.modifier = userId
-        storePublisherMemberRel.updateTime = LocalDateTime.now()
-        return storePublisherMemberRel
     }
 
     override fun createPlatformsData(
