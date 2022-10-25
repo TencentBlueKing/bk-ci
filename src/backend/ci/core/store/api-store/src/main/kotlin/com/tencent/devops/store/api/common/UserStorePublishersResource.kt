@@ -43,7 +43,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_MARKET_PUBLISHERS"], description = "研发商店-发布者")
-@Path("/user/market/publishers")
+@Path("/user/store/publisher")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserStorePublishersResource {
