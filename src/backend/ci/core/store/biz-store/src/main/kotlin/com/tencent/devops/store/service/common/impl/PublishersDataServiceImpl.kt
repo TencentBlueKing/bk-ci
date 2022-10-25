@@ -69,6 +69,10 @@ class PublishersDataServiceImpl @Autowired constructor(
         val storePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
         publishers.forEach {
             val deptInfos = analysisDept(userId, it.organization)
+            if (deptInfos.isEmpty()) {
+                logger.error("createPublisherData analysis dept data error!")
+                return 0
+            }
             val storePublisherInfo = TStorePublisherInfoRecord()
             val storePublisherInfoId = UUIDUtil.generate()
             storePublisherInfo.id = storePublisherInfoId

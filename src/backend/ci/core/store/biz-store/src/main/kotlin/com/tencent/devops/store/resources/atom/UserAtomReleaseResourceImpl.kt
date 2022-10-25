@@ -73,12 +73,4 @@ class UserAtomReleaseResourceImpl @Autowired constructor(
     override fun offlineAtom(userId: String, atomCode: String, atomOfflineReq: AtomOfflineReq): Result<Boolean> {
         return atomReleaseService.offlineAtom(userId, atomCode, atomOfflineReq)
     }
-
-    override fun getPublishers(
-        userId: String,
-        storeCode: String,
-        storeType: StoreTypeEnum
-    ): Result<List<PublisherInfo>> {
-        return publishersDataService.getPublishers(userId, storeCode, storeType)
-    }
 }
