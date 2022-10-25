@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository
 class LambdaStoreDao {
     fun getPlatformName(
         dslContext: DSLContext,
-        platformCode: String
+        platformCode: String?
     ): String? {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.select(PLATFORM_NAME).from(this)
