@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.webhook
 
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.ICodeWebhookEvent
 import org.slf4j.LoggerFactory

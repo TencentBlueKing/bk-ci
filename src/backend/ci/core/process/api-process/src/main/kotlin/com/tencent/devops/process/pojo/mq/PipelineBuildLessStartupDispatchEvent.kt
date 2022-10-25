@@ -30,9 +30,7 @@ package com.tencent.devops.process.pojo.mq
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.stream.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.annotation.RabbitEvent
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 

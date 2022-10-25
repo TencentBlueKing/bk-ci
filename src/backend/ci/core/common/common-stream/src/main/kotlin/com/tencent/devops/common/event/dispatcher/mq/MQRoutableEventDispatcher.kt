@@ -27,10 +27,7 @@
 
 package com.tencent.devops.common.event.dispatcher.mq
 
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.annotation.RabbitEvent
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate

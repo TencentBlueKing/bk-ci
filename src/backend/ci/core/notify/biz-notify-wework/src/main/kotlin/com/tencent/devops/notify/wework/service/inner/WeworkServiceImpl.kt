@@ -55,7 +55,6 @@ import com.tencent.devops.notify.wework.pojo.UploadMediaResp
 import com.tencent.devops.notify.wework.pojo.VideoSendMessageRequest
 import com.tencent.devops.notify.wework.pojo.VoiceSendMessageRequest
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
 import java.io.InputStream

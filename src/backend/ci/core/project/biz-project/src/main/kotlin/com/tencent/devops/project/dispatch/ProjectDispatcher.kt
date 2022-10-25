@@ -29,8 +29,6 @@ package com.tencent.devops.project.dispatch
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import org.slf4j.LoggerFactory

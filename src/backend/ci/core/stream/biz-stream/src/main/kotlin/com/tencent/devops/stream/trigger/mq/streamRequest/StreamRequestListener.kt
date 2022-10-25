@@ -27,14 +27,8 @@
 
 package com.tencent.devops.stream.trigger.mq.streamRequest
 
-import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.StreamTriggerRequestService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.ExchangeTypes
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 

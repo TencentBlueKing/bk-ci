@@ -31,21 +31,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.Tools
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_AGENT_LISTENER_DIRECT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_SHUTDOWN
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_STARTUP
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.stream.constants.StreamBinding
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.MessagePostProcessor
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
@@ -60,7 +55,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.messaging.Message
 import java.util.function.Consumer
-import kotlin.math.max
 
 @Suppress("ALL")
 @Configuration
@@ -71,7 +65,6 @@ class MQConfiguration @Autowired constructor() {
         const val STREAM_CONSUMER_GROUP = "dispatch-service"
         private val logger = LoggerFactory.getLogger(MQConfiguration::class.java)
     }
-
 
     @Value("\${dispatch.demoteQueue.concurrency:2}")
     private val demoteQueueConcurrency: Int = 2

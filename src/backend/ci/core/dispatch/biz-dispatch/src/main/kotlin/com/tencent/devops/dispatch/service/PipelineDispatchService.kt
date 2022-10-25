@@ -30,7 +30,6 @@ package com.tencent.devops.dispatch.service
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao

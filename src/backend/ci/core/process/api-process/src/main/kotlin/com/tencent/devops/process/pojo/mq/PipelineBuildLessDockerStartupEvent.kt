@@ -30,7 +30,6 @@ package com.tencent.devops.process.pojo.mq
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.stream.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.annotation.RabbitEvent
 
 @RabbitEvent(MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT, MQ.QUEUE_BUILD_LESS_AGENT_STARTUP_PREFFIX)

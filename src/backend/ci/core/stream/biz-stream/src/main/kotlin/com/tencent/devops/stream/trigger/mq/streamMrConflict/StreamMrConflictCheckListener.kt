@@ -35,7 +35,6 @@ import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptio
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 
 @Service

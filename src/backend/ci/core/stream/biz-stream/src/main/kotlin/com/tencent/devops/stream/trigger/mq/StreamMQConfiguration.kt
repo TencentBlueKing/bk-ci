@@ -32,7 +32,6 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.stream.constant.MQ
-import com.tencent.devops.stream.trigger.StreamTriggerRequestService
 import com.tencent.devops.stream.trigger.listener.StreamBuildFinishListenerService
 import com.tencent.devops.stream.trigger.listener.StreamBuildQualityCheckListener
 import com.tencent.devops.stream.trigger.mq.streamMrConflict.StreamMrConflictCheckEvent
@@ -62,7 +61,6 @@ class StreamMQConfiguration {
     @Bean
     fun pipelineEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
 
-
     @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
     fun buildFinishListener(
         @Autowired finishListenerService: StreamBuildFinishListenerService
@@ -80,7 +78,6 @@ class StreamMQConfiguration {
             checkListener.buildQualityCheckListener(event.payload)
         }
     }
-
 
     @StreamEventConsumer(MQ.QUEUE_STREAM_TRIGGER_PIPELINE_EVENT, STREAM_CONSUMER_GROUP)
     fun streamTriggerListener(

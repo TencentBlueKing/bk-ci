@@ -31,5 +31,3 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-v3"))
     api(project(":core:image:biz-image"))
 }
-
-

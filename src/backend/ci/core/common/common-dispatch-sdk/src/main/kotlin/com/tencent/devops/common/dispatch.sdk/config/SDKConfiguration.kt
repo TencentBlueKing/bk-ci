@@ -28,8 +28,6 @@
 package com.tencent.devops.common.dispatch.sdk.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -42,7 +40,6 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
-import org.springframework.cloud.stream.function.StreamBridge
 
 @Configuration
 class SDKConfiguration {

@@ -42,7 +42,6 @@ import com.tencent.devops.process.plugin.trigger.timer.listener.PipelineTimerCha
 import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineJobBean
 import com.tencent.devops.process.plugin.trigger.timer.quartz.QuartzSchedulerManager
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.quartz.QuartzProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.stream.function.StreamBridge
@@ -93,7 +92,7 @@ class TriggerConfiguration {
      */
     @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_TIMER, STREAM_CONSUMER_GROUP)
     fun timerTriggerListener(
-        @Autowired buildListener: PipelineTimerBuildListener,
+        @Autowired buildListener: PipelineTimerBuildListener
     ): Consumer<Message<PipelineTimerBuildEvent>> {
         return Consumer { event: Message<PipelineTimerBuildEvent> ->
             buildListener.run(event.payload)
@@ -105,14 +104,10 @@ class TriggerConfiguration {
      */
     @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT, STREAM_CONSUMER_GROUP)
     fun timerChangeListener(
-        @Autowired buildListener: PipelineTimerChangerListener,
+        @Autowired buildListener: PipelineTimerChangerListener
     ): Consumer<Message<PipelineTimerChangeEvent>> {
         return Consumer { event: Message<PipelineTimerChangeEvent> ->
             buildListener.run(event.payload)
         }
     }
-
-    @Value("\${queueConcurrency.timerChanger:3}")
-    private val timerChangerConcurrency: Int? = null
-
 }

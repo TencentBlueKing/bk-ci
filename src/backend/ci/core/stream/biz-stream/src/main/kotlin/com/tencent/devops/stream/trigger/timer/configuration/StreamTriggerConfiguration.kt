@@ -28,30 +28,12 @@
 package com.tencent.devops.stream.trigger.timer.configuration
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.timer.SchedulerManager
-import com.tencent.devops.stream.trigger.timer.listener.StreamTimerBuildListener
-import com.tencent.devops.stream.trigger.timer.listener.StreamTimerChangerListener
 import com.tencent.devops.stream.trigger.timer.quartz.QuartzSchedulerManager
 import com.tencent.devops.stream.trigger.timer.quartz.StreamJobBean
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.core.QueueBuilder
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
