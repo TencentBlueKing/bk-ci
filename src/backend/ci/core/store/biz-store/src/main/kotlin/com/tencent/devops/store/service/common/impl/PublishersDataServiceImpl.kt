@@ -88,7 +88,7 @@ class PublishersDataServiceImpl @Autowired constructor(
                 storePublisherInfo.fourthLevelDeptName = deptInfos[3].name
             }
             storePublisherInfo.organizationName = it.organization
-            storePublisherInfo.ownerDeptName = it.ownerDeptName
+            storePublisherInfo.BgName = it.BgName
             storePublisherInfo.certificationFlag = it.certificationFlag
             storePublisherInfo.storeType = it.storeType.type.toByte()
             storePublisherInfo.creator = userId
@@ -143,7 +143,7 @@ class PublishersDataServiceImpl @Autowired constructor(
                 records.certificationFlag = it.certificationFlag
                 records.organizationName = it.organization
                 records.modifier = userId
-                records.ownerDeptName = it.ownerDeptName
+                records.BgName = it.BgName
                 records.helper = it.helper
                 records.storeType = it.storeType.type.toByte()
                 records.updateTime = LocalDateTime.now()
@@ -282,7 +282,7 @@ class PublishersDataServiceImpl @Autowired constructor(
                     fourthLevelDeptId = it.groupId.toInt(),
                     fourthLevelDeptName = it.groupName,
                     organizationName = storeUserService.getUserFullDeptName(userId).data ?: "",
-                    ownerDeptName = it.deptName,
+                    BgName = it.BgName,
                     certificationFlag = false,
                     storeType = storeType,
                     creator = userId,
