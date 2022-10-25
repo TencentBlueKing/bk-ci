@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.DeptInfo
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -123,6 +124,10 @@ class PublishersDataServiceImpl @Autowired constructor(
         publishers.forEach {
             val publisherId = publishersDao.getPublisherId(dslContext, it.publishersCode)
             val deptInfos = analysisDept(userId, it.organization)
+            if (deptInfos.isEmpty()) {
+                logger.error("createPublisherData analysis dept data error!")
+                return 0
+            }
             publisherId?.let { id ->
                 val records = TStorePublisherInfoRecord()
                 records.id = id
@@ -304,8 +309,12 @@ class PublishersDataServiceImpl @Autowired constructor(
         val deptNames = organization.split("/")
         val deptInfos = mutableListOf<DeptInfo>()
         deptNames.forEachIndexed() { index, deptName ->
-            val result = client.get(ServiceDeptResource::class).getDeptByName(userId, deptName).data
-            result?.let { it -> deptInfos.add(index, it.results[0]) }
+            try {
+                val result = client.get(ServiceDeptResource::class).getDeptByName(userId, deptName).data
+                result?.let { it -> deptInfos.add(index, it.results[0]) }
+            } catch (e: OperationException) {
+                logger.error("analysisDept getDeptByName error! ${e.message}")
+            }
         }
         return deptInfos
     }

@@ -285,7 +285,6 @@ class AuthDeptServiceImpl @Autowired constructor(
         val request = Request.Builder().url(url)
             .post(requestBody)
             .build()
-        logger.info("call user cente request: $request")
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 // 请求错误
