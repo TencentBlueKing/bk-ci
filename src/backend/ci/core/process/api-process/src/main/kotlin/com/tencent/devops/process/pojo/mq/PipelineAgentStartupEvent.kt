@@ -33,8 +33,9 @@ import com.tencent.devops.common.stream.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.annotation.RabbitEvent
 
-@Event(MQ.ROUTE_AGENT_STARTUP)
+@RabbitEvent(MQ.EXCHANGE_AGENT_LISTENER_DIRECT, MQ.ROUTE_AGENT_STARTUP)
 data class PipelineAgentStartupEvent(
     override val source: String,
     override val projectId: String,

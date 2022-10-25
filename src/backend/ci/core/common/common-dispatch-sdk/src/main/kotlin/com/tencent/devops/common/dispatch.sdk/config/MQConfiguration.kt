@@ -29,16 +29,23 @@ package com.tencent.devops.common.dispatch.sdk.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.dispatcher.pipeline.Tools
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_AGENT_LISTENER_DIRECT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_SHUTDOWN
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_STARTUP
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
+import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.stream.constants.StreamBinding
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
 import org.springframework.amqp.core.FanoutExchange
+import org.springframework.amqp.core.MessagePostProcessor
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
@@ -51,11 +58,20 @@ import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
+import org.springframework.messaging.Message
+import java.util.function.Consumer
+import kotlin.math.max
 
 @Suppress("ALL")
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class MQConfiguration @Autowired constructor() {
+
+    companion object {
+        const val STREAM_CONSUMER_GROUP = "dispatch-service"
+        private val logger = LoggerFactory.getLogger(MQConfiguration::class.java)
+    }
+
 
     @Value("\${dispatch.demoteQueue.concurrency:2}")
     private val demoteQueueConcurrency: Int = 2
@@ -72,91 +88,25 @@ class MQConfiguration @Autowired constructor() {
     /**
      * 构建启动广播交换机
      */
-    @Bean
-    fun pipelineBuildStartFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_START_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun pipelineBuildDispatchStartQueue(@Autowired buildListener: BuildListener) =
-        Queue(MQ.QUEUE_PIPELINE_BUILD_START_DISPATCHER + getStartQueue(buildListener))
-
-    @Bean
-    fun pipelineBuildDispatchStartQueueBind(
-        @Autowired pipelineBuildDispatchStartQueue: Queue,
-        @Autowired pipelineBuildStartFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildDispatchStartQueue).to(pipelineBuildStartFanoutExchange)
-    }
-
-    @Bean
-    fun pipelineBuildDispatchStartListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildDispatchStartQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: BuildListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildListener, buildListener::onPipelineStartup.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildDispatchStartQueue,
-            rabbitAdmin = rabbitAdmin,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 10,
-            adapter = adapter,
-            prefetchCount = 1
-        )
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    fun buildStartupListener(
+        @Autowired buildListener: BuildListener
+    ): Consumer<Message<PipelineBuildStartBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildStartBroadCastEvent> ->
+            buildListener.onPipelineStartup(event.payload)
+        }
     }
 
     /**
-     * 构建结束广播交换机
+     * 构建广播交换机
      */
-    @Bean
-    fun pipelineBuildFinishFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun pipelineBuildDispatchFinishQueue(@Autowired buildListener: BuildListener) =
-        Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER + getShutdownQueue(buildListener))
-
-    @Bean
-    fun pipelineBuildDispatchFinishQueueBind(
-        @Autowired pipelineBuildDispatchFinishQueue: Queue,
-        @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildDispatchFinishQueue).to(pipelineBuildFinishFanoutExchange)
-    }
-
-    @Bean
-    fun pipelineBuildDispatchFinishListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildDispatchFinishQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: BuildListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(buildListener, buildListener::onPipelineShutdown.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildDispatchFinishQueue,
-            rabbitAdmin = rabbitAdmin,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 10,
-            adapter = adapter,
-            prefetchCount = 1
-        )
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    fun buildFinishListener(
+        @Autowired buildListener: BuildListener
+    ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildFinishBroadCastEvent> ->
+            buildListener.onPipelineShutdown(event.payload)
+        }
     }
 
     @Bean
@@ -281,10 +231,6 @@ class MQConfiguration @Autowired constructor() {
             adapter = adapter,
             prefetchCount = 1
         )
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(MQConfiguration::class.java)
     }
 
     private fun getStartQueue(buildListener: BuildListener): String {

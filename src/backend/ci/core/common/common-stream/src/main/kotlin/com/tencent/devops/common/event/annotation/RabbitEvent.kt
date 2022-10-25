@@ -25,21 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.pipeline
-
-import com.tencent.devops.common.stream.enums.ActionType
+package com.tencent.devops.common.event.annotation
 
 /**
- * 可指定路由key后续的流水线事件
+ * 事件注解
+ * @version 1.0
  */
-@Suppress("LongParameterList")
-abstract class IPipelineRoutableEvent(
-    open var routeKeySuffix: String? = null, // 路由后缀Key
-    open var actionType: ActionType,
-    open val source: String,
-    open val projectId: String,
-    open val pipelineId: String,
-    open val userId: String,
-    open var delayMills: Int,
-    open var retryTime: Int = 1
-)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class RabbitEvent(val exchange: String, val routeKey: String = "", val delayMills: Int = 0)

@@ -28,8 +28,8 @@
 package com.tencent.devops.dispatch.configuration
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.event.dispatcher.pipeline.Tools
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.dispatch.listener.ThirdPartyAgentListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder

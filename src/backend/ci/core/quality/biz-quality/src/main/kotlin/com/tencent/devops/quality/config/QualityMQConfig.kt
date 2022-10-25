@@ -27,7 +27,14 @@
 
 package com.tencent.devops.quality.config
 
+import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.quality.listener.PipelineBuildQualityListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -35,9 +42,15 @@ import org.springframework.amqp.core.Queue
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 @Configuration
 class QualityMQConfig {
+
+    companion object {
+        const val STREAM_CONSUMER_GROUP = "quality-service"
+    }
 
     @Bean
     fun qualityDailyQueue() = Queue(MQ.QUEUE_QUALITY_DAILY_EVENT)
@@ -55,5 +68,41 @@ class QualityMQConfig {
         @Autowired qualityDailyExchange: DirectExchange
     ): Binding {
         return BindingBuilder.bind(qualityDailyQueue).to(qualityDailyExchange).with(MQ.ROUTE_QUALITY_DAILY_FANOUT)
+    }
+
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT, STREAM_CONSUMER_GROUP)
+    fun pipelineCancelQualityListener(
+        @Autowired listener: PipelineBuildQualityListener
+    ): Consumer<Message<PipelineBuildCancelBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildCancelBroadCastEvent> ->
+            listener.listenPipelineCancelQualityListener(event.payload)
+        }
+    }
+
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, STREAM_CONSUMER_GROUP)
+    fun pipelineRetryQualityListener(
+        @Autowired listener: PipelineBuildQualityListener
+    ): Consumer<Message<PipelineBuildQueueBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildQueueBroadCastEvent> ->
+            listener.listenPipelineRetryBroadCastEvent(event.payload)
+        }
+    }
+
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, STREAM_CONSUMER_GROUP)
+    fun pipelineReviewListener(
+        @Autowired listener: PipelineBuildQualityListener
+    ): Consumer<Message<PipelineBuildReviewBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildReviewBroadCastEvent> ->
+            listener.listenPipelineTimeoutBroadCastEvent(event.payload)
+        }
+    }
+
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT, STREAM_CONSUMER_GROUP)
+    fun pipelineReviewQualityListener(
+        @Autowired listener: PipelineBuildQualityListener
+    ): Consumer<Message<PipelineBuildQualityReviewBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildQualityReviewBroadCastEvent> ->
+            listener.listenPipelineQualityReviewBroadCastEvent(event.payload)
+        }
     }
 }

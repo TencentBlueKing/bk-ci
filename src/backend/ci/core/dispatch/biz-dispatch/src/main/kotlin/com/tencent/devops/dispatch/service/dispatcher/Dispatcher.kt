@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.service.dispatcher
 
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -53,7 +54,7 @@ interface Dispatcher {
     fun retry(
         client: Client,
         buildLogPrinter: BuildLogPrinter,
-        pipelineEventDispatcher: PipelineEventDispatcher,
+        pipelineEventDispatcher: MQRoutableEventDispatcher,
         event: PipelineAgentStartupEvent,
         errorCodeEnum: ErrorCodeEnum? = ErrorCodeEnum.SYSTEM_ERROR,
         errorMessage: String? = null

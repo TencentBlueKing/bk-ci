@@ -33,8 +33,10 @@ import com.tencent.devops.common.stream.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.annotation.RabbitEvent
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 
-@Event(MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
+@RabbitEvent(MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT, MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
 data class PipelineBuildLessStartupDispatchEvent(
     override val source: String,
     override val projectId: String,
@@ -53,5 +55,6 @@ data class PipelineBuildLessStartupDispatchEvent(
     val executeCount: Int?,
     val customBuildEnv: Map<String, String>?,
     override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+    override var delayMills: Int = 0,
+    override var routeKeySuffix: String? = null
+) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)

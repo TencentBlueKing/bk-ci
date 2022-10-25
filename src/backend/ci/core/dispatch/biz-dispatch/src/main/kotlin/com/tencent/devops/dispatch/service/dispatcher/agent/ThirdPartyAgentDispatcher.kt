@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
@@ -66,7 +67,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val buildLogPrinter: BuildLogPrinter,
     private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineEventDispatcher: MQRoutableEventDispatcher,
     private val thirdPartyAgentBuildService: ThirdPartyAgentService
 ) : Dispatcher {
     override fun canDispatch(event: PipelineAgentStartupEvent) =
@@ -547,7 +548,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     override fun retry(
         client: Client,
         buildLogPrinter: BuildLogPrinter,
-        pipelineEventDispatcher: PipelineEventDispatcher,
+        pipelineEventDispatcher: MQRoutableEventDispatcher,
         event: PipelineAgentStartupEvent,
         errorCodeEnum: ErrorCodeEnum?,
         errorMessage: String?

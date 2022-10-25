@@ -41,6 +41,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
+import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
+import org.springframework.cloud.stream.function.StreamBridge
 
 @Configuration
 class SDKConfiguration {
@@ -50,7 +52,7 @@ class SDKConfiguration {
     @Bean
     fun dispatchService(
         @Autowired redisOperation: RedisOperation,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
+        @Autowired pipelineEventDispatcher: MQRoutableEventDispatcher,
         @Autowired objectMapper: ObjectMapper,
         @Autowired client: Client,
         @Autowired channelUtils: ChannelUtils,
@@ -67,7 +69,7 @@ class SDKConfiguration {
         JobQuotaService(client, buildLogPrinter)
 
     @Bean
-    fun pipelineEventDispatcher(@Autowired streamBridge: StreamBridge): PipelineEventDispatcher {
-        return MQEventDispatcher(streamBridge)
+    fun pipelineEventDispatcher(@Autowired rabbitTemplate: RabbitTemplate): MQRoutableEventDispatcher {
+        return MQRoutableEventDispatcher(rabbitTemplate)
     }
 }

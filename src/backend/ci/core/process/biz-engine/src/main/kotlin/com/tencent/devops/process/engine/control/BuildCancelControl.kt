@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -70,6 +71,7 @@ class BuildCancelControl @Autowired constructor(
     private val mutexControl: MutexControl,
     private val redisOperation: RedisOperation,
     private val pipelineMQEventDispatcher: PipelineEventDispatcher,
+    private val routeEventDispatcher: MQRoutableEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
@@ -356,7 +358,7 @@ class BuildCancelControl @Autowired constructor(
     }
 
     private fun VMBuildContainer.shutdown(event: PipelineBuildCancelEvent, executeCount: Int) {
-        pipelineMQEventDispatcher.dispatch(
+        routeEventDispatcher.dispatch(
             PipelineAgentShutdownEvent(
                 source = "BuildCancelControl",
                 projectId = event.projectId,
