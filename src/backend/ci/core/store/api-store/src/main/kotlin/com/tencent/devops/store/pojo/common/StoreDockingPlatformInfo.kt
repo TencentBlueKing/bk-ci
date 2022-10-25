@@ -49,7 +49,7 @@ data class StoreDockingPlatformInfo(
     @ApiModelProperty("标签", required = false)
     val labels: List<String>? = null,
     @ApiModelProperty("所属机构名称", required = true)
-    val bgName: String,
+    val ownerDeptName: String,
     @ApiModelProperty("运营负责人", required = true)
     val owner: String,
     @ApiModelProperty("添加用户", required = true)

@@ -130,9 +130,10 @@ class PublishersDataServiceImpl @Autowired constructor(
                 records.secondLevelDeptId = deptInfos[1].id.toLong()
                 records.thirdLevelDeptId = deptInfos[2].id.toLong()
                 records.thirdLevelDeptName = deptInfos[2].name
-                if (deptInfos.size > 3) {
-                    records.fourthLevelDeptId = deptInfos[3].id.toLong()
-                    records.fourthLevelDeptName = deptInfos[3].name
+                // 如果存在第四层部门层级
+                if (deptInfos.size > deptIndex) {
+                    records.fourthLevelDeptId = deptInfos[deptIndex].id.toLong()
+                    records.fourthLevelDeptName = deptInfos[deptIndex].name
                 }
                 records.publisherType = it.publishersType.name
                 records.owners = JsonUtil.toJson(it.owners)
@@ -323,5 +324,6 @@ class PublishersDataServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublishersDataServiceImpl::class.java)
+        private const val deptIndex = 3
     }
 }

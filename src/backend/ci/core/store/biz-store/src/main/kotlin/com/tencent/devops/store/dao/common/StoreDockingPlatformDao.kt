@@ -73,7 +73,7 @@ class StoreDockingPlatformDao {
                     storeDockingPlatformRequest.logoUrl,
                     userId,
                     userId,
-                    storeDockingPlatformRequest.BgName,
+                    storeDockingPlatformRequest.ownerDeptName,
                     storeDockingPlatformRequest.owner,
                     storeDockingPlatformRequest.labels?.joinToString(",")
                 ).execute()
@@ -112,7 +112,7 @@ class StoreDockingPlatformDao {
                             storeDockingPlatformRequest.logoUrl,
                             userId,
                             userId,
-                            storeDockingPlatformRequest.BgName,
+                            storeDockingPlatformRequest.ownerDeptName,
                             storeDockingPlatformRequest.owner,
                             storeDockingPlatformRequest.labels?.joinToString(",")
                         )
@@ -138,7 +138,7 @@ class StoreDockingPlatformDao {
                 .set(LABELS, storeDockingPlatformRequest.labels?.joinToString(","))
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
-                .set(BG_NAME, storeDockingPlatformRequest.BgName)
+                .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
                 .set(OWNERS, storeDockingPlatformRequest.owner)
                 .where(ID.eq(id))
                 .execute()
@@ -160,7 +160,7 @@ class StoreDockingPlatformDao {
                     .set(LABELS, storeDockingPlatformRequest.labels?.joinToString(","))
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .set(MODIFIER, userId)
-                    .set(BG_NAME, storeDockingPlatformRequest.BgName)
+                    .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
                     .set(OWNERS, storeDockingPlatformRequest.owner)
                 if (!storeDockingPlatformRequest.logoUrl.isNullOrBlank()) {
                     step = step.set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
@@ -188,7 +188,7 @@ class StoreDockingPlatformDao {
             return dslContext.batch(storeDockingPlatformRequests.map {
                 dslContext.deleteFrom(this)
                     .where(PLATFORM_CODE.eq(it.platformCode))
-                    .and(BG_NAME.eq(it.BgName))
+                    .and(OWNER_DEPT_NAME.eq(it.ownerDeptName))
             }).execute().size
         }
     }
@@ -324,7 +324,7 @@ class StoreDockingPlatformDao {
                 modifier = modifier,
                 createTime = DateTimeUtil.toDateTime(createTime),
                 updateTime = DateTimeUtil.toDateTime(updateTime),
-                BgName = record.BgName,
+                ownerDeptName = record.ownerDeptName,
                 owner = record.owners
             )
         }
