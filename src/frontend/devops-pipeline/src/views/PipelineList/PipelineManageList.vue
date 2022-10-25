@@ -216,6 +216,7 @@
                     } else {
                         this.refresh()
                     }
+                    this.checkHasCreatePermission()
                 })
             },
             '$route.params.viewId': function () {
