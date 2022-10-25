@@ -140,7 +140,7 @@ data class GithubRepo(
     @JsonProperty("pulls_url")
     val pullsUrl: String,
     @JsonProperty("pushed_at")
-    val pushedAt: String,
+    val pushedAt: String?,
     @JsonProperty("releases_url")
     val releasesUrl: String?,
     val size: Int,
@@ -168,7 +168,7 @@ data class GithubRepo(
     @JsonProperty("trees_url")
     val treesUrl: String,
     @JsonProperty("updated_at")
-    val updatedAt: String,
+    val updatedAt: String?,
     val url: String,
     val watchers: Int,
     @JsonProperty("watchers_count")

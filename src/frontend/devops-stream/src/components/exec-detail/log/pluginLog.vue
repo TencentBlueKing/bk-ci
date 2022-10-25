@@ -190,8 +190,7 @@
                 }
                 try {
                     const logStatusRes = await pipelines.getLogStatus(pluginData)
-                    const data = logStatusRes.data || {}
-                    const logMode = data.logMode || ''
+                    const logMode = logStatusRes?.logMode || ''
                     if (logMode === 'LOCAL') {
                         this.$bkMessage({ theme: 'primary', message: this.$t('history.uploadLog') })
                         return

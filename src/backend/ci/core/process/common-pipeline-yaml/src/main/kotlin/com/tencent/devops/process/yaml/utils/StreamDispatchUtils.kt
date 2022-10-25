@@ -41,11 +41,9 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.v2.models.Resources
-import com.tencent.devops.process.yaml.v2.models.image.BuildType
-import com.tencent.devops.process.yaml.v2.models.image.Credential
-import com.tencent.devops.process.yaml.v2.models.image.Pool
 import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Container2
 import com.tencent.devops.process.yaml.v2.models.job.Job
@@ -130,16 +128,9 @@ object StreamDispatchUtils {
 
         // 公共docker构建机
         if (poolName == "docker") {
-            var containerPool = Pool(
-                container = defaultImage,
-                credential = Credential(
-                    user = "",
-                    password = ""
-                ),
-                third = null,
-                env = job.env,
-                buildType = BuildType.DOCKER_VM
-            )
+            var image = defaultImage
+            var credentialId = ""
+            var env: Map<String, String>?
 
             if (job.runsOn.container != null) {
                 try {
@@ -148,44 +139,25 @@ object StreamDispatchUtils {
                         Container::class.java
                     )
 
-                    containerPool = Pool(
-                        container = EnvUtils.parseEnv(container.image, context ?: mapOf()),
-                        credential = Credential(
-                            user = EnvUtils.parseEnv(container.credentials?.username, context ?: mapOf()),
-                            password = EnvUtils.parseEnv(container.credentials?.password, context ?: mapOf())
-                        ),
-                        third = null,
-                        env = job.env,
-                        buildType = BuildType.DOCKER_VM
-                    )
+                    image = EnvUtils.parseEnv(container.image, context ?: mapOf())
+                    env = job.env
                 } catch (e: Exception) {
                     val container = YamlUtil.getObjectMapper().readValue(
                         JsonUtil.toJson(job.runsOn.container!!),
                         Container2::class.java
                     )
 
-                    var user = ""
-                    var password = ""
-                    if (!container.credentials.isNullOrEmpty()) {
-                        val ticketsMap = getTicket(client, projectCode, container, context, buildTemplateAcrossInfo)
-                        user = ticketsMap["v1"] as String
-                        password = ticketsMap["v2"] as String
-                    }
-
-                    containerPool = Pool(
-                        container = EnvUtils.parseEnv(container.image, context ?: mapOf()),
-                        credential = Credential(
-                            user = user,
-                            password = password
-                        ),
-                        third = null,
-                        env = job.env,
-                        buildType = BuildType.DOCKER_VM
-                    )
+                    image = EnvUtils.parseEnv(container.image, context ?: mapOf())
+                    credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf())
+                    env = job.env
                 }
             }
 
-            return DockerDispatchType(objectMapper.writeValueAsString(containerPool))
+            return DockerDispatchType(
+                dockerBuildVersion = image,
+                credentialId = credentialId,
+                imageType = ImageType.THIRD
+            )
         }
 
         if (containsMatrix == true) {

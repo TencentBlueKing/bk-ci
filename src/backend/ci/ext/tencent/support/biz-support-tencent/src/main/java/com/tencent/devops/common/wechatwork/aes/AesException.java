@@ -28,6 +28,8 @@
 package com.tencent.devops.common.wechatwork.aes;
 
 @SuppressWarnings("serial")
+@Deprecated
+// 请使用AesExceptionV2
 public class AesException extends Exception {
 
 	public final static int OK = 0;

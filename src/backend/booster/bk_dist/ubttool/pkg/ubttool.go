@@ -304,7 +304,7 @@ func (h *UBTTool) executeOneAction(action common.Action, actionchan chan common.
 	for try := 0; try < 6; try++ {
 		exitcode, err = h.executor.Run(fullargs, action.Workdir)
 		if err != nil {
-			blog.Warnf("UBTTool: failed to execute action with error [%+v] for %d times, actions:%+v", err, try, action)
+			blog.Warnf("UBTTool: failed to execute action with error [%+v] for %d times, actions:%+v", err, try+1, action)
 			time.Sleep(time.Duration(waitsecs) * time.Second)
 			waitsecs = waitsecs * 2
 			continue

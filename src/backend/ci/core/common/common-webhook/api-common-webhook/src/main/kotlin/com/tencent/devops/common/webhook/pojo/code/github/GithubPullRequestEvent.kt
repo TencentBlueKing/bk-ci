@@ -142,11 +142,11 @@ data class GithubPullRequest(
     @JsonProperty("state")
     val state: String, // open
     @JsonProperty("statuses_url")
-    val statusesUrl: String, // https://api.github.com/repos/yongyiduan/webhook-test/statuses/bed5f474e52f1fadae3f5b770e3d752129678cf8
+    val statusesUrl: String,
     @JsonProperty("title")
     val title: String, // Update 1 testesteste
     @JsonProperty("updated_at")
-    val updatedAt: String, // 2022-06-21T08:45:42Z
+    val updatedAt: String?, // 2022-06-21T08:45:42Z
     @JsonProperty("url")
     val url: String, // https://api.github.com/repos/yongyiduan/webhook-test/pulls/1
     @JsonProperty("user")

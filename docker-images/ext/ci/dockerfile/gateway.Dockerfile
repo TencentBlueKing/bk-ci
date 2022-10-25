@@ -15,6 +15,6 @@ RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
 
 WORKDIR /usr/local/openresty/nginx/
 
-CMD mkdir -p /data/bkee/logs/ci/nginx/ /data/bkee/ci/frontend &&\
+CMD mkdir -p /data/bkee/logs/ci/nginx/ /data/bkee/ci/frontend /data/bkee/codecc/frontend &&\
     chown nobody:nobody /data/bkee/logs/ci/nginx/ &&\
     sbin/nginx -g 'daemon off;'
