@@ -222,8 +222,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Value("\${store.defaulAtomErrorCodoLength:6}")
     private var defaulAtomErrorCodoLength: Int = 6
 
-    @Value("\${store.defaulAtomErrorCodoPrefix:}")
-    private var defaulAtomErrorCodoPrefix: String = ""
+    @Value("\${store.defaulAtomErrorCodoPrefix:8}")
+    private lateinit var defaulAtomErrorCodoPrefix: String
 
     companion object {
         private val logger = LoggerFactory.getLogger(MarketAtomServiceImpl::class.java)
@@ -662,7 +662,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }
             // 校验code码是否符合插件自定义错误码规范
             errorCodes.forEach {
-                if (it.length != defaulAtomErrorCodoLength || (!it.startsWith(defaulAtomErrorCodoPrefix))) {
+                if ((it.length != defaulAtomErrorCodoLength) || (!it.startsWith(defaulAtomErrorCodoPrefix))) {
                     throw ErrorCodeException(
                         errorCode = StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
                     )
