@@ -38,6 +38,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TStorePublisherInfoRecord
 import com.tencent.devops.model.store.tables.records.TStorePublisherMemberRelRecord
 import com.tencent.devops.project.api.service.ServiceUserResource
+import com.tencent.devops.store.dao.common.PublisherMemberDao
 import com.tencent.devops.store.dao.common.PublishersDao
 import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -59,6 +60,7 @@ import java.time.LocalDateTime
 class PublishersDataServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val publishersDao: PublishersDao,
+    private val publisherMemberDao: PublisherMemberDao,
     private val client: Client,
     private val storeDockingPlatformDao: StoreDockingPlatformDao,
     private val storeMemberDao: StoreMemberDao,
@@ -87,9 +89,9 @@ class PublishersDataServiceImpl @Autowired constructor(
             storePublisherInfo.secondLevelDeptName = deptInfos[1].name
             storePublisherInfo.thirdLevelDeptId = deptInfos[2].id.toLong()
             storePublisherInfo.thirdLevelDeptName = deptInfos[2].name
-            if (deptInfos.size > 3) {
-                storePublisherInfo.fourthLevelDeptId = deptInfos[3].id.toLong()
-                storePublisherInfo.fourthLevelDeptName = deptInfos[3].name
+            if (deptInfos.size > deptIndex) {
+                storePublisherInfo.fourthLevelDeptId = deptInfos[deptIndex].id.toLong()
+                storePublisherInfo.fourthLevelDeptName = deptInfos[deptIndex].name
             }
             storePublisherInfo.organizationName = it.organization
             storePublisherInfo.bgName = it.bgName
@@ -108,7 +110,7 @@ class PublishersDataServiceImpl @Autowired constructor(
             }
         }
         val batchCreateCount = publishersDao.batchCreate(dslContext, storePublisherInfoRecords)
-        publishersDao.batchCreatePublisherMemberRel(dslContext, storePublisherMemberRelRecords)
+        publisherMemberDao.batchCreatePublisherMemberRel(dslContext, storePublisherMemberRelRecords)
         return batchCreateCount
     }
 
@@ -158,8 +160,8 @@ class PublishersDataServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             count = publishersDao.batchUpdate(context, storePublisherInfoRecords)
-            publishersDao.batchCreatePublisherMemberRel(context, addStorePublisherMemberRelRecords)
-            publishersDao.batchDeletePublisherMemberByMemberIds(context, delStorePublisherMemberRelRecords)
+            publisherMemberDao.batchCreatePublisherMemberRel(context, addStorePublisherMemberRelRecords)
+            publisherMemberDao.batchDeletePublisherMemberByMemberIds(context, delStorePublisherMemberRelRecords)
         }
         return count
     }
@@ -176,7 +178,7 @@ class PublishersDataServiceImpl @Autowired constructor(
         if (organizePublishers.isNotEmpty()) {
             //  删除组织发布者关联的组织成员关联
             val organizePublishersIds = publishersDao.getPublisherIdsByCode(dslContext, organizePublishers)
-            publishersDao.batchDeletePublisherMemberRelByPublisherId(dslContext, organizePublishersIds)
+            publisherMemberDao.batchDeletePublisherMemberRelByPublisherId(dslContext, organizePublishersIds)
         }
         return publishersDao.batchDelete(dslContext, publishers)
     }
@@ -188,7 +190,7 @@ class PublishersDataServiceImpl @Autowired constructor(
         addRecords: MutableList<TStorePublisherMemberRelRecord>,
         delRecords: MutableList<TStorePublisherMemberRelRecord>
     ) {
-        val members = publishersDao.getPublisherMemberRelMemberIdsByPublisherId(dslContext, publisherId)
+        val members = publisherMemberDao.getPublisherMemberRelMemberIdsByPublisherId(dslContext, publisherId)
         val intersection = members.intersect(newMembers)
         members.forEach { member ->
             if (!intersection.contains(member)) {
@@ -257,7 +259,7 @@ class PublishersDataServiceImpl @Autowired constructor(
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val organizationPublisherIds =
-            publishersDao.getPublisherMemberRelByMemberId(dslContext, userId)
+            publisherMemberDao.getPublisherMemberRelByMemberId(dslContext, userId)
         if (organizationPublisherIds.isNotEmpty()) {
             // 获取组织发布者信息
             organizationPublisherIds.forEach {
