@@ -76,7 +76,7 @@ class Format : Function() {
                     }
 
                     // 加上arg参数，以及调到右括号后
-                    result.append(argIndex.toInt(), formatSpecifiers)
+                    result.append(argIndex, formatSpecifiers)
                     index = rbrace + 1
                 } else {
                     throw FunctionFormatException.invalidFormatString(format)
@@ -106,18 +106,18 @@ class Format : Function() {
     private fun readArgIndex(
         str: String,
         startIndex: Int
-    ): Triple<Byte?, Int, Boolean> {
+    ): Triple<Int?, Int, Boolean> {
         var length = 0
         while (safeCharAt(str, startIndex + length)?.isDigit() == true) {
             length++
         }
 
         if (length < 1) {
-            return Triple(0.toByte(), 0, false)
+            return Triple(0, 0, false)
         }
 
         val endIndex = startIndex + length - 1
-        val result = str.substring(startIndex, startIndex + length).toByteOrNull()
+        val result = str.substring(startIndex, startIndex + length).toIntOrNull()
         return Triple(result, endIndex, result != null)
     }
 
@@ -225,6 +225,7 @@ class Format : Function() {
                         mCache[argIndex] = argValue
                     }
 
+                    // 在这里禁掉了使用format azure 0:yyyyMMdd 的可能
                     if (formatSpecifiers.isNullOrEmpty()) {
                         result = argValue.stringResult
                     } else {
@@ -250,6 +251,14 @@ class Format : Function() {
     )
 
     override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
-        TODO("Not yet implemented")
+        val sb = StringBuilder(name).append("(")
+        parameters.forEachIndexed { index, param ->
+            sb.append(param.subNameValueEvaluate(context).parseSubNameValueEvaluateResult())
+            if (index != parameters.count() - 1) {
+                sb.append(", ")
+            }
+        }
+        sb.append(")")
+        return Pair(sb.toString(), false)
     }
 }
