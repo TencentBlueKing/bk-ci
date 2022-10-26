@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
@@ -331,7 +332,8 @@ class DockerHostDebugServiceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String?,
-        vmSeqId: String
+        vmSeqId: String,
+        dockerRoutingType: DockerRoutingType
     ): String {
         LOG.info("[$userId]| start debug, pipelineId: $pipelineId, vmSeqId: $vmSeqId")
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
@@ -416,7 +418,8 @@ class DockerHostDebugServiceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
-        containerName: String
+        containerName: String,
+        dockerRoutingType: DockerRoutingType
     ): Boolean {
         return deleteDebug(pipelineId, vmSeqId).data ?: false
     }

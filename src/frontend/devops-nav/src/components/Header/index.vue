@@ -56,8 +56,11 @@
                 class="service-title"
                 @click="goHome"
             >
+                <img v-if="isAbsoluteUrl(serviceLogo)" :src="serviceLogo" class="service-logo" />
                 <logo
+                    v-else
                     :name="serviceLogo"
+                    class="service-logo"
                     size="20"
                 />
                 {{ title }}
@@ -100,7 +103,7 @@
     import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
     import eventBus from '../../utils/eventBus'
-    import { urlJoin } from '../../utils/util'
+    import { urlJoin, isAbsoluteUrl } from '../../utils/util'
 
     @Component({
         components: {
@@ -127,6 +130,7 @@
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
+        isAbsoluteUrl = isAbsoluteUrl
 
         @Inject()
         isMooc: boolean
@@ -355,7 +359,9 @@
                     color: white;
                     background-color: black;
                 }
-                > svg {
+                .service-logo {
+                    width: 20px;
+                    height: 20px;
                     margin-right: 5px;
                 }
             }
