@@ -31,7 +31,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchType
-import io.swagger.annotations.ApiModelProperty
 
 data class ThirdPartyAgentIDDispatchType(
     @JsonProperty("value") var displayName: String,

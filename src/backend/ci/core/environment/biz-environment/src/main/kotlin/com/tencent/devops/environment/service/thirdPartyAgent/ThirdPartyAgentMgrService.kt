@@ -1164,7 +1164,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     agentChanged = true
                 }
             }
-            if (newHeartbeatInfo.dockerParallelTaskCount != null && agentRecord.dockerParallelTaskCount == null){
+            if (newHeartbeatInfo.dockerParallelTaskCount != null && agentRecord.dockerParallelTaskCount == null) {
                 agentRecord.dockerParallelTaskCount = newHeartbeatInfo.dockerParallelTaskCount
                 agentChanged = true
             }

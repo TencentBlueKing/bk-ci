@@ -50,5 +50,5 @@ data class HeartbeatResponse(
     @ApiModelProperty("Agent的一些属性配置")
     val props: Map<String, Any>,
     @ApiModelProperty("docker最大任务数量")
-    val dockerParallelTaskCount: Int,
+    val dockerParallelTaskCount: Int
 )
