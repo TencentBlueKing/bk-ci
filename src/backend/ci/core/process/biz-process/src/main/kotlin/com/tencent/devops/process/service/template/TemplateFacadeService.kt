@@ -945,7 +945,7 @@ class TemplateFacadeService @Autowired constructor(
                 defaultMessage = "模板设置不存在"
             )
         }
-        val template = if (version == null && versionName == null) {
+        val template = if (version == null && versionName.isNullOrBlank()) {
             latestTemplate
         } else {
             templateDao.getTemplate(dslContext = dslContext, version = version, versionName = versionName)
