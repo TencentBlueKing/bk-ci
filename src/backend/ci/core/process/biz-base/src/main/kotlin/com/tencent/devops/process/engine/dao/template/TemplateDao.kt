@@ -286,11 +286,23 @@ class TemplateDao {
     fun getTemplate(
         dslContext: DSLContext,
         projectId: String? = null,
-        version: Long
+        version: Long?,
+        versionName: String? = null
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
-            conditions.add(VERSION.eq(version))
+            if (version == null && versionName.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_ENTER_VERSION_OR_VERSIONNAME,
+                    defaultMessage = "查询模板请输入模板版本号或版本名称"
+                )
+            }
+            if (version != null) {
+                conditions.add(VERSION.eq(version))
+            }
+            if (!versionName.isNullOrBlank()) {
+                conditions.add(VERSION_NAME.eq(versionName))
+            }
             if (!projectId.isNullOrBlank()) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
