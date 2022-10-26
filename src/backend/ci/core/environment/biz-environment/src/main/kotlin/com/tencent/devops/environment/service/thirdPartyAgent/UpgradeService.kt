@@ -259,7 +259,9 @@ class UpgradeService @Autowired constructor(
             // 目前存在非linux系统的不支持，旧数据或agent不使用docker构建机，所以不校验升级
             info.dockerInitFileInfo?.needUpgrade != true -> false
             currentDockerInitFileMd5.isBlank() -> {
-                logger.warn("project: $projectId|agent: $agentId|os: $os|arch: ${props?.arch}|current docker init md5 is null")
+                logger.warn(
+                    "project: $projectId|agent: $agentId|os: $os|arch: ${props?.arch}|current docker init md5 is null"
+                )
                 false
             }
 
