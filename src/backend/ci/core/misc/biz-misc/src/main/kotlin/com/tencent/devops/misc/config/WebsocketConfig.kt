@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.websocket.config
+package com.tencent.devops.misc.config
 
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import org.springframework.cloud.stream.function.StreamBridge
@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class WebsocketDispatcherConfiguration {
+class WebsocketConfig {
 
     @Bean
     fun webSocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)

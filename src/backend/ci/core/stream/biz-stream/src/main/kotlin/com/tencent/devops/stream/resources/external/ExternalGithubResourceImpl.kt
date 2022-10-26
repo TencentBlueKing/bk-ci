@@ -38,6 +38,7 @@ import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.service.StreamLoginService
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestEvent
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
