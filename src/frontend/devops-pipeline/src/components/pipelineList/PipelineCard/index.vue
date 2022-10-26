@@ -2,7 +2,14 @@
     <div class="bk-pipeline-card-view">
         <header class="bk-pipeline-card-header">
             <aside class="bk-pipeline-card-header-left-aside">
-                <h3>{{ pipeline.pipelineName }}</h3>
+                <h3>
+                    <router-link
+                        class="pipeline-cell-link"
+                        :to="pipeline.historyRoute"
+                    >
+                        {{pipeline.pipelineName}}
+                    </router-link>
+                </h3>
                 <p class="bk-pipeline-card-summary">
                     <span>
                         <logo size="12" name="complement" />
@@ -48,10 +55,13 @@
                     </span>
                     <bk-tag>{{ timeTag }}</bk-tag>
                 </div>
-                <p class="bk-pipeline-card-info-row">
+                <router-link
+                    class="pipeline-cell-link bk-pipeline-card-info-row"
+                    :to="pipeline.latestBuildRoute"
+                >
                     <b>{{latestBuildNum}}</b>
                     <span class="bk-pipeline-card-info-build-msg">{{ pipeline.lastBuildMsg }}</span>
-                </p>
+                </router-link>
                 <p class="bk-pipeline-card-info-row bk-pipeline-card-desc-row">
                     <span>
                         <logo size="16" :name="pipeline.trigger" />

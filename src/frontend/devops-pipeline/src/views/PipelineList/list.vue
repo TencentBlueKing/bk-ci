@@ -129,6 +129,10 @@
                 &:hover {
                     color: #699df4;
                 }
+                &[disabled] {
+                    cursor: not-allowed;
+                    color: $fontColor
+                }
             }
         }
     }

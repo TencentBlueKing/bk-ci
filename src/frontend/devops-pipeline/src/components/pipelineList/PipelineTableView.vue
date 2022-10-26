@@ -18,7 +18,12 @@
         <bk-table-column v-if="isPatchView" type="selection" width="60" :selectable="checkSelecteable"></bk-table-column>
         <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
-                <router-link class="pipeline-cell-link" :to="props.row.historyRoute">
+                <!-- hack disabled event -->
+                <router-link
+                    class="pipeline-cell-link"
+                    :disabled="!props.row.hasPermission"
+                    :event="props.row.hasPermission ? 'click' : ''"
+                    :to="props.row.historyRoute">
                     {{props.row.pipelineName}}
                 </router-link>
             </template>
@@ -55,7 +60,12 @@
                     <pipeline-status-icon :status="props.row.latestBuildStatus" />
                     <div class="pipeline-exec-msg">
                         <template v-if="props.row.latestBuildNum">
-                            <router-link :to="props.row.latestBuildRoute" class="pipeline-cell-link pipeline-exec-msg-title">
+                            <router-link
+                                class="pipeline-cell-link pipeline-exec-msg-title"
+                                :disabled="!props.row.hasPermission"
+                                :event="props.row.hasPermission ? 'click' : ''"
+                                :to="props.row.latestBuildRoute"
+                            >
                                 <b>#{{ props.row.latestBuildNum }}</b>
                                 |
                                 <span>{{ props.row.lastBuildMsg }}</span>

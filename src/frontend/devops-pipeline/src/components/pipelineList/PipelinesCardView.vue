@@ -6,18 +6,19 @@
         scroll-box-class-name="pipeline-list-box"
         v-slot="slotProps"
     >
-        <ul class="pipelines-card-view-list">
-            <li v-for="pipeline of slotProps.list" :key="pipeline.pipelineId" @click="goHistory(pipeline.pipelineId)">
+        <PipelineListEmpty class="pipeline-card-list-empty-tips" v-if="slotProps.list.length === 0"></PipelineListEmpty>
+        <ul v-else class="pipelines-card-view-list">
+            <li v-for="pipeline of slotProps.list" :key="pipeline.pipelineId">
                 <pipeline-card
                     :pipeline="pipeline"
                     :remove-handler="removeHandler"
                     :exec-pipeline="execPipeline"
                     :apply-permission="applyPermission"
-
                 >
                 </pipeline-card>
             </li>
         </ul>
+
     </infinite-scroll>
 </template>
 
@@ -25,11 +26,13 @@
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import PipelineCard from '@/components/pipelineList/PipelineCard'
     import InfiniteScroll from '@/components/InfiniteScroll'
+    import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
 
     export default {
         components: {
             PipelineCard,
-            InfiniteScroll
+            InfiniteScroll,
+            PipelineListEmpty
         },
         mixins: [piplineActionMixin],
         props: {
@@ -84,13 +87,17 @@
 <style lang="scss">
     @import '@/scss/mixins/ellipsis';
     @import '@/scss/conf';
-
+    .pipeline-card-list-empty-tips {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
     .pipelines-card-view-list {
         display: grid;
-        grid-template-columns: repeat(auto-fill, 408px);
         grid-gap: 24px;
-        > li {
-            cursor: pointer;
-        }
+        grid-template-columns: repeat(auto-fill, minmax(408px, auto));
     }
 </style>
