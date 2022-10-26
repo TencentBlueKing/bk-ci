@@ -53,7 +53,7 @@ class WebsocketConfiguration {
     fun websocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
 
     @StreamEventConsumer(StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT, STREAM_CONSUMER_GROUP, true)
-    fun pipelineWebSocketIn(
+    fun pipelineWebSocketListener(
         @Autowired webSocketListener: WebSocketListener
     ): Consumer<Message<SendMessage>> {
         return Consumer { event: Message<SendMessage> ->
@@ -62,7 +62,7 @@ class WebsocketConfiguration {
     }
 
     @StreamEventConsumer(StreamBinding.QUEUE_WEBSOCKET_SESSION_CLEAR_EVENT, STREAM_CONSUMER_GROUP, true)
-    fun cacheClearWebSocketIn(
+    fun cacheClearWebSocketListener(
         @Autowired cacheSessionListener: CacheSessionListener
     ): Consumer<Message<ClearSessionEvent>> {
         return Consumer { event: Message<ClearSessionEvent> ->
