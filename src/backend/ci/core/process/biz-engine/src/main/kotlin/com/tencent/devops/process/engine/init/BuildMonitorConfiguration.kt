@@ -51,7 +51,7 @@ class BuildMonitorConfiguration {
     /**
      * 监控队列--- 并发可小
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_MONITOR, STREAM_CONSUMER_GROUP)
+    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_MONITOR_DIRECT, STREAM_CONSUMER_GROUP)
     fun buildMonitorListener(
         @Autowired buildListener: PipelineBuildMonitorListener
     ): Consumer<Message<PipelineBuildMonitorEvent>> {
@@ -63,7 +63,7 @@ class BuildMonitorConfiguration {
     /**
      * 心跳监听队列--- 并发可小
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_NOTIFY, STREAM_CONSUMER_GROUP)
+    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_HEART_BEAT, STREAM_CONSUMER_GROUP)
     fun buildHeartBeatListener(
         @Autowired buildListener: PipelineBuildHeartbeatListener
     ): Consumer<Message<PipelineContainerAgentHeartBeatEvent>> {

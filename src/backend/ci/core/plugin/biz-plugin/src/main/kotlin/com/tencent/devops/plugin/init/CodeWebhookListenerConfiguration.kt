@@ -85,7 +85,7 @@ class CodeWebhookListenerConfiguration {
     /**
      * gitcommit队列--- 并发小
      */
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, STREAM_CONSUMER_GROUP)
+    @StreamEventConsumer(StreamBinding.QUEUE_GIT_COMMIT_CHECK, STREAM_CONSUMER_GROUP)
     fun gitCommitCheckListener(
         @Autowired listener: TGitCommitListener
     ): Consumer<Message<GitCommitCheckEvent>> {
@@ -97,7 +97,7 @@ class CodeWebhookListenerConfiguration {
     /**
      * github pr队列--- 并发小
      */
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, STREAM_CONSUMER_GROUP)
+    @StreamEventConsumer(StreamBinding.QUEUE_GITHUB_PR, STREAM_CONSUMER_GROUP)
     fun githubPrQueueListener(
         @Autowired listener: GitHubPullRequestListener
     ): Consumer<Message<GithubPrEvent>> {

@@ -32,7 +32,7 @@ import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.stream.enums.ActionType
 
-@Event(StreamBinding.ROUTE_PIPELINE_PAUSE_TASK_EXECUTE)
+@Event(StreamBinding.QUEUE_PIPELINE_PAUSE_TASK_EXECUTE)
 data class PipelineTaskPauseEvent(
     override var actionType: ActionType,
     override val source: String,

@@ -61,7 +61,7 @@ class WebsocketConfiguration {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.QUEUE_WEBSOCKET_SESSION_CLEAR_EVENT, STREAM_CONSUMER_GROUP, true)
+    @StreamEventConsumer(StreamBinding.BINDING_WEBSOCKET_SESSION_CLEAR_DESTINATION, STREAM_CONSUMER_GROUP, true)
     fun cacheClearWebSocketListener(
         @Autowired cacheSessionListener: CacheSessionListener
     ): Consumer<Message<ClearSessionEvent>> {
