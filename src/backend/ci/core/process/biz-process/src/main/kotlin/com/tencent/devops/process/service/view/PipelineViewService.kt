@@ -359,7 +359,7 @@ class PipelineViewService @Autowired constructor(
         context: DSLContext? = null
     ): Boolean {
         try {
-            checkForUpset(context, projectId, userId, pipelineView, false)
+            checkForUpset(context, projectId, userId, pipelineView, false, viewId)
             return pipelineViewDao.update(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
@@ -387,7 +387,8 @@ class PipelineViewService @Autowired constructor(
         projectId: String,
         userId: String,
         pipelineView: PipelineViewForm,
-        isCreate: Boolean
+        isCreate: Boolean,
+        viewId: Long? = null
     ) {
         if (isCreate) {
             val countForLimit = pipelineViewDao.countForLimit(
@@ -406,22 +407,24 @@ class PipelineViewService @Autowired constructor(
                 )
             }
         }
-
+        val excludeIds = viewId?.let { setOf(viewId) } ?: emptySet()
         val hasSameName = if (pipelineView.projected) {
             pipelineViewDao.countByName(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
                 name = pipelineView.name,
-                isProject = true
-            ) > if (isCreate) 0 else 1
+                isProject = true,
+                excludeIds = excludeIds
+            ) > 0
         } else {
             pipelineViewDao.countByName(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
                 name = pipelineView.name,
                 creator = userId,
-                isProject = false
-            ) > if (isCreate) 0 else 1
+                isProject = false,
+                excludeIds = excludeIds
+            ) > 0
         }
 
         if (hasSameName) {
