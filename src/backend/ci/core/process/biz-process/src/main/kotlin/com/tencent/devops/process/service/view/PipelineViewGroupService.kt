@@ -217,7 +217,11 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun getClassifiedPipelineIds(projectId: String): List<String> {
-        return pipelineViewGroupDao.distinctPipelineIds(dslContext, projectId)
+        val projectViews = pipelineViewDao.list(dslContext = dslContext, projectId = projectId, isProject = true)
+        if (projectViews.isEmpty()) {
+            return emptyList()
+        }
+        return pipelineViewGroupDao.distinctPipelineIds(dslContext, projectId, projectViews.map { it.id })
     }
 
     fun listPipelineIdsByViewIds(projectId: String, viewIdsEncode: List<String>): List<String> {
@@ -621,7 +625,7 @@ class PipelineViewGroupService @Autowired constructor(
         val countByViewId = pipelineViewGroupDao.countByViewId(dslContext, projectId, views.map { it.id })
         val summaries = sortViews2Summary(projectId, userId, views, countByViewId)
         if (projected != false) {
-            val classifiedPipelineIds = pipelineViewGroupDao.distinctPipelineIds(dslContext, projectId)
+            val classifiedPipelineIds = getClassifiedPipelineIds(projectId)
             val unclassifiedCount =
                 pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds)
             summaries.add(
