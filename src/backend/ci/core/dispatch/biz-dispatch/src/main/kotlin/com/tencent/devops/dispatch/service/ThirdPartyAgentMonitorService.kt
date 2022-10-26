@@ -59,7 +59,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
 ) {
 
-    @Suppress("LongMethod", "NestedBlockDepth")
+    @Suppress("LongMethod", "NestedBlockDepth", "ComplexMethod")
     fun monitor(event: AgentStartMonitor) {
 
         val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return
