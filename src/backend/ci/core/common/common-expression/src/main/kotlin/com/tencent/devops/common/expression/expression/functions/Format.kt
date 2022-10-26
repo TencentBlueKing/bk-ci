@@ -34,7 +34,7 @@ import com.tencent.devops.common.expression.expression.sdk.Function
 import com.tencent.devops.common.expression.expression.sdk.MemoryCounter
 import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
-@Suppress("ComplexMethod", "NestedBlockDepth")
+@Suppress("ComplexMethod", "NestedBlockDepth", "ReturnCount")
 class Format : Function() {
     companion object {
         const val name = "format"
