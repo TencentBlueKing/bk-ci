@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceGroupStrategyResourceImpl @Autowired constructor(
     private val strategyService: StrategyService
 ) : ServiceGroupStrategyResource {
-    override fun getGroupStrategy(strategyName: String): StrategyEntity? {
-        return strategyService.getStrategyByName(strategyName)
+    override fun getGroupStrategy(): List<StrategyEntity> {
+        return strategyService.listStrategy()
     }
 }

@@ -46,9 +46,5 @@ interface ServiceGroupStrategyResource {
     @GET
     @Path("/getGroupStrategy")
     @ApiOperation("获取组策略")
-    fun getGroupStrategy(
-        @ApiParam(name = "策略名", required = true)
-        @QueryParam("action")
-        strategyName: String
-    ): StrategyEntity?
+    fun getGroupStrategy(): List<StrategyEntity>
 }
