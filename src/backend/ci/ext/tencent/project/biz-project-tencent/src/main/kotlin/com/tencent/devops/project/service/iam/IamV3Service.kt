@@ -91,6 +91,7 @@ class IamV3Service @Autowired constructor(
                     resourceRegisterInfo = resourceRegisterInfo,
                     subjectScopes = event.subjectScopes
                 )
+                logger.info("iamV3 project gradeManagerId: $gradeManagerId")
                 watcher.start("batchCreateDefaultGroups")
                 // 批量创建默认用户组
                 batchCreateDefaultGroups(
@@ -293,7 +294,7 @@ class IamV3Service @Autowired constructor(
             iamManagerService.deleteRoleGroup(roleId)
             logger.warn(
                 "create iam group permission fail : projectCode = $projectCode |" +
-                    " iamRoleId = $roleId | groupInfo = ${defaultGroupType.value}"
+                    " iamRoleId = $roleId | groupInfo = ${defaultGroupType.value}", e
             )
             throw e
         }
@@ -324,6 +325,7 @@ class IamV3Service @Autowired constructor(
         projectCode: String,
         group: DefaultGroupType
     ) {
+        logger.info("iamV3 createDefaultGroup : ${group.value}")
         val actions = getGroupStrategy(group)
         if (actions.first.isNotEmpty()) {
             val authorizationScopes = buildCreateAuthorizationScopes(actions.first, projectCode)
