@@ -29,6 +29,8 @@ package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
+import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.webhook.listener.WebhookEventListener
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
@@ -39,6 +41,8 @@ import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.messaging.Message
@@ -57,6 +61,17 @@ class WebhookMQConfiguration @Autowired constructor() {
     companion object {
         private const val STREAM_CONSUMER_GROUP = "process-service"
     }
+
+    @Bean
+    fun webhookEventListener(
+        @Autowired pipelineBuildService: PipelineBuildWebhookService,
+        @Autowired streamBridge: StreamBridge,
+        @Autowired triggerBuildLogService: PipelineWebhookBuildLogService
+    ) = WebhookEventListener(
+        pipelineBuildService = pipelineBuildService,
+        streamBridge = streamBridge,
+        triggerBuildLogService = triggerBuildLogService
+    )
 
     // 各类Commit事件监听
     @StreamEventConsumer(StreamBinding.QUEUE_GITHUB_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)

@@ -28,9 +28,11 @@
 package com.tencent.devops.process.websocket
 
 import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.websocket.listener.PipelineWebSocketListener
 import com.tencent.devops.process.websocket.page.DefaultDetailPageBuild
 import com.tencent.devops.process.websocket.page.DefaultHistoryPageBuild
@@ -38,6 +40,7 @@ import com.tencent.devops.process.websocket.page.DefaultStatusPageBuild
 import com.tencent.devops.process.websocket.page.GithubDetailPageBuild
 import com.tencent.devops.process.websocket.page.GithubHistoryPageBuild
 import com.tencent.devops.process.websocket.page.GithubStatusPageBuild
+import com.tencent.devops.process.websocket.service.PipelineWebsocketService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -72,6 +75,19 @@ class PipelineWebSocketConfiguration {
             pipelineWebSocketListener.run(event.payload)
         }
     }
+
+    @Bean
+    fun pipelineWebSocketListener(
+        @Autowired pipelineWebsocketService: PipelineWebsocketService,
+        @Autowired webSocketDispatcher: WebSocketDispatcher,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
+        @Autowired pipelineInfoFacadeService: PipelineInfoFacadeService
+    ) = PipelineWebSocketListener(
+        pipelineWebsocketService = pipelineWebsocketService,
+        webSocketDispatcher = webSocketDispatcher,
+        pipelineEventDispatcher = pipelineEventDispatcher,
+        pipelineInfoFacadeService = pipelineInfoFacadeService
+    )
 
     @Bean
     fun websocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)

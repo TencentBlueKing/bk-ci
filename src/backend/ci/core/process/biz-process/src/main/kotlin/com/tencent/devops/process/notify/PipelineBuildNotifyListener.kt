@@ -37,9 +37,9 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.ProjectCacheService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 
-@Service
+@Component
 class PipelineBuildNotifyListener @Autowired constructor(
     private val client: Client,
     private val pipelineUrlBean: PipelineUrlBean,

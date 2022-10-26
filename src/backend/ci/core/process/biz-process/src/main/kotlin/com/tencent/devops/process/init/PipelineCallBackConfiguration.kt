@@ -29,7 +29,9 @@ package com.tencent.devops.process.init
 
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineStreamEnabledListener
 import com.tencent.devops.process.engine.listener.run.callback.PipelineBuildCallBackListener
 import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
@@ -53,6 +55,18 @@ class PipelineCallBackConfiguration {
     companion object {
         private const val STREAM_CONSUMER_GROUP = "process-service"
     }
+
+    @Bean
+    fun buildCallBackListener(
+        @Autowired callBackControl: CallBackControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildCallBackListener(callBackControl, pipelineEventDispatcher)
+
+    @Bean
+    fun streamEnabledListener(
+        @Autowired callBackControl: CallBackControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = MQPipelineStreamEnabledListener(callBackControl, pipelineEventDispatcher)
 
     /**
      * 构建构建回调广播交换机

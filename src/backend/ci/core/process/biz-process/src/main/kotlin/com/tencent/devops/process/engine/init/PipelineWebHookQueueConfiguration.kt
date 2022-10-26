@@ -32,8 +32,10 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCast
 import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.listener.run.PipelineWebHookQueueListener
+import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.messaging.Message
@@ -46,6 +48,11 @@ class PipelineWebHookQueueConfiguration {
     companion object {
         private const val STREAM_CONSUMER_GROUP = "process-service"
     }
+
+    @Bean
+    fun pipelineWebHookQueueListener(
+        @Autowired pipelineWebHookQueueService: PipelineWebHookQueueService
+    ) = PipelineWebHookQueueListener(pipelineWebHookQueueService)
 
     /**
      * webhook构建触发广播监听

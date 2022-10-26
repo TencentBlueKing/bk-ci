@@ -27,10 +27,15 @@
 
 package com.tencent.devops.process.notify
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.service.ProjectCacheService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.Message
 import java.util.function.Consumer
@@ -44,6 +49,14 @@ class PipelineExtendsNotifyConfiguration {
     companion object {
         private const val STREAM_CONSUMER_GROUP = "process-service"
     }
+
+    @Bean
+    fun notifyListener(
+        @Autowired client: Client,
+        @Autowired pipelineUrlBean: PipelineUrlBean,
+        @Autowired projectCacheService: ProjectCacheService,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildNotifyListener(client, pipelineUrlBean, projectCacheService, pipelineEventDispatcher)
 
     /**
      * webhook构建触发广播监听
