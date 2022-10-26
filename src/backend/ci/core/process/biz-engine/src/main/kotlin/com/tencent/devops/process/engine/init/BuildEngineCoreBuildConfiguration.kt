@@ -250,7 +250,7 @@ class BuildEngineCoreBuildConfiguration {
      * 流水线暂停操作队列
      */
     @Bean
-    fun pipelineBuildCancelListener(
+    fun pipelineTaskPauseListener(
         @Autowired redisOperation: RedisOperation,
         @Autowired taskBuildDetailService: TaskBuildDetailService,
         @Autowired pipelineTaskService: PipelineTaskService,
