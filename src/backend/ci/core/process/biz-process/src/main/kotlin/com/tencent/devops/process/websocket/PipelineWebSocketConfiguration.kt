@@ -68,7 +68,7 @@ class PipelineWebSocketConfiguration {
      * webhook构建触发广播监听
      */
     @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_WEBSOCKET, STREAM_CONSUMER_GROUP)
-    fun notifyQueueBuildFinishListener(
+    fun pipelineWebSocketPushEventListener(
         @Autowired pipelineWebSocketListener: PipelineWebSocketListener
     ): Consumer<Message<PipelineBuildWebSocketPushEvent>> {
         return Consumer { event: Message<PipelineBuildWebSocketPushEvent> ->
