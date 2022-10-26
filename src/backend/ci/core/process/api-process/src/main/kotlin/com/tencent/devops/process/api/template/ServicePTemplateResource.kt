@@ -179,7 +179,7 @@ interface ServicePTemplateResource {
         @PathParam("templateId")
         templateId: String,
         @ApiParam("模板版本", required = false)
-        @QueryParam("version")
+        @QueryParam("versionName")
         versionName: String?
     ): Result<TemplateModelDetail>
 
