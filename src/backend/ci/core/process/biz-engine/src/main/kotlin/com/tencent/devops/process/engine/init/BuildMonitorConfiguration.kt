@@ -28,12 +28,18 @@
 package com.tencent.devops.process.engine.init
 
 import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.process.engine.control.BuildCancelControl
+import com.tencent.devops.process.engine.control.BuildMonitorControl
+import com.tencent.devops.process.engine.control.HeartbeatControl
+import com.tencent.devops.process.engine.listener.run.finish.PipelineBuildCancelListener
 import com.tencent.devops.process.engine.listener.run.monitor.PipelineBuildHeartbeatListener
 import com.tencent.devops.process.engine.listener.run.monitor.PipelineBuildMonitorListener
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.Message
 import java.util.function.Consumer
@@ -51,6 +57,15 @@ class BuildMonitorConfiguration {
     /**
      * 监控队列--- 并发可小
      */
+    @Bean
+    fun pipelineBuildMonitorListener(
+        @Autowired buildMonitorControl: BuildMonitorControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildMonitorListener(
+        buildMonitorControl = buildMonitorControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
+
     @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_MONITOR_DIRECT, STREAM_CONSUMER_GROUP)
     fun buildMonitorListener(
         @Autowired buildListener: PipelineBuildMonitorListener
@@ -63,6 +78,15 @@ class BuildMonitorConfiguration {
     /**
      * 心跳监听队列--- 并发可小
      */
+    @Bean
+    fun pipelineBuildHeartbeatListener(
+        @Autowired heartbeatControl: HeartbeatControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildHeartbeatListener(
+        heartbeatControl = heartbeatControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
+
     @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_HEART_BEAT, STREAM_CONSUMER_GROUP)
     fun buildHeartBeatListener(
         @Autowired buildListener: PipelineBuildHeartbeatListener

@@ -31,8 +31,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.process.engine.control.BuildCancelControl
+import com.tencent.devops.process.engine.control.BuildEndControl
+import com.tencent.devops.process.engine.control.BuildStartControl
+import com.tencent.devops.process.engine.control.ContainerControl
+import com.tencent.devops.process.engine.control.StageControl
+import com.tencent.devops.process.engine.control.TaskControl
 import com.tencent.devops.process.engine.listener.run.PipelineAtomTaskBuildListener
 import com.tencent.devops.process.engine.listener.run.PipelineBuildStartListener
 import com.tencent.devops.process.engine.listener.run.PipelineContainerBuildListener
@@ -47,7 +55,13 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
+import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineTaskPauseService
+import org.jooq.DSLContext
 import org.slf4j.MDC
 import org.springframework.amqp.core.MessagePostProcessor
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
@@ -66,6 +80,7 @@ import java.util.function.Consumer
  * 流水线构建核心配置
  */
 @Configuration
+@Suppress("LongParameterList", "TooManyFunctions")
 class BuildEngineCoreBuildConfiguration {
 
     companion object {
@@ -108,6 +123,15 @@ class BuildEngineCoreBuildConfiguration {
     /**
      * 入口：整个构建开始队列---- 并发一般
      */
+    @Bean
+    fun pipelineBuildStartListener(
+        @Autowired buildControl: BuildStartControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildStartListener(
+        buildControl = buildControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
+
     @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_START, STREAM_CONSUMER_GROUP)
     fun buildStartListener(
         @Autowired buildListener: PipelineBuildStartListener
@@ -120,6 +144,15 @@ class BuildEngineCoreBuildConfiguration {
     /**
      * 构建结束队列--- 并发一般，与Stage一致
      */
+    @Bean
+    fun pipelineBuildFinishListener(
+        @Autowired buildEndControl: BuildEndControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildFinishListener(
+        buildEndControl = buildEndControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
+
     @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_FINISH, STREAM_CONSUMER_GROUP)
     fun buildFinishListener(
         @Autowired buildListener: PipelineBuildFinishListener
@@ -132,6 +165,15 @@ class BuildEngineCoreBuildConfiguration {
     /**
      * 构建取消队列--- 并发一般，与Stage一致
      */
+    @Bean
+    fun pipelineBuildCancelListener(
+        @Autowired buildCancelControl: BuildCancelControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineBuildCancelListener(
+        buildCancelControl = buildCancelControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
+
     @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_CANCEL, STREAM_CONSUMER_GROUP)
     fun buildCancelListener(
         @Autowired buildListener: PipelineBuildCancelListener
@@ -144,6 +186,15 @@ class BuildEngineCoreBuildConfiguration {
     /**
      * Stage构建队列---- 并发一般
      */
+    @Bean
+    fun pipelineStageBuildListener(
+        @Autowired stageControl: StageControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineStageBuildListener(
+        stageControl = stageControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
+
     @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_STAGE, STREAM_CONSUMER_GROUP)
     fun stageBuildListener(
         @Autowired buildListener: PipelineStageBuildListener
@@ -156,6 +207,15 @@ class BuildEngineCoreBuildConfiguration {
     /**
      * Job构建队列---- 并发一般
      */
+    @Bean
+    fun pipelineContainerBuildListener(
+        @Autowired containerControl: ContainerControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineContainerBuildListener(
+        containerControl = containerControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
+
     @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_CONTAINER, STREAM_CONSUMER_GROUP)
     fun containerBuildListener(
         @Autowired buildListener: PipelineContainerBuildListener
@@ -168,6 +228,15 @@ class BuildEngineCoreBuildConfiguration {
     /**
      * 任务队列---- 并发要大
      */
+    @Bean
+    fun pipelineAtomTaskBuildListener(
+        @Autowired taskControl: TaskControl,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineAtomTaskBuildListener(
+        taskControl = taskControl,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
+
     @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_TASK_START, STREAM_CONSUMER_GROUP)
     fun taskBuildListener(
         @Autowired buildListener: PipelineAtomTaskBuildListener
@@ -180,6 +249,29 @@ class BuildEngineCoreBuildConfiguration {
     /**
      * 流水线暂停操作队列
      */
+    @Bean
+    fun pipelineBuildCancelListener(
+        @Autowired redisOperation: RedisOperation,
+        @Autowired taskBuildDetailService: TaskBuildDetailService,
+        @Autowired pipelineTaskService: PipelineTaskService,
+        @Autowired pipelineContainerService: PipelineContainerService,
+        @Autowired pipelineTaskPauseService: PipelineTaskPauseService,
+        @Autowired buildVariableService: BuildVariableService,
+        @Autowired dslContext: DSLContext,
+        @Autowired buildLogPrinter: BuildLogPrinter,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = PipelineTaskPauseListener(
+        redisOperation = redisOperation,
+        taskBuildDetailService = taskBuildDetailService,
+        pipelineTaskService = pipelineTaskService,
+        pipelineContainerService = pipelineContainerService,
+        pipelineTaskPauseService = pipelineTaskPauseService,
+        buildVariableService = buildVariableService,
+        dslContext = dslContext,
+        buildLogPrinter = buildLogPrinter,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
+
     @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_PAUSE_TASK_EXECUTE, STREAM_CONSUMER_GROUP)
     fun taskPauseListener(
         @Autowired buildListener: PipelineTaskPauseListener
