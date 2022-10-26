@@ -28,6 +28,7 @@
 package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
 
@@ -84,4 +85,10 @@ interface StoreDockingPlatformService {
         page: Int = 1,
         pageSize: Int = 10
     ): Page<StoreDockingPlatformInfo>?
+
+    /**
+     * 判断对接平台Code是否已注册
+     * @param platformCode 平台Code
+     */
+    fun isPlatformCodeRegistered(platformCode: String): Boolean
 }

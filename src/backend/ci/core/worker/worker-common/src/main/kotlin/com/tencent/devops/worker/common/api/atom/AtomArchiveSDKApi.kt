@@ -110,6 +110,8 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
         platformCodes: Set<String>
     ): Result<Boolean>
 
+    fun isPlatformCodeRegistered(platformCode: String): Boolean
+
     fun getStorePkgRunEnvInfo(
         language: String,
         osName: String,

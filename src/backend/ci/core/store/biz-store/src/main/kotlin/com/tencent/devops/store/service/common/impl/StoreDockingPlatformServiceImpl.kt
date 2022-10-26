@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
@@ -141,5 +142,9 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
             totalPages = totalPages,
             records = storeDockingPlatformInfos ?: emptyList()
         )
+    }
+
+    override fun isPlatformCodeRegistered(platformCode: String): Boolean {
+        return storeDockingPlatformDao.isPlatformCodeRegistered(dslContext, platformCode)
     }
 }
