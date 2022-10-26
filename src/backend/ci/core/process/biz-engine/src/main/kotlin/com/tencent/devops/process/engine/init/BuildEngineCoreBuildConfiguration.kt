@@ -27,7 +27,11 @@
 
 package com.tencent.devops.process.engine.init
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.listener.run.PipelineAtomTaskBuildListener
 import com.tencent.devops.process.engine.listener.run.PipelineBuildStartListener
@@ -43,8 +47,18 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import org.slf4j.MDC
+import org.springframework.amqp.core.MessagePostProcessor
+import org.springframework.amqp.rabbit.connection.ConnectionFactory
+import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.messaging.Message
 import java.util.function.Consumer
 
@@ -57,6 +71,39 @@ class BuildEngineCoreBuildConfiguration {
     companion object {
         private const val STREAM_CONSUMER_GROUP = "engine-service"
     }
+
+    @Bean
+    fun messageConverter(objectMapper: ObjectMapper) =
+        Jackson2JsonMessageConverter(objectMapper)
+
+    @Bean
+    fun rabbitAdmin(
+        connectionFactory: ConnectionFactory
+    ): RabbitAdmin {
+        return RabbitAdmin(connectionFactory)
+    }
+
+    @Bean
+    fun rabbitTemplate(
+        connectionFactory: ConnectionFactory,
+        objectMapper: ObjectMapper
+    ): RabbitTemplate {
+        val rabbitTemplate = RabbitTemplate(connectionFactory)
+        rabbitTemplate.messageConverter = messageConverter(objectMapper)
+        rabbitTemplate.addBeforePublishPostProcessors(MessagePostProcessor { message ->
+            val traceId = MDC.get(TraceTag.BIZID)?.ifBlank { TraceTag.buildBiz() }
+            message.messageProperties.setHeader(TraceTag.X_DEVOPS_RID, traceId)
+            message
+        })
+        return rabbitTemplate
+    }
+
+    @Bean
+    fun routableEventDispatcher(
+        @Autowired rabbitTemplate: RabbitTemplate
+    ) = MQRoutableEventDispatcher(
+        rabbitTemplate = rabbitTemplate
+    )
 
     /**
      * 入口：整个构建开始队列---- 并发一般
