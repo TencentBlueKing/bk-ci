@@ -119,8 +119,8 @@
     import webSocketMessage from '@/utils/webSocketMessage'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
-    import CopyPipelineDialog from '@/views/PipelineList/CopyPipelineDialog'
-    import SaveAsTemplateDialog from '@/views/PipelineList/SaveAsTemplateDialog'
+    import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
+    import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import PipelineSearcher from './PipelineSearcher'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
@@ -133,6 +133,7 @@
     import {
         ALL_PIPELINE_VIEW_ID
     } from '@/store/constants'
+    import { bus, REFRESH_PIPELINE_LIST } from '@/utils/bus'
 
     const TABLE_LAYOUT = 'table'
     const CARD_LAYOUT = 'card'
@@ -217,7 +218,6 @@
                         this.refresh()
                     }
                     this.checkHasCreatePermission()
-                    this.checkHasTemplatePermission()
                 })
             },
             '$route.params.viewId': function () {
@@ -227,15 +227,17 @@
         created () {
             this.goList()
             this.checkHasCreatePermission()
-            this.checkHasTemplatePermission()
         },
 
         mounted () {
             webSocketMessage.installWsMessage(this.$refs.pipelineBox?.updatePipelineStatus)
+            bus.$off(REFRESH_PIPELINE_LIST, this.refresh)
+            bus.$on(REFRESH_PIPELINE_LIST, this.refresh)
         },
 
         beforeDestroy () {
             webSocketMessage.unInstallWsMessage()
+            bus.$off(REFRESH_PIPELINE_LIST, this.refresh)
         },
 
         methods: {

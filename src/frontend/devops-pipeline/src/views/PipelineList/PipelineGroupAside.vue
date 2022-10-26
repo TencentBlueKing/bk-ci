@@ -86,7 +86,7 @@
                 </bk-button>
             </footer>
         </bk-dialog>
-        <pipeline-group-edit-dialog @close="handleCloseEditCount" :group="activeGroup" />
+        <pipeline-group-edit-dialog @close="handleCloseEditCount" @done="refreshList" :group="activeGroup" />
     </aside>
 
 </template>
@@ -99,7 +99,7 @@
         DELETED_VIEW_ID
     } from '@/store/constants'
     import { cacheViewId } from '@/utils/util'
-    import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
+    import { bus, ADD_TO_PIPELINE_GROUP, REFRESH_PIPELINE_LIST } from '@/utils/bus'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
@@ -416,6 +416,9 @@
                         theme
                     })
                 }
+            },
+            refreshList () {
+                bus.$emit(REFRESH_PIPELINE_LIST)
             }
         }
     }

@@ -113,30 +113,6 @@ export default {
             return curPipeline
         },
         /**
-         *  处理收藏和取消收藏
-         */
-        async togglePipelineCollect (pipelineId, isCollect = false) {
-            try {
-                const { projectId } = this.$route.params
-                await this.requestToggleCollect({
-                    projectId,
-                    pipelineId,
-                    isCollect
-                })
-
-                this.$showTips({
-                    message: isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc'),
-                    theme: 'success'
-                })
-                this.updateCurPipelineByKeyValue('hasCollect', isCollect)
-            } catch (err) {
-                this.$showTips({
-                    message: err.message || err,
-                    theme: 'error'
-                })
-            }
-        },
-        /**
              *  终止任务
              */
         async terminatePipeline (pipelineId) {
@@ -252,48 +228,6 @@ export default {
                     instanceId: [{
                         id: prePipeline.pipelineId,
                         name: prePipeline.pipelineName
-                    }],
-                    projectId
-                }])
-            } finally {
-                message && this.$showTips({
-                    message,
-                    theme
-                })
-            }
-        },
-        /**
-         *  复制流水线弹窗的取消回调
-         */
-        async rename ({ name }, projectId, pipelineId) {
-            let message = ''
-            let theme = ''
-            try {
-                if (!name) {
-                    throw new Error(this.$t('subpage.nameNullTips'))
-                }
-                await this.$ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`, {
-                    name
-                })
-                this.$nextTick(() => {
-                    this.updateCurPipelineByKeyValue('pipelineName', name)
-
-                    this.pipelineSetting && Object.keys(this.pipelineSetting).length && this.updatePipelineSetting({
-                        container: this.pipelineSetting,
-                        param: {
-                            pipelineName: name
-                        }
-                    })
-                })
-                message = this.$t('updateSuc')
-                theme = 'success'
-            } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: this.curPipeline.pipelineId,
-                        name: this.curPipeline.pipelineName
                     }],
                     projectId
                 }])
@@ -623,7 +557,6 @@ export default {
                         ...pipeline
                     }]
                 }])
-                console.log('redirectUrl', redirectUrl)
                 window.open(redirectUrl, '_blank')
                 this.$bkInfo({
                     title: this.$t('permissionRefreshtitle'),

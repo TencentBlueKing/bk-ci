@@ -18,9 +18,9 @@
         <bk-table-column v-if="isPatchView" type="selection" width="60" :selectable="checkSelecteable"></bk-table-column>
         <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
-                <span class="pipeline-name-cell-link primary" @click="goHistory(props.row.pipelineId)">
+                <router-link class="pipeline-cell-link" :to="props.row.historyRoute">
                     {{props.row.pipelineName}}
-                </span>
+                </router-link>
             </template>
         </bk-table-column>
         <bk-table-column v-if="isAllPipelineView || isPatchView || isDeleteView" width="250" :label="$t('ownGroupName')" prop="viewNames">
@@ -55,11 +55,11 @@
                     <pipeline-status-icon :status="props.row.latestBuildStatus" />
                     <div class="pipeline-exec-msg">
                         <template v-if="props.row.latestBuildNum">
-                            <p class="pipeline-exec-msg-title">
+                            <router-link :to="props.row.latestBuildRoute" class="pipeline-cell-link pipeline-exec-msg-title">
                                 <b>#{{ props.row.latestBuildNum }}</b>
                                 |
                                 <span>{{ props.row.lastBuildMsg }}</span>
-                            </p>
+                            </router-link>
                             <p class="pipeline-exec-msg-desc">
                                 <span class="desc">
                                     <logo :name="props.row.trigger" size="16" />
@@ -277,9 +277,6 @@
 
 <style lang="scss">
     @import '@/scss/conf.scss';
-    .pipeline-name-cell-link {
-        cursor: pointer;
-    }
     .primary {
         color: $primaryColor;
     }

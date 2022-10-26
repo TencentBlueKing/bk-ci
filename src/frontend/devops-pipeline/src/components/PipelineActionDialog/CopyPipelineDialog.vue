@@ -68,7 +68,7 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import PipelineLabelSelector from '@/components/PipelineLabelSelector'
     export default {
@@ -99,6 +99,9 @@
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'allPipelineGroup'
+            ]),
             ...mapGetters('pipelines', [
                 'staticPipelineGroups',
                 'dynamicPipelineGroups'
@@ -126,7 +129,7 @@
                         }
                     },
                     {
-                        name: 'label',
+                        name: 'desc',
                         placeholder: 'desc',
                         value: this.model.desc,
                         rules: [
@@ -145,15 +148,23 @@
         },
         watch: {
             'pipeline.pipelineId': function () {
-                this.model.name = this.initName()
-                this.$nextTick(() => {
-                    this.$refs.copyForm?.validate()
-                })
+                if (this.isCopyDialogShow) {
+                    this.model.name = this.initName()
+                    this.$nextTick(() => {
+                        this.$refs.copyForm?.validate()
+                    })
+                }
+            }
+        },
+        created () {
+            if (this.allPipelineGroup.length === 0) {
+                this.requestGetGroupLists(this.$route.params)
             }
         },
         methods: {
             ...mapActions('pipelines', [
-                'matchDynamicView'
+                'matchDynamicView',
+                'requestGetGroupLists'
             ]),
             initName () {
                 return this.pipeline?.pipelineName ? `${this.pipeline?.pipelineName}_copy` : ''

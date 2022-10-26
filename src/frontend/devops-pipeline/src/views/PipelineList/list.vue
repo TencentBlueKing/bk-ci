@@ -47,7 +47,6 @@
                     font-weight: bold;
                     margin-left: 8px;
                 }
-
             }
             .pipeline-list-main-header {
                 display: flex;
@@ -122,6 +121,13 @@
                         font-size: 18px;
                         padding: 0 6px;
                     }
+                }
+            }
+            .pipeline-cell-link {
+                color: $primaryColor;
+                cursor: pointer;
+                &:hover {
+                    color: #699df4;
                 }
             }
         }

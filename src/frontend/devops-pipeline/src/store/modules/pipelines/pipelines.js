@@ -531,6 +531,11 @@ const actions = {
     // 删除流水线历史版本
     deletePipelineVersion (_, { projectId, pipelineId, version }) {
         return ajax.delete(`${prefix}${projectId}/${pipelineId}/${version}`)
+    },
+    renamePipeline (_, { projectId, pipelineId, name }) {
+        return ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`, {
+            name
+        })
     }
 }
 

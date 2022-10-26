@@ -35,7 +35,8 @@ import {
 export default {
     data () {
         return {
-            pipelineMap: {}
+            pipelineMap: {},
+            hasTemplatePermission: false
         }
     },
     computed: {
@@ -49,8 +50,14 @@ export default {
             return this.groupMap?.[this.$route.params.viewId]
         }
     },
+    watch: {
+        '$route.params.projectId': function () {
+            this.$nextTick(this.checkHasCreatePermission)
+        }
+    },
     created () {
         moment.locale(this.$i18n.locale)
+        this.checkHasTemplatePermission()
     },
     methods: {
         ...mapMutations('pipelines', [
@@ -72,6 +79,7 @@ export default {
         async checkHasTemplatePermission () {
             this.hasTemplatePermission = await this.requestTemplatePermission(this.$route.params.projectId)
             this.$nextTick(() => {
+                console.log(this.hasTemplatePermission, 'this.hasTemplatePermission')
                 Object.keys(this.pipelineMap).forEach(pipelineId => {
                     this.pipelineMap[pipelineId].pipelineActions = this.getPipelineActions(this.pipelineMap[pipelineId])
                 })
@@ -103,7 +111,22 @@ export default {
                         duration: this.calcDuration(item),
                         progress: this.calcProgress(item),
                         pipelineActions: this.getPipelineActions(item, index),
-                        trigger: triggerType[item.trigger]
+                        trigger: triggerType[item.trigger],
+                        historyRoute: {
+                            name: 'pipelinesHistory',
+                            params: {
+                                projectId: item.projectId,
+                                pipelineId: item.pipelineId
+                            }
+                        },
+                        latestBuildRoute: {
+                            name: 'pipelinesDetail',
+                            params: {
+                                projectId: item.projectId,
+                                pipelineId: item.pipelineId,
+                                buildNo: item.latestBuildId
+                            }
+                        }
                     }))
                     this.pipelineMap = pipelineList.reduce((acc, item) => {
                         return {
@@ -278,18 +301,6 @@ export default {
                 params: {
                     projectId: this.$route.params.projectId,
                     pipelineId
-                }
-            })
-        },
-        /**
-             *  跳转执行历史
-             */
-        goHistory (pipelineId) {
-            this.$router.push({
-                name: 'pipelinesHistory',
-                params: {
-                    projectId: this.$route.params.projectId,
-                    pipelineId: pipelineId
                 }
             })
         },
