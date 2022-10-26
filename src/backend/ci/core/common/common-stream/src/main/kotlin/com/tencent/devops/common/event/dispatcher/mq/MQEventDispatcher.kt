@@ -28,8 +28,6 @@
 package com.tencent.devops.common.event.dispatcher.mq
 
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
@@ -46,15 +44,7 @@ class MQEventDispatcher constructor(
     override fun dispatch(vararg events: IPipelineEvent) {
         events.forEach { event ->
             try {
-                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-                val destination = // 根据 routeKey+后缀 实现动态变换路由Key
-                    // TODO 定向路由
-                    if (event is IPipelineRoutableEvent && !event.routeKeySuffix.isNullOrBlank()) {
-                        eventType.destination + event.routeKeySuffix
-                    } else {
-                        eventType.destination
-                    }
-                event.sendTo(bridge = streamBridge, destination)
+                event.sendTo(bridge = streamBridge)
             } catch (ignored: Exception) {
                 logger.error("[ENGINE_MQ_SEVERE] Fail to dispatch the event($event)", ignored)
             }
