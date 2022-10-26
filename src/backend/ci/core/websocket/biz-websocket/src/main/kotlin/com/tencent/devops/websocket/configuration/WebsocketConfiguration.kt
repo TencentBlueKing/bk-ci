@@ -30,13 +30,11 @@ package com.tencent.devops.websocket.configuration
 import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
-import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.listener.CacheSessionListener
 import com.tencent.devops.websocket.listener.WebSocketListener
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.messaging.Message
 import org.springframework.stereotype.Component
@@ -49,11 +47,8 @@ class WebsocketConfiguration {
         const val STREAM_CONSUMER_GROUP = "websocket-service"
     }
 
-    @Bean
-    fun websocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
-
     @StreamEventConsumer(StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT, STREAM_CONSUMER_GROUP, true)
-    fun pipelineWebSocketIn(
+    fun pipelineWebSocketListener(
         @Autowired webSocketListener: WebSocketListener
     ): Consumer<Message<SendMessage>> {
         return Consumer { event: Message<SendMessage> ->
@@ -62,7 +57,7 @@ class WebsocketConfiguration {
     }
 
     @StreamEventConsumer(StreamBinding.QUEUE_WEBSOCKET_SESSION_CLEAR_EVENT, STREAM_CONSUMER_GROUP, true)
-    fun cacheClearWebSocketIn(
+    fun cacheClearWebSocketListener(
         @Autowired cacheSessionListener: CacheSessionListener
     ): Consumer<Message<ClearSessionEvent>> {
         return Consumer { event: Message<ClearSessionEvent> ->
