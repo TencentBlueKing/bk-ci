@@ -285,7 +285,7 @@ func LoadAgentConfig() error {
 	}
 
 	// 兼容旧版本 .agent.properties 没有这个键
-	dockerParallelTaskCount := 0
+	dockerParallelTaskCount := 4
 	if conf.Section("").HasKey(KeyDockerTaskCount) {
 		dockerParallelTaskCount, err = conf.Section("").Key(KeyDockerTaskCount).Int()
 		if err != nil || dockerParallelTaskCount < 0 {
