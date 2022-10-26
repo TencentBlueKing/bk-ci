@@ -9,4 +9,4 @@ echo docker_init
 cat docker_init.sh
 echo "download docker_init.sh success, start it..." >> /data/logs/docker.log
 cat docker_init.sh >> /data/logs/docker.log
-sh docker_init.sh $@"
+sh docker_init.sh $@

@@ -40,7 +40,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
@@ -268,7 +267,14 @@ class ThirdPartyAgentService @Autowired constructor(
             }
         } catch (t: Throwable) {
             logger.warn("Fail to check if agent can upgrade", t)
-            AgentResult(AgentStatus.IMPORT_EXCEPTION, UpgradeItem(false, false, false))
+            AgentResult(
+                AgentStatus.IMPORT_EXCEPTION, UpgradeItem(
+                    agent = false,
+                    worker = false,
+                    jdk = false,
+                    dockerInitFile = false
+                )
+            )
         }
     }
 

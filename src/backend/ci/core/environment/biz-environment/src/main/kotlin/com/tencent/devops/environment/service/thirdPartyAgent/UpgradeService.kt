@@ -141,6 +141,11 @@ class UpgradeService @Autowired constructor(
         }
     }
 
+    fun getDockerInitFileMd5(): String {
+        // 目前仅支持linux且amd和arm脚本上没有区别
+        return getRedisValueWithCache(agentGrayUtils.getDockerInitFileMd5Key())
+    }
+
     fun getGatewayMapping(): Map<String, String> {
         val mappingConfig = getRedisValueWithCache("environment.thirdparty.gateway.mapping")
         return objectMapper.readValue(mappingConfig)
@@ -195,12 +200,20 @@ class UpgradeService @Autowired constructor(
         val (status, props, os) = checkAgent(projectId, agentId, secretKey)
         if (status != AgentStatus.IMPORT_OK) {
             logger.warn("The agent($agentId) status($status) is not OK")
-            return AgentResult(status, UpgradeItem(false, false, false))
+            return AgentResult(
+                status, UpgradeItem(
+                    agent = false,
+                    worker = false,
+                    jdk = false,
+                    dockerInitFile = false
+                )
+            )
         }
 
         val currentWorkerVersion = getWorkerVersion()
         val currentGoAgentVersion = getAgentVersion()
         val currentJdkVersion = getJdkVersion(os, props?.arch)
+        val currentDockerInitFileMd5 = getDockerInitFileMd5()
 
         val canUpgrade = agentGrayUtils.getCanUpgradeAgents().contains(HashUtil.decodeIdToLong(agentId))
 
@@ -241,11 +254,27 @@ class UpgradeService @Autowired constructor(
                                     currentJdkVersion.trim() != info.jdkVersion?.get(2)?.trim()))
         }
 
+        val dockerInitFile = when {
+            info.dockerInitFileInfo == null -> false
+            // 目前存在非linux系统的不支持，或agent不使用docker构建机，所以不校验升级
+            info.dockerInitFileInfo?.needUpgrade != true -> false
+            // 兼容旧数据以及不会使用docker构建机的agent，这种情况不会存在
+            currentDockerInitFileMd5.isBlank() -> {
+                logger.warn("project: $projectId|agent: $agentId|os: $os|arch: ${props?.arch}|current docker init md5 is null")
+                false
+            }
+
+            agentGrayUtils.checkLockUpgrade(agentId, AgentUpgradeType.DOCKER_INIT_FILE) -> false
+            agentGrayUtils.checkForceUpgrade(agentId, AgentUpgradeType.DOCKER_INIT_FILE) -> true
+            else -> canUpgrade && info.dockerInitFileInfo?.fileMd5 != currentDockerInitFileMd5
+        }
+
         return AgentResult(
             AgentStatus.IMPORT_OK, UpgradeItem(
                 agent = goAgentVersion,
                 worker = workerVersion,
-                jdk = jdkVersion
+                jdk = jdkVersion,
+                dockerInitFile = dockerInitFile
             )
         )
     }

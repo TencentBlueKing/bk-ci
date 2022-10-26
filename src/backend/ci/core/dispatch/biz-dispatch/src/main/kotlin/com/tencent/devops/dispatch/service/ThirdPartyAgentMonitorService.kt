@@ -75,46 +75,78 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
         val agentDetail = client.get(ServiceThirdPartyAgentResource::class)
             .getAgentDetail(userId = event.userId, projectId = event.projectId, agentHashId = record.agentId)
-            .data
+            .data ?: return
 
-        if (agentDetail != null) {
-            val tag = VMUtils.genStartVMTaskId(event.vmSeqId)
-            val heartbeatInfo = agentDetail.heartbeatInfo
+        val tag = VMUtils.genStartVMTaskId(event.vmSeqId)
+        val heartbeatInfo = agentDetail.heartbeatInfo
 
-            logMessage.append(
-                MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                    params = arrayOf(event.projectId, agentDetail.nodeId)
-                )
+        logMessage.append(
+            MessageCodeUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
+                params = arrayOf(event.projectId, agentDetail.nodeId)
             )
+        )
+
+        // #7748 agent使用docker作为构建机
+        var parallelTaskCount = agentDetail.parallelTaskCount
+        var busyTaskSize = heartbeatInfo?.busyTaskSize
+        if (record.dockerInfo != null) {
+            parallelTaskCount = agentDetail.dockerParallelTaskCount
+            busyTaskSize = heartbeatInfo?.dockerBusyTaskSize
+        }
+
+        if (record.dockerInfo != null) {
+            logMessage.append("|Docker构建|最大并行构建量(maximum parallelism)/当前正在运行构建数量(Running): ")
+        } else {
             logMessage.append("|最大并行构建量(maximum parallelism)/当前正在运行构建数量(Running): ")
-            if (agentDetail.parallelTaskCount != "0") {
-                logMessage.append(agentDetail.parallelTaskCount).append("/").append(heartbeatInfo?.busyTaskSize ?: 0)
-            }
+        }
+        if (parallelTaskCount != "0") {
+            logMessage.append(parallelTaskCount).append("/")
+                .append(busyTaskSize ?: 0)
+        }
 
-            if (agentDetail.parallelTaskCount == "0") {
-                logMessage.append("无限制(unlimited), 注意负载(Attention)")
-            }
-            log(event, logMessage, tag)
+        if (parallelTaskCount == "0") {
+            logMessage.append("无限制(unlimited), 注意负载(Attention)")
+        }
+        log(event, logMessage, tag)
 
-            if (heartbeatInfo != null) {
+        if (heartbeatInfo == null) {
+            return
+        }
 
-                heartbeatInfo.heartbeatTime?.let { self ->
-                    logMessage.append("构建机最近心跳时间（heartbeat Time): ${DateTimeUtil.formatDate(Date(self))}")
-                }
+        heartbeatInfo.heartbeatTime?.let { self ->
+            logMessage.append("构建机最近心跳时间（heartbeat Time): ${DateTimeUtil.formatDate(Date(self))}")
+        }
 
-                logMessage.append("|最近${heartbeatInfo.taskList.size}次运行中的构建:\n")
+        if (record.dockerInfo != null) {
+            logMessage.append("|Docker构建|最近${heartbeatInfo.dockerTaskList?.size ?: 0}次运行中的构建:\n")
+        } else {
+            logMessage.append("|最近${heartbeatInfo.taskList?.size ?: 0}次运行中的构建:\n")
+        }
 
-                heartbeatInfo.taskList.forEach {
-                    thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
-                        logMessage.append("<a href='${genBuildDetailUrl(r1.projectId, r1.pipelineId, r1.buildId)}'>")
-                        logMessage.append("运行中(Running) #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n")
+        if (record.dockerInfo != null) {
+            heartbeatInfo.dockerTaskList?.forEach dockerInfoFor@{
+                thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
+                    if (r1.dockerInfo == null) {
+                        return@dockerInfoFor
                     }
+                    logMessage.append("<a href='${genBuildDetailUrl(r1.projectId, r1.pipelineId, r1.buildId)}'>")
+                    logMessage.append("运行中(Running) #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n")
                 }
-
-                log(event, logMessage, tag)
+            }
+        } else {
+            heartbeatInfo.taskList?.forEach taskInfoFor@{
+                thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
+                    if (r1.dockerInfo != null) {
+                        return@taskInfoFor
+                    }
+                    logMessage.append("<a href='${genBuildDetailUrl(r1.projectId, r1.pipelineId, r1.buildId)}'>")
+                    logMessage.append("运行中(Running) #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n")
+                }
             }
         }
+
+        log(event, logMessage, tag)
     }
 
     private fun log(event: AgentStartMonitor, sb: StringBuilder, tag: String) {
@@ -130,7 +162,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
     private fun genBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): String {
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
-            "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+                "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
     }
 
     /**
