@@ -45,7 +45,7 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
 
     fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
 
-    fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean>
+    fun endTask(variables: Map<String, String>, envBuildId: String, retryCount: Int): Result<Boolean>
 
     fun heartbeat(executeCount: Int = 1): Result<HeartBeatInfo>
 
