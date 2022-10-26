@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.type
 
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.service.utils.KubernetesUtils
+import org.apache.commons.lang3.BooleanUtils
 
 enum class BuildType(
     val value: String,
@@ -43,9 +44,9 @@ enum class BuildType(
     KUBERNETES(
         "Kubernetes构建资源",
         listOf(OS.LINUX),
-        KubernetesUtils.inContainer(),
-        KubernetesUtils.inContainer(),
-        KubernetesUtils.inContainer()
+        KubernetesUtils.enableK8sBuild(),
+        KubernetesUtils.enableK8sBuild(),
+        KubernetesUtils.enableK8sBuild()
     ),
     IDC("公共：Docker on IDC CVM", listOf(OS.LINUX), true, false, false),
     PUBLIC_DEVCLOUD("公共：Docker on DevCloud", listOf(OS.LINUX), true, false, false),
@@ -59,9 +60,9 @@ enum class BuildType(
     DOCKER(
         "Docker公共构建机",
         listOf(OS.LINUX),
-        KubernetesUtils.notInContainer(),
-        KubernetesUtils.notInContainer(),
-        KubernetesUtils.notInContainer()
+        KubernetesUtils.enablePublicDocker(),
+        KubernetesUtils.enablePublicDocker(),
+        KubernetesUtils.enablePublicDocker()
     ),
     STREAM("stream", listOf(OS.LINUX), false, false, false),
     AGENT_LESS("无编译环境", listOf(OS.LINUX), false, false, false)
