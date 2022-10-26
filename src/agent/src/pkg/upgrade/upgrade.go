@@ -54,7 +54,7 @@ var JdkVersion struct {
 
 // DockerFileMd5 缓存，用来计算md5
 var DockerFileMd5 struct {
-	// 目前非linux机器不支持，不用计算md5
+	// 目前非linux机器不支持，以及一些机器不使用docker就不用计算md5
 	NeedUpgrade bool
 	FileModTime time.Time
 	Lock        sync.Mutex

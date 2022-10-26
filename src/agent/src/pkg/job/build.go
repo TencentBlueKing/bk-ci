@@ -168,8 +168,9 @@ func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 			"maxJob config: %d, instance count: %d",
 			config.GAgentConfig.DockerParallelTaskCount, dockerInstanceCount))
 		dockerCanRun = false
+	} else {
+		dockerCanRun = true
 	}
-	dockerCanRun = true
 
 	// 检查普通任务
 	instanceCount := GBuildManager.GetInstanceCount()
@@ -178,9 +179,9 @@ func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 			"ParallelTaskCount config: %d, instance count: %d",
 			config.GAgentConfig.ParallelTaskCount, instanceCount))
 		normalCanRun = false
+	} else {
+		normalCanRun = true
 	}
-
-	normalCanRun = true
 
 	return dockerCanRun, normalCanRun
 }
