@@ -93,12 +93,12 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
                 retryCount = 0,
                 delayMills = 1000,
                 resourceRegisterInfo = resourceRegisterInfo,
-                projectId = projectId,
+                projectId = "",
                 iamProjectId = null,
                 subjectScopes = subjectScopes
             )
         )
-        return projectId
+        return ""
     }
 
     override fun deleteResource(projectCode: String) {
