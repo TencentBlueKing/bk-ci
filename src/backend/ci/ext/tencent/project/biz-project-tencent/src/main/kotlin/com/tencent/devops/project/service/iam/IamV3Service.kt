@@ -41,7 +41,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.api.service.ServiceGroupStrategyResource
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
@@ -340,7 +340,7 @@ class IamV3Service @Autowired constructor(
     }
 
     private fun getGroupStrategy(defaultGroup: DefaultGroupType): Pair<List<String>, Map<String, List<String>>> {
-        val strategyInfo = client.get(ServiceGroupStrategyResource::class).getGroupStrategy(defaultGroup.displayName)
+        val strategyInfo = client.get(ServiceProjectAuthResource::class).getGroupStrategy(defaultGroup.displayName).data
             ?: throw ErrorCodeException(
                 errorCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
                 defaultMessage = MessageCodeUtil.getCodeMessage(

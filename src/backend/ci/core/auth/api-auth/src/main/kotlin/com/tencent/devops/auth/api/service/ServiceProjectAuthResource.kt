@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.StrategyEntity
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.pojo.Result
@@ -165,4 +166,13 @@ interface ServiceProjectAuthResource {
         @ApiParam("项目Id", required = true)
         projectId: String
     ): Result<List<BKAuthProjectRolesResources>>
+
+    @GET
+    @Path("/getGroupStrategy")
+    @ApiOperation("获取组策略")
+    fun getGroupStrategy(
+        @ApiParam(name = "策略名", required = true)
+        @QueryParam("action")
+        strategyName: String
+    ): Result<StrategyEntity?>
 }
