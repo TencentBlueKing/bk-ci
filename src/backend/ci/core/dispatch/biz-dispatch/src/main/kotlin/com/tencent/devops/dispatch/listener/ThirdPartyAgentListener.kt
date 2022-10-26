@@ -31,7 +31,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.dispatch.exception.VMTaskFailException
 import com.tencent.devops.dispatch.service.PipelineDispatchService
-import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchService
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent

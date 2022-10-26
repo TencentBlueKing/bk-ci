@@ -13,7 +13,7 @@ data class ThirdPartyAgentDockerInfo(
 
 data class Credential(
     val user: String,
-    val password: String,
+    val password: String
 )
 
 // 第三方构建机docker类型，调度使用，会带有调度相关信息
