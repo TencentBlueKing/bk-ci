@@ -453,6 +453,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
                 val hasTryAgents = HashSet<String>()
                 val runningBuildsMapper = HashMap<String/*AgentId*/, Int/*running builds*/>()
+                // docker和二进制任务区分开，所以单独设立一个
+                val dockerRunningBuildsMapper = HashMap<String/*AgentId*/, Int/*running builds*/>()
 
                 /**
                  * 1. 最高优先级的agent:
@@ -482,7 +484,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                         dispatchType = dispatchType,
                         agents = preBuildAgents,
                         hasTryAgents = hasTryAgents,
-                        runningBuildsMapper = runningBuildsMapper
+                        runningBuildsMapper = runningBuildsMapper,
+                        dockerRunningBuildsMapper = dockerRunningBuildsMapper
                     )
                 ) {
                     logger.info(
@@ -509,7 +512,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                         dispatchType = dispatchType,
                         agents = preBuildAgents,
                         hasTryAgents = hasTryAgents,
-                        runningBuildsMapper = runningBuildsMapper
+                        runningBuildsMapper = runningBuildsMapper,
+                        dockerRunningBuildsMapper = dockerRunningBuildsMapper
                     )
                 ) {
                     logger.info(
@@ -531,7 +535,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                         dispatchType = dispatchType,
                         agents = activeAgents,
                         hasTryAgents = hasTryAgents,
-                        runningBuildsMapper = runningBuildsMapper
+                        runningBuildsMapper = runningBuildsMapper,
+                        dockerRunningBuildsMapper = dockerRunningBuildsMapper
                     )
                 ) {
                     logger.info(
@@ -553,7 +558,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                         dispatchType = dispatchType,
                         agents = activeAgents,
                         hasTryAgents = hasTryAgents,
-                        runningBuildsMapper = runningBuildsMapper
+                        runningBuildsMapper = runningBuildsMapper,
+                        dockerRunningBuildsMapper = dockerRunningBuildsMapper
                     )
                 ) {
                     logger.info(
@@ -624,7 +630,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         dispatchType: ThirdPartyAgentEnvDispatchType,
         agents: HashSet<ThirdPartyAgent>,
         hasTryAgents: HashSet<String>,
-        runningBuildsMapper: HashMap<String, Int>
+        runningBuildsMapper: HashMap<String, Int>,
+        dockerRunningBuildsMapper: HashMap<String, Int>
     ): Boolean {
         return startAgentsForEnvBuild(
             event = event,
@@ -632,6 +639,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             agents = agents,
             hasTryAgents = hasTryAgents,
             runningBuildsMapper = runningBuildsMapper,
+            dockerRunningBuildsMapper = dockerRunningBuildsMapper,
             agentMatcher = object : AgentMatcher {
                 override fun match(
                     runningCnt: Int,
@@ -653,7 +661,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         dispatchType: ThirdPartyAgentEnvDispatchType,
         agents: HashSet<ThirdPartyAgent>,
         hasTryAgents: HashSet<String>,
-        runningBuildsMapper: HashMap<String, Int>
+        runningBuildsMapper: HashMap<String, Int>,
+        dockerRunningBuildsMapper: HashMap<String, Int>
     ): Boolean {
         return startAgentsForEnvBuild(
             event = event,
@@ -661,6 +670,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             agents = agents,
             hasTryAgents = hasTryAgents,
             runningBuildsMapper = runningBuildsMapper,
+            dockerRunningBuildsMapper = dockerRunningBuildsMapper,
             agentMatcher = object : AgentMatcher {
                 override fun match(
                     runningCnt: Int,
@@ -695,6 +705,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         agents: HashSet<ThirdPartyAgent>,
         hasTryAgents: HashSet<String>,
         runningBuildsMapper: HashMap<String, Int>,
+        dockerRunningBuildsMapper: HashMap<String, Int>,
         agentMatcher: AgentMatcher
     ): Boolean {
         if (agents.isNotEmpty()) {
@@ -706,7 +717,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 val dockerRunningCnt = if (dispatchType.dockerInfo == null) {
                     0
                 } else {
-                    getDockerRunningCnt(it.agentId, runningBuildsMapper)
+                    getDockerRunningCnt(it.agentId, dockerRunningBuildsMapper)
                 }
                 if (agentMatcher.match(
                         runningCnt = runningCnt,
@@ -753,11 +764,11 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         return runningCnt
     }
 
-    private fun getDockerRunningCnt(agentId: String, runningBuildsMapper: HashMap<String, Int>): Int {
-        var dockerRunningCnt = runningBuildsMapper[agentId]
+    private fun getDockerRunningCnt(agentId: String, dockerRunningBuildsMapper: HashMap<String, Int>): Int {
+        var dockerRunningCnt = dockerRunningBuildsMapper[agentId]
         if (dockerRunningCnt == null) {
             dockerRunningCnt = thirdPartyAgentBuildService.getDockerRunningBuilds(agentId)
-            runningBuildsMapper[agentId] = dockerRunningCnt
+            dockerRunningBuildsMapper[agentId] = dockerRunningCnt
         }
         return dockerRunningCnt
     }
