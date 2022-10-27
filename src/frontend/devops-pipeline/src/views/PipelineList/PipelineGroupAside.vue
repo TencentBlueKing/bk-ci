@@ -10,9 +10,6 @@
                     {{$t(item.name)}}
                 </span>
                 <span v-if="item.pipelineCount" class="pipeline-group-item-sum group-header-sum">{{item.pipelineCount}}</span>
-                <span @click.stop>
-                    <ext-menu></ext-menu>
-                </span>
             </div>
         </header>
         <article class="pipeline-group-container">
