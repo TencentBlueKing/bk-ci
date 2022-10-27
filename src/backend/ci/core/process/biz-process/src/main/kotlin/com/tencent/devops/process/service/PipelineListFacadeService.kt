@@ -477,9 +477,9 @@ class PipelineListFacadeService @Autowired constructor(
             )
             val includeDelete = showDelete && !viewIdList.contains(viewId)
 
-            if (!viewIdList.contains(viewId)) {// 已分组的视图
+            if (!viewIdList.contains(viewId)) { // 已分组的视图
                 pipelineIds.addAll(pipelineViewGroupService.listPipelineIdsByViewId(projectId, viewId))
-            } else if (viewId == PIPELINE_VIEW_UNCLASSIFIED) {// 非分组的视图
+            } else if (viewId == PIPELINE_VIEW_UNCLASSIFIED) { // 非分组的视图
                 val allPipelineIds = pipelineInfoDao.listPipelineIdByProject(dslContext, projectId).toMutableSet()
                 pipelineIds.addAll(
                     allPipelineIds.subtract(pipelineViewGroupService.getClassifiedPipelineIds(projectId).toSet())
