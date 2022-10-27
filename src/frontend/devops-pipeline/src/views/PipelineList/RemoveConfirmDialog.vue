@@ -72,6 +72,9 @@
 <script>
     import { mapState, mapActions, mapGetters } from 'vuex'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import {
+        UNCLASSIFIED_PIPELINE_VIEW_ID
+    } from '@/store/constants'
     export default {
         mixins: [piplineActionMixin],
         props: {
@@ -125,7 +128,6 @@
                 return this.pipelineList.length - this.hasPermissionPipelines.length
             },
             removedPipelines () {
-                console.log('this.hideNoPermissionPipeline', this.hideNoPermissionPipeline)
                 const list = this.hideNoPermissionPipeline ? this.hasPermissionPipelines : this.pipelineList
                 return list.map((pipeline, index) => {
                     const viewNames = pipeline.viewNames ?? []
@@ -188,12 +190,24 @@
                             ...params,
                             viewId: this.groupId
                         })
-
-                        this.$store.commit('pipelines/UPDATE_PIPELINE_GROUP', {
-                            id: this.groupId,
-                            body: {
-                                pipelineCount: this.groupMap[this.groupId].pipelineCount - (this.pipelineList.length ?? 0)
+                        const res = [
+                            {
+                                id: UNCLASSIFIED_PIPELINE_VIEW_ID,
+                                num: list.filter(pipeline => pipeline.viewNames.length === 1).length
+                            },
+                            {
+                                id: this.groupId,
+                                num: -list.length
                             }
+                        ]
+                        res.forEach(item => {
+                            console.log(item)
+                            this.$store.commit('pipelines/UPDATE_PIPELINE_GROUP', {
+                                id: item.id,
+                                body: {
+                                    pipelineCount: this.groupMap[item.id].pipelineCount + item.num
+                                }
+                            })
                         })
                     } else {
                         await this.patchDeletePipelines(params)

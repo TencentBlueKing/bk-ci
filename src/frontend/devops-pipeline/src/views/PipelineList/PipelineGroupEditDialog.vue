@@ -31,7 +31,11 @@
                         <bk-table class="group-filters-table" :data="formatFilters">
                             <bk-table-column width="152" :label="$t('view.key')">
                                 <template slot-scope="props">
-                                    <bk-select v-model="props.row.id" @change="handleFilterTypeChange(props.row)">
+                                    <bk-select
+                                        :clearable="false"
+                                        v-model="props.row.id"
+                                        @change="handleFilterTypeChange(props.row, props.$index)"
+                                    >
                                         <bk-option
                                             v-for="item in filterTypes"
                                             :id="item.id"
@@ -43,34 +47,36 @@
                             </bk-table-column>
                             <bk-table-column :label="$t('view.value')" prop="value">
                                 <div class="group-filter-value-cell" slot-scope="props">
-                                    <section class="group-filter-value-input">
-                                        <bk-input
-                                            v-if="props.row.id === NAME_FILTER_TYPE"
-                                            :placeholder="$t('view.nameTips')"
-                                            maxlength="40"
-                                            id="pipelineName"
-                                            v-model="props.row.pipelineName"
-                                        />
-                                        <bk-tag-input
-                                            v-else-if="props.row.id === CREATOR_FILTER_TYPE"
-                                            allow-create
-                                            allow-auto-match
-                                            v-model="props.row.userIds"
-                                        >
-                                        </bk-tag-input>
-                                        <bk-select
-                                            v-else
-                                            v-model="props.row.labelIds"
-                                            :multiple="true"
-                                        >
-                                            <bk-option
-                                                v-for="item in filterLabelMap[props.row.id]"
-                                                :key="item.id"
-                                                :name="item.name"
-                                                :id="item.id"
+                                    <bk-form :label-width="0" :ref="`dynamicForms_${props.$index}`" :model="props.row" class="group-filter-value-input">
+                                        <bk-form-item v-if="props.row.id === NAME_FILTER_TYPE" v-bind="getDynamicFilterConf(props.row.id, props.row)">
+                                            <bk-input
+                                                :placeholder="$t('view.nameTips')"
+                                                maxlength="40"
+                                                id="pipelineName"
+                                                v-model="props.row.pipelineName"
                                             />
-                                        </bk-select>
-                                    </section>
+                                        </bk-form-item>
+                                        <bk-form-item v-else-if="props.row.id === CREATOR_FILTER_TYPE" v-bind="getDynamicFilterConf(props.row.id)">
+                                            <bk-tag-input
+                                                allow-create
+                                                allow-auto-match
+                                                v-model="props.row.userIds"
+                                            />
+                                        </bk-form-item>
+                                        <bk-form-item v-else v-bind="getDynamicFilterConf(props.row.id)">
+                                            <bk-select
+                                                v-model="props.row.labelIds"
+                                                :multiple="true"
+                                            >
+                                                <bk-option
+                                                    v-for="item in filterLabelMap[props.row.id]"
+                                                    :key="item.id"
+                                                    :name="item.name"
+                                                    :id="item.id"
+                                                />
+                                            </bk-select>
+                                        </bk-form-item>
+                                    </bk-form>
                                     <span class="filter-operations-span">
                                         <bk-button theme="normal" text @click="removeFilter(props)">
                                             <i class="devops-icon icon-minus-circle" />
@@ -308,7 +314,6 @@
                 ]
             },
             formatFilters () { // TODO: ugly
-                console.log(this.model.filters)
                 return this.model.filters.map(item => {
                     let id
                     switch (item['@type']) {
@@ -387,6 +392,32 @@
                 'updatePipelineGroup',
                 'previewGroupResult'
             ]),
+            getDynamicFilterConf (id, row) {
+                let property = 'labelIds'
+                let message = 'view.labelTips'
+
+                switch (id) {
+                    case NAME_FILTER_TYPE:
+                        property = 'pipelineName'
+                        message = 'subpage.nameNullTips'
+                        break
+                    case CREATOR_FILTER_TYPE:
+                        property = 'userIds'
+                        message = 'view.creatorTips'
+                        break
+                }
+
+                return {
+                    property,
+                    rules: [
+                        {
+                            required: true,
+                            message: this.$t(message),
+                            trigger: 'blur'
+                        }
+                    ]
+                }
+            },
             changeFilterChangeFlag () {
                 if (this.model.viewType === 1) {
                     if (this.inited) {
@@ -539,11 +570,27 @@
                 }
                 this.model.pipelineIds = new Set(this.model.pipelineIds)
             },
+            async checkcDynamicFiltersValid () {
+                try {
+                    const res = await Promise.all(this.formatFilters?.map((_, index) => {
+                        const form = this.$refs[`dynamicForms_${index}`]
+                        return form?.validate?.() ?? Promise.resolve(true)
+                    }))
+                    return res.every(res => res)
+                } catch (e) {
+                    this.$showTips({
+                        message: e.content ?? e,
+                        theme: 'error'
+                    })
+                    return false
+                }
+            },
             async updatePreview () {
                 try {
+                    const valid = await this.checkcDynamicFiltersValid()
+                    if (!valid) return
                     this.loading = true
 
-                    console.log(this.model, this.group)
                     const { data } = await this.previewGroupResult({
                         projectId: this.$route.params.projectId,
                         name: this.group.name,
@@ -557,23 +604,30 @@
                     this.isFilterChange = false
                 } catch (error) {
                     console.log(error)
+                    this.$showTips({
+                        message: error.message
+                    })
                 } finally {
                     this.loading = false
                 }
             },
-            handleFilterTypeChange (filter) {
+            handleFilterTypeChange (filter, index) {
+                this.$refs[`dynamicForms_${index}`]?.clearError?.()
                 switch (filter.id) {
                     case NAME_FILTER_TYPE:
                         filter.condition = VIEW_CONDITION.LIKE
                         filter['@type'] = NAME_FILTER_TYPE
+                        filter.pipelineName = ''
                         break
                     case CREATOR_FILTER_TYPE:
                         filter.condition = VIEW_CONDITION.INCLUDE
                         filter['@type'] = CREATOR_FILTER_TYPE
+                        filter.userIds = []
                         break
                     default:
                         filter['@type'] = FILTER_BY_LABEL
                         filter.groupId = filter.id
+                        filter.labelIds = []
                 }
             },
             addFilters () {
