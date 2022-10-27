@@ -329,7 +329,7 @@ class PipelineListFacadeService @Autowired constructor(
                     authPipelines = hasPermissionList,
                     projectId = projectId
                 )
-                logger.info("listPermissionPipeline favorPipelines: {}, pipelines: {}" , favorPipelines, pipelines)
+                logger.info("listPermissionPipeline favorPipelines: {}, pipelines: {}", favorPipelines, pipelines)
                 pipelines to favorPipelines.isNotEmpty()
             } else {
                 mutableListOf<Pipeline>() to false
