@@ -50,6 +50,7 @@ import java.util.concurrent.TimeUnit
 /**
  * 三方构建机的业务监控拓展
  */
+@Suppress("LongMethod", "NestedBlockDepth", "ComplexMethod", "ReturnCount")
 @Service
 class ThirdPartyAgentMonitorService @Autowired constructor(
     private val client: Client,
@@ -59,7 +60,6 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
 ) {
 
-    @Suppress("LongMethod", "NestedBlockDepth", "ComplexMethod")
     fun monitor(event: AgentStartMonitor) {
 
         val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return
