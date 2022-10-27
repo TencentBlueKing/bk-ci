@@ -261,7 +261,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建svn代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -305,7 +305,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建svn代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -339,6 +339,9 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             gitPullMode != null -> EnvUtils.parseEnv(gitPullMode.value, variables)
             !oldBranchName.isNullOrBlank() -> EnvUtils.parseEnv(oldBranchName, variables)
             else -> return false
+        }
+        if (branchName.isBlank()) {
+            return false
         }
         val gitPullModeType = gitPullMode?.type ?: GitPullModeType.BRANCH
 //        val latestRevision =
@@ -391,7 +394,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建${ele.getClassType()}代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -423,6 +426,10 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             GitPullModeType.TAG.name -> EnvUtils.parseEnv(input["tagName"] as String?, variables)
             GitPullModeType.COMMIT_ID.name -> EnvUtils.parseEnv(input["commitId"] as String?, variables)
             else -> return false
+        }
+        // 如果分支是变量形式,默认值为空,那么解析后值就为空,导致调接口失败
+        if (branchName.isBlank()) {
+            return false
         }
 
         // 如果是commit id ,则gitPullModeType直接比对就可以了，不需要再拉commit id
@@ -456,7 +463,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建${ele.getAtomCode()}代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"

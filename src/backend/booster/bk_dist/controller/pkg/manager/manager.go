@@ -554,10 +554,14 @@ func (m *mgr) checkWork(startseconds int64) {
 	// 释放心跳超时的work
 	m.worksPool.cleanHeartbeatTimeout()
 
+	// 屏蔽掉该逻辑，有两个理由：
+	// 		1. 重复Init导致内存泄漏
+	//		2. 该协程执行Init时，有可能globalWork在其它协程中正在被使用，导致未知错误（比如内存越界）
+	//		后续如果有脏数据的情况，需要定位跟进
 	// 每当work pool为空时, 重置一下globalWork, 避免一些脏数据残留
-	if m.worksPool.empty() {
-		m.globalWork.Local().Init()
-	}
+	// if m.worksPool.empty() {
+	// 	m.globalWork.Local().Init()
+	// }
 
 	// 如果works pool空闲超过一定时间, 主动退出controller进程
 	if m.conf.RemainTime >= 0 && m.worksPool.emptyTimeout(time.Duration(m.conf.RemainTime)*time.Second) {
@@ -604,7 +608,7 @@ func (m *mgr) checkNet() {
 }
 
 func (m *mgr) setCommonConfig(config *types.CommonConfig) error {
-	blog.Infof("mgr: try to set common config: %+v", *config)
+	blog.Infof("mgr: try to set common config")
 
 	if err := m.saveCommonConfig(config); err != nil {
 		blog.Infof("mgr: failed to save common config with error: %v", err)

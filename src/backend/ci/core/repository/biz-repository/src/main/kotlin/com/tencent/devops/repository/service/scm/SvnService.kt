@@ -39,12 +39,12 @@ import com.tencent.devops.scm.pojo.enums.SvnFileType
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.tmatesoft.svn.core.SVNURL
-import org.tmatesoft.svn.core.SVNProperties
-import org.tmatesoft.svn.core.SVNDirEntry
 import org.tmatesoft.svn.core.SVNAuthenticationException
+import org.tmatesoft.svn.core.SVNDirEntry
 import org.tmatesoft.svn.core.SVNException
 import org.tmatesoft.svn.core.SVNLogEntry
+import org.tmatesoft.svn.core.SVNProperties
+import org.tmatesoft.svn.core.SVNURL
 import org.tmatesoft.svn.core.auth.BasicAuthenticationManager
 import org.tmatesoft.svn.core.auth.SVNPasswordAuthentication
 import org.tmatesoft.svn.core.auth.SVNSSHAuthentication

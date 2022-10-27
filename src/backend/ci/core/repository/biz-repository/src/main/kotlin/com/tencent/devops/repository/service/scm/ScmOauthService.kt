@@ -28,12 +28,12 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.ScmOauthFactory
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
@@ -134,7 +134,8 @@ class ScmOauthService @Autowired constructor(
                 token = token,
                 region = null,
                 userName = userName,
-                event = null)
+                event = null
+            )
                 .getTags(search = search)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list tags")
@@ -164,7 +165,8 @@ class ScmOauthService @Autowired constructor(
                 token = token,
                 region = region,
                 userName = userName,
-                event = null)
+                event = null
+            )
                 .checkTokenAndPrivateKey()
         } catch (e: Throwable) {
             logger.warn("CheckPrivateKeyFail|projectName=$projectName|type=$type|region=$region|username=$userName", e)
@@ -203,7 +205,8 @@ class ScmOauthService @Autowired constructor(
                     throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
                 }
             }
-            ScmOauthFactory.getScm(projectName = projectName,
+            ScmOauthFactory.getScm(
+                projectName = projectName,
                 url = url,
                 type = type,
                 branchName = null,
@@ -212,7 +215,8 @@ class ScmOauthService @Autowired constructor(
                 token = token,
                 region = region,
                 userName = userName,
-                event = event)
+                event = event
+            )
                 .addWebHook(hookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
@@ -226,7 +230,8 @@ class ScmOauthService @Autowired constructor(
         try {
             with(request) {
                 val scm =
-                    ScmOauthFactory.getScm(projectName = projectName,
+                    ScmOauthFactory.getScm(
+                        projectName = projectName,
                         url = url,
                         type = type,
                         branchName = null,
@@ -235,17 +240,22 @@ class ScmOauthService @Autowired constructor(
                         token = token,
                         region = region,
                         userName = "",
-                        event = "")
-                scm.addCommitCheck(commitId = commitId,
+                        event = ""
+                    )
+                scm.addCommitCheck(
+                    commitId = commitId,
                     state = state,
                     targetUrl = targetUrl,
                     context = context,
                     description = description,
-                    block = block)
+                    block = block
+                )
                 if (mrRequestId != null) {
                     if (reportData.second.isEmpty()) return
-                    val comment = QualityUtils.getQualityReport(titleData = reportData.first,
-                        resultData = reportData.second)
+                    val comment = QualityUtils.getQualityReport(
+                        titleData = reportData.first,
+                        resultData = reportData.second
+                    )
                     scm.addMRComment(mrRequestId!!, comment)
                 }
             }

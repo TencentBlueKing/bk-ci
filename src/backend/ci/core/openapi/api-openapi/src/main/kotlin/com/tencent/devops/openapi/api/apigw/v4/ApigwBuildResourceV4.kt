@@ -36,9 +36,12 @@ import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
@@ -409,6 +412,30 @@ interface ApigwBuildResourceV4 {
         buildId: String
     ): Result<String>
 
+    @ApiOperation("修改某次构建的备注", tags = ["v4_app_update_remark", "v4_user_update_remark"])
+    @POST
+    @Path("update_remark")
+    fun updateRemark(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = false)
+        @QueryParam("pipelineId")
+        @BkField(required = false)
+        pipelineId: String?,
+        @ApiParam("构建ID", required = true)
+        @QueryParam("buildId")
+        @BkField(required = true)
+        buildId: String,
+        @ApiParam("备注信息", required = true)
+        remark: BuildHistoryRemark?
+    ): Result<Boolean>
+
     @ApiOperation("人工审核插件进行审核", tags = ["v4_app_manual_review", "v4_user_manual_review"])
     @POST
     @Path("/manual_review")
@@ -431,4 +458,30 @@ interface ApigwBuildResourceV4 {
         @ApiParam("审核信息", required = true)
         params: ReviewParam
     ): Result<Boolean>
+
+    @ApiOperation("获取流水线手动启动分页的参数", tags = ["v4_app_build_startOptions", "v4_user_build_startOptions"])
+    @POST
+    @Path("/build_manual_startup_options")
+    fun manualStartupOptions(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigwType", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("搜索参数", required = false)
+        @QueryParam("search")
+        search: String? = null,
+        @ApiParam("请求参数", required = true)
+        property: BuildFormProperty
+    ): Result<List<BuildFormValue>>
 }

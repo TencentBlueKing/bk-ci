@@ -46,7 +46,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 @Component
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 class MutexControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
@@ -318,23 +318,31 @@ class MutexControl @Autowired constructor(
         isError: Boolean = false
     ) {
 
-        val message = "互斥组Mutex[${mutexGroup.mutexGroupName}]|" + if (!lockedContainerMutexId.isNullOrBlank()) {
-            // #5454 拿出占用锁定的信息
-            redisOperation.get(mutexGroup.genMutexLinkTipKey(lockedContainerMutexId))?.let { s ->
-                val endIndex = s.indexOf("_")
-                val pipelineId = s.substring(0, endIndex)
-                val linkTip = s.substring(endIndex + 1)
-                val cs = getBuildIdAndContainerId(lockedContainerMutexId)
-                val link = pipelineUrlBean.genBuildDetailUrl(container.projectId, pipelineId, cs[0], null, null)
-                if (cs[0] != container.buildId) {
-                    "锁定中(Running): $linkTip<a target='_blank' href='$link'>查看(Click)</a> | $msg"
-                } else {
-                    "当前(Current): $linkTip| $msg"
-                }
-            } ?: msg
-        } else {
-            msg
-        }
+        val message = "Job#${container.containerId}|互斥组Mutex[${mutexGroup.mutexGroupName}]|" +
+            if (!lockedContainerMutexId.isNullOrBlank()) {
+                // #5454 拿出占用锁定的信息
+                redisOperation.get(mutexGroup.genMutexLinkTipKey(lockedContainerMutexId))?.let { s ->
+                    val endIndex = s.indexOf("_")
+                    val pipelineId = s.substring(0, endIndex)
+                    val linkTip = s.substring(endIndex + 1)
+                    val cs = getBuildIdAndContainerId(lockedContainerMutexId)
+                    val link = pipelineUrlBean.genBuildDetailUrl(
+                        projectCode = container.projectId,
+                        pipelineId = pipelineId,
+                        buildId = cs[0],
+                        position = null,
+                        stageId = null,
+                        needShortUrl = false
+                    )
+                    if (cs[0] != container.buildId) {
+                        "锁定中(Running): $linkTip<a target='_blank' href='$link'>查看(Click)</a> | $msg"
+                    } else {
+                        "当前(Current): $linkTip| $msg"
+                    }
+                } ?: msg
+            } else {
+                msg
+            }
 
         if (isError) {
             buildLogPrinter.addErrorLine(

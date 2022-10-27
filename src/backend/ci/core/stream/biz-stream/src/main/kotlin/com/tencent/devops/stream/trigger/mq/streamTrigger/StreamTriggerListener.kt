@@ -49,12 +49,11 @@ class StreamTriggerListener @Autowired constructor(
         try {
             run(event)
         } catch (e: Throwable) {
-            logger.error("listenStreamTriggerEvent|error", e)
+            logger.error("BKSystemErrorMonitor|listenStreamTriggerEvent|error", e)
         }
     }
 
     private fun run(event: StreamTriggerEvent) {
-        val startTime = System.currentTimeMillis()
         val action = try {
             val action = actionFactory.loadByData(
                 eventStr = event.eventStr,
@@ -63,7 +62,7 @@ class StreamTriggerListener @Autowired constructor(
                 actionSetting = event.actionSetting
             )
             if (action == null) {
-                logger.error("trigger listener event not support: $event")
+                logger.warn("StreamTriggerListener|run|$event")
                 return
             }
             action
@@ -71,14 +70,14 @@ class StreamTriggerListener @Autowired constructor(
             logger.warn("StreamTriggerListener|load|action|error", e)
             return
         }
-        logger.info("|${action.data.context.requestEventId}|listenStreamTriggerEvent|action|${action.format()}")
+        logger.info(
+            "StreamTriggerListener|${action.data.context.requestEventId} " +
+                "|listenStreamTriggerEvent|action|${action.format()}"
+        )
 
         // 针对每个流水线处理异常
-        exceptionHandler.handle(action = action) { streamYamlTrigger.triggerBuild(action = action) }
-
-        logger.info(
-            "stream pipeline: ${action.data.context.pipeline?.pipelineId} " +
-                "from trigger to build time：${System.currentTimeMillis() - startTime}"
-        )
+        exceptionHandler.handle(action = action) {
+            streamYamlTrigger.checkAndTrigger(action = action, trigger = event.trigger)
+        }
     }
 }

@@ -61,6 +61,7 @@ import com.tencent.devops.process.yaml.v2.models.job.PreJob
 import com.tencent.devops.process.yaml.v2.models.job.RunsOn
 import com.tencent.devops.process.yaml.v2.models.job.Service
 import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
+import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.models.on.IssueRule
 import com.tencent.devops.process.yaml.v2.models.on.MrRule
 import com.tencent.devops.process.yaml.v2.models.on.NoteRule
@@ -93,8 +94,6 @@ object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)
 
-    //    private const val dockerHubUrl = "https://index.docker.io/v1/"
-
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
     private const val jobNamespace = "job-"
@@ -103,8 +102,6 @@ object ScriptYmlUtils {
     // 用户编写的触发器语法和实际对象不一致
     private const val userTrigger = "on"
     private const val formatTrigger = "triggerOn"
-
-    private const val PARAMETERS_PREFIX = "parameters."
 
     /**
      * 1、解决锚点
@@ -129,7 +126,6 @@ object ScriptYmlUtils {
             val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
             YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         } catch (e: Exception) {
-            logger.warn("Check yaml version failed. return null")
             null
         }
     }
@@ -144,7 +140,6 @@ object ScriptYmlUtils {
             val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
             YamlUtil.getObjectMapper().readValue(obj, YmlName::class.java)
         } catch (e: Exception) {
-            logger.warn("get yaml name failed. return null")
             null
         }
     }
@@ -159,7 +154,6 @@ object ScriptYmlUtils {
             val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
             version != null && version.version == "v2.0"
         } catch (e: Exception) {
-            logger.error("Check yaml version failed. Set default v2.0")
             true
         }
     }
@@ -177,7 +171,7 @@ object ScriptYmlUtils {
             val realValue = settingMap[matcher.group(1).trim()] ?: continue
             newValue = newValue!!.replace(matcher.group(), realValue)
         }
-        logger.info("STREAM|parseVariableValue value :$value; settingMap: $settingMap;newValue: $newValue")
+
         return newValue
     }
 
@@ -230,8 +224,6 @@ object ScriptYmlUtils {
                 val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
                     .removeSuffix("\"")
 
-                logger.info("IF|CONDITION|$condition")
-
                 // 去掉花括号
                 val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()
                 val originItems: List<Word>
@@ -239,7 +231,6 @@ object ScriptYmlUtils {
                 try {
                     originItems = Lex(baldExpress.toList().toMutableList()).getToken()
                 } catch (e: Exception) {
-                    logger.info("expression=$baldExpress|reason=Grammar Invalid: ${e.message}")
                     throw ExpressionException("expression=$baldExpress|reason=Grammar Invalid: ${e.message}")
                 }
                 // 替换变量
@@ -264,7 +255,7 @@ object ScriptYmlUtils {
     private fun replaceParameters(
         it: Word,
         settingMap: Map<String, Any?>
-    ) = if (it.str.startsWith(PARAMETERS_PREFIX)) {
+    ) = if (it.str.startsWith("parameters.")) {
         val realValue = settingMap[it.str] ?: it.str
         if (realValue is List<*>) {
             // ["test"]->[test]
@@ -585,7 +576,6 @@ object ScriptYmlUtils {
 
     fun formatRepoHookTriggerOn(preTriggerOn: PreTriggerOn?, name: String?): TriggerOn? {
         if (preTriggerOn?.repoHook == null) {
-            logger.info("流水线已不存在远程触发配置，不做处理，返回null进行相关检查")
             return null
         }
 
@@ -595,7 +585,6 @@ object ScriptYmlUtils {
                 object : TypeReference<List<PreRepositoryHook>>() {}
             )
         } catch (e: MismatchedInputException) {
-            logger.error("Format triggerOn repoHook failed.", e)
             return null
         }
         repositoryHookList.find { it.name == name }?.let { repositoryHook ->
@@ -624,7 +613,6 @@ object ScriptYmlUtils {
                     PreTriggerOn::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn repoHook events failed.", e)
                 return null
             }
 
@@ -637,7 +625,9 @@ object ScriptYmlUtils {
                 issue = issueRule(repoPreTriggerOn),
                 review = reviewRule(repoPreTriggerOn),
                 note = noteRule(repoPreTriggerOn),
-                repoHook = repoHookRule(repositoryHook)
+                repoHook = repoHookRule(repositoryHook),
+                manual = manualRule(repoPreTriggerOn),
+                openapi = openapiRule(repoPreTriggerOn)
             )
         }
         logger.warn("repo hook has none effective TriggerOn in ($repositoryHookList)")
@@ -673,7 +663,9 @@ object ScriptYmlUtils {
             delete = deleteRule(preTriggerOn),
             issue = issueRule(preTriggerOn),
             review = reviewRule(preTriggerOn),
-            note = noteRule(preTriggerOn)
+            note = noteRule(preTriggerOn),
+            manual = manualRule(preTriggerOn),
+            openapi = openapiRule(preTriggerOn)
         )
     }
 
@@ -706,6 +698,34 @@ object ScriptYmlUtils {
         }
     }
 
+    private fun manualRule(
+        preTriggerOn: PreTriggerOn
+    ): String? {
+        if (preTriggerOn.manual == null) {
+            return null
+        }
+
+        if (preTriggerOn.manual != EnableType.TRUE.value && preTriggerOn.manual != EnableType.FALSE.value) {
+            throw YamlFormatException("not allow manual type ${preTriggerOn.manual}")
+        }
+
+        return preTriggerOn.manual
+    }
+
+    private fun openapiRule(
+        preTriggerOn: PreTriggerOn
+    ): String? {
+        if (preTriggerOn.openapi == null) {
+            return null
+        }
+
+        if (preTriggerOn.openapi != EnableType.TRUE.value || preTriggerOn.openapi != EnableType.FALSE.value) {
+            throw YamlFormatException("not allow openapi type ${preTriggerOn.openapi}")
+        }
+
+        return preTriggerOn.openapi
+    }
+
     private fun noteRule(
         preTriggerOn: PreTriggerOn
     ): NoteRule? {
@@ -717,7 +737,6 @@ object ScriptYmlUtils {
                     NoteRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn noteRule failed.", e)
                 null
             }
         }
@@ -735,7 +754,6 @@ object ScriptYmlUtils {
                     ReviewRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn reviewRule failed.", e)
                 null
             }
         }
@@ -753,7 +771,6 @@ object ScriptYmlUtils {
                     IssueRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn issueRule failed.", e)
                 null
             }
         }
@@ -771,7 +788,6 @@ object ScriptYmlUtils {
                     DeleteRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn schedulesRule failed.", e)
                 null
             }
         }
@@ -789,7 +805,6 @@ object ScriptYmlUtils {
                     SchedulesRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn schedulesRule failed.", e)
                 null
             }
         }
@@ -822,7 +837,6 @@ object ScriptYmlUtils {
                         usersIgnore = null
                     )
                 } catch (e: Exception) {
-                    logger.error("Format triggerOn mrRule failed.", e)
                     null
                 }
             }
@@ -855,7 +869,6 @@ object ScriptYmlUtils {
                         usersIgnore = null
                     )
                 } catch (e: Exception) {
-                    logger.error("Format triggerOn tagRule failed.", e)
                     null
                 }
             }
@@ -889,7 +902,6 @@ object ScriptYmlUtils {
                         usersIgnore = null
                     )
                 } catch (e: Exception) {
-                    logger.error("Format triggerOn pushRule failed.", e)
                     null
                 }
             }
@@ -958,8 +970,7 @@ object ScriptYmlUtils {
         } catch (e: MismatchedInputException) {
             listOf(value.toString())
         } catch (e: Exception) {
-            logger.error("Format label  failed.", e)
-            listOf<String>()
+            emptyList()
         }
     }
 

@@ -2,11 +2,15 @@ package com.tencent.devops.stream.trigger.actions.tgit
 
 import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.stream.trigger.pojo.CheckType
+import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
+@DisplayName("TGit Mr Action 相关测试")
 internal class TGitMrActionGitTest {
 
-    private val action = TGitMrActionGit(mock(), mock(), mock(), mock(), mock())
+    private val action = TGitMrActionGit(mock(), mock(), mock(), mock(), mock(), mock(), mock())
 
     /**
      * 校验
@@ -15,19 +19,21 @@ internal class TGitMrActionGitTest {
      * 源有，目标有，变更有
      * 源有，目标有，变更无
      */
+    @DisplayName("对比源分支相比较目标分支")
     @Test
     fun checkMrYamlPathList() {
-        val sources = setOf("1", "2", "3", "4")
-        val target = setOf("1", "4")
+        val sources = setOf(Pair("1", "1"), Pair("2", "2"), Pair("3", "3"), Pair("4", "4"))
+        val target = setOf(Pair("1", "1"), Pair("4", "4"))
         val changeSet = setOf("1")
-        val result = action.checkMrYamlPathList(sources, target, changeSet)
-        val compare = mapOf(
-            "1" to CheckType.NEED_CHECK,
-            "2" to CheckType.NO_TRIGGER,
-            "3" to CheckType.NO_TRIGGER,
-            "4" to CheckType.NO_NEED_CHECK
+        val result = action.checkMrYamlPathList(sources, target, changeSet, "source", "master")
+        val compare = listOf(
+            YamlPathListEntry("1", CheckType.NEED_CHECK, "source", "1"),
+            YamlPathListEntry("2", CheckType.NO_TRIGGER, "source", "2"),
+            YamlPathListEntry("3", CheckType.NO_TRIGGER, "source", "3"),
+            YamlPathListEntry("4", CheckType.NO_NEED_CHECK, "master", "4")
         )
-        assert(result == compare)
+
+        Assertions.assertEquals(compare, result)
     }
 
     /**
@@ -37,13 +43,18 @@ internal class TGitMrActionGitTest {
      * 源无，目标无，变更有
      * 源无，目标无，变更无
      */
+    @DisplayName("对比目标分支相比较源分支")
     @Test
     fun checkMrYamlPathList2() {
-        val sources = setOf("3")
-        val target = setOf("1", "2")
+        val sources = setOf(Pair("3", "3"))
+        val target = setOf(Pair("1", "1"), Pair("2", "2"))
         val changeSet = setOf("1", "5")
-        val result = action.checkMrYamlPathList(sources, target, changeSet)
-        val compare = mapOf("2" to CheckType.NO_NEED_CHECK, "3" to CheckType.NO_TRIGGER)
-        assert(result == compare)
+        val result = action.checkMrYamlPathList(sources, target, changeSet, "source", "master")
+        val compare = listOf(
+            YamlPathListEntry("3", CheckType.NO_TRIGGER, "source", "3"),
+            YamlPathListEntry("2", CheckType.NO_NEED_CHECK, "master", "2")
+        )
+
+        Assertions.assertEquals(compare, result)
     }
 }

@@ -74,8 +74,8 @@ class TemplateInstanceCronService @Autowired constructor(
     @Value("\${template.instanceListUrl}")
     private val instanceListUrl: String = ""
 
-    @Value("\${template.maxErrorReasonLength:200}")
-    private val maxErrorReasonLength: Int = 200
+    @Value("\${template.maxErrorReasonLength:400}")
+    private val maxErrorReasonLength: Int = 400
 
     @Scheduled(cron = "0 0/1 * * * ?")
     fun templateInstance() {
@@ -185,8 +185,8 @@ class TemplateInstanceCronService @Autowired constructor(
                     failurePipelines = failurePipelines
                 )
             }
-        } catch (t: Throwable) {
-            logger.warn("templateInstance failed", t)
+        } catch (ignored: Throwable) {
+            logger.warn("templateInstance failed", ignored)
         } finally {
             lock.unlock()
         }

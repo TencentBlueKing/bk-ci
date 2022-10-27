@@ -35,6 +35,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
@@ -74,7 +75,8 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
         // 判断项目是不是审核的情况
         var flag = false
         if (1 == dbProjectRecord.approvalStatus &&
-            (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
+            (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)
+        ) {
             flag = true
             projectInfoRequest.approver = projectInfoRequest.approver
             projectInfoRequest.approvalTime = System.currentTimeMillis()
@@ -147,5 +149,10 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     override fun synProjectInit(isRefresh: Boolean?): Result<List<String>> {
         logger.info("[synProjectInit]| isRefresh=$isRefresh| do nothing")
         return Result(emptyList())
+    }
+
+    override fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean {
+        logger.info("[updateProjectProperties]| properties=$properties| do nothing")
+        return false
     }
 }

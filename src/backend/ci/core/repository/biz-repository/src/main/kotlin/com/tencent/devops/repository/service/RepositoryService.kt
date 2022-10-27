@@ -445,7 +445,8 @@ class RepositoryService @Autowired constructor(
         // 兼容历史插件的代码库不在公共group下的情况，历史插件的代码库信息更新要用用户的token更新
         var finalTokenType = tokenType
         if (!repoProjectName.startsWith(devopsGroupName) && !repoProjectName
-                .contains("bkdevops-extension-service", true)) {
+            .contains("bkdevops-extension-service", true)
+        ) {
             finalTokenType = TokenTypeEnum.OAUTH
         }
         return finalTokenType
@@ -957,8 +958,11 @@ class RepositoryService @Autowired constructor(
         repositoryType: ScmType?,
         aliasName: String?,
         offset: Int,
-        limit: Int
+        limit: Int,
+        sortBy: String? = null,
+        sortType: String? = null
     ): Pair<SQLPage<RepositoryInfoWithPermission>, Boolean> {
+        // 校验权限
         val hasCreatePermission = validatePermission(userId, projectId, AuthPermission.CREATE)
         val permissionToListMap = repositoryPermissionService.filterRepositories(
             userId = userId,
@@ -984,12 +988,14 @@ class RepositoryService @Autowired constructor(
             aliasName = aliasName,
             repositoryIds = hasListPermissionRepoList.toSet(),
             offset = offset,
-            limit = limit
+            limit = limit,
+            sortBy = sortBy,
+            sortType = sortType
         )
         val gitRepoIds =
             repositoryRecordList.filter {
                 it.type == ScmType.CODE_GIT.name ||
-                        it.type == ScmType.CODE_TGIT.name
+                    it.type == ScmType.CODE_TGIT.name
             }.map { it.repositoryId }.toSet()
         val gitAuthMap =
             repositoryCodeGitDao.list(dslContext, gitRepoIds)?.map { it.repositoryId to it }?.toMap()

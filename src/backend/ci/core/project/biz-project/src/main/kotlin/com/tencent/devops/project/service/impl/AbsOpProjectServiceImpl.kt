@@ -64,7 +64,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         val projectId = projectInfoRequest.projectId
         val dbProjectRecord = projectDao.get(dslContext, projectId)
         if (dbProjectRecord == null) {
-            logger.warn("The project $projectId is not exist")
+            logger.warn("The project is not exist : projectId = $projectId")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
         }
         // 判断项目是不是审核的情况

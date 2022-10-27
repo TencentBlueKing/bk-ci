@@ -26,6 +26,7 @@ stages:
         credentials: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -51,7 +52,7 @@ stages:
       checkout: "self"
     - name: "腾讯代码分析(官方-代码分析工作组)"
       id: "check"
-      if: "false == true"
+      if: "(false == true)"
       if-modify: null
       uses: "CodeccCheckAtomDebug@4.*"
       with:
@@ -60,7 +61,7 @@ stages:
         toolScanType: "1"
         languages:
         - "C_CPP"
-        tools: "${{ parameters.tools }}"
+        tools: ""
         languageRuleSetMap:
           C_CPP_RULE:
           - "standard_cpp"
@@ -103,7 +104,7 @@ stages:
       checkout: null
     - name: null
       id: "123123123"
-      if: "[JAVA, JS] == [PYTHON]"
+      if: "('[\"${{ variables.xxx }}\",\"JS\"]' == fromJSON('[\"PYTHON\"]'))"
       if-modify: null
       uses: null
       with: null
@@ -111,7 +112,7 @@ stages:
       continue-on-error: null
       retry-times: null
       env: null
-      run: "echo 123\n"
+      run: "echo ${{ (join('[\"${{ variables.xxx }}\",\"JS\"]') == join(fromJSON('[\"JAVA\", \"JS\"]'))) }}\n"
       runAdditionalOptions:
         shell: null
       checkout: null

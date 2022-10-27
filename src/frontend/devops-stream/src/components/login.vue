@@ -29,7 +29,9 @@
 <script>
     import {
         defineComponent,
-        computed
+        computed,
+        watch,
+        getCurrentInstance
     } from '@vue/composition-api'
     import {
         common
@@ -45,6 +47,8 @@
             dashboardHeader
         },
         setup () {
+            const instance = getCurrentInstance()
+
             const isShowDialog = computed(() => {
                 return store.state.showLoginDialog
             })
@@ -59,6 +63,15 @@
                         messageError(err.message || err)
                     })
             }
+
+            watch(
+                () => isShowDialog,
+                (val) => {
+                    if (val) {
+                        document.title = instance.proxy.$t('pleaseLogin')
+                    }
+                }
+            )
 
             return {
                 isShowDialog,
@@ -85,7 +98,7 @@
         height: 370px;
         width: 670px;
         background: #FFFFFF;
-        box-shadow: 1px 1px 6px 0 rgba(0,0,0,0.50);
+        box-shadow: 0 0 6px 0 rgb(0 0 0 / 10%), 0 0 4px 0 rgb(0 0 0 / 6%);
         border-radius: 10px;
     }
     .login-title {
@@ -107,27 +120,30 @@
         position: relative;
         display: flex;
         align-items: center;
-        background: #182132;
         border-radius: 5px;
-        color: white;
-        line-height: 72px;
+        color: #333;
+        line-height: 60px;
         width: 370px;
         text-align: center;
         font-size: 19px;
         border-radius: 5px;
         cursor: pointer;
         padding-left: 30px;
+        border: 1px solid #333;
         svg {
             margin-right: 70px;
         }
         &:before {
             content: '';
-            background: #fff;
+            background: #333;
             width: 1px;
             height: 30px;
             position: absolute;
             left: 95px;
-            top: 21px;
+            top: 15px;
+        }
+        &:hover {
+            background-color: #eef0f4;
         }
     }
     .image-top {

@@ -72,6 +72,7 @@ import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
@@ -94,7 +95,8 @@ import java.util.Date
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
 class TGitMrTriggerHandler(
-    private val gitScmService: GitScmService
+    private val gitScmService: GitScmService,
+    private val eventCacheService: EventCacheService
 ) : GitHookTriggerHandler<GitMergeRequestEvent> {
 
     companion object {
@@ -158,8 +160,10 @@ class TGitMrTriggerHandler(
 
     override fun preMatch(event: GitMergeRequestEvent): ScmWebhookMatcher.MatchResult {
         if (event.object_attributes.action == "close" ||
-            (event.object_attributes.action == "update" &&
-                    event.object_attributes.extension_action != "push-update")
+            (
+                event.object_attributes.action == "update" &&
+                    event.object_attributes.extension_action != "push-update"
+                )
         ) {
             logger.info("Git web hook is ${event.object_attributes.action} merge request")
             return ScmWebhookMatcher.MatchResult(false)
@@ -196,7 +200,7 @@ class TGitMrTriggerHandler(
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
                     // 只有开启路径匹配时才查询mr change file list
-                    val mrChangeInfo = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
+                    val changeFiles = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
                         null
                     } else {
                         val mrId = if (repository is CodeGitlabRepository) {
@@ -204,15 +208,8 @@ class TGitMrTriggerHandler(
                         } else {
                             event.object_attributes.id
                         }
-                        gitScmService.getMergeRequestChangeInfo(projectId, mrId, repository)
-                    }
-                    val changeFiles = mrChangeInfo?.files?.map {
-                        if (it.deletedFile) {
-                            it.oldPath
-                        } else {
-                            it.newPath
-                        }
-                    } ?: emptyList()
+                        eventCacheService.getMergeRequestChangeInfo(projectId, mrId, repository)
+                    }?.toList() ?: emptyList()
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = pathFilterType,
@@ -324,7 +321,8 @@ class TGitMrTriggerHandler(
                 repoType = ScmType.CODE_TGIT.name,
                 commitTime = commitTime,
                 eventType = CodeEventType.MERGE_REQUEST.name,
-                mrId = mrId.toString()
+                mrId = mrId.toString(),
+                action = event.object_attributes.action
             )
         }
     }
@@ -342,11 +340,14 @@ class TGitMrTriggerHandler(
         } else {
             event.object_attributes.id
         }
+        // MR提交人
+        val mrInfo = eventCacheService.getMergeRequestInfo(projectId, mrRequestId, repository)
+        val reviewInfo = eventCacheService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)
+
         return WebhookUtils.mrStartParam(
-            gitScmService = gitScmService,
-            mrRequestId = mrRequestId,
-            projectId = projectId,
-            repository = repository
+            mrInfo = mrInfo,
+            reviewInfo = reviewInfo,
+            mrRequestId = mrRequestId
         )
     }
 }

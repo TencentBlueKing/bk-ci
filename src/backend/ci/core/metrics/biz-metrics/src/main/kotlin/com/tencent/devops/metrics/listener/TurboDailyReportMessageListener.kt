@@ -33,19 +33,19 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.metrics.pojo.message.TurboReportEvent
-import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportService
+import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportFacadeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class TurboDailyReportMessageListener @Autowired constructor(
-    private val thirdPlatformDataReportService: MetricsThirdPlatformDataReportService
+    private val metricsThirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
 ) : Listener<String> {
 
     override fun execute(event: String) {
         try {
-            thirdPlatformDataReportService.metricsTurboDataReport(
+            metricsThirdPlatformDataReportFacadeService.metricsTurboDataReport(
                 JsonUtil.to(event, object : TypeReference<TurboReportEvent>() {})
             )
         } catch (ignored: Throwable) {

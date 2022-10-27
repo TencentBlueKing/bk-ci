@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.container.impl
 
+import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -56,18 +57,35 @@ class CheckConditionalSkipContainerCmd constructor(
     override fun canExecute(commandContext: ContainerContext): Boolean {
         // 仅在初次进入Container
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            (commandContext.container.status.isReadyToRun() ||
-                commandContext.container.status == BuildStatus.DEPENDENT_WAITING)
+            (
+                commandContext.container.status.isReadyToRun() ||
+                    commandContext.container.status == BuildStatus.DEPENDENT_WAITING
+                )
     }
 
     override fun execute(commandContext: ContainerContext) {
+        val container = commandContext.container
         // 仅在初次进入Container时进行跳过和依赖判断
-        if (checkIfSkip(commandContext)) {
-            commandContext.buildStatus = BuildStatus.SKIP
-            commandContext.latestSummary = "j(${commandContext.container.containerId}) skipped"
-            commandContext.cmdFlowState = CmdFlowState.FINALLY // 跳转至FINALLY，处理SKIP
-        } else if (commandContext.buildStatus.isFailure()) {
-            // 如果前置出现失败，则走向结束
+        try {
+            if (checkIfSkip(commandContext)) {
+                commandContext.buildStatus = BuildStatus.SKIP
+                commandContext.latestSummary = "j(${container.containerId}) skipped"
+                commandContext.cmdFlowState = CmdFlowState.FINALLY // 跳转至FINALLY，处理SKIP
+            } else if (commandContext.buildStatus.isFailure()) {
+                // 如果前置出现失败，则走向结束
+                commandContext.cmdFlowState = CmdFlowState.FINALLY
+            }
+        } catch (e: ExpressionParseException) {
+            // 当条件判断出现异常情况时，stage直接判定为失败
+            buildLogPrinter.addErrorLine(
+                buildId = container.buildId,
+                message = "[${e.kind}] condition of job is invalid: ${e.message}",
+                jobId = container.containerHashId,
+                tag = VMUtils.genStartVMTaskId(container.containerId),
+                executeCount = commandContext.executeCount
+            )
+            commandContext.buildStatus = BuildStatus.FAILED
+            commandContext.latestSummary = "j(${container.containerId}) check condition failed"
             commandContext.cmdFlowState = CmdFlowState.FINALLY
         }
     }
@@ -77,7 +95,8 @@ class CheckConditionalSkipContainerCmd constructor(
      */
     fun checkIfSkip(containerContext: ContainerContext): Boolean {
         if (containerContext.containerTasks.isEmpty() &&
-            containerContext.container.matrixGroupFlag != true) {
+            containerContext.container.matrixGroupFlag != true
+        ) {
             return true // 非构建矩阵且无任务
         }
         // condition check
@@ -107,7 +126,8 @@ class CheckConditionalSkipContainerCmd constructor(
                     buildId = container.buildId,
                     runCondition = jobControlOption.runCondition,
                     customCondition = jobControlOption.customCondition,
-                    message = message
+                    message = message,
+                    asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
                 )
             }
 

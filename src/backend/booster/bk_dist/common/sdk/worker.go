@@ -72,6 +72,7 @@ type BKCommand struct {
 	Params          []string   `json:"params"`
 	Inputfiles      []FileDesc `json:"input_files"`
 	ResultFiles     []string   `json:"result_files"`
+	Env             []string   `json:"env"`
 }
 
 // Result result after execute command

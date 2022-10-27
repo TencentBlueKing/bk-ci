@@ -30,6 +30,7 @@ package com.tencent.devops.stream.cron
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.config.StreamCronConfig
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -37,6 +38,7 @@ import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.dao.StreamUserMessageDao
 import com.tencent.devops.stream.pojo.message.UserMessageType
 import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -61,7 +63,8 @@ class StreamEventHistoryClearJob @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val streamUserMessageDao: StreamUserMessageDao,
-    private val streamBasicSettingService: StreamBasicSettingService
+    private val streamBasicSettingService: StreamBasicSettingService,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamEventHistoryClearJob::class.java)
@@ -78,17 +81,17 @@ class StreamEventHistoryClearJob @Autowired constructor(
 
     @PostConstruct
     fun init() {
-        logger.info("start init streamEventHistoryClearJob")
+        logger.info("StreamEventHistoryClearJob|init|start")
         // 启动的时候删除redis中存储的清理线程集合，防止redis中的线程信息因为服务异常停了无法删除
         redisOperation.delete(STREAM_PIPELINE_BUILD_HISTORY_CLEAR_THREAD_SET_KEY, true)
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 12000)
     fun streamEventHistoryClear() {
-        logger.info("streamEventHistoryClear start")
+        logger.info("StreamEventHistoryClearJob|streamEventHistoryClear|start")
         if (executor == null) {
             // 创建带有边界队列的线程池，防止内存爆掉
-            logger.info("pipelineBuildHistoryDataClear create executor")
+            logger.info("StreamEventHistoryClearJob|pipelineBuildHistoryDataClear|create executor")
             executor = ThreadPoolExecutor(
                 streamCronConfig.maxThreadHandleProjectNum,
                 streamCronConfig.maxThreadHandleProjectNum,
@@ -105,7 +108,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
         )
         try {
             if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
+                logger.info("StreamEventHistoryClearJob|streamEventHistoryClear|get lock failed, skip")
                 return
             }
             // 查询project表中的项目数据处理
@@ -149,7 +152,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
                 }
             }
         } catch (t: Throwable) {
-            logger.warn("streamEventHistoryClear failed", t)
+            logger.warn("StreamEventHistoryClearJob|streamEventHistoryClear|failed", t)
         } finally {
             lock.unlock()
         }
@@ -178,7 +181,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
                             key = "$threadName:$STREAM_PIPELINE_BUILD_HISTORY_CLEAR_GIT_PROJECT_ID_KEY",
                             isDistinguishCluster = true
                         )
-                        logger.info("streamEventHistoryClear $threadName reStart")
+                        logger.info("StreamEventHistoryClearJob|doClearBus|threadName|$threadName|reStart")
                         return@Callable true
                     }
                 }
@@ -216,7 +219,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
                         isDistinguishCluster = true
                     )
                 } catch (ignore: Exception) {
-                    logger.warn("streamEventHistoryClear doClearBus failed", ignore)
+                    logger.warn("StreamEventHistoryClearJob|streamEventHistoryClear|doClearBus|failed", ignore)
                 } finally {
                     // 释放redis集合中的线程编号
                     redisOperation.sremove(
@@ -247,8 +250,8 @@ class StreamEventHistoryClearJob @Autowired constructor(
         needClearNum: Int
     ) {
         logger.info(
-            "streamEventHistoryClear EventNotBuild" +
-                "|$gitProjectId|totalBuildCount=$totalBuildCount|needClearNum=$needClearNum"
+            "StreamEventHistoryClearJob|clearEventNotBuildData" +
+                "|gitProjectId=$gitProjectId|totalBuildCount=$totalBuildCount|needClearNum=$needClearNum"
         )
         var totalHandleNum = 0
         while (totalHandleNum < needClearNum) {
@@ -275,7 +278,10 @@ class StreamEventHistoryClearJob @Autowired constructor(
         // 获取当前项目下流水线记录的最小主键Pipeline值
         var minId = gitPipelineResourceDao.getMinByGitProjectId(dslContext, gitProjectId)
         do {
-            logger.info("streamEventHistoryClear clearPipelineBuildData gitProjectId:$gitProjectId,minId:$minId")
+            logger.info(
+                "StreamEventHistoryClearJob|clearPipelineBuildData" +
+                    "|gitProjectId|$gitProjectId|minId|$minId"
+            )
             val pipelineIdList = gitPipelineResourceDao.getPipelineIdListByProjectId(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
@@ -293,7 +299,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
                     ) + 1
             }
             pipelineIdList?.forEach { pipelineId ->
-                logger.info("streamEventHistoryClear start..............")
+                logger.info("StreamEventHistoryClearJob|clearPipelineBuildData|start")
                 cleanNormalPipelineData(pipelineId, gitProjectId)
             }
         } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
@@ -308,7 +314,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
             gitRequestEventBuildDao.getBuildCountByPipelineId(dslContext, gitProjectId, pipelineId)
         val needClearNum = maxPipelineBuildNum - streamCronConfig.maxKeepNum
         if (needClearNum > 0) {
-            logger.info("streamEventHistoryClear start.............")
+            logger.info("StreamEventHistoryClearJob|cleanNormalPipelineData|start")
             cleanBuildHistoryData(
                 pipelineId = pipelineId,
                 gitProjectId = gitProjectId,
@@ -349,7 +355,7 @@ class StreamEventHistoryClearJob @Autowired constructor(
                     gitRequestEventNotBuildDao.deleteByEventId(context, gitProjectId, eventId)
                     streamUserMessageDao.deleteByMessageId(
                         context,
-                        "git_$gitProjectId",
+                        GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType()),
                         eventId.toString(),
                         UserMessageType.REQUEST
                     )

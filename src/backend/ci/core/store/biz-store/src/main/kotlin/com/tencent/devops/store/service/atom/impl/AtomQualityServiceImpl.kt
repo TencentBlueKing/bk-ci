@@ -53,7 +53,7 @@ class AtomQualityServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(AtomQualityServiceImpl::class.java)
 
     override fun updateQualityInApprove(atomCode: String, atomStatus: Byte) {
-        logger.info("update quality atomStatus: $atomCode, $atomStatus")
+        logger.info("update quality params: [$atomCode|$atomStatus]")
 
         val key = this::class.java.name + "#" + Thread.currentThread().stackTrace[1].methodName + "#" + atomCode
         val lock = RedisLock(redisOperation, key, 3600L)

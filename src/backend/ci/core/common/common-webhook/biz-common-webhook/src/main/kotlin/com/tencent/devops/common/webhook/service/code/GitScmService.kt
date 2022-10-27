@@ -95,7 +95,7 @@ class GitScmService @Autowired constructor(
                 ).data
             }
         } catch (e: Exception) {
-            logger.error("fail to get mr reviews info", e)
+            logger.warn("fail to get mr reviews info", e)
             null
         }
     }
@@ -134,7 +134,7 @@ class GitScmService @Autowired constructor(
                 ).data
             }
         } catch (e: Exception) {
-            logger.error("fail to get mr info", e)
+            logger.warn("fail to get mr info", e)
             null
         }
     }
@@ -173,7 +173,7 @@ class GitScmService @Autowired constructor(
                 ).data
             }
         } catch (e: Exception) {
-            logger.error("fail to get mr info", e)
+            logger.warn("fail to get mr info", e)
             null
         }
     }
@@ -206,20 +206,21 @@ class GitScmService @Autowired constructor(
                     page = i,
                     pageSize = 100
                 ).data ?: emptyList()
-                changeSet.addAll(result.map {
-                    if (it.deletedFile) {
-                        it.oldPath
-                    } else {
-                        it.newPath
+                changeSet.addAll(
+                    result.map {
+                        if (it.deletedFile) {
+                            it.oldPath
+                        } else {
+                            it.newPath
+                        }
                     }
-                }
                 )
                 if (result.size < 100) {
                     break
                 }
             }
         } catch (ignore: Exception) {
-            logger.error("fail to get change file list", ignore)
+            logger.warn("fail to get change file list", ignore)
         }
         return changeSet
     }
@@ -251,7 +252,7 @@ class GitScmService @Autowired constructor(
             ).data
             Pair(defaultBranch, commitInfo)
         } catch (ignore: Exception) {
-            logger.error("fail to get default branch latest commit info", ignore)
+            logger.warn("fail to get default branch latest commit info", ignore)
             Pair(null, null)
         }
     }
@@ -313,7 +314,7 @@ class GitScmService @Autowired constructor(
                 tokenType = tokenType
             ).data?.username ?: ""
         } catch (ignore: Throwable) {
-            logger.error("fail to get repo auth user", ignore)
+            logger.warn("fail to get repo auth user", ignore)
             ""
         }
     }

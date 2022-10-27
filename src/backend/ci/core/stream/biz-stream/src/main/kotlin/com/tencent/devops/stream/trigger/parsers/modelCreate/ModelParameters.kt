@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
@@ -41,6 +42,11 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_START_MANUAL_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_SERVICE_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
@@ -49,11 +55,12 @@ import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.CommonVariables
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.pojo.ModelParametersData
 import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
 
 @Suppress("ComplexMethod")
 object ModelParameters {
-    private const val VARIABLE_PREFIX = "variables."
+    const val VARIABLE_PREFIX = "variables."
 
     fun createPipelineParams(
         action: BaseAction,
@@ -61,9 +68,7 @@ object ModelParameters {
         streamGitProjectInfo: StreamGitProjectCache,
         webhookParams: Map<String, String> = mapOf(),
         yamlTransferData: YamlTransferData? = null
-    ): MutableList<BuildFormProperty> {
-        val result = mutableListOf<BuildFormProperty>()
-
+    ): ModelParametersData {
         val event = action.data.eventCommon
         val startParams = mutableMapOf<String, String>()
         val parsedCommitMsg = EmojiUtil.removeAllEmoji(event.commit.commitMsg ?: "")
@@ -71,11 +76,16 @@ object ModelParameters {
         // 通用参数
         startParams[CommonVariables.CI_PIPELINE_NAME] = yaml.name ?: ""
         startParams[BK_CI_RUN] = "true"
-        startParams[CommonVariables.CI_ACTOR] = if (action.metaData.streamObjectKind == StreamObjectKind.SCHEDULE) {
-            "system"
-        } else {
-            event.userId
+        // 增加触发人上下文
+        when (action.getStartType()) {
+            StartType.PIPELINE -> startParams[PIPELINE_START_PIPELINE_USER_ID] = action.data.eventCommon.userId
+            StartType.WEB_HOOK -> startParams[PIPELINE_START_WEBHOOK_USER_ID] = action.data.eventCommon.userId
+            StartType.SERVICE -> startParams[PIPELINE_START_SERVICE_USER_ID] = action.data.eventCommon.userId
+            StartType.MANUAL -> startParams[PIPELINE_START_MANUAL_USER_ID] = action.data.eventCommon.userId
+            StartType.TIME_TRIGGER -> startParams[PIPELINE_START_TIME_TRIGGER_USER_ID] =
+                action.data.context.pipeline?.lastModifier ?: ""
         }
+
         startParams[CommonVariables.CI_BRANCH] = event.branch
         startParams[PIPELINE_GIT_COMMIT_MESSAGE] = parsedCommitMsg
         startParams[PIPELINE_GIT_SHA] = event.commit.commitId
@@ -117,27 +127,7 @@ object ModelParameters {
             startParams = startParams
         )
 
-        startParams.forEach {
-            result.add(
-                BuildFormProperty(
-                    id = it.key,
-                    required = false,
-                    type = BuildFormPropertyType.STRING,
-                    defaultValue = it.value,
-                    options = null,
-                    desc = null,
-                    repoHashId = null,
-                    relativePath = null,
-                    scmType = null,
-                    containerType = null,
-                    glob = null,
-                    properties = null
-                )
-            )
-        }
-        result.addAll(buildFormProperties)
-
-        return result
+        return ModelParametersData(buildFormProperties, startParams)
     }
 
     private fun getBuildFormPropertyFromYmlVariable(
@@ -149,9 +139,14 @@ object ModelParameters {
         }
         val buildFormProperties = mutableListOf<BuildFormProperty>()
         variables.forEach { (key, variable) ->
+            val keyWithPrefix = if (key.startsWith(VARIABLE_PREFIX)) {
+                key
+            } else {
+                VARIABLE_PREFIX + key
+            }
             buildFormProperties.add(
                 BuildFormProperty(
-                    id = VARIABLE_PREFIX + key,
+                    id = keyWithPrefix,
                     required = false,
                     type = BuildFormPropertyType.STRING,
                     defaultValue = ModelCommon.formatVariablesValue(variable.value, startParams) ?: "",
