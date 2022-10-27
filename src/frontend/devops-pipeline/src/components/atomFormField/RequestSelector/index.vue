@@ -119,6 +119,7 @@
                     const { url, element } = this
                     const query = this.$route.params
                     const changeUrl = this.urlParse(url, {
+                        bk_poolType: this?.container?.dispatchType?.buildType,
                         ...query,
                         ...element
                     })

@@ -38,7 +38,11 @@
         computed: {
             paramValues () {
                 const { atomValue = {}, $route: { params = {} } } = this
-                return { ...params, ...atomValue }
+                return {
+                    bk_poolType: this?.container?.dispatchType?.buildType,
+                    ...params,
+                    ...atomValue
+                }
             }
         },
 
