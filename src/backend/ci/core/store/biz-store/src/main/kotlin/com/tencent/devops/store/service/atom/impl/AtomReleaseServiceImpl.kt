@@ -166,11 +166,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Autowired
     lateinit var storeWebsocketService: StoreWebsocketService
 
-    @Value("\${store.defaulAtomErrorCodoLength:6}")
-    private var defaulAtomErrorCodoLength: Int = 6
+    @Value("\${store.defaultAtomErrorCodeLength:6}")
+    private var defaultAtomErrorCodeLength: Int = 6
 
-    @Value("\${store.defaulAtomErrorCodoPrefix:}")
-    private var defaulAtomErrorCodoPrefix: String = ""
+    @Value("\${store.defaultAtomErrorCodePrefix:}")
+    private var defaultAtomErrorCodePrefix: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
@@ -580,7 +580,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     }
                     // 校验code码是否符合插件自定义错误码规范
                     errorCodes.forEach {
-                        if (it.length != defaulAtomErrorCodoLength || (!it.startsWith(defaulAtomErrorCodoPrefix))) {
+                        if (it.length != defaultAtomErrorCodeLength || (!it.startsWith(defaultAtomErrorCodePrefix))) {
                             throw ErrorCodeException(
                                 errorCode = USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
                             )
