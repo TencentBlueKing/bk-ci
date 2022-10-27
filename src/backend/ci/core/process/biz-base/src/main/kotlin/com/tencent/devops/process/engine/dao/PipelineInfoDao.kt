@@ -354,7 +354,7 @@ class PipelineInfoDao {
     fun countDeletePipeline(
         dslContext: DSLContext,
         projectId: String,
-        days: Long?,
+        days: Long?
     ): Int {
         with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()

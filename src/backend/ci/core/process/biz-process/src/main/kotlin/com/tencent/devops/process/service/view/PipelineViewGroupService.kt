@@ -311,7 +311,7 @@ class PipelineViewGroupService @Autowired constructor(
         pipelineView: PipelineViewForm,
         projectId: String,
         viewId: Long,
-        userId: String,
+        userId: String
     ) {
         val watcher = Watcher("initViewGroup|$projectId|$viewId|$userId")
         if (pipelineView.viewType == PipelineViewType.DYNAMIC) {

@@ -2,6 +2,7 @@ package com.tencent.devops.process.service.view
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW
 import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW_GROUP
@@ -9,7 +10,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewTopRecord
-import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.label.PipelineViewDao
@@ -86,25 +86,23 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     )
 
     private val pi = TPipelineInfoRecord(
-        "p-test",//        setPipelineId(pipelineId);
-        "test",//    setProjectId(projectId);
-        "test",//    setPipelineName(pipelineName);
-        "test",//    setPipelineDesc(pipelineDesc);
-        1,//    setVersion(version);
-        now,//    setCreateTime(createTime);
-        "test",//    setCreator(creator);
-        now,//    setUpdateTime(updateTime);
-        "test",//    setLastModifyUser(lastModifyUser);
-        "test",//    setChannel(channel);
-        1,//    setManualStartup(manualStartup);
-        1,//    setElementSkip(elementSkip);
-        1,//    setTaskCount(taskCount);
-        false,//    setDelete(delete);
-        1,//    setId(id);
-        "test",//    setPipelineNamePinyin(pipelineNamePinyin);
-        now,//    setLatestStartTime(latestStartTime);
-        "test",//    setPlatformCode(platformCode);
-        0//    setPlatformErrorCode(platformErrorCode);
+        "p-test", //        setPipelineId(pipelineId);
+        "test", //    setProjectId(projectId);
+        "test", //    setPipelineName(pipelineName);
+        "test", //    setPipelineDesc(pipelineDesc);
+        1, //    setVersion(version);
+        now, //    setCreateTime(createTime);
+        "test", //    setCreator(creator);
+        now, //    setUpdateTime(updateTime);
+        "test", //    setLastModifyUser(lastModifyUser);
+        "test", //    setChannel(channel);
+        1, //    setManualStartup(manualStartup);
+        1, //    setElementSkip(elementSkip);
+        1, //    setTaskCount(taskCount);
+        false, //    setDelete(delete);
+        1, //    setId(id);
+        "test", //    setPipelineNamePinyin(pipelineNamePinyin);
+        now //    setLatestStartTime(latestStartTime);
     )
 
     private val pipelineViewForm = PipelineViewForm(
@@ -340,7 +338,16 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @Test
         @DisplayName("正常执行")
         fun test_1() {
-            every { pipelineViewGroupDao.distinctPipelineIds(anyDslContext(), any()) } returns listOf("test")
+            every { pipelineViewGroupDao.distinctPipelineIds(anyDslContext(), any(), any()) } returns listOf("test")
+            every {
+                pipelineViewDao.list(
+                    anyDslContext(),
+                    any() as String,
+                    any() as Boolean
+                )
+            } returns dslContext.mockResult(
+                T_PIPELINE_VIEW, pv
+            )
             self.getClassifiedPipelineIds("test").let {
                 Assertions.assertTrue(it.size == 1)
                 Assertions.assertTrue(it[0] == "test")
@@ -848,7 +855,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
                     any() as Map<Long, Int>
                 )
             } returns mutableListOf<PipelineNewViewSummary>()
-            every { pipelineViewGroupDao.distinctPipelineIds(anyDslContext(), any()) } returns emptyList()
+            every { self["getClassifiedPipelineIds"](any() as String) } returns emptyList<String>()
             every { pipelineInfoDao.countExcludePipelineIds(anyDslContext(), any(), any()) } returns 0
             self.listView("test", "test", true, PipelineViewType.DYNAMIC).let {
                 Assertions.assertEquals(it.size, 1)

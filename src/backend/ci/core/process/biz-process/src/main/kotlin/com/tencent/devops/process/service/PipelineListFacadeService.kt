@@ -1210,7 +1210,7 @@ class PipelineListFacadeService @Autowired constructor(
         val buildTaskCountList = pipelineBuildTaskDao.countGroupByBuildId(
             dslContext = dslContext,
             projectId = projectId,
-            buildIds = lastBuildMap.keys,
+            buildIds = lastBuildMap.keys
         )
         val buildTaskTotalCountMap = buildTaskCountList.groupBy { it.value1() }
             .map { it -> lastBuildMap.getOrDefault(it.key, "") to it.value.sumOf { it.value3() } }

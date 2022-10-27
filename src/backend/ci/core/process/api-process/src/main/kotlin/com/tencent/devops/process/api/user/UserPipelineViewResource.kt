@@ -272,7 +272,7 @@ interface UserPipelineViewResource {
         userId: String,
         @PathParam("projectId")
         projectId: String
-    ):Result<Boolean>
+    ): Result<Boolean>
 
     @ApiOperation("根据流水线ID获取视图(流水线组)")
     @GET
@@ -285,5 +285,5 @@ interface UserPipelineViewResource {
         projectId: String,
         @PathParam("pipelineId")
         pipelineId: String
-    ):Result<List<PipelineNewViewSummary>>
+    ): Result<List<PipelineNewViewSummary>>
 }

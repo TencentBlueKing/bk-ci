@@ -21,7 +21,7 @@ import java.lang.reflect.InvocationTargetException
 
 open class BkCiAbstractTest {
     val dslContext: DSLContext = DSL.using(MockConnection(Mock.of(0)), SQLDialect.MYSQL)
-    val objectMapper:ObjectMapper = spyk()
+    val objectMapper: ObjectMapper = spyk()
 
     /**
      * Mock JooQ 的返回

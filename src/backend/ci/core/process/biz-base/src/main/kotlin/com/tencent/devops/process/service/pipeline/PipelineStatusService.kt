@@ -70,7 +70,7 @@ class PipelineStatusService(
         val buildTaskCountList = pipelineBuildTaskDao.countGroupByBuildId(
             dslContext = dslContext,
             projectId = projectId,
-            buildIds = listOf(pipelineBuildSummary.latestBuildId),
+            buildIds = listOf(pipelineBuildSummary.latestBuildId)
         )
         val lastBuildTotalCount = buildTaskCountList.sumOf { it.value3() }
         val lastBuildFinishCount =

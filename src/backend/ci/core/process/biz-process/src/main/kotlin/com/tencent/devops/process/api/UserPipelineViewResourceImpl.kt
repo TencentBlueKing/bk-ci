@@ -81,7 +81,7 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): Result<List<PipelineNewViewSummary>> {
-        return Result(pipelineViewGroupService.listViewByPipelineId(userId,projectId,pipelineId))
+        return Result(pipelineViewGroupService.listViewByPipelineId(userId, projectId, pipelineId))
     }
 
     override fun topView(

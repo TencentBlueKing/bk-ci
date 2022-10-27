@@ -91,8 +91,6 @@ class PipelineViewService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val client: Client
 ) {
-
-
     fun addUsingView(userId: String, projectId: String, viewId: String) {
         pipelineViewLastViewDao.save(
             dslContext = dslContext,
@@ -634,7 +632,6 @@ class PipelineViewService @Autowired constructor(
             } else {
                 continue
             }
-
         }
         return hitFilters
     }
