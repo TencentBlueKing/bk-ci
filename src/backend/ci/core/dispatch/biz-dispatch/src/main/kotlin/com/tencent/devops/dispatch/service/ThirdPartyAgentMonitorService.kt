@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit
 /**
  * 三方构建机的业务监控拓展
  */
-@Suppress("LongMethod", "NestedBlockDepth", "ComplexMethod", "ReturnCount")
+@Suppress("ALL")
 @Service
 class ThirdPartyAgentMonitorService @Autowired constructor(
     private val client: Client,
