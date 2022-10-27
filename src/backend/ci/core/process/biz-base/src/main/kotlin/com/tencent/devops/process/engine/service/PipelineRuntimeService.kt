@@ -621,6 +621,12 @@ class PipelineRuntimeService @Autowired constructor(
         terminateFlag: Boolean = false
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
+        // 记录该构建取消人信息
+        pipelineBuildDetailService.updateBuildCancelUser(
+            projectId = projectId,
+            buildId = buildId,
+            cancelUserId = userId
+        )
         // 发送取消事件
         val actionType = if (terminateFlag) ActionType.TERMINATE else ActionType.END
         // 发送取消事件

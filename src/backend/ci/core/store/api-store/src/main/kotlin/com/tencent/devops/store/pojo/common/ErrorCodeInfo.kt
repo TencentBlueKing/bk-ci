@@ -25,12 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.pojo.common
 
-enum class BusinessEnum {
-    CATEGORY, // 范畴
-    ATOM, // 插件
-    IMAGE, // 插件
-    BUILD_TYPE, // 构建资源类型
-    CODECC // 代码扫描
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("错误码信息")
+data class ErrorCodeInfo(
+    @ApiModelProperty("组件错误码")
+    val errorCode: Int,
+    @ApiModelProperty("中文简体描述信息")
+    val errorMsgZhCn: String,
+    @ApiModelProperty("中文繁体描述信息")
+    val errorMsgZhTw: String? = null,
+    @ApiModelProperty("英文描述信息")
+    val errorMsgEn: String? = null
+)
