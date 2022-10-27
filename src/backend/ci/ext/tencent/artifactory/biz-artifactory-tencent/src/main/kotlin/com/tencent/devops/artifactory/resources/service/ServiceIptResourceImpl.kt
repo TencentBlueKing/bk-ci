@@ -35,8 +35,10 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.RepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 
 @RestResource
 class ServiceIptResourceImpl @Autowired constructor(
@@ -73,6 +75,12 @@ class ServiceIptResourceImpl @Autowired constructor(
             ).firstOrNull()
         }
 
-        return Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
+        return Result(FileInfoPage(
+            count = result.second.size.toLong(),
+            page = 0,
+            pageSize = 0,
+            records = result.second,
+            timestamp = LocalDateTime.now().timestamp()
+        ))
     }
 }
