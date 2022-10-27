@@ -68,6 +68,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -655,7 +656,7 @@ class PipelineViewService @Autowired constructor(
             var isMatch = view.logic == Logic.AND.name
             for (filter in filters) {
                 val match = if (filter is PipelineViewFilterByName) {
-                    pipelineViewMatchDynamic.pipelineName.contains(filter.pipelineName)
+                    StringUtils.containsIgnoreCase(pipelineViewMatchDynamic.pipelineName, filter.pipelineName)
                 } else if (filter is PipelineViewFilterByCreator) {
                     filter.userIds.contains(userId)
                 } else if (filter is PipelineViewFilterByLabel) {
