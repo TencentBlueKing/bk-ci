@@ -181,7 +181,7 @@
                 try {
                     const query = this.$route.params
                     const changeUrl = this.urlParse(url, {
-                        bk_poolType: this?.container?.dispatchType?.buildType,
+                        bkPoolType: this?.container?.dispatchType?.buildType,
                         repositoryHashId: this.repositoryHashId,
                         ...query
                     })

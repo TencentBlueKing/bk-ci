@@ -125,7 +125,7 @@
                 if (pipelineId) {
                     try {
                         const changeUrl = this.urlParse(url, {
-                            bk_poolType: this?.container?.dispatchType?.buildType,
+                            bkPoolType: this?.container?.dispatchType?.buildType,
                             pipelineId,
                             projectId
                         })

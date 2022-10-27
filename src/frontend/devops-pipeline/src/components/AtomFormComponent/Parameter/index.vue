@@ -39,7 +39,7 @@
             paramValues () {
                 const { atomValue = {}, $route: { params = {} } } = this
                 return {
-                    bk_poolType: this?.container?.dispatchType?.buildType,
+                    bkPoolType: this?.container?.dispatchType?.buildType,
                     ...params,
                     ...atomValue
                 }

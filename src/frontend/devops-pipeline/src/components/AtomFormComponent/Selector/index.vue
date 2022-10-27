@@ -120,7 +120,7 @@
                 }
                 const { atomValue = {}, transformList, $route: { params = {} }, mergedOptionsConf } = this
                 const changeUrl = this.urlParse(mergedOptionsConf.url, {
-                    bk_poolType: this?.container?.dispatchType?.buildType,
+                    bkPoolType: this?.container?.dispatchType?.buildType,
                     ...params,
                     ...atomValue
                 })

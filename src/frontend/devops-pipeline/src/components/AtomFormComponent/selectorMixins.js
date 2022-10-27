@@ -48,7 +48,7 @@ export default {
             const originUrl = /^(http|https):\/\//.test(itemTargetUrl) ? itemTargetUrl : webUrl + itemTargetUrl
 
             return urlParse(originUrl, {
-                bk_poolType: this?.container?.dispatchType?.buildType,
+                bkPoolType: this?.container?.dispatchType?.buildType,
                 ...params
             })
         },
@@ -83,7 +83,7 @@ export default {
         queryParams () {
             const { atomValue = {}, $route: { params = {} } } = this
             return {
-                bk_poolType: this?.container?.dispatchType?.buildType,
+                bkPoolType: this?.container?.dispatchType?.buildType,
                 ...params,
                 ...atomValue
             }
