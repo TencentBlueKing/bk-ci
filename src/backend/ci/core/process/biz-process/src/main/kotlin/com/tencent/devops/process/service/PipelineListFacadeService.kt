@@ -1275,7 +1275,7 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineViewNameMap: Map<String, MutableList<String>>,
         pipelineBuildMap: Map<String, TPipelineBuildHistoryRecord>,
         buildTaskTotalCountMap: Map<String, Int>,
-        buildTaskFinishCountMap: Map<String, Int>,
+        buildTaskFinishCountMap: Map<String, Int>
     ) {
         pipelines.forEach {
             val pipelineId = it.pipelineId
