@@ -63,7 +63,7 @@ import org.springframework.stereotype.Component
 import javax.ws.rs.core.Response
 
 @Component
-@Suppress("NestedBlockDepth")
+@Suppress("NestedBlockDepth", "ComplexMethod", "ReturnCount")
 class ThirdPartyAgentDispatcher @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,

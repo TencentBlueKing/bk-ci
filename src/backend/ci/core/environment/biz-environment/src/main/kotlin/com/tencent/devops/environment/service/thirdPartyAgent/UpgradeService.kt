@@ -53,7 +53,7 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 @Service
 class UpgradeService @Autowired constructor(
     private val dslContext: DSLContext,

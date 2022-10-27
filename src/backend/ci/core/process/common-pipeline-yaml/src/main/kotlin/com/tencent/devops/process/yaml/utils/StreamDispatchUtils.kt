@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory
 import java.util.Base64
 import javax.ws.rs.core.Response
 
-@Suppress("NestedBlockDepth", "ComplexMethod")
+@Suppress("ALL")
 object StreamDispatchUtils {
 
     private val logger = LoggerFactory.getLogger(StreamDispatchUtils::class.java)

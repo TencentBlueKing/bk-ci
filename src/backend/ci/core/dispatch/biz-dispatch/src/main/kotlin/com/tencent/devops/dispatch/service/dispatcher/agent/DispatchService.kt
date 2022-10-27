@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service
 /** issue_7748 搬用 dispatch sdk 的方法，因为sdk集成当前存在问题
  *  @see com.tencent.devops.common.dispatch.sdk.service.DispatchService
  **/
+@Suppress("ALL")
 @Service
 class DispatchService @Autowired constructor(
     private val redisOperation: RedisOperation,
