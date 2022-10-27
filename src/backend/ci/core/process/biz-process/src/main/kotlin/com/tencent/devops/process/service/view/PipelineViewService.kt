@@ -91,8 +91,6 @@ class PipelineViewService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val client: Client
 ) {
-
-
     fun addUsingView(userId: String, projectId: String, viewId: String) {
         pipelineViewLastViewDao.save(
             dslContext = dslContext,
@@ -359,7 +357,7 @@ class PipelineViewService @Autowired constructor(
         context: DSLContext? = null
     ): Boolean {
         try {
-            checkForUpset(context, projectId, userId, pipelineView, false)
+            checkForUpset(context, projectId, userId, pipelineView, false, viewId)
             return pipelineViewDao.update(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
@@ -387,7 +385,8 @@ class PipelineViewService @Autowired constructor(
         projectId: String,
         userId: String,
         pipelineView: PipelineViewForm,
-        isCreate: Boolean
+        isCreate: Boolean,
+        viewId: Long? = null
     ) {
         if (isCreate) {
             val countForLimit = pipelineViewDao.countForLimit(
@@ -406,13 +405,27 @@ class PipelineViewService @Autowired constructor(
                 )
             }
         }
-
-        if (pipelineView.projected && pipelineViewDao.countByName(
+        val excludeIds = viewId?.let { setOf(viewId) } ?: emptySet()
+        val hasSameName = if (pipelineView.projected) {
+            pipelineViewDao.countByName(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
-                name = pipelineView.name
-            ) > if (isCreate) 0 else 1
-        ) {
+                name = pipelineView.name,
+                isProject = true,
+                excludeIds = excludeIds
+            ) > 0
+        } else {
+            pipelineViewDao.countByName(
+                dslContext = context ?: dslContext,
+                projectId = projectId,
+                name = pipelineView.name,
+                creator = userId,
+                isProject = false,
+                excludeIds = excludeIds
+            ) > 0
+        }
+
+        if (hasSameName) {
             logger.warn("duplicate name , project:$projectId , user:$userId , view:$pipelineView")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_VIEW_DUPLICATE_NAME,
@@ -619,7 +632,6 @@ class PipelineViewService @Autowired constructor(
             } else {
                 continue
             }
-
         }
         return hitFilters
     }

@@ -39,7 +39,6 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -96,10 +95,6 @@ class MQPipelineDeleteListener @Autowired constructor(
 
         watcher.safeAround("callback") {
             callBackControl.pipelineDeleteEvent(projectId = event.projectId, pipelineId = event.pipelineId)
-        }
-
-        watcher.safeAround("updateViewGroup") {
-            pipelineViewGroupService.updateGroupAfterPipelineDelete(projectId, pipelineId)
         }
 
         LogUtils.printCostTimeWE(watcher = watcher)

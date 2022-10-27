@@ -53,7 +53,6 @@ import com.tencent.devops.process.pojo.classify.PipelineViewFilter
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.enums.Logic
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import org.apache.commons.lang3.StringUtils
@@ -65,10 +64,9 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-@SuppressWarnings("LoopWithTooManyJumpStatements")
+@SuppressWarnings("LoopWithTooManyJumpStatements", "LongParameterList", "TooManyFunctions", "ReturnCount")
 class PipelineViewGroupService @Autowired constructor(
     private val pipelineViewService: PipelineViewService,
-    private val pipelineGroupService: PipelineGroupService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineViewGroupDao: PipelineViewGroupDao,
@@ -88,7 +86,7 @@ class PipelineViewGroupService @Autowired constructor(
         }
         val viewIds = pipelineViewGroups.map { it.viewId }.toSet()
         val views = pipelineViewDao.list(dslContext, projectId, viewIds)
-        if (viewIds.isEmpty()) {
+        if (views.isEmpty()) {
             return emptyMap()
         }
         val viewId2Name = views.filter { it.isProject }.associate { it.id to it.name }
@@ -140,7 +138,7 @@ class PipelineViewGroupService @Autowired constructor(
         if (pipelineView.projected != oldView.isProject) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_VIEW_GROUP_IS_PROJECT_NO_SAME,
-                defaultMessage = "view scope can`t change , user:$userId , view:$viewIdEncode , project:${projectId}"
+                defaultMessage = "view scope can`t change , user:$userId , view:$viewIdEncode , project:$projectId"
             )
         }
         // 更新视图
@@ -219,7 +217,11 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun getClassifiedPipelineIds(projectId: String): List<String> {
-        return pipelineViewGroupDao.distinctPipelineIds(dslContext, projectId)
+        val projectViews = pipelineViewDao.list(dslContext = dslContext, projectId = projectId, isProject = true)
+        if (projectViews.isEmpty()) {
+            return emptyList()
+        }
+        return pipelineViewGroupDao.distinctPipelineIds(dslContext, projectId, projectViews.map { it.id })
     }
 
     fun listPipelineIdsByViewIds(projectId: String, viewIdsEncode: List<String>): List<String> {
@@ -267,15 +269,6 @@ class PipelineViewGroupService @Autowired constructor(
         }
     }
 
-    fun updateGroupAfterPipelineDelete(projectId: String, pipelineId: String) {
-        PipelineViewGroupLock(redisOperation, projectId).lockAround {
-            logger.info("updateGroupAfterPipelineDelete, projectId:$projectId, pipelineId:$pipelineId")
-            pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId).forEach {
-                pipelineViewGroupDao.remove(dslContext, it.projectId, it.viewId, it.pipelineId)
-            }
-        }
-    }
-
     fun updateGroupAfterPipelineUpdate(projectId: String, pipelineId: String, userId: String) {
         PipelineViewGroupLock(redisOperation, projectId).lockAround {
             logger.info("updateGroupAfterPipelineUpdate, projectId:$projectId, pipelineId:$pipelineId , userId:$userId")
@@ -318,7 +311,7 @@ class PipelineViewGroupService @Autowired constructor(
         pipelineView: PipelineViewForm,
         projectId: String,
         viewId: Long,
-        userId: String,
+        userId: String
     ) {
         val watcher = Watcher("initViewGroup|$projectId|$viewId|$userId")
         if (pipelineView.viewType == PipelineViewType.DYNAMIC) {
@@ -352,7 +345,7 @@ class PipelineViewGroupService @Autowired constructor(
             if (!firstInit) {
                 return@lockAround emptyList()
             }
-            val pipelineIds = allPipelineInfos(projectId)
+            val pipelineIds = allPipelineInfos(projectId, false)
                 .filter { pipelineViewService.matchView(view, it) }
                 .map { it.pipelineId }
             pipelineIds.forEach {
@@ -397,12 +390,14 @@ class PipelineViewGroupService @Autowired constructor(
         pipelineView: PipelineViewForm
     ): PipelineViewPreview {
         // 获取所有流水线信息
-        val allPipelineInfoMap = allPipelineInfos(projectId).associateBy { it.pipelineId }
+        val allPipelineInfoMap = allPipelineInfos(
+            projectId, pipelineView.viewType == PipelineViewType.STATIC
+        ).associateBy { it.pipelineId }
         if (allPipelineInfoMap.isEmpty()) {
             return PipelineViewPreview.EMPTY
         }
 
-        //获取老流水线组的流水线
+        // 获取老流水线组的流水线
         val viewId = pipelineView.id
         val oldPipelineIds = if (null == viewId) {
             emptyList<String>()
@@ -429,57 +424,52 @@ class PipelineViewGroupService @Autowired constructor(
             pipelineView.pipelineIds.filter { allPipelineInfoMap.containsKey(it) }
         }
 
-        //新增流水线 = 新流水线 - 老流水线
+        // 新增流水线 = 新流水线 - 老流水线
         val addedPipelineInfos = newPipelineIds.asSequence()
             .filterNot { oldPipelineIds.contains(it) }
             .map { allPipelineInfoMap[it]!! }
-            .map { PipelineViewPreview.PipelineInfo(pipelineId = it.pipelineId, pipelineName = it.pipelineName) }
+            .map { pipelineRecord2Info(it) }
             .toList()
 
         // 移除流水线 = 老流水线 - 新流水线
         val removedPipelineInfos = oldPipelineIds.asSequence()
             .filterNot { newPipelineIds.contains(it) }
             .map { allPipelineInfoMap[it]!! }
-            .map { PipelineViewPreview.PipelineInfo(pipelineId = it.pipelineId, pipelineName = it.pipelineName) }
+            .map { pipelineRecord2Info(it) }
             .toList()
 
         // 保留流水线 = 老流水线 & 新流水线
         val reservePipelineInfos = newPipelineIds.asSequence()
             .filter { oldPipelineIds.contains(it) }
             .map { allPipelineInfoMap[it]!! }
-            .map { PipelineViewPreview.PipelineInfo(pipelineId = it.pipelineId, pipelineName = it.pipelineName) }
+            .map { pipelineRecord2Info(it) }
             .toList()
 
         return PipelineViewPreview(addedPipelineInfos, removedPipelineInfos, reservePipelineInfos)
     }
 
     fun dict(userId: String, projectId: String): PipelineViewDict {
+        // 流水线信息
+        val pipelineInfoMap = allPipelineInfos(projectId, true).associateBy { it.pipelineId }
+        if (pipelineInfoMap.isEmpty()) {
+            return PipelineViewDict.EMPTY
+        }
         // 流水线组信息
         val viewInfoMap = pipelineViewDao.list(dslContext, projectId).associateBy { it.id }
-        if (viewInfoMap.isEmpty()) {
-            return PipelineViewDict.EMPTY
-        }
         // 流水线组映射关系
         val viewGroups = pipelineViewGroupDao.listByProjectId(dslContext, projectId)
-        if (viewGroups.isEmpty()) {
-            return PipelineViewDict.EMPTY
-        }
-        val viewGroupMap = mutableMapOf<Long/*viewId*/, MutableList<String>/*pipelineIds*/>()
+        val viewGroupMap = viewInfoMap.map { it.key to mutableListOf<String>() }.toMap().toMutableMap()
         val classifiedPipelineIds = mutableSetOf<String>()
+
         viewGroups.forEach {
             val viewId = it.viewId
-            if (!viewGroupMap.containsKey(viewId)) {
-                viewGroupMap[viewId] = mutableListOf()
+            if (!viewInfoMap.containsKey(viewId)) {
+                return@forEach
             }
             viewGroupMap[viewId]!!.add(it.pipelineId)
             if (viewInfoMap[it.viewId]?.isProject == true) {
                 classifiedPipelineIds.add(it.pipelineId)
             }
-        }
-        //流水线信息
-        val pipelineInfoMap = allPipelineInfos(projectId).associateBy { it.pipelineId }
-        if (pipelineInfoMap.isEmpty()) {
-            return PipelineViewDict.EMPTY
         }
         val personalViewList = mutableListOf<PipelineViewDict.ViewInfo>()
         val projectViewList = mutableListOf<PipelineViewDict.ViewInfo>()
@@ -494,7 +484,8 @@ class PipelineViewGroupService @Autowired constructor(
                         PipelineViewDict.ViewInfo.PipelineInfo(
                             pipelineId = it.pipelineId,
                             pipelineName = it.pipelineName,
-                            viewId = PIPELINE_VIEW_UNCLASSIFIED
+                            viewId = PIPELINE_VIEW_UNCLASSIFIED,
+                            delete = it.delete
                         )
                     }
             )
@@ -513,7 +504,8 @@ class PipelineViewGroupService @Autowired constructor(
                 PipelineViewDict.ViewInfo.PipelineInfo(
                     pipelineId = pipelineInfo.pipelineId,
                     pipelineName = pipelineInfo.pipelineName,
-                    viewId = viewId
+                    viewId = viewId,
+                    delete = pipelineInfo.delete
                 )
             }
             val viewList = if (view.isProject) projectViewList else personalViewList
@@ -528,7 +520,7 @@ class PipelineViewGroupService @Autowired constructor(
         return PipelineViewDict(personalViewList, projectViewList)
     }
 
-    private fun allPipelineInfos(projectId: String): List<TPipelineInfoRecord> {
+    private fun allPipelineInfos(projectId: String, includeDelete: Boolean): List<TPipelineInfoRecord> {
         val pipelineInfos = mutableListOf<TPipelineInfoRecord>()
         val step = 200
         var offset = 0
@@ -538,7 +530,8 @@ class PipelineViewGroupService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 offset = offset,
-                limit = step
+                limit = step,
+                deleteFlag = if (includeDelete) null else false
             ) ?: emptyList<TPipelineInfoRecord>()
             if (subPipelineInfos.isEmpty()) {
                 break
@@ -601,7 +594,6 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun bulkRemove(userId: String, projectId: String, bulkRemove: PipelineViewBulkRemove): Boolean {
-        val isProjectManager = checkPermission(userId, projectId)
         val viewId = HashUtil.decodeIdToLong(bulkRemove.viewId)
         val view = pipelineViewDao.get(
             dslContext = dslContext,
@@ -612,6 +604,7 @@ class PipelineViewGroupService @Autowired constructor(
             logger.warn("bulkRemove , view:$viewId")
             return false
         }
+        val isProjectManager = checkPermission(userId, projectId)
         if (isProjectManager && !view.isProject && view.createUser != userId) {
             logger.warn("bulkRemove , $userId is ProjectManager , but can`t remove other view")
             return false
@@ -632,7 +625,7 @@ class PipelineViewGroupService @Autowired constructor(
         val countByViewId = pipelineViewGroupDao.countByViewId(dslContext, projectId, views.map { it.id })
         val summaries = sortViews2Summary(projectId, userId, views, countByViewId)
         if (projected != false) {
-            val classifiedPipelineIds = pipelineViewGroupDao.distinctPipelineIds(dslContext, projectId)
+            val classifiedPipelineIds = getClassifiedPipelineIds(projectId)
             val unclassifiedCount =
                 pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds)
             summaries.add(
@@ -645,12 +638,30 @@ class PipelineViewGroupService @Autowired constructor(
                     updateTime = LocalDateTime.now().timestamp(),
                     creator = "admin",
                     top = true,
-                    viewType = PipelineViewType.DYNAMIC,
+                    viewType = PipelineViewType.UNCLASSIFIED,
                     pipelineCount = unclassifiedCount
                 )
             )
         }
         return summaries
+    }
+
+    fun listViewByPipelineId(userId: String, projectId: String, pipelineId: String): List<PipelineNewViewSummary> {
+        val viewGroupRecords = pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId)
+        val viewRecords = pipelineViewDao.list(dslContext, projectId, viewGroupRecords.map { it.viewId }.toSet())
+        return viewRecords.filter { it.isProject || it.createUser == userId }.map {
+            PipelineNewViewSummary(
+                id = HashUtil.encodeLongId(it.id),
+                projectId = it.projectId,
+                name = it.name,
+                projected = it.isProject,
+                createTime = it.createTime.timestamp(),
+                updateTime = it.updateTime.timestamp(),
+                creator = it.createUser,
+                viewType = it.viewType,
+                pipelineCount = 0
+            )
+        }
     }
 
     private fun sortViews2Summary(
@@ -678,6 +689,14 @@ class PipelineViewGroupService @Autowired constructor(
                 pipelineCount = countByViewId[it.id] ?: 0
             )
         }.toMutableList()
+    }
+
+    private fun pipelineRecord2Info(record: TPipelineInfoRecord): PipelineViewPreview.PipelineInfo {
+        return PipelineViewPreview.PipelineInfo(
+            pipelineId = record.pipelineId,
+            pipelineName = record.pipelineName,
+            delete = record.delete
+        )
     }
 
     companion object {

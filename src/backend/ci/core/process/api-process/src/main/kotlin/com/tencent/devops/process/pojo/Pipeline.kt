@@ -113,6 +113,14 @@ data class Pipeline(
     var lastBuildFinishCount: Int? = null,
     @ApiModelProperty("触发方式", required = false)
     var trigger: String? = null,
+    @ApiModelProperty("webhook仓库别名", required = false)
+    var webhookAliasName: String? = null,
+    @ApiModelProperty("webhook提交信息", required = false)
+    var webhookMessage: String? = null,
     @ApiModelProperty("webhook仓库地址", required = false)
-    var webhookRepoUrl: String? = null
+    var webhookRepoUrl: String? = null,
+    @ApiModelProperty("webhook类型", required = false)
+    var webhookType: String? = null,
+    @ApiModelProperty("是否已删除", required = false)
+    var delete: Boolean? = false
 )

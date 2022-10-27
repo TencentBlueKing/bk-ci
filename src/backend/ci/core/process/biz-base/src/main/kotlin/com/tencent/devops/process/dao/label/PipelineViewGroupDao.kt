@@ -195,12 +195,14 @@ class PipelineViewGroupDao {
 
     fun distinctPipelineIds(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        viewIds: Collection<Long>
     ): List<String> {
         with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
             return dslContext.selectDistinct(PIPELINE_ID)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_ID.`in`(viewIds))
                 .fetch().getValues(0, String::class.java)
         }
     }

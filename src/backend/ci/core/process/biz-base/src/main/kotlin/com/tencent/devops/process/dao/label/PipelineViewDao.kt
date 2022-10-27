@@ -342,13 +342,19 @@ class PipelineViewDao {
     fun countByName(
         dslContext: DSLContext,
         projectId: String,
-        name: String
+        name: String,
+        creator: String? = null,
+        isProject: Boolean,
+        excludeIds: Collection<Long> = emptySet()
     ): Int {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NAME.eq(name))
+                .and(IS_PROJECT.eq(isProject))
+                .let { if (null != creator) it.and(CREATE_USER.eq(creator)) else it }
+                .let { if (excludeIds.isNotEmpty()) it.and(ID.notIn(excludeIds)) else it }
                 .fetchOne()?.component1() ?: 0
         }
     }
