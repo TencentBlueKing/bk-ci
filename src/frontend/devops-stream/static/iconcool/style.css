@@ -26,8 +26,14 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .stream-issue:before {
 	content: "\e15b";
 }
+.stream-docker:before {
+	content: "\e16f";
+}
 .stream-user:before {
 	content: "\e162";
+}
+.stream-file:before {
+	content: "\e170";
 }
 .stream-folder-open-shape:before {
 	content: "\e160";
