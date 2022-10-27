@@ -283,7 +283,6 @@
                 'groupMap'
             ]),
             defaultExpandedNodes () {
-                console.log(this.group?.id)
                 return this.group?.id ? [this.group?.id] : []
             },
             title () {
