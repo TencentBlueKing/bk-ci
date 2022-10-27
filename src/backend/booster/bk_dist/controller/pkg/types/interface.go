@@ -213,6 +213,9 @@ type BasicMgr interface {
 	// get analysis status
 	AnalysisStatus() *WorkAnalysisStatus
 
+	// reset stat
+	ResetStat() error
+
 	// update toolchain
 	SetToolChain(toolchain *ToolChain) error
 

@@ -28,9 +28,9 @@
 package com.tencent.devops.common.archive.pojo
 
 data class QueryData(
-    var count: Int,
-    var page: Int,
-    var pageSize: Int,
-    var totalPages: Int,
-    var records: List<QueryNodeInfo>
+    val pageNumber: Int,
+    val pageSize: Int,
+    val totalRecords: Long,
+    val totalPages: Long,
+    val records: List<QueryNodeInfo>
 )

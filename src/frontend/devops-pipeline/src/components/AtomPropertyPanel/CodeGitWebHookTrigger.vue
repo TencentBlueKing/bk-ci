@@ -50,8 +50,9 @@
         data () {
             return {
                 customTriggerControlModel: {},
-                enableCustomTrigger: false,
-                customTriggerDocsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=4007038192`
+                customTriggerDocsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=4007038192`,
+                enableThirdFilter: false,
+                customTriggerDocsLink: 'https://github.com/Tencent/bk-ci/issues/7743#issue-1391717634'
             }
         },
         watch: {
