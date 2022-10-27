@@ -285,11 +285,11 @@ class IamV3Service @Autowired constructor(
         // 赋予权限
         try {
             when (defaultGroupType) {
-                DefaultGroupType.DEVELOPER -> addDevelopPermission(roleId, projectCode)
-                DefaultGroupType.MAINTAINER -> addMaintainerPermission(roleId, projectCode)
-                DefaultGroupType.TESTER -> addTestPermission(roleId, projectCode)
-                DefaultGroupType.QC -> addQCPermission(roleId, projectCode)
-                DefaultGroupType.PM -> addPMPermission(roleId, projectCode)
+                DefaultGroupType.DEVELOPER -> addIamGroupAction(roleId, projectCode, DefaultGroupType.DEVELOPER)
+                DefaultGroupType.MAINTAINER -> addIamGroupAction(roleId, projectCode, DefaultGroupType.MAINTAINER)
+                DefaultGroupType.TESTER -> addIamGroupAction(roleId, projectCode, DefaultGroupType.TESTER)
+                DefaultGroupType.QC -> addIamGroupAction(roleId, projectCode, DefaultGroupType.QC)
+                DefaultGroupType.PM -> addIamGroupAction(roleId, projectCode, DefaultGroupType.PM)
             }
         } catch (e: Exception) {
             iamManagerService.deleteRoleGroup(roleId)
@@ -299,26 +299,6 @@ class IamV3Service @Autowired constructor(
             )
             throw e
         }
-    }
-
-    private fun addDevelopPermission(roleId: Int, projectCode: String) {
-        addIamGroupAction(roleId, projectCode, DefaultGroupType.DEVELOPER)
-    }
-
-    private fun addTestPermission(roleId: Int, projectCode: String) {
-        addIamGroupAction(roleId, projectCode, DefaultGroupType.TESTER)
-    }
-
-    private fun addPMPermission(roleId: Int, projectCode: String) {
-        addIamGroupAction(roleId, projectCode, DefaultGroupType.PM)
-    }
-
-    private fun addQCPermission(roleId: Int, projectCode: String) {
-        addIamGroupAction(roleId, projectCode, DefaultGroupType.QC)
-    }
-
-    private fun addMaintainerPermission(roleId: Int, projectCode: String) {
-        addIamGroupAction(roleId, projectCode, DefaultGroupType.MAINTAINER)
     }
 
     private fun addIamGroupAction(
