@@ -224,7 +224,6 @@ class TxProjectServiceImpl @Autowired constructor(
                 projectCreateInfo = projectCreateInfo
             )
         }
-        //todo 传递多一个最大可授权人员范围字段，有无影响
         // 工蜂CI项目不会添加paas项目，但也需要广播
         projectDispatcher.dispatch(
             ProjectCreateBroadCastEvent(
