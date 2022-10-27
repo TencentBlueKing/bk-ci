@@ -6,7 +6,13 @@
             :header-cell-style="{ background: '#f1f2f3' }"
             :empty-text="$t('pipeline.noArtifacts')"
         >
-            <bk-table-column :label="$t('name')" width="220" prop="name" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('name')" width="220" show-overflow-tooltip>
+                <template slot-scope="props">
+                    <i v-if="props.row.artifactoryType === 'IMAGE'" class="stream-icon stream-docker"></i>
+                    <i v-else class="stream-icon stream-file"></i>
+                    <span>{{ props.row.name }}</span>
+                </template>
+            </bk-table-column>
             <bk-table-column :label="$t('pipeline.path')" show-overflow-tooltip>
                 <template slot-scope="props">
                     <span v-if="props.row.artifactoryType === 'PIPELINE'">{{ props.row.name }}</span>
@@ -17,20 +23,34 @@
             <bk-table-column :label="$t('operation')" width="300">
                 <template slot-scope="props">
                     <bk-button text
-                        @click="downLoadFile(props.row)"
+                        v-if="props.row.artifactoryType !== 'IMAGE'"
+                        v-bk-tooltips="{
+                            content: $t('pipeline.downloadFailTips'),
+                            disabled: hasPermission
+                        }"
                         :disabled="!hasPermission"
-                        v-bk-tooltips="{ content: $t('pipeline.downloadFailTips'), disabled: hasPermission }"
-                    >{{$t('pipeline.download')}}</bk-button>
-                    <bk-popover v-if="props.row.isApkOrIpa" theme="light" trigger="click" placement="top">
+                        @click="downLoadFile(props.row)"
+                    >
+                        {{$t('pipeline.download')}}
+                    </bk-button>
+                    <bk-popover
+                        v-if="props.row.isApkOrIpa"
+                        theme="light"
+                        trigger="click"
+                        placement="top"
+                    >
                         <bk-button
                             class="ml5"
                             text
-                            @click="requestArtifactExternalUrl(props.row)"
                             :disabled="!hasPermission"
+                            @click="requestArtifactExternalUrl(props.row)"
                         >
                             {{$t('pipeline.qrCode')}}
                         </bk-button>
-                        <div slot="content" v-bkloading="{ isLoading: fetchingUrl }">
+                        <div
+                            slot="content"
+                            v-bkloading="{ isLoading: fetchingUrl }"
+                        >
                             <qr-code v-if="hasPermission" class="qrcode-view" :text="qrCodeUrl" :size="100"></qr-code>
                             <p v-else>{{$t('pipeline.downloadFailTips')}}</p>
                         </div>
