@@ -4,7 +4,8 @@
         placement="bottom"
         ref="dotMenuRef"
         theme="dot-menu light"
-        trigger="mouseenter"
+        trigger="click"
+        class="pipeline-ext-menu"
     >
         <div :class="`dot-menu-trigger ${extCls}`">
             <i class="devops-icon icon-more"></i>
@@ -66,6 +67,10 @@
 <style lang="scss">
      @import './../../../scss/conf';
 
+    .pipeline-ext-menu {
+        display: flex;
+    }
+
     .ext-dot {
         width: 3px;
         height: 3px;
@@ -108,7 +113,7 @@
         align-items: center;
         justify-content: center;
         text-align: center;
-        font-size: 16px;
+        font-size: 22px;
         cursor: pointer;
         &:hover {
             border-radius: 50%;

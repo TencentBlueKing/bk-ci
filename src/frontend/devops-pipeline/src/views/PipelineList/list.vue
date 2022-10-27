@@ -39,7 +39,7 @@
                 display: flex;
                 align-items: center;
                 font-size: 14px;
-                line-height: 22px;
+                line-height: 26px;
                 margin: 0 0 16px 0;
                 color: #313238;
                 font-weight: normal;

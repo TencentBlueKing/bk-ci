@@ -515,7 +515,7 @@
                     pipelineId,
                     pipelineName: pipelineName ?? pipelingGroup?.pipelineName,
                     ...metaData,
-                    groups: (pipelingGroup.groupIds ?? []).map(groupId => this.groupMap[groupId]?.name).join(';'),
+                    groups: (pipelingGroup?.groupIds ?? []).map(groupId => this.groupMap[groupId]?.name).join(';'),
                     tooltips: {
                         content: this.$t(isAdded ? 'cancelAdd' : 'restore.restore'),
                         delay: [500, 0],

@@ -9,7 +9,10 @@
                 <span class="pipeline-group-item-name">
                     {{$t(item.name)}}
                 </span>
-                <span v-if="item.pipelineCount" class="pipeline-group-item-sum">{{item.pipelineCount}}</span>
+                <span v-if="item.pipelineCount" class="pipeline-group-item-sum group-header-sum">{{item.pipelineCount}}</span>
+                <span @click.stop>
+                    <ext-menu></ext-menu>
+                </span>
             </div>
         </header>
         <article class="pipeline-group-container">
@@ -45,7 +48,9 @@
                         {{item.name}}
                     </span>
                     <span class="pipeline-group-item-sum">{{item.pipelineCount}}</span>
-                    <ext-menu :class="{ hidden: item.actions.length <= 0 }" :data="item" :config="item.actions"></ext-menu>
+                    <span @click.stop>
+                        <ext-menu :class="{ hidden: item.actions.length <= 0 }" :data="item" :config="item.actions"></ext-menu>
+                    </span>
                 </div>
             </div>
         </article>
@@ -439,6 +444,7 @@
         .pipeline-group-item-icon {
             display: inline-flex;
             margin-right: 10px;
+            color: #C4C6CC;
         }
         .pipeline-group-aside-header {
             padding: 0 0 16px 0;
@@ -473,7 +479,7 @@
             height: 52px;
             border-top: 1px solid #DCDEE5;
         }
-            .pipeline-group-item {
+        .pipeline-group-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -498,7 +504,10 @@
                 border-radius: 8px;
                 text-align: center;
                 margin: 0 6px;
-                color: $fontWeightColor;
+                color: #979BA5;
+                &.group-header-sum {
+                    // margin-right: 28px;
+                }
             }
 
             &.sticky-top {
@@ -509,6 +518,9 @@
             &.active {
                 background: #E1ECFF;
                 color: $primaryColor;
+                .pipeline-group-item-icon {
+                    color: $primaryColor;
+                }
             }
 
         }

@@ -20,12 +20,14 @@
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <router-link
+                    v-if="!isDeleteView && props.row.historyRoute"
                     class="pipeline-cell-link"
                     :disabled="!props.row.hasPermission"
                     :event="props.row.hasPermission ? 'click' : ''"
                     :to="props.row.historyRoute">
                     {{props.row.pipelineName}}
                 </router-link>
+                <span v-else>{{props.row.pipelineName}}</span>
             </template>
         </bk-table-column>
         <bk-table-column v-if="isAllPipelineView || isPatchView || isDeleteView" width="250" :label="$t('ownGroupName')" prop="viewNames">
