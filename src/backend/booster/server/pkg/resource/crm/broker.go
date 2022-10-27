@@ -264,6 +264,9 @@ func (b *Broker) recover() error {
 	rl, err = b.mgr.listResources(resourceStatusDeleting)
 	if err == nil && rl != nil {
 		for _, r := range rl {
+			if r.brokerName != b.name {
+				continue
+			}
 			blog.Infof("crm broker: broker(%s) recover resource(%s): %s", b.name, r.status, r.resourceID)
 			b.addReleaseResource(r.resourceID)
 		}

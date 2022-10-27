@@ -82,7 +82,8 @@ object ModelParameters {
             StartType.WEB_HOOK -> startParams[PIPELINE_START_WEBHOOK_USER_ID] = action.data.eventCommon.userId
             StartType.SERVICE -> startParams[PIPELINE_START_SERVICE_USER_ID] = action.data.eventCommon.userId
             StartType.MANUAL -> startParams[PIPELINE_START_MANUAL_USER_ID] = action.data.eventCommon.userId
-            StartType.TIME_TRIGGER -> startParams[PIPELINE_START_TIME_TRIGGER_USER_ID] = "system"
+            StartType.TIME_TRIGGER -> startParams[PIPELINE_START_TIME_TRIGGER_USER_ID] =
+                action.data.context.pipeline?.lastModifier ?: ""
         }
 
         startParams[CommonVariables.CI_BRANCH] = event.branch

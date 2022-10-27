@@ -355,14 +355,13 @@ class StreamYamlBaseBuild @Autowired constructor(
                 modelAndSetting = modelAndSetting,
                 updateLastModifyUser = updateLastModifyUser
             )
-            val pipelineParams = modelParameters.webHookParams.toMutableMap()
             buildId = client.get(ServiceWebhookBuildResource::class).webhookTrigger(
                 // #7700 此处传入userid 为权限人。同一为用ci开启人做权限校验
                 userId = action.data.setting.enableUser,
                 projectId = action.getProjectCode(),
                 pipelineId = pipeline.pipelineId,
                 params = WebhookTriggerParams(
-                    params = pipelineParams,
+                    params = modelParameters.webHookParams,
                     userParams = manualValues,
                     startValues = mutableMapOf(PIPELINE_NAME to pipeline.displayName),
                     triggerReviewers = action.forkMrNeedReviewers()
@@ -385,7 +384,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                         e.triggerReason.detail.format(e.reasonParams)
                     } catch (ignore: Throwable) {
                         e.triggerReason.detail
-                    }, e
+                    },
+                    e
                 ),
                 yamlTransferData = yamlTransferData
             )
