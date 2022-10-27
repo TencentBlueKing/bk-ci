@@ -9,7 +9,7 @@
                     :label="$t('store.镜像名称')"
                     :required="true"
                     property="imageName"
-                    :rules="[requireRule]"
+                    :rules="[requireRule, nameRule]"
                     ref="imageName"
                     error-display-type="normal"
                 >
@@ -282,6 +282,11 @@
                     message: this.$t('store.必填项'),
                     trigger: 'blur'
                 },
+                nameRule: {
+                    validator: (val) => (/^[\u4e00-\u9fa5a-zA-Z0-9-_.]{1,20}$/.test(val)),
+                    message: this.$t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过20个字符'),
+                    trigger: 'blur'
+                },
                 logoErr: false,
                 toolbars
             }
@@ -344,12 +349,10 @@
 
             submitImage () {
                 if (this.form.dockerFileType === 'INPUT') this.form.dockerFileContent = this.$refs.codeEditor.getValue()
+                if (!this.form.logoUrl && !this.form.iconData) {
+                    this.logoErr = true
+                }
                 this.$refs.imageForm.validate().then(() => {
-                    if (!this.form.logoUrl && !this.form.iconData) {
-                        this.logoErr = true
-                        const err = { field: 'selectLogo' }
-                        throw err
-                    }
                     this.isLoading = true
                     this.requestReleaseImage(this.form).then((imageId) => {
                         this.$bkMessage({ message: this.$t('store.提交成功'), theme: 'success' })

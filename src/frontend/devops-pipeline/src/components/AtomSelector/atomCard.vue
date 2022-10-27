@@ -1,5 +1,4 @@
 <template>
-    
     <div
         :class="atomCls"
         ref="atomCard"
@@ -34,16 +33,17 @@
                 size="small"
                 @click="handleUpdateAtomType(atom.atomCode)"
                 :disabled="atom.disabled || atom.atomCode === atomCode"
-                v-if="!atom.notShowSelect"
+                v-if="atom.installed || atom.defaultFlag"
             >{{atom.atomCode === atomCode ? $t('editPage.selected') : $t('editPage.select')}}
             </bk-button>
-            <bk-button class="select-atom-btn"
+            <bk-button
+                v-else
+                class="select-atom-btn"
                 size="small"
                 @click="handleInstallStoreAtom(atom.atomCode)"
-                :disabled="!atom.flag"
-                :title="atom.tips"
+                :disabled="!atom.installFlag"
+                :title="atom.installFlag ? '' : $t('editPage.noPermToInstall')"
                 :loading="isInstalling"
-                v-else-if="!atom.hasInstalled"
             >{{ $t('editPage.install') }}
             </bk-button>
             <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('newlist.knowMore') }}</a>
@@ -56,49 +56,40 @@
     import { jobConst } from '@/utils/pipelineConst'
     import { mapGetters, mapActions } from 'vuex'
     import logo from '@/components/Logo'
-
     export default {
         components: {
             logo
         },
-
         props: {
             atom: {
                 type: Object,
                 default: {}
             },
-
             container: {
                 type: Object,
                 default: () => ({})
             },
-
             elementIndex: {
                 type: Number,
                 default: 0
             },
-
             atomCode: {
                 type: String
             },
-
             activeAtomCode: {
                 type: String
             }
         },
-
         data () {
             return {
                 isInstalling: false
             }
         },
-
         computed: {
             ...mapGetters('atom', [
                 'getDefaultVersion',
                 'getAtomModal'
             ]),
-
             atomCls () {
                 return [
                     'atom-item-main atom-item',
@@ -117,43 +108,37 @@
             atomOsTooltips () {
                 const { atom } = this
                 const os = atom.os || []
-                let contxt
-                if (os.length) {
+                let context
+                if (os.length && !os.includes('NONE')) {
                     const osListStr = os.map(val => jobConst[val]).join('、')
-                    contxt = `${osListStr}${this.$t('editPage.envUseTips')}`
+                    context = `${osListStr}${this.$t('editPage.envUseTips')}`
                 } else {
-                    contxt = this.$t('editPage.noEnvUseTips')
+                    context = this.$t('editPage.noEnvUseTips')
                 }
-                
                 return {
                     delay: 300,
                     disabled: !atom.disabled,
-                    content: contxt,
+                    content: context,
                     zIndex: 10001
                 }
             }
         },
-
         mounted () {
             this.scrollIntoView()
         },
-
         methods: {
             ...mapActions('atom', [
                 'updateAtomType',
                 'fetchAtomModal',
                 'installAtom'
             ]),
-
             scrollIntoView () {
                 if (this.atomCode === this.atom.atomCode) this.$refs.atomCard.scrollIntoView(false)
             },
-
             getIconByCode (atomCode) {
                 const svg = document.getElementById(atomCode)
                 return svg ? atomCode : 'placeholder'
             },
-
             handleUpdateAtomType (atomCode) {
                 const { elementIndex, container, updateAtomType, getAtomModal, fetchAtomModal, getDefaultVersion } = this
                 const version = getDefaultVersion(atomCode)
@@ -161,7 +146,6 @@
                     atomCode,
                     version
                 })
-
                 const fn = atomModal ? updateAtomType : fetchAtomModal
                 fn({
                     projectCode: this.$route.params.projectId,
@@ -172,7 +156,6 @@
                 })
                 this.$emit('close')
             },
-
             handleInstallStoreAtom (atomCode) {
                 this.isInstalling = true
                 const param = {
@@ -181,8 +164,8 @@
                 }
                 this.installAtom(param).then(() => {
                     this.$bkMessage({ message: this.$t('editPage.installSuc'), theme: 'success', extCls: 'install-tips' })
-                    this.atom.notShowSelect = !this.atom.isInOs
-                    this.atom.hasInstalled = true
+                    this.atom.installed = !this.atom.installed
+                    this.$emit('installAtomSuccess', this.atom)
                 }).catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
                 }).finally(() => {
