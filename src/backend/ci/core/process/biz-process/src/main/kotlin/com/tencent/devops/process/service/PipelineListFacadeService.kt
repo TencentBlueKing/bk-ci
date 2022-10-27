@@ -214,8 +214,8 @@ class PipelineListFacadeService @Autowired constructor(
         templateIdList: Collection<String>? = null
     ): List<Pipeline> {
         logger.info(
-            "listPipelines userId: ${userId}, projectId: ${projectId}, pipelineIdList: ${pipelineIdList}, " +
-                    "templateIdList: ${templateIdList}"
+            "listPipelines userId: {}, projectId: {}, pipelineIdList: {}, templateIdList: {}",
+            userId, projectId, pipelineIdList, templateIdList
         )
         val resultPipelineIds = mutableSetOf<String>()
 
@@ -229,7 +229,7 @@ class PipelineListFacadeService @Autowired constructor(
             checkPermission = false
         )
 
-        logger.info("listPipelines pipelines: ${pipelines}")
+        logger.info("listPipelines pipelines: {}", pipelines)
 
         if (pipelineIdList != null) {
             resultPipelineIds.addAll(pipelineIdList)
@@ -329,7 +329,7 @@ class PipelineListFacadeService @Autowired constructor(
                     authPipelines = hasPermissionList,
                     projectId = projectId
                 )
-                logger.info("listPermissionPipeline favorPipelines: {}, pipelines: {}" , pagePipelines, pipelines)
+                logger.info("listPermissionPipeline favorPipelines: {}, pipelines: {}" , favorPipelines, pipelines)
                 pipelines to favorPipelines.isNotEmpty()
             } else {
                 mutableListOf<Pipeline>() to false
