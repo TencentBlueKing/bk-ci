@@ -74,8 +74,9 @@ class WeworkRobotServiceImpl @Autowired constructor(
         return
     }
 
-    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
+    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
         val sendRequest = mutableListOf<WeweokRobotBaseMessage>()
+        val attachments = weworkNotifyTextMessage.attachments
         val content = if (checkMessageSize(weworkNotifyTextMessage.message)) {
             weworkNotifyTextMessage.message.replace("\\n", "\n")
         } else {
@@ -85,7 +86,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
         weworkNotifyTextMessage.message = content
         when (weworkNotifyTextMessage.receiverType) {
             WeworkReceiverType.group -> {
-                return
+                return false
             }
             WeworkReceiverType.single -> {
                 weworkNotifyTextMessage.receivers.forEach {
@@ -109,7 +110,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
                                 markdown = WeworkRobotContentMessage(
                                     content = content,
                                     mentionedList = null,
-                                    mentionedMobileList = null
+                                    mentionedMobileList = null,
+                                    attachments = attachments
                                 ),
                                 postId = null
                             )
@@ -118,13 +120,15 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 }
             }
         }
-        try {
+        return try {
             doSendRequest(sendRequest)
             logger.info("send message success, $weworkNotifyTextMessage")
             saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", true, null)
+            true
         } catch (e: Exception) {
             logger.warn("send message fail, $weworkNotifyTextMessage")
             saveResult(weworkNotifyTextMessage.receivers, "type:${weworkNotifyTextMessage.message}\n", false, e.message)
+            false
         }
     }
 

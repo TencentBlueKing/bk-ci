@@ -101,12 +101,11 @@ task('build', async cb => {
         version: type,
         lsVersion
     }
-    const envQueryStr = Object.keys(envConfMap).reduce((acc, key) => {
-        acc += ` --env ${key}=${envConfMap[key]}`
-        return acc
-    }, '')
+    Object.keys(envConfMap).forEach((key) => {
+        process.env[key] = envConfMap[key]
+    })
 
-    require('child_process').exec(`lerna run public:master ${scopeStr} --${envQueryStr}`, {
+    require('child_process').exec(`lerna run public:master ${scopeStr}`, {
         maxBuffer: 5000 * 1024
     }, (err, res) => {
         if (err) {

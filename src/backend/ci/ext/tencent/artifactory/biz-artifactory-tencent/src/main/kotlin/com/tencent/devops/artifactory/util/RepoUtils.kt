@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -43,11 +44,13 @@ object RepoUtils {
     const val CUSTOM_REPO = "custom"
     const val REPORT_REPO = "report"
     const val LOG_REPO = "log"
+    const val IMAGE_REPO = "image"
 
     fun getRepoByType(repoType: ArtifactoryType): String {
         return when (repoType) {
             ArtifactoryType.PIPELINE -> PIPELINE_REPO
             ArtifactoryType.CUSTOM_DIR -> CUSTOM_REPO
+            ArtifactoryType.IMAGE -> IMAGE_REPO
         }
     }
 
@@ -55,6 +58,7 @@ object RepoUtils {
         return when (repo) {
             PIPELINE_REPO -> ArtifactoryType.PIPELINE
             CUSTOM_REPO -> ArtifactoryType.CUSTOM_DIR
+            IMAGE_REPO -> ArtifactoryType.IMAGE
             else -> throw IllegalArgumentException("invalid repo: $repo")
         }
     }
@@ -65,6 +69,10 @@ object RepoUtils {
 
     fun isPipelineFile(nodeInfo: QueryNodeInfo): Boolean {
         return nodeInfo.repoName == PIPELINE_REPO
+    }
+
+    fun isImageFile(nodeInfo: QueryNodeInfo): Boolean {
+        return nodeInfo.repoName == IMAGE_REPO
     }
 
     fun toFileInfo(fileInfo: NodeInfo): FileInfo {
@@ -127,6 +135,22 @@ object RepoUtils {
             ),
             meta = nodeInfo.metadata ?: mapOf()
         )
+    }
+
+    fun toFileDetail(imageName: String, packageVersionInfo: PackageVersionInfo): FileDetail {
+        with(packageVersionInfo) {
+            return FileDetail(
+                name = imageName,
+                fullName = "$imageName:${basic.version}",
+                path = basic.fullPath,
+                fullPath = basic.fullPath,
+                size = basic.size,
+                createdTime = LocalDateTime.parse(basic.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                modifiedTime = LocalDateTime.parse(basic.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                checksums = FileChecksums(basic.sha256, "", basic.md5),
+                meta = metadata.associate { it["key"].toString() to it["value"].toString() }
+            )
+        }
     }
 
     private fun refineFullPath(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): String {

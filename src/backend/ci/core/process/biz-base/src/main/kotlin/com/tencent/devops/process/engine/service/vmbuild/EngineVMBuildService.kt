@@ -892,10 +892,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     (
                         errorCode?.let {
                             "\n${
-                            MessageCodeUtil.getCodeLanMessage(
-                                messageCode = errorCode.toString(),
-                                checkUrlDecoder = true
-                            )
+                                MessageCodeUtil.getCodeLanMessage(
+                                    messageCode = errorCode.toString(),
+                                    checkUrlDecoder = true
+                                )
                             }\n"
                         }
                             ?: ""

@@ -51,10 +51,6 @@ spec:
       {{- if .Values.lambda.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.lambda.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: secret-volume
-          secret:
-            secretName: {{ include "bkci.names.fullname" . }}-lambda
       containers:
         - name: lambda
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
@@ -87,17 +83,14 @@ spec:
                   apiVersion: v1
                   fieldPath: metadata.name
           workingDir: /data/workspace/lambda
-          volumeMounts:
-            - mountPath: /data1/certificate/
-              name: secret-volume
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 90
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           readinessProbe:
             httpGet:
@@ -106,14 +99,19 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           volumeMounts:
           - mountPath: /data/workspace/lambda/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
+          - mountPath: /data1/certificate/
+            name: secret-volume
       volumes:
       - hostPath:
           path: /data
         name: log-volume
+      - name: secret-volume
+        secret:
+          secretName: {{ include "bkci.names.fullname" . }}-lambda
 {{- end -}}

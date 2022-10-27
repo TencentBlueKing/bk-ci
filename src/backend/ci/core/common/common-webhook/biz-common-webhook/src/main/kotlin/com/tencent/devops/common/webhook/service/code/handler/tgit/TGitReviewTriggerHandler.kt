@@ -126,13 +126,13 @@ class TGitReviewTriggerHandler(
         ) {
             // MR提交人
             val mrInfo = eventCacheService.getMergeRequestInfo(projectId, event.reviewableId, repository)
-            val reviewers =
-                eventCacheService.getMergeRequestReviewersInfo(projectId, event.reviewableId, repository)?.reviewers
+            val reviewInfo =
+                eventCacheService.getMergeRequestReviewersInfo(projectId, event.reviewableId, repository)
 
             startParams.putAll(
                 WebhookUtils.mrStartParam(
                     mrInfo = mrInfo,
-                    reviewers = reviewers,
+                    reviewInfo = reviewInfo,
                     mrRequestId = event.reviewableId!!,
                     homepage = event.repository.homepage
                 )

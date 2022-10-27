@@ -184,7 +184,7 @@ class StreamHistoryService @Autowired constructor(
             pageSizeNotNull = pageSize
         )
     }
-
+    @Suppress("LongMethod")
     fun getAllBuildBranchList(
         userId: String,
         gitProjectId: Long,
