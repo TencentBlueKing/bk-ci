@@ -470,7 +470,7 @@ class PipelineViewService @Autowired constructor(
         )
         for (filter in filters) {
             val match = if (filter is PipelineViewFilterByName) {
-                pipelineInfo.pipelineName.contains(filter.pipelineName)
+                StringUtils.containsIgnoreCase(pipelineInfo.pipelineName, filter.pipelineName)
             } else if (filter is PipelineViewFilterByCreator) {
                 filter.userIds.contains(pipelineInfo.creator)
             } else if (filter is PipelineViewFilterByLabel) {
@@ -592,7 +592,7 @@ class PipelineViewService @Autowired constructor(
                         key = "流水线名称",
                         hits = mutableListOf(
                             PipelineViewHitFilters.FilterInfo.Hit(
-                                hit = pipelineInfo.pipelineName.contains(filter.pipelineName),
+                                hit = StringUtils.containsIgnoreCase(pipelineInfo.pipelineName, filter.pipelineName),
                                 value = filter.pipelineName
                             )
                         )
