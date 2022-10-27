@@ -73,7 +73,7 @@ class PublishersDataServiceImpl @Autowired constructor(
         publishers.forEach {
             val deptInfos = analysisDept(userId, it.organization)
             if (deptInfos.isEmpty()) {
-                logger.error("createPublisherData analysis dept data error!")
+                logger.warn("create publisherData fail, analysis dept data error!")
                 return 0
             }
             val storePublisherInfo = TStorePublisherInfoRecord()
@@ -313,7 +313,7 @@ class PublishersDataServiceImpl @Autowired constructor(
                 val result = client.get(ServiceDeptResource::class).getDeptByName(userId, deptName).data
                 result?.let { it -> deptInfos.add(index, it.results[0]) }
             } catch (e: OperationException) {
-                logger.error("analysisDept getDeptByName error! ${e.message}")
+                logger.warn("analysis deptInfo get deptId by name fail! ${e.message}")
             }
         }
         return deptInfos
