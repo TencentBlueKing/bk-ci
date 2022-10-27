@@ -70,7 +70,10 @@ interface AppExperienceSearchResource {
         experienceName: String,
         @ApiParam("是否搜索公开体验", required = true)
         @QueryParam("experiencePublic")
-        experiencePublic: Boolean
+        experiencePublic: Boolean,
+        @ApiParam("是否搜索minigame", required = true)
+        @QueryParam("minigame")
+        minigame: Boolean? = null
     ): Result<List<SearchAppInfoVO>>
 
     @ApiOperation("推荐搜索")

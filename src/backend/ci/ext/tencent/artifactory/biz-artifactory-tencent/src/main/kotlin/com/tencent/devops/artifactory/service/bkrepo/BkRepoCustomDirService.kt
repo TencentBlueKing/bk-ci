@@ -34,7 +34,6 @@ import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.service.CustomDirService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.BkRepoUtils.toFileInfo
-import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
@@ -67,7 +66,7 @@ class BkRepoCustomDirService @Autowired constructor(
         ).map {
             RepoUtils.toFileInfo(it)
         }
-        return JFrogUtil.sort(fileList)
+        return PathUtils.sort(fileList)
     }
 
     override fun show(userId: String, projectId: String, argPath: String): FileDetail {
@@ -117,8 +116,8 @@ class BkRepoCustomDirService @Autowired constructor(
         }
 
         combinationPath.srcPaths.map { srcPath ->
-            val normalizedSrcPath = JFrogUtil.normalize(srcPath)
-            if (JFrogUtil.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
+            val normalizedSrcPath = PathUtils.normalize(srcPath)
+            if (PathUtils.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
                 throw BadRequestException("不能在拷贝到当前目录")
             }
 
@@ -139,10 +138,10 @@ class BkRepoCustomDirService @Autowired constructor(
         pipelineService.validatePermission(userId, projectId)
         val normalizedDestPath = PathUtils.checkAndNormalizeAbsPath(combinationPath.destPath)
         combinationPath.srcPaths.map { srcPath ->
-            val normalizedSrcPath = JFrogUtil.normalize(srcPath)
+            val normalizedSrcPath = PathUtils.normalize(srcPath)
 
             if (normalizedSrcPath == normalizedDestPath ||
-                JFrogUtil.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
+                PathUtils.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
                 throw BadRequestException("不能移动到当前目录")
             }
 

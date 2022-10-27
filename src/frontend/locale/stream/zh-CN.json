@@ -55,9 +55,10 @@
     "group": "项目组",
     "failToGetData": "获取数据失败",
     "noPermToView": "没有查看权限",
+    "pleaseLogin": "请登录",
     "header": {
         "pipelines": "流水线",
-        "metrics": "数据分析",
+        "metrics": "Metrics 看板",
         "settings": "项目设置",
         "notifications": "通知",
         "goToGit": "查看代码库"
@@ -109,6 +110,12 @@
         "debugLeaveTips": "如果离开，新编辑数据将会丢失",
         "thirdReport": "第三方报告",
         "noReports": "暂无报告",
+        "reviewInfo": "审核信息",
+        "reviewTitle": "当前构建由协同者的合并请求触发，协同者未加入白名单或协同者修改了流水线，需审核通过才能运行。",
+        "noYmlFiles": "暂无yml文件变更",
+        "reviewTips": "构建过程可能会用到当前项目下的凭证、构建机或其它资源，请确认无安全问题再允许运行。",
+        "approveAndRun": "同意运行",
+        "refuse": "拒绝",
         "system": "系统",
         "openapi": "OPENAPI",
         "editNote": "备注",
@@ -207,6 +214,8 @@
         "filterByName": "通过项目名称过滤"
     },
     "setting": {
+        "save": "保存",
+        "cancel": "取消",
         "settings": "设置",
         "baseSetting": "基本设置",
         "credentialSetting": "凭据设置",
@@ -276,7 +285,8 @@
             "token": "Token",
             "tokenPlaceholder": "请输入Token",
             "passwordToken": "用户密码+私人Token",
-            "passwordTokenDesc": "用于通过 http 链接 Git 类型的代码仓库"
+            "passwordTokenDesc": "用于通过 http 链接 Git 类型的代码仓库",
+            "privateKey": "私钥"
         },
         "userGroup": {
             "createGroup": "新增体验组",

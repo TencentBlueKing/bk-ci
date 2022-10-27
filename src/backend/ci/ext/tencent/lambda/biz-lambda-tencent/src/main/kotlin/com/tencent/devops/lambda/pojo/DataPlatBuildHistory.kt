@@ -106,10 +106,14 @@ data class DataPlatBuildHistory(
     var labels: List<String>?,
     @ApiModelProperty("是否保密项目", required = false)
     val isSecrecy: Boolean?,
+    @ApiModelProperty("构建描述", required = false)
+    val buildMsg: String?,
     @ApiModelProperty("事业群ID", required = false)
     val bgId: String,
     @ApiModelProperty("部门ID", required = false)
     val deptId: String,
     @ApiModelProperty("中心ID", required = false)
-    val centerId: String
+    val centerId: String,
+    @ApiModelProperty("非法变量名列表", required = false)
+    val invalidKeyList: List<String>?
 )

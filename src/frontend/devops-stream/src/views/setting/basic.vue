@@ -27,7 +27,7 @@
             </section>
         </section>
 
-        <!-- <h3 class="setting-basic-head">{{$t('setting.mrRunPerm')}}</h3>
+        <h3 class="setting-basic-head">{{$t('setting.mrRunPerm')}}</h3>
         <section class="basic-main">
             <section class="form-item">
                 <bk-checkbox v-model="triggerSetting.memberNoNeedApproving" class="basic-item">{{$t('setting.mrNoApproval')}}</bk-checkbox>
@@ -47,7 +47,7 @@
             <section class="main-checkbox">
                 <bk-button theme="primary" :loading="isSavingTrigginSetting" @click="saveTriggerSetting">{{ $t('save') }}</bk-button>
             </section>
-        </section> -->
+        </section>
     </article>
 </template>
 
@@ -119,9 +119,7 @@
                     memberNoNeedApproving: this.triggerSetting.memberNoNeedApproving,
                     whitelist
                 }
-                setting.saveTriggerSetting(this.projectId, data).then(() => {
-                    this.$bkMessage({ theme: 'success', message: 'Saved successfully' })
-                }).catch((err) => {
+                setting.saveTriggerSetting(this.projectId, data).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
                     this.isSavingTrigginSetting = false

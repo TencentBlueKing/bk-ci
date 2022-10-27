@@ -109,14 +109,16 @@ class PipelineRuntimeExtService @Autowired constructor(
     fun popNextConcurrencyGroupQueueCanPend2Start(
         projectId: String,
         concurrencyGroup: String,
+        pipelineId: String? = null,
         buildId: String? = null,
         buildStatus: BuildStatus = BuildStatus.QUEUE_CACHE
     ): BuildInfo? {
         val buildInfo = pipelineBuildDao.convert(
             pipelineBuildDao.getOneConcurrencyQueueBuild(
-                dslContext,
+                dslContext = dslContext,
                 projectId = projectId,
-                concurrencyGroup = concurrencyGroup
+                concurrencyGroup = concurrencyGroup,
+                pipelineId = pipelineId
             )
         )
         val updateBuildId = buildId ?: buildInfo?.buildId

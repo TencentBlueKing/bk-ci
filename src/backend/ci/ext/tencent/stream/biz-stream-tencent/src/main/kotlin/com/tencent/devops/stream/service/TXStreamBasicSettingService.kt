@@ -65,7 +65,8 @@ class TXStreamBasicSettingService @Autowired constructor(
     client = client,
     streamBasicSettingDao = streamBasicSettingDao,
     pipelineResourceDao = pipelineResourceDao,
-    streamGitTransferService = streamGitTransferService
+    streamGitTransferService = streamGitTransferService,
+    streamGitConfig = streamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamBasicSettingService::class.java)
@@ -254,7 +255,7 @@ class TXStreamBasicSettingService @Autowired constructor(
 
     private fun refreshNameSpace(it: TGitBasicSettingRecord) {
         try {
-            val projectResult = requestGitProjectInfo(it.id)
+            val projectResult = requestGitProjectInfo(it.id, "")
             if (projectResult != null) {
                 streamBasicSettingDao.fixProjectNameSpace(
                     dslContext = dslContext,
@@ -278,7 +279,7 @@ class TXStreamBasicSettingService @Autowired constructor(
 
     private fun refresh(it: TGitBasicSettingRecord) {
         try {
-            val projectResult = requestGitProjectInfo(it.id)
+            val projectResult = requestGitProjectInfo(it.id, "")
             if (projectResult != null) {
                 val httpUrl = if (!projectResult.gitHttpsUrl.isNullOrBlank()) {
                     projectResult.gitHttpsUrl!!
@@ -296,7 +297,7 @@ class TXStreamBasicSettingService @Autowired constructor(
         }
     }
 
-    override fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {
+    override fun requestGitProjectInfo(gitProjectId: Long, userId: String): StreamGitProjectInfoWithProject? {
         return when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> try {
                 val accessToken = tokenService.getToken(gitProjectId)

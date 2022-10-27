@@ -92,7 +92,7 @@ class V1GitCIBranchService @Autowired constructor(
             logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
             return emptyList()
         }
-        logger.info("Get branch build history list buildHistoryList: $buildHistoryList, gitProjectId: $gitProjectId")
+        logger.info("Get branch build history list buildHistoryList, gitProjectId: $gitProjectId")
 
         val result = mutableListOf<V1BranchBuildHistory>()
         branchBuildsList.forEach nextBuild@{

@@ -35,6 +35,7 @@ import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerConte
  * @param event 各源的事件原文
  * @param context stream触发过程中会用到的上下文数据
  */
+@Suppress("MaxLineLength")
 data class ActionData(
     val event: CodeWebhookEvent,
     var context: StreamTriggerContext

@@ -16,5 +16,6 @@ data class PipelineBuildCommit(
     val url: String,
     val eventType: String,
     val mrId: String?,
-    val channel: String
+    val channel: String,
+    val action: String?
 )

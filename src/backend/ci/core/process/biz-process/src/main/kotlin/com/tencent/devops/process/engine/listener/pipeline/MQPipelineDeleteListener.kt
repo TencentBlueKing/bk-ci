@@ -75,7 +75,6 @@ class MQPipelineDeleteListener @Autowired constructor(
             watcher.safeAround("deleteExt") {
                 pipelineGroupService.deleteAllUserFavorByPipeline(userId, projectId, pipelineId) // 删除收藏该流水线上所有记录
                 pipelineGroupService.deletePipelineLabel(userId, projectId, pipelineId)
-                pipelineRuntimeService.deletePipelineBuilds(projectId, pipelineId)
             }
         }
 

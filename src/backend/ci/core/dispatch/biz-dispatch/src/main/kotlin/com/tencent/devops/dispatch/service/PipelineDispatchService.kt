@@ -31,12 +31,10 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao
 import com.tencent.devops.dispatch.pojo.PipelineBuild
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -82,21 +80,6 @@ class PipelineDispatchService @Autowired constructor(
     fun startUp(startupEvent: PipelineAgentStartupEvent) {
         logger.info("ENGINE|${startupEvent.buildId}|VM_START|j(${startupEvent.vmSeqId})|" +
             "dispatchType=${startupEvent.dispatchType}")
-        // Check if the pipeline is running
-        val resource = client.get(ServicePipelineResource::class).isPipelineRunning(
-            projectId = startupEvent.projectId,
-            buildId = startupEvent.buildId,
-            channelCode = ChannelCode.valueOf(startupEvent.channelCode)
-        )
-        if (resource.isNotOk() || resource.data == null) {
-            logger.warn("ENGINE|${startupEvent.buildId}|VM_START|j(${startupEvent.vmSeqId})|msg=${resource.message}")
-            return
-        }
-
-        if (!resource.data!!) {
-            logger.warn("ENGINE|${startupEvent.buildId}|VM_START|j(${startupEvent.vmSeqId})|ALREADY_FINISH")
-            return
-        }
 
         if (startupEvent.retryTime == 0) {
             buildLogPrinter.addLine(

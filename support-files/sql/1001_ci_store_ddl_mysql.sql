@@ -157,8 +157,9 @@ CREATE TABLE IF NOT EXISTS `T_ATOM_ENV_INFO` (
   `OS_ARCH` varchar(128) DEFAULT NULL COMMENT '支持的操作系统架构',
   `RUNTIME_VERSION` varchar(128) DEFAULT NULL COMMENT '运行时版本',
   `DEFAULT_FLAG` bit(1) NOT NULL DEFAULT b'1' COMMENT '是否为默认环境信息',
+  `FINISH_KILL_FLAG` bit(1) COMMENT '插件运行结束后是否立即杀掉其进程',
   PRIMARY KEY (`ID`),
-  KEY `inx_tpaei_atom_id` (`ATOM_ID`)
+  UNIQUE KEY `UNI_INX_TAEI_ID_OS_NAME_ARCH` (`ATOM_ID`,`OS_NAME`,`OS_ARCH`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线原子执行环境信息表';
 
 
@@ -727,6 +728,7 @@ CREATE TABLE IF NOT EXISTS `T_STORE_APPROVE`
     `MODIFIER`    varchar(50) NOT NULL DEFAULT 'system' COMMENT '最近修改人',
     `CREATE_TIME` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    `TOKEN` varchar(64) DEFAULT NULL,
     PRIMARY KEY (`ID`),
     KEY `inx_tsa_applicant` (`APPLICANT`),
     KEY `inx_tsa_type` (`TYPE`),

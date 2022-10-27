@@ -70,7 +70,7 @@ class ParseContext(
 
         this.trace = trace ?: NoOperationTraceWriter()
 
-        lexicalAnalyzer = LexicalAnalyzer(expression)
+        lexicalAnalyzer = LexicalAnalyzer(expression, subNameValueEvaluateInfo)
     }
 
     private class NoOperationTraceWriter : ITraceWriter {

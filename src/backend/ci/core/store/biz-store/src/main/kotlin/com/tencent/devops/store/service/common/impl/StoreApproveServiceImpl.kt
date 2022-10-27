@@ -90,6 +90,10 @@ class StoreApproveServiceImpl : StoreApproveService {
             )
         val storeCode = storeApproveRecord.storeCode
         val storeType = storeApproveRecord.storeType
+        val token = storeApproveRecord.token
+        if (!storeApproveRequest.token.isNullOrBlank() && token != storeApproveRequest.token) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
         // 判断是否是插件管理员在操作
         val flag = storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType)
         if (!flag) {

@@ -377,7 +377,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 return client.get(ServiceScmResource::class).listTags(
                     projectName = repo.projectName,
                     url = repo.url,
-                    type = ScmType.CODE_GIT,
+                    type = ScmType.CODE_TGIT,
                     token = credInfo.privateKey,
                     userName = credInfo.username,
                     search = search

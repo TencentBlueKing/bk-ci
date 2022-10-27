@@ -86,7 +86,6 @@ class MessageApproveService @Autowired constructor() {
             sysUrl = createMoaApproveRequest.sysUrl
         )
         val requestBody = JsonUtil.toJson(createEsbMoaApproveParam)
-        logger.info("the requestBody is:$requestBody")
         val request = Request.Builder()
             .url(urlPrefix + moaPushDataUrl)
             .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
@@ -112,7 +111,6 @@ class MessageApproveService @Autowired constructor() {
             workItems = moaWorkItemElementList
         )
         val requestBody = JsonUtil.toJson(createEsbMoaWorkItem)
-        logger.info("the requestBody is:$requestBody")
         val request = Request.Builder()
             .url(urlPrefix + moaPushWorkItemUrl)
             .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
@@ -142,7 +140,6 @@ class MessageApproveService @Autowired constructor() {
             processName = completeMoaWorkItemRequest.processName
         )
         val requestBody = JsonUtil.toJson(completeEsbMoaWorkItem)
-        logger.info("the requestBody is:$requestBody")
         val request = Request.Builder()
             .url(urlPrefix + moaCompleteWorkItemUrl)
             .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
@@ -169,7 +166,6 @@ class MessageApproveService @Autowired constructor() {
             taskId = taskId
         )
         val requestBody = JsonUtil.toJson(createEsbMoaCompleteParam)
-        logger.info("the requestBody is:$requestBody")
         val request = Request.Builder()
             .url(urlPrefix + moaCompleteUrl)
             .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))

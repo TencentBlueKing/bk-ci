@@ -30,6 +30,7 @@ package com.tencent.devops.stream.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.pipeline.DynamicParameterInfo
 import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.ManualTriggerReq
 import com.tencent.devops.stream.pojo.StreamGitYamlString
@@ -88,6 +89,27 @@ interface UserStreamTriggerResource {
         @QueryParam("commitId")
         commitId: String?
     ): Result<ManualTriggerInfo>
+
+    @ApiOperation("子流水线插件TriggerBuild拿启动信息")
+    @GET
+    @Path("/{projectId}/{pipelineId}/manualStartupInfo")
+    fun getManualStartupInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("分支名称", required = false)
+        @QueryParam("branchName")
+        branchName: String,
+        @ApiParam("COMMIT_ID", required = false)
+        @QueryParam("commitId")
+        commitId: String?
+    ): Result<List<DynamicParameterInfo>>
 
     @ApiOperation("校验yaml格式")
     @POST

@@ -30,9 +30,12 @@ package com.tencent.devops.auth.cron
 import com.tencent.devops.auth.entity.ManagerChangeType
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
+import com.tencent.devops.auth.service.AuthManagerApprovalService
 import com.tencent.devops.auth.service.ManagerOrganizationService
 import com.tencent.devops.auth.service.ManagerUserService
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -44,7 +47,9 @@ class AuthCronManager @Autowired constructor(
     val managerUserService: ManagerUserService,
     val managerOrganizationService: ManagerOrganizationService,
     val refreshDispatch: AuthRefreshDispatch,
-    val clientTokenService: ClientTokenService
+    val clientTokenService: ClientTokenService,
+    val authManagerApprovalService: AuthManagerApprovalService,
+    val redisOperation: RedisOperation
 ) {
 
     @PostConstruct
@@ -87,7 +92,30 @@ class AuthCronManager @Autowired constructor(
         clientTokenService.setSystemToken(null)
     }
 
+    /**
+     * 每天凌晨1点检查即将失效的管理员权限
+     */
+    @Scheduled(cron = "0 0 1 * * ?")
+    fun checkExpiringManager() {
+        RedisLock(redisOperation, AUTH_EXPIRING_MANAGAER_APPROVAL, expiredTimeInSeconds).use { redisLock ->
+            try {
+                logger.info("AuthCronManager|checkExpiringManager|start")
+                val lockSuccess = redisLock.tryLock()
+                if (lockSuccess) {
+                    authManagerApprovalService.checkExpiringManager()
+                    logger.info("AuthCronManager|checkExpiringManager |finish")
+                } else {
+                    logger.info("AuthCronManager|checkExpiringManager | running")
+                }
+            } catch (e: Throwable) {
+                logger.warn("AuthCronManager|checkExpiringManager | error", e)
+            }
+        }
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(AuthCronManager::class.java)
+        private const val AUTH_EXPIRING_MANAGAER_APPROVAL = "auth:expiring:manager:approval"
+        private const val expiredTimeInSeconds = 60L
     }
 }

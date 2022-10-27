@@ -27,4 +27,11 @@ class UserCustomScheduleTaskController @Autowired constructor(
         }
         return customScheduleJobService.customScheduledJobAdd(customScheduleJobModel)
     }
+
+    override fun triggerCustomScheduleJob(user: String, projectId: String, jobName: String): String? {
+        if (!turboAuthService.getAuthResult(projectId, user)) {
+            throw TurboException(errorCode = IS_NOT_ADMIN_MEMBER, errorMessage = NO_ADMIN_MEMBER_MESSAGE)
+        }
+        return customScheduleJobService.trigger(jobName)
+    }
 }

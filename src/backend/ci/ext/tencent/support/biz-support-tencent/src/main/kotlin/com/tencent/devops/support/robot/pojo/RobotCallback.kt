@@ -36,5 +36,8 @@ data class RobotCallback(
     val msgId: String,
     val chatId: String,
     val getChatInfoUrl: String,
-    val eventType: String?
+    val eventType: String?,
+    val callbackId: String?,
+    val actionName: String?,
+    val actionValue: String?
 )
