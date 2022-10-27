@@ -125,7 +125,7 @@ class PublishersDataServiceImpl @Autowired constructor(
             val publisherId = publishersDao.getPublisherId(dslContext, it.publishersCode)
             val deptInfos = analysisDept(userId, it.organization)
             if (deptInfos.isEmpty()) {
-                logger.error("createPublisherData analysis dept data error!")
+                logger.warn("update publisherData fail, analysis dept data error!")
                 return 0
             }
             publisherId?.let { id ->
