@@ -64,7 +64,7 @@ class ServiceAutoConfiguration {
     fun gray() = Gray()
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(CommonConfig::class)
     fun commonConfig() = CommonConfig()
 
     @Bean
