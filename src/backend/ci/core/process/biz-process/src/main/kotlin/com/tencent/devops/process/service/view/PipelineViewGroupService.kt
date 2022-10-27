@@ -622,7 +622,6 @@ class PipelineViewGroupService @Autowired constructor(
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
-        initDynamicViewGroup()
         val countByViewId = pipelineViewGroupDao.countByViewId(dslContext, projectId, views.map { it.id })
         val summaries = sortViews2Summary(projectId, userId, views, countByViewId)
         if (projected != false) {
