@@ -19,7 +19,7 @@ BEGIN
                         AND COLUMN_NAME = 'DOCKER_INFO'
                         AND COLUMN_NAME = 'EXECUTE_COUNT'
                         AND COLUMN_NAME = 'CONTAINER_HASH_ID') THEN
-        ALTER TABLE `devops_dispatch`.`T_DISPATCH_THIRDPARTY_AGENT_BUILD` 
+        ALTER TABLE `T_DISPATCH_THIRDPARTY_AGENT_BUILD` 
         ADD COLUMN `DOCKER_INFO` json NULL COMMENT '第三方构建机docker构建信息',
         ADD COLUMN `EXECUTE_COUNT` int(11) NULL COMMENT '流水线执行次数',
         ADD COLUMN `CONTAINER_HASH_ID` varchar(128) NULL COMMENT '容器ID日志使用';
