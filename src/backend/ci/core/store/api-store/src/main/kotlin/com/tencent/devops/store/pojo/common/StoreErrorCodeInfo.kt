@@ -25,43 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
-import com.tencent.devops.artifactory.service.ArchiveAtomService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceArchiveAtomResourceImpl @Autowired constructor(
-    private val archiveAtomService: ArchiveAtomService
-) : ServiceArchiveAtomResource {
-
-    override fun getAtomFileContent(filePath: String): Result<String> {
-        return Result(archiveAtomService.getAtomFileContent(filePath))
-    }
-
-    override fun deleteAtomFile(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
-        archiveAtomService.deleteAtom(userId, projectCode, atomCode)
-        return Result(true)
-    }
-
-    override fun updateArchiveFile(
-        projectCode: String,
-        atomCode: String,
-        version: String,
-        fileName: String,
-        content: String
-    ): Result<Boolean> {
-        return Result(
-            archiveAtomService.updateArchiveFile(
-                projectCode = projectCode,
-                atomCode = atomCode,
-                version = version,
-                fileName = fileName,
-                content = content
-            )
-        )
-    }
-}
+@ApiModel("组件所属错误码信息")
+data class StoreErrorCodeInfo(
+    @ApiModelProperty("store组件代码")
+    val storeCode: String,
+    @ApiModelProperty("store组件类型")
+    val storeType: StoreTypeEnum,
+    @ApiModelProperty("错误码信息")
+    val errorCodeInfos: List<ErrorCodeInfo>
+)

@@ -25,43 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
-import com.tencent.devops.artifactory.service.ArchiveAtomService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceArchiveAtomResourceImpl @Autowired constructor(
-    private val archiveAtomService: ArchiveAtomService
-) : ServiceArchiveAtomResource {
-
-    override fun getAtomFileContent(filePath: String): Result<String> {
-        return Result(archiveAtomService.getAtomFileContent(filePath))
-    }
-
-    override fun deleteAtomFile(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
-        archiveAtomService.deleteAtom(userId, projectCode, atomCode)
-        return Result(true)
-    }
-
-    override fun updateArchiveFile(
-        projectCode: String,
-        atomCode: String,
-        version: String,
-        fileName: String,
-        content: String
-    ): Result<Boolean> {
-        return Result(
-            archiveAtomService.updateArchiveFile(
-                projectCode = projectCode,
-                atomCode = atomCode,
-                version = version,
-                fileName = fileName,
-                content = content
-            )
-        )
-    }
-}
+@ApiModel("错误码信息")
+data class ErrorCodeInfo(
+    @ApiModelProperty("组件错误码")
+    val errorCode: Int,
+    @ApiModelProperty("中文简体描述信息")
+    val errorMsgZhCn: String,
+    @ApiModelProperty("中文繁体描述信息")
+    val errorMsgZhTw: String? = null,
+    @ApiModelProperty("英文描述信息")
+    val errorMsgEn: String? = null
+)
