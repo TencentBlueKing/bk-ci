@@ -64,6 +64,11 @@
         "goToGit": "go to git"
     },
     "pipeline": {
+        "queue": "Queue",
+        "queueTimeout": "Queue Timeout",
+        "running": "Running",
+        "reviewing": "Reviewing",
+        "stageSuccess": "Stage Success",
         "pipeline": "Pipeline",
         "allPipelines": "All pipelines",
         "nameRule": "Consists of uppercase and lowercase English letters, numbers, underscores, underscores and dots",

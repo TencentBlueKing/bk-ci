@@ -64,6 +64,11 @@
         "goToGit": "查看代码库"
     },
     "pipeline": {
+        "queue": "排队中",
+        "queueTimeout": "排队超时",
+        "running": "运行中",
+        "reviewing": "审批中",
+        "stageSuccess": "阶段性完成",
         "pipeline": "流水线",
         "allPipelines": "所有流水线",
         "nameRule": "由大写和小写英文字母、数字、下划线、下划线和点组成",
