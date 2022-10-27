@@ -1,11 +1,16 @@
 package com.tencent.devops.turbo.service
 
+import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_WORK_STATS
+import com.tencent.devops.common.util.constants.ROUTE_TURBO_WORK_STATS
+import com.tencent.devops.common.web.mq.CORE_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.turbo.dto.TurboRecordCreateDto
 import com.tencent.devops.turbo.dto.TurboRecordUpdateDto
 import com.tencent.devops.turbo.enums.EnumDistccTaskStatus
 import com.tencent.devops.turbo.model.TTurboEngineConfigEntity
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDate
@@ -27,6 +32,8 @@ import java.time.ZoneOffset
 @Suppress("ComplexMethod","NestedBlockDepth","ComplexCondition","MaxLineLength")
 @Service
 class TurboDataSyncService @Autowired constructor(
+    @Qualifier(CORE_RABBIT_TEMPLATE_NAME)
+    private val rabbitTemplate: RabbitTemplate,
     private val turboPlanService: TurboPlanService,
     private val turboPlanInstanceService: TurboPlanInstanceService,
     private val turboRecordService: TurboRecordService,
@@ -112,6 +119,15 @@ class TurboDataSyncService @Autowired constructor(
             pipelineName = turboPlanInstanceEntity.pipelineName,
             pipelineElementId = turboPlanInstanceEntity.pipelineElementId
         )
+
+        // 这里判断report状态status字段,finish才去查询统计信息,用于统计数据落地
+        if (turboRecordEntity?.status == EnumDistccTaskStatus.FINISH.getTBSStatus()) {
+            rabbitTemplate.convertAndSend(
+                EXCHANGE_TURBO_WORK_STATS,
+                ROUTE_TURBO_WORK_STATS,
+                turboRecordEntity.tbsRecordId!!
+            )
+        }
 
         // 3.进行各个表的统计工作,如果状态为完成，则要统计时间(各个表的统计)
         // (1)完成编译加速实例的统计工作

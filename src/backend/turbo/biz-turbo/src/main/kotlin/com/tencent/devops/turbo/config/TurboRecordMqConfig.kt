@@ -6,8 +6,11 @@ import com.tencent.devops.common.util.constants.ROUTE_TURBO_REPORT_CREATE
 import com.tencent.devops.common.util.constants.QUEUE_TURBO_REPORT_UPDATE
 import com.tencent.devops.common.util.constants.ROUTE_TURBO_REPORT_UPDATE
 import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_PLUGIN
+import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_WORK_STATS
 import com.tencent.devops.common.util.constants.QUEUE_TURBO_PLUGIN_DATA
+import com.tencent.devops.common.util.constants.QUEUE_TURBO_WORK_STATS
 import com.tencent.devops.common.util.constants.ROUTE_TURBO_PLUGIN_DATA
+import com.tencent.devops.common.util.constants.ROUTE_TURBO_WORK_STATS
 import com.tencent.devops.common.web.mq.CORE_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.CORE_RABBIT_ADMIN_NAME
 import com.tencent.devops.turbo.component.TurboRecordConsumer
@@ -153,4 +156,45 @@ class TurboRecordMqConfig {
         container.setMessageListener(adapter)
         return container
     }
+
+    @Bean
+    fun syncTbsWorkStatDataExchange(): DirectExchange {
+        val directExchange = DirectExchange(EXCHANGE_TURBO_WORK_STATS)
+        directExchange.isDelayed = true
+        directExchange.isDurable
+        return directExchange
+    }
+
+    @Bean
+    fun syncTbsWorkStatDataQueue(): Queue {
+        return Queue(QUEUE_TURBO_WORK_STATS)
+    }
+
+    @Bean
+    fun syncTbsWorkStatDataBind(syncTbsWorkStatDataQueue: Queue, syncTbsWorkStatDataExchange: CustomExchange): Binding {
+        return BindingBuilder.bind(syncTbsWorkStatDataQueue).to(syncTbsWorkStatDataExchange)
+            .with(ROUTE_TURBO_WORK_STATS).noargs()
+    }
+
+    @Bean
+    fun syncTbsWorkStatDataListenerContainer(
+        connectionFactory: ConnectionFactory,
+        syncTbsWorkStatDataQueue: Queue,
+        rabbitAdmin: RabbitAdmin,
+        turboRecordConsumer: TurboRecordConsumer,
+        messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setPrefetchCount(1)
+        container.setQueueNames(syncTbsWorkStatDataQueue.name)
+        container.setConcurrentConsumers(5)
+        container.setMaxConcurrentConsumers(5)
+        container.setAmqpAdmin(rabbitAdmin)
+        // 确保只有一个消费者消费，保证负载不超时
+        val adapter = MessageListenerAdapter(turboRecordConsumer, turboRecordConsumer::syncTbsWorkStatData.name)
+        adapter.setMessageConverter(messageConverter)
+        container.setMessageListener(adapter)
+        return container
+    }
+
 }

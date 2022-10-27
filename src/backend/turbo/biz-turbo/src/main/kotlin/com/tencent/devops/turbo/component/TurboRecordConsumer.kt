@@ -13,6 +13,7 @@ import com.tencent.devops.turbo.service.TurboDataSyncService
 import com.tencent.devops.turbo.service.TurboEngineConfigService
 import com.tencent.devops.turbo.service.TurboPlanService
 import com.tencent.devops.turbo.service.TurboRecordService
+import com.tencent.devops.turbo.service.TurboWorkStatService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -24,7 +25,8 @@ class TurboRecordConsumer @Autowired constructor(
     private val turboEngineConfigService: TurboEngineConfigService,
     private val turboDataSyncService: TurboDataSyncService,
     private val turboPlanService: TurboPlanService,
-    private val turboRecordService: TurboRecordService
+    private val turboRecordService: TurboRecordService,
+    private val turboWorkDataService: TurboWorkStatService
 ) {
 
     companion object {
@@ -133,5 +135,19 @@ class TurboRecordConsumer @Autowired constructor(
             status = EnumDistccTaskStatus.FAILED.getTBSStatus(),
             user = turboRecordPluginUpdateDto.user
         )
+    }
+
+    /**
+     * 同步TBS编译加速统计数据
+     */
+    fun syncTbsWorkStatData(turboRecordId: String) {
+        logger.info("sync TBS work stats data, turbo record id: $turboRecordId")
+        try {
+            turboWorkDataService.syncTbsWorkStatData(
+                turboRecordId = turboRecordId
+            )
+        } catch (e: Exception) {
+            logger.error("sync TBS work stats data failed! msg: ${e.message}", e)
+        }
     }
 }
