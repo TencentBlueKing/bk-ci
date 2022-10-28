@@ -197,7 +197,7 @@
         methods: {
             initData () {
                 const defaultForm = {
-                    credentialType: 'PASSWORD',
+                    credentialType: '',
                     credentialId: '',
                     credentialName: '',
                     credentialRemark: '',
