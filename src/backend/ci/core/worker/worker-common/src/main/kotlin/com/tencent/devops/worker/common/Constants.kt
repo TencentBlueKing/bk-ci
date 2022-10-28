@@ -31,10 +31,6 @@ const val BUILD_ID = "devops.build.id"
 
 const val BUILD_TYPE = "build.type"
 
-const val AGENT_ID = "devops_agent_id"
-
-const val AGENT_SECRET_KEY = "devops_agent_secret_key"
-
 const val WORKSPACE_ENV = "WORKSPACE"
 
 const val COMMON_ENV_CONTEXT = "common_env"
