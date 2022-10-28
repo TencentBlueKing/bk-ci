@@ -479,12 +479,12 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @Test
         @DisplayName("首次初始化")
         fun test_2() {
-            every { redisOperation.setIfAbsent(any(), any()) } returns true
+            every { redisOperation.setIfAbsent(any(), any(), any(), any()) } returns true
             every { self["allPipelineInfos"](any() as String, any() as Boolean) } returns listOf(pi)
             every { pipelineViewService.matchView(any(), any()) } returns true
             every { pipelineViewGroupDao.create(anyDslContext(), any(), any(), any(), any()) } returns Unit
             self.invokePrivate<List<String>>("initDynamicViewGroup", pv, "test", dslContext).let {
-                Assertions.assertTrue(it!!.size == 1)
+                Assertions.assertEquals(it!!.size, 1)
                 Assertions.assertEquals(it[0], "p-test")
             }
         }
