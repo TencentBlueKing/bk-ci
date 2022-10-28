@@ -1,6 +1,7 @@
 package com.tencent.devops.turbo.model
 
 
+import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
@@ -8,14 +9,17 @@ import org.springframework.data.mongodb.core.mapping.Field
 @Document(collection = "t_turbo_work_stats")
 data class TTurboWorkStatsEntity(
 
-    @Indexed(background = true)
-    @Field("job_stats_id")
-    val jobStatsId: String,
+    /**
+     * 实体类id
+     */
+    @Id
+    val entityId: String = "",
 
     @Field("tbs_record_id")
     val taskId: String,
 
     @Field("project_id")
+    @Indexed(background = true)
     val projectId: String,
 
     val id: Long,

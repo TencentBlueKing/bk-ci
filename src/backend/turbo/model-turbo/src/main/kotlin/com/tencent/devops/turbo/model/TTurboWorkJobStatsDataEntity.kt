@@ -11,10 +11,16 @@ import org.springframework.data.mongodb.core.mapping.Field
 data class TTurboWorkJobStatsDataEntity(
 
     /**
+     * 所属TTurboWorkStatsEntity的id
+     */
+    @Field("work_stats_entity_id")
+    var workStatsEntityId: String = "",
+
+    /**
      * 实体类id
      */
     @Id
-    val entityId: String? = null,
+    var entityId: String? = null,
 
     @Field("work_id")
     val workId: String = "",

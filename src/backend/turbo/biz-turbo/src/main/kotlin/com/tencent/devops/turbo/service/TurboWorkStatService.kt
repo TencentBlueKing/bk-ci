@@ -60,16 +60,8 @@ class TurboWorkStatService @Autowired constructor(
      */
     fun syncTbsWorkStatData(turboRecordId: String) {
         val tbsWorkStatDataDto: TurboWorkStatsDto = getTbsWorkStatData(turboRecordId)
-        val jobStatsDataStr = tbsWorkStatDataDto.jobStatsData
 
-        val jobStatsDataDto = JsonUtil.to(jobStatsDataStr, object : TypeReference<JobStatsDataDto>() {})
-
-        var tTurboWorkJobStatsDataEntity = TTurboWorkJobStatsDataEntity()
-        BeanUtils.copyProperties(jobStatsDataDto, tTurboWorkJobStatsDataEntity)
-
-        tTurboWorkJobStatsDataEntity = turboWorkJobStatsDataRepository.save(tTurboWorkJobStatsDataEntity)
-
-        val tTurboWorkStatsEntity =
+        var tTurboWorkStatsEntity =
             with(tbsWorkStatDataDto) {
                 TTurboWorkStatsEntity(
                     id = id,
@@ -86,10 +78,33 @@ class TurboWorkStatService @Autowired constructor(
                     unregisteredTime = unregisteredTime,
                     workId = workId,
                     projectId = projectId,
-                    jobStatsId = tTurboWorkJobStatsDataEntity.entityId!!
                 )
             }
-        turboWorkStatsRepository.save(tTurboWorkStatsEntity)
+        tTurboWorkStatsEntity = turboWorkStatsRepository.save(tTurboWorkStatsEntity)
+
+        val jobStatsDataStr = tbsWorkStatDataDto.jobStatsData
+        val jobStatsDataDtoList = JsonUtil.to(jobStatsDataStr, object : TypeReference<List<JobStatsDataDto>>() {})
+        logger.info("jobStatsDataDtoList size: ${jobStatsDataDtoList.size}")
+
+        var isShaderWorker = false
+
+        val jobStatsDataEntityList = jobStatsDataDtoList.map { item ->
+            if (!isShaderWorker && item.originArgs.any { it.contains("ShaderCompileWorker")}) {
+                isShaderWorker = true
+            }
+            val tTurboWorkJobStatsDataEntity = TTurboWorkJobStatsDataEntity()
+            BeanUtils.copyProperties(item, tTurboWorkJobStatsDataEntity)
+
+            // 使workJob与workStats建立关联
+            tTurboWorkJobStatsDataEntity.workStatsEntityId = tTurboWorkStatsEntity.entityId
+            tTurboWorkJobStatsDataEntity
+        }
+
+        turboWorkJobStatsDataRepository.saveAll(jobStatsDataEntityList)
         logger.info("sync TBS work stats data success.")
+
+        if (isShaderWorker) {
+            logger.info("TODO")
+        }
     }
 }
