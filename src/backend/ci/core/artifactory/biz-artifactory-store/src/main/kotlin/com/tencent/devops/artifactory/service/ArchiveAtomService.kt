@@ -66,4 +66,15 @@ interface ArchiveAtomService {
      * 删除插件
      */
     fun deleteAtom(userId: String, projectCode: String, atomCode: String)
+
+    /**
+     * 更新插件相关文件内容
+     */
+    fun updateArchiveFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        content: String
+    ): Boolean
 }
