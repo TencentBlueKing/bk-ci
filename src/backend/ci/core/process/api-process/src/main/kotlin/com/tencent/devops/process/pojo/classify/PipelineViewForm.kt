@@ -20,5 +20,5 @@ data class PipelineViewForm(
     @ApiModelProperty("流水线视图过滤器列表", required = false)
     val filters: List<PipelineViewFilter> = emptyList(),
     @ApiModelProperty("流水线列表", required = false)
-    val pipelineIds: List<String> = emptyList()
+    val pipelineIds: List<String>? = null
 )
