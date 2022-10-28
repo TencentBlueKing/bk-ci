@@ -223,7 +223,10 @@ const atomMixin = {
             }
         },
         rely (obj, element) {
-            return rely(obj, element)
+            return rely(obj, {
+                bkPoolType: this?.container?.dispatchType?.buildType,
+                ...element
+            })
         },
         /**
          * 获取每种类型最大长度限制
