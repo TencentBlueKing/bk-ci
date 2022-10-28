@@ -13,6 +13,8 @@ import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.OpStoreLogoResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import com.tencent.devops.artifactory.api.service.ServiceFileResource
+import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
@@ -39,12 +41,13 @@ object AtomReleaseTxtAnalysisUtil {
         atomPath: String,
         client: Client
     ): String {
-        val descriptionText =
+        var descriptionText = description
             if (description.startsWith("http") && description.endsWith(".md")) {
                 // 读取远程文件
-                val inputStream = URL(description).openStream()
+                var inputStream: InputStream? = null
                 val file = File("$atomPath${fileSeparator}file${fileSeparator}description.md")
                 try {
+                    inputStream = URL(description).openStream()
                     FileOutputStream(file).use { outputStream ->
                         var read: Int
                         val bytes = ByteArray(1024)
@@ -52,13 +55,13 @@ object AtomReleaseTxtAnalysisUtil {
                             outputStream.write(bytes, 0, read)
                         }
                     }
-                    file.readText()
+                    descriptionText = file.readText()
+                } catch (e: Exception) {
+                    logger.warn("get remote file fail:${e.message}")
                 } finally {
-                    inputStream.close()
+                    inputStream?.close()
                     file.delete()
                 }
-            } else {
-                description
             }
         return regexAnalysis(
             userId = userId,
@@ -68,11 +71,11 @@ object AtomReleaseTxtAnalysisUtil {
         )
     }
 
-    fun getAtomBasePath(): String {
+    private fun getAtomBasePath(): String {
         return System.getProperty("java.io.tmpdir").removeSuffix(fileSeparator)
     }
 
-    fun regexAnalysis(
+    private fun regexAnalysis(
         userId: String,
         input: String,
         atomPath: String,
@@ -88,7 +91,12 @@ object AtomReleaseTxtAnalysisUtil {
             if (path.endsWith(".md")) {
                 val file = File("$atomPath${fileSeparator}file${fileSeparator}$path")
                 if (file.exists()) {
-                    return regexAnalysis(userId, file.readText(), atomPath)
+                    return regexAnalysis(
+                        userId = userId,
+                        input = file.readText(),
+                        atomPath = atomPath,
+                        client = client
+                    )
                 }
             }
             pathList.add(path)
@@ -119,9 +127,9 @@ object AtomReleaseTxtAnalysisUtil {
         }
         // 替换资源路径
         result.forEach {
-            val pattern: Pattern = Pattern.compile("(\\\$\\{\\{indexFile\\(\"$it\"\\)}})")
-            val matcher: Matcher = pattern.matcher(descriptionContent)
-            descriptionContent = matcher.replaceFirst(
+            val analysisPattern: Pattern = Pattern.compile("(\\\$\\{\\{indexFile\\(\"$it\"\\)}})")
+            val analysisMatcher: Matcher = analysisPattern.matcher(descriptionContent)
+            descriptionContent = analysisMatcher.replaceFirst(
                 "![](${it.value.replace(fileSeparator, "\\$fileSeparator")})"
             )
         }
@@ -178,7 +186,7 @@ object AtomReleaseTxtAnalysisUtil {
 
     // 生成压缩文件
     fun zipFiles(userId: String, atomCode: String, atomPath: String): String {
-        val zipPath = AtomReleaseTxtAnalysisUtil.getAtomBasePath() +
+        val zipPath = getAtomBasePath() +
                 "$fileSeparator$BK_CI_ATOM_DIR$fileSeparator$userId$fileSeparator$atomCode" +
                 "$fileSeparator$atomCode.zip"
         val zipOutputStream = ZipOutputStream(FileOutputStream(zipPath))
@@ -218,7 +226,7 @@ object AtomReleaseTxtAnalysisUtil {
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1)
         // 解压到指定目录
-        val atomPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(userId, atomCode)
+        val atomPath = buildAtomArchivePath(userId, atomCode)
         if (!File(atomPath).exists()) {
             val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
             file.outputStream().use {

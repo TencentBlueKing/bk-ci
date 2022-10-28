@@ -27,12 +27,8 @@
 
 package com.tencent.devops.store.service.atom.impl
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -47,13 +43,8 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.store.api.common.OpStoreLogoResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
@@ -72,17 +63,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
 import java.io.InputStream
-import java.net.URL
 import java.nio.charset.Charset
-import java.nio.file.Files
-import java.util.regex.Matcher
-import java.util.regex.Pattern
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 
 @Service
 class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServiceImpl() {
@@ -286,7 +268,12 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         }
         val atomId = addMarketAtomResult.data!!
         // 解析logoUrl
-        val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(userId, releaseInfo.logoUrl, atomPath)
+        val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(
+            userId = userId,
+            logoUrl = releaseInfo.logoUrl,
+            atomPath = atomPath,
+            client = client
+        )
         if (logoUrlAnalysisResult.isNotOk()) {
             return Result(data = false, message = logoUrlAnalysisResult.message)
         }
@@ -295,7 +282,8 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         releaseInfo.description = AtomReleaseTxtAnalysisUtil.descriptionAnalysis(
             description = releaseInfo.description,
             atomPath = atomPath,
-            userId = userId
+            userId = userId,
+            client = client
         )
         taskJsonMap["releaseInfo"] = releaseInfo.toJsonString()
         val taskJson = taskJsonMap.toJsonString()
