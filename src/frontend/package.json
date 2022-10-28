@@ -54,9 +54,7 @@
     ],
     "nohoist": [
       "devops-metrics",
-      "devops-metrics/**",
-      "devops-stream",
-      "devops-stream/**"
+      "devops-metrics/**"
     ]
   },
   "dependencies": {
