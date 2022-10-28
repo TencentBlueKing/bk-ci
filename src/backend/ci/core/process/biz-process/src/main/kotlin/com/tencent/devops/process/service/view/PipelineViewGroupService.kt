@@ -141,6 +141,9 @@ class PipelineViewGroupService @Autowired constructor(
                 defaultMessage = "view scope can`t change , user:$userId , view:$viewIdEncode , project:$projectId"
             )
         }
+        if (pipelineView.viewType == PipelineViewType.UNCLASSIFIED) {
+            pipelineView.viewType = oldView.viewType
+        }
         // 更新视图
         var result = false
         dslContext.transaction { t ->

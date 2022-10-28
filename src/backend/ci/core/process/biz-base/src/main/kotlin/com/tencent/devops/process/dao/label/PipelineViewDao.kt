@@ -29,6 +29,7 @@ package com.tencent.devops.process.dao.label
 
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
+import com.tencent.devops.process.constant.PipelineViewType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -165,7 +166,7 @@ class PipelineViewDao {
                 .let { if (StringUtils.isNotBlank(name)) it.set(NAME, name) else it }
                 .let { if (StringUtils.isNotBlank(logic)) it.set(LOGIC, logic) else it }
                 .let { if (filters.contains("@type")) it.set(FILTERS, filters) else it }
-                .let { if (viewType != -1) it.set(VIEW_TYPE, viewType) else it }
+                .let { if (viewType != PipelineViewType.UNCLASSIFIED) it.set(VIEW_TYPE, viewType) else it }
                 .set(IS_PROJECT, isProject)
                 .set(FILTER_BY_PIPEINE_NAME, "")
                 .set(FILTER_BY_CREATOR, "")
