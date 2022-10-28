@@ -76,4 +76,6 @@ object CommonMessageCode {
     const val PARAMETER_SECRET_ERROR = "2100026" // {0}密钥配置错误: {1}
     const val PARAMETER_IS_EMPTY = "2100027" // 参数不能为空
     const val ERROR_QUERY_TIME_RANGE_ERROR = "2100028" // 查询的时间范围跨度错误
+    const val SERVICE_NOT_EXIST = "2100029" // 父服务不存在异常
+    const val INIT_SERVICE_LIST_ERROR = "2100030" // 初始化服务列表异常
 }
