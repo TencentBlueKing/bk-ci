@@ -29,7 +29,6 @@ package com.tencent.devops.common.pipeline.type
 
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.service.utils.KubernetesUtils
-import org.apache.commons.lang3.BooleanUtils
 
 enum class BuildType(
     val value: String,
