@@ -84,6 +84,7 @@ import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
@@ -404,7 +405,8 @@ open class MarketAtomTask : ITask() {
                         value = JsonUtil.toJson(value),
                         contextMap = variables,
                         onlyExpression = true,
-                        contextPair = customReplacement
+                        contextPair = customReplacement,
+                        functions = SpecialFunctions.functions
                     )
                 }
             } else {

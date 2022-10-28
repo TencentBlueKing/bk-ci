@@ -37,6 +37,7 @@ import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.RuntimeDictionaryContextData
 import com.tencent.devops.common.expression.context.RuntimeNamedValue
+import com.tencent.devops.common.expression.expression.IFunctionInfo
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import org.slf4j.LoggerFactory
 
@@ -57,12 +58,14 @@ object EnvReplacementParser {
      * @param contextMap 环境变量map值
      * @param contextPair 自定义表达式计算上下文（如果指定则不使用表达式替换或默认替换逻辑）
      * @param onlyExpression 只进行表达式替换（若指定了自定义替换逻辑此字段无效，为false）
+     * @param functions 用户自定义的拓展用函数
      */
     fun parse(
         value: String?,
         contextMap: Map<String, String>,
         onlyExpression: Boolean? = false,
-        contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null
+        contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
+        functions: Iterable<IFunctionInfo>? = null
     ): String {
         if (value.isNullOrBlank()) return ""
         return if (onlyExpression == true) {
@@ -73,7 +76,8 @@ object EnvReplacementParser {
                 parseExpressionTwice(
                     value = value,
                     context = context,
-                    nameValues = nameValues
+                    nameValues = nameValues,
+                    functions = functions
                 )
             } catch (ignore: Throwable) {
                 logger.warn("[$value]|EnvReplacementParser expression invalid: ", ignore)
@@ -111,13 +115,15 @@ object EnvReplacementParser {
     private fun parseExpressionTwice(
         value: String,
         nameValues: List<NamedValueInfo>,
-        context: ExecutionContext
+        context: ExecutionContext,
+        functions: Iterable<IFunctionInfo>? = null
     ): String {
         val onceResult = parseExpression(
             value = value,
             blocks = findExpressions(value),
             context = context,
-            nameValues = nameValues
+            nameValues = nameValues,
+            functions = functions
         )
         findExpressions(onceResult).let { blocks ->
             if (blocks.isEmpty()) {
@@ -127,7 +133,8 @@ object EnvReplacementParser {
                     value = onceResult,
                     blocks = blocks,
                     context = context,
-                    nameValues = nameValues
+                    nameValues = nameValues,
+                    functions = functions
                 )
             }
         }
@@ -140,7 +147,8 @@ object EnvReplacementParser {
         value: String,
         blocks: List<List<ExpressionBlock>>,
         nameValues: List<NamedValueInfo>,
-        context: ExecutionContext
+        context: ExecutionContext,
+        functions: Iterable<IFunctionInfo>? = null
     ): String {
         var chars = value.toList()
         blocks.forEachIndexed nextBlockLevel@{ blockLevel, blocksInLevel ->
@@ -149,7 +157,7 @@ object EnvReplacementParser {
                 val expression = chars.joinToString("").substring(block.startIndex + 3, block.endIndex - 1)
 
                 var result = try {
-                    ExpressionParser.createTree(expression, null, nameValues, null)!!
+                    ExpressionParser.createTree(expression, null, nameValues, functions)!!
                         .evaluate(null, context, null).value.let {
                             if (it is PipelineContextData) it.fetchValue() else it
                         }?.let {

@@ -15,7 +15,9 @@ import com.tencent.devops.common.expression.context.ExpressionContextData
 import com.tencent.devops.common.expression.context.NumberContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.expression.FunctionInfo
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
+import com.tencent.devops.common.expression.expression.specialFuctions.hashFiles.HashFilesFunction
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.exception.YamlTemplateException
 import com.tencent.devops.process.yaml.v2.parameter.Parameters
@@ -373,6 +375,15 @@ object ParametersExpressionParse {
         return lineChars.joinToString("")
     }
 
+    private val functionList = listOf(
+        FunctionInfo(
+            HashFilesFunction.name,
+            1,
+            Byte.MAX_VALUE.toInt(),
+            HashFilesFunction(null)
+        )
+    )
+
     fun expressionEvaluate(
         path: String,
         expression: String,
@@ -383,7 +394,7 @@ object ParametersExpressionParse {
         val subInfo = SubNameValueEvaluateInfo()
         val (value, isComplete, type) = try {
             ExpressionParser.createSubNameValueEvaluateTree(
-                expression, null, nameValues, null, subInfo
+                expression, null, nameValues, functionList, subInfo
             )?.subNameValueEvaluate(null, context, null, subInfo)
                 ?: throw YamlTemplateException("create evaluate tree is null")
         } catch (e: Throwable) {
