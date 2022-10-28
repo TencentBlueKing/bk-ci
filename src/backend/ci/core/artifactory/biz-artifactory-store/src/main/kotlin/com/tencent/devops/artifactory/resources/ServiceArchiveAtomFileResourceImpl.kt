@@ -25,75 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom
+package com.tencent.devops.artifactory.resources
 
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
+import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
+import com.tencent.devops.artifactory.service.ArchiveAtomService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomOfflineReq
-import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
-import com.tencent.devops.store.pojo.common.StoreProcessInfo
-import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
-import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
-@Suppress("ALL")
-interface AtomReleaseService {
+@RestResource
+class ServiceArchiveAtomFileResourceImpl @Autowired constructor(
+    private val archiveAtomService: ArchiveAtomService
+) : ServiceArchiveAtomFileResource {
 
-    /**
-     * 添加插件
-     */
-    fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest): Result<String>
-
-    /**
-     * 升级插件
-     */
-    fun updateMarketAtom(
+    override fun archiveAtomFile(
         userId: String,
         projectCode: String,
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
-    ): Result<String?>
-
-    /**
-     * 获取插件版本发布进度
-     */
-    fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo>
-
-    /**
-     * 取消发布
-     */
-    fun cancelRelease(userId: String, atomId: String): Result<Boolean>
-
-    /**
-     * 确认通过测试，继续发布
-     */
-    fun passTest(userId: String, atomId: String): Result<Boolean>
-
-    /**
-     * 处理用户提交的下架插件请求
-     */
-    fun offlineAtom(
-        userId: String,
+        atomId: String,
         atomCode: String,
-        atomOfflineReq: AtomOfflineReq,
-        checkPermissionFlag: Boolean = true
-    ): Result<Boolean>
-
-    /**
-     * 处理插件发布逻辑
-     */
-    fun handleAtomRelease(
-        userId: String,
-        releaseFlag: Boolean,
-        atomReleaseRequest: AtomReleaseRequest
-    ): Result<Boolean>
-
-    /**
-     * 一键部署发布插件
-     */
-    fun releaseAtom(
-        userId: String,
-        atomCode: String,
+        version: String,
+        releaseType: ReleaseTypeEnum,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<Boolean>
+        disposition: FormDataContentDisposition,
+        os: String
+    ): Result<ArchiveAtomResponse?> {
+        return archiveAtomService.archiveAtom(
+            userId = userId,
+            inputStream = inputStream,
+            disposition = disposition,
+            atomId = atomId,
+            archiveAtomRequest = ArchiveAtomRequest(
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = version,
+                releaseType = releaseType,
+                os = os
+            )
+        )
+    }
 }
