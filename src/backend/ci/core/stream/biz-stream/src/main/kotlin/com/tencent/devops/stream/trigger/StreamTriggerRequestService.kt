@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
@@ -60,6 +61,7 @@ import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -155,7 +157,10 @@ class StreamTriggerRequestService @Autowired constructor(
                     return true
                 }
                 // 为了不影响主逻辑对action进行深拷贝
+                val bizId = MDC.get(TraceTag.BIZID)
                 executors.submit {
+                    // 新线程biz id会断，需要重新注入
+                    MDC.put(TraceTag.BIZID, bizId + "_repo_hook")
                     streamTriggerRequestRepoService.repoTriggerBuild(
                         triggerPipelineList = repoTriggerPipelineList,
                         eventStr = event,
