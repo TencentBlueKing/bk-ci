@@ -179,7 +179,7 @@
             ...mapState(['projectId']),
 
             computedTicket () {
-                return this.ticketTypes.find((x) => (x.id === this.formData.credentialType))
+                return this.ticketTypes.find((x) => (x.id === this.formData.credentialType)) || {}
             },
             isEdit () {
                 return this.form.permissions
