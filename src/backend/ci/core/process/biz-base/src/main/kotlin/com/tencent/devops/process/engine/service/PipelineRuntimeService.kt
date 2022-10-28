@@ -307,7 +307,8 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineFilterParamList = pipelineFilterParamList,
             permissionFlag = permissionFlag,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            userId = null
         )
     }
 
