@@ -30,9 +30,10 @@ package collector
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/influxdata/telegraf/logger"
-	"time"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 
@@ -120,6 +121,8 @@ const configTemplateWindows = `[global_tags]
   skip_database_creation = true
   ###{tls_ca}###
 [[inputs.mem]]
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
 [[inputs.win_perf_counters]]
   [[inputs.win_perf_counters.object]]
     ObjectName = "Processor"
