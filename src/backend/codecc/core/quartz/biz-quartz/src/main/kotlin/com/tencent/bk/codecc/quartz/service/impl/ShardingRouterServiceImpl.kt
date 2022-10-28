@@ -14,7 +14,6 @@ import org.quartz.Scheduler
 import org.quartz.impl.matchers.GroupMatcher
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.DiscoveryClient
 import org.springframework.cloud.client.serviceregistry.Registration
 import org.springframework.stereotype.Service
@@ -42,7 +41,6 @@ class ShardingRouterServiceImpl @Autowired constructor(
             discoveryClient.getInstances(serviceName)
         //取本地服务
         logger.info("successfully get instance list and local instance!")
-        getInstanceList(instances, registration)
         //按照特定分片算法计算分片信息
         val shardingResult = enumShardingStrategy.getShardingStrategy().shardInstances(instances, registration)
         logger.info("shard info: ${shardingResult.currentShard}, node info: ${shardingResult.currentNode}")
@@ -92,7 +90,6 @@ class ShardingRouterServiceImpl @Autowired constructor(
         val instances =
             discoveryClient.getInstances(serviceName)
         //取本地服务
-        getInstanceList(instances, registration)
         val oldShardingResult = enumShardingStrategy.getShardingStrategy().getShardingResult()!!
         val newShardingResult = enumShardingStrategy.getShardingStrategy().shardInstances(instances, registration)
         val jobsNeedToAdd = mutableListOf<JobInstanceEntity>()
@@ -165,17 +162,5 @@ class ShardingRouterServiceImpl @Autowired constructor(
             enumShardingStrategy.getShardingStrategy().setPreviousShardingResult(newShardingResult)
         }
         return JobInstancesChangeInfo(jobsNeedToAdd, jobsNeedToRemove)
-    }
-
-    private fun getInstanceList(
-        instances: MutableList<ServiceInstance>,
-        localInstance: ServiceInstance
-    ) {
-        val specificInstance = instances.find { it.host == localInstance.host && it.port == localInstance.port }
-        if (null == specificInstance) {
-            instances.add(localInstance)
-        } else {
-            instances[instances.indexOf(specificInstance)] = localInstance
-        }
     }
 }

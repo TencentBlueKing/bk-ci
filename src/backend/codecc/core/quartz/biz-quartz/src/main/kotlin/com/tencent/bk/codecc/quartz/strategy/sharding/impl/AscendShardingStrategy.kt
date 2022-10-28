@@ -5,13 +5,20 @@ import com.tencent.bk.codecc.quartz.pojo.ShardInfo
 import com.tencent.bk.codecc.quartz.pojo.ShardingResult
 import com.tencent.bk.codecc.quartz.strategy.sharding.AbstractShardingStrategy
 import org.springframework.cloud.client.ServiceInstance
+import org.springframework.cloud.consul.discovery.ConsulServiceInstance
+import org.springframework.cloud.consul.serviceregistry.ConsulRegistration
 
 class AscendShardingStrategy : AbstractShardingStrategy() {
 
     override fun shardInstances(instanceList: List<ServiceInstance>, localInstance: ServiceInstance): ShardingResult {
         //获取分片map
-        val shardMap = instanceList.groupBy { originInstances -> originInstances.metadata.values.firstOrNull() ?: "" }
-            .entries.sortedBy { it.key }
+        val shardMap = instanceList.groupBy { originInstances ->
+            if (originInstances is ConsulServiceInstance) {
+                originInstances.tags.firstOrNull() ?: ""
+            } else {
+                originInstances.metadata.values.firstOrNull() ?: ""
+            }
+        }.entries.sortedBy { it.key }
         //获取分片总数
         val currentShardCount = shardMap.size
         //处理每个分片节点信息
@@ -29,7 +36,13 @@ class AscendShardingStrategy : AbstractShardingStrategy() {
                 })
         }
         //获取当前分片
-        val currentShard = shardList.find { it.tag == localInstance.metadata.values.firstOrNull() ?: "" }!!
+        val currentShard = shardList.find {
+            if (localInstance is ConsulRegistration) {
+                it.tag == (localInstance.service.tags.firstOrNull() ?: "")
+            } else {
+                it.tag == (localInstance.metadata.values.firstOrNull() ?: "")
+            }
+        }!!
         //获取节点数
         val currentNode =
             shardList[currentShard.shardNum - 1].nodeList.find { it.host == localInstance.host && it.port == localInstance.port }!!
