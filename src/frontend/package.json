@@ -60,7 +60,9 @@
     ]
   },
   "dependencies": {
+    "core-js": "^3.26.0",
     "cross-env": "^7.0.3",
+    "eslint-plugin-vue": "^7.15.1",
     "glob-parent": "5.1.2",
     "uuid": "^8.3.2"
   }
