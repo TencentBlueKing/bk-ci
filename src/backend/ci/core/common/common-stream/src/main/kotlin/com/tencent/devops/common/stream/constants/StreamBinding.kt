@@ -97,7 +97,7 @@ object StreamBinding {
     const val QUEUE_PIPELINE_BUILD_QUEUE_CODE_WEBHOOK = "q.engine.pipeline.build.queue.code.webhook"
 
     // 构建启动广播exchange ====================================
-    const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "e.engine.pipeline.build.start.fanout"
+    const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "engine.pipeline.build.start.fanout"
     const val QUEUE_PIPELINE_BUILD_START_DISPATCHER = "q.engine.pipeline.build.start.dispatcher"
     const val QUEUE_PIPELINE_BUILD_START_WEBHOOK_QUEUE = "q.engine.pipeline.build.start.webhook.queue"
 
