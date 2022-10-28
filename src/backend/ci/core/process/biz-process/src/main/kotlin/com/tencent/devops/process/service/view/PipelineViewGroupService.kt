@@ -340,11 +340,11 @@ class PipelineViewGroupService @Autowired constructor(
         context: DSLContext? = null
     ): List<String> {
         val projectId = view.projectId
+        val firstInit = redisOperation.setIfAbsent(firstInitMark(projectId, view.id), "1", 30 * 24 * 3600, true)
+        if (!firstInit) {
+            return emptyList()
+        }
         return PipelineViewGroupLock(redisOperation, projectId).lockAround {
-            val firstInit = redisOperation.setIfAbsent(firstInitMark(projectId, view.id), "1")
-            if (!firstInit) {
-                return@lockAround emptyList()
-            }
             val pipelineIds = allPipelineInfos(projectId, false)
                 .filter { pipelineViewService.matchView(view, it) }
                 .map { it.pipelineId }
@@ -623,6 +623,9 @@ class PipelineViewGroupService @Autowired constructor(
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
         val countByViewId = pipelineViewGroupDao.countByViewId(dslContext, projectId, views.map { it.id })
+        // 确保数据都初始化一下
+        views.filter { it.viewType == PipelineViewType.DYNAMIC }
+            .forEach { initDynamicViewGroup(it, userId, dslContext) }
         val summaries = sortViews2Summary(projectId, userId, views, countByViewId)
         if (projected != false) {
             val classifiedPipelineIds = getClassifiedPipelineIds(projectId)
