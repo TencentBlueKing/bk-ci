@@ -63,6 +63,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 class StreamTriggerRequestService @Autowired constructor(
@@ -84,6 +85,7 @@ class StreamTriggerRequestService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamTriggerRequestService::class.java)
     }
+    private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     fun externalCodeGitBuild(eventType: String?, webHookType: String, event: String): Boolean? {
         logger.info("StreamTriggerRequestService|externalCodeGitBuild|event|$event|type|$eventType|$webHookType")
@@ -153,12 +155,14 @@ class StreamTriggerRequestService @Autowired constructor(
                     return true
                 }
                 // 为了不影响主逻辑对action进行深拷贝
-                streamTriggerRequestRepoService.repoTriggerBuild(
-                    triggerPipelineList = repoTriggerPipelineList,
-                    eventStr = event,
-                    actionCommonData = objectMapper.writeValueAsString(action.data.eventCommon),
-                    actionContext = objectMapper.writeValueAsString(action.data.context)
-                )
+                executors.submit {
+                    streamTriggerRequestRepoService.repoTriggerBuild(
+                        triggerPipelineList = repoTriggerPipelineList,
+                        eventStr = event,
+                        actionCommonData = objectMapper.writeValueAsString(action.data.eventCommon),
+                        actionContext = objectMapper.writeValueAsString(action.data.context)
+                    )
+                }
             } catch (ignore: Throwable) {
                 logger.warn("StreamTriggerRequestService|start|${action.data.eventCommon.gitProjectName}|error", ignore)
             }
