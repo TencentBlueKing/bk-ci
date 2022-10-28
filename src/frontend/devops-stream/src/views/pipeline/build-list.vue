@@ -144,7 +144,7 @@
                     <template slot-scope="props">
                         <opt-menu>
                             <li @click="cancelBuild(props.row)"
-                                v-if="['RUNNING', 'PREPARE_ENV', 'QUEUE', 'LOOP_WAITING', 'CALL_WAITING', 'REVIEWING'].includes(props.row.buildHistory.status)"
+                                v-if="['RUNNING', 'PREPARE_ENV', 'QUEUE', 'LOOP_WAITING', 'CALL_WAITING', 'REVIEWING', 'TRIGGER_REVIEWING'].includes(props.row.buildHistory.status)"
                                 v-bk-tooltips="computedOptToolTip"
                                 :class="{ disabled: !curPipeline.enabled || !permission }"
                             >{{$t('pipeline.cancelBuild')}}</li>
