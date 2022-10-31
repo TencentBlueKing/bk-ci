@@ -119,7 +119,7 @@ class DispatchService constructor(
             containerType = event.containerType,
             stageId = event.stageId,
             dispatchType = event.dispatchType,
-            customBuildEnv = event.customBuildEnv,
+            customBuildEnv = customBuildEnv,
             dockerRoutingType = event.dockerRoutingType
         )
     }

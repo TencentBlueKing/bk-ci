@@ -98,7 +98,7 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun endTask(variables: Map<String, String>,  envBuildId: String, retryCount: Int): Result<Boolean> {
+    override fun endTask(variables: Map<String, String>, envBuildId: String, retryCount: Int): Result<Boolean> {
         if (envBuildId.isNotBlank()) {
             buildId = envBuildId
         }

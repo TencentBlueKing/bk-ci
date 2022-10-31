@@ -24,13 +24,34 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-dependencies {
-    api(project(":core:common:common-webhook:api-common-webhook"))
-    api(project(":core:common:common-scm"))
-    api(project(":core:common:common-client"))
-    api(project(":core:repository:api-repository"))
-    api(project(":core:ticket:api-ticket"))
-    api(project(":core:process:api-process"))
-    api("io.github.resilience4j:resilience4j-circuitbreaker")
-    testImplementation(project(":core:common:common-test"))
-}
+
+package com.tencent.devops.store.pojo.common
+
+import com.tencent.devops.store.pojo.common.enums.PublisherType
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("发布者数据同步请求")
+data class PublishersRequest(
+    @ApiModelProperty("发布者标识", required = true)
+    val publishersCode: String,
+    @ApiModelProperty("发布者名称", required = true)
+    val name: String,
+    @ApiModelProperty("发布者类型", required = true)
+    val publishersType: PublisherType,
+    @ApiModelProperty("主体负责人", required = true)
+    val owners: List<String>,
+    @ApiModelProperty("成员", required = true)
+    val members: List<String>,
+    @ApiModelProperty("技术支持", required = false)
+    val helper: String? = null,
+    @ApiModelProperty("是否认证", required = true)
+    val certificationFlag: Boolean,
+    @ApiModelProperty("组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @ApiModelProperty("实体组织架构", required = true)
+    val organization: String,
+    @ApiModelProperty("所属工作组BG", required = true)
+    val bgName: String
+)

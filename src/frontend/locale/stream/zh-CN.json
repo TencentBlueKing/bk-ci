@@ -249,7 +249,7 @@
         "crossRepoUse": "允许跨项目使用",
         "crossRepoUseTips": "仅支持通过模板共享凭据。如当前代码库下管理的模板A引用此凭据，其它项目下的流水线B引用模板A的场景下，流水线B运行时才能使用此凭据",
         "ticket": {
-            "credentialDesc": "在 YAML 中通过上下文 settings.<key>.xxx 的方式引用凭据，xxx 根据凭据类型不同而有不同的字段名称",
+            "credentialDesc": "在 YAML 中通过上下文 settings.&lt;key&gt;.xxx 的方式引用凭据，xxx 根据凭据类型不同而有不同的字段名称",
             "credentialType": "凭证类型",
             "credentialKey": "凭据标识（key）",
             "addCredential": "新增凭据",
