@@ -29,7 +29,6 @@ package com.tencent.devops.worker.common.api.engine.impl
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.api.ApiPriority
