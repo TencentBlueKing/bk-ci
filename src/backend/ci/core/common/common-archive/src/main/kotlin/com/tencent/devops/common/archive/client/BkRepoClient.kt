@@ -260,7 +260,7 @@ class BkRepoClient constructor(
         val direction = if (modifiedTimeDesc) Direction.DESC.name else Direction.ASC.name
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/page/$projectId/$repoName/$path" +
             "?deep=$deep&includeFolder=$includeFolders&includeMetadata=true&pageNumber=$page&pageSize=$pageSize" +
-            "sortProperty=lastModifiedDate&direction=$direction"
+            "&sortProperty=lastModifiedDate&direction=$direction"
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
