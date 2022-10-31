@@ -86,7 +86,7 @@ class OPRepositoryService @Autowired constructor(
         oldGitDomain: String,
         newGitDomain: String,
         grayProject: String?,
-        grayWeight: Int = -1,
+        grayWeight: Int?,
         grayWhiteProject: String?
     ): Boolean {
         logger.info(
@@ -137,13 +137,13 @@ class OPRepositoryService @Autowired constructor(
         projectId: String,
         grayProjects: List<String>,
         grayWhiteProjects: List<String>,
-        grayWeight: Int
+        grayWeight: Int?
     ): Boolean {
         val hash = (projectId.hashCode() and Int.MAX_VALUE) % 100
         return when {
             grayWhiteProjects.contains(projectId) -> false
             grayProjects.contains(projectId) -> true
-            hash <= grayWeight -> true
+            hash <= (grayWeight ?: -1) -> true
             else -> false
         }
     }

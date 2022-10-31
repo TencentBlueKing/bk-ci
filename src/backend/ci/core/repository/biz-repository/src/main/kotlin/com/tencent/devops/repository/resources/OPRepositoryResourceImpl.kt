@@ -45,7 +45,7 @@ class OPRepositoryResourceImpl @Autowired constructor(
         oldGitDomain: String,
         newGitDomain: String,
         grayProject: String?,
-        grayWeight: Int,
+        grayWeight: Int?,
         grayWhiteProject: String?
     ): Result<Boolean> {
         return Result(

@@ -61,7 +61,7 @@ interface OPRepositoryResource {
         grayProject: String?,
         @ApiParam(value = "灰度权重", required = true)
         @QueryParam("grayWeight")
-        grayWeight: Int = -1,
+        grayWeight: Int?,
         @ApiParam(value = "灰度白名单,多个用,分割", required = true)
         @QueryParam("grayWhiteProject")
         grayWhiteProject: String?
