@@ -99,7 +99,10 @@ export default {
                     if (
                         !keyModal.required // 字段允许为空时
                         || keyModal.hidden // 字段不可见时
-                        || (keyModal.rely && !rely(keyModal, this.atomValue)) // 字段配置了rely且返回false时，字段不可见
+                        || (keyModal.rely && !rely(keyModal, {
+                            bkPoolType: this?.container?.dispatchType?.buildType,
+                            ...this.atomValue
+                        })) // 字段配置了rely且返回false时，字段不可见
                     ) {
                         return false
                     }
