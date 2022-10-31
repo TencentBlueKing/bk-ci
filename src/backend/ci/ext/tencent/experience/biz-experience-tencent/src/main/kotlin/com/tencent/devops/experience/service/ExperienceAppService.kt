@@ -466,7 +466,15 @@ class ExperienceAppService(
         )
         return Pagination(
             false,
-            listOf(AppExperienceInstallPackage(projectId, artifactoryPath, artifactoryType.name, detailPermission))
+            listOf(
+                AppExperienceInstallPackage(
+                    name = experience.name,
+                    projectId = projectId,
+                    path = artifactoryPath,
+                    artifactoryType = artifactoryType.name,
+                    detailPermission = detailPermission
+                )
+            )
         )
     }
 }

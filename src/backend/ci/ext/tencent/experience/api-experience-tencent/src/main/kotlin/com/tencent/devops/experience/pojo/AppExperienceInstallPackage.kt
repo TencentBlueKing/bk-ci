@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("体验--安装包")
 data class AppExperienceInstallPackage(
+    @ApiModelProperty("名称", required = true)
+    val name: String,
     @ApiModelProperty("项目ID", required = true)
     val projectId: String,
     @ApiModelProperty("路径", required = true)
