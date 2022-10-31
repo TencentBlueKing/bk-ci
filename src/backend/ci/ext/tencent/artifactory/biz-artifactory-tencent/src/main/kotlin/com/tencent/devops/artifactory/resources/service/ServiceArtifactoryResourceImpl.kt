@@ -312,7 +312,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         includeFolder: Boolean?,
         deep: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        modifiedTimeDesc: Boolean?
     ): Result<Page<FileInfo>> {
         val data = bkRepoCustomDirService.listPage(
             userId = userId,
@@ -322,7 +323,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             includeFolder = includeFolder ?: true,
             deep = deep ?: false,
             page = page ?: 1,
-            pageSize = pageSize ?: 20
+            pageSize = pageSize ?: 20,
+            modifiedTimeDesc = modifiedTimeDesc ?: false
         )
         return Result(data)
     }
