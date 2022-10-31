@@ -25,39 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.api.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.PublisherInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("store组件对接平台信息")
-data class StoreDockingPlatformInfo(
-    @ApiModelProperty("环境变量ID", required = true)
-    val id: String,
-    @ApiModelProperty("平台代码", required = true)
-    val platformCode: String,
-    @ApiModelProperty("平台名称", required = true)
-    val platformName: String,
-    @ApiModelProperty("网址", required = false)
-    val website: String?,
-    @ApiModelProperty("简介", required = true)
-    val summary: String,
-    @ApiModelProperty("负责人", required = true)
-    val principal: String,
-    @ApiModelProperty("平台logo地址", required = false)
-    val logoUrl: String?,
-    @ApiModelProperty("标签", required = false)
-    val labels: List<String>? = null,
-    @ApiModelProperty("所属机构名称", required = true)
-    val ownerDeptName: String,
-    @ApiModelProperty("运营负责人", required = true)
-    val owner: String,
-    @ApiModelProperty("添加用户", required = true)
-    val creator: String,
-    @ApiModelProperty("修改用户", required = true)
-    val modifier: String,
-    @ApiModelProperty("添加时间", required = true)
-    val createTime: String,
-    @ApiModelProperty("修改时间", required = true)
-    val updateTime: String
-)
+@Api(tags = ["USER_MARKET_PUBLISHERS"], description = "研发商店-发布者")
+@Path("/user/market/publishers")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserStorePublishersResource {
+
+    @ApiOperation("获取发布组件可选发布者")
+    @GET
+    @Path("/get")
+    fun getPublishers(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("storeCode", required = true)
+        @QueryParam("storeCode")
+        storeCode: String,
+        @ApiParam("storeType", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<List<PublisherInfo>>
+}
