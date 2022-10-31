@@ -65,6 +65,7 @@ import org.slf4j.MDC
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.UUID
 import java.util.concurrent.Executors
 
 @Service
@@ -159,9 +160,11 @@ class StreamTriggerRequestService @Autowired constructor(
                 }
                 // 为了不影响主逻辑对action进行深拷贝
                 val bizId = MDC.get(TraceTag.BIZID)
+                val newId = UUID.randomUUID().toString()
+                logger.info("stream start repo trigger|old bizId:$bizId| new bizId:$newId")
                 executors.submit {
                     // 新线程biz id会断，需要重新注入
-                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+                    MDC.put(TraceTag.BIZID, newId)
                     logger.info("stream start repo trigger|old bizId:$bizId| new bizId:${MDC.get(TraceTag.BIZID)}")
                     streamTriggerRequestRepoService.repoTriggerBuild(
                         triggerPipelineList = repoTriggerPipelineList,
@@ -289,6 +292,8 @@ class StreamTriggerRequestService @Autowired constructor(
             yamlMap[index] = yamlMap[index]?.also { it.add(yamlPath) } ?: mutableListOf(yamlPath)
         }
 
+        val bizId = MDC.get(TraceTag.BIZID)
+
         yamlMap.forEach { (i, yamlList) ->
             val triggers = if (!confirmProjectUseTriggerCache) {
                 null
@@ -343,11 +348,15 @@ class StreamTriggerRequestService @Autowired constructor(
                             reasonParams = listOf(filePath)
                         )
                     }
-                    val bizId = MDC.get(TraceTag.BIZID)
-                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-                    logger.info("stream start local trigger|old bizId:$bizId| new bizId:${MDC.get(TraceTag.BIZID)}")
-
+                    val newId = UUID.randomUUID().toString()
+                    logger.info("stream start local trigger $filePath|old bizId:$bizId| new bizId:$newId")
+                    MDC.put(TraceTag.BIZID, newId)
+                    logger.info(
+                        "stream start local trigger $filePath|old bizId:$bizId|" +
+                            " new bizId:${MDC.get(TraceTag.BIZID)}"
+                    )
                     trigger(action = action, trigger = trigger)
+                    MDC.put(TraceTag.BIZID, bizId)
                 }
             }
         }
