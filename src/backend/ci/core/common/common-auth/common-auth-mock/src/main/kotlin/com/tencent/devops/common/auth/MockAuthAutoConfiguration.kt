@@ -68,6 +68,7 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@SuppressWarnings("TooManyFunctions")
 class MockAuthAutoConfiguration {
 
     @Bean
