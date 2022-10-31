@@ -24,13 +24,42 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-dependencies {
-    api(project(":core:common:common-webhook:api-common-webhook"))
-    api(project(":core:common:common-scm"))
-    api(project(":core:common:common-client"))
-    api(project(":core:repository:api-repository"))
-    api(project(":core:ticket:api-ticket"))
-    api(project(":core:process:api-process"))
-    api("io.github.resilience4j:resilience4j-circuitbreaker")
-    testImplementation(project(":core:common:common-test"))
+
+package com.tencent.devops.store.api.common
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.PublisherInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["USER_MARKET_PUBLISHERS"], description = "研发商店-发布者")
+@Path("/user/market/publishers")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserStorePublishersResource {
+
+    @ApiOperation("获取发布组件可选发布者")
+    @GET
+    @Path("/get")
+    fun getPublishers(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("storeCode", required = true)
+        @QueryParam("storeCode")
+        storeCode: String,
+        @ApiParam("storeType", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<List<PublisherInfo>>
 }

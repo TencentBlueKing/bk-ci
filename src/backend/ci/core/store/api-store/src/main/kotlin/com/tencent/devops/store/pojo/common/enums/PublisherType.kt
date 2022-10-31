@@ -24,13 +24,10 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-dependencies {
-    api(project(":core:common:common-webhook:api-common-webhook"))
-    api(project(":core:common:common-scm"))
-    api(project(":core:common:common-client"))
-    api(project(":core:repository:api-repository"))
-    api(project(":core:ticket:api-ticket"))
-    api(project(":core:process:api-process"))
-    api("io.github.resilience4j:resilience4j-circuitbreaker")
-    testImplementation(project(":core:common:common-test"))
+
+package com.tencent.devops.store.pojo.common.enums
+
+enum class PublisherType {
+    PERSON, // 个人
+    ORGANIZATION // 组织
 }
