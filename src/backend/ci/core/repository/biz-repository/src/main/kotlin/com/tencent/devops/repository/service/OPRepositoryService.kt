@@ -81,7 +81,7 @@ class OPRepositoryService @Autowired constructor(
         logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 
-    @SuppressWarnings("NestedBlockDepth")
+    @SuppressWarnings("NestedBlockDepth", "MagicNumber")
     fun updateGitDomain(
         oldGitDomain: String,
         newGitDomain: String,
@@ -127,12 +127,13 @@ class OPRepositoryService @Autowired constructor(
                 }
                 offset += limit
             } while (projectSize == 1000)
-        } catch (e: Exception) {
-            logger.warn("Failed to update gitDomain", e)
+        } catch (ignore: Exception) {
+            logger.warn("Failed to update gitDomain", ignore)
         }
         return true
     }
 
+    @SuppressWarnings("MagicNumber")
     private fun isGrayProject(
         projectId: String,
         grayProjects: List<String>,
