@@ -16,11 +16,10 @@ import (
 	"syscall"
 
 	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
-	"github.com/Tencent/bk-ci/src/booster/bk_dist/idleloop/pkg"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/monitor/pkg"
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
 	"github.com/Tencent/bk-ci/src/booster/common/conf"
 
-	"github.com/shirou/gopsutil/process"
 	commandCli "github.com/urfave/cli"
 )
 
@@ -30,19 +29,19 @@ func mainProcess(c *commandCli.Context) error {
 	setLogLevel(c.String(FlagLog))
 
 	// get the new obj
-	loop := newIdleLoop(c)
+	proc := newProcess(c)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// run a system signal watcher for breaking process
-	go sysSignalHandler(cancel, loop)
+	go sysSignalHandler(cancel, proc)
 
-	// run loop
-	_, err := loop.Run(ctx)
+	// run proc
+	_, err := proc.Run(ctx)
 
 	return err
 }
 
-func sysSignalHandler(cancel context.CancelFunc, _ *pkg.IdleLoop) {
+func sysSignalHandler(cancel context.CancelFunc, _ *pkg.Monitor) {
 	interrupt := make(chan os.Signal)
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
 
@@ -50,15 +49,15 @@ func sysSignalHandler(cancel context.CancelFunc, _ *pkg.IdleLoop) {
 	case sig := <-interrupt:
 		blog.Warnf("idelloop: get system signal %s, going to exit", sig.String())
 
-		// cancel booster's context and make sure that task is released.
+		// cancel context
 		cancel()
 
-		p, err := process.NewProcess(int32(os.Getpid()))
-		if err == nil {
-			blog.Debugf("idelloop: ready kill children when recieved sinal")
-			// kill children
-			pkg.KillChildren(p)
-		}
+		// p, err := process.NewProcess(int32(os.Getpid()))
+		// if err == nil {
+		// 	blog.Debugf("idelloop: ready kill children when recieved sinal")
+		// 	// kill children
+		// 	pkg.KillChildren(p)
+		// }
 
 		// catch control-C and should return code 130(128+0x2)
 		if sig == syscall.SIGINT {
@@ -74,8 +73,8 @@ func sysSignalHandler(cancel context.CancelFunc, _ *pkg.IdleLoop) {
 	}
 }
 
-func newIdleLoop(_ *commandCli.Context) *pkg.IdleLoop {
-	return pkg.NewIdleLoop()
+func newProcess(c *commandCli.Context) *pkg.Monitor {
+	return pkg.NewMonitor(c.String(FlagRulesFile))
 }
 
 func setLogLevel(level string) {

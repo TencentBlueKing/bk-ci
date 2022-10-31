@@ -38,6 +38,7 @@ const (
 	ServerErrExecuteRemoteTaskFailed
 	ServerErrSendRemoteFileFailed
 	ServerErrExecuteLocalTaskFailed
+	ServerErrWorkNotFound
 )
 
 var serverErrCode = map[ServerErrCode]string{
@@ -66,6 +67,7 @@ var serverErrCode = map[ServerErrCode]string{
 	ServerErrExecuteRemoteTaskFailed:    "execute remote task failed",
 	ServerErrSendRemoteFileFailed:       "send remote file failed",
 	ServerErrExecuteLocalTaskFailed:     "execute local task failed",
+	ServerErrWorkNotFound:               "work not found",
 }
 
 // String get error string from error code
