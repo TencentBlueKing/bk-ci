@@ -65,6 +65,7 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.time.LocalDateTime
@@ -457,13 +458,18 @@ class ExperienceAppService(
         val artifactoryPath = experience.artifactoryPath
         val artifactoryType =
             com.tencent.devops.experience.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType)
-        val detailPermission = experienceService.hasArtifactoryPermission(
-            userId = userId,
-            projectId = projectId,
-            path = artifactoryPath,
-            artifactoryType = artifactoryType,
-            permission = Permission.VIEW
-        )
+        val detailPermission = try {
+            experienceService.hasArtifactoryPermission(
+                userId = userId,
+                projectId = projectId,
+                path = artifactoryPath,
+                artifactoryType = artifactoryType,
+                permission = Permission.VIEW
+            )
+        } catch (e: Exception) {
+            logger.warn("get permission failed!", e)
+            false
+        }
         return Pagination(
             false,
             listOf(
@@ -476,5 +482,9 @@ class ExperienceAppService(
                 )
             )
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceAppService::class.java)
     }
 }
