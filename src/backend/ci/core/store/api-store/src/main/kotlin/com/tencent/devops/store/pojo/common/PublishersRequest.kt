@@ -27,37 +27,31 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.store.pojo.common.enums.PublisherType
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("store组件对接平台信息")
-data class StoreDockingPlatformInfo(
-    @ApiModelProperty("环境变量ID", required = true)
-    val id: String,
-    @ApiModelProperty("平台代码", required = true)
-    val platformCode: String,
-    @ApiModelProperty("平台名称", required = true)
-    val platformName: String,
-    @ApiModelProperty("网址", required = false)
-    val website: String?,
-    @ApiModelProperty("简介", required = true)
-    val summary: String,
-    @ApiModelProperty("负责人", required = true)
-    val principal: String,
-    @ApiModelProperty("平台logo地址", required = false)
-    val logoUrl: String?,
-    @ApiModelProperty("标签", required = false)
-    val labels: List<String>? = null,
-    @ApiModelProperty("所属机构名称", required = true)
-    val ownerDeptName: String,
-    @ApiModelProperty("运营负责人", required = true)
-    val owner: String,
-    @ApiModelProperty("添加用户", required = true)
-    val creator: String,
-    @ApiModelProperty("修改用户", required = true)
-    val modifier: String,
-    @ApiModelProperty("添加时间", required = true)
-    val createTime: String,
-    @ApiModelProperty("修改时间", required = true)
-    val updateTime: String
+@ApiModel("发布者数据同步请求")
+data class PublishersRequest(
+    @ApiModelProperty("发布者标识", required = true)
+    val publishersCode: String,
+    @ApiModelProperty("发布者名称", required = true)
+    val name: String,
+    @ApiModelProperty("发布者类型", required = true)
+    val publishersType: PublisherType,
+    @ApiModelProperty("主体负责人", required = true)
+    val owners: List<String>,
+    @ApiModelProperty("成员", required = true)
+    val members: List<String>,
+    @ApiModelProperty("技术支持", required = false)
+    val helper: String? = null,
+    @ApiModelProperty("是否认证", required = true)
+    val certificationFlag: Boolean,
+    @ApiModelProperty("组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @ApiModelProperty("实体组织架构", required = true)
+    val organization: String,
+    @ApiModelProperty("所属工作组BG", required = true)
+    val bgName: String
 )
