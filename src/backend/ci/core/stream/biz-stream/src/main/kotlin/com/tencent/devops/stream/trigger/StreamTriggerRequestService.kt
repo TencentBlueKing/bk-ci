@@ -87,6 +87,7 @@ class StreamTriggerRequestService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamTriggerRequestService::class.java)
     }
+
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     fun externalCodeGitBuild(eventType: String?, webHookType: String, event: String): Boolean? {
@@ -160,7 +161,8 @@ class StreamTriggerRequestService @Autowired constructor(
                 val bizId = MDC.get(TraceTag.BIZID)
                 executors.submit {
                     // 新线程biz id会断，需要重新注入
-                    MDC.put(TraceTag.BIZID, bizId + "_repo_hook")
+                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+                    logger.info("stream start repo trigger|old bizId:$bizId| new bizId:${MDC.get(TraceTag.BIZID)}")
                     streamTriggerRequestRepoService.repoTriggerBuild(
                         triggerPipelineList = repoTriggerPipelineList,
                         eventStr = event,
@@ -341,6 +343,9 @@ class StreamTriggerRequestService @Autowired constructor(
                             reasonParams = listOf(filePath)
                         )
                     }
+                    val bizId = MDC.get(TraceTag.BIZID)
+                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+                    logger.info("stream start local trigger|old bizId:$bizId| new bizId:${MDC.get(TraceTag.BIZID)}")
 
                     trigger(action = action, trigger = trigger)
                 }
