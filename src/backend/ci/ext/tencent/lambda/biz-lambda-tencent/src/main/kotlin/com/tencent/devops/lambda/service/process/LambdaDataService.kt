@@ -69,6 +69,7 @@ import com.tencent.devops.lambda.pojo.DataPlatJobDetail
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
 import com.tencent.devops.lambda.pojo.MakeUpBuildVO
 import com.tencent.devops.lambda.pojo.ProjectOrganize
+import com.tencent.devops.lambda.service.store.LambdaStoreService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
@@ -101,7 +102,7 @@ class LambdaDataService @Autowired constructor(
     private val kafkaClient: KafkaClient,
     private val lambdaKafkaTopicConfig: LambdaKafkaTopicConfig,
     private val lambdaBuildCommitDao: LambdaBuildCommitDao,
-    private val lambdaStoreDao: LambdaStoreDao
+    private val lambdaStoreService: LambdaStoreService
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
@@ -234,10 +235,7 @@ class LambdaDataService @Autowired constructor(
             val platformCode = task.platformCode
             val platformErrorCode = task.platformErrorCode
             val taskParamMap = JsonUtil.toMap(task.taskParams)
-            val platformName = lambdaStoreDao.getPlatformName(
-                dslContext = dslContext,
-                platformCode = platformCode
-            )
+            val platformName = lambdaStoreService.getPlatName(platformCode)
 
             if (task.taskType == "VM" || task.taskType == "NORMAL") {
                 if (taskAtom == "dispatchVMShutdownTaskAtom") {

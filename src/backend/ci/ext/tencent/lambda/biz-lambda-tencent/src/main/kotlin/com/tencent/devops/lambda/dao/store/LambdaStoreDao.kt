@@ -1,10 +1,7 @@
 package com.tencent.devops.lambda.dao.store
 
-import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.model.store.tables.TStoreDockingPlatform
-import com.tencent.devops.model.store.tables.records.TStoreDockingPlatformRecord
 import org.jooq.DSLContext
-import org.jooq.Record1
 import org.springframework.stereotype.Repository
 
 @Repository
