@@ -2075,21 +2075,13 @@ class PipelineBuildFacadeService(
                         params = arrayOf(buildId)
                     )
                 }
-                // 按原有的启动参数组装启动参数
-                val startParameters = mutableMapOf<String, String>()
-                buildInfo.buildParameters?.map {
-                    startParameters.put(it.key, it.value.toString())
-                }
+
                 // 目标构建已经结束,直接按原有启动参数新发起一次构建,此次构建会遵循流水线配置的串行阈值
                 if (buildInfo.status.isFinish()) {
-                    // 发起新构建
-                    return buildManualStartup(
-                        userId = buildInfo.startUser,
-                        startType = StartType.MANUAL,
+                    return buildRestartPipeline(
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        values = startParameters,
-                        channelCode = ChannelCode.BS
+                        buildInfo = buildInfo
                     )
                 }
 
@@ -2103,14 +2095,10 @@ class PipelineBuildFacadeService(
                     userId = userId,
                     buildStatus = BuildStatus.CANCELED
                 )
-                // 发起新构建
-                return buildManualStartup(
-                    userId = buildInfo.startUser,
-                    startType = StartType.MANUAL,
+                return buildRestartPipeline(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    values = startParameters,
-                    channelCode = ChannelCode.BS
+                    buildInfo = buildInfo
                 )
             }
         } finally {
@@ -2122,6 +2110,43 @@ class PipelineBuildFacadeService(
             defaultMessage = MessageCodeUtil.getCodeMessage(ProcessMessageCode.ERROR_RESTART_EXSIT, arrayOf(buildId)),
             params = arrayOf(buildId)
         )
+    }
+
+    private fun buildRestartPipeline(
+        projectId: String,
+        pipelineId: String,
+        buildInfo: BuildInfo
+    ): String {
+        // 按原有的启动参数组装启动参数
+        val startParameters = mutableMapOf<String, String>()
+        buildInfo.buildParameters?.map {
+            startParameters.put(it.key, it.value.toString())
+        }
+        val startType = StartType.toStartType(buildInfo.trigger)
+        // 发起新构建
+        return if (startType == StartType.WEB_HOOK) {
+            webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
+                startParameters[param.key] = param.value.toString()
+            }
+            webhookTriggerPipelineBuild(
+                userId = buildInfo.startUser,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                parameters = startParameters,
+                checkPermission = false,
+                startType = startType
+            )!!
+        } else {
+            // 发起新构建
+            buildManualStartup(
+                userId = buildInfo.startUser,
+                startType = StartType.MANUAL,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                values = startParameters,
+                channelCode = ChannelCode.BS
+            )
+        }
     }
 
     private fun checkPipelineInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo {
