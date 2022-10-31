@@ -129,7 +129,8 @@ class ExperienceService @Autowired constructor(
         userId: String,
         projectId: String,
         path: String,
-        artifactoryType: ArtifactoryType
+        artifactoryType: ArtifactoryType,
+        permission: Permission = Permission.EXECUTE
     ): Boolean {
         val type = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(artifactoryType.name)
         if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, type, path).data!!) {
@@ -156,7 +157,7 @@ class ExperienceService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = Permission.EXECUTE
+            permission = permission
         ).data!!
     }
 
