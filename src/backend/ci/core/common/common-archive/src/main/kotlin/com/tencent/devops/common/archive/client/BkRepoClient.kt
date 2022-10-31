@@ -68,7 +68,6 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
-import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
 import com.tencent.devops.common.archive.util.closeQuietly
@@ -565,7 +564,7 @@ class BkRepoClient constructor(
             metadata = mapOf(),
             page = 0,
             pageSize = 10000
-        ).map {
+        ).records.map {
             BkRepoFile(
                 fullPath = it.fullPath,
                 displayPath = it.fullPath,
@@ -823,7 +822,7 @@ class BkRepoClient constructor(
         metadata: Map<String, String>, // eq and
         page: Int,
         pageSize: Int
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByRepoAndMetadata, userId: $userId, projectId: $projectId, repoNames: $repoNames," +
                 " fileNames: $fileNames, metadata: $metadata, page: $page, pageSize: $pageSize"
@@ -860,7 +859,7 @@ class BkRepoClient constructor(
         metadata: Map<String, String>, // eq and
         page: Int,
         pageSize: Int
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByPathEqOrNameMatchOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
                     " repoNames: $repoNames, filePaths: $filePaths, fileNames: $fileNames, metadata: $metadata," +
@@ -906,7 +905,7 @@ class BkRepoClient constructor(
         metadata: Map<String, String>, // eq and
         page: Int,
         pageSize: Int
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByPathNamePairOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
                 " repoNames: $repoNames, pathNamePairs: $pathNamePairs, metadata: $metadata," +
@@ -943,7 +942,7 @@ class BkRepoClient constructor(
         repoNames: List<String>,
         fullPathPatterns: List<String>,
         metadata: Map<String, String>
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByPattern, userId: $userId, projectId: $projectId, repoNames: $repoNames," +
                     " fullPathPatterns: $fullPathPatterns, metadata: $metadata"
@@ -976,7 +975,7 @@ class BkRepoClient constructor(
         includeFolders: Boolean = false,
         page: Int = 1,
         pageSize: Int = 10000
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "listFileByQuery, userId: $userId, projectId: $projectId, repoName: $repoName," +
                     " path: $path, includeFolders: $includeFolders"
@@ -1035,7 +1034,7 @@ class BkRepoClient constructor(
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
     }
 
-    private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): List<QueryNodeInfo> {
+    private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): QueryData {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
         val queryModel = QueryModel(
             page = PageLimit(page, pageSize),
@@ -1046,7 +1045,7 @@ class BkRepoClient constructor(
         return query(userId, projectId, queryModel)
     }
 
-    private fun query(userId: String, projectId: String, queryModel: QueryModel): List<QueryNodeInfo> {
+    private fun query(userId: String, projectId: String, queryModel: QueryModel): QueryData {
         logger.info("query, userId: $userId, queryModel: $queryModel")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/search"
         val requestBody = objectMapper.writeValueAsString(queryModel)
@@ -1061,7 +1060,7 @@ class BkRepoClient constructor(
                     requestBody
                 )
             ).build()
-        return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!.records
+        return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
     }
 
     private fun doRequest(request: Request): okhttp3.Response {

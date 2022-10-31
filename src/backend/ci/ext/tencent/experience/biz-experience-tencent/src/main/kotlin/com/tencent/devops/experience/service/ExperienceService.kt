@@ -112,7 +112,6 @@ class ExperienceService @Autowired constructor(
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceOuterDao: ExperienceOuterDao,
     private val groupDao: GroupDao,
-    private val groupService: GroupService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val wechatWorkService: WechatWorkService,
     private val client: Client,
@@ -298,7 +297,7 @@ class ExperienceService @Autowired constructor(
             if (HashUtil.decodeIdToLong(it) == ExperienceConstant.PUBLIC_GROUP) {
                 isPublic = true
             } else {
-                if (!groupService.serviceCheck(it)) {
+                if (!serviceCheck(it)) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
                         defaultMessage = "体验组($it)不存在",
@@ -310,7 +309,9 @@ class ExperienceService @Autowired constructor(
         }
         return isPublic
     }
-
+    private fun serviceCheck(groupHashId: String): Boolean {
+        return groupDao.getOrNull(dslContext, HashUtil.decodeIdToLong(groupHashId)) != null
+    }
     private fun getArtifactoryPropertiesMap(
         userId: String,
         projectId: String,
@@ -771,7 +772,7 @@ class ExperienceService @Autowired constructor(
     /**
      * 发给外部人员
      */
-    private fun sendMessageToOuterReceivers(
+    fun sendMessageToOuterReceivers(
         outerReceivers: MutableSet<String>,
         experienceRecord: TExperienceRecord
     ) {
@@ -809,7 +810,7 @@ class ExperienceService @Autowired constructor(
     /**
      * 发给内部人员
      */
-    private fun sendMessageToInnerReceivers(
+    fun sendMessageToInnerReceivers(
         notifyTypeList: Set<NotifyType>,
         projectName: String,
         innerReceivers: MutableSet<String>,
@@ -887,13 +888,13 @@ class ExperienceService @Autowired constructor(
         return ShaUtils.sha1((artifactoryType.name + path).toByteArray())
     }
 
-    private fun getPcUrl(projectId: String, experienceId: Long): String {
+    fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
                 "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
-    private fun getShortExternalUrl(experienceId: Long): String {
+    fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
             HomeHostUtil.outerServerHost() +
