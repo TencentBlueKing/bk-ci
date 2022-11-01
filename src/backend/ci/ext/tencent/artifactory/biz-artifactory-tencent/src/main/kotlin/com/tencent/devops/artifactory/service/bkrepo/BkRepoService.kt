@@ -130,26 +130,7 @@ class BkRepoService @Autowired constructor(
             val fileDetail =
                 bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                     ?: throw NotFoundException("文件不存在")
-            val projectInfo =
-                client.get(ServiceProjectResource::class).get(projectId).data ?: throw NotFoundException("项目不存在")
-            val pipelineInfo = fileDetail.metadata[ARCHIVE_PROPS_PIPELINE_ID]?.let {
-                client.get(ServicePipelineResource::class).getPipelineInfoByPipelineId(it.toString())?.data
-            }
-            val buildNo = fileDetail.metadata[ARCHIVE_PROPS_BUILD_ID]?.let {
-                client.get(ServicePipelineResource::class)
-                    .getBuildNoByBuildIds(setOf(it.toString()), projectId).data?.get(it.toString())
-            }
-            RepoUtils.toFileDetail(fileDetail).also {
-                it.projectName = projectInfo.projectName
-                if (null != pipelineInfo) {
-                    it.pipelineName = pipelineInfo.pipelineName
-                }
-                if (null != buildNo) {
-                    it.buildNo = buildNo
-                }
-                it.artifactoryType = artifactoryType.name
-                it.artifactoryPath = path
-            }
+            RepoUtils.toFileDetail(fileDetail)
         }
     }
 

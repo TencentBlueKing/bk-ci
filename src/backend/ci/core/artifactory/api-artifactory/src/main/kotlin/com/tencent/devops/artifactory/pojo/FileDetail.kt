@@ -50,19 +50,5 @@ data class FileDetail(
     @ApiModelProperty("文件摘要", required = true)
     val checksums: FileChecksums,
     @ApiModelProperty("meta数据", required = true)
-    val meta: Map<String, String>,
-    @ApiModelProperty("nodeMetadata数据", required = true)
-    val nodeMetadata: List<MetadataModel> = emptyList(),
-    @ApiModelProperty("创建人", required = true)
-    val createdBy: String = "",
-    @ApiModelProperty("项目名称", required = true)
-    var projectName: String = "",
-    @ApiModelProperty("流水线名称", required = true)
-    var pipelineName: String = "",
-    @ApiModelProperty("构建号", required = true)
-    var buildNo: String = "",
-    @ApiModelProperty("仓库类型", required = true)
-    var artifactoryType: String = "",
-    @ApiModelProperty("仓库路径", required = true)
-    var artifactoryPath: String = ""
+    val meta: Map<String, String>
 )

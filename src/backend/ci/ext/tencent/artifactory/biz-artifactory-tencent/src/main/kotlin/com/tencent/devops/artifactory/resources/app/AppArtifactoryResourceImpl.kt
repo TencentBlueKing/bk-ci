@@ -245,7 +245,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 artifactoryType = artifactoryType,
                 modifiedTime = fileDetail.modifiedTime,
                 md5 = fileDetail.checksums.md5,
-                buildNum = NumberUtils.toInt(fileDetail.meta[ARCHIVE_PROPS_BUILD_NO], 0)
+                buildNum = NumberUtils.toInt(fileDetail.meta[ARCHIVE_PROPS_BUILD_NO], 0),
+                nodeMetadata = fileDetail.nodeMetadata
             )
         )
     }
