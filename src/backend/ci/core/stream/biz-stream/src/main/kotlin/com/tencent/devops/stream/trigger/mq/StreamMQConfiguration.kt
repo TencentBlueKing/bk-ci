@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.stream.trigger.mq
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.annotation.StreamEventConsumer
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
@@ -34,20 +35,39 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.MQ
+import com.tencent.devops.stream.dao.GitPipelineResourceDao
+import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.tencent.devops.stream.dao.GitRequestEventDao
+import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.trigger.ScheduleTriggerService
+import com.tencent.devops.stream.trigger.StreamTriggerRequestService
+import com.tencent.devops.stream.trigger.StreamYamlTrigger
+import com.tencent.devops.stream.trigger.actions.EventActionFactory
+import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
+import com.tencent.devops.stream.trigger.git.service.GithubApiService
+import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.listener.StreamBuildFinishListenerService
 import com.tencent.devops.stream.trigger.listener.StreamBuildQualityCheckListener
 import com.tencent.devops.stream.trigger.listener.StreamBuildReviewListener
+import com.tencent.devops.stream.trigger.listener.components.SendCommitCheck
+import com.tencent.devops.stream.trigger.listener.components.SendNotify
+import com.tencent.devops.stream.trigger.listener.components.SendQualityMrComment
 import com.tencent.devops.stream.trigger.mq.streamMrConflict.StreamMrConflictCheckEvent
 import com.tencent.devops.stream.trigger.mq.streamMrConflict.StreamMrConflictCheckListener
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestEvent
 import com.tencent.devops.stream.trigger.mq.streamRequest.StreamRequestListener
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerEvent
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerListener
+import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
+import com.tencent.devops.stream.trigger.timer.SchedulerManager
 import com.tencent.devops.stream.trigger.timer.listener.StreamTimerBuildListener
 import com.tencent.devops.stream.trigger.timer.listener.StreamTimerChangerListener
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamChangeEvent
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
+import com.tencent.devops.stream.trigger.timer.service.StreamTimerBranchService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
@@ -56,6 +76,7 @@ import org.springframework.messaging.Message
 import java.util.function.Consumer
 
 @Configuration
+@Suppress("LongParameterList")
 class StreamMQConfiguration {
 
     companion object {
@@ -68,6 +89,31 @@ class StreamMQConfiguration {
     @Bean
     fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
+    @Bean
+    fun streamBuildFinishListenerService(
+        @Autowired dslContext: DSLContext,
+        @Autowired objectMapper: ObjectMapper,
+        @Autowired actionFactory: EventActionFactory,
+        @Autowired sendCommitCheck: SendCommitCheck,
+        @Autowired sendNotify: SendNotify,
+        @Autowired streamGitConfig: StreamGitConfig,
+        @Autowired gitRequestEventBuildDao: GitRequestEventBuildDao,
+        @Autowired gitRequestEventDao: GitRequestEventDao,
+        @Autowired streamBasicSettingDao: StreamBasicSettingDao,
+        @Autowired gitPipelineResourceDao: GitPipelineResourceDao
+    ) = StreamBuildFinishListenerService(
+        dslContext = dslContext,
+        objectMapper = objectMapper,
+        actionFactory = actionFactory,
+        sendCommitCheck = sendCommitCheck,
+        sendNotify = sendNotify,
+        streamGitConfig = streamGitConfig,
+        gitRequestEventBuildDao = gitRequestEventBuildDao,
+        gitRequestEventDao = gitRequestEventDao,
+        streamBasicSettingDao = streamBasicSettingDao,
+        gitPipelineResourceDao = gitPipelineResourceDao
+    )
+
     @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
     fun buildFinishListener(
         @Autowired finishListenerService: StreamBuildFinishListenerService
@@ -76,6 +122,29 @@ class StreamMQConfiguration {
             finishListenerService.doFinish(event.payload)
         }
     }
+
+    @Bean
+    fun streamBuildQualityCheckListener(
+        @Autowired dslContext: DSLContext,
+        @Autowired objectMapper: ObjectMapper,
+        @Autowired actionFactory: EventActionFactory,
+        @Autowired streamGitConfig: StreamGitConfig,
+        @Autowired gitRequestEventBuildDao: GitRequestEventBuildDao,
+        @Autowired gitRequestEventDao: GitRequestEventDao,
+        @Autowired gitPipelineResourceDao: GitPipelineResourceDao,
+        @Autowired streamBasicSettingDao: StreamBasicSettingDao,
+        @Autowired sendQualityMrComment: SendQualityMrComment
+    ) = StreamBuildQualityCheckListener(
+        dslContext = dslContext,
+        objectMapper = objectMapper,
+        actionFactory = actionFactory,
+        streamGitConfig = streamGitConfig,
+        gitRequestEventBuildDao = gitRequestEventBuildDao,
+        gitRequestEventDao = gitRequestEventDao,
+        streamBasicSettingDao = streamBasicSettingDao,
+        gitPipelineResourceDao = gitPipelineResourceDao,
+        sendQualityMrComment = sendQualityMrComment
+    )
 
     @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT, STREAM_CONSUMER_GROUP)
     fun buildQualityCheckListener(
@@ -86,14 +155,40 @@ class StreamMQConfiguration {
         }
     }
 
-    @StreamEventConsumer(MQ.QUEUE_STREAM_TRIGGER_PIPELINE_EVENT, STREAM_CONSUMER_GROUP)
+    @Bean
     fun streamTriggerListener(
+        @Autowired exceptionHandler: StreamTriggerExceptionHandler,
+        @Autowired streamYamlTrigger: StreamYamlTrigger,
+        @Autowired actionFactory: EventActionFactory
+    ) = StreamTriggerListener(
+        exceptionHandler = exceptionHandler,
+        streamYamlTrigger = streamYamlTrigger,
+        actionFactory = actionFactory
+    )
+
+    @StreamEventConsumer(MQ.QUEUE_STREAM_TRIGGER_PIPELINE_EVENT, STREAM_CONSUMER_GROUP)
+    fun triggerListener(
         @Autowired streamTriggerListener: StreamTriggerListener
     ): Consumer<Message<StreamTriggerEvent>> {
         return Consumer { event: Message<StreamTriggerEvent> ->
             streamTriggerListener.listenStreamTriggerEvent(event.payload)
         }
     }
+
+    @Bean
+    fun streamMrConflictCheckListener(
+        @Autowired mergeConflictCheck: MergeConflictCheck,
+        @Autowired streamTriggerRequestService: StreamTriggerRequestService,
+        @Autowired eventDispatcher: SampleEventDispatcher,
+        @Autowired exHandler: StreamTriggerExceptionHandler,
+        @Autowired actionFactory: EventActionFactory
+    ) = StreamMrConflictCheckListener(
+        mergeConflictCheck = mergeConflictCheck,
+        streamTriggerRequestService = streamTriggerRequestService,
+        actionFactory = actionFactory,
+        eventDispatcher = eventDispatcher,
+        exHandler = exHandler
+    )
 
     @StreamEventConsumer(MQ.QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT, STREAM_CONSUMER_GROUP)
     fun conflictCheckListener(
@@ -104,8 +199,15 @@ class StreamMQConfiguration {
         }
     }
 
-    @StreamEventConsumer(MQ.QUEUE_STREAM_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
+    @Bean
     fun streamRequestListener(
+        @Autowired steamRequestService: StreamTriggerRequestService
+    ) = StreamRequestListener(
+        steamRequestService = steamRequestService
+    )
+
+    @StreamEventConsumer(MQ.QUEUE_STREAM_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
+    fun requestListener(
         @Autowired requestListener: StreamRequestListener
     ): Consumer<Message<StreamRequestEvent>> {
         return Consumer { event: Message<StreamRequestEvent> ->
@@ -113,8 +215,29 @@ class StreamMQConfiguration {
         }
     }
 
-    @StreamEventConsumer(MQ.QUEUE_STREAM_TIMER, STREAM_CONSUMER_GROUP)
+    @Bean
     fun streamTimerBuildListener(
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
+        @Autowired dslContext: DSLContext,
+        @Autowired streamTimerBranchService: StreamTimerBranchService,
+        @Autowired scheduleTriggerService: ScheduleTriggerService,
+        @Autowired streamBasicSettingDao: StreamBasicSettingDao,
+        @Autowired streamGitConfig: StreamGitConfig,
+        @Autowired tGitApiService: TGitApiService,
+        @Autowired githubApiService: GithubApiService
+    ) = StreamTimerBuildListener(
+        dslContext = dslContext,
+        pipelineEventDispatcher = pipelineEventDispatcher,
+        streamTimerBranchService = streamTimerBranchService,
+        scheduleTriggerService = scheduleTriggerService,
+        streamBasicSettingDao = streamBasicSettingDao,
+        streamGitConfig = streamGitConfig,
+        tGitApiService = tGitApiService,
+        githubApiService = githubApiService
+    )
+
+    @StreamEventConsumer(MQ.QUEUE_STREAM_TIMER, STREAM_CONSUMER_GROUP)
+    fun timerBuildListener(
         @Autowired buildListener: StreamTimerBuildListener
     ): Consumer<Message<StreamTimerBuildEvent>> {
         return Consumer { event: Message<StreamTimerBuildEvent> ->
@@ -122,9 +245,18 @@ class StreamMQConfiguration {
         }
     }
 
+    @Bean
+    fun streamTimerChangerListener(
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
+        @Autowired schedulerManager: SchedulerManager
+    ) = StreamTimerChangerListener(
+        pipelineEventDispatcher = pipelineEventDispatcher,
+        schedulerManager = schedulerManager
+    )
+
     // 每个实例都需要刷新自己维护的定时任务
     @StreamEventConsumer(MQ.QUEUE_STREAM_TIMER, STREAM_CONSUMER_GROUP, true)
-    fun streamTimerChangerListener(
+    fun timerChangerListener(
         @Autowired buildListener: StreamTimerChangerListener
     ): Consumer<Message<StreamChangeEvent>> {
         return Consumer { event: Message<StreamChangeEvent> ->
@@ -132,8 +264,31 @@ class StreamMQConfiguration {
         }
     }
 
+    @Bean
+    fun streamBuildReviewListener(
+        @Autowired dslContext: DSLContext,
+        @Autowired objectMapper: ObjectMapper,
+        @Autowired actionFactory: EventActionFactory,
+        @Autowired streamGitConfig: StreamGitConfig,
+        @Autowired gitRequestEventBuildDao: GitRequestEventBuildDao,
+        @Autowired gitRequestEventDao: GitRequestEventDao,
+        @Autowired gitPipelineResourceDao: GitPipelineResourceDao,
+        @Autowired streamBasicSettingDao: StreamBasicSettingDao,
+        @Autowired sendCommitCheck: SendCommitCheck
+    ) = StreamBuildReviewListener(
+        dslContext = dslContext,
+        objectMapper = objectMapper,
+        actionFactory = actionFactory,
+        sendCommitCheck = sendCommitCheck,
+        streamGitConfig = streamGitConfig,
+        gitRequestEventBuildDao = gitRequestEventBuildDao,
+        gitRequestEventDao = gitRequestEventDao,
+        streamBasicSettingDao = streamBasicSettingDao,
+        gitPipelineResourceDao = gitPipelineResourceDao
+    )
+
     @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, STREAM_CONSUMER_GROUP)
-    fun buildFinishListener(
+    fun buildReviewListener(
         @Autowired listener: StreamBuildReviewListener
     ): Consumer<Message<PipelineBuildReviewBroadCastEvent>> {
         return Consumer { event: Message<PipelineBuildReviewBroadCastEvent> ->
