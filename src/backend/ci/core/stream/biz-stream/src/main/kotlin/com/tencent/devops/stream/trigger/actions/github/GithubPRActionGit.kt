@@ -36,6 +36,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.isPrForkNotMergeEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -118,7 +119,8 @@ class GithubPRActionGit(
                 userId = this.data.eventCommon.userId
             ).accessLevel
 
-            accessLevel >= 30
+            // >= TRIAGE
+            accessLevel >= GithubAccessLevelEnum.TRIAGE.level
         } catch (error: ErrorCodeException) {
             false
         }
