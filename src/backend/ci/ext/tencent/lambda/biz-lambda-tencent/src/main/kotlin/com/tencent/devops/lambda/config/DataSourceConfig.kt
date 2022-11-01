@@ -72,7 +72,6 @@ class DataSourceConfig {
     }
 
     @Bean
-    @Primary
     fun storeDataSource(
         @Value("\${spring.datasource.store.url}")
         datasourceUrl: String,
