@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
@@ -735,6 +736,18 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     buildParameters = pipelineParamMap.values.toList()
                 )
+                if (parameters[PIPELINE_START_TASK_ID] != null) {
+                    buildLogPrinter.addLines(
+                        buildId = buildId,
+                        logMessages = pipelineParamMap.map {
+                            LogMessage(
+                                message = "${it.key}=${it.value.value}",
+                                timestamp = System.currentTimeMillis(),
+                                tag = parameters[PIPELINE_START_TASK_ID]?.toString() ?: ""
+                            )
+                        }
+                    )
+                }
             }
             return buildId
         } finally {
