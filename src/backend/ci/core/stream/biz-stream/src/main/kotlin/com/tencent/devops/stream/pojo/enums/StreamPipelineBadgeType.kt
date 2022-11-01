@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.common
+package com.tencent.devops.stream.pojo.enums
 
 enum class StreamPipelineBadgeType(val labelColor: String, val text: String, val color: String, val logo: String) {
     // 没有找到
