@@ -25,42 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.stream.api
 
-import org.slf4j.LoggerFactory
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
-object SensitiveValueService {
+@Api(tags = ["EXTERNAL_STREAM"], description = "外部-STREAM资源获取")
+@Path("/external/stream")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TXExternalStreamResource {
 
-    private val logger = LoggerFactory.getLogger(SensitiveValueService::class.java)
-    private const val SENSITIVE_MIXER = "******"
-
-    /**
-     * 每个Job内维护的敏感信息集合
-     */
-    val sensitiveStringSet = mutableSetOf<String>()
-
-    fun addSensitiveValues(sensitiveValues: List<String>?) {
-        sensitiveValues?.let {
-            logger.info("Append sensitive string set")
-            sensitiveStringSet.addAll(it)
-            logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
-        }
-    }
-
-    fun matchSensitiveValue(value: String): Boolean {
-        sensitiveStringSet.forEach { sensitive ->
-            if (value.contains(sensitive)) return true
-        }
-        return false
-    }
-
-    fun fixSensitiveContent(message: String): String {
-        var realMessage = message
-        sensitiveStringSet.forEach { sensitiveStr ->
-            if (realMessage.contains(sensitiveStr)) {
-                realMessage = realMessage.replace(sensitiveStr, SENSITIVE_MIXER)
-            }
-        }
-        return realMessage
-    }
+    @ApiOperation("工蜂回调请求")
+    @GET
+    @Path("/git/callback")
+    fun gitCallback(
+        @ApiParam(value = "code")
+        @QueryParam("code")
+        code: String,
+        @ApiParam(value = "state")
+        @QueryParam("state")
+        state: String
+    ): Response
 }

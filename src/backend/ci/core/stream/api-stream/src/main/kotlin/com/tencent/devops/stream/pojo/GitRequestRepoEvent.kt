@@ -25,42 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.stream.pojo
 
-import org.slf4j.LoggerFactory
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object SensitiveValueService {
-
-    private val logger = LoggerFactory.getLogger(SensitiveValueService::class.java)
-    private const val SENSITIVE_MIXER = "******"
-
-    /**
-     * 每个Job内维护的敏感信息集合
-     */
-    val sensitiveStringSet = mutableSetOf<String>()
-
-    fun addSensitiveValues(sensitiveValues: List<String>?) {
-        sensitiveValues?.let {
-            logger.info("Append sensitive string set")
-            sensitiveStringSet.addAll(it)
-            logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
-        }
-    }
-
-    fun matchSensitiveValue(value: String): Boolean {
-        sensitiveStringSet.forEach { sensitive ->
-            if (value.contains(sensitive)) return true
-        }
-        return false
-    }
-
-    fun fixSensitiveContent(message: String): String {
-        var realMessage = message
-        sensitiveStringSet.forEach { sensitiveStr ->
-            if (realMessage.contains(sensitiveStr)) {
-                realMessage = realMessage.replace(sensitiveStr, SENSITIVE_MIXER)
-            }
-        }
-        return realMessage
-    }
-}
+@ApiModel("repo hook 构建信息")
+data class GitRequestRepoEvent(
+    @ApiModelProperty("EVENT_ID")
+    val eventId: Long,
+    @ApiModelProperty("流水线id")
+    val pipelineId: String,
+    @ApiModelProperty("构建id")
+    val buildId: String?,
+    @ApiModelProperty("流水线主库projectId")
+    val targetGitProjectId: Long,
+    @ApiModelProperty("触发库projectId")
+    val sourceGitProjectId: Long,
+    @ApiModelProperty("创建时间")
+    val createTime: Long?
+)

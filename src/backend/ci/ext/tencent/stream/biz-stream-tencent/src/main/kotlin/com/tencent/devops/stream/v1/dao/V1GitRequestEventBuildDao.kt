@@ -264,10 +264,15 @@ class V1GitRequestEventBuildDao {
         return buildRecords
     }
 
-    fun getRequestBuildsByEventId(dslContext: DSLContext, eventId: Long): List<TGitRequestEventBuildRecord> {
+    fun getRequestBuildsByEventId(
+        dslContext: DSLContext,
+        eventId: Long,
+        gitProjectId: Long
+    ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
                 .where(EVENT_ID.eq(eventId))
+                .and(GIT_PROJECT_ID.eq(gitProjectId))
                 .fetch()
         }
     }

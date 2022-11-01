@@ -204,6 +204,23 @@ class StreamUserMessageDao {
         }
     }
 
+    fun updateMessageType(
+        dslContext: DSLContext,
+        projectId: String,
+        userId: String,
+        messageId: String,
+        messageType: UserMessageType
+    ) {
+        with(TGitUserMessage.T_GIT_USER_MESSAGE) {
+            dslContext.update(this)
+                .set(MESSAGE_TYPE, messageType.name)
+                .where(PROJECT_ID.eq(projectId))
+                .and(MESSAGE_ID.eq(messageId))
+                .and(MESSAGE_TYPE.eq(messageType.name))
+                .execute()
+        }
+    }
+
     fun deleteByMessageId(
         dslContext: DSLContext,
         projectId: String,
