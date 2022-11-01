@@ -181,6 +181,31 @@ class GitOauthService @Autowired constructor(
         return AuthorizeResult(200, "")
     }
 
+    override fun getAuthUrl(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        gitProjectId: Long?
+    ): String {
+        logger.info("getAuthUrl userId is: $userId,redirectUrlType is: $redirectUrlType")
+        if (redirectUrlType == RedirectUrlTypeEnum.SPEC) {
+            if (redirectUrl.isNullOrEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("redirectUrl")
+                )
+            }
+        }
+        val authParams = mapOf(
+            "gitProjectId" to gitProjectId?.toString(),
+            "userId" to userId,
+            "redirectUrlType" to redirectUrlType?.type,
+            "redirectUrl" to redirectUrl,
+            "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
+        )
+        return getAuthUrl(authParams)
+    }
+
     private fun getAuthUrl(authParams: Map<String, String?>): String {
         val authParamJsonStr = URLEncoder.encode(JsonUtil.toJson(authParams), "UTF-8")
         logger.info("getAuthUrl authParamJsonStr is: $authParamJsonStr")
