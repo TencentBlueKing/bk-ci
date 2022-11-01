@@ -10,7 +10,6 @@ import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.archive.client.BkRepoClient
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -21,9 +20,7 @@ import javax.ws.rs.NotFoundException
 
 @Service
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
-class ArchiveAtomToBkRepoServiceImpl(
-    private val bkRepoClient: BkRepoClient
-) : ArchiveAtomServiceImpl() {
+class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
 
     override fun getAtomArchiveBasePath(): String {
         return System.getProperty("java.io.tmpdir")

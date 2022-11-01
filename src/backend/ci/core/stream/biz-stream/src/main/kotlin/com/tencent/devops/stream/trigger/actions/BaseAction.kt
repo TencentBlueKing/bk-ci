@@ -137,6 +137,11 @@ interface BaseAction {
     fun needSendCommitCheck(): Boolean
 
     /**
+     * 判断是否需要更新流水线最近修改人
+     */
+    fun needUpdateLastModifyUser(filePath: String): Boolean
+
+    /**
      * 发送commit check
      */
     fun sendCommitCheck(
