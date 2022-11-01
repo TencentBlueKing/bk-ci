@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.config
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
@@ -48,7 +48,7 @@ class ProjectMQConfiguration {
         const val STREAM_CONSUMER_GROUP = "project-service"
     }
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PROJECT_CREATE_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PROJECT_CREATE_FANOUT, STREAM_CONSUMER_GROUP)
     fun projectCreateEventListener(
         @Autowired listener: ProjectEventListener
     ): Consumer<Message<ProjectBroadCastEvent>> {
@@ -57,7 +57,7 @@ class ProjectMQConfiguration {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PROJECT_UPDATE_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PROJECT_UPDATE_FANOUT, STREAM_CONSUMER_GROUP)
     fun projectUpdateEventListener(
         @Autowired listener: ProjectEventListener
     ): Consumer<Message<ProjectBroadCastEvent>> {
@@ -66,7 +66,7 @@ class ProjectMQConfiguration {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PROJECT_UPDATE_LOGO_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PROJECT_UPDATE_LOGO_FANOUT, STREAM_CONSUMER_GROUP)
     fun projectUpdateLogoEventListener(
         @Autowired listener: ProjectEventListener
     ): Consumer<Message<ProjectBroadCastEvent>> {

@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.stream.enums.ActionType
+import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.model.stream.tables.records.TStreamTimerRecord
 import com.tencent.devops.process.constant.ProcessMessageCode

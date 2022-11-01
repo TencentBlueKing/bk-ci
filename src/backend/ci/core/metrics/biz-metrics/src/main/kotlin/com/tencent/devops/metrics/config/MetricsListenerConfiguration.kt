@@ -27,7 +27,7 @@
 
 package com.tencent.devops.metrics.config
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
 import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
@@ -45,7 +45,7 @@ class MetricsListenerConfiguration {
         const val STREAM_CONSUMER_GROUP = "metrics-service"
     }
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT, STREAM_CONSUMER_GROUP)
     fun buildEndMetricsDataReportListener(
         @Autowired listener: BuildEndMetricsDataReportListener
     ): Consumer<Message<BuildEndMetricsBroadCastEvent>> {
@@ -54,7 +54,7 @@ class MetricsListenerConfiguration {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT, STREAM_CONSUMER_GROUP)
     fun labelChangeMetricsDataSyncListener(
         @Autowired listener: LabelChangeMetricsDataSyncListener
     ): Consumer<Message<LabelChangeMetricsBroadCastEvent>> {

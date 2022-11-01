@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.common.stream.enums.ActionType
+import com.tencent.devops.common.event.enums.ActionType
 
 /**
  * TGit提交检查事件

@@ -28,11 +28,9 @@
 package com.tencent.devops.process.engine.init
 
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.process.engine.control.BuildCancelControl
-import com.tencent.devops.process.engine.listener.run.finish.PipelineBuildCancelListener
 import com.tencent.devops.process.engine.listener.run.finish.SubPipelineBuildFinishListener
 import com.tencent.devops.process.service.SubPipelineStatusService
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,7 +61,7 @@ class BuildEngineExtendConfiguration {
         pipelineEventDispatcher = pipelineEventDispatcher
     )
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
     fun subPipelineBuildFinishListener(
         @Autowired buildListener: SubPipelineBuildFinishListener
     ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {

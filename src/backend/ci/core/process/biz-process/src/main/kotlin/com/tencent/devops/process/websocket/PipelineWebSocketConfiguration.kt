@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.websocket
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
@@ -67,7 +67,7 @@ class PipelineWebSocketConfiguration {
     /**
      * webhook构建触发广播监听
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_WEBSOCKET, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_WEBSOCKET, STREAM_CONSUMER_GROUP)
     fun pipelineWebSocketPushEventListener(
         @Autowired pipelineWebSocketListener: PipelineWebSocketListener
     ): Consumer<Message<PipelineBuildWebSocketPushEvent>> {

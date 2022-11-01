@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.webhook
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
@@ -74,7 +74,7 @@ class WebhookMQConfiguration @Autowired constructor() {
     )
 
     // 各类Commit事件监听
-    @StreamEventConsumer(StreamBinding.QUEUE_GITHUB_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_GITHUB_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
     fun githubWebhookListener(
         @Autowired webhookEventListener: WebhookEventListener
     ): Consumer<Message<GithubWebhookEvent>> {
@@ -83,7 +83,7 @@ class WebhookMQConfiguration @Autowired constructor() {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.QUEUE_GITLAB_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_GITLAB_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
     fun gitlabWebhookListener(
         @Autowired webhookEventListener: WebhookEventListener
     ): Consumer<Message<GitlabWebhookEvent>> {
@@ -92,7 +92,7 @@ class WebhookMQConfiguration @Autowired constructor() {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.QUEUE_GIT_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_GIT_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
     fun gitWebhookListener(
         @Autowired webhookEventListener: WebhookEventListener
     ): Consumer<Message<GitWebhookEvent>> {
@@ -101,7 +101,7 @@ class WebhookMQConfiguration @Autowired constructor() {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.QUEUE_P4_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_P4_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
     fun p4WebhookListener(
         @Autowired webhookEventListener: WebhookEventListener
     ): Consumer<Message<P4WebhookEvent>> {
@@ -110,7 +110,7 @@ class WebhookMQConfiguration @Autowired constructor() {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.QUEUE_SVN_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_SVN_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
     fun svnWebhookListener(
         @Autowired webhookEventListener: WebhookEventListener
     ): Consumer<Message<SvnWebhookEvent>> {
@@ -119,7 +119,7 @@ class WebhookMQConfiguration @Autowired constructor() {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.QUEUE_TGIT_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_TGIT_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
     fun tgitWebhookListener(
         @Autowired webhookEventListener: WebhookEventListener
     ): Consumer<Message<TGitWebhookEvent>> {

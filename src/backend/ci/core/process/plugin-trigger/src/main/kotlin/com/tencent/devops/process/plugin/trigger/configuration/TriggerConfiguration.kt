@@ -30,7 +30,7 @@ package com.tencent.devops.process.plugin.trigger.configuration
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
@@ -90,7 +90,7 @@ class TriggerConfiguration {
     /**
      * 定时构建队列--- 并发一般
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_TIMER, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_TIMER, STREAM_CONSUMER_GROUP)
     fun timerTriggerListener(
         @Autowired buildListener: PipelineTimerBuildListener
     ): Consumer<Message<PipelineTimerBuildEvent>> {
@@ -102,7 +102,7 @@ class TriggerConfiguration {
     /**
      * 构建定时构建定时变化的广播交换机
      */
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT, STREAM_CONSUMER_GROUP)
     fun timerChangeListener(
         @Autowired buildListener: PipelineTimerChangerListener
     ): Consumer<Message<PipelineTimerChangeEvent>> {

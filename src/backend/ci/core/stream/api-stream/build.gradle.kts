@@ -28,7 +28,7 @@
 dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
-    api(project(":core:common:common-stream"))
+    api(project(":core:common:common-event"))
     api(project(":core:store:api-store"))
     api(project(":core:log:api-log"))
     api(project(":core:common:common-webhook:api-common-webhook"))

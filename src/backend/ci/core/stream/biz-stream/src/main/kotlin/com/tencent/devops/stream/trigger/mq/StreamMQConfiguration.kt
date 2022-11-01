@@ -27,7 +27,7 @@
 package com.tencent.devops.stream.trigger.mq
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -114,7 +114,7 @@ class StreamMQConfiguration {
         gitPipelineResourceDao = gitPipelineResourceDao
     )
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
     fun buildFinishListener(
         @Autowired finishListenerService: StreamBuildFinishListenerService
     ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
@@ -146,7 +146,7 @@ class StreamMQConfiguration {
         sendQualityMrComment = sendQualityMrComment
     )
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT, STREAM_CONSUMER_GROUP)
     fun buildQualityCheckListener(
         @Autowired checkListener: StreamBuildQualityCheckListener
     ): Consumer<Message<PipelineBuildQualityCheckBroadCastEvent>> {
@@ -166,7 +166,7 @@ class StreamMQConfiguration {
         actionFactory = actionFactory
     )
 
-    @StreamEventConsumer(MQ.QUEUE_STREAM_TRIGGER_PIPELINE_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(MQ.QUEUE_STREAM_TRIGGER_PIPELINE_EVENT, STREAM_CONSUMER_GROUP)
     fun triggerListener(
         @Autowired streamTriggerListener: StreamTriggerListener
     ): Consumer<Message<StreamTriggerEvent>> {
@@ -190,7 +190,7 @@ class StreamMQConfiguration {
         exHandler = exHandler
     )
 
-    @StreamEventConsumer(MQ.QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(MQ.QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT, STREAM_CONSUMER_GROUP)
     fun conflictCheckListener(
         @Autowired checkListener: StreamMrConflictCheckListener
     ): Consumer<Message<StreamMrConflictCheckEvent>> {
@@ -206,7 +206,7 @@ class StreamMQConfiguration {
         steamRequestService = steamRequestService
     )
 
-    @StreamEventConsumer(MQ.QUEUE_STREAM_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(MQ.QUEUE_STREAM_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
     fun requestListener(
         @Autowired requestListener: StreamRequestListener
     ): Consumer<Message<StreamRequestEvent>> {
@@ -236,7 +236,7 @@ class StreamMQConfiguration {
         githubApiService = githubApiService
     )
 
-    @StreamEventConsumer(MQ.QUEUE_STREAM_TIMER, STREAM_CONSUMER_GROUP)
+    @EventConsumer(MQ.QUEUE_STREAM_TIMER, STREAM_CONSUMER_GROUP)
     fun timerBuildListener(
         @Autowired buildListener: StreamTimerBuildListener
     ): Consumer<Message<StreamTimerBuildEvent>> {
@@ -255,7 +255,7 @@ class StreamMQConfiguration {
     )
 
     // 每个实例都需要刷新自己维护的定时任务
-    @StreamEventConsumer(MQ.QUEUE_STREAM_TIMER, STREAM_CONSUMER_GROUP, true)
+    @EventConsumer(MQ.QUEUE_STREAM_TIMER, STREAM_CONSUMER_GROUP, true)
     fun timerChangerListener(
         @Autowired buildListener: StreamTimerChangerListener
     ): Consumer<Message<StreamChangeEvent>> {
@@ -287,7 +287,7 @@ class StreamMQConfiguration {
         gitPipelineResourceDao = gitPipelineResourceDao
     )
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, STREAM_CONSUMER_GROUP)
     fun buildReviewListener(
         @Autowired listener: StreamBuildReviewListener
     ): Consumer<Message<PipelineBuildReviewBroadCastEvent>> {

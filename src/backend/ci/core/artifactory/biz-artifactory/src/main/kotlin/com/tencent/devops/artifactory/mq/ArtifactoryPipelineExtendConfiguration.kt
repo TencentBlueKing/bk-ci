@@ -27,7 +27,7 @@
 
 package com.tencent.devops.artifactory.mq
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
@@ -55,7 +55,7 @@ class ArtifactoryPipelineExtendConfiguration {
     /**
      * 构建广播交换机
      */
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
     fun buildFinishListener(
         @Autowired listener: PipelineBuildArtifactoryListener
     ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {

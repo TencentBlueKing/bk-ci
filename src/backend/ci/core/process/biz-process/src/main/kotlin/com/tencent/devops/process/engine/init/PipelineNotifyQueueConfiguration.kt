@@ -1,7 +1,7 @@
 package com.tencent.devops.process.engine.init
 
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.listener.run.PipelineNotifyQueueListener
@@ -28,7 +28,7 @@ class PipelineNotifyQueueConfiguration {
     /**
      * webhook构建触发广播监听
      */
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
     fun notifyQueueBuildFinishListener(
         @Autowired buildListener: PipelineNotifyQueueListener
     ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {

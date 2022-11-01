@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.init
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -56,7 +56,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.service.BuildVariableService
@@ -69,10 +68,8 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 import org.springframework.messaging.Message
 import java.util.function.Consumer
 
@@ -132,7 +129,7 @@ class BuildEngineCoreBuildConfiguration {
         pipelineEventDispatcher = pipelineEventDispatcher
     )
 
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_START, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_START, STREAM_CONSUMER_GROUP)
     fun buildStartListener(
         @Autowired buildListener: PipelineBuildStartListener
     ): Consumer<Message<PipelineBuildStartEvent>> {
@@ -153,7 +150,7 @@ class BuildEngineCoreBuildConfiguration {
         pipelineEventDispatcher = pipelineEventDispatcher
     )
 
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_FINISH, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_FINISH, STREAM_CONSUMER_GROUP)
     fun buildFinishListener(
         @Autowired buildListener: PipelineBuildFinishListener
     ): Consumer<Message<PipelineBuildFinishEvent>> {
@@ -174,7 +171,7 @@ class BuildEngineCoreBuildConfiguration {
         pipelineEventDispatcher = pipelineEventDispatcher
     )
 
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_CANCEL, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_CANCEL, STREAM_CONSUMER_GROUP)
     fun buildCancelListener(
         @Autowired buildListener: PipelineBuildCancelListener
     ): Consumer<Message<PipelineBuildCancelEvent>> {
@@ -195,7 +192,7 @@ class BuildEngineCoreBuildConfiguration {
         pipelineEventDispatcher = pipelineEventDispatcher
     )
 
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_STAGE, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_STAGE, STREAM_CONSUMER_GROUP)
     fun stageBuildListener(
         @Autowired buildListener: PipelineStageBuildListener
     ): Consumer<Message<PipelineBuildStageEvent>> {
@@ -216,7 +213,7 @@ class BuildEngineCoreBuildConfiguration {
         pipelineEventDispatcher = pipelineEventDispatcher
     )
 
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_CONTAINER, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_CONTAINER, STREAM_CONSUMER_GROUP)
     fun containerBuildListener(
         @Autowired buildListener: PipelineContainerBuildListener
     ): Consumer<Message<PipelineBuildContainerEvent>> {
@@ -237,7 +234,7 @@ class BuildEngineCoreBuildConfiguration {
         pipelineEventDispatcher = pipelineEventDispatcher
     )
 
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_TASK_START, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_TASK_START, STREAM_CONSUMER_GROUP)
     fun taskBuildListener(
         @Autowired buildListener: PipelineAtomTaskBuildListener
     ): Consumer<Message<PipelineBuildAtomTaskEvent>> {
@@ -272,7 +269,7 @@ class BuildEngineCoreBuildConfiguration {
         pipelineEventDispatcher = pipelineEventDispatcher
     )
 
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_PAUSE_TASK_EXECUTE, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_PAUSE_TASK_EXECUTE, STREAM_CONSUMER_GROUP)
     fun taskPauseListener(
         @Autowired buildListener: PipelineTaskPauseListener
     ): Consumer<Message<PipelineTaskPauseEvent>> {

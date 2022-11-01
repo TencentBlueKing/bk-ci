@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.init
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.control.CallBackControl
@@ -128,7 +128,7 @@ class PipelineBaseConfiguration {
     /**
      * 流水线创建队列--- 并发小
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_CREATE, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_CREATE, STREAM_CONSUMER_GROUP)
     fun pipelineCreateListener(
         @Autowired createListener: MQPipelineCreateListener
     ): Consumer<Message<PipelineCreateEvent>> {
@@ -140,7 +140,7 @@ class PipelineBaseConfiguration {
     /**
      * 流水线删除队列--- 并发小
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_DELETE, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_DELETE, STREAM_CONSUMER_GROUP)
     fun pipelineDeleteListener(
         @Autowired deleteListener: MQPipelineDeleteListener
     ): Consumer<Message<PipelineDeleteEvent>> {
@@ -152,7 +152,7 @@ class PipelineBaseConfiguration {
     /**
      * 流水线更新队列--- 并发小
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_UPDATE, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_UPDATE, STREAM_CONSUMER_GROUP)
     fun pipelineUpdateListener(
         @Autowired updateListener: MQPipelineUpdateListener
     ): Consumer<Message<PipelineUpdateEvent>> {
@@ -164,7 +164,7 @@ class PipelineBaseConfiguration {
     /**
      * 流水线恢复队列--- 并发一般
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_RESTORE, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_RESTORE, STREAM_CONSUMER_GROUP)
     fun pipelineRestoreListener(
         @Autowired restoreListener: MQPipelineRestoreListener
     ): Consumer<Message<PipelineRestoreEvent>> {

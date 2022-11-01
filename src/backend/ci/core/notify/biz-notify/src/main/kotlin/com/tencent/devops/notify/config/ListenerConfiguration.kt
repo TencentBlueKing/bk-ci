@@ -27,7 +27,7 @@
 
 package com.tencent.devops.notify.config
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.notify.QUEUE_NOTIFY_EMAIL
 import com.tencent.devops.notify.QUEUE_NOTIFY_RTX
 import com.tencent.devops.notify.QUEUE_NOTIFY_SMS
@@ -51,7 +51,7 @@ class ListenerConfiguration {
         const val STREAM_CONSUMER_GROUP = "notify-service"
     }
 
-    @StreamEventConsumer(QUEUE_NOTIFY_RTX, STREAM_CONSUMER_GROUP)
+    @EventConsumer(QUEUE_NOTIFY_RTX, STREAM_CONSUMER_GROUP)
     fun rtxNotifyListener(
         @Autowired listener: NotifyMessageConsumer
     ): Consumer<Message<RtxNotifyMessageWithOperation>> {
@@ -60,7 +60,7 @@ class ListenerConfiguration {
         }
     }
 
-    @StreamEventConsumer(QUEUE_NOTIFY_EMAIL, STREAM_CONSUMER_GROUP)
+    @EventConsumer(QUEUE_NOTIFY_EMAIL, STREAM_CONSUMER_GROUP)
     fun emailNotifyListener(
         @Autowired listener: NotifyMessageConsumer
     ): Consumer<Message<EmailNotifyMessageWithOperation>> {
@@ -69,7 +69,7 @@ class ListenerConfiguration {
         }
     }
 
-    @StreamEventConsumer(QUEUE_NOTIFY_SMS, STREAM_CONSUMER_GROUP)
+    @EventConsumer(QUEUE_NOTIFY_SMS, STREAM_CONSUMER_GROUP)
     fun smsNotifyListener(
         @Autowired listener: NotifyMessageConsumer
     ): Consumer<Message<SmsNotifyMessageWithOperation>> {
@@ -78,7 +78,7 @@ class ListenerConfiguration {
         }
     }
 
-    @StreamEventConsumer(QUEUE_NOTIFY_WECHAT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(QUEUE_NOTIFY_WECHAT, STREAM_CONSUMER_GROUP)
     fun wechatNotifyListener(
         @Autowired listener: NotifyMessageConsumer
     ): Consumer<Message<WechatNotifyMessageWithOperation>> {
@@ -87,7 +87,7 @@ class ListenerConfiguration {
         }
     }
 
-    @StreamEventConsumer(QUEUE_NOTIFY_WEWORK, STREAM_CONSUMER_GROUP)
+    @EventConsumer(QUEUE_NOTIFY_WEWORK, STREAM_CONSUMER_GROUP)
     fun weworkNotifyListener(
         @Autowired listener: NotifyMessageConsumer
     ): Consumer<Message<WeworkNotifyMessageWithOperation>> {

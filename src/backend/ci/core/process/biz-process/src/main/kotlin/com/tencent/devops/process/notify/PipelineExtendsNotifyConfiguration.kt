@@ -28,7 +28,7 @@
 package com.tencent.devops.process.notify
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.bean.PipelineUrlBean
@@ -61,7 +61,7 @@ class PipelineExtendsNotifyConfiguration {
     /**
      * webhook构建触发广播监听
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_NOTIFY, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_NOTIFY, STREAM_CONSUMER_GROUP)
     fun pipelineBuildNotifyListener(
         @Autowired pipelineBuildNotifyListener: PipelineBuildNotifyListener
     ): Consumer<Message<PipelineBuildNotifyEvent>> {

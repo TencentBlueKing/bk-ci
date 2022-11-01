@@ -28,7 +28,7 @@
 package com.tencent.devops.process.init
 
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.control.CallBackControl
@@ -71,7 +71,7 @@ class PipelineCallBackConfiguration {
     /**
      * 构建构建回调广播交换机
      */
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT, STREAM_CONSUMER_GROUP)
     fun pipelineBuildCallBackListener(
         @Autowired buildListener: PipelineBuildCallBackListener
     ): Consumer<Message<PipelineBuildStatusBroadCastEvent>> {
@@ -83,7 +83,7 @@ class PipelineCallBackConfiguration {
     /**
      * 构建构建回调广播交换机
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_STREAM_ENABLED, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_STREAM_ENABLED, STREAM_CONSUMER_GROUP)
     fun pipelineStreamEnabledListener(
         @Autowired streamEnabledListener: MQPipelineStreamEnabledListener
     ): Consumer<Message<PipelineStreamEnabledEvent>> {

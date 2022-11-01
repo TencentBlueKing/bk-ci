@@ -27,7 +27,7 @@
 
 package com.tencent.devops.metrics.config
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.metrics.listener.CodeCheckDailyMessageListener
@@ -41,7 +41,7 @@ import java.util.function.Consumer
 @Configuration
 class MetricsThirdPartyListenerConfiguration {
 
-    @StreamEventConsumer(EXCHANGE_METRICS_STATISTIC_CODECC_DAILY, STREAM_CONSUMER_GROUP)
+    @EventConsumer(EXCHANGE_METRICS_STATISTIC_CODECC_DAILY, STREAM_CONSUMER_GROUP)
     fun codeCheckDailyMessageListener(
         @Autowired listener: CodeCheckDailyMessageListener
     ): Consumer<Message<String>> {
@@ -50,7 +50,7 @@ class MetricsThirdPartyListenerConfiguration {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_QUALITY_DAILY_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_QUALITY_DAILY_FANOUT, STREAM_CONSUMER_GROUP)
     fun metricsQualityDailyReportListener(
         @Autowired listener: QualityReportDailyMessageListener
     ): Consumer<Message<QualityReportEvent>> {
@@ -59,7 +59,7 @@ class MetricsThirdPartyListenerConfiguration {
         }
     }
 
-    @StreamEventConsumer(EXCHANGE_METRICS_STATISTIC_TURBO_DAILY, STREAM_CONSUMER_GROUP)
+    @EventConsumer(EXCHANGE_METRICS_STATISTIC_TURBO_DAILY, STREAM_CONSUMER_GROUP)
     fun metricsTurboDailyReportListener(
         @Autowired listener: TurboDailyReportMessageListener
     ): Consumer<Message<String>> {

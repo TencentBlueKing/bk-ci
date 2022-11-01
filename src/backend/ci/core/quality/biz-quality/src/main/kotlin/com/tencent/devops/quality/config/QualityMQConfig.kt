@@ -27,7 +27,7 @@
 
 package com.tencent.devops.quality.config
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
@@ -46,7 +46,7 @@ class QualityMQConfig {
         const val STREAM_CONSUMER_GROUP = "quality-service"
     }
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT, STREAM_CONSUMER_GROUP)
     fun pipelineCancelQualityListener(
         @Autowired listener: PipelineBuildQualityListener
     ): Consumer<Message<PipelineBuildCancelBroadCastEvent>> {
@@ -55,7 +55,7 @@ class QualityMQConfig {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, STREAM_CONSUMER_GROUP)
     fun pipelineRetryQualityListener(
         @Autowired listener: PipelineBuildQualityListener
     ): Consumer<Message<PipelineBuildQueueBroadCastEvent>> {
@@ -64,7 +64,7 @@ class QualityMQConfig {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, STREAM_CONSUMER_GROUP)
     fun pipelineReviewListener(
         @Autowired listener: PipelineBuildQualityListener
     ): Consumer<Message<PipelineBuildReviewBroadCastEvent>> {
@@ -73,7 +73,7 @@ class QualityMQConfig {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT, STREAM_CONSUMER_GROUP)
     fun pipelineQualityReviewListener(
         @Autowired listener: PipelineBuildQualityListener
     ): Consumer<Message<PipelineBuildQualityReviewBroadCastEvent>> {

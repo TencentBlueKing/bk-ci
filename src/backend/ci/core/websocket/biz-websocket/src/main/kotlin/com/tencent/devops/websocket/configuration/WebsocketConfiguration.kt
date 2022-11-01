@@ -27,7 +27,7 @@
 
 package com.tencent.devops.websocket.configuration
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
@@ -52,7 +52,7 @@ class WebsocketConfiguration {
     @Bean
     fun websocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT, STREAM_CONSUMER_GROUP, true)
+    @EventConsumer(StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT, STREAM_CONSUMER_GROUP, true)
     fun pipelineWebSocketListener(
         @Autowired webSocketListener: WebSocketListener
     ): Consumer<Message<SendMessage>> {
@@ -61,7 +61,7 @@ class WebsocketConfiguration {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.BINDING_WEBSOCKET_SESSION_CLEAR_DESTINATION, STREAM_CONSUMER_GROUP, true)
+    @EventConsumer(StreamBinding.BINDING_WEBSOCKET_SESSION_CLEAR_DESTINATION, STREAM_CONSUMER_GROUP, true)
     fun cacheClearWebSocketListener(
         @Autowired cacheSessionListener: CacheSessionListener
     ): Consumer<Message<ClearSessionEvent>> {

@@ -27,13 +27,11 @@
 
 package com.tencent.devops.process.engine.init
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.process.engine.control.BuildCancelControl
 import com.tencent.devops.process.engine.control.BuildMonitorControl
 import com.tencent.devops.process.engine.control.HeartbeatControl
-import com.tencent.devops.process.engine.listener.run.finish.PipelineBuildCancelListener
 import com.tencent.devops.process.engine.listener.run.monitor.PipelineBuildHeartbeatListener
 import com.tencent.devops.process.engine.listener.run.monitor.PipelineBuildMonitorListener
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
@@ -66,7 +64,7 @@ class BuildMonitorConfiguration {
         pipelineEventDispatcher = pipelineEventDispatcher
     )
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_MONITOR_DIRECT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_MONITOR_DIRECT, STREAM_CONSUMER_GROUP)
     fun buildMonitorListener(
         @Autowired buildListener: PipelineBuildMonitorListener
     ): Consumer<Message<PipelineBuildMonitorEvent>> {
@@ -87,7 +85,7 @@ class BuildMonitorConfiguration {
         pipelineEventDispatcher = pipelineEventDispatcher
     )
 
-    @StreamEventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_HEART_BEAT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_HEART_BEAT, STREAM_CONSUMER_GROUP)
     fun buildHeartBeatListener(
         @Autowired buildListener: PipelineBuildHeartbeatListener
     ): Consumer<Message<PipelineContainerAgentHeartBeatEvent>> {

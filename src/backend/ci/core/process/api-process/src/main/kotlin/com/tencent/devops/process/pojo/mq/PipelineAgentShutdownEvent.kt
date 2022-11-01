@@ -30,7 +30,7 @@ package com.tencent.devops.process.pojo.mq
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 import com.tencent.devops.common.event.annotation.RabbitEvent
-import com.tencent.devops.common.stream.enums.ActionType
+import com.tencent.devops.common.event.enums.ActionType
 
 @RabbitEvent(MQ.EXCHANGE_AGENT_LISTENER_DIRECT, MQ.ROUTE_AGENT_SHUTDOWN)
 data class PipelineAgentShutdownEvent(

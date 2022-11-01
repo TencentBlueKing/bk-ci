@@ -27,7 +27,7 @@
 
 package com.tencent.devops.plugin.init
 
-import com.tencent.devops.common.event.annotation.StreamEventConsumer
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
@@ -38,7 +38,6 @@ import com.tencent.devops.plugin.listener.CodeWebhookListener
 import com.tencent.devops.plugin.listener.GitHubPullRequestListener
 import com.tencent.devops.plugin.listener.TGitCommitListener
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -53,18 +52,13 @@ import java.util.function.Consumer
 class CodeWebhookListenerConfiguration {
 
     companion object {
-        private const val BUILD_MAX_CONCURRENT = 10
-        private const val CHECK_MAX_CONCURRENT = 5
         const val STREAM_CONSUMER_GROUP = "plugin-service"
     }
 
     @Bean
     fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
-    @Value("\${queueConcurrency.webhook:2}")
-    private val webhookConcurrency: Int? = null
-
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
     fun codeWebhookFinishListener(
         @Autowired listener: CodeWebhookListener
     ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
@@ -73,7 +67,7 @@ class CodeWebhookListenerConfiguration {
         }
     }
 
-    @StreamEventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, STREAM_CONSUMER_GROUP)
     fun codeWebhookQueueListener(
         @Autowired listener: CodeWebhookListener
     ): Consumer<Message<PipelineBuildQueueBroadCastEvent>> {
@@ -85,7 +79,7 @@ class CodeWebhookListenerConfiguration {
     /**
      * gitcommit队列--- 并发小
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_GIT_COMMIT_CHECK, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_GIT_COMMIT_CHECK, STREAM_CONSUMER_GROUP)
     fun gitCommitCheckListener(
         @Autowired listener: TGitCommitListener
     ): Consumer<Message<GitCommitCheckEvent>> {
@@ -97,7 +91,7 @@ class CodeWebhookListenerConfiguration {
     /**
      * github pr队列--- 并发小
      */
-    @StreamEventConsumer(StreamBinding.QUEUE_GITHUB_PR, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_GITHUB_PR, STREAM_CONSUMER_GROUP)
     fun githubPrQueueListener(
         @Autowired listener: GitHubPullRequestListener
     ): Consumer<Message<GithubPrEvent>> {

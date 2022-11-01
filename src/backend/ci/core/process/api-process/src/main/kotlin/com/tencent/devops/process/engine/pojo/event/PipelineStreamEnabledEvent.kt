@@ -3,7 +3,7 @@ package com.tencent.devops.process.engine.pojo.event
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.common.stream.enums.ActionType
+import com.tencent.devops.common.event.enums.ActionType
 
 /**
  * 流水线开启stream事件
