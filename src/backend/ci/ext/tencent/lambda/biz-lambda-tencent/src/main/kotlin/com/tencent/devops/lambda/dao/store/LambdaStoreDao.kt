@@ -16,5 +16,4 @@ class LambdaStoreDao {
                 .fetchOne(0, String::class.java)
         }
     }
-
 }

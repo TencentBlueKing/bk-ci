@@ -61,7 +61,6 @@ import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineLabelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineTemplateDao
-import com.tencent.devops.lambda.dao.store.LambdaStoreDao
 import com.tencent.devops.lambda.pojo.DataPlatBuildCommits
 import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
 import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
