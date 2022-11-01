@@ -102,7 +102,7 @@ const optionConfigMixin = {
                     desc: this.$t('storeMap.runManual'),
                     component: 'atom-checkbox',
                     text: this.$t('storeMap.pauseAtom'),
-                    default: false,
+                    default: true,
                     extCls: 'pause-conf-options',
                     isHidden: (element) => {
                         return !(element.data && element.data.config && (element.data.config.canPauseBeforeRun === true))
