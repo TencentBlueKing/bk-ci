@@ -442,6 +442,7 @@ class StreamBasicSettingDao {
                 .set(ENABLE_USER_ID, oauthUserId)
                 .set(OAUTH_OPERATOR, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(ENABLE_CI, true)
                 .where(ID.eq(gitProjectId))
                 .execute()
         }
