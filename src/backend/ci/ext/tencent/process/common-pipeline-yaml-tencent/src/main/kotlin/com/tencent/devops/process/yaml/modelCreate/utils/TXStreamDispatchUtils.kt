@@ -74,6 +74,8 @@ object TXStreamDispatchUtils {
             return VMBaseOS.LINUX
         } else if (poolName.startsWith("macos")) {
             return VMBaseOS.MACOS
+        } else if (poolName.startsWith("windows")) {
+            return VMBaseOS.WINDOWS
         }
 
         // agentSelector 也要支持占位符
