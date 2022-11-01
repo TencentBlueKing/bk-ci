@@ -97,7 +97,8 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             txStreamBasicSettingService.updateProjectSetting(
                 userId = userId,
                 gitProjectId = gitProjectId,
-                enableCi = enabled
+                enableCi = enabled,
+                authUserId = userId
             )
         }
         logger.info("dispatch stream enable event")
