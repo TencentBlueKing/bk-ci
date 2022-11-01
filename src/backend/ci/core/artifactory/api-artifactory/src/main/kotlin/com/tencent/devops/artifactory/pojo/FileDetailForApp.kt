@@ -67,5 +67,5 @@ data class FileDetailForApp(
     @ApiModelProperty("构建号", required = true)
     val buildNum: Int,
     @ApiModelProperty("nodeMetadata数据", required = true)
-    val nodeMetadata: List<MetadataModel> = emptyList(),
+    val nodeMetadata: List<MetadataModel> = emptyList()
 )

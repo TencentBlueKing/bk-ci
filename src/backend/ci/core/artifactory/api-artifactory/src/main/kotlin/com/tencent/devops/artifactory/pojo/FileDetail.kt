@@ -50,5 +50,7 @@ data class FileDetail(
     @ApiModelProperty("文件摘要", required = true)
     val checksums: FileChecksums,
     @ApiModelProperty("meta数据", required = true)
-    val meta: Map<String, String>
+    val meta: Map<String, String>,
+    @ApiModelProperty("nodeMetadata数据", required = true)
+    val nodeMetadata: List<MetadataModel> = emptyList()
 )
