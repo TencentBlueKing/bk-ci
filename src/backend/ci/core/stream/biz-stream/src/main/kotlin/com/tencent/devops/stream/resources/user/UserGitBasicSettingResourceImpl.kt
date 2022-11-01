@@ -87,8 +87,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 userId = userId,
-                enableCi = enabled,
-                authUserId = userId
+                enableCi = enabled
             )
         }
         pipelineEventDispatcher.dispatch(
