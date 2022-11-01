@@ -14,5 +14,7 @@ data class AppExperienceInstallPackage(
     @ApiModelProperty("仓库类型", required = true)
     val artifactoryType: String,
     @ApiModelProperty("是否有跳转构件详情的权限", required = true)
-    val detailPermission: Boolean
+    val detailPermission: Boolean,
+    @ApiModelProperty("大小", required = true)
+    val size: Long
 )

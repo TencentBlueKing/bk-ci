@@ -478,7 +478,8 @@ class ExperienceAppService(
                     projectId = projectId,
                     path = artifactoryPath,
                     artifactoryType = artifactoryType.name,
-                    detailPermission = detailPermission
+                    detailPermission = detailPermission,
+                    size = experience.size
                 )
             )
         )
