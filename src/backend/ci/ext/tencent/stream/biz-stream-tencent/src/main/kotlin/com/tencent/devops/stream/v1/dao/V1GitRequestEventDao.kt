@@ -287,4 +287,60 @@ class V1GitRequestEventDao {
                 .fetchOne(0, Long::class.java)!!
         }
     }
+
+    /**
+     * 根据ID批量查询
+     */
+    fun getRequestsById(
+        dslContext: DSLContext,
+        requestIds: Set<Int>,
+        hasEvent: Boolean
+    ): List<V1GitRequestEvent> {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            val records = dslContext.selectFrom(this)
+                .where(ID.`in`(requestIds))
+                .orderBy(ID.desc())
+                .fetch()
+            val result = mutableListOf<V1GitRequestEvent>()
+            records.forEach {
+                result.add(
+                    V1GitRequestEvent(
+                        id = it.id,
+                        objectKind = it.objectKind,
+                        operationKind = it.operationKind,
+                        extensionAction = it.extensionAction,
+                        gitProjectId = it.gitProjectId,
+                        sourceGitProjectId = it.sourceGitProjectId,
+                        branch = it.branch,
+                        targetBranch = it.targetBranch,
+                        commitId = it.commitId,
+                        commitMsg = it.commitMessage,
+                        commitTimeStamp = it.commitTimestamp,
+                        userId = it.userName,
+                        totalCommitCount = it.totalCommitCount,
+                        mergeRequestId = it.mergeRequestId,
+                        event = if (hasEvent) {
+                            it.event
+                        } else {
+                            ""
+                        },
+                        description = if (it.description.isNullOrBlank()) {
+                            it.commitMessage
+                        } else {
+                            it.description
+                        },
+                        mrTitle = it.mrTitle,
+                        gitEvent = try {
+                            JsonUtil.to(it.event, GitEvent::class.java)
+                        } catch (e: Exception) {
+                            null
+                        },
+                        commitAuthorName = null,
+                        gitProjectName = null
+                    )
+                )
+            }
+            return result
+        }
+    }
 }

@@ -37,7 +37,7 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
-import com.tencent.devops.repository.pojo.git.GitCreateFile
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
@@ -1032,7 +1032,27 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String,
         @ApiParam(value = "创建文件内容")
-        gitCreateFile: GitCreateFile,
+        gitOperationFile: GitOperationFile,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    @ApiOperation("工蜂更新文件")
+    @POST
+    @Path("/gitcode/update/file")
+    fun tGitUpdateFile(
+        @ApiParam(value = "repoUrl")
+        @QueryParam("repoUrl")
+        repoUrl: String?,
+        @ApiParam(value = "repoName")
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "更新文件内容")
+        gitOperationFile: GitOperationFile,
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
