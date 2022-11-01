@@ -37,7 +37,7 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.repository.api.ServiceGitOauthResource
+import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -227,12 +227,16 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         gitProjectId: Long?,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
-        return client.get(ServiceGitOauthResource::class).isOAuth(
-            userId = userId,
-            redirectUrlType = redirectUrlType,
-            redirectUrl = redirectUrl,
-            gitProjectId = gitProjectId,
-            refreshToken = refreshToken
+        // 更改为每次都进行重定向授权
+        return Result(
+            AuthorizeResult(
+                403, client.get(ServiceOauthResource::class).getAuthUrl(
+                    userId = userId,
+                    redirectUrlType = redirectUrlType,
+                    redirectUrl = redirectUrl,
+                    gitProjectId = gitProjectId
+                ).data!!
+            )
         )
     }
 
