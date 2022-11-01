@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
@@ -182,7 +183,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         val projectId = GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
         checkParam(userId)
         permissionService.checkCommonUser(userId)
-        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkStreamAndOAuth(userId, projectId, AuthPermission.EDIT)
         return streamGitTransferService.isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
