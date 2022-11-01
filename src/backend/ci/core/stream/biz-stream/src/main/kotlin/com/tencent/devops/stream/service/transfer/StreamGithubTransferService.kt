@@ -40,7 +40,6 @@ import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
 import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
 import com.tencent.devops.repository.api.ServiceGithubResource
-import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.github.ServiceGithubAppResource
 import com.tencent.devops.repository.api.github.ServiceGithubBranchResource
 import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
@@ -242,17 +241,15 @@ class StreamGithubTransferService @Autowired constructor(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long?,
+        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
-        // todo 未实现
-        return client.get(ServiceOauthResource::class).isOAuth(
-            userId = userId,
-            redirectUrlType = redirectUrlType,
-            redirectUrl = redirectUrl,
-            gitProjectId = gitProjectId,
-            refreshToken = refreshToken
+        // 直接以当前用户更新授权人并开启ci
+        streamBasicSettingDao.updateOauthSetting(
+            dslContext, gitProjectId, userId, userId
         )
+        // github未实现 重定向授权逻辑，直接返回200
+        return Result(AuthorizeResult(200))
     }
 
     override fun getCommits(

@@ -200,7 +200,7 @@ class StreamTGitTransferService @Autowired constructor(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long?,
+        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
         // 更改为每次都进行重定向授权
