@@ -95,6 +95,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             )
         } else {
             txStreamBasicSettingService.updateProjectSetting(
+                userId = userId,
                 gitProjectId = gitProjectId,
                 enableCi = enabled
             )

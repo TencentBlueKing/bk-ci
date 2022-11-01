@@ -30,31 +30,16 @@ package com.tencent.devops.stream.resources
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.stream.api.ExternalStreamResource
-import com.tencent.devops.stream.service.StreamPipelineBadgeService
+import com.tencent.devops.stream.api.TXExternalStreamResource
 import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
 @RestResource
-class ExternalStreamResourceImpl(
-    private val streamPipelineBadgeService: StreamPipelineBadgeService,
+class TXExternalStreamResourceImpl(
     private val basicSettingService: TXStreamBasicSettingService,
     private val client: Client
-) : ExternalStreamResource {
-    override fun getPipelineBadge(
-        gitProjectId: Long,
-        filePath: String,
-        branch: String?,
-        objectKind: String?
-    ): String {
-        return streamPipelineBadgeService.get(
-            gitProjectId = gitProjectId,
-            filePath = filePath,
-            branch = branch,
-            objectKind = objectKind
-        )
-    }
+) : TXExternalStreamResource {
 
     override fun gitCallback(code: String, state: String): Response {
         val gitOauthCallback = client.get(ServiceOauthResource::class).gitCallback(code = code, state = state).data!!

@@ -29,9 +29,9 @@ package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.stream.common.StreamPipelineBadgeType
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.tencent.devops.stream.pojo.enums.StreamPipelineBadgeType
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
