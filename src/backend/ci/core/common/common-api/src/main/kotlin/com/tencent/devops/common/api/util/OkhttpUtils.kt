@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import okhttp3.ConnectionPool
 import okhttp3.Headers
+import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -329,6 +330,16 @@ object OkhttpUtils {
                 }
                 return String(outStream.toCharArray())
             }
+        }
+    }
+
+    fun validUrl(url: String): Boolean {
+        return try {
+            HttpUrl.get(url)
+            true
+        } catch (e: IllegalArgumentException) {
+            logger.warn("url Invalid: ${e.message}")
+            false
         }
     }
 }

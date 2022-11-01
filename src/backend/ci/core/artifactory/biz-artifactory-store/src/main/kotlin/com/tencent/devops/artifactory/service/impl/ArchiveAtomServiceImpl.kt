@@ -35,10 +35,12 @@ import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
 import com.tencent.devops.artifactory.pojo.PackageFileInfo
 import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
 import com.tencent.devops.artifactory.service.ArchiveAtomService
+import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.ZipUtil
@@ -78,6 +80,9 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
 
     @Autowired
     lateinit var fileDao: FileDao
+
+    @Autowired
+    lateinit var bkRepoClient: BkRepoClient
 
     override fun archiveAtom(
         userId: String,
@@ -294,4 +299,32 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         atomCode: String,
         version: String
     )
+
+    override fun updateArchiveFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        content: String
+    ): Boolean {
+        val atomArchivePath = buildAtomArchivePath(projectCode, atomCode, version)
+        val file = File(atomArchivePath, fileName)
+        try {
+            file.printWriter().use {
+                it.write(content)
+            }
+            val path = file.path.removePrefix("${getAtomArchiveBasePath()}/$BK_CI_ATOM_DIR")
+            logger.info("updateArchiveFile path:$path")
+            bkRepoClient.uploadLocalFile(
+                userId = BkRepoUtils.BKREPO_DEFAULT_USER,
+                projectId = BkRepoUtils.BKREPO_STORE_PROJECT_ID,
+                repoName = BkRepoUtils.REPO_NAME_PLUGIN,
+                path = path,
+                file = file
+            )
+        } finally {
+            file.delete()
+        }
+        return true
+    }
 }
