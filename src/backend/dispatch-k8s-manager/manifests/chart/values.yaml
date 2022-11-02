@@ -138,12 +138,18 @@ kubernetesManager:
       server:
       username:
       password:
+  apiserver:
+    auth:
+      # 针对蓝盾流水线访问的超级权限token
+      apiToken:
+        key: Devops-Token
+        value: landun
+      rsaPrivateKey: |
 
 dockerInit:
   # 是否使用当前chart的 dockerinit.sh
   useDockerInit: true
 
-  
 kubeConfig:
   # 是否使用配置的kubeConfig文件而不使用当前默认集群的client
   useKubeConfig: false

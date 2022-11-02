@@ -57,3 +57,9 @@ image.arm64v8: release.arm64v8
 clean:
 	rm -rf ./bin
 	rm -rf ./bin
+
+# rsa证书生成
+.PHONY: release.rsa-generate
+release.rsa-generate: clean
+	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+ 	go build -o bin/rsa-generate ./cmd/rsa/rsa.go
