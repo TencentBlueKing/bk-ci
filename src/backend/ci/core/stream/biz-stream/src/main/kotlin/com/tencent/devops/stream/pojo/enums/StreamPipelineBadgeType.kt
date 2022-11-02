@@ -25,42 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.stream.pojo.enums
 
-import org.slf4j.LoggerFactory
+enum class StreamPipelineBadgeType(val labelColor: String, val text: String, val color: String, val logo: String) {
+    // 没有找到
+    NOT_FOUND("#182132", "not found", "#FF9C01", "stream"),
 
-object SensitiveValueService {
+    // 从来没有构建
+    NEVER_BUILD("#182132", "never build", "#FF9C01", "stream"),
 
-    private val logger = LoggerFactory.getLogger(SensitiveValueService::class.java)
-    private const val SENSITIVE_MIXER = "******"
+    // 构建成功
+    SUCCEEDED("#182132", "succeeded", "#2DCB56", "stream"),
 
-    /**
-     * 每个Job内维护的敏感信息集合
-     */
-    val sensitiveStringSet = mutableSetOf<String>()
-
-    fun addSensitiveValues(sensitiveValues: List<String>?) {
-        sensitiveValues?.let {
-            logger.info("Append sensitive string set")
-            sensitiveStringSet.addAll(it)
-            logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
-        }
-    }
-
-    fun matchSensitiveValue(value: String): Boolean {
-        sensitiveStringSet.forEach { sensitive ->
-            if (value.contains(sensitive)) return true
-        }
-        return false
-    }
-
-    fun fixSensitiveContent(message: String): String {
-        var realMessage = message
-        sensitiveStringSet.forEach { sensitiveStr ->
-            if (realMessage.contains(sensitiveStr)) {
-                realMessage = realMessage.replace(sensitiveStr, SENSITIVE_MIXER)
-            }
-        }
-        return realMessage
-    }
+    // 构建失败
+    FAILED("#182132", "failed", "#EA3636", "stream");
 }

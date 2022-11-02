@@ -25,42 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.stream.resources.external
 
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.stream.api.external.ExternalStreamResource
+import com.tencent.devops.stream.service.StreamPipelineBadgeService
 
-object SensitiveValueService {
-
-    private val logger = LoggerFactory.getLogger(SensitiveValueService::class.java)
-    private const val SENSITIVE_MIXER = "******"
-
-    /**
-     * 每个Job内维护的敏感信息集合
-     */
-    val sensitiveStringSet = mutableSetOf<String>()
-
-    fun addSensitiveValues(sensitiveValues: List<String>?) {
-        sensitiveValues?.let {
-            logger.info("Append sensitive string set")
-            sensitiveStringSet.addAll(it)
-            logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
-        }
-    }
-
-    fun matchSensitiveValue(value: String): Boolean {
-        sensitiveStringSet.forEach { sensitive ->
-            if (value.contains(sensitive)) return true
-        }
-        return false
-    }
-
-    fun fixSensitiveContent(message: String): String {
-        var realMessage = message
-        sensitiveStringSet.forEach { sensitiveStr ->
-            if (realMessage.contains(sensitiveStr)) {
-                realMessage = realMessage.replace(sensitiveStr, SENSITIVE_MIXER)
-            }
-        }
-        return realMessage
+@RestResource
+class ExternalStreamResourceImpl(
+    private val streamPipelineBadgeService: StreamPipelineBadgeService
+) : ExternalStreamResource {
+    override fun getPipelineBadge(
+        gitProjectId: Long,
+        filePath: String,
+        branch: String?,
+        objectKind: String?
+    ): String {
+        return streamPipelineBadgeService.get(
+            gitProjectId = gitProjectId,
+            filePath = filePath,
+            branch = branch,
+            objectKind = objectKind
+        )
     }
 }
