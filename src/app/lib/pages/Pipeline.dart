@@ -138,19 +138,20 @@ class _PipelineState extends State<PipelineScreen> {
                       padding: EdgeInsets.symmetric(horizontal: 16.px),
                       child: Row(
                         children: [
-                          PFMediumText(
-                            value.currentProject.projectName ?? '',
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 36.px,
+                          Expanded(
+                            child: PFMediumText(
+                              value.currentProject.projectName ?? '',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 36.px,
+                              ),
                             ),
                           ),
                           Icon(
                             BkIcons.downFill,
                             size: 44.px,
                             color: Theme.of(context).hintColor,
-                          ),
+                          )
                         ],
                       ),
                     ),
