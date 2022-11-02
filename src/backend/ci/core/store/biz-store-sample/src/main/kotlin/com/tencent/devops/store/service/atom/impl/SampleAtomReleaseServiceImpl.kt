@@ -353,8 +353,6 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return passTest(userId, atomId)
     }
 
-
-
     companion object {
         private val logger = LoggerFactory.getLogger(SampleAtomReleaseServiceImpl::class.java)
         private val fileSeparator: String = System.getProperty("file.separator")
