@@ -27,35 +27,79 @@
 
 package com.tencent.devops.stream.resources
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.stream.api.TXExternalStreamResource
+import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.TXStreamBasicSettingService
+import com.tencent.devops.stream.util.GitCommonUtils
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
 @RestResource
 class TXExternalStreamResourceImpl(
     private val basicSettingService: TXStreamBasicSettingService,
-    private val client: Client
+    private val client: Client,
+    private val streamPermissionService: StreamPermissionService,
+    private val streamGitConfig: StreamGitConfig,
+    private val streamBasicSettingService: StreamBasicSettingService
 ) : TXExternalStreamResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TXExternalStreamResourceImpl::class.java)
+    }
 
     override fun gitCallback(code: String, state: String): Response {
         val gitOauthCallback = client.get(ServiceOauthResource::class).gitCallback(code = code, state = state).data!!
         with(gitOauthCallback) {
-            if (gitOauthCallback.gitProjectId != null) {
-                basicSettingService.updateOauthSetting(
-                    gitProjectId = gitProjectId!!,
-                    userId = userId,
-                    oauthUserId = oauthUserId
-                )
+            logger.info("get oauth call back info: $gitOauthCallback")
+            val gitProjectId = gitOauthCallback.gitProjectId
+            if (gitProjectId != null) {
+                val projectId = GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
+                try {
+                    streamPermissionService.checkStreamAndOAuth(userId, projectId)
+                } catch (exception: Exception) {
+                    return Response.status(Response.Status.FORBIDDEN).type(MediaType.APPLICATION_JSON_TYPE)
+                        .entity(Result(status = 403, message = "授权人权限校验失败", data = exception.message)).build()
+                }
 
-                // 更新项目信息
-                basicSettingService.updateProjectOrganizationInfo(
-                    projectId = gitProjectId!!.toString(),
-                    userId = oauthUserId
-                )
+                val setting = streamBasicSettingService.getStreamConf(gitProjectId)
+                if (setting == null) {
+                    streamBasicSettingService.initStreamConf(
+                        userId = userId,
+                        projectId = projectId,
+                        gitProjectId = gitProjectId,
+                        enabled = true
+                    )
+                } else {
+                    streamBasicSettingService.updateProjectSetting(
+                        gitProjectId = gitProjectId,
+                        userId = userId,
+                        enableCi = true
+                    )
+
+                    // 更新项目信息
+                    basicSettingService.updateProjectOrganizationInfo(
+                        projectId = gitProjectId.toString(),
+                        userId = oauthUserId
+                    )
+                }
+
+                if (userId != oauthUserId) {
+                    // 此时应该为公共账号
+                    basicSettingService.updateOauthSetting(
+                        gitProjectId = gitProjectId,
+                        userId = userId,
+                        oauthUserId = oauthUserId
+                    )
+                }
+
             }
             return Response.temporaryRedirect(UriBuilder.fromUri(gitOauthCallback.redirectUrl).build()).build()
         }
