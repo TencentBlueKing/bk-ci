@@ -11,6 +11,7 @@ package command
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -27,6 +28,13 @@ import (
 func mainProcess(c *commandCli.Context) error {
 	initialLogDir(getLogDir(c.String(FlagLogDir)))
 	setLogLevel(c.String(FlagLog))
+
+	if !pkg.Lock() {
+		fmt.Printf("monitor: exit for other instance is already started")
+		blog.Infof("monitor: exit for other instance is already started")
+		return nil
+	}
+	defer pkg.Unlock()
 
 	// get the new obj
 	proc := newProcess(c)
@@ -47,17 +55,10 @@ func sysSignalHandler(cancel context.CancelFunc, _ *pkg.Monitor) {
 
 	select {
 	case sig := <-interrupt:
-		blog.Warnf("idelloop: get system signal %s, going to exit", sig.String())
+		blog.Warnf("monitor: get system signal %s, going to exit", sig.String())
 
 		// cancel context
 		cancel()
-
-		// p, err := process.NewProcess(int32(os.Getpid()))
-		// if err == nil {
-		// 	blog.Debugf("idelloop: ready kill children when recieved sinal")
-		// 	// kill children
-		// 	pkg.KillChildren(p)
-		// }
 
 		// catch control-C and should return code 130(128+0x2)
 		if sig == syscall.SIGINT {

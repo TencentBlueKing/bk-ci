@@ -15,6 +15,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
@@ -25,10 +26,12 @@ import (
 )
 
 const (
-	RulesFileName            = "bk_rules.json"
+	RulesFileName            = "bk_monitor_rules.json"
 	DevOPSProcessTreeKillKey = "DEVOPS_DONT_KILL_PROCESS_TREE"
 
 	DefautInterval = 20000
+
+	MacroKillTree = "${BK_KILL_TREE}"
 )
 
 // NewMonitor get a new idle loop instance
@@ -54,7 +57,7 @@ func (m *Monitor) run(pCtx context.Context) (int, error) {
 	m.intEnv()
 	err := m.initRules()
 	if err != nil {
-		blog.Errorf("failed to init rules with err:%v", err)
+		blog.Errorf("monitor: failed to init rules with err:%v", err)
 		return 1, nil
 	}
 
@@ -103,29 +106,63 @@ func (m *Monitor) runMonitor(interval int, r types.Rule, ctx context.Context) {
 
 func (m *Monitor) runRule(r types.Rule) {
 	blog.Infof("monitor: ready run check cmd:[%s]", r.CheckCmd)
-	sandbox := dcSyscall.Sandbox{}
-	exitcode, outmsg, errmsg, err := sandbox.ExecScriptsWithMessage(r.CheckCmd)
+	// sandbox := dcSyscall.Sandbox{}
+	exitcode, outmsg, errmsg, err := m.runCommand(r.CheckCmd)
 	if exitcode != 0 {
-		blog.Errorf("failed to execute cmd:[%s] with exit code:%d, err:%v", r.CheckCmd, exitcode, err)
+		blog.Errorf("monitor: failed to execute cmd:[%s] with exit code:%d, err:%v", r.CheckCmd, exitcode, err)
 		return
 	}
-	blog.Infof("succeed to execute cmd:[%s] with exit code:%d,output:%s,errmsg:%s, err:%v",
+	blog.Infof("monitor: succeed to execute cmd:[%s] with exit code:%d,output:%s,errmsg:%s, err:%v",
 		r.CheckCmd, exitcode, outmsg, errmsg, err)
 
 	if len(r.RecoverCmds) > 0 {
 		if v, ok := r.RecoverCmds[string(outmsg)]; ok {
 			for _, c := range v {
 				blog.Infof("monitor: ready run recover cmd:[%s]", c)
-				exitcode, outmsg, errmsg, err := sandbox.ExecScriptsWithMessage(c)
+				exitcode, outmsg, errmsg, err = m.runCommand(c)
 				if exitcode != 0 {
-					blog.Errorf("failed to execute cmd:[%s] with exit code:%d, err:%v", c, exitcode, err)
+					blog.Errorf("monitor: failed to execute cmd:[%s] with exit code:%d, err:%v", c, exitcode, err)
 					return
 				}
-				blog.Infof("succeed to execute cmd:[%s] with exit code:%d,output:%s,errmsg:%s, err:%v",
+				blog.Infof("monitor: succeed to execute cmd:[%s] with exit code:%d,output:%s,errmsg:%s, err:%v",
 					c, exitcode, outmsg, errmsg, err)
 			}
 		}
 	}
+}
+
+func (m *Monitor) runCommand(c string) (int, []byte, []byte, error) {
+	if strings.Contains(c, MacroKillTree) {
+		return m.killTree(c)
+	} else {
+		sandbox := dcSyscall.Sandbox{}
+		return sandbox.ExecScriptsWithMessage(c)
+	}
+}
+
+func (m *Monitor) killTree(c string) (int, []byte, []byte, error) {
+	args := strings.Split(c, " ")
+	if len(args) != 2 {
+		return -1, []byte(""), []byte(""), fmt.Errorf("[%s] is not valid kill tree args", c)
+	}
+
+	procs, err := dcUtil.ListProcess(args[1])
+	if err != nil {
+		return -1, []byte(""), []byte(""), err
+	}
+
+	if len(procs) == 0 {
+		blog.Infof("monitor: not found any process with name:%s", args[1])
+	}
+
+	for _, v := range procs {
+		name, _ := v.Name()
+		blog.Infof("monitor: ready kill process %s %d", name, int32(v.Pid))
+		KillChildren(v)
+		_ = v.Kill()
+	}
+
+	return 0, []byte(""), []byte(""), nil
 }
 
 func (m *Monitor) initRules() error {

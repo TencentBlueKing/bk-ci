@@ -13,7 +13,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/flock"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
@@ -28,11 +27,6 @@ func KillChildren(p *process.Process) {
 	children, err := p.Children()
 	if err == nil && len(children) > 0 {
 		for _, v := range children {
-			n, err := v.Name()
-			// do not kill bk-dist-controller, for it may be used by other process
-			if err == nil && strings.Contains(n, "bk-dist-controller") {
-				continue
-			}
 			KillChildren(v)
 			_ = v.Kill()
 		}
@@ -58,7 +52,7 @@ func resolveRules(f string) (*types.Rules, error) {
 }
 
 var (
-	lockfile = "bk-dist-controller.lock"
+	lockfile = "bk-dist-monitor.lock"
 )
 
 func getLockFile() (string, error) {
@@ -72,17 +66,17 @@ func getLockFile() (string, error) {
 func Lock() bool {
 	f, err := getLockFile()
 	if err != nil {
-		blog.Errorf("[controller]: failed to start with error:%v\n", err)
+		blog.Errorf("[monitor]: failed to start with error:%v\n", err)
 		return false
 	}
-	blog.Infof("[controller]: ready lock file: %s\n", f)
+	blog.Infof("[monitor]: ready lock file: %s\n", f)
 	flag, err := flock.TryLock(f)
 	if err != nil {
-		blog.Errorf("[controller]: failed to start with error:%v\n", err)
+		blog.Errorf("[monitor]: failed to start with error:%v\n", err)
 		return false
 	}
 	if !flag {
-		blog.Infof("[controller]: program is maybe running for lock file has been locked \n")
+		blog.Infof("[monitor]: program is maybe running for lock file has been locked \n")
 		return false
 	}
 
