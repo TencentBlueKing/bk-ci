@@ -88,6 +88,17 @@ interface AtomReleaseService {
     ): Result<Boolean>
 
     /**
+     * error.json数据入库
+     */
+    fun syncAtomErrorCodeConfig(
+        atomCode: String,
+        atomVersion: String,
+        userId: String,
+        repositoryHashId: String?,
+        branch: String?
+    )
+
+    /**
      * 一键部署发布插件
      */
     fun releaseAtom(

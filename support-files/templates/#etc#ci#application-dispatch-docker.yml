@@ -23,6 +23,8 @@ dispatch:
   jobQuota:
     systemAlertReceiver: 
     enable: false
+  # 默认的构建容器集群类型：VM, KUBERNETES, BCS
+  defaultDockerRoutingType: VM
 
 codecc:
   path: __BK_CODECC_DATA_DIR__/tools

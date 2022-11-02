@@ -36,12 +36,10 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
-import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
@@ -301,10 +299,7 @@ object Runner {
 
         val buildResult = taskDaemon.getBuildResult(
             isSuccess = false,
-            errorMessage = CommonUtils.interceptStringInLength(
-                string = message,
-                length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
-            ),
+            errorMessage = message,
             errorType = errorType,
             errorCode = errorCode
         )
