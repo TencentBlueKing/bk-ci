@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.constant.URL
 import com.tencent.devops.common.api.constant.VALUE
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -655,10 +656,16 @@ open class MarketAtomTask : ITask() {
         if (monitorData != null) {
             addMonitorData(monitorData)
         }
-        // 校验插件对接平台错误码信息
+        // 校验插件对接平台错误码信息失败
         val platformCode = atomResult?.platformCode
         if (!platformCode.isNullOrBlank()) {
-            val isPlatformCodeRegistered = storeApi.isPlatformCodeRegistered(platformCode).data ?: false
+            var isPlatformCodeRegistered = false
+            try {
+                isPlatformCodeRegistered = storeApi.isPlatformCodeRegistered(platformCode).data ?: false
+            } catch (e: RemoteServiceException) {
+                logger.warn("Failed to verify the error code information of the atom " +
+                        "docking platformm $platformCode | ${e.errorMessage}")
+            }
             if (isPlatformCodeRegistered) {
                 addPlatformCode(platformCode)
                 atomApi.addAtomDockingPlatforms(atomCode, setOf(platformCode))
