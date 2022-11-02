@@ -80,7 +80,7 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
-import com.tencent.devops.worker.common.api.atom.StoreSDKApi
+import com.tencent.devops.worker.common.api.atom.StoreSdkApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
@@ -110,7 +110,7 @@ open class MarketAtomTask : ITask() {
 
     private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
 
-    private val storeApi = ApiFactory.create(StoreSDKApi::class)
+    private val storeApi = ApiFactory.create(StoreSdkApi::class)
 
     private val outputFile = "output.json"
 
