@@ -53,6 +53,11 @@ func NewWork(id string, conf *config.ServerConfig, mgrSet MgrSet, rp *recorder.R
 	work.remote = mgrSet.Remote(ctx, work)
 	work.resource = mgrSet.Resource(ctx, work)
 	work.basic.Info().Init()
+
+	// TODO : work.local need Init also, but it depend basic.Setting
+	work.local.Init()
+	work.remote.Init()
+
 	return work
 }
 
@@ -290,6 +295,11 @@ func (wi *WorkInfo) Register(batchMode bool) {
 	wi.commonStatus.register()
 }
 
+// Start set work start time
+func (wi *WorkInfo) RegisterTime(t time.Time) {
+	wi.commonStatus.registerTime(t)
+}
+
 // Unregister set work unregister
 func (wi *WorkInfo) Unregister() {
 	wi.commonStatus.unregister()
@@ -320,9 +330,19 @@ func (wi *WorkInfo) Start() {
 	wi.commonStatus.start()
 }
 
+// Start set work start time
+func (wi *WorkInfo) StartTime(t time.Time) {
+	wi.commonStatus.startTime(t)
+}
+
 // End set work end
 func (wi *WorkInfo) End(timeoutBefore time.Duration) {
 	wi.commonStatus.end(timeoutBefore)
+}
+
+// End set work end time
+func (wi *WorkInfo) EndTime(t time.Time) {
+	wi.commonStatus.endTime(t)
 }
 
 // CanBeRegistered check if work can be registered now
@@ -439,6 +459,10 @@ func (wcs *WorkCommonStatus) register() {
 	wcs.changeStatus(dcSDK.WorkStatusRegistered)
 }
 
+func (wcs *WorkCommonStatus) registerTime(t time.Time) {
+	wcs.RegisteredTime = t
+}
+
 func (wcs *WorkCommonStatus) unregister() {
 	wcs.UnregisteredTime = now()
 	wcs.changeStatus(dcSDK.WorkStatusUnregistered)
@@ -469,9 +493,17 @@ func (wcs *WorkCommonStatus) start() {
 	wcs.changeStatus(dcSDK.WorkStatusWorking)
 }
 
+func (wcs *WorkCommonStatus) startTime(t time.Time) {
+	wcs.StartTime = t
+}
+
 func (wcs *WorkCommonStatus) end(timeoutBefore time.Duration) {
 	wcs.EndTime = now().Add(-timeoutBefore)
 	wcs.changeStatus(dcSDK.WorkStatusEnded)
+}
+
+func (wcs *WorkCommonStatus) endTime(t time.Time) {
+	wcs.EndTime = t
 }
 
 func (wcs *WorkCommonStatus) changeStatus(status dcSDK.WorkStatus) {
@@ -565,6 +597,17 @@ func (was *WorkAnalysisStatus) GetJobsByIndex(index int) []*dcSDK.ControllerJobS
 	}
 
 	return was.jobs[index:]
+}
+
+// Reset reset stat datas
+func (was *WorkAnalysisStatus) Reset() error {
+	was.mutex.Lock()
+	defer was.mutex.Unlock()
+
+	was.indexMap = make(map[string]int)
+	was.jobs = make([]*dcSDK.ControllerJobStats, 0, 1000)
+
+	return nil
 }
 
 func now() time.Time {

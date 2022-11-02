@@ -30,7 +30,7 @@ cron:
 
 # stream 运行时的默认镜像
 container:
-  defaultImage: bkci/ci:latest
+  defaultImage: bkci/ci:ubuntu
  
 github:
   redirectUrl: __BK_CI_STREAM_URL__/auth/api/external/third/login?code=%s&userId=%s&type=%s
@@ -40,3 +40,6 @@ github:
 gateway:
   url: __BK_CI_HOST__
   reportPrefix: __BK_CI_STREAM_REPORT_PREFIX__
+
+badge:
+  serverUrl: __BK_CI_BADGE_SERVER_URL__

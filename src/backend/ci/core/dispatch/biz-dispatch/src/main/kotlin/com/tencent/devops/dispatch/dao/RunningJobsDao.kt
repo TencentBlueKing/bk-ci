@@ -109,23 +109,39 @@ class RunningJobsDao {
     ) {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             val now = LocalDateTime.now()
-            dslContext.insertInto(this,
-                PROJECT_ID,
-                VM_TYPE,
-                BUILD_ID,
-                VM_SEQ_ID,
-                EXECUTE_COUNT,
-                CREATED_TIME
-            )
-                .values(
-                    projectId,
-                    jobQuotaVmType.name,
-                    buildId,
-                    vmSeqId,
-                    executeCount,
-                    now
+
+            val preRecord = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .fetchOne()
+
+            if (preRecord != null) {
+                dslContext.update(this)
+                    .set(CREATED_TIME, now)
+                    .where(ID.eq(preRecord.id))
+                    .execute()
+                return
+            } else {
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    VM_TYPE,
+                    BUILD_ID,
+                    VM_SEQ_ID,
+                    EXECUTE_COUNT,
+                    CREATED_TIME
                 )
-                .execute()
+                    .values(
+                        projectId,
+                        jobQuotaVmType.name,
+                        buildId,
+                        vmSeqId,
+                        executeCount,
+                        now
+                    )
+                    .execute()
+            }
         }
     }
 
