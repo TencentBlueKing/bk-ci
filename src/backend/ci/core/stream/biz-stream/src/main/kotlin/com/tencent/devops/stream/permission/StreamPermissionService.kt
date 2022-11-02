@@ -124,7 +124,7 @@ class StreamPermissionService @Autowired constructor(
         if (result == null || !result) {
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                "Permission denied."
+                "Access to Stream project permission denied."
             )
         }
     }
