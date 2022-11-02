@@ -28,7 +28,6 @@
 package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
 
