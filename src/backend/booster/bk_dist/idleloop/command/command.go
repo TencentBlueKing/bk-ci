@@ -20,8 +20,9 @@ import (
 
 // define const vars
 const (
-	FlagArgs = "args"
-	FlagLog  = "log"
+	FlagLog    = "log"
+	FlagLogDir = "log_dir"
+	FlagArgs   = "args"
 )
 
 // Run main entrance
@@ -48,6 +49,10 @@ func GetApp(ct ClientType) *commandCli.App {
 		commandCli.StringFlag{
 			Name:  "log",
 			Usage: "log level to print some information",
+		},
+		commandCli.StringFlag{
+			Name:  "log_dir",
+			Usage: "log dir to save log files",
 		},
 		commandCli.StringFlag{
 			Name:  "args, a",
