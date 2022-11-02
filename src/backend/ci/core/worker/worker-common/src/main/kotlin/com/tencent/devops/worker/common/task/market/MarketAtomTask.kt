@@ -80,6 +80,7 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
+import com.tencent.devops.worker.common.api.atom.StoreSDKApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
@@ -108,6 +109,8 @@ import java.nio.file.Paths
 open class MarketAtomTask : ITask() {
 
     private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
+
+    private val storeApi = ApiFactory.create(StoreSDKApi::class)
 
     private val outputFile = "output.json"
 
@@ -655,7 +658,7 @@ open class MarketAtomTask : ITask() {
         // 校验插件对接平台错误码信息
         val platformCode = atomResult?.platformCode
         if (!platformCode.isNullOrBlank()) {
-            val isPlatformCodeRegistered = atomApi.isPlatformCodeRegistered(platformCode).data ?: false
+            val isPlatformCodeRegistered = storeApi.isPlatformCodeRegistered(platformCode).data ?: false
             if (isPlatformCodeRegistered) {
                 addPlatformCode(platformCode)
                 atomApi.addAtomDockingPlatforms(atomCode, setOf(platformCode))
