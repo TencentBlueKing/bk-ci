@@ -99,7 +99,6 @@ class TXExternalStreamResourceImpl(
                         oauthUserId = oauthUserId
                     )
                 }
-
             }
             return Response.temporaryRedirect(UriBuilder.fromUri(gitOauthCallback.redirectUrl).build()).build()
         }
