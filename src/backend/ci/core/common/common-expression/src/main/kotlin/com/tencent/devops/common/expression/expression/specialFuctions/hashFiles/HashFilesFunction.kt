@@ -29,7 +29,6 @@
 
 package com.tencent.devops.common.expression.expression.specialFuctions.hashFiles
 
-import com.sun.org.slf4j.internal.LoggerFactory
 import com.tencent.devops.common.expression.ContextNotFoundException
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.context.DictionaryContextData
