@@ -9,7 +9,10 @@ class StoreSdkResourceApi : AbstractBuildResourceApi(), StoreSdkApi {
     override fun isPlatformCodeRegistered(platformCode: String): Result<Boolean> {
         val path = "/ms/store/api/build/store/docking/platforms/codes/$platformCode/user/validate"
         val request = buildGet(path)
-        val responseContent = request(request, "获取插件对接平台注册信息失败")
+        val responseContent = request(
+            request,
+            "Failed to obtain the registration information of the atom docking platform"
+        )
         return objectMapper.readValue(responseContent)
     }
 }
