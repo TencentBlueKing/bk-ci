@@ -46,7 +46,7 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
         listOf("process", "project", "openapi")
     }
     "lambda" -> {
-        listOf("process", "project", "lambda")
+        listOf("process", "project", "lambda", "store")
     }
     "gitci" -> {
         listOf("stream")
