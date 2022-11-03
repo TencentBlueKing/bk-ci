@@ -246,17 +246,15 @@ object AtomReleaseTxtAnalysisUtil {
                 try {
                     val input = FileInputStream(file)
                     val byteArray = ByteArray(FILE_DEFAULT_SIZE)
-                    var len: Int
-                    len = input.read(byteArray)
-                    println(len)
+                    var len = input.read(byteArray)
                     while (len != -1) {
                         while (len != -1) {
                             zipOutputStream.write(byteArray, 0, len)
                             len = input.read(byteArray)
                         }
                     }
-                } catch (ex: IOException) {
-                    ex.printStackTrace()
+                } catch (e: IOException) {
+                    e.printStackTrace()
                 }
             }
         }
