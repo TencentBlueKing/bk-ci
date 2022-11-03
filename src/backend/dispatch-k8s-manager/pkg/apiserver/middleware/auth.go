@@ -8,6 +8,7 @@ import (
 	"disaptch-k8s-manager/pkg/config"
 	"disaptch-k8s-manager/pkg/logs"
 	"disaptch-k8s-manager/pkg/types"
+	"encoding/base64"
 	"encoding/pem"
 	"errors"
 	"net/http"
@@ -35,7 +36,12 @@ func InitApiAuth() gin.HandlerFunc {
 				return
 			}
 		} else {
-			decryptToken, err := RSADecrypt([]byte(token), []byte(config.Config.ApiServer.Auth.RsaPrivateKey))
+			// 过来的数据是base64解码后的，需要先编码下
+			tokenB, err := base64.StdEncoding.DecodeString(token)
+			if err != nil {
+				logs.Error("base64 decode auth token error", err)
+			}
+			decryptToken, err := RSADecrypt(tokenB, []byte(config.Config.ApiServer.Auth.RsaPrivateKey))
 			if err != nil {
 				logs.Error("decryptToken error", err)
 			} else if decryptToken != "" && decryptToken == config.Config.ApiServer.Auth.ApiToken.Value {
