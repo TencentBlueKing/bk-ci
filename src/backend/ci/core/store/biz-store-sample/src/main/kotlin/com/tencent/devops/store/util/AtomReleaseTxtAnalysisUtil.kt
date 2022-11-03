@@ -61,6 +61,7 @@ object AtomReleaseTxtAnalysisUtil {
     private const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
     private val fileSeparator: String = System.getProperty("file.separator")
     private val logger = LoggerFactory.getLogger(AtomReleaseTxtAnalysisUtil::class.java)
+    private val fileDefaultSize = 1024
 
     fun descriptionAnalysis(
         userId: String,
@@ -77,13 +78,13 @@ object AtomReleaseTxtAnalysisUtil {
                     inputStream = URL(description).openStream()
                     FileOutputStream(file).use { outputStream ->
                         var read: Int
-                        val bytes = ByteArray(1024)
+                        val bytes = ByteArray(fileDefaultSize)
                         while (inputStream.read(bytes).also { read = it } != -1) {
                             outputStream.write(bytes, 0, read)
                         }
                     }
                     descriptionText = file.readText()
-                } catch (e: Exception) {
+                } catch (e: IOException) {
                     logger.warn("get remote file fail:${e.message}")
                 } finally {
                     inputStream?.close()
@@ -128,6 +129,25 @@ object AtomReleaseTxtAnalysisUtil {
             }
             pathList.add(path)
         }
+        return filePathReplace(
+            pathList = pathList,
+            client = client,
+            atomPath = atomPath,
+            userId = userId,
+            result = result,
+            descriptionContent = descriptionContent
+        )
+    }
+
+    private fun filePathReplace(
+        pathList: List<String>,
+        client: Client,
+        atomPath: String,
+        userId: String,
+        result: MutableMap<String, String>,
+        descriptionContent: String
+    ): String {
+        var content = descriptionContent
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         pathList.forEach {
             val file = File("$atomPath${fileSeparator}file${fileSeparator}$it")
@@ -155,12 +175,12 @@ object AtomReleaseTxtAnalysisUtil {
         // 替换资源路径
         result.forEach {
             val analysisPattern: Pattern = Pattern.compile("(\\\$\\{\\{indexFile\\(\"$it\"\\)}})")
-            val analysisMatcher: Matcher = analysisPattern.matcher(descriptionContent)
-            descriptionContent = analysisMatcher.replaceFirst(
+            val analysisMatcher: Matcher = analysisPattern.matcher(content)
+            content = analysisMatcher.replaceFirst(
                 "![](${it.value.replace(fileSeparator, "\\$fileSeparator")})"
             )
         }
-        return descriptionContent
+        return content
     }
 
     fun logoUrlAnalysis(
@@ -170,6 +190,7 @@ object AtomReleaseTxtAnalysisUtil {
         client: Client
     ): Result<String> {
         var result = logoUrl
+        var results: Result<String> = Result(result)
         // 远程资源不做处理
         if (!logoUrl.startsWith("http")) {
             // 正则解析
@@ -179,13 +200,13 @@ object AtomReleaseTxtAnalysisUtil {
                 matcher.group(2).replace("\"", "")
             } else null
             if (relativePath.isNullOrBlank()) {
-                return MessageCodeUtil.generateResponseDataObject(
+                results = MessageCodeUtil.generateResponseDataObject(
                     StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
                     arrayOf("releaseInfo.logoUrl")
                 )
             }
             val logoFile =
-                File("$atomPath${fileSeparator}file$fileSeparator${relativePath.removePrefix(fileSeparator)}")
+                File("$atomPath${fileSeparator}file$fileSeparator${relativePath?.removePrefix(fileSeparator)}")
             if (logoFile.exists()) {
                 val uploadStoreLogoResult = client.get(OpStoreLogoResource::class).uploadStoreLogo(
                     userId = userId,
@@ -197,8 +218,9 @@ object AtomReleaseTxtAnalysisUtil {
                 )
                 if (uploadStoreLogoResult.isOk()) {
                     result = uploadStoreLogoResult.data!!.logoUrl!!
+                    results = Result(result)
                 } else {
-                    return Result(
+                    results = Result(
                         data = logoUrl,
                         status = uploadStoreLogoResult.status,
                         message = uploadStoreLogoResult.message
@@ -208,7 +230,7 @@ object AtomReleaseTxtAnalysisUtil {
                 logger.error("uploadStoreLogo fail logoName:${logoFile.name}")
             }
         }
-        return Result(data = result)
+        return results
     }
 
     // 生成压缩文件
@@ -223,7 +245,7 @@ object AtomReleaseTxtAnalysisUtil {
                 zipOutputStream.putNextEntry(ZipEntry(file.name))
                 try {
                     val input = FileInputStream(file)
-                    val byteArray = ByteArray(1024)
+                    val byteArray = ByteArray(fileDefaultSize)
                     var len: Int
                     len = input.read(byteArray)
                     println(len)
