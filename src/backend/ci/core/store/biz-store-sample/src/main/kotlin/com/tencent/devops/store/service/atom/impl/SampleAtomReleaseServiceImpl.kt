@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.common.api.constant.BEGIN
@@ -248,7 +249,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
             taskJsonMap = JsonUtil.toMap(taskJsonStr).toMutableMap()
             val releaseInfoMap = taskJsonMap["releaseInfo"]
             releaseInfo = JsonUtil.mapTo(releaseInfoMap as Map<String, Any>, ReleaseInfo::class.java)
-        } catch (e: Exception) {
+        } catch (e: JsonProcessingException) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID
             )

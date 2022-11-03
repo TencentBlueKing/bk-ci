@@ -61,7 +61,7 @@ object AtomReleaseTxtAnalysisUtil {
     private const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
     private val fileSeparator: String = System.getProperty("file.separator")
     private val logger = LoggerFactory.getLogger(AtomReleaseTxtAnalysisUtil::class.java)
-    private val fileDefaultSize = 1024
+    private const val FILE_DEFAULT_SIZE = 1024
 
     fun descriptionAnalysis(
         userId: String,
@@ -78,7 +78,7 @@ object AtomReleaseTxtAnalysisUtil {
                     inputStream = URL(description).openStream()
                     FileOutputStream(file).use { outputStream ->
                         var read: Int
-                        val bytes = ByteArray(fileDefaultSize)
+                        val bytes = ByteArray(FILE_DEFAULT_SIZE)
                         while (inputStream.read(bytes).also { read = it } != -1) {
                             outputStream.write(bytes, 0, read)
                         }
@@ -245,7 +245,7 @@ object AtomReleaseTxtAnalysisUtil {
                 zipOutputStream.putNextEntry(ZipEntry(file.name))
                 try {
                     val input = FileInputStream(file)
-                    val byteArray = ByteArray(fileDefaultSize)
+                    val byteArray = ByteArray(FILE_DEFAULT_SIZE)
                     var len: Int
                     len = input.read(byteArray)
                     println(len)
@@ -305,7 +305,6 @@ object AtomReleaseTxtAnalysisUtil {
         val serviceUrl = "$serviceUrlPrefix/service/artifactories/archiveAtom" +
                 "?userId=$userId&projectCode=$projectCode&atomId=$atomId&atomCode=$atomCode" +
                 "&version=$version&releaseType=$releaseType&os=$os"
-
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body()!!.string()
             logger.error("uploadFile responseContent is: $responseContent")
@@ -316,7 +315,7 @@ object AtomReleaseTxtAnalysisUtil {
         }
     }
 
-    fun buildAtomArchivePath(userId: String, atomCode: String) =
+    private fun buildAtomArchivePath(userId: String, atomCode: String) =
         "${getAtomBasePath()}$fileSeparator$BK_CI_ATOM_DIR$fileSeparator$userId$fileSeparator$atomCode" +
                 "$fileSeparator${UUIDUtil.generate()}"
 }
