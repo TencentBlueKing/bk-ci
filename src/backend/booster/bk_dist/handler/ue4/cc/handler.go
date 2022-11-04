@@ -170,7 +170,7 @@ func (cc *TaskCC) preExecute(command []string) (*dcSDK.BKDistCommand, error) {
 	// debugRecordFileName(fmt.Sprintf("cc: start pre execute for: %v", command))
 
 	cc.originArgs = command
-	responseFile, args, err := ensureCompiler(command)
+	responseFile, args, err := ensureCompiler(command, cc.sandbox.Dir)
 	if err != nil {
 		blog.Warnf("cc: pre execute ensure compiler %v: %v", args, err)
 		return nil, err
