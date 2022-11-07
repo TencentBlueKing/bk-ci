@@ -70,10 +70,10 @@ func RSADecrypt(src []byte, keyBuf []byte) (string, error) {
 	}
 
 	// 解析出一个der编码的私钥
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 
 	// 私钥解密
-	result, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, src)
+	result, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey.(*rsa.PrivateKey), src)
 	if err != nil {
 		return "", err
 	}
