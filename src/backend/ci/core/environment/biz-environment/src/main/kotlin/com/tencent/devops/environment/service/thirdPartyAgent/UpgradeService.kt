@@ -153,7 +153,6 @@ class UpgradeService @Autowired constructor(
         agentVersion: String?,
         masterVersion: String?
     ): AgentResult<Boolean> {
-
         val (status, _) = checkAgent(projectId, agentId, secretKey)
         if (status != AgentStatus.IMPORT_OK) {
             logger.warn("The agent($agentId) status($status) is not OK")
@@ -315,6 +314,16 @@ class UpgradeService @Autowired constructor(
         }
 
         return Triple(AgentStatus.fromStatus(agentRecord.status), props, agentRecord.os)
+    }
+
+    // 校验这个agent所属的项目是否可以进行升级或者其他属性
+    // @return true 可以升级 false 不能进行升级
+    private fun checkProjectUpgrade(
+        projectId: String
+    ): Boolean {
+        // 校验优先升级，这些项目在升级时，其他项目不能进行升级
+
+        // 校验
     }
 
     private fun getUpgradeFile(file: String) = downloadAgentInstallService.getUpgradeFile(file)
