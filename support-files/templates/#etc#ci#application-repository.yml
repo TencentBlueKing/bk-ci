@@ -65,4 +65,4 @@ tapd:
     apiUrl: __BK_CI_REPOSITORY_TAPD_API_URL__
 
 aes:
-  key: __BK_CI_REPOSITORY_AES_KEY__
+  git: __BK_CI_REPOSITORY_AES_GIT__
