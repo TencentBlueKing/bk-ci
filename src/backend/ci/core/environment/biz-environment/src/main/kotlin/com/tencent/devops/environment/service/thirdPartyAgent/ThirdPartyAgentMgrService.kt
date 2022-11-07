@@ -1257,7 +1257,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 gateway = agentRecord.gateway,
                 fileGateway = agentRecord.fileGateway,
                 props = oldUserProps,
-                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0
             )
         }
     }
