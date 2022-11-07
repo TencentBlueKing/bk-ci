@@ -1031,7 +1031,7 @@ func getFirstIncludeFile(args []string) string {
 	return ""
 }
 
-func saveResultFile(rf *dcSDK.FileDesc) error {
+func saveResultFile(rf *dcSDK.FileDesc, dir string) error {
 	fp := rf.FilePath
 	data := rf.Buffer
 	blog.Debugf("cc: ready save file [%s]", fp)
@@ -1042,10 +1042,18 @@ func saveResultFile(rf *dcSDK.FileDesc) error {
 
 	f, err := os.Create(fp)
 	if err != nil {
-		blog.Errorf("cc: create file %s error: [%s]", fp, err.Error())
-		return err
+		if !filepath.IsAbs(fp) && dir != "" {
+			newfp, _ := filepath.Abs(filepath.Join(dir, fp))
+			f, err = os.Create(newfp)
+			if err != nil {
+				blog.Errorf("cc: create file %s or %s error: [%s]", fp, newfp, err.Error())
+				return err
+			}
+		} else {
+			blog.Errorf("cc: create file %s error: [%s]", fp, err.Error())
+			return err
+		}
 	}
-
 	defer func() {
 		_ = f.Close()
 	}()

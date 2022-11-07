@@ -290,7 +290,7 @@ func (cc *TaskCC) postExecute(r *dcSDK.BKDistResult) error {
 	if len(r.Results[0].ResultFiles) > 0 {
 		for _, f := range r.Results[0].ResultFiles {
 			if f.Buffer != nil {
-				if err := saveResultFile(&f); err != nil {
+				if err := saveResultFile(&f, cc.sandbox.Dir); err != nil {
 					blog.Errorf("cc: failed to save file [%s]", f.FilePath)
 					return err
 				}
