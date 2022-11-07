@@ -81,6 +81,11 @@ class UserStreamGitResourceImpl @Autowired constructor(
             gitProjectId = projectInfo.gitProjectId,
             scmType = streamGitConfig.getScmType()
         )
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectCode,
+            permission = AuthPermission.VIEW
+        )
         // 增加用户访问记录
         streamProjectService.addUserProjectHistory(
             userId = userId,
@@ -99,6 +104,11 @@ class UserStreamGitResourceImpl @Autowired constructor(
         pageSize: Int?,
         search: String?
     ): Result<List<StreamGitMember>?> {
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
             streamGitTransferService.getProjectMember(
@@ -122,7 +132,11 @@ class UserStreamGitResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<List<StreamCommitInfo>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        permissionService.checkStreamPermission(userId, projectId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(
             streamGitTransferService.getCommits(
                 userId = getOauthUser(userId = userId, isEnableUser = false, gitProjectId = gitProjectId),
@@ -142,20 +156,24 @@ class UserStreamGitResourceImpl @Autowired constructor(
         projectId: String,
         streamCreateFile: StreamCreateFileInfo
     ): Result<Boolean> {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
-        permissionService.checkStreamPermission(userId, projectId, AuthPermission.CREATE)
-        permissionService.checkEnableStream(gitProjectId.toLong())
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        permissionService.checkStreamAndOAuthAndEnable(
+            userId = userId,
+            projectId = projectId,
+            gitProjectId = gitProjectId,
+            permission = AuthPermission.CREATE
+        )
         val newFile = streamCreateFile.copy(
             filePath = getFilePath(streamCreateFile.filePath)
         )
         val createNewFileIsSuccess = streamGitTransferService.createNewFile(
-            userId = getOauthUser(userId = userId, isEnableUser = false, gitProjectId = gitProjectId.toLong()),
-            gitProjectId = gitProjectId,
+            userId = getOauthUser(userId = userId, isEnableUser = false, gitProjectId = gitProjectId),
+            gitProjectId = gitProjectId.toString(),
             streamCreateFile = newFile
         )
         if (createNewFileIsSuccess) {
             streamPipelineService.createNewPipeLine(
-                gitProjectId = gitProjectId,
+                gitProjectId = gitProjectId.toString(),
                 file = newFile,
                 userId = userId,
                 branch = streamCreateFile.branch
@@ -188,6 +206,11 @@ class UserStreamGitResourceImpl @Autowired constructor(
         sort: StreamSortAscOrDesc?
     ): Result<List<String>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(
             kotlin.runCatching {
                 streamGitTransferService.getProjectBranches(
@@ -210,7 +233,11 @@ class UserStreamGitResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<List<String>?> {
-        permissionService.checkStreamPermission(userId, projectId, AuthPermission.VIEW)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         return Result(
             streamHistoryService.getProjectLocalBranches(
