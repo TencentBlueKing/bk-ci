@@ -81,9 +81,10 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
         checkCommonUser(userId)
-        permissionService.checkStreamAndOAuth(
+        permissionService.checkStreamPermission(
             userId = userId,
-            projectId = projectId
+            projectId = projectId,
+            permission = AuthPermission.EDIT
         )
         val setting = txStreamBasicSettingService.getStreamConf(gitProjectId)
         val result = if (setting == null) {
