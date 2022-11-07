@@ -57,7 +57,7 @@ import java.util.zip.ZipOutputStream
 
 object AtomReleaseTxtAnalysisUtil {
 
-    private const val BK_CI_ATOM_DIR = "bk-atom-test"
+    private const val BK_CI_ATOM_DIR = "bk-atom"
     private const val BKREPO_DEFAULT_USER = "admin"
     private const val BKREPO_STORE_PROJECT_ID = "bk-store"
     private const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
