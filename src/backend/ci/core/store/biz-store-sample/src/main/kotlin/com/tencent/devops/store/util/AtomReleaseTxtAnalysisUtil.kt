@@ -28,6 +28,8 @@
 package com.tencent.devops.store.util
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -40,8 +42,6 @@ import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.OpStoreLogoResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
@@ -58,6 +58,8 @@ import java.util.zip.ZipOutputStream
 object AtomReleaseTxtAnalysisUtil {
 
     private const val BK_CI_ATOM_DIR = "bk-atom-test"
+    private const val BKREPO_DEFAULT_USER = "admin"
+    private const val BKREPO_STORE_PROJECT_ID = "bk-store"
     private const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
     private val fileSeparator: String = System.getProperty("file.separator")
     private val logger = LoggerFactory.getLogger(AtomReleaseTxtAnalysisUtil::class.java)
@@ -109,7 +111,6 @@ object AtomReleaseTxtAnalysisUtil {
         atomPath: String,
         client: Client
     ): String {
-        var descriptionContent = input
         val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
         val matcher: Matcher = pattern.matcher(input)
         val pathList = mutableListOf<String>()
@@ -133,9 +134,8 @@ object AtomReleaseTxtAnalysisUtil {
             pathList = pathList,
             client = client,
             atomPath = atomPath,
-            userId = userId,
             result = result,
-            descriptionContent = descriptionContent
+            descriptionContent = input
         )
     }
 
@@ -143,30 +143,30 @@ object AtomReleaseTxtAnalysisUtil {
         pathList: List<String>,
         client: Client,
         atomPath: String,
-        userId: String,
         result: MutableMap<String, String>,
         descriptionContent: String
     ): String {
         var content = descriptionContent
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
+        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class)
         pathList.forEach {
             val file = File("$atomPath${fileSeparator}file${fileSeparator}$it")
             try {
                 if (file.exists()) {
-                    val uploadFileResult = CommonUtils.serviceUploadFile(
-                        userId = userId,
+                    val uploadFileResult = CommonUtils.serviceUploadFileToPath(
+                        userId = BKREPO_DEFAULT_USER,
+                        projectId = BKREPO_STORE_PROJECT_ID,
                         serviceUrlPrefix = serviceUrlPrefix,
                         file = file,
-                        fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-                        logo = false
+                        fileType = FileTypeEnum.BK_STATIC.name,
+                        path = "${UUIDUtil.generate()}${file.name.substring(file.name.indexOf("."))}"
                     )
                     if (uploadFileResult.isOk()) {
                         result[it] = uploadFileResult.data!!
                     } else {
-                        logger.error("upload file result is fail, file path:$it")
+                        logger.warn("upload file result is fail, file path:$it")
                     }
                 } else {
-                    logger.error("Resource file does not exist:${file.path}")
+                    logger.warn("Resource file does not exist:${file.path}")
                 }
             } finally {
                 file.delete()
@@ -174,7 +174,7 @@ object AtomReleaseTxtAnalysisUtil {
         }
         // 替换资源路径
         result.forEach {
-            val analysisPattern: Pattern = Pattern.compile("(\\\$\\{\\{indexFile\\(\"$it\"\\)}})")
+            val analysisPattern: Pattern = Pattern.compile("(\\\$\\{\\{indexFile\\(\"${it.key}\"\\)}})")
             val analysisMatcher: Matcher = analysisPattern.matcher(content)
             content = analysisMatcher.replaceFirst(
                 "![](${it.value.replace(fileSeparator, "\\$fileSeparator")})"
@@ -227,7 +227,7 @@ object AtomReleaseTxtAnalysisUtil {
                     )
                 }
             } else {
-                logger.error("uploadStoreLogo fail logoName:${logoFile.name}")
+                logger.warn("uploadStoreLogo fail logoName:${logoFile.name}")
             }
         }
         return results
@@ -305,7 +305,7 @@ object AtomReleaseTxtAnalysisUtil {
                 "&version=$version&releaseType=$releaseType&os=$os"
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body()!!.string()
-            logger.error("uploadFile responseContent is: $responseContent")
+            logger.warn("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }

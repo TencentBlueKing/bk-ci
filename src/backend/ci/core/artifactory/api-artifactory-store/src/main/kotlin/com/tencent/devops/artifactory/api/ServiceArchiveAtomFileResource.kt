@@ -81,4 +81,28 @@ interface ServiceArchiveAtomFileResource {
         @QueryParam("os")
         os: String
     ): Result<ArchiveAtomResponse?>
+
+    @ApiOperation("上传插件资源文件到指定自定义仓库路径")
+    @POST
+    @Path("/file/uploadToPath")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun uploadToPath(
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("项目代码", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("文件路径", required = true)
+        @QueryParam("path")
+        path: String,
+        @ApiParam("文件类型", required = true)
+        @QueryParam("fileType")
+        fileType: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition
+    ): Result<String?>
 }

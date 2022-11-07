@@ -28,9 +28,15 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
+import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveAtomService
+import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
@@ -40,7 +46,8 @@ import java.io.InputStream
 
 @RestResource
 class ServiceArchiveAtomFileResourceImpl @Autowired constructor(
-    private val archiveAtomService: ArchiveAtomService
+    private val archiveAtomService: ArchiveAtomService,
+    private val archiveFileService: ArchiveFileService
 ) : ServiceArchiveAtomFileResource {
 
     override fun archiveAtomFile(
@@ -67,5 +74,38 @@ class ServiceArchiveAtomFileResourceImpl @Autowired constructor(
                 os = os
             )
         )
+    }
+
+    override fun uploadToPath(
+        userId: String,
+        projectId: String,
+        path: String,
+        fileType: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
+        checkParam(userId, projectId, path)
+        val url = archiveFileService.uploadFile(
+            userId = userId,
+            inputStream = inputStream,
+            disposition = disposition,
+            projectId = projectId,
+            filePath = path,
+            fileType = FileTypeEnum.valueOf(fileType),
+            fileChannelType = FileChannelTypeEnum.WEB_SHOW
+        )
+        return Result(url)
+    }
+
+    private fun checkParam(userId: String, projectId: String, path: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (path.isBlank()) {
+            throw ErrorCodeException(errorCode = ArtifactoryMessageCode.INVALID_CUSTOM_ARTIFACTORY_PATH)
+        }
     }
 }
