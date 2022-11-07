@@ -86,7 +86,7 @@ class ExperienceAppService(
     private val experiencePushSubscribeDao: ExperiencePushSubscribeDao,
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val experienceService: ExperienceService,
+    private val experienceService: ExperienceService
 ) {
 
     private val executorService = Executors.newFixedThreadPool(2)
