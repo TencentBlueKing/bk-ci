@@ -64,15 +64,6 @@ class StreamPermissionService @Autowired constructor(
         checkPermissionAndOauth(userId, projectId, permission)
     }
 
-    // 校验只需要OAuth的
-    fun checkStreamAndOAuth(
-        userId: String,
-        projectId: String,
-        permission: AuthPermission = AuthPermission.EDIT
-    ) {
-        checkPermissionAndOauth(userId, projectId, permission)
-    }
-
     fun checkWebPermission(userId: String, projectId: String): Boolean {
         logger.info("StreamPermissionService|checkWebPermission|user|$userId|projectId|$projectId ")
 
@@ -118,7 +109,7 @@ class StreamPermissionService @Autowired constructor(
             token = tokenCheckService.getSystemToken(null) ?: "",
             action = permission.value,
             projectCode = projectId,
-            resourceCode = null
+            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
         ).data
         // 说明用户没有stream 权限
         if (result == null || !result) {
