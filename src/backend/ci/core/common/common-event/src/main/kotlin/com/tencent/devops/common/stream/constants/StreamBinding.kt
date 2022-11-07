@@ -76,7 +76,7 @@ object StreamBinding {
     const val QUEUE_PIPELINE_PAUSE_TASK_EXECUTE = "q.engine.pipeline.pause.task.execute"
 
     // 监控 ====================================
-    const val EXCHANGE_PIPELINE_MONITOR_DIRECT = "e.engine.pipeline.listener.monitor"
+    const val EXCHANGE_PIPELINE_MONITOR_DIRECT = "engine.pipeline.listener.monitor"
 
     // 接收上述广播的队列
     const val ROUTE_PIPELINE_BUILD_MONITOR = "r.engine.pipeline.listener.monitor"
