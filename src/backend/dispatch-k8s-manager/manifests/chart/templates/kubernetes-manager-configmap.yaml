@@ -106,10 +106,12 @@ data:
         apiToken:
           key: {{ .Values.kubernetesManager.apiserver.auth.apiToken.key }}
           value: {{ .Values.kubernetesManager.apiserver.auth.apiToken.value }}
-        rsaPrivateKey: {{ .Values.kubernetesManager.apiserver.auth.rsaPrivateKey | nindent 10 }}
+        rsaPrivateKey: |
+          {{- .Values.kubernetesManager.apiserver.auth.rsaPrivateKey | nindent 10 }}
 
   {{ if .Values.kubeConfig.useKubeConfig -}}
-  kubeConfig.yaml: {{ .Values.kubeConfig.content | nindent 4 }}
+  kubeConfig.yaml: |
+    {{- .Values.kubeConfig.content | nindent 4 }}
   {{- end -}}
 {{- end -}}
 {{- end -}}

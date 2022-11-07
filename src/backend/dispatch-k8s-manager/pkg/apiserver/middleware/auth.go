@@ -36,14 +36,14 @@ func InitApiAuth() gin.HandlerFunc {
 				return
 			}
 		} else {
-			// 过来的数据是base64解码后的，需要先编码下
+			// 过来的数据是base64解码后的，需要先解码下
 			tokenB, err := base64.StdEncoding.DecodeString(token)
 			if err != nil {
-				logs.Error("base64 decode auth token error", err)
+				logs.Error("base64 decode auth token error ", err)
 			}
 			decryptToken, err := RSADecrypt(tokenB, []byte(config.Config.ApiServer.Auth.RsaPrivateKey))
 			if err != nil {
-				logs.Error("decryptToken error", err)
+				logs.Error("decryptToken error ", err)
 			} else if decryptToken != "" && decryptToken == config.Config.ApiServer.Auth.ApiToken.Value {
 				c.Next()
 				return
