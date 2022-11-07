@@ -1,0 +1,53 @@
+<script setup lang="ts">
+import { AngleRight } from 'bkui-vue/lib/icon';
+
+defineProps<{
+  name: string
+}>();
+</script>
+
+<template>
+  <section class="manage-header">
+    <bk-breadcrumb
+      class="manage-breadcrumb"
+      separator="/"
+    >
+      <bk-breadcrumb-item
+        to="www"
+      >
+        项目管理
+        <template #separator>
+          <angle-right class="manage-icon" />
+        </template>
+      </bk-breadcrumb-item>
+      <bk-breadcrumb-item>
+        {{ name }}
+      </bk-breadcrumb-item>
+    </bk-breadcrumb>
+    <slot></slot>
+  </section>
+</template>
+
+<style lang="postcss" scoped>
+.manage-header {
+  height: 60px;
+  background: #FFFFFF;
+  box-shadow: 0 2px 5px 0 rgba(51,60,72,0.03);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 25px;
+}
+.manage-icon {
+  font-size: 18px;
+  margin-right: 1px;
+}
+.bk-breadcrumb-item {
+  :deep(.bk-breadcrumb-item-inner) {
+    color: #313238;
+  }
+  :deep(.is-link) {
+    color: #3A84FF;
+  }
+}
+</style>

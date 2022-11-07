@@ -50,11 +50,14 @@
       "devops-turbo",
       "devops-stream",
       "devops-metrics",
+      "devops-manage",
       "bk-pipeline"
     ],
     "nohoist": [
       "devops-metrics",
-      "devops-metrics/**"
+      "devops-metrics/**",
+      "devops-manage",
+      "devops-manage/**"
     ]
   },
   "dependencies": {
