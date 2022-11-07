@@ -16,10 +16,12 @@
 
 package com.tencent.devops.common.expression.utils;
 
+import kotlin.Suppress;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
+@Suppress(names = "ALL")
 public abstract class CollectionUtils {
     public static boolean isEmpty(@Nullable Collection<?> collection) {
         return (collection == null || collection.isEmpty());

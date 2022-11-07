@@ -90,7 +90,7 @@ class HashFiles(
                 .forEach files@{ file ->
                     patterns.forEach { pattern ->
                         if (matcher.match(pattern.pattern, file.toString())) {
-                            val abs = path.toAbsolutePath().toString()
+                            val abs = file.toAbsolutePath().toString()
                             files.add(abs)
                             out?.write("pattern: ${pattern.pattern} match file $abs to calculateHash")
                         }

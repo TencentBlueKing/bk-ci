@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import kotlin.Suppress;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -71,6 +72,7 @@ import org.jetbrains.annotations.Nullable;
  * @author Vladislav Kisel
  * @since 16.07.2003
  */
+@Suppress(names = "ALL")
 public class AntPathMatcher {
 
     /**
