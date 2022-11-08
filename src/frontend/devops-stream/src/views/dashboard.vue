@@ -69,7 +69,7 @@
                                     <span class="to-page-link" @click="toProjectDetail('buildList', repo.nameWithNamespace)">{{ repo.nameWithNamespace }}</span>
                                 </div>
                                 <div class="repo-desc">
-                                    <div v-if="repo.ciInfo && repo.ciInfo.enableCI" class="repo-ci-info">
+                                    <div v-if="repo.ciInfo && repo.ciInfo.enableCI" class="repo-ci-info" v-bk-overflow-tips>
                                         <i :class="getIconClass(repo.ciInfo.lastBuildStatus)"></i>
                                         <span class="to-page-link" @click="toLastBuildDetail(repo)">{{ repo.ciInfo.lastBuildMessage || $t('dashboard.emptyCommit') }}</span>
                                     </div>
@@ -79,8 +79,8 @@
                                 <div class="repo-name">
                                     {{ repo.nameWithNamespace }}
                                 </div>
-                                <div class="repo-desc">
-                                    <div>{{ repo.description || $t('dashboard.emptyDesc') }}</div>
+                                <div class="repo-desc" v-bk-overflow-tips>
+                                    {{ repo.description || $t('dashboard.emptyDesc') }}
                                 </div>
                             </section>
                         </div>
@@ -355,6 +355,7 @@
                 }
             }
             .repo-data {
+                max-width: calc(100% - 210px);
                 flex: 1;
                 margin: 0 16px;
                 .repo-name {

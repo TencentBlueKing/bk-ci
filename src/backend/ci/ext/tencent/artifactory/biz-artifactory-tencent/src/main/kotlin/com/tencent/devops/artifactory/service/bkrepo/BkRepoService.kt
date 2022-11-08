@@ -279,7 +279,7 @@ class BkRepoService @Autowired constructor(
                 metadata = mapOf(),
                 page = 0,
                 pageSize = 10000
-            ).forEach {
+            ).records.forEach {
                 resultList.add(RepoUtils.toFileDetail(it))
             }
         }
@@ -326,7 +326,7 @@ class BkRepoService @Autowired constructor(
                 metadata = mapOf(ARCHIVE_PROPS_PIPELINE_ID to pipelineId, ARCHIVE_PROPS_BUILD_ID to buildId),
                 page = 0,
                 pageSize = 10000
-            )
+            ).records
 
             val fileInfoList = transferFileInfo(projectId, nodeList, listOf(), false)
             val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId)
@@ -608,7 +608,7 @@ class BkRepoService @Autowired constructor(
             metadata = condition.properties,
             page = 0,
             pageSize = 10000
-        )
+        ).records
 
         return fileList.sortedByDescending { it.lastModifiedDate }.map { it.fullPath }
     }
@@ -673,7 +673,7 @@ class BkRepoService @Autowired constructor(
             metadata = mapOf(),
             page = 0,
             pageSize = 10000
-        ).map { it.fullPath }
+        ).records.map { it.fullPath }
         logger.info("match files: $srcFiles")
 
         val destPathFolder = "/share/$projectId/${PathUtils.normalize(targetPath).removePrefix("/")}"
