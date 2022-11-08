@@ -83,6 +83,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 )
                 val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName"
                 setProperty("$rabbitPropPrefix.producer.delayedExchange", "true")
+                setProperty("$rabbitPropPrefix.producer.exchangeType", "topic")
                 val prefix = "spring.cloud.stream.bindings.$bindingName"
                 setProperty("$prefix.destination", event.destination)
             }
@@ -144,6 +145,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         setProperty("$bindingPrefix.destination", consumer.destination)
         setProperty("$bindingPrefix.group", if (consumer.separately) hostName else consumer.group)
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")
+        setProperty("$rabbitPropPrefix.consumer.exchangeType", "topic")
     }
 
     override fun getOrder(): Int {
