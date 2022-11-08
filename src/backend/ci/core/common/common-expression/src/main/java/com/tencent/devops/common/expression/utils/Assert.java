@@ -16,10 +16,9 @@
 
 package com.tencent.devops.common.expression.utils;
 
-import kotlin.Suppress;
 import org.jetbrains.annotations.Nullable;
 
-@Suppress(names = "ALL")
+@SuppressWarnings("ALL")
 public abstract class Assert {
 
     /**

@@ -34,6 +34,7 @@ import java.nio.file.Paths
 import java.security.MessageDigest
 import javax.xml.bind.DatatypeConverter
 
+@Suppress("NestedBlockDepth")
 class HashFiles(
     private val workspace: String,
     private val out: Output?

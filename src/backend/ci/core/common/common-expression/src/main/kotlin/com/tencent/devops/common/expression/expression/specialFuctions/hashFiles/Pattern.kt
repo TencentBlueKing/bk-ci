@@ -30,6 +30,7 @@ package com.tencent.devops.common.expression.expression.specialFuctions.hashFile
 import java.io.File
 import java.nio.file.Paths
 
+@Suppress("ComplexCondition")
 class Pattern(
     var pattern: String,
     workspace: String

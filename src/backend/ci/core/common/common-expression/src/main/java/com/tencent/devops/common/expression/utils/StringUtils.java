@@ -16,7 +16,6 @@
 
 package com.tencent.devops.common.expression.utils;
 
-import kotlin.Suppress;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -24,7 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
 
-@Suppress(names = "ALL")
+@SuppressWarnings("ALL")
 public abstract class StringUtils {
     private static final String[] EMPTY_STRING_ARRAY = {};
 

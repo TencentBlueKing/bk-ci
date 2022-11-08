@@ -46,6 +46,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
+@Suppress("ALL")
 internal class HashFilesFunctionTest {
 
     @DisplayName("HashFiles相关异常测试")
