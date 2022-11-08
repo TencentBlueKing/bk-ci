@@ -213,17 +213,13 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineIdList: Collection<String>?,
         templateIdList: Collection<String>? = null
     ): List<Pipeline> {
-        logger.info(
-            "listPipelines userId: {}, projectId: {}, pipelineIdList: {}, templateIdList: {}",
-            userId, projectId, pipelineIdList, templateIdList
-        )
         val resultPipelineIds = mutableSetOf<String>()
 
         val pipelines = listPermissionPipeline(
             userId = userId,
             projectId = projectId,
             page = 1,
-            pageSize = 1000,
+            pageSize = getPipelineCountByProject(projectId),
             sortType = PipelineSortType.CREATE_TIME,
             channelCode = ChannelCode.BS,
             checkPermission = false
@@ -250,6 +246,18 @@ class PipelineListFacadeService @Autowired constructor(
         } else {
             pipelines.records.filter { it.pipelineId in resultPipelineIds }
         }
+    }
+
+    /**
+     * 查询指定projectId下的流水线数量
+     */
+    private fun getPipelineCountByProject(
+        projectId: String
+    ): Int {
+        return pipelineBuildSummaryDao.getPipelineCountByProject(
+            dslContext = dslContext,
+            projectId = projectId
+        )
     }
 
     fun listPermissionPipeline(
@@ -310,7 +318,6 @@ class PipelineListFacadeService @Autowired constructor(
                 pageSize = pageSizeNotNull,
                 sortType = sortType
             )
-            logger.info("listPermissionPipeline buildPipelineRecords: {}", buildPipelineRecords)
             val buildPipelineCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -329,7 +336,6 @@ class PipelineListFacadeService @Autowired constructor(
                     authPipelines = hasPermissionList,
                     projectId = projectId
                 )
-                logger.info("listPermissionPipeline favorPipelines: {}, pipelines: {}", favorPipelines, pipelines)
                 pipelines to favorPipelines.isNotEmpty()
             } else {
                 mutableListOf<Pipeline>() to false
