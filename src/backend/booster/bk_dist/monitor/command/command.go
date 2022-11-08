@@ -20,11 +20,10 @@ import (
 
 // define const vars
 const (
-	FlagLog               = "log"
-	FlagLogDir            = "log_dir"
-	FlagActionJSONFile    = "actions_json_file"
-	FlagToolChainJSONFile = "tool_chain_json_file"
-	FlagMostDependFirst   = "most_depend_first"
+	FlagLog       = "log"
+	FlagLogDir    = "log_dir"
+	FlagArgs      = "args"
+	FlagRulesFile = "rules_file"
 )
 
 // Run main entrance
@@ -57,21 +56,17 @@ func GetApp(ct ClientType) *commandCli.App {
 			Usage: "log dir to save log files",
 		},
 		commandCli.StringFlag{
-			Name:  "actions_json_file",
-			Usage: "json file to describe ue4 actions to execute",
+			Name:  "args, a",
+			Usage: "flags and args that will be pass-through",
 		},
 		commandCli.StringFlag{
-			Name:  "tool_chain_json_file",
-			Usage: "json file to describe tool chain",
-		},
-		commandCli.BoolFlag{
-			Name:  "most_depend_first",
-			Usage: "firstly execute actions which depend mostly",
+			Name:  "rules_file, rf",
+			Usage: "rules file to describe monitor rules",
 		},
 	}
 
 	switch ct {
-	case ClientBKUBTTool:
+	case ClientBKDistMonitor:
 		client.Flags = append(client.Flags, []commandCli.Flag{}...)
 
 		client.Action = mainProcess
