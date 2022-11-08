@@ -25,44 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.client
+package com.tencent.devops.dispatch.kubernetes.interfaces
 
-import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
-import okhttp3.Headers
-import okhttp3.Request
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+/**
+ * 用来获取内外网不同逻辑实现的接口类
+ */
+interface CommonService {
 
-@Component
-class BcsClientCommon @Autowired constructor(
-    private val commonService: CommonService
-) {
-
-    companion object {
-        private const val BCS_TOKEN_KEY = "BK-Devops-Token"
-    }
-
-    @Value("\${bcs.token}")
-    val bcsToken: String = ""
-
-    @Value("\${bcs.apiUrl}")
-    val bcsApiUrl: String = ""
-
-    fun baseRequest(userId: String, url: String, headers: Map<String, String>? = null): Request.Builder {
-        return Request.Builder().url(commonService.getProxyUrl(bcsApiUrl + url)).headers(headers(headers))
-    }
-
-    fun headers(otherHeaders: Map<String, String>? = null): Headers {
-        val result = mutableMapOf<String, String>()
-
-        val bcsHeaders = mapOf(BCS_TOKEN_KEY to bcsToken)
-        result.putAll(bcsHeaders)
-
-        if (!otherHeaders.isNullOrEmpty()) {
-            result.putAll(otherHeaders)
-        }
-
-        return Headers.of(result)
-    }
+    /**
+     * 获取代理url
+     * @param realUrl 真实跳转url
+     */
+    fun getProxyUrl(
+        realUrl: String
+    ): String
 }
