@@ -222,8 +222,8 @@ class PipelineListFacadeService @Autowired constructor(
         val pipelines = listPermissionPipeline(
             userId = userId,
             projectId = projectId,
-            page = null,
-            pageSize = null,
+            page = 1,
+            pageSize = 1000,
             sortType = PipelineSortType.CREATE_TIME,
             channelCode = ChannelCode.BS,
             checkPermission = false
