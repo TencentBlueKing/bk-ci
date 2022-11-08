@@ -20,9 +20,86 @@
 
 import request from '@/utils/request'
 
+const state = {
+}
+
+const getters = {
+}
+
+const mutations = {
+}
+
 const actions = {
+    /**
+     * 根据projectcode获取项目详情
+     */
+    requestProjectDetail: async ({ commit }, { projectId }) => {
+        return request.get(`backend/mesos/api/projects/${projectId}/`).then(response => {
+            Object.assign(response.data, { ccAppName: response.ccAppName })
+            return response.data
+        })
+    },
+    getBcsProjectInstance: async ({ commit }, { projectId, ccId, category, namespace = '' }) => {
+        let url = `backend/api/ci/paas-cd/apps/cc_app_ids/${ccId}/projects/${projectId}/instances?category=${category}`
+        if (namespace) {
+            url += `&namespace=${namespace}`
+        }
+        return request.get(url).then(response => {
+            return response.data
+        })
+    },
+    getBcsInstVersion: async ({ commit }, { projectId, ccId, instId }) => {
+        return request.get(`backend/api/ci/paas-cd/apps/cc_app_ids/${ccId}/projects/${projectId}/instances/${instId}/versions`).then(response => {
+            return response.data
+        })
+    },
+    getBcsInstVar: async ({ commit }, { projectId, ccId, instId, versionId }) => {
+        return request.get(`backend/api/ci/paas-cd/apps/cc_app_ids/${ccId}/projects/${projectId}/instances/${instId}/version/configs/?show_version_id=${versionId}`).then(response => {
+            return response.data
+        })
+    },
+    getBcsCluster: async ({ commit }, { projectCode }) => {
+        return request.get(`backend/api/projects/${projectCode}/clusters/`).then(response => {
+            return response.data
+        })
+    },
+    getBcsMuster: async ({ commit }, { projectId, ccId }) => {
+        return request.get(`backend/api/ci/paas-cd/apps/cc_app_ids/${ccId}/projects/${projectId}/musters/`).then(response => {
+            return response.data
+        })
+    },
+    getBcsMusterVersion: async ({ commit }, { projectId, ccId, musterId }) => {
+        return request.get(`backend/api/ci/paas-cd/apps/cc_app_ids/${ccId}/projects/${projectId}/musters/${musterId}/versions`).then(response => {
+            return response.data
+        })
+    },
+    getBcsInstanceEntity: async ({ commit }, { projectId, ccId, versionId }) => {
+        return request.get(`backend/api/ci/paas-cd/apps/cc_app_ids/${ccId}/projects/${projectId}/versions/${versionId}/templates`).then(response => {
+            return response.data
+        })
+    },
+    getTcmTemplate: async ({ commit }, { tcmId, appId }) => {
+        return request.get(`plugin/api/user/tcm/templates?ccid=${appId}&tcmAppId=${tcmId}`).then(response => {
+            return response.data
+        })
+    },
+    getTcmTemplateParam: async ({ commit }, { tcmId, appId, templateId }) => {
+        return request.get(`plugin/api/user/tcm/templateInfo?ccid=${appId}&tcmAppId=${tcmId}&templateId=${templateId}`).then(response => {
+            return response.data
+        })
+    },
+    // getGithubConfig: async ({ commit }, { projectId, pipelineId }) => {
+    //     return request.get(`process/api/user/containers/${projectId}/${pipelineId}/webhookConfig`).then(response => {
+    //         return response.data
+    //     })
+    // },
     getGithubAppUrl: async ({ commit }) => {
         return request.get('repository/api/user/github/githubAppUrl').then(response => {
+            return response.data
+        })
+    },
+    getBcsNamespaces: async ({ commit }, { projectId, ccId, used = 1 }) => {
+        return request.get(`backend/api/ci/paas-cd/ns/cc_app_ids/${ccId}/projects/${projectId}/namespaces/?used=${used}`).then(response => {
             return response.data
         })
     },
@@ -40,5 +117,8 @@ const actions = {
 
 export default {
     namespaced: true,
+    state,
+    getters,
+    mutations,
     actions
 }

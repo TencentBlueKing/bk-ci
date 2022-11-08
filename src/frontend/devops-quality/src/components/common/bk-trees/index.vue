@@ -1,34 +1,36 @@
 <template>
     <ul class="bk-trees-list">
-        <li class="bk-trees-item" :key="index" v-for="(item, index) of list" v-if="item.folder">
-            <div class="bk-tree-title"
-                :class="{ open: item.isOpen, selected: isActive(index) }"
-                :style="{ &quot;padding-left&quot;: 23 * _deepCount + &quot;px&quot; }"
-                @dblclick.stop="itemDbClickHandler({
-                    index,
-                    deepCount,
-                    item
-                })"
-                @click.stop="itemClickHandler({
-                    index,
-                    deepCount,
-                    item
-                })">
-                <i @click.stop="itemDbClickHandler({ index, deepCount, item })" class="devops-icon arrow-icon" :class="item.isOpen ? item.arrowOpenIcon : item.arrowIcon"></i>
-                <i class="devops-icon title-icon" :class="item.isOpen ? item.openIcon : item.icon"></i>
-                <span class="title-text pr15">{{ item.name }}</span>
-            </div>
-            <CollapseTransition>
-                <bk-trees
-                    v-if="item.children && item.children.length"
-                    v-show="item.isOpen"
-                    :list.sync="item.children"
-                    :deep-count="_deepCount"
-                    :is-root="false"
-                    :road-map="index">
-                </bk-trees>
-            </CollapseTransition>
-        </li>
+        <template v-for="(item, index) of list">
+            <li class="bk-trees-item" :key="index" v-if="item.folder">
+                <div class="bk-tree-title"
+                    :class="{ open: item.isOpen, selected: isActive(index) }"
+                    :style="{ &quot;padding-left&quot;: 23 * _deepCount + &quot;px&quot; }"
+                    @dblclick.stop="itemDbClickHandler({
+                        index,
+                        deepCount,
+                        item
+                    })"
+                    @click.stop="itemClickHandler({
+                        index,
+                        deepCount,
+                        item
+                    })">
+                    <i @click.stop="itemDbClickHandler({ index, deepCount, item })" class="devops-icon arrow-icon" :class="item.isOpen ? item.arrowOpenIcon : item.arrowIcon"></i>
+                    <i class="devops-icon title-icon" :class="item.isOpen ? item.openIcon : item.icon"></i>
+                    <span class="title-text pr15">{{ item.name }}</span>
+                </div>
+                <CollapseTransition>
+                    <bk-trees
+                        v-if="item.children && item.children.length"
+                        v-show="item.isOpen"
+                        :list.sync="item.children"
+                        :deep-count="_deepCount"
+                        :is-root="false"
+                        :road-map="index">
+                    </bk-trees>
+                </CollapseTransition>
+            </li>
+        </template>
     </ul>
 </template>
 

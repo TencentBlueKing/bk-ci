@@ -26,6 +26,8 @@ import {
 } from '@/store/constants'
 import {
     SET_STAGE_TAG_LIST,
+    SET_DEFAULT_STAGE_TAG,
+    UPDATE_STAGE,
     SET_PIPELINE_STAGE,
     SET_COMMON_SETTING,
     SET_PIPELINE_CONTAINER,
@@ -45,7 +47,6 @@ import {
     DELETE_ATOM,
     UPDATE_CONTAINER,
     ADD_STAGE,
-    UPDATE_STAGE,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
     SET_BUILD_PARAM,
@@ -64,7 +65,7 @@ import {
     SET_ATOM_VERSION_LIST,
     SET_EXECUTE_STATUS,
     SET_SAVE_STATUS,
-    SET_DEFAULT_STAGE_TAG,
+    SET_AUTH_EDITING,
     TOGGLE_STAGE_REVIEW_PANEL,
     SET_IMPORTED_JSON,
     SET_EDIT_FROM,
@@ -95,6 +96,9 @@ function getMapByKey (list, key) {
 }
 
 export default {
+    setAuthEditing ({ commit }, editing) {
+        commit(SET_AUTH_EDITING, editing)
+    },
     triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel, reviewParams, id, suggest }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`, { reviewParams, id, suggest })
     },
@@ -186,7 +190,7 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    
+
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
             const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
@@ -631,8 +635,8 @@ export default {
             document.body.removeChild(a)
         })
     },
-    reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
+    reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action, ruleIds }) => {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`, { ruleIds }).then(response => {
             return response.data
         })
     }

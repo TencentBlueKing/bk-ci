@@ -39,7 +39,8 @@ const store = new Vuex.Store({
             state.user = Object.assign({}, user)
         },
         setProjectInfo (state, projectInfo) {
-            state.projectId = projectInfo.projectCode
+            const projectId = `git_${projectInfo.id}`
+            state.projectId = projectId
             state.projectInfo = projectInfo
         },
         setProjectSetting (state, projectSetting) {

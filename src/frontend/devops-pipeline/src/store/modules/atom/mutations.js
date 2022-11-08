@@ -61,6 +61,7 @@ import {
     SET_ATOM_VERSION_LIST,
     SET_EXECUTE_STATUS,
     SET_SAVE_STATUS,
+    SET_AUTH_EDITING,
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_STAGE_REVIEW_PANEL,
     SET_IMPORTED_JSON,
@@ -82,6 +83,11 @@ import {
 import { hashID } from '@/utils/util'
 
 export default {
+    [SET_AUTH_EDITING]: (state, editing) => {
+        return Object.assign(state, {
+            authSettingEditing: editing
+        })
+    },
     [TOGGLE_STAGE_REVIEW_PANEL]: (state, { showStageReviewPanel, editingElementPos = null }) => {
         Object.assign(state, {
             showStageReviewPanel,

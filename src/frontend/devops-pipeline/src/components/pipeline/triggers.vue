@@ -130,7 +130,7 @@
                             name: this.pipelineId
                         }],
                         projectId: this.projectId
-                    }])
+                    }], this.getPermUrlByRole(this.projectId, this.pipeline, this.roleMap.executor))
                 }
             },
             /**

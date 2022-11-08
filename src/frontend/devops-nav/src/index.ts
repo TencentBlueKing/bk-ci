@@ -41,6 +41,12 @@ declare module 'vue/types/vue' {
         $bkInfo: any
         $showAskPermissionDialog: any
         iframeUtil: any
+        isExtendTx: boolean
+        $permissionActionMap: any
+        $permissionResourceMap: any
+        $permissionResourceTypeMap: any
+        tencentPermission: any
+        applyPermission: any
     }
 }
 
@@ -55,7 +61,7 @@ Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
 
 const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/))
-
+const isMooc = location.search.indexOf('isMooc') > -1
 // @ts-ignore
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.
@@ -80,10 +86,12 @@ router.beforeEach((to, from, next) => {
 })
 window.eventBus = eventBus
 window.vuexStore = store
+window.isMooc = isMooc
 Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.$localeList = localeList
+Vue.prototype.isExtendTx = VERSION_TYPE === 'tencent'
 Vue.prototype.$permissionActionMap = actionMap
 Vue.prototype.$permissionResourceMap = resourceMap
 Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
@@ -97,6 +105,10 @@ judgementLsVersion()
 
 Vue.mixin({
     methods: {
+        tencentPermission (url) {
+            const permUrl = this.isExtendTx ? url : PERM_URL_PREFIX
+            window.open(permUrl, '_blank')
+        },
         async applyPermission (actionId, resourceId, instanceId = []) {
             try {
                 const redirectUrl = await this.$store.dispatch('getPermRedirectUrl', [{
@@ -127,6 +139,9 @@ window.devops = new Vue({
     i18n,
     router,
     store,
+    provide: {
+        isMooc
+    },
     render (h) {
         return h(App)
     }

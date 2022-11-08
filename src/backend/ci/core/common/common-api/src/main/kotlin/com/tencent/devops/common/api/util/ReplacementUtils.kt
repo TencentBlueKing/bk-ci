@@ -27,9 +27,13 @@
 
 package com.tencent.devops.common.api.util
 
-import java.util.regex.Matcher
-import java.util.regex.Pattern
-
+/**
+ * 注意：这是腾讯特供版本，与开源版完全不一样，因被用户历史流水线绑架，用户会使用${{a}}的嵌套写法，问题有:
+ * 1、代码较恶心，变量名存在与{}混用情况。 比如 ${{sfsf} 变量名会是 {sfsf
+ *
+ * 2、 二次替换 只能 对应处理 一直是双括号或者一直是单括号 ，不支持两级变量单双括号混排
+ */
+@Suppress("MagicNumber")
 object ReplacementUtils {
 
     fun replace(command: String, replacement: KeyReplacement): String {
@@ -52,7 +56,10 @@ object ReplacementUtils {
             val template = if (line.trim().startsWith("#")) {
                 line
             } else {
-                parseTemplate(line, replacement, contextMap)
+                // 先处理${{}} 双花括号的情况
+                val lineTmp = parseWithDoubleCurlyBraces(line, replacement, contextMap)
+                // 再处理${} 单个花括号的情况
+                parseTemplate(lineTmp, replacement, contextMap)
             }
             sb.append(template)
             if (index != lines.size - 1) {
@@ -65,29 +72,147 @@ object ReplacementUtils {
     private fun parseTemplate(
         command: String,
         replacement: KeyReplacement,
-        contextMap: Map<String, String>?,
+        contextMap: Map<String, String>? = emptyMap(),
         depth: Int = 1
     ): String {
-        if (depth < 0) {
+        if (command.isBlank()) {
             return command
         }
-        val matcher = tPattern.matcher(command)
-        val buff = StringBuffer()
-        while (matcher.find()) {
-            val key = (matcher.group("single") ?: matcher.group("double")).trim()
-            var value = replacement.getReplacement(key) ?: contextMap?.get(key)
-            if (value == null) {
-                value = matcher.group()
+        val newValue = StringBuilder()
+        var index = 0
+        while (index < command.length) {
+            val c = command[index]
+            if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
+                val inside = StringBuilder()
+                index = parseVariable(command, index + 2, inside, replacement, contextMap, depth)
+                newValue.append(inside)
             } else {
-                if (depth > 0 && tPattern.matcher(value).find()) {
-                    value = parseTemplate(value, replacement, contextMap, depth = depth - 1)
-                }
+                newValue.append(c)
+                index++
             }
-            matcher.appendReplacement(buff, Matcher.quoteReplacement(value))
         }
-        matcher.appendTail(buff)
-        return buff.toString()
+        return newValue.toString()
     }
 
-    private val tPattern = Pattern.compile("(\\$[{](?<single>[^$^{}]+)})|(\\$[{]{2}(?<double>[^$^{}]+)[}]{2})")
+    private fun parseWithDoubleCurlyBraces(
+        command: String,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap(),
+        depth: Int = 1
+    ): String {
+        if (command.isBlank()) {
+            return command
+        }
+        val newValue = StringBuilder()
+        var index = 0
+        while (index < command.length) {
+            val c = command[index]
+            if (checkPrefix(c, index, command)) {
+                val inside = StringBuilder()
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement, contextMap, depth)
+                newValue.append(inside)
+            } else {
+                newValue.append(c)
+                index++
+            }
+        }
+        return newValue.toString()
+    }
+
+    @Suppress("NestedBlockDepth", "LongParameterList")
+    private fun parseVariable(
+        command: String,
+        start: Int,
+        newValue: StringBuilder,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap(),
+        depth: Int = 1
+    ): Int {
+        val token = StringBuilder()
+        var index = start
+        while (index < command.length) {
+            val c = command[index]
+            if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
+                val inside = StringBuilder()
+                index = parseVariable(command, index + 2, inside, replacement, contextMap, depth)
+                token.append(inside)
+            } else if (c == '}') {
+                var tokenValue: String? = getVariable(token.toString(), replacement, false)
+                if (tokenValue == "\${$token}") {
+                    tokenValue = contextMap?.get(token.toString())
+                }
+
+                if (tokenValue == null) {
+                    tokenValue = "\${$token}"
+                } else {
+                    // 去掉tokenValue.startsWith("\${")是考虑存在XXX_${{xxxx}}这种有前缀的情况
+                    if (depth > 0) {
+                        tokenValue = parseTemplate(tokenValue, replacement, contextMap, depth - 1)
+                    }
+                }
+                newValue.append(tokenValue)
+                return index + 1
+            } else {
+                token.append(c)
+                index++
+            }
+        }
+        newValue.append("\${").append(token)
+        return index
+    }
+
+    @Suppress("NestedBlockDepth", "LongParameterList")
+    private fun parseVariableWithDoubleCurlyBraces(
+        command: String,
+        start: Int,
+        newValue: StringBuilder,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap(),
+        depth: Int = 1
+    ): Int {
+        val token = StringBuilder()
+        var index = start
+
+        while (index < command.length) {
+            val c = command[index]
+            if (checkPrefix(c, index, command)) {
+                val inside = StringBuilder()
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement, contextMap, depth)
+                token.append(inside)
+            } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
+                val tokenStr = token.toString().trim()
+                var tokenValue: String? = getVariable(token.toString().trim(), replacement, true)
+                if (tokenValue == "\${{$tokenStr}}") {
+                    tokenValue = contextMap?.get(tokenStr)
+                }
+
+                if (tokenValue == null) {
+                    tokenValue = "\${{$token}}"
+                } else {
+                    // 去掉tokenValue.startsWith是考虑有xxx_${{xxx}前缀的情况
+                    if (depth > 0) {
+                        tokenValue = parseWithDoubleCurlyBraces(tokenValue, replacement, contextMap, depth - 1)
+                    }
+                }
+                newValue.append(tokenValue)
+                return index + 2
+            } else {
+                token.append(c)
+                index++
+            }
+        }
+        newValue.append("\${{").append(token)
+        return index
+    }
+
+    private fun checkPrefix(c: Char, index: Int, command: String) =
+        c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{'
+
+    private fun getVariable(key: String, replacement: KeyReplacement, doubleCurlyBraces: Boolean) =
+        replacement.getReplacement(key)
+            ?: if (doubleCurlyBraces) {
+                "\${{$key}}"
+            } else {
+                "\${$key}"
+            }
 }

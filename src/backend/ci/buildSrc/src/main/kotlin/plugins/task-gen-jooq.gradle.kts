@@ -25,7 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import nu.studer.gradle.jooq.JooqGenerate
-import org.gradle.api.tasks.compile.AbstractCompile
 
 plugins {
     id("nu.studer.jooq")
@@ -47,7 +46,10 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
         listOf("process", "project", "openapi")
     }
     "lambda" -> {
-        listOf("process", "project", "lambda")
+        listOf("process", "project", "lambda", "store")
+    }
+    "gitci" -> {
+        listOf("stream")
     }
     else -> listOf(moduleName)
 }
@@ -92,7 +94,7 @@ jooq {
                         }
 
                         if (mysqlURL == null) {
-                            println("use default properties.")
+                            println("use default mysql database.")
                             mysqlURL = project.extra["DB_HOST"]?.toString()
                             mysqlUser = project.extra["DB_USERNAME"]?.toString()
                             mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
@@ -127,7 +129,11 @@ jooq {
                         }
 
                         target.apply {
-                            packageName = "com.tencent.devops.model.$moduleName"
+                            if (packageName == "gitci") {
+                                packageName = "com.tencent.devops.model.gitci"
+                            } else {
+                                packageName = "com.tencent.devops.model.$moduleName"
+                            }
                         }
                     }
                 }

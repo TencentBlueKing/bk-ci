@@ -1,0 +1,112 @@
+#dispatchDevcloud Deployment
+{{ if .Values.dispatchDevcloud.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-dispatch-devcloud
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: dispatch-devcloud
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: dispatch-devcloud
+  {{- if not .Values.dispatchDevcloud.autoscaling.enabled }}
+  replicas: {{ .Values.dispatchDevcloud.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        {{- if .Values.dispatchDevcloud.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.dispatchDevcloud.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: dispatch-devcloud
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      {{- if .Values.dispatchDevcloud.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.dispatchDevcloud.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dispatchDevcloud.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.dispatchDevcloud.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.dispatchDevcloud.podAffinityPreset "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.dispatchDevcloud.podAntiAffinityPreset  "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.dispatchDevcloud.nodeAffinityPreset.type "key" .Values.dispatchDevcloud.nodeAffinityPreset.key "values" .Values.dispatchDevcloud.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.dispatchDevcloud.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.dispatchDevcloud.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dispatchDevcloud.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.dispatchDevcloud.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dispatchDevcloud.priorityClassName }}
+      priorityClassName: {{ .Values.dispatchDevcloud.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.dispatchDevcloud.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.dispatchDevcloud.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}        
+      containers:
+        - name: dispatch-devcloud
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.dispatchDevcloud.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.dispatchDevcloud.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.dispatchDevcloud.resources }}
+          resources: {{- toYaml .Values.dispatchDevcloud.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: dispatch-devcloud
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          workingDir: /data/workspace/dispatch-devcloud
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          volumeMounts:
+          - mountPath: /data/workspace/dispatch-devcloud/jvm
+            name: log-volume
+            subPathExpr: bkci/jvm/$(POD_NAME)
+      volumes:
+      - hostPath:
+          path: /data
+        name: log-volume
+{{- end -}}

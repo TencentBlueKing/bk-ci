@@ -18,6 +18,7 @@
  */
 
 import Vue from 'vue'
+import { SET_ENVIRONMENT_EXTENSIONS } from './constants'
 
 const prefix = 'environment/api'
 const vue = new Vue()
@@ -44,6 +45,14 @@ const actions = {
      */
     requestPermission ({ commit }, { projectId }) {
         return vue.$ajax.get(`${prefix}/user/environment/${projectId}/hasCreatePermission`).then(response => {
+            return response
+        })
+    },
+    /**
+     * Bcs镜像
+     */
+    requestImageList ({ commit }, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/cluster/${projectId}/getImageList`).then(response => {
             return response
         })
     },
@@ -120,10 +129,58 @@ const actions = {
         })
     },
     /**
+     * 创建节点
+     */
+    createNewNode ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/addBcsVmNodes`, params).then(response => {
+            return response
+        })
+    },
+    /**
      * 删除节点
      */
     toDeleteNode ({ commit }, { projectId, params }) {
         return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/deleteNodes`, params).then(response => {
+            return response
+        })
+    },
+    /**
+     * 修改节点导入人
+     */
+    changeCreatedUser ({ commit }, { projectId, nodeHashId }) {
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/${nodeHashId}/changeCreatedUser`).then(response => {
+            return response
+        })
+    },
+    /**
+     * CMDB节点列表
+     */
+    requestCmdbNode ({ commit }, { params }) {
+        return vue.$ajax.post(`${prefix}/user/envnode/listUserCmdbNodesNew?page=${params.page}&pageSize=${params.pageSize}&bakOperator=${params.bakOperator}`, params.ipList).then(response => {
+            return response
+        })
+    },
+    /**
+     * 导入CMDB节点
+     */
+    importCmdbNode ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/addCmdbNodes`, params).then(response => {
+            return response
+        })
+    },
+    /**
+     * CC节点列表
+     */
+    requestCcNode ({ commit }) {
+        return vue.$ajax.get(`${prefix}/user/envnode/listUserCcNodes`).then(response => {
+            return response
+        })
+    },
+    /**
+     * 导入CC节点
+     */
+    importCcNode ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/addCcNodes`, params).then(response => {
             return response
         })
     },
@@ -161,6 +218,11 @@ const actions = {
             return response
         })
     },
+    getVncToken ({ commit }, { projectId, nodeHashId }) {
+        return vue.$ajax.get(`${prefix}/user/tstack/${projectId}/nodes/${nodeHashId}/getVncToken`).then(response => {
+            return response
+        })
+    },
     /**
      * 获取网关列表
      */
@@ -177,6 +239,25 @@ const actions = {
             return response
         })
     },
+
+    /**
+     * 销毁DevCloud虚拟机
+     */
+    toDestoryNode ({ commit }, { projectId, nodeHashId }) {
+        return vue.$ajax.post(`${prefix}/user/devcloud/${projectId}/deleteDevCloudVm/${nodeHashId}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 制作镜像
+     */
+    createImage ({ commit }, { projectId, nodeHashId, params }) {
+        return vue.$ajax.post(`${prefix}/user/devcloud/${projectId}/createImage/${nodeHashId}`, params).then(response => {
+            return response
+        })
+    },
+
     /**
      * 获取节点详情
      */
@@ -267,6 +348,39 @@ const actions = {
         })
     },
 
+    async getEnvironmentExtensions ({ commit, rootState, dispatch, rootGetters }, { projectCode, hookIds }) {
+        try {
+            const serviceHooks = rootGetters.getServiceHooks(rootState.currentPage.id) || []
+            const hookKeyMap = serviceHooks.reduce((acc, hook) => {
+                acc[hook.itemId] = hook
+                return acc
+            }, {})
+            const res = await dispatch('fetchExtensionByHookId', {
+                projectCode,
+                itemIds: hookIds
+            }, { root: true })
+            let extensions = []
+            const extensionMap = res.reduce((extensionMap, ext) => {
+                const extServiceList = ext.extServiceList.map(item => ({
+                    ...hookKeyMap[ext.itemId],
+                    ...item
+                }))
+                extensionMap[ext.itemId] = [
+                    ...extServiceList
+                ]
+
+                extensions = [
+                    ...extensions,
+                    ...extServiceList
+                ]
+
+                return extensionMap
+            }, {})
+            commit(SET_ENVIRONMENT_EXTENSIONS, { extensionMap, extensions })
+        } catch (error) {
+            console.log(error)
+        }
+    },
     requestShareEnvProjectList (_, { projectId, envHashId, ...query }) {
         return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list`, {
             params: query

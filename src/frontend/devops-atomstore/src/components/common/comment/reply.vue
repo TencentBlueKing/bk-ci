@@ -6,12 +6,14 @@
         </h5>
         <p class="comment-content">{{comment.commentContent}}</p>
         <h5 class="comment-static">
-            <comment-rate :rate="comment.score" :width="11" :height="12" class="commet-rate" v-if="!isReply"></comment-rate>
+            <p class="comment-info">
+                <comment-rate :rate="comment.score" :width="11" :height="12" class="commet-rate" v-if="!isReply"></comment-rate>
+                <span class="comment-replay" @click="clickReply"> {{ $t('store.回复') }} <span v-if="+comment.replyCount">({{comment.replyCount}})</span>
+                </span>
+                <icon class="comment-praise" :style="{ 'fill': comment.praiseFlag ? '#979BA5' : 'none' }" name="praise" size="14" @click.native="priase" v-if="!isReply" />
+                <span v-if="!isReply">{{comment.praiseCount}}</span>
+            </p>
             <span>{{comment.updateTime|timeFilter}}</span>
-            <span class="comment-replay" @click="clickReply"> {{ $t('store.回复') }} <span v-if="+comment.replyCount">({{comment.replyCount}})</span>
-            </span>
-            <icon class="comment-praise" :style="{ 'fill': comment.praiseFlag ? '#979BA5' : 'none' }" name="praise" size="14" @click.native="priase" v-if="!isReply" />
-            <span v-if="!isReply">{{comment.praiseCount}}</span>
         </h5>
     </h3>
 </template>
@@ -48,12 +50,16 @@
                     expandReplys: {
                         atom: (id) => this.requestAtomReplyList(id),
                         template: (id) => this.requestTemplateReplyList(id),
-                        image: (id) => this.requestImageReplyList(id)
+                        ide: (id) => this.requestIDEReplyList(id),
+                        image: (id) => this.requestImageReplyList(id),
+                        service: (id) => this.requestServiceReplyList(id)
                     },
                     priase: {
                         atom: (id) => this.requestAtomPraiseComment(id),
                         template: (id) => this.requestTemplatePraiseComment(id),
-                        image: (id) => this.requestImagePraiseComment(id)
+                        ide: (id) => this.requestIDEPraiseComment(id),
+                        image: (id) => this.requestImagePraiseComment(id),
+                        service: (id) => this.requestServicePraiseComment(id)
                     }
                 },
                 hadShowMore: false
@@ -84,8 +90,12 @@
                 'requestAtomPraiseComment',
                 'requestTemplatePraiseComment',
                 'requestTemplateReplyList',
+                'requestIDEPraiseComment',
+                'requestIDEReplyList',
                 'requestImageReplyList',
                 'requestImagePraiseComment',
+                'requestServiceReplyList',
+                'requestServicePraiseComment',
                 'clearCommentReply'
             ]),
 
@@ -137,60 +147,73 @@
     @import '@/assets/scss/conf.scss';
 
     .comment-main {
-        margin-top: 22px;
+        margin-top: 35px;
+        padding-bottom: 8px;
         &.comment-reply {
             border-top: 1px solid $borderWeightColor;
-            margin-left: 59px;
-            margin-top: 9px;
-            padding: 10px 0 8px;
+            padding-top: 15px;
+            margin-left: 77px;
+            margin-top: 0px;
             &:last-child {
                 border-bottom: 1px solid $borderWeightColor;
+            }
+            .comment-photo {
+                height: 40px;
+                width: 40px;
+            }
+            .commenter-info, .comment-content, .comment-static {
+                margin-left: 52px;
             }
         }
         .comment-photo {
             float: left;
-            height: 42px;
-            width: 42px;
+            height: 60px;
+            width: 60px;
             border-radius: 100%;
         }
         .commenter-info {
-            margin-left: 59px;
+            margin-left: 77px;
             font-weight: normal;
             height: 16px;
             font-size: 12px;
-            color: $fontBlack;
+            color: $fontDarkBlack;
             line-height: 16px;
             span:nth-child(2) {
                 display: inline-block;
-                color: $fontGray;
+                color: #999999;
                 margin-left: 10px;
             }
         }
         .comment-content {
-            margin: 9px 0 7px 59px;
+            margin: 9px 0 7px 77px;
             font-size: 14px;
-            color: $fontWeightColor;
+            color: $fontDarkBlack;
             line-height: 19px;
+            min-height: 19px;
             font-weight: normal;
             word-wrap: break-word;
         }
         .comment-static {
-            margin-left: 59px;
+            margin-left: 77px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             height: 16px;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: normal;
-            color: $fontGray;
+            color: #999999;
             line-height:16px;
+            .comment-info {
+                display: flex;
+                align-items: center;
+            }
             .commet-rate {
-                margin-right: 19px;
+                margin-right: 23px;
             }
             .comment-replay {
                 cursor: pointer;
-                margin: 0 30px 0 27px;
+                margin-right: 23px;
                 height: 16px;
-                font-size: 12px;
                 color: $iconPrimaryColor;
                 line-height: 16px;
             }
