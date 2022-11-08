@@ -44,7 +44,7 @@
     "@blueking/babel-preset-bk": "^2.0.0",
     "@blueking/bkui-form": "0.0.15",
     "@blueking/log": "2.0.6",
-    "@tencent/bk-magic-vue": "^2.4.11",
+    "@tencent/bk-magic-vue": "2.4.11",
     "@vue/babel-preset-jsx": "^1.2.4",
     "@vue/composition-api": "^1.2.4",
     "acorn": "^6.0.5",
