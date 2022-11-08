@@ -109,7 +109,12 @@
                     <p v-else class="desc">{{props.row.duration}}</p>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('lastModify')" sortable="custom" prop="updater" sort />
+            <bk-table-column :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
+                <template slot-scope="props">
+                    <p>{{ props.row.updater }}</p>
+                    <p class="desc">{{props.row.updateDate}}</p>
+                </template>
+            </bk-table-column>
         </template>
         <bk-table-column v-if="!isPatchView" width="150" :label="$t('operate')" prop="pipelineId">
             <div class="pipeline-operation-cell" slot-scope="props">
@@ -275,7 +280,6 @@
                 this.$nextTick(this.requestList)
             },
             handleSort ({ prop, order }) {
-                console.log('sort change', prop, order)
                 Object.assign(this.sortField, {
                     order: prop ? ORDER_ENUM[order] : undefined,
                     prop: PIPELINE_SORT_FILED[prop]
@@ -295,6 +299,7 @@
                         ...this.filterParams,
                         ...query
                     })
+
                     Object.assign(this.pagination, {
                         count,
                         current: page

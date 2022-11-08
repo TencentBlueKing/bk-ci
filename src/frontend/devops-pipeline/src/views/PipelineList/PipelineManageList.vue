@@ -156,7 +156,7 @@
         },
         mixins: [piplineActionMixin],
         data () {
-            const { page, pageSize, sortType, ...restQuery } = this.$route.query
+            const { page, pageSize, sortType, collation, ...restQuery } = this.$route.query
             return {
                 layout: this.getLs('pipelineLayout') || TABLE_LAYOUT,
                 hasCreatePermission: false,

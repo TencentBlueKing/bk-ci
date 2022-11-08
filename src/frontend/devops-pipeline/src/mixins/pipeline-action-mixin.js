@@ -106,6 +106,7 @@ export default {
                     })
                     const pipelineList = records.map((item, index) => Object.assign(item, {
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
+                        updateDate: convertTime(item.updateTime),
                         duration: this.calcDuration(item),
                         progress: this.calcProgress(item),
                         pipelineActions: this.getPipelineActions(item, index),
