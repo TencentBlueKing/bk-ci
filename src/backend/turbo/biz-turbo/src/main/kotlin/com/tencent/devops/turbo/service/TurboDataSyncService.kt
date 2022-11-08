@@ -195,6 +195,15 @@ class TurboDataSyncService @Autowired constructor(
             return
         }
 
+        // --这里判断report状态status字段,finish才去查询统计信息,用于统计数据落地
+        if (turboRecordEntity.status == EnumDistccTaskStatus.FINISH.getTBSStatus()) {
+            rabbitTemplate.convertAndSend(
+                EXCHANGE_TURBO_WORK_STATS,
+                ROUTE_TURBO_WORK_STATS,
+                turboRecordEntity.tbsRecordId!!
+            )
+        }
+
         // 3.进行各个表的统计工作,如果状态为完成，则要统计时间(各个表的统计)
         // (1)完成编译加速实例的统计工作
         turboPlanInstanceService.updateStatInfo(

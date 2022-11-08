@@ -13,6 +13,11 @@ interface TurboRecordRepository : MongoRepository<TTurboRecordEntity, String> {
     fun existsByTbsRecordId(tbsRecordId: String): Boolean
 
     /**
+     * 根据tbs记录id查询
+     */
+    fun findByTbsRecordId(tbsRecordId: String): TTurboRecordEntity
+
+    /**
      * 查找状态不为特定值的记录
      */
     fun findByEngineCodeAndStatusNotIn(engineCode: String, status: Set<String>): List<TTurboRecordEntity>

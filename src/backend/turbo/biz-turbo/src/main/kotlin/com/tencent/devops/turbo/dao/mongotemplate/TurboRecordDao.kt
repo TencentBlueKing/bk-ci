@@ -287,4 +287,15 @@ class TurboRecordDao @Autowired constructor(
             .addCriteria(Criteria.where("created_date").ne(null))
         return mongoTemplate.find(query, TurboRecordRefreshModel::class.java, "t_turbo_report_entity")
     }
+
+    /**
+     * 更新record的场景标识
+     */
+    fun updateScene(turboRecordId: String, scene: String) {
+        val query = Query()
+        query.addCriteria(Criteria.where("tbs_record_id").`is`(turboRecordId))
+        val update = Update()
+        update.set("scene", scene)
+        mongoTemplate.updateFirst(query, update, TTurboRecordEntity::class.java)
+    }
 }

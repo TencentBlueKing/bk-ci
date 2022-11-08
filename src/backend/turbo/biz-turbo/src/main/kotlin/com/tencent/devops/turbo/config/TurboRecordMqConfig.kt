@@ -190,7 +190,7 @@ class TurboRecordMqConfig {
         container.setConcurrentConsumers(5)
         container.setMaxConcurrentConsumers(5)
         container.setAmqpAdmin(rabbitAdmin)
-        // 确保只有一个消费者消费，保证负载不超时
+
         val adapter = MessageListenerAdapter(turboRecordConsumer, turboRecordConsumer::syncTbsWorkStatData.name)
         adapter.setMessageConverter(messageConverter)
         container.setMessageListener(adapter)

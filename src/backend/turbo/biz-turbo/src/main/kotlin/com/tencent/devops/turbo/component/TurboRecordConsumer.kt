@@ -7,6 +7,7 @@ import com.tencent.devops.turbo.dto.TurboRecordCreateDto
 import com.tencent.devops.turbo.dto.TurboRecordPluginUpdateDto
 import com.tencent.devops.turbo.dto.TurboRecordUpdateDto
 import com.tencent.devops.turbo.enums.EnumDistccTaskStatus
+import com.tencent.devops.turbo.enums.EnumEngineScene
 import com.tencent.devops.turbo.model.TTurboEngineConfigEntity
 import com.tencent.devops.turbo.sdk.TBSSdkApi
 import com.tencent.devops.turbo.service.TurboDataSyncService
@@ -143,6 +144,10 @@ class TurboRecordConsumer @Autowired constructor(
     fun syncTbsWorkStatData(turboRecordId: String) {
         logger.info("sync TBS work stats data, turbo record id: $turboRecordId")
         try {
+            if (turboRecordId.startsWith(EnumEngineScene.DISTCC.regexStr())) {
+                turboRecordService.updateRecordScene(turboRecordId, EnumEngineScene.DISTCC)
+            }
+
             turboWorkDataService.syncTbsWorkStatData(
                 turboRecordId = turboRecordId
             )

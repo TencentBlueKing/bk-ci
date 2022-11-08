@@ -6,11 +6,13 @@ import com.tencent.devops.common.api.exception.TurboException
 import com.tencent.devops.common.api.exception.code.TURBO_THIRDPARTY_SYSTEM_FAIL
 import com.tencent.devops.common.api.util.OkhttpUtil
 import com.tencent.devops.common.util.JsonUtil
+import com.tencent.devops.turbo.dao.repository.TurboRecordRepository
 import com.tencent.devops.turbo.dao.repository.TurboWorkJobStatsDataRepository
 import com.tencent.devops.turbo.dao.repository.TurboWorkStatsRepository
 import com.tencent.devops.turbo.dto.DistccResponse
 import com.tencent.devops.turbo.dto.JobStatsDataDto
 import com.tencent.devops.turbo.dto.TurboWorkStatsDto
+import com.tencent.devops.turbo.enums.EnumEngineScene
 import com.tencent.devops.turbo.model.TTurboWorkJobStatsDataEntity
 import com.tencent.devops.turbo.model.TTurboWorkStatsEntity
 import org.slf4j.LoggerFactory
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service
 class TurboWorkStatService @Autowired constructor(
     private val turboWorkStatsRepository: TurboWorkStatsRepository,
     private val turboWorkJobStatsDataRepository: TurboWorkJobStatsDataRepository,
+    private val turboRecordRepository: TurboRecordRepository
 ) {
 
     companion object {
@@ -50,7 +53,7 @@ class TurboWorkStatService @Autowired constructor(
             JsonUtil.to(tbsWorkStatDataStr, object : TypeReference<DistccResponse<TurboWorkStatsDto>>() {})
         if (response.code != 0 || !response.result) {
             logger.warn("response not success: $response")
-            throw TurboException(errorCode = TURBO_THIRDPARTY_SYSTEM_FAIL, errorMessage = "fail to invoke request")
+            throw TurboException(errorCode = TURBO_THIRDPARTY_SYSTEM_FAIL, errorMessage = "fail to get response result")
         }
         return response.data
     }
@@ -86,11 +89,30 @@ class TurboWorkStatService @Autowired constructor(
         val jobStatsDataDtoList = JsonUtil.to(jobStatsDataStr, object : TypeReference<List<JobStatsDataDto>>() {})
         logger.info("jobStatsDataDtoList size: ${jobStatsDataDtoList.size}")
 
-        var isShaderWorker = false
+        // 只有ue4需要从originArgs查找关键字区分，cc可以直接赋值
+        var scene: String? = when (tTurboWorkStatsEntity.scene) {
+            EnumEngineScene.DISTTASKCC.regexStr() -> {
+                tTurboWorkStatsEntity.scene
+            }
+            EnumEngineScene.DISTCC.regexStr() -> {
+                tTurboWorkStatsEntity.scene
+            }
+            else -> {
+                null
+            }
+        }
 
         val jobStatsDataEntityList = jobStatsDataDtoList.map { item ->
-            if (!isShaderWorker && item.originArgs.any { it.contains("ShaderCompileWorker")}) {
-                isShaderWorker = true
+            if (null == scene) {
+                val originArgs = item.originArgs
+                when {
+                    originArgs.any { it.contains(EnumEngineScene.UE4SHADER.regexStr())} -> {
+                        scene = EnumEngineScene.UE4SHADER.name
+                    }
+                    originArgs.any { it.contains(EnumEngineScene.UE4COMPILE.regexStr())} -> {
+                        scene = EnumEngineScene.UE4COMPILE.name
+                    }
+                }
             }
             val tTurboWorkJobStatsDataEntity = TTurboWorkJobStatsDataEntity()
             BeanUtils.copyProperties(item, tTurboWorkJobStatsDataEntity)
@@ -103,8 +125,9 @@ class TurboWorkStatService @Autowired constructor(
         turboWorkJobStatsDataRepository.saveAll(jobStatsDataEntityList)
         logger.info("sync TBS work stats data success.")
 
-        if (isShaderWorker) {
-            logger.info("TODO")
-        }
+        val turboReportEntity = turboRecordRepository.findByTbsRecordId(tTurboWorkStatsEntity.taskId)
+        turboReportEntity.scene = scene
+        turboRecordRepository.save(turboReportEntity)
+        logger.info("update record scene success")
     }
 }

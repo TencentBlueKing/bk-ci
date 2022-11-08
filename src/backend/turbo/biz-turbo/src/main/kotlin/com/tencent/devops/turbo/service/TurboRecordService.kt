@@ -19,6 +19,7 @@ import com.tencent.devops.turbo.dao.repository.TurboRecordRepository
 import com.tencent.devops.turbo.dto.TurboRecordPluginUpdateDto
 import com.tencent.devops.turbo.dto.TurboRecordRefreshModel
 import com.tencent.devops.turbo.enums.EnumDistccTaskStatus
+import com.tencent.devops.turbo.enums.EnumEngineScene
 import com.tencent.devops.turbo.model.TTurboPlanEntity
 import com.tencent.devops.turbo.model.TTurboRecordEntity
 import com.tencent.devops.turbo.pojo.TurboRecordModel
@@ -491,5 +492,12 @@ class TurboRecordService @Autowired constructor(
      */
     fun findListByProjectId(projectId: String): List<TurboRecordRefreshModel>? {
         return turboRecordDao.findByProjectId(projectId)
+    }
+
+    /**
+     * 更新record的场景标识
+     */
+    fun updateRecordScene(turboRecordId: String, scene: EnumEngineScene) {
+        turboRecordDao.updateScene(turboRecordId, scene.name)
     }
 }

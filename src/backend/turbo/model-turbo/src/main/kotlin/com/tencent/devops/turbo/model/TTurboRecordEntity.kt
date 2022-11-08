@@ -94,6 +94,9 @@ data class TTurboRecordEntity(
 //    @Indexed(background = true)
     val executeNum: Int? = null,
 
+    @Field("scene")
+    var scene: String? = null,
+
     @Field("updated_by")
     var updatedBy: String,
     @Field("updated_date")
