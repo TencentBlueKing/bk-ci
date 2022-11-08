@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceOauthResource
@@ -63,7 +64,11 @@ class TXExternalStreamResourceImpl(
             if (gitProjectId != null) {
                 val projectId = GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
                 try {
-                    streamPermissionService.checkStreamAndOAuth(userId, projectId)
+                    streamPermissionService.checkStreamPermission(
+                        userId = userId,
+                        projectId = projectId,
+                        permission = AuthPermission.EDIT
+                    )
                 } catch (exception: Exception) {
                     return Response.status(Response.Status.FORBIDDEN).type(MediaType.APPLICATION_JSON_TYPE)
                         .entity(Result(status = 403, message = "授权人权限校验失败", data = exception.message)).build()
