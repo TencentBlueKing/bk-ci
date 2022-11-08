@@ -102,14 +102,14 @@
                     </div>
                 </div>
             </bk-table-column>
-            <bk-table-column width="150" :label="$t('lastExecTime')" prop="latestBuildStartDate" key="latestBuildStatus">
+            <bk-table-column width="250" :label="$t('lastExecTime')" prop="latestBuildStartDate" key="latestBuildStatus">
                 <template slot-scope="props">
                     <p>{{ props.row.latestBuildStartDate }}</p>
                     <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
                     <p v-else class="desc">{{props.row.duration}}</p>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
+            <bk-table-column width="250" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
                 <template slot-scope="props">
                     <p>{{ props.row.updater }}</p>
                     <p class="desc">{{props.row.updateDate}}</p>
