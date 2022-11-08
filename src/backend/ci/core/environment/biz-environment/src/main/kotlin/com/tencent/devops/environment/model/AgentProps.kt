@@ -1,7 +1,6 @@
 package com.tencent.devops.environment.model
 
 import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
-import io.swagger.annotations.ApiModelProperty
 
 /**
  * Agent 系统属性
