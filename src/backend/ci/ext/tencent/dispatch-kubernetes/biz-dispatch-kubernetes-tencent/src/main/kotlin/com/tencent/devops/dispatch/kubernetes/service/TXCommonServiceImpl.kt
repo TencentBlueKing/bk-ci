@@ -25,7 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch-kubernetes:biz-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+package com.tencent.devops.dispatch.kubernetes.service
+
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.net.URLEncoder
+
+@Service
+class TXCommonServiceImpl @Autowired constructor(
+    private val commonConfig: CommonConfig
+) : CommonService {
+    override fun getProxyUrl(realUrl: String): String {
+        return "${commonConfig.devopsIdcProxyGateway}/proxy-devnet?" +
+            "url=${URLEncoder.encode(realUrl, "UTF-8")}"
+    }
 }
