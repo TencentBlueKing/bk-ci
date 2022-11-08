@@ -25,21 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes
+package com.tencent.devops.dispatch.kubernetes.service
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.scheduling.annotation.EnableScheduling
+import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
+import org.springframework.stereotype.Service
 
-@MicroService
-@EnableScheduling
-@ComponentScan(
-    "com.tencent.devops.dispatch",
-    "com.tencent.devops.common.dispatch.sdk"
-)
-class DispatchKubernetesApplication
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(DispatchKubernetesApplication::class, args)
+@Service
+class CoreCommonService : CommonService {
+    override fun getProxyUrl(realUrl: String): String {
+        return realUrl
+    }
 }

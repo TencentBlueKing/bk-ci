@@ -14,6 +14,8 @@ dispatch:
   jobQuota:
     systemAlertReceiver:
     enable: false
+  # 默认的构建容器集群类型：VM, KUBERNETES, BCS
+  defaultDockerRoutingType: __BK_CI_DOCKER_ROUTING_TYPE__
 
 # kubernetes-dispatch集群配置
 kubernetes:

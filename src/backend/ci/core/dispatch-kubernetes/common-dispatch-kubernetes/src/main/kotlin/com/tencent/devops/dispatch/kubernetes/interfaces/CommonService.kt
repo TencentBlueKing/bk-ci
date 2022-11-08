@@ -25,21 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes
+package com.tencent.devops.dispatch.kubernetes.interfaces
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.scheduling.annotation.EnableScheduling
+/**
+ * 用来获取内外网不同逻辑实现的接口类
+ */
+interface CommonService {
 
-@MicroService
-@EnableScheduling
-@ComponentScan(
-    "com.tencent.devops.dispatch",
-    "com.tencent.devops.common.dispatch.sdk"
-)
-class DispatchKubernetesApplication
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(DispatchKubernetesApplication::class, args)
+    /**
+     * 获取代理url
+     * @param realUrl 真实跳转url
+     */
+    fun getProxyUrl(
+        realUrl: String
+    ): String
 }
