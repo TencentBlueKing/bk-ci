@@ -23,7 +23,7 @@ spec:
     app.kubernetes.io/name: kubernetes-manager
   ports:
     - name: http
-      port: 80
+      port: {{ .Values.service.port }}
       targetPort: 80
       protocol: TCP
   {{- else if eq .Values.service.serviceType "LoadBalancer" }}
@@ -34,7 +34,7 @@ spec:
     app.kubernetes.io/name: kubernetes-manager
   ports:
     - name: http
-      port: 80
+      port: {{ .Values.service.port }}
       targetPort: 80
       protocol: TCP
   {{- else }}
@@ -45,9 +45,9 @@ spec:
     app.kubernetes.io/name: kubernetes-manager
   ports:
     - name: http
-      port: 80
+      port: {{ .Values.service.port }}
       targetPort: 80
-      nodePort: 30004
+      nodePort: {{ .Values.service.nodePort }}
       protocol: TCP
   {{- end }}
 {{- end -}}
