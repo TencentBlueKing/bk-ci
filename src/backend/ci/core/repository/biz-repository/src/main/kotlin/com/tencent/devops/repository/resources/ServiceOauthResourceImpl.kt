@@ -66,4 +66,20 @@ class ServiceOauthResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getAuthUrl(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        gitProjectId: Long?
+    ): Result<String> {
+        return Result(
+            gitOauthService.getAuthUrl(
+                userId = userId,
+                redirectUrlType = redirectUrlType,
+                redirectUrl = redirectUrl,
+                gitProjectId = gitProjectId
+            )
+        )
+    }
 }

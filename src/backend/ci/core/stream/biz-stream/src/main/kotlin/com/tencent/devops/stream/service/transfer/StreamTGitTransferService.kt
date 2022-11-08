@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.service.transfer
 
+import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
@@ -68,6 +69,8 @@ class StreamTGitTransferService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamTGitTransferService::class.java)
+        private const val DEFAULT_PAGE = 1
+        private const val DEFAULT_PAGE_SIZE = 20
     }
 
     fun getAndCheckOauthToken(
@@ -183,8 +186,8 @@ class StreamTGitTransferService @Autowired constructor(
         return client.get(ServiceGitResource::class).getMembers(
             token = getAndCheckOauthToken(userId).accessToken,
             gitProjectId = gitProjectId,
-            page = page ?: 1,
-            pageSize = pageSize ?: 20,
+            page = page ?: DEFAULT_PAGE,
+            pageSize = pageSize ?: DEFAULT_PAGE_SIZE,
             search = search,
             tokenType = TokenTypeEnum.OAUTH
         ).data?.map {
@@ -200,15 +203,19 @@ class StreamTGitTransferService @Autowired constructor(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long?,
+        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
-        return client.get(ServiceOauthResource::class).isOAuth(
-            userId = userId,
-            redirectUrlType = redirectUrlType,
-            redirectUrl = redirectUrl,
-            gitProjectId = gitProjectId,
-            refreshToken = refreshToken
+        // 更改为每次都进行重定向授权
+        return Result(
+            AuthorizeResult(
+                HTTP_403, client.get(ServiceOauthResource::class).getAuthUrl(
+                    userId = userId,
+                    redirectUrlType = redirectUrlType,
+                    redirectUrl = redirectUrl,
+                    gitProjectId = gitProjectId
+                ).data!!
+            )
         )
     }
 
