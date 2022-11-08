@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.service.transfer
 
+import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
@@ -81,6 +82,8 @@ class StreamGithubTransferService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamGithubTransferService::class.java)
         private const val DEFAULT_GITHUB_PER_PAGE = 100
+        private const val DEFAULT_PAGE = 1
+        private const val DEFAULT_PAGE_SIZE = 30
     }
 
     // gitProjectId在github中必须为项目名字
@@ -164,7 +167,7 @@ class StreamGithubTransferService @Autowired constructor(
         minAccessLevel: GitAccessLevelEnum?
     ): List<StreamProjectGitInfo>? {
         // search  owned  minAccessLevel 参数暂时没使用
-        var githubPage = 1
+        var githubPage = DEFAULT_PAGE
         val repos = mutableListOf<StreamProjectGitInfo>()
         // github查询有权限列表不支持名称搜索，需要自实现搜索
         // TODO 目前先全部查出来然后再分页,后面需要改造
@@ -221,8 +224,8 @@ class StreamGithubTransferService @Autowired constructor(
     ): List<StreamGitMember> {
         val request = ListRepositoryCollaboratorsRequest(
             repoName = gitProjectId,
-            page = page ?: 1,
-            perPage = pageSize ?: 30
+            page = page ?: DEFAULT_PAGE,
+            perPage = pageSize ?: DEFAULT_PAGE_SIZE
         )
         return client.get(ServiceGithubRepositoryResource::class).listRepositoryCollaborators(
             request = request,
@@ -249,7 +252,7 @@ class StreamGithubTransferService @Autowired constructor(
             dslContext, gitProjectId, userId, userId
         )
         // github未实现 重定向授权逻辑，直接返回200
-        return Result(AuthorizeResult(200))
+        return Result(AuthorizeResult(HTTP_200))
     }
 
     override fun getCommits(
@@ -265,8 +268,8 @@ class StreamGithubTransferService @Autowired constructor(
         return client.get(ServiceGithubCommitsResource::class).listCommits(
             request = ListCommitRequest(
                 repoName = gitProjectId.toString(),
-                page = page ?: 1,
-                perPage = perPage ?: 30
+                page = page ?: DEFAULT_PAGE,
+                perPage = perPage ?: DEFAULT_PAGE_SIZE
             ),
             token = getAndCheckOauthToken(userId).accessToken
             // todo commit 信息严重不足
@@ -305,8 +308,8 @@ class StreamGithubTransferService @Autowired constructor(
         return client.get(ServiceGithubBranchResource::class).listBranch(
             request = ListBranchesRequest(
                 repoName = gitProjectId,
-                page = page ?: 1,
-                perPage = pageSize ?: 30
+                page = page ?: DEFAULT_PAGE,
+                perPage = pageSize ?: DEFAULT_PAGE_SIZE
             ),
             token = getAndCheckOauthToken(userId).accessToken
         ).data?.map { it.name }
