@@ -93,4 +93,22 @@ interface ServiceOauthResource {
         @QueryParam("refreshToken")
         refreshToken: Boolean? = false
     ): Result<AuthorizeResult>
+
+    @ApiOperation("获取oauth认证的重定向地址")
+    @GET
+    @Path("/getAuthUrl")
+    fun getAuthUrl(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("重定向url类型", required = false)
+        @QueryParam("redirectUrlType")
+        redirectUrlType: RedirectUrlTypeEnum?,
+        @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
+        @QueryParam("redirectUrl")
+        redirectUrl: String?,
+        @ApiParam(value = "工蜂项目Id", required = false)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long? = null
+    ): Result<String>
 }
