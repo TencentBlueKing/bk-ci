@@ -210,6 +210,7 @@ class StreamPipelineService @Autowired constructor(
         )
     }
 
+    @Suppress("ReturnCount")
     fun enablePipeline(
         userId: String,
         gitProjectId: Long,

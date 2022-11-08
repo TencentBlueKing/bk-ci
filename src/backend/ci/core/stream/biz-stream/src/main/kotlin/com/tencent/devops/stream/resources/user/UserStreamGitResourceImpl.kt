@@ -70,6 +70,8 @@ class UserStreamGitResourceImpl @Autowired constructor(
 ) : UserStreamGitResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserStreamGitResourceImpl::class.java)
+        private const val DEFAULT_PAGE = 1
+        private const val DEFAULT_PAGE_SIZE = 20
     }
 
     override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<StreamGitProjectInfoWithProject?> {
@@ -214,7 +216,10 @@ class UserStreamGitResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         return Result(
             streamHistoryService.getProjectLocalBranches(
-                projectId = gitProjectId, branchName = search, page = page ?: 1, pageSize = pageSize ?: 20
+                projectId = gitProjectId,
+                branchName = search,
+                page = page ?: DEFAULT_PAGE,
+                pageSize = pageSize ?: DEFAULT_PAGE_SIZE
             )
         )
     }
