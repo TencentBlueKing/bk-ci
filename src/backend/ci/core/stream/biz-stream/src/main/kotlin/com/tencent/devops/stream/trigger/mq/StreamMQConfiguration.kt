@@ -255,7 +255,7 @@ class StreamMQConfiguration {
     )
 
     // 每个实例都需要刷新自己维护的定时任务
-    @EventConsumer(MQ.QUEUE_STREAM_TIMER, STREAM_CONSUMER_GROUP, true)
+    @EventConsumer(MQ.EXCHANGE_STREAM_TIMER_CHANGE_FANOUT, STREAM_CONSUMER_GROUP, true)
     fun timerChangerListener(
         @Autowired buildListener: StreamTimerChangerListener
     ): Consumer<Message<StreamChangeEvent>> {
