@@ -285,7 +285,6 @@ object AtomReleaseTxtAnalysisUtil {
                 file.delete() // 删除临时文件
             }
         }
-        logger.info("releaseAtom unzipFile atomPath:$atomPath exists:${File(atomPath).exists()}")
         return atomPath
     }
 
