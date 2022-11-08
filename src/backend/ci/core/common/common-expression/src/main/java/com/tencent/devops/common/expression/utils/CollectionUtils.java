@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-@SuppressWarnings("ALL")
+@SuppressWarnings("all")
 public abstract class CollectionUtils {
     public static boolean isEmpty(@Nullable Collection<?> collection) {
         return (collection == null || collection.isEmpty());

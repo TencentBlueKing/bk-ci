@@ -18,7 +18,7 @@ package com.tencent.devops.common.expression.utils;
 
 import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings("ALL")
+@SuppressWarnings("all")
 public abstract class Assert {
 
     /**

@@ -70,7 +70,7 @@ import org.jetbrains.annotations.Nullable;
  * @author Vladislav Kisel
  * @since 16.07.2003
  */
-@SuppressWarnings("ALL")
+@SuppressWarnings("all")
 public class AntPathMatcher {
 
     /**

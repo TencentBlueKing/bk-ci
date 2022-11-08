@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
 
-@SuppressWarnings("ALL")
+@SuppressWarnings("all")
 public abstract class StringUtils {
     private static final String[] EMPTY_STRING_ARRAY = {};
 
