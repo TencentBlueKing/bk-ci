@@ -1,60 +1,69 @@
 <template>
     <aside v-bkloading="{ isLoading }" class="pipeline-group-aside">
-        <header class="pipeline-group-aside-header">
-            <div v-for="item in sumViews" :key="item.id" :class="{
-                'pipeline-group-item': true,
-                active: $route.params.viewId === item.id
-            }" @click="switchViewId(item.id)">
-                <logo class="pipeline-group-item-icon" size="12" :name="item.icon" />
-                <span class="pipeline-group-item-name">
-                    {{$t(item.name)}}
-                </span>
-                <span v-if="item.pipelineCount" class="pipeline-group-item-sum group-header-sum">{{item.pipelineCount}}</span>
-            </div>
-        </header>
-        <article class="pipeline-group-container">
-            <div class="pipeline-group-classify-block" v-for="block in pipelineGroupTree" :key="block.title">
-                <h3 @click="toggle(block.id)" class="pipeline-group-classify-header">
-                    <i :class="['devops-icon', 'pipeline-group-item-icon', {
-                        'icon-down-shape': block.show,
-                        'icon-right-shape': !block.show
-                    }]" />
-                    {{block.title}}
-                </h3>
-                <div
-                    :class="{
-                        'pipeline-group-item': true,
-                        'sticky-top': item.top,
-                        active: $route.params.viewId === item.id
-                    }"
-                    v-if="block.show"
-                    v-for="item in block.children"
-                    :key="item.id"
-                    @click="switchViewId(item.id)"
-                >
+        <div class="pipeline-group-aside-main">
+            <header class="pipeline-group-aside-header">
+                <div v-for="item in sumViews" :key="item.id" :class="{
+                    'pipeline-group-item': true,
+                    active: $route.params.viewId === item.id
+                }" @click="switchViewId(item.id)">
+                    <logo class="pipeline-group-item-icon" size="12" :name="item.icon" />
+                    <span class="pipeline-group-item-name">
+                        {{$t(item.name)}}
+                    </span>
+                    <span v-if="item.pipelineCount" class="pipeline-group-item-sum group-header-sum">{{item.pipelineCount}}</span>
 
-                    <i v-if="item.icon" size="12" :class="`pipeline-group-item-icon devops-icon icon-${item.icon}`" />
-                    <bk-input
-                        v-if="item.id === editingGroupId"
-                        v-bk-focus="1"
-                        :disabled="renaming"
-                        @blur="submitRename(item)"
-                        v-model="newViewName"
-                    />
-                    <span v-else class="pipeline-group-item-name">
-                        {{item.name}}
-                    </span>
-                    <span class="pipeline-group-item-sum">{{item.pipelineCount}}</span>
-                    <span @click.stop>
-                        <ext-menu :class="{ hidden: item.actions.length <= 0 }" :data="item" :config="item.actions"></ext-menu>
-                    </span>
                 </div>
-            </div>
-        </article>
-        <footer class="add-pipeline-group-footer">
-            <bk-button text theme="primary" icon="plus" @click="showAddPipelineGroupDialog">
-                {{$t('addPipelineGroup')}}
-            </bk-button>
+            </header>
+            <article class="pipeline-group-container">
+                <div class="pipeline-group-classify-block" v-for="block in pipelineGroupTree" :key="block.title">
+                    <h3 @click="toggle(block.id)" class="pipeline-group-classify-header">
+                        <i :class="['devops-icon', 'pipeline-group-item-icon', {
+                            'icon-down-shape': block.show,
+                            'icon-right-shape': !block.show
+                        }]"
+                        />
+                        <span class="pipeline-group-header-name">{{block.title}}</span>
+                        <bk-button text theme="primary" class="add-pipeline-group-btn" @click.stop="showAddPipelineGroupDialog(block.projected)">
+                            <logo name="increase" size="16"></logo>
+                        </bk-button>
+                    </h3>
+                    <div
+                        :class="{
+                            'pipeline-group-item': true,
+                            'sticky-top': item.top,
+                            active: $route.params.viewId === item.id
+                        }"
+                        v-if="block.show"
+                        v-for="item in block.children"
+                        :key="item.id"
+                        @click="switchViewId(item.id)"
+                    >
+
+                        <logo v-if="item.icon" size="12" class="pipeline-group-item-icon" :name="item.icon" />
+                        <bk-input
+                            v-if="item.id === editingGroupId"
+                            v-bk-focus="1"
+                            :disabled="renaming"
+                            @blur="submitRename(item)"
+                            @enter="submitRename(item)"
+                            v-model="newViewName"
+                        />
+                        <span v-else class="pipeline-group-item-name">
+                            {{item.name}}
+                        </span>
+                        <span class="pipeline-group-item-sum">{{item.pipelineCount}}</span>
+                        <span @click.stop>
+                            <ext-menu :class="{ hidden: item.actions.length <= 0 }" :data="item" :config="item.actions"></ext-menu>
+                        </span>
+                    </div>
+                </div>
+            </article>
+        </div>
+        <footer :class="['recycle-pipeline-group-footer', {
+            active: $route.params.viewId === DELETED_VIEW_ID
+        }]" @click="goRecycleBin">
+            <logo class="pipeline-group-item-icon" name="delete" size="16"></logo>
+            <span>{{$t('restore.recycleBin')}}</span>
         </footer>
         <bk-dialog
             v-model="isAddPipelineGroupDialogShow"
@@ -88,7 +97,7 @@
                 </bk-button>
             </footer>
         </bk-dialog>
-        <pipeline-group-edit-dialog @close="handleCloseEditCount" @done="refreshList" :group="activeGroup" />
+
     </aside>
 
 </template>
@@ -97,24 +106,21 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import {
         PROCESS_API_URL_PREFIX,
-        ALL_PIPELINE_VIEW_ID,
-        DELETED_VIEW_ID
+        DELETED_VIEW_ID,
+        UNCLASSIFIED_PIPELINE_VIEW_ID
     } from '@/store/constants'
     import { cacheViewId } from '@/utils/util'
-    import { bus, ADD_TO_PIPELINE_GROUP, REFRESH_PIPELINE_LIST } from '@/utils/bus'
+    import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
-    import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
 
     export default {
         components: {
             Logo,
-            ExtMenu,
-            PipelineGroupEditDialog
+            ExtMenu
         },
         data () {
             return {
-                ALL_PIPELINE_VIEW_ID,
                 DELETED_VIEW_ID,
                 isLoading: false,
                 isPatchOperate: false,
@@ -133,7 +139,6 @@
                     name: '',
                     projected: false
                 },
-                activeGroup: null,
                 isSticking: false,
                 isDeleting: false
             }
@@ -145,15 +150,9 @@
             ...mapGetters('pipelines', [
                 'pipelineGroupDict',
                 'groupMap',
-                'fixedGroupIdSet'
+                'fixedGroupIdSet',
+                'groupNamesMap'
             ]),
-            groupNamesMap () {
-                return Object.keys(this.groupMap).reduce((acc, id) => {
-                    const item = this.groupMap[id]
-                    acc[item.name] = item.projected
-                    return acc
-                }, {})
-            },
             groupNameRules () {
                 return [{
                     validator: this.checkGroupNameValid,
@@ -172,6 +171,7 @@
                     show: this.showClassify.personalViewList,
                     children: this.pipelineGroupDict.personalViewList.map((view) => ({
                         ...view,
+                        icon: 'pipelineGroup',
                         name: view.i18nKey ? this.$t(view.i18nKey) : view.name,
                         actions: this.pipelineGroupActions(view)
                     }))
@@ -179,8 +179,10 @@
                     title: `${this.$t('projectViewList')}(${this.pipelineGroupDict.projectViewList.length})`,
                     id: 'projectViewList',
                     show: this.showClassify.projectViewList,
+                    projected: true,
                     children: this.pipelineGroupDict.projectViewList.map((view) => ({
                         ...view,
+                        icon: view.id === UNCLASSIFIED_PIPELINE_VIEW_ID ? 'unGroup' : 'pipelineGroup',
                         actions: this.pipelineGroupActions(view)
                     }))
                 }]
@@ -210,7 +212,10 @@
                 'toggleStickyTop'
             ]),
             checkGroupNameValid (name) {
-                return this.newPipelineGroup.projected !== this.groupNamesMap[name]
+                return this.newPipelineGroup.projected !== this.groupNamesMap[name]?.projected
+            },
+            goRecycleBin () {
+                this.switchViewId(DELETED_VIEW_ID)
             },
             async refreshPipelineGroup () {
                 this.isLoading = true
@@ -228,10 +233,6 @@
                             this.editingGroupId = group.id
                             this.newViewName = group.name
                         }
-                    },
-                    {
-                        text: this.$t('pipelineCountEdit'),
-                        handler: () => this.handleAddToGroup(group.id)
                     },
                     // {
                     //     text: this.$t('pipelineGroupAuth'),
@@ -265,12 +266,6 @@
                         }
                     }
                 ]
-            },
-            handleAddToGroup (groupId) {
-                const group = this.groupMap[groupId]
-                if (group) {
-                    this.activeGroup = group
-                }
             },
             toggle (id) {
                 this.showClassify[id] = !this.showClassify[id]
@@ -352,11 +347,9 @@
                     })
                 }
             },
-            handleCloseEditCount () {
-                this.activeGroup = null
-            },
-            showAddPipelineGroupDialog () {
+            showAddPipelineGroupDialog (isProjected = false) {
                 this.isAddPipelineGroupDialogShow = true
+                this.newPipelineGroup.projected = isProjected
                 this.checkHasProjectedGroupPermission()
             },
             closeAddPipelineGroupDialog () {
@@ -418,9 +411,6 @@
                         theme
                     })
                 }
-            },
-            refreshList () {
-                bus.$emit(REFRESH_PIPELINE_LIST)
             }
         }
     }
@@ -436,17 +426,25 @@
         flex-direction: column;
         width: 280px;
         background: white;
-        padding: 16px 16px 0 16px;
+        padding: 16px 0 0 0;
         border-right: 1px solid #DCDEE5;
         .pipeline-group-item-icon {
             display: inline-flex;
             margin-right: 10px;
             color: #C4C6CC;
+
         }
         .pipeline-group-aside-header {
-            padding: 0 0 16px 0;
+
             border-bottom: 1px solid #DCDEE5;
             box-sizing: content-box;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: white;
+            >.pipeline-group-item {
+                padding-right: 38px;
+            }
         }
 
         .pipeline-group-classify-block {
@@ -459,33 +457,57 @@
         .pipeline-group-classify-header {
             display: flex;
             align-items: center;
-            height: 20px;
-            margin-bottom: 8px;
+            height: 40px;
+            padding: 0 16px;
             font-size: 14px;
             font-weight: normal;
             color: #979BA5;
+            position: sticky;
+            margin: 0;
+            background: white;
+            top: 40px;
+            z-index: 1;
+            .pipeline-group-header-name {
+                flex: 1;
+            }
+            .add-pipeline-group-btn {
+                display: flex;
+                align-items: center;
+                font-size: 0;
+            }
         }
-        .pipeline-group-container {
+        .pipeline-group-aside-main {
             flex: 1;
+            display: flex;
+            flex-direction: column;
             overflow: auto;
         }
-        .add-pipeline-group-footer {
+        .recycle-pipeline-group-footer {
             display: flex;
             align-items: center;
-            justify-content: center;
             height: 52px;
             border-top: 1px solid #DCDEE5;
+            padding: 0 0 0 32px;
+            cursor: pointer;
+            font-size: 14px;
+            &:hover,
+            &.active {
+                color: $primaryColor;
+                .pipeline-group-item-icon {
+                    color: $primaryColor;
+                }
+            }
         }
         .pipeline-group-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
             height: 40px;
-            padding: 0 16px;
+            padding: 0 16px 0 32px;
             font-size: 14px;
             cursor: pointer;
             &.-header {
-                padding-bottom: 16px;
+                padding: 0 16px 16px 16px;
                 margin-bottom: 16px;
                 border-bottom: 1px solid #EAEBF0;
             }
@@ -502,9 +524,6 @@
                 text-align: center;
                 margin: 0 6px;
                 color: #979BA5;
-                &.group-header-sum {
-                    // margin-right: 28px;
-                }
             }
 
             &.sticky-top {
@@ -514,9 +533,13 @@
             &:hover,
             &.active {
                 background: #E1ECFF;
-                color: $primaryColor;
-                .pipeline-group-item-icon {
+                .pipeline-group-item-icon,
+                .pipeline-group-item-sum,
+                .pipeline-group-item-name {
                     color: $primaryColor;
+                }
+                .pipeline-group-item-sum {
+                    background: white;
                 }
             }
 

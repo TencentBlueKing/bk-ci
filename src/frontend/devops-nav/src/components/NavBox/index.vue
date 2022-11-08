@@ -69,6 +69,7 @@
     import { Component, Prop } from 'vue-property-decorator'
     import { urlJoin, getServiceAliasByPath, isAbsoluteUrl } from '../../utils/util'
     import eventBus from '../../utils/eventBus'
+    import { ObjectMap } from '../../typings/type'
 
     @Component
     export default class NavBox extends Vue {

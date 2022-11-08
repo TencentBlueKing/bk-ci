@@ -100,7 +100,6 @@
             },
             togglePatchAddTo () {
                 if (this.addToDialogShow) {
-                    console.log(this.$refs.pipelineTable?.clearSelection)
                     this.$refs.pipelineTable?.clearSelection?.()
                 }
                 this.addToDialogShow = !this.addToDialogShow

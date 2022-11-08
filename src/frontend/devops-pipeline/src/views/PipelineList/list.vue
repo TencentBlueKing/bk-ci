@@ -43,21 +43,22 @@
                 margin: 0 0 16px 0;
                 color: #313238;
                 font-weight: normal;
+                > :first-child {
+                    margin: 0 8px 0 0;
+                }
                 > span {
                     font-weight: bold;
-                    margin-left: 8px;
+
                 }
             }
             .pipeline-list-main-header {
                 display: flex;
                 justify-content: space-between;
                 margin-bottom: 16px;
-                .pipeline-list-main-header-left-area {
-                    width: 300px
-                }
                 .pipeline-list-main-header-right-area {
                     flex: 1;
                     display: flex;
+                    margin-left: 100px;
                     .search-pipeline-input {
                         flex: 1;
                         background: white;

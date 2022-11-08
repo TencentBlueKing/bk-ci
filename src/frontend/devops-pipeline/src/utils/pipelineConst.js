@@ -104,5 +104,6 @@ export const PIPELINE_SORT_FILED = {
     pipelineName: 'NAME',
     createTime: 'CREATE_TIME',
     latestBuildStartDate: 'LAST_EXEC_TIME',
-    updateTime: 'UPDATE_TIME'
+    updateTime: 'UPDATE_TIME',
+    updater: 'UPDATER'
 }

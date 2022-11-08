@@ -7,7 +7,7 @@
         <template v-else>
 
             <h5 class="current-pipeline-group-name">
-                <bk-tag v-if="pipelineGroupType" type="stroke">{{ pipelineGroupType }}</bk-tag>
+                <bk-tag v-bk-tooltips="pipelineGroupType.tips" v-if="pipelineGroupType" type="stroke">{{ pipelineGroupType.label }}</bk-tag>
                 <span>{{currentViewName}}</span>
             </h5>
             <header class="pipeline-list-main-header">
@@ -22,6 +22,7 @@
                             </li>
                         </ul>
                     </bk-dropdown-menu>
+                    <bk-button v-if="pipelineGroupType" @click="handleAddToGroup">{{$t('pipelineCountEdit')}}</bk-button>
                     <bk-button @click="goPatchManage">{{$t('patchManage')}}</bk-button>
                 </div>
                 <div class="pipeline-list-main-header-right-area">
@@ -112,6 +113,7 @@
         <import-pipeline-popup
             :is-show.sync="importPipelinePopupShow"
         />
+        <pipeline-group-edit-dialog @close="handleCloseEditCount" @done="refresh" :group="activeGroup" />
     </main>
 </template>
 <script>
@@ -126,6 +128,8 @@
     import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
     import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
+    import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
+
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import Logo from '@/components/Logo'
     import { PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
@@ -133,7 +137,6 @@
     import {
         ALL_PIPELINE_VIEW_ID
     } from '@/store/constants'
-    import { bus, REFRESH_PIPELINE_LIST } from '@/utils/bus'
 
     const TABLE_LAYOUT = 'table'
     const CARD_LAYOUT = 'card'
@@ -148,7 +151,8 @@
             PipelineTableView,
             PipelineSearcher,
             PipelineTemplatePopup,
-            ImportPipelinePopup
+            ImportPipelinePopup,
+            PipelineGroupEditDialog
         },
         mixins: [piplineActionMixin],
         data () {
@@ -160,6 +164,7 @@
                 filters: restQuery,
                 templatePopupShow: false,
                 importPipelinePopupShow: false,
+                activeGroup: null,
                 newPipelineDropdown: [{
                     text: this.$t('newPipelineFromTemplateLabel'),
                     action: this.toggleTemplatePopup
@@ -173,6 +178,9 @@
             ...mapState('pipelines', [
                 'pipelineActionState'
             ]),
+            isAllPipelineView () {
+                return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
+            },
             isTableLayout () {
                 return this.isDeleteView || this.layout === TABLE_LAYOUT
             },
@@ -186,9 +194,18 @@
                 return this.currentGroup?.i18nKey ? this.$t(this.currentGroup.i18nKey) : (this.currentGroup?.name ?? '')
             },
             pipelineGroupType () {
-                const typeAlias = ['', 'dynamic', 'static']
-                return this.$t(typeAlias[this.currentGroup?.viewType ?? 0])
+                if (this.currentGroup?.viewType > 0) {
+                    const typeAlias = ['', 'dynamic', 'static']
+                    const tips = this.currentGroup?.viewType === 1 ? 'dynamicGroupTips' : 'staticGroupTips'
+
+                    return {
+                        label: this.$t(typeAlias[this.currentGroup?.viewType ?? 0]),
+                        tips: this.$t(tips)
+                    }
+                }
+                return null
             },
+
             sortList () {
                 return [
                     {
@@ -212,7 +229,7 @@
             '$route.params.projectId': function () {
                 this.filters = []
                 this.$nextTick(() => {
-                    if (this.$route.params.viewId !== ALL_PIPELINE_VIEW_ID) {
+                    if (!this.isAllPipelineView) {
                         this.goList()
                     } else {
                         this.refresh()
@@ -231,13 +248,10 @@
 
         mounted () {
             webSocketMessage.installWsMessage(this.$refs.pipelineBox?.updatePipelineStatus)
-            bus.$off(REFRESH_PIPELINE_LIST, this.refresh)
-            bus.$on(REFRESH_PIPELINE_LIST, this.refresh)
         },
 
         beforeDestroy () {
             webSocketMessage.unInstallWsMessage()
-            bus.$off(REFRESH_PIPELINE_LIST, this.refresh)
         },
 
         methods: {
@@ -280,6 +294,15 @@
                 } else {
                     this.templatePopupShow = !this.templatePopupShow
                 }
+            },
+            handleAddToGroup () {
+                if (this.currentGroup) {
+                    this.activeGroup = this.currentGroup
+                }
+            },
+
+            handleCloseEditCount () {
+                this.activeGroup = null
             },
 
             toggleImportPipelinePopup () {

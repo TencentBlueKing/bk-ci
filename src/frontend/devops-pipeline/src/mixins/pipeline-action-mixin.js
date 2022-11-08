@@ -18,10 +18,9 @@
  */
 
 import { mapActions, mapMutations, mapGetters } from 'vuex'
-import moment from 'moment'
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
-import { navConfirm, convertMStoStringByRule } from '@/utils/util'
+import { navConfirm, convertMStoStringByRule, convertTime } from '@/utils/util'
 import { bus } from '@/utils/bus'
 
 import {
@@ -56,7 +55,6 @@ export default {
         }
     },
     created () {
-        moment.locale(this.$i18n.locale)
         this.checkHasTemplatePermission()
     },
     methods: {
@@ -148,11 +146,14 @@ export default {
             }
         },
         getLatestBuildFromNow (latestBuildStartTime) {
-            return latestBuildStartTime ? moment(latestBuildStartTime).fromNow() : '--'
+            return latestBuildStartTime ? convertTime(latestBuildStartTime) : '--'
         },
-        calcDuration ({ latestBuildEndTime, latestBuildStartTime }) {
-            const duration = convertMStoStringByRule(latestBuildEndTime - latestBuildStartTime)
-            return `${this.$t('history.tableMap.totalTime')}${duration}`
+        calcDuration ({ latestBuildEndTime, latestBuildStartTime, latestBuildNum }) {
+            if (latestBuildNum) {
+                const duration = convertMStoStringByRule(latestBuildEndTime - latestBuildStartTime)
+                return `${this.$t('history.tableMap.totalTime')}${duration}`
+            }
+            return '--'
         },
         calcProgress ({ latestBuildStatus, lastBuildFinishCount = 0, lastBuildTotalCount = 1, currentTimestamp, latestBuildStartTime }) {
             if (latestBuildStatus === statusAlias.RUNNING) {

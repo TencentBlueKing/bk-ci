@@ -6,7 +6,6 @@
         :title="title"
         header-position="left"
         :draggable="false"
-        :loading="isBusy"
         @cancel="handleClose"
         @confirm="handleSubmit"
     >
@@ -119,6 +118,7 @@
                 return this.type === 'delete'
             },
             title () {
+                console.log('sdfafdsa')
                 return this.isRemoveType ? this.$t('removeFrom') : ''
             },
             hasPermissionPipelines () {

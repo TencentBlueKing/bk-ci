@@ -3,6 +3,7 @@
         :value="isShow"
         width="960"
         ext-cls="pipeline-group-edit-dialog"
+        scrollable
         :quick-close="false"
         :close-icon="false"
         :draggable="false"
@@ -13,8 +14,11 @@
                 <div class="group-form-item">
                     <label class="group-form-label">{{$t('groupStrategy')}}</label>
                     <bk-radio-group class="group-form-radio-group" v-model="model.viewType" @change="handleViewTypeChange">
-                        <bk-radio :value="2">{{$t('staticGroup')}}</bk-radio>
-                        <bk-radio :value="1">{{$t('dynamicGroup')}}</bk-radio>
+                        <bk-radio v-for="strategy in groupStrategy" :value="strategy.value" :key="strategy.value">
+                            <span v-bk-tooltips="strategy.tooltips" class="group-strategy-radio">
+                                {{strategy.label}}
+                            </span>
+                        </bk-radio>
                     </bk-radio-group>
                 </div>
                 <article>
@@ -103,25 +107,21 @@
                                 :data="pipleinGroupTree"
                                 node-key="id"
                                 :default-expanded-nodes="defaultExpandedNodes"
+                                show
                                 :show-icon="false"
                             >
-                                <div class="pipeline-group-tree-node" slot-scope="{ node, data }">
-                                    <span @click.stop>
-                                        <bk-checkbox
-                                            v-if="Array.isArray(data.children)"
-                                            v-bind="parentCheckStatusMap[data.id]"
-                                            @change="(checked) => handleRootCheck(checked, data)"
-                                        />
-                                        <bk-checkbox
-                                            v-else
-                                            :value="model.pipelineIds.has(data.id)"
-                                            :class="{
-                                                'last-checked': savedPipelineInfos.has(data.id)
-                                            }"
-                                            @change="(checked) => handleCheck(checked, data)"
-                                        />
-                                    </span>
-                                    <span class="pipeline-group-tree-node-name">{{data.name}}</span>
+                                <div @click.stop class="pipeline-group-tree-node" slot-scope="{ node, data }">
+                                    <bk-checkbox
+                                        v-bind="isChecked(data.id)"
+                                        :class="{
+                                            'pipeline-group-tree-node-checkbox': true,
+                                            'last-checked': savedPipelineInfos.has(data.id)
+                                        }"
+                                        @change="(checked) => data.hasChild ? handleRootCheck(checked, data) : handleCheck(checked, data)"
+                                    >
+                                        {{data.name}}
+                                    </bk-checkbox>
+                                    <span v-if="data.hasChild">（{{ data.children.length }}）</span>
                                 </div>
                             </bk-big-tree>
                         </div>
@@ -365,6 +365,19 @@
             },
             totalPreviewCount () {
                 return this.preAddedPipelineList.length - this.preview.removedPipelineInfos.length
+            },
+            groupStrategy () {
+                return [
+                    {
+                        value: 1,
+                        label: this.$t('dynamicGroup'),
+                        tooltips: this.$t('dynamicGroupTips')
+                    }, {
+                        value: 2,
+                        label: this.$t('staticGroup'),
+                        tooltips: this.$t('staticGroupTips')
+                    }
+                ]
             }
         },
         watch: {
@@ -391,6 +404,11 @@
                 'updatePipelineGroup',
                 'previewGroupResult'
             ]),
+            isChecked (id) {
+                return this.parentCheckStatusMap[id] ?? {
+                    checked: this.model.pipelineIds.has(id)
+                }
+            },
             getDynamicFilterConf (id, row) {
                 let property = 'labelIds'
                 let message = 'view.labelTips'
@@ -472,6 +490,7 @@
                     return {
                         id: groupItem.viewId,
                         name: groupItem.viewName,
+                        hasChild: true,
                         children: groupItem.pipelineList
                             .filter(pipeline => !pipeline.delete || pipeline.viewId === group.id)
                             .map(pipeline => ({
@@ -763,11 +782,13 @@
                     .pipeline-group-tree {
                         overflow: auto;
                         flex: 1;
+                        padding-right: 20px;
                         .pipeline-group-tree-node {
                             display: flex;
                             align-items: center;
-                            justify-content: space-between;
+
                             font-size: 12px;
+                            height: 32px;
                             // TODO: ugly overwrite
                             .last-checked.is-checked {
                                 .bk-checkbox {
@@ -775,10 +796,12 @@
                                     background-color: #8F9DF6;
                                 }
                             }
-                            .pipeline-group-tree-node-name {
-                                padding-left: 8px;
-                                flex: 1;
-                                @include ellipsis();
+                            .pipeline-group-tree-node-checkbox {
+                                display: inline-flex;
+                                .bk-checkbox-text {
+                                    @include ellipsis();
+                                    flex: 1;
+                                }
                             }
                             .pipeline-group-tree-node-added {
                                 color: #C4C6CC;
@@ -873,6 +896,9 @@
                 .group-form-radio-group {
                     > :first-child {
                         margin-right: 60px;
+                    }
+                    .group-strategy-radio {
+                        border-bottom: 1px dashed;
                     }
                 }
             }

@@ -13,9 +13,7 @@
                 <header>
                     {{ title }}
                 </header>
-                <p>
-                    {{ groupTitle }}
-                </p>
+                <p v-html="groupTitle"></p>
                 <bk-input
                     :placeholder="$t('searchPipelineGroup')"
                     v-model="filterKeyword"
@@ -30,17 +28,20 @@
                     default-expand-all
                     class="add-to-pipeline-group-list"
                 >
-                    <div class="add-to-pipeline-group-tree-node" slot-scope="{ node, data }">
-                        <span @click.stop>
-                            <bk-checkbox
-                                :disabled="savedPipelineGroupMap[data.id]"
-                                :value="isChecked(data)"
-                                :indeterminate="isIndeterminate(data)"
-                                @change="(checked) => handleChecked(checked, data)"
-                            />
+                    <div @click.stop class="add-to-pipeline-group-tree-node" slot-scope="{ node, data }">
+                        <bk-checkbox
+                            ext-cls="add-to-pipeline-checkbox"
+                            :disabled="data.disabled"
+                            :value="isChecked(data)"
+                            :indeterminate="isIndeterminate(data)"
+                            @change="(checked) => handleChecked(checked, data)"
+                        >
+                            {{data.name}}
+                        </bk-checkbox>
+
+                        <span class="added-pipeline-group-desc" v-if="data.disabled">
+                            {{$t(data.isDynamicGroup ? 'dynamicGroup' : 'added')}}
                         </span>
-                        <span class="add-to-pipeline-group-item-name">{{data.name}}</span>
-                        <span class="added-pipeline-group-desc" v-if="savedPipelineGroupMap[data.id]">{{$t('added')}}</span>
                     </div>
                 </bk-big-tree>
 
@@ -108,13 +109,15 @@
             groupTitle () {
                 return this.isPatch ? this.$t('patchAddToGroupTitle', [this.pipelineList.length]) : this.$t('addToGroupTitle', [this.pipeline.pipelineName])
             },
-            pipelineGroups () {
-                return this.allPipelineGroup.filter(group => group.viewType === 2)
-            },
             pipelineGroupsTree () {
-                return this.pipelineGroups.reduce((acc, group) => {
+                return this.allPipelineGroup.reduce((acc, group) => {
                     const index = group.projected ? 1 : 0
-                    acc[index].children.push(group)
+                    const isDynamicGroup = group.viewType === 1
+                    acc[index].children.push({
+                        ...group,
+                        disabled: isDynamicGroup || this.savedPipelineGroupMap[group.id],
+                        isDynamicGroup
+                    })
                     return acc
                 }, [{
                     id: 'personal',
@@ -178,7 +181,7 @@
                 this.$refs.pipelineGroupTree.filter(this.filterKeyword)
             },
             isChecked ({ id, children }) {
-                if (Array.isArray(children)) {
+                if (Array.isArray(children) && children.length > 0) {
                     return children.every(this.isChecked)
                 }
                 return this.savedPipelineGroupMap[id] || this.selectedGroupIdMap[id]
@@ -300,14 +303,21 @@
                     flex: 1;
                     overflow: auto;
                     margin-top: 8px;
+                    padding-right: 12px;
                     .add-to-pipeline-group-tree-node {
                         display: flex;
                         font-size: 12px;
-                        .add-to-pipeline-group-item-name {
+                        height: 32px;
+                        .add-to-pipeline-checkbox {
+                            display: inline-flex;
                             flex: 1;
-                            @include ellipsis();
-                            margin-left: 8px;
+                            align-items: center;
+                            .bk-checkbox-text {
+                                @include ellipsis();
+                                flex: 1;
+                            }
                         }
+
                         .added-pipeline-group-desc {
                             color: #c4c4c4;
                         }

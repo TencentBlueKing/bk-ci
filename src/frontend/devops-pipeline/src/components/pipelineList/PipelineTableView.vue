@@ -3,8 +3,8 @@
         v-bkloading="{ isLoading }"
         ref="pipelineTable"
         size="large"
-        height="100%"
         row-key="pipelineId"
+        height="100%"
         :data="pipelineList"
         :pagination="pagination"
         @page-change="handlePageChange"
@@ -12,8 +12,15 @@
         :row-class-name="setRowCls"
         @sort-change="handleSort"
         :default-sort="sortField"
+        @selection-change="handleSelectChange"
         v-on="$listeners"
     >
+        <div v-if="selectionLength > 0" slot="prepend" class="selected-all-indicator">
+            <span v-html="$t('selectedCount', [selectionLength])"></span>
+            <bk-button theme="primary" text @click="clearSelection">
+                {{$t('clearSelection')}}
+            </bk-button>
+        </div>
         <PipelineListEmpty slot="empty" :is-patch="isPatchView"></PipelineListEmpty>
         <bk-table-column v-if="isPatchView" type="selection" width="60" :selectable="checkSelecteable"></bk-table-column>
         <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
@@ -33,7 +40,12 @@
         <bk-table-column v-if="isAllPipelineView || isPatchView || isDeleteView" width="250" :label="$t('ownGroupName')" prop="viewNames">
             <div class="pipeline-group-box-cell" slot-scope="props">
                 <div class="group-name-tag-box">
-                    <bk-tag v-bk-tooltips="viewName" ext-cls="pipeline-group-name-tag" v-for="viewName in props.row.viewNames" :key="viewName">
+                    <bk-tag
+                        ext-cls="pipeline-group-name-tag"
+                        v-for="(viewName, index) in props.row.viewNames"
+                        :key="index"
+                        @click="goGroup(viewName)"
+                    >
                         {{viewName}}
                     </bk-tag>
                 </div>
@@ -97,6 +109,7 @@
                     <p v-else class="desc">{{props.row.duration}}</p>
                 </template>
             </bk-table-column>
+            <bk-table-column :label="$t('lastModify')" sortable="custom" prop="updater" sort />
         </template>
         <bk-table-column v-if="!isPatchView" width="150" :label="$t('operate')" prop="pipelineId">
             <div class="pipeline-operation-cell" slot-scope="props">
@@ -143,6 +156,7 @@
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import Logo from '@/components/Logo'
     import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
@@ -177,6 +191,7 @@
             return {
                 isLoading: false,
                 pipelineList: [],
+                selectionLength: 0,
                 pagination: {
                     current: 1,
                     limit: 20,
@@ -185,15 +200,22 @@
                 sortField: {
                     prop: this.sortType,
                     order: this.$route.query.collation ?? ORDER_ENUM.descending
-                },
-                activePipeline: null
+                }
             }
         },
         computed: {
+            ...mapGetters('pipelines', [
+                'groupNamesMap'
+            ]),
             isAllPipelineView () {
                 return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
+            },
+            maxheight () {
+                console.log(this.$refs?.pipelineTable?.$el?.parent)
+                return this.$refs?.pipelineTable?.$el?.parent?.clientHeight
             }
         },
+
         watch: {
             '$route.params.viewId': function (viewId) {
                 this.requestList({
@@ -229,6 +251,20 @@
             },
             clearSelection () {
                 this.$refs.pipelineTable?.clearSelection?.()
+            },
+            handleSelectChange (selection, ...args) {
+                this.selectionLength = selection.length
+                this.$emit('selection-change', selection, ...args)
+            },
+            goGroup (groupName) {
+                const group = this.groupNamesMap[groupName]
+                if (group) {
+                    this.$router.push({
+                        params: {
+                            viewId: group?.id
+                        }
+                    })
+                }
             },
             handlePageLimitChange (limit) {
                 this.pagination.limit = limit
@@ -300,5 +336,12 @@
     }
     tr.has-delete {
         color: #C4C6CC;
+    }
+    .selected-all-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #EAEBF0;
+        height: 32px;
     }
 </style>

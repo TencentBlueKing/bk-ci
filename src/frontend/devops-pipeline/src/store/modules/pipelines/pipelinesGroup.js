@@ -24,7 +24,6 @@ import {
     COLLECT_VIEW_ID,
     COLLECT_VIEW_ID_NAME,
     ALL_PIPELINE_VIEW_ID,
-    DELETED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
 
@@ -42,12 +41,6 @@ const state = {
             id: ALL_PIPELINE_VIEW_ID,
             name: ALL_PIPELINE_VIEW_ID,
             icon: 'group',
-            hideMore: true
-        },
-        {
-            id: DELETED_VIEW_ID,
-            name: 'restore.recycleBin',
-            icon: 'delete',
             hideMore: true
         }
     ],
@@ -102,6 +95,12 @@ const getters = {
         acc[item.id] = item
         return acc
     }, getters.hardViewsMap),
+    groupNamesMap: (state) => {
+        return state.allPipelineGroup.reduce((acc, item) => {
+            acc[item.name] = item
+            return acc
+        }, {})
+    },
     getTagList: (state) => { // 标签分组集
         const list = state.tagGroupList || []
         return list.map((item) => {
@@ -181,6 +180,7 @@ const actions = {
             ])
 
             state.sumViews[0].pipelineCount = groupCounts.data.totalCount
+
             state.hardViews[0].pipelineCount = groupCounts.data.myFavoriteCount
             state.hardViews[1].pipelineCount = groupCounts.data.myPipelineCount
             commit(SET_ALL_PIPELINE_GROUP, pipelineGroups.data)

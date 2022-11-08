@@ -6,6 +6,10 @@
         theme="dot-menu light"
         trigger="click"
         class="pipeline-ext-menu"
+        :tippy-options="{
+            arrow: false,
+            placement: 'bottom-end'
+        }"
     >
         <div :class="`dot-menu-trigger ${extCls}`">
             <i class="devops-icon icon-more"></i>

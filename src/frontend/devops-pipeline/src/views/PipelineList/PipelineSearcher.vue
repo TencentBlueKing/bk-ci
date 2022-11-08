@@ -1,7 +1,6 @@
 <template>
     <bk-search-select
         class="search-pipeline-input"
-        right-icon="bk-icon icon-search"
         clearable
         :show-condition="false"
         :filter="true"
