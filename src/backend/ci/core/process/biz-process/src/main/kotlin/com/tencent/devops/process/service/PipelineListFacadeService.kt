@@ -225,8 +225,6 @@ class PipelineListFacadeService @Autowired constructor(
             checkPermission = false
         )
 
-        logger.info("listPipelines pipelines: {}", pipelines)
-
         if (pipelineIdList != null) {
             resultPipelineIds.addAll(pipelineIdList)
         }
