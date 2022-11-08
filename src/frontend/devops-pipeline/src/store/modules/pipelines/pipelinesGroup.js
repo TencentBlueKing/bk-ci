@@ -24,6 +24,7 @@ import {
     COLLECT_VIEW_ID,
     COLLECT_VIEW_ID_NAME,
     ALL_PIPELINE_VIEW_ID,
+    DELETED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
 
@@ -88,6 +89,7 @@ const getters = {
     }),
     fixedGroupIdSet: (state, getters) => new Set([
         UNCLASSIFIED_PIPELINE_VIEW_ID,
+        DELETED_VIEW_ID,
         ...state.sumViews.map(view => view.id),
         ...Object.keys(getters.hardViewsMap)
     ]),

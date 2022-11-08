@@ -15,13 +15,13 @@
         @selection-change="handleSelectChange"
         v-on="$listeners"
     >
+        <PipelineListEmpty slot="empty" :is-patch="isPatchView"></PipelineListEmpty>
         <div v-if="selectionLength > 0" slot="prepend" class="selected-all-indicator">
             <span v-html="$t('selectedCount', [selectionLength])"></span>
             <bk-button theme="primary" text @click="clearSelection">
                 {{$t('clearSelection')}}
             </bk-button>
         </div>
-        <PipelineListEmpty slot="empty" :is-patch="isPatchView"></PipelineListEmpty>
         <bk-table-column v-if="isPatchView" type="selection" width="60" :selectable="checkSelecteable"></bk-table-column>
         <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
