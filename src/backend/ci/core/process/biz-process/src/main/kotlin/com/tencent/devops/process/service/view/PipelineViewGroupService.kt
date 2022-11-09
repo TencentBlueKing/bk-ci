@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -44,7 +45,6 @@ import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -68,14 +69,14 @@ import java.time.LocalDateTime
 @SuppressWarnings("LoopWithTooManyJumpStatements", "LongParameterList", "TooManyFunctions", "ReturnCount")
 class PipelineViewGroupService @Autowired constructor(
     private val pipelineViewService: PipelineViewService,
-    private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineViewGroupDao: PipelineViewGroupDao,
     private val pipelineViewTopDao: PipelineViewTopDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val client: Client
 ) {
     fun getViewNameMap(
         projectId: String,
@@ -624,7 +625,7 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun checkPermission(userId: String, projectId: String) =
-        pipelinePermissionService.checkPipelinePermission(userId, projectId, AuthPermission.MANAGE)
+        client.get(ServiceProjectResource::class).hasPermission(userId, projectId, AuthPermission.MANAGE).data ?: false
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
