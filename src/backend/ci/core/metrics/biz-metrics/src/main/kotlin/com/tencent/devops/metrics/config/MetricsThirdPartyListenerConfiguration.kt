@@ -68,13 +68,6 @@ class MetricsThirdPartyListenerConfiguration {
         }
     }
 
-    @Bean
-    fun dailyReportMessageListener(
-        @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
-    ) = TurboDailyReportMessageListener(
-        metricsThirdPlatformDataReportFacadeService = thirdPlatformDataReportFacadeService
-    )
-
     @EventConsumer(EXCHANGE_METRICS_STATISTIC_TURBO_DAILY, STREAM_CONSUMER_GROUP)
     fun metricsTurboDailyReportListener(
         @Autowired listener: TurboDailyReportMessageListener
