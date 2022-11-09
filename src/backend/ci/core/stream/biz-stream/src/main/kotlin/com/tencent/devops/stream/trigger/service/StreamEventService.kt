@@ -227,7 +227,7 @@ class StreamEventService @Autowired constructor(
             saveLock.lock()
             val exist = userMessageDao.getMessageExist(dslContext, projectCode, userId, event.id.toString())
             if (isSave) {
-                if (exist) {
+                if (exist != null) {
                     return false
                 }
                 userMessageDao.save(
@@ -239,7 +239,7 @@ class StreamEventService @Autowired constructor(
                     messageTitle = messageTitle?.value ?: ""
                 )
             } else {
-                if (!exist) {
+                if (exist == null || exist.messageType == messageType.name) {
                     return false
                 }
                 userMessageDao.updateMessageType(
