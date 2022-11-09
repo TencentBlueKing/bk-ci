@@ -33,7 +33,10 @@ import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastE
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.metrics.listener.BuildEndMetricsDataReportListener
 import com.tencent.devops.metrics.listener.LabelChangeMetricsDataSyncListener
+import com.tencent.devops.metrics.service.MetricsDataReportService
+import com.tencent.devops.metrics.service.SyncPipelineRelateLabelDataService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.Message
 import java.util.function.Consumer
@@ -45,6 +48,13 @@ class MetricsListenerConfiguration {
         const val STREAM_CONSUMER_GROUP = "metrics-service"
     }
 
+    @Bean
+    fun buildEndDataReportListener(
+        @Autowired metricsDataReportService: MetricsDataReportService
+    ) = BuildEndMetricsDataReportListener(
+        metricsDataReportService = metricsDataReportService
+    )
+
     @EventConsumer(StreamBinding.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT, STREAM_CONSUMER_GROUP)
     fun buildEndMetricsDataReportListener(
         @Autowired listener: BuildEndMetricsDataReportListener
@@ -53,6 +63,13 @@ class MetricsListenerConfiguration {
             listener.execute(event.payload)
         }
     }
+
+    @Bean
+    fun labelChangeDataSyncListener(
+        @Autowired syncPipelineRelateLabelDataService: SyncPipelineRelateLabelDataService
+    ) = LabelChangeMetricsDataSyncListener(
+        syncPipelineRelateLabelDataService = syncPipelineRelateLabelDataService
+    )
 
     @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT, STREAM_CONSUMER_GROUP)
     fun labelChangeMetricsDataSyncListener(
