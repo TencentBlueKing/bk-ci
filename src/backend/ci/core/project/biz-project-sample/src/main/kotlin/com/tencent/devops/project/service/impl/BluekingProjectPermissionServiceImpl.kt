@@ -97,7 +97,8 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
         accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
         userDeptDetail: UserDeptDetail?,
-        subjectScopes: List<SubjectScope>?
+        subjectScopes: List<SubjectScope>?,
+        needApproval: Boolean?
     ): String {
         val projectList = mutableListOf<ResourceRegisterInfo>()
         projectList.add(resourceRegisterInfo)

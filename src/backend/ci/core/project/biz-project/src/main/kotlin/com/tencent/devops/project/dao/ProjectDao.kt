@@ -266,7 +266,8 @@ class ProjectDao {
         projectCreateInfo: ProjectCreateInfo,
         userDeptDetail: UserDeptDetail,
         projectId: String,
-        channelCode: ProjectChannelCode? = ProjectChannelCode.BS
+        channelCode: ProjectChannelCode? = ProjectChannelCode.BS,
+        needApproval: Boolean? = false
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
@@ -310,7 +311,7 @@ class ProjectDao {
                 userId,
                 LocalDateTime.now(),
                 projectCreateInfo.projectType,
-                ApproveStatus.APPROVED.status,
+                if (needApproval!!) ApproveStatus.CREATE_PENDING.status else ApproveStatus.APPROVED.status,
                 logoAddress,
                 userDeptDetail.bgName,
                 userDeptDetail.deptName,

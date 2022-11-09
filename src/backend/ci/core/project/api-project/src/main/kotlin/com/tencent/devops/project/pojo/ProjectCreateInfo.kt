@@ -29,6 +29,7 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.io.InputStream
 
 @ApiModel("项目-新增模型")
 data class ProjectCreateInfo(
@@ -69,5 +70,7 @@ data class ProjectCreateInfo(
     @ApiModelProperty("项目相关配置")
     val properties: ProjectProperties? = null,
     @ApiModelProperty("项目最大可授权人员范围")
-    val subjectScopes: List<SubjectScope>? = emptyList()
+    val subjectScopes: List<SubjectScope>? = emptyList(),
+    @ApiModelProperty("logo文件")
+    val logo: InputStream? = null
 )

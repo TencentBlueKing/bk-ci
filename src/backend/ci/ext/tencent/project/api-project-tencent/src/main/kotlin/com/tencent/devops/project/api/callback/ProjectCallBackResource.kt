@@ -25,15 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.project.api.callback
 
-enum class ApproveStatus(val status: Int) {
-    // 创建审批中
-    CREATE_PENDING(1),
-    // 审批通过
-    APPROVED(2),
-    // 审批拒绝
-    REJECT(3),
-    // 修改审批中
-    UPDATE_PENDING(4)
+import com.tencent.devops.project.pojo.CallbackRequestDTO
+import com.tencent.devops.project.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["PROJECT_CALLBACK"], description = "项目-回调")
+@Path("/service/callback")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ProjectCallBackResource {
+
+    @Path("/create_callback")
+    @POST
+    @ApiOperation("创建项目回调")
+    fun createProjectCallBack(
+        callbackRequestDTO: CallbackRequestDTO
+    ): Result<Boolean>
 }

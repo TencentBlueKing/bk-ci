@@ -68,7 +68,8 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
         userDeptDetail: UserDeptDetail?,
-        subjectScopes: List<SubjectScope>?
+        subjectScopes: List<SubjectScope>?,
+        needApproval: Boolean?
     ): String {
         val validateCreatePermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
@@ -139,12 +140,12 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         permission: AuthPermission
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = projectAuthServiceCode,
-                resourceType = projectResourceType,
-                resourceCode = projectCode,
-                projectCode = projectCode,
-                permission = permission
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = projectResourceType,
+            resourceCode = projectCode,
+            projectCode = projectCode,
+            permission = permission
         )
     }
 

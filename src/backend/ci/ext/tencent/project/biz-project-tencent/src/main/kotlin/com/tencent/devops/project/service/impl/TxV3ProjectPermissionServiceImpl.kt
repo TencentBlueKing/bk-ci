@@ -40,17 +40,25 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum.getType
+import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
+import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.SubjectScope
+import com.tencent.devops.project.service.iam.AuthorizationUtils
 import okhttp3.MediaType
 import org.springframework.beans.factory.annotation.Value
 
@@ -59,7 +67,9 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     val authProperties: BkAuthProperties,
     val projectDispatcher: ProjectDispatcher,
     val client: Client,
-    val tokenService: ClientTokenService
+    val tokenService: ClientTokenService,
+    val iamConfiguration: IamConfiguration,
+    val iamManagerService: ManagerService,
 ) : ProjectPermissionService {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -81,23 +91,61 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
         userDeptDetail: UserDeptDetail?,
-        subjectScopes: List<SubjectScope>?
+        subjectScopes: List<SubjectScope>?,
+        needApproval: Boolean?
     ): String {
-        // TODO: 是否干掉
         // 同步创建V0项目
         // val projectId = createResourcesToV0(userId, accessToken, resourceRegisterInfo, userDeptDetail)
-        // 异步创建V3项目
-        projectDispatcher.dispatch(
-            TxIamV3CreateEvent(
-                userId = userId,
-                retryCount = 0,
-                delayMills = 1000,
-                resourceRegisterInfo = resourceRegisterInfo,
-                projectId = "",
-                iamProjectId = null,
-                subjectScopes = subjectScopes
+        if (needApproval!!) {
+            val projectCode = resourceRegisterInfo.resourceCode
+            val projectName = resourceRegisterInfo.resourceName
+            val iamSubjectScopes: ArrayList<ManagerScopes> = ArrayList()
+            if (subjectScopes == null) {
+                throw OperationException("The maximum authorized scope cannot be empty!!")
+            } else {
+                subjectScopes.forEach {
+                    if (it.type == DEPARTMENT) {
+                        iamSubjectScopes.add(
+                            ManagerScopes(getType(ManagerScopesEnum.DEPARTMENT), it.id)
+                        )
+                    } else {
+                        iamSubjectScopes.add(ManagerScopes(getType(ManagerScopesEnum.USER), it.id))
+                    }
+                }
+            }
+            val authorizationScopes = AuthorizationUtils.buildManagerResources(
+                projectId = projectCode,
+                projectName = projectName,
+                iamConfiguration = iamConfiguration
             )
-        )
+            val gradeManagerApplicationCreateDTO: GradeManagerApplicationCreateDTO = GradeManagerApplicationCreateDTO
+                .builder()
+                .name("$SYSTEM_DEFAULT_NAME-$projectName")
+                .description(IamGroupUtils.buildManagerDescription(projectCode, userId))
+                .members(arrayListOf(userId))
+                .authorizationScopes(authorizationScopes)
+                .subjectScopes(iamSubjectScopes)
+                //todo 需补充
+                .syncPerm(true)
+                .callbackId("")
+                .callbackUrl("").build()
+            val createGradeManagerApplication =
+                iamManagerService.createGradeManagerApplication(gradeManagerApplicationCreateDTO)
+            // 权限中心申请单id和itsm返回的申请sn是否需要存储
+        } else {
+            // 若不需要审批，则直接异步创建分级管理员和默认用户组
+            projectDispatcher.dispatch(
+                TxIamV3CreateEvent(
+                    userId = userId,
+                    retryCount = 0,
+                    delayMills = 1000,
+                    resourceRegisterInfo = resourceRegisterInfo,
+                    projectId = "",
+                    iamProjectId = null,
+                    subjectScopes = subjectScopes
+                )
+            )
+        }
         return ""
     }
 
@@ -193,5 +241,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(TxV3ProjectPermissionServiceImpl::class.java)
+        private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
+        private const val SYSTEM_DEFAULT_NAME = "蓝盾"
+        private const val DEPARTMENT = "department"
     }
 }

@@ -193,10 +193,10 @@ class IamV3Service @Autowired constructor(
     ): String {
         val iamSubjectScopes: ArrayList<ManagerScopes> = ArrayList()
         // 若授权人员范围为空，则设置为全部人员
-        if (subjectScopes?.isEmpty() == true) {
+        if (subjectScopes == null) {
             iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), "*"))
         } else {
-            subjectScopes!!.forEach {
+            subjectScopes.forEach {
                 if (it.type == DEPARTMENT) {
                     iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT), it.id))
                 } else {

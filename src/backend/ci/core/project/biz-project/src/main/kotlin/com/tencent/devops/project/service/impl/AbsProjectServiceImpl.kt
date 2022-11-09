@@ -130,7 +130,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     logger.warn("Project English Name($name) is not match")
                     throw ErrorCodeException(
                         defaultMessage = MessageCodeUtil.getCodeLanMessage(
-                            ProjectMessageCode.EN_NAME_COMBINATION_ERROR),
+                            ProjectMessageCode.EN_NAME_COMBINATION_ERROR
+                        ),
                         errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR
                     )
                 }
@@ -174,7 +175,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         resourceName = projectCreateInfo.projectName
                     ),
                     userDeptDetail = userDeptDetail,
-                    subjectScopes = projectCreateInfo.subjectScopes
+                    subjectScopes = projectCreateInfo.subjectScopes,
+                    needApproval = createExtInfo.needApproval
                 )
             }
         } catch (e: PermissionForbiddenException) {
@@ -186,11 +188,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         if (projectId.isNullOrEmpty()) {
             projectId = UUIDUtil.generate()
         }
-
         try {
             dslContext.transaction { configuration ->
-                val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
                 val context = DSL.using(configuration)
+                val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
+                //todo 若授权人员范围处理并落库
                 projectDao.create(
                     dslContext = context,
                     userId = userId,
@@ -198,9 +200,31 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectCreateInfo = projectInfo,
                     userDeptDetail = userDeptDetail,
                     projectId = projectId,
-                    channelCode = projectChannel
+                    channelCode = projectChannel,
+                    needApproval = createExtInfo.needApproval
                 )
-
+                // 上传logo
+                val logo = projectCreateInfo.logo
+                var logoFile: File? = null
+                if (logo != null) {
+                    try {
+                        logoFile = FileUtil.convertTempFile(logo)
+                        val logoAddress = saveLogoAddress(userId, projectCreateInfo.englishName, logoFile!!)
+                        projectDao.updateLogoAddress(context, userId, projectId, logoAddress)
+                        projectDispatcher.dispatch(
+                            ProjectUpdateLogoBroadCastEvent(
+                                userId = userId,
+                                projectId = projectId,
+                                logoAddr = logoAddress
+                            )
+                        )
+                    } catch (e: Exception) {
+                        logger.warn("fail update projectLogo", e)
+                        throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
+                    } finally {
+                        logoFile?.delete()
+                    }
+                }
                 try {
                     createExtProjectInfo(
                         userId = userId,
@@ -220,6 +244,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     routingName = projectCreateInfo.englishName,
                     moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
                 )
+                // todo 私密项目待了解
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
@@ -311,6 +336,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         dslContext = dslContext,
                         englishName = englishName
                     )?.projectId ?: throw NotFoundException("项目 -$englishName 不存在")
+                    // 若为内部版v3且网页调用并且若私密项目或者最大可授权人员范围改变，则要进入审核
+                    // modifyProjectAuthResource，然后直接return
+                    // 以上条件不满足，则代码继续走
+
                     projectDao.update(
                         dslContext = context,
                         userId = userId,
@@ -321,16 +350,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         projectUpdateInfo.englishName,
                         projectUpdateInfo.projectName
                     )
+                    // 若返回false，私密字段则直接修改，若不是，私密字段，要等到回调再去修改
                     if (!projectUpdateInfo.secrecy) {
                         redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
                     } else {
                         redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
                     }
-                    projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
-                        userId = userId,
-                        projectId = projectId,
-                        projectInfo = projectUpdateInfo
-                    ))
+                    projectDispatcher.dispatch(
+                        ProjectUpdateBroadCastEvent(
+                            userId = userId,
+                            projectId = projectId,
+                            projectInfo = projectUpdateInfo
+                        )
+                    )
                 }
                 success = true
             } catch (e: DuplicateKeyException) {
@@ -561,11 +593,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     projectDao.updateLogoAddress(context, userId, projectRecord.projectId, logoAddress)
-                    projectDispatcher.dispatch(ProjectUpdateLogoBroadCastEvent(
-                        userId = userId,
-                        projectId = projectRecord.projectId,
-                        logoAddr = logoAddress
-                    ))
+                    projectDispatcher.dispatch(
+                        ProjectUpdateLogoBroadCastEvent(
+                            userId = userId,
+                            projectId = projectRecord.projectId,
+                            logoAddr = logoAddress
+                        )
+                    )
                 }
                 return Result(ProjectLogo(logoAddress))
             } catch (e: Exception) {

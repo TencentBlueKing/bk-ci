@@ -68,7 +68,7 @@ class UserProjectResourceImpl @Autowired constructor(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
             accessToken = accessToken,
-            createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true),
+            createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true, needApproval = true),
             projectChannel = ProjectChannelCode.BS
         )
 

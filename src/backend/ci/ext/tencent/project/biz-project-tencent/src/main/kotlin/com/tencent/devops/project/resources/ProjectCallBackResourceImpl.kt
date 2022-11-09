@@ -25,15 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.project.resources
 
-enum class ApproveStatus(val status: Int) {
-    // 创建审批中
-    CREATE_PENDING(1),
-    // 审批通过
-    APPROVED(2),
-    // 审批拒绝
-    REJECT(3),
-    // 修改审批中
-    UPDATE_PENDING(4)
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.callback.ProjectCallBackResource
+import com.tencent.devops.project.pojo.CallbackRequestDTO
+import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.service.ProjectCallBackSevice
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ProjectCallBackResourceImpl @Autowired constructor(
+    private val projectCallBackSevice: ProjectCallBackSevice
+) : ProjectCallBackResource {
+    override fun createProjectCallBack(callbackRequestDTO: CallbackRequestDTO): Result<Boolean> {
+        projectCallBackSevice.createProjectCallBack(callbackRequestDTO)
+        return Result(true)
+    }
 }

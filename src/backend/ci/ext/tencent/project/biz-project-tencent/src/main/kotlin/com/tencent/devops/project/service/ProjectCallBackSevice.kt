@@ -25,15 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.project.service
 
-enum class ApproveStatus(val status: Int) {
-    // 创建审批中
-    CREATE_PENDING(1),
-    // 审批通过
-    APPROVED(2),
-    // 审批拒绝
-    REJECT(3),
-    // 修改审批中
-    UPDATE_PENDING(4)
+import com.tencent.devops.project.pojo.CallbackRequestDTO
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class ProjectCallBackSevice @Autowired constructor(
+    private val dslContext: DSLContext,
+) {
+    fun createProjectCallBack(callbackRequestDTO: CallbackRequestDTO) {
+        TODO("Not yet implemented")
+    }
 }

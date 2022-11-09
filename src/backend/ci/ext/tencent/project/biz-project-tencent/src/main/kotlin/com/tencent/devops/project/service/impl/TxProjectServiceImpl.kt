@@ -320,6 +320,9 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
+        // 判断是否是网页调起的且是v3的，且私密项目和最大可授权人员字段被修改
+        // 是则去发起审批，并且返回true
+        // 若不是则直接 fasle
         return
     }
 

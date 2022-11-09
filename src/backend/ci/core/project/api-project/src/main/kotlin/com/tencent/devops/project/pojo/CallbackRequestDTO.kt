@@ -25,15 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.project.pojo
 
-enum class ApproveStatus(val status: Int) {
-    // 创建审批中
-    CREATE_PENDING(1),
-    // 审批通过
-    APPROVED(2),
-    // 审批拒绝
-    REJECT(3),
-    // 修改审批中
-    UPDATE_PENDING(4)
-}
+data class CallbackRequestDTO(
+    val projectCode: String
+)

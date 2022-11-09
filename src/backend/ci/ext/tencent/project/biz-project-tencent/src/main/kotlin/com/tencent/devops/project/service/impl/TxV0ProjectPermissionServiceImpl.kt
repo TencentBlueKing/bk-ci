@@ -71,7 +71,8 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
         accessToken: String?,
         projectCreateInfo: ResourceRegisterInfo,
         userDeptDetail: UserDeptDetail?,
-        subjectScopes: List<SubjectScope>?
+        subjectScopes: List<SubjectScope>?,
+        needApproval: Boolean?
     ): String {
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
         // 创建AUTH项目
@@ -161,11 +162,11 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String, permission: AuthPermission): Boolean {
         val isSuccess = authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = bsProjectAuthServiceCode,
-                projectCode = projectCode,
-                permission = permission,
-                resourceType = AuthResourceType.PROJECT
+            user = userId,
+            serviceCode = bsProjectAuthServiceCode,
+            projectCode = projectCode,
+            permission = permission,
+            resourceType = AuthResourceType.PROJECT
         )
         if (isSuccess) {
             return true
