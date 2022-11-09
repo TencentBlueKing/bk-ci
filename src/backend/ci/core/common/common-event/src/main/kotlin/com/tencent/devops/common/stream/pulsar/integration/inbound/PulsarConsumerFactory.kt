@@ -51,7 +51,7 @@ object PulsarConsumerFactory {
      * @param consumerProperties consumerProperties
      * @return DefaultMQConsumer
      */
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "LongMethod")
     fun initPulsarConsumer(
         topic: String,
         group: String? = null,
