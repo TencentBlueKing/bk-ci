@@ -38,8 +38,6 @@ object StreamBinding {
     const val BINDING_LOG_STATUS_EVENT_DESTINATION = "e.build.log.status.event"
 
     // 核心交换机及队列 ====================================
-    const val ENGINE_PROCESS_LISTENER_EXCHANGE = "e.engine.pipeline.listener"
-
     const val QUEUE_PIPELINE_UPDATE = "engine.pipeline.update"
 
     const val QUEUE_PIPELINE_CREATE = "engine.pipeline.create"
@@ -75,7 +73,7 @@ object StreamBinding {
     const val QUEUE_PIPELINE_BUILD_WEBSOCKET = "engine.pipeline.build.websocket"
 
     // 构建排队广播exchange ====================================
-    const val EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT = "e.engine.pipeline.build.queue.fanout"
+    const val EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT = "engine.pipeline.build.queue.fanout"
 
     // 构建启动广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "engine.pipeline.build.start.fanout"
@@ -85,10 +83,10 @@ object StreamBinding {
     const val EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT = "engine.pipeline.build.quality.check.fanout"
 
     // 构建结束后续广播exchange ====================================
-    const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "engine.pipeline.build.finish"
+    const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "engine.pipeline.build.finish.fanout"
 
     // 构建取消后续广播exchange ====================================
-    const val EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT = "engine.pipeline.build.cancel"
+    const val EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT = "engine.pipeline.build.cancel.fanout"
 
     // 插件结束后续广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT = "engine.pipeline.build.element.finish"
