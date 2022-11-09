@@ -85,6 +85,7 @@ class TXExternalStreamResourceImpl(
                 } else {
                     streamBasicSettingService.updateProjectSetting(
                         gitProjectId = gitProjectId,
+                        authUserId = oauthUserId,
                         userId = userId,
                         enableCi = true
                     )
@@ -93,15 +94,6 @@ class TXExternalStreamResourceImpl(
                     basicSettingService.updateProjectOrganizationInfo(
                         projectId = gitProjectId.toString(),
                         userId = oauthUserId
-                    )
-                }
-
-                if (userId != oauthUserId) {
-                    // 此时应该为公共账号
-                    basicSettingService.updateOauthSetting(
-                        gitProjectId = gitProjectId,
-                        userId = userId,
-                        oauthUserId = oauthUserId
                     )
                 }
             }
