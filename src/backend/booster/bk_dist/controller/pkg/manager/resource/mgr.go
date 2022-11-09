@@ -135,9 +135,12 @@ func (m *Mgr) SetServerHost(serverHost string) {
 
 // GetStatus return the resource task status
 func (m *Mgr) GetStatus() *v2.RespTaskInfo {
-	// to compatible with old, just return the first resoure info
+	m.reslock.Lock()
+	defer m.reslock.Unlock()
+
+	// return the latest task
 	if len(m.resources) > 0 {
-		return m.resources[0].taskInfo
+		return m.resources[len(m.resources)-1].taskInfo
 	}
 
 	return nil
@@ -512,8 +515,21 @@ func (m *Mgr) SendStats(brief bool) error {
 	return nil
 }
 
+func (m *Mgr) SendAndResetStats(brief bool, t int64) error {
+
+	data, _ := m.getSendStatsData(false, t)
+	go m.sendStatsData(data)
+
+	// reset stat
+	m.work.Lock()
+	m.work.Basic().ResetStat()
+	m.work.Unlock()
+
+	return nil
+}
+
 // get stat data which ready to send
-func (m *Mgr) getSendStatsData(brief bool, r *Res) (*[]byte, error) {
+func (m *Mgr) getSendStatsData(brief bool, t int64) (*[]byte, error) {
 	m.work.Lock()
 	info := m.work.Basic().Info()
 	cs := info.CommonStatus()
@@ -538,7 +554,7 @@ func (m *Mgr) getSendStatsData(brief bool, r *Res) (*[]byte, error) {
 	}
 	registeredTime := cs.RegisteredTime.Local().UnixNano()
 	if registeredTime <= 0 {
-		registeredTime = r.applyTime.UnixNano()
+		registeredTime = t
 	}
 	unregisteredTime := cs.UnregisteredTime.Local().UnixNano()
 	if unregisteredTime <= 0 {
@@ -723,14 +739,17 @@ func (m *Mgr) clearOldInvalidRes(info *v2.RespTaskInfo) error {
 		if len(r.taskInfo.HostList) == 0 {
 			m.releaseOne(nil, r)
 			// TODO : send detail stat data and reset stat data
-			// send stat
-			data, _ := m.getSendStatsData(false, r)
-			go m.sendStatsData(data)
 
-			// reset stat
-			m.work.Lock()
-			m.work.Basic().ResetStat()
-			m.work.Unlock()
+			// // send stat
+			// data, _ := m.getSendStatsData(false, r.applyTime.UnixNano())
+			// go m.sendStatsData(data)
+
+			// // reset stat
+			// m.work.Lock()
+			// m.work.Basic().ResetStat()
+			// m.work.Unlock()
+
+			m.SendAndResetStats(false, r.applyTime.UnixNano())
 
 		} else {
 			newres = append(newres, r)
