@@ -101,24 +101,25 @@ type InstanceType struct {
 
 // ContainerResourceConfig defines configs for resource from bcs.
 type ContainerResourceConfig struct {
-	Enable                 bool           `json:"crm_enable"`
-	Operator               string         `json:"crm_operator"`
-	BcsAPIToken            string         `json:"crm_bcs_api_token"`
-	BcsAPIAddress          string         `json:"crm_bcs_api_address"`
-	BcsNamespace           string         `json:"crm_bcs_namespace"`
-	EnableBCSApiGw         bool           `json:"crm_bcs_apigw_enable" value:"false"`
-	BcsCPUPerInstance      float64        `json:"crm_bcs_cpu_per_instance"`
-	BcsMemPerInstance      float64        `json:"crm_bcs_mem_per_instance"`
-	BcsCPULimitPerInstance float64        `json:"crm_bcs_cpu_limit_per_instance,omitempty"`
-	BcsMemLimitPerInstance float64        `json:"crm_bcs_mem_limit_per_instance,omitempty"`
-	InstanceType           []InstanceType `json:"instance_type"`
-	BcsClusterID           string         `json:"crm_bcs_cluster_id"`
-	BcsFederationClusterID string         `json:"crm_bcs_federation_cluster_id"`
-	BcsClusterType         string         `json:"crm_bcs_cluster_type"`
-	BcsAppTemplate         string         `json:"crm_bcs_template_file"`
-	BcsGroupLabelKey       string         `json:"crm_bcs_group_label_key"`
-	BcsPlatformLabelKey    string         `json:"crm_bcs_platform_label_key"`
-	BcsDisableWinHostNW    bool           `json:"crm_bcs_disable_win_host_network"`
+	Enable                     bool           `json:"crm_enable"`
+	Operator                   string         `json:"crm_operator"`
+	BcsAPIToken                string         `json:"crm_bcs_api_token"`
+	BcsAPIAddress              string         `json:"crm_bcs_api_address"`
+	BcsNamespace               string         `json:"crm_bcs_namespace"`
+	EnableBCSApiGw             bool           `json:"crm_bcs_apigw_enable" value:"false"`
+	BcsCPUPerInstance          float64        `json:"crm_bcs_cpu_per_instance"`
+	BcsMemPerInstance          float64        `json:"crm_bcs_mem_per_instance"`
+	BcsStoragePerInstance      float64        `json:"crm_bcs_storage_per_instance,omitempty"`
+	BcsCPULimitPerInstance     float64        `json:"crm_bcs_cpu_limit_per_instance,omitempty"`
+	BcsMemLimitPerInstance     float64        `json:"crm_bcs_mem_limit_per_instance,omitempty"`
+	BcsStorageLimitPerInstance float64        `json:"crm_bcs_storage_limit_per_instance,omitempty"`
+	InstanceType               []InstanceType `json:"instance_type"`
+	BcsClusterID               string         `json:"crm_bcs_cluster_id"`
+	BcsClusterType             string         `json:"crm_bcs_cluster_type"`
+	BcsAppTemplate             string         `json:"crm_bcs_template_file"`
+	BcsGroupLabelKey           string         `json:"crm_bcs_group_label_key"`
+	BcsPlatformLabelKey        string         `json:"crm_bcs_platform_label_key"`
+	BcsDisableWinHostNW        bool           `json:"crm_bcs_disable_win_host_network"`
 
 	MySQLStorage     string `json:"crm_resource_mysql"`
 	MySQLDatabase    string `json:"crm_resource_mysql_db"`

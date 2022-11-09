@@ -35,9 +35,11 @@ spec:
           requests:
             memory: "__crm_mem__Mi"
             cpu: "__crm_cpu__m"
+            __crm_storage__
           limits:
             memory: "__crm_limit_mem__Mi"
             cpu: "__crm_limit_cpu__m"
+            __crm_limit_storage__
       volumes: __crm_volumes__
       nodeSelector:
         __crm_platform_key__: __crm_platform__

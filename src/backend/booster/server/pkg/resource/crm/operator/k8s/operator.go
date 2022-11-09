@@ -62,8 +62,10 @@ const (
 	templateVarInstance         = "__crm_instance__"
 	templateVarCPU              = "__crm_cpu__"
 	templateVarMem              = "__crm_mem__"
+	templateStorage             = "__crm_storage__"
 	templateLimitVarCPU         = "__crm_limit_cpu__"
 	templateLimitVarMem         = "__crm_limit_mem__"
+	templateLimitStorage        = "__crm_limit_storage__"
 	templateVarEnv              = "__crm_env__"
 	templateVarEnvKey           = "__crm_env_key__"
 	templateVarEnvValue         = "__crm_env_value__"
@@ -149,9 +151,6 @@ type clusterClientSet struct {
 // GetResource get specific cluster's resources.
 func (o *operator) GetResource(clusterID string) ([]*op.NodeInfo, error) {
 	if o.conf.BcsClusterType == FederationCluster {
-		if o.conf.BcsFederationClusterID != "" {
-			return o.getFederationResource(o.conf.BcsFederationClusterID)
-		}
 		return o.getFederationResource(clusterID)
 	}
 	return o.getResource(clusterID)
@@ -656,10 +655,22 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 		}
 		break
 	}
+	storageRequest := ""
+	storageLimitRequest := ""
+	blog.Errorf("%v", o.conf.BcsStoragePerInstance)
+	if o.conf.BcsStoragePerInstance > 0.0 {
+		storageRequest = fmt.Sprintf("ephemeral-storage: %.2fGi", o.conf.BcsStoragePerInstance)
+		storageLimitRequest = storageRequest
+	}
+	if o.conf.BcsStorageLimitPerInstance > 0.0 {
+		storageLimitRequest = fmt.Sprintf("ephemeral-storage: %.2fGi", o.conf.BcsStorageLimitPerInstance)
+	}
 	data = strings.ReplaceAll(data, templateVarCPU, fmt.Sprintf("%.2f", varCPU*1000))
 	data = strings.ReplaceAll(data, templateVarMem, fmt.Sprintf("%.2f", varMem))
+	data = strings.ReplaceAll(data, templateStorage, storageRequest)
 	data = strings.ReplaceAll(data, templateLimitVarCPU, fmt.Sprintf("%.2f", varLimitCPU*1000))
 	data = strings.ReplaceAll(data, templateLimitVarMem, fmt.Sprintf("%.2f", varLimitMem))
+	data = strings.ReplaceAll(data, templateLimitStorage, storageLimitRequest)
 	return data, nil
 }
 
