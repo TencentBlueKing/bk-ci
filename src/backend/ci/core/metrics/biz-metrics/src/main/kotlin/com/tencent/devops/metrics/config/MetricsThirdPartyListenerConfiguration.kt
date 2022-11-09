@@ -93,11 +93,7 @@ class MetricsThirdPartyListenerConfiguration {
 
     companion object {
         const val STREAM_CONSUMER_GROUP = "metrics-service"
-        private const val QUEUE_QUALITY_DAILY_EVENT = "q.metrics.quality.daily.exchange.queue"
-        private const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.metrics.quality.daily.exchange.fanout"
-        private const val QUEUE_METRICS_STATISTIC_CODECC_DAILY = "q.metrics.statistic.codecc.daily"
-        private const val EXCHANGE_METRICS_STATISTIC_CODECC_DAILY = "e.metrics.statistic.codecc.daily"
-        private const val QUEUE_METRICS_STATISTIC_TURBO_DAILY = "q.metrics.statistic.turbo.daily"
-        private const val EXCHANGE_METRICS_STATISTIC_TURBO_DAILY = "e.metrics.statistic.turbo.daily"
+        private const val EXCHANGE_METRICS_STATISTIC_CODECC_DAILY = "metrics.statistic.codecc.daily"
+        private const val EXCHANGE_METRICS_STATISTIC_TURBO_DAILY = "metrics.statistic.turbo.daily"
     }
 }
