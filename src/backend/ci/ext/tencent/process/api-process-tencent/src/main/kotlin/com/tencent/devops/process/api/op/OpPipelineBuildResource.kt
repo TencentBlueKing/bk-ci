@@ -35,7 +35,7 @@ interface OpPipelineBuildResource {
         statusTo: Int,
         @ApiParam("构建号", required = false)
         @QueryParam("buildIds")
-        buildIds: List<String>?,
+        buildIds: List<String>?
     ): Result<Int>
 
     @ApiOperation("修复流水线summary count计数信息)")
@@ -56,6 +56,6 @@ interface OpPipelineBuildResource {
         runningCount: Int?,
         @ApiParam("需要变更的排队计数", required = false)
         @QueryParam("queueCount")
-        queueCount: Int?,
+        queueCount: Int?
     ): Result<Int>
 }
