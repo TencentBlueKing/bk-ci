@@ -43,8 +43,8 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PUBLISHER"], description = "service-publisher")
-@Path("/service/publisher/sync")
+@Api(tags = ["BUILD_PUBLISHER"], description = "build-publisher")
+@Path("/build/store/publisher/sync")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServicePublishersResource {
