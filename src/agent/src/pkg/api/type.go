@@ -111,8 +111,9 @@ type ThirdPartyDockerTaskInfo struct {
 }
 
 type AgentPropsInfo struct {
-	Arch       string   `json:"arch"`
-	JdkVersion []string `json:"jdkVersion"`
+	Arch              string             `json:"arch"`
+	JdkVersion        []string           `json:"jdkVersion"`
+	DockerInitFileMd5 DockerInitFileInfo `json:"dockerInitFileMd5"`
 }
 
 type AgentHeartbeatResponse struct {
