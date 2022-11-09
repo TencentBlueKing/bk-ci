@@ -59,13 +59,6 @@ class MetricsThirdPartyListenerConfiguration {
         }
     }
 
-    @Bean
-    fun qualityDailyReportListener(
-        @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
-    ) = QualityReportDailyMessageListener(
-        metricsThirdPlatformDataReportFacadeService = thirdPlatformDataReportFacadeService
-    )
-
     @EventConsumer(StreamBinding.EXCHANGE_QUALITY_DAILY_FANOUT, STREAM_CONSUMER_GROUP)
     fun metricsQualityDailyReportListener(
         @Autowired listener: QualityReportDailyMessageListener
