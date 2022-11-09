@@ -102,7 +102,7 @@ class TriggerConfiguration {
     /**
      * 构建定时构建定时变化的广播交换机
      */
-    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT, STREAM_CONSUMER_GROUP, true)
     fun timerChangeListener(
         @Autowired buildListener: PipelineTimerChangerListener
     ): Consumer<Message<PipelineTimerChangeEvent>> {

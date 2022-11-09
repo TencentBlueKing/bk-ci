@@ -47,6 +47,9 @@ data class PulsarConsumerProperties(
      * 	Key_Shared
      */
     var subscriptionType: String = "Shared",
+
+    var subscriptionMode: String = "Durable",
+
     /**
      * Size of a consumer's receiver queue.
      * For example, the number of messages accumulated by a consumer before an application calls Receive.

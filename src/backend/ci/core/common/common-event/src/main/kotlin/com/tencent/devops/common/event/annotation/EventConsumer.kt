@@ -40,5 +40,5 @@ import org.springframework.context.annotation.Bean
 annotation class EventConsumer(
     val destination: String,
     val group: String,
-    val separately: Boolean = false
+    val anonymous: Boolean = false // 匿名队列，每个实例均会消费
 )

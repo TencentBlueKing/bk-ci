@@ -37,6 +37,7 @@ import org.apache.pulsar.client.api.HashingScheme
 import org.apache.pulsar.client.api.MessageRoutingMode
 import org.apache.pulsar.client.api.Producer
 import org.apache.pulsar.client.api.ProducerCryptoFailureAction
+import org.apache.pulsar.client.api.SubscriptionType
 import java.util.concurrent.TimeUnit
 
 object PulsarProducerFactory {
@@ -55,24 +56,38 @@ object PulsarProducerFactory {
     ): Producer<Any> {
         with(producerProperties) {
             // TODO 消息序列化方式需要调整， producer需要缓存
+            val serialType = runCatching {
+                Serialization.valueOf(serialType)
+            }.getOrNull() ?: Serialization.BYTE
             val producer = PulsarClientUtils.pulsarClient(pulsarProperties).newProducer(
-                PulsarSchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
-            )
-                .topic(topic)
+                PulsarSchemaUtils.getSchema(serialType, serialClass)
+            ).topic(topic)
             if (!producerName.isNullOrBlank()) {
                 producer.producerName(producerName)
             }
+            val messageRoutingMode = runCatching {
+                MessageRoutingMode.valueOf(messageRoutingMode)
+            }.getOrNull() ?: MessageRoutingMode.RoundRobinPartition
+            val hashingScheme = runCatching {
+                HashingScheme.valueOf(hashingScheme)
+            }.getOrNull() ?: HashingScheme.JavaStringHash
+            val cryptoFailureAction = runCatching {
+                ProducerCryptoFailureAction.valueOf(cryptoFailureAction)
+            }.getOrNull() ?: ProducerCryptoFailureAction.FAIL
+            val compressionType = runCatching {
+                CompressionType.valueOf(compressionType)
+            }.getOrNull() ?: CompressionType.NONE
             producer.sendTimeout(sendTimeoutMs, TimeUnit.MILLISECONDS)
                 .blockIfQueueFull(blockIfQueueFull)
                 .maxPendingMessages(maxPendingMessages)
                 .maxPendingMessagesAcrossPartitions(maxPendingMessagesAcrossPartitions)
-                .messageRoutingMode(MessageRoutingMode.valueOf(messageRoutingMode))
-                .hashingScheme(HashingScheme.valueOf(hashingScheme))
-                .cryptoFailureAction(ProducerCryptoFailureAction.valueOf(cryptoFailureAction))
+                .messageRoutingMode(messageRoutingMode)
+                .hashingScheme(hashingScheme)
+                .cryptoFailureAction(cryptoFailureAction)
                 .batchingMaxPublishDelay(batchingMaxPublishDelayMicros, TimeUnit.MILLISECONDS)
                 .batchingMaxMessages(batchingMaxMessages)
                 .enableBatching(batchingEnabled)
-                .compressionType(CompressionType.valueOf(compressionType))
+                .compressionType(compressionType)
             return producer.create() as Producer<Any>
         }
     }
