@@ -25,12 +25,12 @@ kubernetes:
   sleepEntrypoint: /data/landun/config/sleep.sh
   resources:
     builder:
-      cpu: 8
-      memory: 16048
+      cpu: __BK_CI_KUBERNETES_CPU__
+      memory: __BK_CI_KUBERNETES_MEMORY__
       disk: 100
     job:
-      cpu: 8
-      memory: 16048
+      cpu: __BK_CI_KUBERNETES_CPU__
+      memory: __BK_CI_KUBERNETES_MEMORY__
       disk: 100
   gateway:
     webConsoleProxy: __BK_CI_KUBERNETES_WEBCONSOLE_PROXY__
@@ -42,12 +42,12 @@ bcs:
   sleepEntrypoint: /tools/sleep.sh
   resources:
     builder:
-      cpu: 16.0
-      memory: 32769
+      cpu: __BK_CI_BCS_CPU__
+      memory: __BK_CI_BCS_MEMORY__
       disk: 100
     job:
-      cpu: 16.0
-      memory: 32769
+      cpu: __BK_CI_BCS_CPU__
+      memory: __BK_CI_BCS_MEMORY__
       disk: 100
 
 registry:
