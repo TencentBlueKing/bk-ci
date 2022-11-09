@@ -200,10 +200,9 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         val projectId = GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
         checkParam(userId)
         permissionService.checkCommonUser(userId)
-        permissionService.checkStreamAndOAuthAndEnable(
+        permissionService.checkStreamPermission(
             userId = userId,
             projectId = projectId,
-            gitProjectId = gitProjectId,
             permission = AuthPermission.EDIT
         )
         return streamGitTransferService.isOAuth(
