@@ -2,6 +2,7 @@ package com.tencent.devops.process.service.view
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW
@@ -43,18 +44,19 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val pipelineViewGroupDao: PipelineViewGroupDao = mockk()
     private val pipelineViewTopDao: PipelineViewTopDao = mockk()
     private val pipelineInfoDao: PipelineInfoDao = mockk()
+    private val client: Client = mockk()
 
     private val self: PipelineViewGroupService = spyk(
         PipelineViewGroupService(
             pipelineViewService = pipelineViewService,
-            pipelinePermissionService = pipelinePermissionService,
             pipelineViewDao = pipelineViewDao,
             pipelineViewGroupDao = pipelineViewGroupDao,
             pipelineViewTopDao = pipelineViewTopDao,
             pipelineInfoDao = pipelineInfoDao,
             dslContext = dslContext,
             redisOperation = redisOperation,
-            objectMapper = objectMapper
+            objectMapper = objectMapper,
+            client = client
         ),
         recordPrivateCalls = true
     )
