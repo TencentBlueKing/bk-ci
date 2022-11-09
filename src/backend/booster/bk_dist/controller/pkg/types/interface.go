@@ -81,12 +81,17 @@ type Mgr interface {
 
 	// get caches in pump mode
 	GetPumpCache(workID string) (*analyser.FileCache, *analyser.RootCache, error)
+
+	// Get first workid
+	GetFirstWorkID() (string, error)
 }
 
 // RemoteMgr describe a manager for handling all actions with remote workers for work
 type RemoteMgr interface {
 	// init handler
 	Init()
+
+	Start()
 
 	// run task in remote worker
 	ExecuteTask(req *RemoteTaskExecuteRequest) (*RemoteTaskExecuteResult, error)
@@ -108,6 +113,8 @@ type RemoteMgr interface {
 type LocalMgr interface {
 	// init handler
 	Init()
+
+	Start()
 
 	// lock local slot
 	LockSlots(usage dcSDK.JobUsage, weight int32) bool
@@ -143,6 +150,9 @@ type ResourceMgr interface {
 
 	// send stats, if brief true, then will not send the job stats
 	SendStats(brief bool) error
+
+	// send stats and reset after sent, if brief true, then will not send the job stats
+	SendAndResetStats(brief bool, t int64) error
 
 	// get resource status
 	GetStatus() *v2.RespTaskInfo
@@ -194,6 +204,9 @@ type BasicMgr interface {
 
 	// do register work
 	Register(config *WorkRegisterConfig) error
+
+	// do apply resource
+	ApplyResource(config *WorkRegisterConfig) error
 
 	// do unregister work
 	Unregister(config *WorkUnregisterConfig) error

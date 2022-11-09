@@ -132,6 +132,10 @@ dist_idle_loop:dist_prepare
 	# bk-idle-loop
 	go build -ldflags "${LDFLAG}" -o ${DISTEXECUTOR_BIN_PATH}/bk-idle-loop ./bk_dist/idleloop/main.go
 
+dist_monitor:dist_prepare
+	# bk-dist-monitor
+	go build -ldflags "${LDFLAG}" -o ${DISTEXECUTOR_BIN_PATH}/bk-dist-monitor ./bk_dist/monitor/main.go
+
 dist_help_tool:dist_prepare
 	# bk-help-tool
 	go build -ldflags "${LDFLAG}" -o ${DISTEXECUTOR_BIN_PATH}/bk-help-tool ./bk_dist/helptool/main.go
@@ -147,7 +151,7 @@ dist_shader_tool:dist_prepare
 dist_hook:dist_prepare
 	cd tools/hook_ld_preload && $(MAKE) all && cp bkhook.so ../../${DISTEXECUTOR_BIN_PATH}/
 
-dist:dist_executor dist_booster dist_controller dist_worker dist_idle_loop dist_help_tool dist_ubt_tool dist_shader_tool dist_hook
+dist:dist_executor dist_booster dist_controller dist_worker dist_idle_loop dist_help_tool dist_ubt_tool dist_shader_tool dist_hook dist_monitor
 
 clean_dist:
 	rm -rf ${DISTEXECUTOR_BIN_PATH}

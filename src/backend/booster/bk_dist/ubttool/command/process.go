@@ -75,6 +75,7 @@ func sysSignalHandler(cancel context.CancelFunc, handle *pkg.UBTTool) {
 func newCustomProcess(c *commandCli.Context) *pkg.UBTTool {
 	return pkg.NewUBTTool(&common.Flags{
 		ActionChainFile: c.String(FlagActionJSONFile),
+		ToolChainFile:   c.String(FlagToolChainJSONFile),
 		MostDepentFirst: c.Bool(FlagMostDependFirst),
 	}, sdk.ControllerConfig{
 		NoLocal: false,
