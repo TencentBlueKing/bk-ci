@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.stream.pulsar.integration.inbound
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.stream.pulsar.constant.Serialization
 import com.tencent.devops.common.stream.pulsar.properties.PulsarConsumerProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
@@ -51,7 +52,7 @@ object PulsarConsumerFactory {
      * @param consumerProperties consumerProperties
      * @return DefaultMQConsumer
      */
-    @Suppress("LongParameterList", "LongMethod")
+    @Suppress("LongParameterList", "LongMethod", "MagicNumber")
     fun initPulsarConsumer(
         topic: String,
         group: String? = null,
@@ -76,7 +77,7 @@ object PulsarConsumerFactory {
                 consumer.topicsPattern(topicsPattern)
             }
             if (group.isNullOrEmpty()) {
-                consumer.subscriptionName(subscriptionName)
+                consumer.subscriptionName("$subscriptionName-anonymous-${UUIDUtil.generate().substring(0, 8)}")
             } else {
                 consumer.subscriptionName(group)
             }
