@@ -99,7 +99,7 @@ class KubernetesContainerService @Autowired constructor(
 ) : ContainerService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(CoreCommonService::class.java)
+        private val logger = LoggerFactory.getLogger(KubernetesContainerService::class.java)
 
         // kubernetes构建机默认request配置
         private const val DEFAULT_REQUEST_CPU = 1
