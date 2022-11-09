@@ -215,8 +215,8 @@ class StreamUserMessageDao {
             dslContext.update(this)
                 .set(MESSAGE_TYPE, messageType.name)
                 .where(PROJECT_ID.eq(projectId))
+                .and(USER_ID.eq(userId))
                 .and(MESSAGE_ID.eq(messageId))
-                .and(MESSAGE_TYPE.eq(messageType.name))
                 .execute()
         }
     }
