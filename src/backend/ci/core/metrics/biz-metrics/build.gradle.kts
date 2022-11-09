@@ -27,7 +27,6 @@
 
 dependencies {
     api(project(":core:common:common-service"))
-    api(project(":core:common:common-event"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-db-sharding"))
     api(project(":core:metrics:api-metrics"))

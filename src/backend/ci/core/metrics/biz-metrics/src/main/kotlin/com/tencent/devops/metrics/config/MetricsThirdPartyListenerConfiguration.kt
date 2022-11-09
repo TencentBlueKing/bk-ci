@@ -33,13 +33,22 @@ import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.metrics.listener.CodeCheckDailyMessageListener
 import com.tencent.devops.metrics.listener.QualityReportDailyMessageListener
 import com.tencent.devops.metrics.listener.TurboDailyReportMessageListener
+import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportFacadeService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.Message
 import java.util.function.Consumer
 
 @Configuration
 class MetricsThirdPartyListenerConfiguration {
+
+    @Bean
+    fun codeCheckDailyListener(
+        @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
+    ) = CodeCheckDailyMessageListener(
+        metricsThirdPlatformDataReportFacadeService = thirdPlatformDataReportFacadeService
+    )
 
     @EventConsumer(EXCHANGE_METRICS_STATISTIC_CODECC_DAILY, STREAM_CONSUMER_GROUP)
     fun codeCheckDailyMessageListener(
@@ -50,6 +59,13 @@ class MetricsThirdPartyListenerConfiguration {
         }
     }
 
+    @Bean
+    fun qualityDailyReportListener(
+        @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
+    ) = QualityReportDailyMessageListener(
+        metricsThirdPlatformDataReportFacadeService = thirdPlatformDataReportFacadeService
+    )
+
     @EventConsumer(StreamBinding.EXCHANGE_QUALITY_DAILY_FANOUT, STREAM_CONSUMER_GROUP)
     fun metricsQualityDailyReportListener(
         @Autowired listener: QualityReportDailyMessageListener
@@ -58,6 +74,13 @@ class MetricsThirdPartyListenerConfiguration {
             listener.execute(event.payload)
         }
     }
+
+    @Bean
+    fun dailyReportMessageListener(
+        @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
+    ) = TurboDailyReportMessageListener(
+        metricsThirdPlatformDataReportFacadeService = thirdPlatformDataReportFacadeService
+    )
 
     @EventConsumer(EXCHANGE_METRICS_STATISTIC_TURBO_DAILY, STREAM_CONSUMER_GROUP)
     fun metricsTurboDailyReportListener(

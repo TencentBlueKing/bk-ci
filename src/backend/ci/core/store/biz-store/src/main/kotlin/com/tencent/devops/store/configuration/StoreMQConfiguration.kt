@@ -29,9 +29,11 @@ package com.tencent.devops.store.configuration
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.store.listener.StorePipelineBuildFinishListener
+import com.tencent.devops.store.service.common.StoreBuildService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
@@ -51,6 +53,15 @@ class StoreMQConfiguration {
 
     @Bean
     fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
+
+    @Bean
+    fun storePipelineBuildFinishListener(
+        @Autowired storeBuildService: StoreBuildService,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+    ) = StorePipelineBuildFinishListener(
+        storeBuildService = storeBuildService,
+        pipelineEventDispatcher = pipelineEventDispatcher
+    )
 
     @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
     fun buildFinishListener(
