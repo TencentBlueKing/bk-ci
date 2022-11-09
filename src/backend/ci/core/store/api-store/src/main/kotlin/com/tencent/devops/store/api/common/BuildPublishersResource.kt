@@ -43,11 +43,11 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_PUBLISHER"], description = "build-publisher")
+@Api(tags = ["BUILD_PUBLISHER"], description = "build_publisher")
 @Path("/build/store/publisher/sync")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServicePublishersResource {
+interface BuildPublishersResource {
 
     @ApiOperation("同步新增发布者信息")
     @POST

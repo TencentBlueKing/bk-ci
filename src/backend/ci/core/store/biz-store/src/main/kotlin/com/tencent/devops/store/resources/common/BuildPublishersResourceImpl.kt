@@ -28,7 +28,7 @@
 package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.ServicePublishersResource
+import com.tencent.devops.store.api.common.BuildPublishersResource
 import com.tencent.devops.store.pojo.common.PublishersRequest
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
 import com.tencent.devops.store.service.common.PublishersDataService
@@ -37,9 +37,9 @@ import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServicePublishersResourceImpl @Autowired constructor(
+class BuildPublishersResourceImpl @Autowired constructor(
     private val publishersDataService: PublishersDataService
-) : ServicePublishersResource {
+) : BuildPublishersResource {
 
     @SensitiveApiPermission("syn_publisher_data")
     override fun synAddPublisherData(userId: String, publishers: List<PublishersRequest>): Result<Int> {
