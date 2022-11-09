@@ -54,3 +54,6 @@ registry:
   host: __BK_CI_DOCKER_REGISTRY_URL__
   userName: __BK_CI_DOCKER_REGISTRY_USER__
   password: __BK_CI_DOCKER_REGISTRY_PASSWORD__
+
+gateway:
+  url: __BK_CI_PRIVATE_URL__
