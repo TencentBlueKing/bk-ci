@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -623,7 +624,7 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun checkPermission(userId: String, projectId: String) =
-        pipelinePermissionService.checkProjectManager(userId, projectId)
+        pipelinePermissionService.checkPipelinePermission(userId, projectId, AuthPermission.MANAGE)
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
