@@ -1,6 +1,6 @@
 # metrics hpa
 {{ if .Values.metrics.enabled -}}
-  {{ if .Values.metrics.autoscaling.enabled }}
+{{ if .Values.metrics.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/name: metrics
     app.kubernetes.io/component: microservice
     {{- if .Values.commonLabels }}
-    {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
   {{- if .Values.commonAnnotations }}
   annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
@@ -34,5 +34,5 @@ spec:
         name: memory
         targetAverageUtilization: {{ .Values.metrics.autoscaling.targetMemory  }}
     {{- end }}
-  {{- end }}
-  {{- end -}}
+{{- end }}
+{{- end -}}
