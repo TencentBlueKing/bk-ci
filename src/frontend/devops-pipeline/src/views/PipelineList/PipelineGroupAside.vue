@@ -11,7 +11,6 @@
                         {{$t(item.name)}}
                     </span>
                     <span v-if="item.pipelineCount" class="pipeline-group-item-sum group-header-sum">{{item.pipelineCount}}</span>
-
                 </div>
             </header>
             <article class="pipeline-group-container">
@@ -23,9 +22,17 @@
                         }]"
                         />
                         <span class="pipeline-group-header-name">{{block.title}}</span>
-                        <bk-button text theme="primary" class="add-pipeline-group-btn" @click.stop="showAddPipelineGroupDialog(block.projected)">
-                            <logo name="increase" size="16"></logo>
-                        </bk-button>
+                        <span v-bk-tooltips="block.tooltips">
+                            <bk-button
+                                text
+                                theme="primary"
+                                class="add-pipeline-group-btn"
+                                :disabled="block.disabled"
+                                @click.stop="showAddPipelineGroupDialog(block.projected)"
+                            >
+                                <logo name="increase" size="16"></logo>
+                            </bk-button>
+                        </span>
                     </h3>
                     <div
                         :class="{
@@ -53,7 +60,7 @@
                         </span>
                         <span class="pipeline-group-item-sum">{{item.pipelineCount}}</span>
                         <span @click.stop>
-                            <ext-menu :class="{ hidden: item.actions.length <= 0 }" :data="item" :config="item.actions"></ext-menu>
+                            <ext-menu :class="{ hidden: item.actions.length <= 0 }" :data="item" :config="item.actions" />
                         </span>
                     </div>
                 </div>
@@ -72,16 +79,22 @@
             :mask-close="false"
             header-position="left"
             :title="$t('addPipelineGroup')"
-            :loading="isAdding || checkingPermission"
+            :loading="isAdding"
         >
-            <bk-form ref="newPipelineGroupForm" v-bkloading="{ isLoading: checkingPermission || isAdding }" form-type="vertical" :model="newPipelineGroup">
+            <bk-form ref="newPipelineGroupForm" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
                 <bk-form-item property="name" :rules="groupNameRules" :label="$t('pipelineGroupName')">
                     <bk-input v-model="newPipelineGroup.name" />
                 </bk-form-item>
                 <bk-form-item required property="projected" :label="$t('visibleRange')">
                     <bk-radio-group class="pipeline-group-visible-range-group" v-model="newPipelineGroup.projected">
                         <bk-radio :value="false">{{$t('personalVis')}}</bk-radio>
-                        <bk-radio :disabled="!canAddProjectedGroup" :value="true">{{$t('projectVis')}}</bk-radio>
+                        <bk-radio
+                            v-bk-tooltips="projectedGroupDisableTips"
+                            :disabled="!hasManagePermission"
+                            :value="true"
+                        >
+                            {{$t('projectVis')}}
+                        </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
             </bk-form>
@@ -105,7 +118,6 @@
 <script>
     import { mapActions, mapGetters, mapState } from 'vuex'
     import {
-        PROCESS_API_URL_PREFIX,
         DELETED_VIEW_ID,
         UNCLASSIFIED_PIPELINE_VIEW_ID
     } from '@/store/constants'
@@ -119,13 +131,14 @@
             Logo,
             ExtMenu
         },
+        props: {
+            hasManagePermission: Boolean
+        },
         data () {
             return {
                 DELETED_VIEW_ID,
                 isLoading: false,
                 isPatchOperate: false,
-                checkingPermission: false,
-                canAddProjectedGroup: false,
                 editingGroupId: null,
                 renaming: false,
                 newViewName: '',
@@ -169,6 +182,9 @@
                     title: `${this.$t('personalViewList')}(${this.pipelineGroupDict.personalViewList.length})`,
                     id: 'personalViewList',
                     show: this.showClassify.personalViewList,
+                    tooltips: {
+                        disalbed: true
+                    },
                     children: this.pipelineGroupDict.personalViewList.map((view) => ({
                         ...view,
                         icon: 'pipelineGroup',
@@ -180,12 +196,20 @@
                     id: 'projectViewList',
                     show: this.showClassify.projectViewList,
                     projected: true,
+                    disabled: !this.hasManagePermission,
+                    tooltips: this.projectedGroupDisableTips,
                     children: this.pipelineGroupDict.projectViewList.map((view) => ({
                         ...view,
                         icon: view.id === UNCLASSIFIED_PIPELINE_VIEW_ID ? 'unGroup' : 'pipelineGroup',
                         actions: this.pipelineGroupActions(view)
                     }))
                 }]
+            },
+            projectedGroupDisableTips () {
+                return {
+                    content: this.$t('projectedGroupDisableTips'),
+                    disabled: this.hasManagePermission
+                }
             }
         },
         watch: {
@@ -350,7 +374,6 @@
             showAddPipelineGroupDialog (isProjected = false) {
                 this.isAddPipelineGroupDialogShow = true
                 this.newPipelineGroup.projected = isProjected
-                this.checkHasProjectedGroupPermission()
             },
             closeAddPipelineGroupDialog () {
                 this.isAddPipelineGroupDialogShow = false
@@ -360,18 +383,6 @@
                     projected: false
                 })
                     this.$refs.newPipelineGroupForm?.clearError?.()
-            },
-            async checkHasProjectedGroupPermission () {
-                try {
-                    this.checkingPermission = true
-                    const { projectId } = this.$route.params
-                    const res = await this.$ajax(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/checkPermission`)
-                    this.canAddProjectedGroup = res
-                } catch (error) {
-                    this.canAddProjectedGroup = false
-                } finally {
-                    this.checkingPermission = false
-                }
             },
             switchViewId (id) {
                 cacheViewId(this.$route.params.projectId, id)
@@ -435,11 +446,11 @@
 
         }
         .pipeline-group-aside-header {
-
             border-bottom: 1px solid #DCDEE5;
             box-sizing: content-box;
             position: sticky;
             top: 0;
+            padding-bottom: 10px;
             z-index: 2;
             background: white;
             >.pipeline-group-item {
@@ -465,7 +476,7 @@
             position: sticky;
             margin: 0;
             background: white;
-            top: 40px;
+            top: 50px;
             z-index: 1;
             .pipeline-group-header-name {
                 flex: 1;
@@ -481,6 +492,7 @@
             display: flex;
             flex-direction: column;
             overflow: auto;
+            overflow: overlay;
         }
         .recycle-pipeline-group-footer {
             display: flex;

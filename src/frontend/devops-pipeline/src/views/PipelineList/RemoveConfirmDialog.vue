@@ -6,6 +6,7 @@
         :title="title"
         header-position="left"
         :draggable="false"
+        :loading="isBusy"
         @cancel="handleClose"
         @confirm="handleSubmit"
     >
@@ -164,7 +165,6 @@
                 'patchDeletePipelines'
             ]),
             removeNoPermissionPipeline () {
-                console.log('123')
                 this.hideNoPermissionPipeline = true
             },
             async handleSubmit () {

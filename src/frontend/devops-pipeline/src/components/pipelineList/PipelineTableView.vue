@@ -52,12 +52,12 @@
             </div>
         </bk-table-column>
         <template v-if="isPatchView">
-            <bk-table-column width="250" :label="$t('latestExec')" prop="latestBuildNum">
+            <bk-table-column width="150" :label="$t('latestExec')" prop="latestBuildNum">
                 <span slot-scope="props">{{ props.row.latestBuildNum ? `#${props.row.latestBuildNum}` : '--' }}</span>
             </bk-table-column>
-            <bk-table-column width="150" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate" />
-            <bk-table-column width="250" sortable="custom" :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
-            <bk-table-column width="250" :label="$t('creator')" prop="creator" />
+            <bk-table-column width="200" sortable="custom" :label="$t('lastExecTime')" prop="latestBuildStartDate" />
+            <bk-table-column width="200" sortable="custom" :label="$t('restore.createTime')" prop="createTime" :formatter="formatTime" />
+            <bk-table-column width="200" :label="$t('creator')" prop="creator" />
         </template>
         <template v-else-if="isDeleteView">
             <bk-table-column :label="$t('restore.createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
@@ -102,14 +102,14 @@
                     </div>
                 </div>
             </bk-table-column>
-            <bk-table-column width="250" :label="$t('lastExecTime')" prop="latestBuildStartDate" key="latestBuildStatus">
+            <bk-table-column width="200" :label="$t('lastExecTime')" prop="latestBuildStartDate" key="latestBuildStatus">
                 <template slot-scope="props">
                     <p>{{ props.row.latestBuildStartDate }}</p>
                     <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
                     <p v-else class="desc">{{props.row.duration}}</p>
                 </template>
             </bk-table-column>
-            <bk-table-column width="250" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
+            <bk-table-column width="200" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
                 <template slot-scope="props">
                     <p>{{ props.row.updater }}</p>
                     <p class="desc">{{props.row.updateDate}}</p>
@@ -136,7 +136,7 @@
                 </bk-button>
                 <bk-button
                     v-else-if="!props.row.hasPermission"
-                    text
+                    outline
                     theme="primary"
                     class="pipeline-exec-btn"
                     @click="applyPermission(props.row)">
@@ -337,7 +337,7 @@
         color: #979BA5;
     }
     tr.no-permission {
-        background-color: #F5F7FA;
+        background-color: #FAFBFD;
     }
     tr.has-delete {
         color: #C4C6CC;

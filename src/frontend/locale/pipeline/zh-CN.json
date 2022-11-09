@@ -1014,7 +1014,7 @@
   "pipelineGroupAuth": "流水线组权限",
   "renameSuccess": "流水线组【{0}】重命名成功",
   "deleteGroupTitle": "确定删除【{0}】吗?",
-  "deleteGroupTips": "流水线组中的流水线并不会被删除；而流水线组的角色权限将失效。",
+  "deleteGroupTips": "流水线组中的流水线并不会被删除",
   "groupStrategy": "分组管理策略",
   "staticGroup": "静态分组",
   "dynamicGroup": "动态分组",
@@ -1082,5 +1082,7 @@
   "selectedCount": "已选择 <b>{0}</b> 条，",
   "staticGroupTips": "手动指定组内所包含的流水线",
   "dynamicGroupTips": "组内所包含的流水线根据设置的流水线名称\\标签等属性去动态匹配",
-  "lastModify": "最后修改"
+  "lastModify": "最后修改",
+  "projectedGroupDisableTips": "只有管理员\\CI管理员可以创建项目可见的流水线组",
+  "groupEditDisableTips": "只有管理员\\CI管理员可以对项目流水线组添加\\移出流水线"
 }

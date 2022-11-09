@@ -98,6 +98,6 @@
     .pipelines-card-view-list {
         display: grid;
         grid-gap: 24px;
-        grid-template-columns: repeat(auto-fill, minmax(408px, auto));
+        grid-template-columns: repeat(auto-fill, minmax(408px, 1fr));
     }
 </style>

@@ -63,8 +63,11 @@
             AddToGroupDialog,
             RemoveConfirmDialog
         },
+        props: {
+            hasManagePermission: Boolean
+        },
         data () {
-            const { page, pageSize, sortType, ...restQuery } = this.$route.query
+            const { page, pageSize, sortType, collation, ...restQuery } = this.$route.query
             return {
                 selected: [],
                 addToDialogShow: false,

@@ -165,7 +165,6 @@
     @import '@/scss/mixins/ellipsis';
     .bk-pipeline-card-view {
         position: relative;
-        width: 408px;
         height: 188px;
         background: white;
         border: 1px solid #DCDEE5;

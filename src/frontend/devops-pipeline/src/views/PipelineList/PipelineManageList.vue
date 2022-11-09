@@ -22,7 +22,15 @@
                             </li>
                         </ul>
                     </bk-dropdown-menu>
-                    <bk-button v-if="pipelineGroupType" @click="handleAddToGroup">{{$t('pipelineCountEdit')}}</bk-button>
+                    <span v-bk-tooltips="noManagePermissionTips">
+                        <bk-button
+                            v-if="pipelineGroupType"
+                            @click="handleAddToGroup"
+                            :disabled="canNotMangeProjectedGroup"
+                        >
+                            {{$t('pipelineCountEdit')}}
+                        </bk-button>
+                    </span>
                     <bk-button @click="goPatchManage">{{$t('patchManage')}}</bk-button>
                 </div>
                 <div class="pipeline-list-main-header-right-area">
@@ -82,6 +90,7 @@
         <add-to-group-dialog
             :add-to-dialog-show="pipelineActionState.addToDialogShow"
             :pipeline="pipelineActionState.activePipeline"
+            :has-manage-permission="hasManagePermission"
             @close="closeAddToDialog"
             @done="refresh"
         />
@@ -113,7 +122,12 @@
         <import-pipeline-popup
             :is-show.sync="importPipelinePopupShow"
         />
-        <pipeline-group-edit-dialog @close="handleCloseEditCount" @done="refresh" :group="activeGroup" />
+        <pipeline-group-edit-dialog
+            :has-manage-permission="hasManagePermission"
+            :group="activeGroup"
+            @close="handleCloseEditCount"
+            @done="refresh"
+        />
     </main>
 </template>
 <script>
@@ -155,6 +169,9 @@
             PipelineGroupEditDialog
         },
         mixins: [piplineActionMixin],
+        props: {
+            hasManagePermission: Boolean
+        },
         data () {
             const { page, pageSize, sortType, collation, ...restQuery } = this.$route.query
             return {
@@ -193,6 +210,9 @@
             currentViewName () {
                 return this.currentGroup?.i18nKey ? this.$t(this.currentGroup.i18nKey) : (this.currentGroup?.name ?? '')
             },
+            canNotMangeProjectedGroup () {
+                return this.currentGroup?.projected && !this.hasManagePermission
+            },
             pipelineGroupType () {
                 if (this.currentGroup?.viewType > 0) {
                     const typeAlias = ['', 'dynamic', 'static']
@@ -205,7 +225,12 @@
                 }
                 return null
             },
-
+            noManagePermissionTips () {
+                return {
+                    content: this.$t('groupEditDisableTips'),
+                    disabled: !this.canNotMangeProjectedGroup
+                }
+            },
             sortList () {
                 return [
                     {
@@ -288,6 +313,7 @@
                 const res = await this.requestHasCreatePermission(this.$route.params)
                 this.hasCreatePermission = res
             },
+
             toggleTemplatePopup () {
                 if (!this.hasCreatePermission) {
                     this.toggleCreatePermission()

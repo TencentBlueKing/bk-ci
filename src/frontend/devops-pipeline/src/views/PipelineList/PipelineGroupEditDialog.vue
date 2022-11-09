@@ -113,6 +113,7 @@
                                 <div @click.stop class="pipeline-group-tree-node" slot-scope="{ node, data }">
                                     <bk-checkbox
                                         v-bind="isChecked(data.id)"
+                                        :disabled="data.disabled"
                                         :class="{
                                             'pipeline-group-tree-node-checkbox': true,
                                             'last-checked': savedPipelineInfos.has(data.id)
@@ -242,6 +243,10 @@
             group: {
                 type: Object,
                 required: true
+            },
+            hasManagePermission: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -499,6 +504,7 @@
                             }))
                     }
                 }, [])
+                console.log(this.pipleinGroupTree)
                 this.pipelineGroupMap = pipelineGroupMap
                 this.preview.reservePipelineInfos = groupDetail.pipelineIds.map(pipelineId => this.generatePreviewPipeline({
                     pipelineId
@@ -680,7 +686,7 @@
                     this.$emit('done')
                 } catch (error) {
                     message = error.message || error
-                    theme = 'danger'
+                    theme = 'error'
                 } finally {
                     this.isSubmiting = false
                     this.$bkMessage({

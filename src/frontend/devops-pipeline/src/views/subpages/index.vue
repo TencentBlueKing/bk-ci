@@ -90,7 +90,13 @@
             @cancel="closeSaveAsDialog"
         />
         <import-pipeline-popup :handle-import-success="handleImportModifyPipeline" :is-show.sync="showImportDialog"></import-pipeline-popup>
-
+        <remove-confirm-dialog
+            :type="pipelineActionState.confirmType"
+            :is-show="pipelineActionState.isConfirmShow"
+            :pipeline-list="pipelineActionState.activePipelineList"
+            @close="closeRemoveConfirmDialog"
+            @done="goHome"
+        />
     </div>
 </template>
 
@@ -111,6 +117,7 @@
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import RenameDialog from '@/components/PipelineActionDialog/RenameDialog'
+    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
 
     export default {
         components: {
@@ -124,7 +131,8 @@
             CopyPipelineDialog,
             ImportPipelinePopup,
             SaveAsTemplateDialog,
-            RenameDialog
+            RenameDialog,
+            RemoveConfirmDialog
         },
         mixins: [pipelineActionMixin, pipelineOperateMixin],
         data () {
@@ -283,6 +291,11 @@
             toggleRenameDialog (show = false) {
                 this.isRenameDialogShow = show
             },
+            goHome () {
+                this.$router.push({
+                    name: 'PipelineManageList'
+                })
+            },
             renameDone (name) {
                 this.$nextTick(() => {
                     this.updateCurPipelineByKeyValue('pipelineName', name)
@@ -411,7 +424,7 @@
                 }
             },
             deletePipeline () {
-                this.delete(this.curPipeline)
+                this.deleteHandler(this.curPipeline)
             },
             toExecute (...args) {
                 const goDetail = ['pipelinesEdit', 'pipelinesDetail'].indexOf(this.$route.name) > -1

@@ -21,7 +21,6 @@ import { mapActions, mapMutations, mapGetters } from 'vuex'
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
 import { navConfirm, convertMStoStringByRule, convertTime } from '@/utils/util'
-import { bus } from '@/utils/bus'
 
 import {
     ALL_PIPELINE_VIEW_ID,
@@ -71,8 +70,7 @@ export default {
             'requestToggleCollect',
             'deleteHandler',
             'copyPipeline',
-            'restorePipeline',
-            'requestTemplatePermission'
+            'restorePipeline'
         ]),
         async checkHasTemplatePermission () {
             this.hasTemplatePermission = await this.requestTemplatePermission(this.$route.params.projectId)
@@ -441,8 +439,7 @@ export default {
             })
         },
         applyPermission ({ pipelineName, pipelineId }) {
-            bus.$emit(
-                'set-permission',
+            this.setPermissionConfig(
                 this.$permissionResourceMap.pipeline,
                 this.$permissionActionMap.view,
                 [{

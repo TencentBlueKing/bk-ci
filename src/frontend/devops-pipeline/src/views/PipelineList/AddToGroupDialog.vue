@@ -39,8 +39,8 @@
                             {{data.name}}
                         </bk-checkbox>
 
-                        <span class="added-pipeline-group-desc" v-if="data.disabled">
-                            {{$t(data.isDynamicGroup ? 'dynamicGroup' : 'added')}}
+                        <span class="added-pipeline-group-desc" v-bk-tooltips="data.tooltips" v-if="data.desc">
+                            {{data.desc}}
                         </span>
                     </div>
                 </bk-big-tree>
@@ -86,6 +86,10 @@
                 type: Boolean,
                 default: false
             },
+            hasManagePermission: {
+                type: Boolean,
+                default: false
+            },
             addToDialogShow: Boolean
         },
         data () {
@@ -110,12 +114,40 @@
                 return this.isPatch ? this.$t('patchAddToGroupTitle', [this.pipelineList.length]) : this.$t('addToGroupTitle', [this.pipeline.pipelineName])
             },
             pipelineGroupsTree () {
+                const tooltips = {
+                    content: this.$t('groupEditDisableTips'),
+                    delay: 500,
+                    disabled: this.hasManagePermission
+                }
                 return this.allPipelineGroup.reduce((acc, group) => {
                     const index = group.projected ? 1 : 0
                     const isDynamicGroup = group.viewType === 1
+                    const needManage = group.projected && !this.hasManagePermission
+                    let desc = null
+                    let sortPos = 0
+                    switch (true) {
+                        case this.savedPipelineGroupMap[group.id]:
+                            desc = 'added'
+                            sortPos = 1
+                            break
+                        case isDynamicGroup:
+                            desc = 'dynamicGroup'
+                            sortPos = 2
+                            break
+                        case needManage:
+                            desc = 'err403'
+                            sortPos = 3
+                            break
+                    }
                     acc[index].children.push({
                         ...group,
-                        disabled: isDynamicGroup || this.savedPipelineGroupMap[group.id],
+                        disabled: isDynamicGroup || this.savedPipelineGroupMap[group.id] || needManage,
+                        tooltips: {
+                            ...tooltips,
+                            disabled: !needManage
+                        },
+                        sortPos,
+                        desc: this.$t(desc),
                         isDynamicGroup
                     })
                     return acc
@@ -126,8 +158,13 @@
                 }, {
                     id: 'projected',
                     name: this.$t('projectPipelineGroup'),
+                    disabled: !this.hasManagePermission,
+                    tooltips,
                     children: []
-                }])
+                }]).map(node => {
+                    node.children.sort((a, b) => a.sortPos - b.sortPos)
+                    return node
+                })
             },
             selectedGroupIdMap () {
                 return this.selectedGroups.reduce((acc, group) => ({
