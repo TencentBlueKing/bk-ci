@@ -45,6 +45,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.core.io.ClassPathResource
 
 @Suppress("ALL")
 internal class HashFilesFunctionTest {
@@ -137,6 +138,7 @@ internal class HashFilesFunctionTest {
         @JvmStatic
         fun initData() {
             nameValue.add(NamedValueInfo("variables", ContextValueNode()))
+            val workSpace = ClassPathResource("specialFunctions/hashFiles").url.file
             val varData = DictionaryContextData().apply {
                 add("int", NumberContextData(123.0))
                 add("doub", NumberContextData(12312.12))
@@ -156,7 +158,7 @@ internal class HashFilesFunctionTest {
                 DictionaryContextData().apply {
                     add(
                         "workspace",
-                        StringContextData("/Users/ruotiantang/projects/devops/bk-ci-2/src/backend/ci/core/common/common-expression/src/test/kotlin/com/tencent/devops/common/expression/expression/specialFuctions/hashFiles")
+                        StringContextData(workSpace)
                     )
                 }
             )
