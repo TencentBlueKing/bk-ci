@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("矩阵的分裂计算配置")
+@Suppress("ComplexMethod")
 data class MatrixConfig(
     @ApiModelProperty("分裂策略", required = true)
     val strategy: Map<String, List<String>>?,
