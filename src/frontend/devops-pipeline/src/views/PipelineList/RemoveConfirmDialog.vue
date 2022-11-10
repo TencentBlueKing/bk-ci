@@ -119,7 +119,6 @@
                 return this.type === 'delete'
             },
             title () {
-                console.log('sdfafdsa')
                 return this.isRemoveType ? this.$t('removeFrom') : ''
             },
             hasPermissionPipelines () {
@@ -174,11 +173,7 @@
                     this.isBusy = true
                     const list = this.isRemoveType ? this.pipelineList : this.hasPermissionPipelines
                     if (list.length === 0) {
-                        this.$showTips({
-                            message: 'ssss',
-                            theme: 'error'
-                        })
-                        return
+                        throw Error('noDeletePipelines')
                     }
                     const params = {
                         projectId: this.$route.params.projectId,
