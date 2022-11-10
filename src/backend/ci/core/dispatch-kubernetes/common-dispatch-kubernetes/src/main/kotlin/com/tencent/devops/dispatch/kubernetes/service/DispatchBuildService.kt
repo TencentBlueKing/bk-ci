@@ -95,8 +95,6 @@ class DispatchBuildService @Autowired constructor(
     private val buildPoolSize = 100000 // 单个流水线可同时执行的任务数量
 
     fun preStartUp(dispatchMessage: DispatchMessage): Boolean {
-        logger.info("On start up - ($dispatchMessage)")
-
         val dockerRoutingType = DockerRoutingType.valueOf(dispatchMessage.dockerRoutingType!!)
         logsPrinter.printLogs(
             dispatchMessage = dispatchMessage,
