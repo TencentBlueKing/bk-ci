@@ -389,6 +389,13 @@ class PipelineViewService @Autowired constructor(
         isCreate: Boolean,
         viewId: Long? = null
     ) {
+        if (pipelineView.name.length > 60) {
+            logger.warn("over pipeline view name , user:$userId , project:$projectId")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_VIEW_OVER_NAME_LENGTH,
+                defaultMessage = "pipeline group name is too long"
+            )
+        }
         if (isCreate) {
             val countForLimit = pipelineViewDao.countForLimit(
                 dslContext = context ?: dslContext,

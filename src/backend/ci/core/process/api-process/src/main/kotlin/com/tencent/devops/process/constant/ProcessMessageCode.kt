@@ -262,4 +262,5 @@ object ProcessMessageCode {
     const val ERROR_VIEW_GROUP_IS_PROJECT_NO_SAME = "2101602" // 流水线组的视图范围不一致
     const val ERROR_VIEW_EXCEED_THE_LIMIT = "2101603" // 流水线组创建太多了
     const val ERROR_VIEW_DUPLICATE_NAME = "2101604" // 流水线组名称重复
+    const val ERROR_VIEW_OVER_NAME_LENGTH = "2101605" // 超过流水线组名称长度
 }

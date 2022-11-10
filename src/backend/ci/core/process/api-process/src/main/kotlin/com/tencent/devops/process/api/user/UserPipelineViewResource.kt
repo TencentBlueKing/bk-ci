@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewMatchDynamic
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.PipelineViewTopForm
@@ -265,7 +266,7 @@ interface UserPipelineViewResource {
 
     @ApiOperation("根据流水线ID获取视图(流水线组)")
     @GET
-    @Path("listViews/projects/{projectId}/pipelines/{pipelineId}")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/listViews")
     fun listViewByPipelineId(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -275,4 +276,19 @@ interface UserPipelineViewResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<PipelineNewViewSummary>>
+
+    @ApiOperation("根据视图ID获取当前流水线的具体数目")
+    @GET
+    @Path("/projects/{projectId}/views/{viewId}/pipelineCount")
+    fun pipelineCount(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("标签ID", required = true)
+        @PathParam("viewId")
+        viewId: String
+    ): Result<PipelineViewPipelineCount>
 }

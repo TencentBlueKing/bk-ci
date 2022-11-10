@@ -23,6 +23,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import io.mockk.every
@@ -888,6 +889,38 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             ).let {
                 Assertions.assertEquals(it!!.size, 2)
                 Assertions.assertEquals(it[0].name, pvCopy2.name)
+            }
+        }
+    }
+
+    @Nested
+    inner class PipelineCount {
+        @Test
+        @DisplayName("viewGroup为空")
+        fun test_1() {
+            every { pipelineViewGroupDao.listByViewId(anyDslContext(), any(), any()) } returns emptyList()
+            self.pipelineCount("test", "test", "test").let {
+                Assertions.assertEquals(it, PipelineViewPipelineCount.DEFAULT)
+            }
+        }
+
+        @Test
+        @DisplayName("viewGroup不为空")
+        fun test_2() {
+            every { pipelineViewGroupDao.listByViewId(anyDslContext(), any(), any()) } returns listOf(pvg)
+            every {
+                pipelineInfoDao.listInfoByPipelineIds(
+                    anyDslContext(),
+                    any(),
+                    any(),
+                    any()
+                )
+            } returns dslContext.mockResult(
+                T_PIPELINE_INFO, pi
+            )
+            self.pipelineCount("test", "test", "test").let {
+                Assertions.assertEquals(it.deleteCount, 0)
+                Assertions.assertEquals(it.normalCount, 1)
             }
         }
     }

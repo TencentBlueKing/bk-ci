@@ -53,6 +53,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewFilter
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
@@ -708,6 +709,24 @@ class PipelineViewGroupService @Autowired constructor(
             pipelineId = record.pipelineId,
             pipelineName = record.pipelineName,
             delete = record.delete
+        )
+    }
+
+    fun pipelineCount(userId: String, projectId: String, viewId: String): PipelineViewPipelineCount {
+        val viewGroups = pipelineViewGroupDao.listByViewId(dslContext, projectId, HashUtil.decodeIdToLong(viewId))
+        if (viewGroups.isEmpty()) {
+            return PipelineViewPipelineCount.DEFAULT
+        }
+        val pipelineInfos = pipelineInfoDao.listInfoByPipelineIds(
+            dslContext,
+            projectId,
+            viewGroups.map { it.pipelineId }.toSet(),
+            false
+        )
+        val deleteCount = pipelineInfos.count { it.delete }
+        return PipelineViewPipelineCount(
+            normalCount = pipelineInfos.size - deleteCount,
+            deleteCount = deleteCount
         )
     }
 
