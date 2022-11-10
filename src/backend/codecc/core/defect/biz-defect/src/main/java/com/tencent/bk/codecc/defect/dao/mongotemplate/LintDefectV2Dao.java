@@ -218,6 +218,18 @@ public class LintDefectV2Dao {
 
         // 2.状态过滤
         if (CollectionUtils.isNotEmpty(condStatusList)) {
+            // 若是快照查，选中待修复就必须补偿上已修复；
+            if (StringUtils.isNotEmpty(defectQueryReqVO.getBuildId())) {
+                String newStatusStr = String.valueOf(DefectStatus.NEW.value());
+                String fixedStatusStr = String.valueOf(DefectStatus.FIXED.value());
+                if (condStatusList.contains(newStatusStr)) {
+                    condStatusList.add(newStatusStr);
+                    condStatusList.add(fixedStatusStr);
+                } else {
+                    // 快照查，不存在已修复
+                    condStatusList.remove(fixedStatusStr);
+                }
+            }
             Set<Integer> condStatusSet = condStatusList.stream()
                     .map(it -> Integer.parseInt(it) | DefectStatus.NEW.value())
                     .collect(Collectors.toSet());

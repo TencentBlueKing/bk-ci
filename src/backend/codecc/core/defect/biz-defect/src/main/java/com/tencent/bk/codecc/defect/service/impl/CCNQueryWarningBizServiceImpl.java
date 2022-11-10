@@ -120,6 +120,8 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
     @Autowired
     private CCNStatisticRepository ccnStatisticRepository;
 
+    private static final int FIXED_VAL_IN_DB = DefectStatus.NEW.value() | DefectStatus.FIXED.value();
+
     @Override
     public CommonDefectQueryRspVO processQueryWarningRequest(long taskId, DefectQueryReqVO queryWarningReq, int pageNum, int pageSize, String sortField, Sort.Direction sortType)
     {
@@ -128,7 +130,13 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         Set<String> fileList = queryWarningReq.getFileList();
         String author = queryWarningReq.getAuthor();
         List<CCNDefectEntity> originalCCNDefectList = ccnDefectDao.findByTaskIdAndAuthorAndRelPaths(taskId, author, fileList);
-
+        if (StringUtils.isNotBlank(queryWarningReq.getBuildId())) {
+            for (CCNDefectEntity ccnDefectEntity : originalCCNDefectList) {
+                if (ccnDefectEntity.getStatus() == FIXED_VAL_IN_DB) {
+                    ccnDefectEntity.setStatus(DefectStatus.NEW.value());
+                }
+            }
+        }
         CCNDefectQueryRspVO ccnFileQueryRspVO = new CCNDefectQueryRspVO();
         // 从Task服务获取任务信息
         Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
