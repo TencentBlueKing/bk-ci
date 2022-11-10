@@ -38,7 +38,10 @@ import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.RuntimeDictionaryContextData
 import com.tencent.devops.common.expression.context.RuntimeNamedValue
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
+import org.apache.tools.ant.filters.StringInputStream
 import org.slf4j.LoggerFactory
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 @Suppress(
     "LoopWithTooManyJumpStatements",
@@ -70,7 +73,7 @@ object EnvReplacementParser {
                 val (context, nameValues) = contextPair
                     ?: getCustomExecutionContextByMap(contextMap)
                     ?: return value
-                parseExpressionTwice(
+                parseExpression(
                     value = value,
                     context = context,
                     nameValues = nameValues
@@ -108,35 +111,55 @@ object EnvReplacementParser {
         }
     }
 
-    private fun parseExpressionTwice(
+    private fun parseExpression(
         value: String,
         nameValues: List<NamedValueInfo>,
         context: ExecutionContext
     ): String {
-        val onceResult = parseExpression(
-            value = value,
-            blocks = findExpressions(value),
-            context = context,
-            nameValues = nameValues
-        )
-        findExpressions(onceResult).let { blocks ->
-            if (blocks.isEmpty()) {
-                return onceResult
-            } else {
-                return parseExpression(
-                    value = onceResult,
-                    blocks = blocks,
-                    context = context,
-                    nameValues = nameValues
-                )
+        val strReader = InputStreamReader(StringInputStream(value))
+        val bufferReader = BufferedReader(strReader)
+        val newValue = StringBuilder()
+        try {
+            var line = bufferReader.readLine()
+            while (line != null) {
+                val onceResult = findExpressions(line).let { blocks ->
+                    if (blocks.isEmpty()) {
+                        line
+                    } else {
+                        parseExpressionLine(
+                            value = line,
+                            blocks = blocks,
+                            context = context,
+                            nameValues = nameValues
+                        )
+                    }
+                }
+                val newLine = findExpressions(onceResult).let { blocks ->
+                    if (blocks.isEmpty()) {
+                        onceResult
+                    } else {
+                        parseExpressionLine(
+                            value = onceResult,
+                            blocks = blocks,
+                            context = context,
+                            nameValues = nameValues
+                        )
+                    }
+                }
+                newValue.append(newLine).append("\n")
+                line = bufferReader.readLine()
             }
+        } finally {
+            strReader.close()
+            bufferReader.close()
         }
+        return newValue.toString().removeSuffix("\n")
     }
 
     /**
      * 解析表达式，根据 findExpressions 寻找的括号优先级进行解析
      */
-    private fun parseExpression(
+    private fun parseExpressionLine(
         value: String,
         blocks: List<List<ExpressionBlock>>,
         nameValues: List<NamedValueInfo>,
@@ -156,10 +179,6 @@ object EnvReplacementParser {
                             JsonUtil.toJson(it, false)
                         } ?: return@nextBlock
                 } catch (ignore: ExpressionParseException) {
-                    logger.warn(
-                        "Expression or named values invalid: $expression",
-                        ignore
-                    )
                     return@nextBlock
                 }
 
