@@ -252,7 +252,7 @@
         },
         watch: {
             '$route.params.projectId': function () {
-                this.filters = []
+                this.filters = {}
                 this.$nextTick(() => {
                     if (!this.isAllPipelineView) {
                         this.goList()
@@ -263,7 +263,7 @@
                 })
             },
             '$route.params.viewId': function () {
-                this.filters = []
+                this.filters = {}
             }
         },
         created () {

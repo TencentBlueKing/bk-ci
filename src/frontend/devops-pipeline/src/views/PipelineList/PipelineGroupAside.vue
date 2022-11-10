@@ -385,14 +385,16 @@
                     this.$refs.newPipelineGroupForm?.clearError?.()
             },
             switchViewId (id) {
-                cacheViewId(this.$route.params.projectId, id)
-                this.$router.push({
-                    name: 'PipelineManageList',
-                    params: {
-                        ...this.$route.params,
-                        viewId: id
-                    }
-                })
+                if (id !== this.$route.params.viewId) {
+                    cacheViewId(this.$route.params.projectId, id)
+                    this.$router.push({
+                        name: 'PipelineManageList',
+                        params: {
+                            ...this.$route.params,
+                            viewId: id
+                        }
+                    })
+                }
             },
             async submitPipelineAdd () {
                 if (this.isAdding) return false

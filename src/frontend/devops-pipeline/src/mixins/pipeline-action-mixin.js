@@ -48,11 +48,6 @@ export default {
             return this.groupMap?.[this.$route.params.viewId]
         }
     },
-    watch: {
-        '$route.params.projectId': function () {
-            this.$nextTick(this.checkHasCreatePermission)
-        }
-    },
     created () {
         this.checkHasTemplatePermission()
     },

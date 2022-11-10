@@ -30,6 +30,19 @@ export function urlJoin (...args) {
     return args.filter(arg => arg).join('/').replace(/([^:]\/)\/+/g, '$1')
 }
 
+export function isShallowEqual (obj1, obj2) {
+    if (!isObject(obj1) || !isObject(obj2)) {
+        return false
+    }
+    const obj1Keys = Object.keys(obj1)
+    const obj2Keys = Object.keys(obj2)
+    if (obj1Keys.length !== obj2Keys.length) {
+        return false
+    }
+
+    return obj1Keys.every(key => obj1[key] === obj2[key])
+}
+
 export function isInArray (ele, array) {
     for (const item of array) {
         if (item === ele) {

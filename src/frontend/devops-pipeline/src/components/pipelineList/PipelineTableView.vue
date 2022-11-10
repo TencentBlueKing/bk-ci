@@ -170,7 +170,7 @@
     import {
         ALL_PIPELINE_VIEW_ID
     } from '@/store/constants'
-    import { convertTime } from '@/utils/util'
+    import { convertTime, isShallowEqual } from '@/utils/util'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
 
     export default {
@@ -233,11 +233,13 @@
                     sortType: newSort
                 })
             },
-            filterParams: function (filterMap) {
-                this.requestList({
-                    ...filterMap,
-                    page: 1
-                })
+            filterParams: function (filterMap, oldFilterMap) {
+                if (!isShallowEqual(filterMap, oldFilterMap)) {
+                    this.requestList({
+                        ...filterMap,
+                        page: 1
+                    })
+                }
             }
         },
         created () {

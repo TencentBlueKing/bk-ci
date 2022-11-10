@@ -504,7 +504,6 @@
                             }))
                     }
                 }, [])
-                console.log(this.pipleinGroupTree)
                 this.pipelineGroupMap = pipelineGroupMap
                 this.preview.reservePipelineInfos = groupDetail.pipelineIds.map(pipelineId => this.generatePreviewPipeline({
                     pipelineId
