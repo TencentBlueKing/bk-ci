@@ -246,18 +246,6 @@ class PipelineBuildSummaryDao {
         return conditions
     }
 
-    /**
-     * 查询指定projectId下的流水线数量
-     */
-    fun getPipelineCountByProject(
-        dslContext: DSLContext,
-        projectId: String
-    ): Int {
-        return dslContext.selectCount().from(T_PIPELINE_INFO)
-            .where(T_PIPELINE_INFO.PROJECT_ID.eq(projectId))
-            .fetchOne(0, Int::class.java)!!
-    }
-
     private fun handleFilterParamCondition(
         pipelineFilterParam: PipelineFilterParam,
         conditions: MutableList<Condition>
