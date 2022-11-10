@@ -63,7 +63,7 @@
                                 @click="toProjectDetail('buildList', repo.nameWithNamespace, repo.ciInfo && repo.ciInfo.enableCI)"
                             >
                         </div>
-                        <div class="repo-data">
+                        <div class="repo-data max-width">
                             <section v-if="repo.ciInfo && repo.ciInfo.enableCI">
                                 <div class="repo-name">
                                     <span class="to-page-link" @click="toProjectDetail('buildList', repo.nameWithNamespace)">{{ repo.nameWithNamespace }}</span>
@@ -354,8 +354,10 @@
                     border-radius: 28px;
                 }
             }
-            .repo-data {
+            .max-width {
                 max-width: calc(100% - 210px);
+            }
+            .repo-data {
                 flex: 1;
                 margin: 0 16px;
                 .repo-name {
