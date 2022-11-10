@@ -90,7 +90,8 @@ interface ICommand {
                         CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId)
                     )
                 ),
-                functions = SpecialFunctions.functions
+                functions = SpecialFunctions.functions,
+                output = SpecialFunctions.output
             )
         } else {
             ReplacementUtils.replace(

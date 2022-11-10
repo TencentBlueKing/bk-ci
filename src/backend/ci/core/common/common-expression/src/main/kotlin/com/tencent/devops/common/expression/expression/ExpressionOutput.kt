@@ -25,41 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.expression
-
-import com.tencent.devops.common.expression.expression.ExpressionOutput
-import com.tencent.devops.common.expression.expression.FunctionInfo
-import com.tencent.devops.common.expression.expression.specialFuctions.hashFiles.HashFilesFunction
-import com.tencent.devops.worker.common.logger.LoggerService
-import org.slf4j.LoggerFactory
+package com.tencent.devops.common.expression.expression
 
 /**
- * 针对只有worker使用的特殊函数的集成类
+ * 为表达式计算时需要对外输出提供接口
  */
-object SpecialFunctions {
-
-    private val logger = LoggerFactory.getLogger(SpecialFunctions::class.java)
-
-    val functions: List<FunctionInfo> = listOf(
-        initHashFunction()
-    )
-
-    val output = object : ExpressionOutput {
-        override fun writeDebugLog(content: String) {
-            try {
-                LoggerService.addDebugLine(content)
-            } catch (e: Throwable) {
-                logger.warn("hashFunction out put log error", e)
-            }
-        }
-    }
-
-    private fun initHashFunction(): FunctionInfo {
-        return FunctionInfo(
-            HashFilesFunction.name,
-            1,
-            Byte.MAX_VALUE.toInt(),
-            HashFilesFunction()
-        )
-    }
+interface ExpressionOutput {
+    fun writeDebugLog(content: String)
 }

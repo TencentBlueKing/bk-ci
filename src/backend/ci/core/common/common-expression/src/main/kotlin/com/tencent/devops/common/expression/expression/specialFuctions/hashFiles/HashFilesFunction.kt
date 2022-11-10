@@ -40,9 +40,9 @@ import com.tencent.devops.common.expression.expression.sdk.ResultMemory
  * hashFiles(path,path,..)
  * 注：因为涉及到文件计算，所以只能在worker或template中使用
  */
-class HashFilesFunction(val out: Output?) : Function() {
+class HashFilesFunction : Function() {
 
-    override fun createNode() = HashFilesFunction(null)
+    override fun createNode() = HashFilesFunction()
 
     override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
         val contextValues = context.state as ExecutionContext
@@ -68,7 +68,7 @@ class HashFilesFunction(val out: Output?) : Function() {
 
         val patterns = parameters.map { it.evaluate(context).convertToString() }.toList()
 
-        val hash = HashFiles(workspace, out).calculate(patterns)
+        val hash = HashFiles(workspace, context.expressionOutput).calculate(patterns)
 
         return Pair(null, hash)
     }
@@ -90,8 +90,4 @@ class HashFilesFunction(val out: Output?) : Function() {
         private const val workSpaceKey = "WORKSPACE"
         private const val ciWorkSpaceKey = "ci.workspace"
     }
-}
-
-interface Output {
-    fun write(content: String)
 }

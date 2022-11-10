@@ -406,7 +406,8 @@ open class MarketAtomTask : ITask() {
                         contextMap = variables,
                         onlyExpression = true,
                         contextPair = customReplacement,
-                        functions = SpecialFunctions.functions
+                        functions = SpecialFunctions.functions,
+                        output = SpecialFunctions.output
                     )
                 }
             } else {

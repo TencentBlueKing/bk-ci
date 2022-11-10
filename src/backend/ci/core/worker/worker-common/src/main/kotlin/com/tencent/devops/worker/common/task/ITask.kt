@@ -72,7 +72,8 @@ abstract class ITask {
                                 value = it.value ?: "",
                                 contextMap = variablesBuild,
                                 onlyExpression = buildVariables.pipelineAsCodeSettings?.enable,
-                                functions = SpecialFunctions.functions
+                                functions = SpecialFunctions.functions,
+                                output = SpecialFunctions.output
                             )
                             variablesBuild["envs.${it.key}"] = value
                             variables[it.key!!] = value

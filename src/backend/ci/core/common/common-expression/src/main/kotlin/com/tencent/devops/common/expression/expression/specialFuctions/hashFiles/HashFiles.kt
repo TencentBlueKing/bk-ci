@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.expression.expression.specialFuctions.hashFiles
 
+import com.tencent.devops.common.expression.expression.ExpressionOutput
 import com.tencent.devops.common.expression.utils.AntPathMatcher
 import java.io.File
 import java.nio.file.Files
@@ -37,7 +38,7 @@ import javax.xml.bind.DatatypeConverter
 @Suppress("NestedBlockDepth")
 class HashFiles(
     private val workspace: String,
-    private val out: Output?
+    private val out: ExpressionOutput?
 ) {
 
     private val matcher = AntPathMatcher(File.separator)
@@ -81,7 +82,7 @@ class HashFiles(
                     if (matcher.match(pattern.pattern, path.toString())) {
                         val abs = path.toAbsolutePath().toString()
                         files.add(abs)
-                        out?.write("pattern: ${pattern.pattern} match file $abs to calculateHash")
+                        out?.writeDebugLog("pattern: ${pattern.pattern} match file $abs to calculateHash")
                     }
                 }
                 return@search
@@ -93,7 +94,7 @@ class HashFiles(
                         if (matcher.match(pattern.pattern, file.toString())) {
                             val abs = file.toAbsolutePath().toString()
                             files.add(abs)
-                            out?.write("pattern: ${pattern.pattern} match file $abs to calculateHash")
+                            out?.writeDebugLog("pattern: ${pattern.pattern} match file $abs to calculateHash")
                         }
                     }
                 }

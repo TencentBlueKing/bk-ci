@@ -380,7 +380,7 @@ object ParametersExpressionParse {
             HashFilesFunction.name,
             1,
             Byte.MAX_VALUE.toInt(),
-            HashFilesFunction(null)
+            HashFilesFunction()
         )
     )
 
@@ -395,7 +395,7 @@ object ParametersExpressionParse {
         val (value, isComplete, type) = try {
             ExpressionParser.createSubNameValueEvaluateTree(
                 expression, null, nameValues, functionList, subInfo
-            )?.subNameValueEvaluate(null, context, null, subInfo)
+            )?.subNameValueEvaluate(null, context, null, subInfo, null)
                 ?: throw YamlTemplateException("create evaluate tree is null")
         } catch (e: Throwable) {
             throw error(Constants.EXPRESSION_EVALUATE_ERROR.format(path, expression, e.message))
@@ -549,8 +549,6 @@ object ParametersExpressionParse {
             else -> StringContextData(value.toString())
         }
     }
-
-    private val logger = LoggerFactory.getLogger(ParametersExpressionParse::class.java)
 
     private fun error(content: String) = YamlFormatException(content)
 }

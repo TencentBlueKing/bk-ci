@@ -58,11 +58,11 @@ internal class HashFilesFunctionTest {
         fun noRootPath() {
             val exp = "hashFiles('/data/a/a')"
             Assertions.assertThrows(RuntimeException::class.java) {
-                ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+                ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
             }
             val exp1 = "hashFiles('D: \\data\\.\\..')"
             Assertions.assertThrows(RuntimeException::class.java) {
-                ExpressionParser.createTree(exp1, null, nameValue, null)!!.evaluate(null, ev, null).value
+                ExpressionParser.createTree(exp1, null, nameValue, null)!!.evaluate(null, ev, null, null).value
             }
         }
 
@@ -71,7 +71,7 @@ internal class HashFilesFunctionTest {
         fun noIndexPath() {
             val exp = "hashFiles('/data/./..')"
             Assertions.assertThrows(RuntimeException::class.java) {
-                ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+                ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
             }
         }
     }
@@ -95,10 +95,10 @@ internal class HashFilesFunctionTest {
                         HashFilesFunction.name,
                         1,
                         Byte.MAX_VALUE.toInt(),
-                        HashFilesFunction(null)
+                        HashFilesFunction()
                     )
                 )
-            )!!.evaluate(null, ev, null).value
+            )!!.evaluate(null, ev, null, null).value
         )
     }
 
@@ -120,11 +120,11 @@ internal class HashFilesFunctionTest {
                         HashFilesFunction.name,
                         1,
                         Byte.MAX_VALUE.toInt(),
-                        HashFilesFunction(null)
+                        HashFilesFunction()
                     )
                 ),
                 subInfo
-            )!!.subNameValueEvaluate(null, parametersEv, null, subInfo).value
+            )!!.subNameValueEvaluate(null, parametersEv, null, subInfo, null).value
         )
     }
 
