@@ -25,21 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes
-
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.scheduling.annotation.EnableScheduling
-
-@MicroService
-@EnableScheduling
-@ComponentScan(
-    "com.tencent.devops.dispatch",
-    "com.tencent.devops.common.dispatch.sdk"
-)
-class DispatchKubernetesApplication
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(DispatchKubernetesApplication::class, args)
+dependencies {
+    api(project(":core:dispatch-kubernetes:biz-dispatch-kubernetes-bcs"))
+    api(project(":core:dispatch-kubernetes:biz-dispatch-kubernetes"))
 }
