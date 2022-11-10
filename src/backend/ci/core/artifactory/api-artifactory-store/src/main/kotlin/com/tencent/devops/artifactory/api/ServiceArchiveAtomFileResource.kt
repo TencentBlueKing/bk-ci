@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.api
 
 import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -89,15 +90,19 @@ interface ServiceArchiveAtomFileResource {
     fun uploadToPath(
         @ApiParam("userId", required = true)
         @QueryParam("userId")
+        @BkField(required = true)
         userId: String,
         @ApiParam("项目代码", required = true)
         @QueryParam("projectId")
+        @BkField(required = true)
         projectId: String,
         @ApiParam("文件路径", required = true)
         @QueryParam("path")
+        @BkField(required = true)
         path: String,
         @ApiParam("文件类型", required = true)
         @QueryParam("fileType")
+        @BkField(required = true)
         fileType: String,
         @ApiParam("文件", required = true)
         @FormDataParam("file")

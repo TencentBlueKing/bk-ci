@@ -84,7 +84,6 @@ class ServiceArchiveAtomFileResourceImpl @Autowired constructor(
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
-        checkParam(userId, projectId, path)
         val url = archiveFileService.uploadFile(
             userId = userId,
             inputStream = inputStream,
@@ -95,17 +94,5 @@ class ServiceArchiveAtomFileResourceImpl @Autowired constructor(
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )
         return Result(url)
-    }
-
-    private fun checkParam(userId: String, projectId: String, path: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        if (path.isBlank()) {
-            throw ErrorCodeException(errorCode = ArtifactoryMessageCode.INVALID_CUSTOM_ARTIFACTORY_PATH)
-        }
     }
 }

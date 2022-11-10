@@ -193,7 +193,7 @@ interface OpAtomResource {
 
     @ApiOperation("根据插件包一键部署插件")
     @POST
-    @Path("/deployment")
+    @Path("/deploy")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun releaseAtom(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

@@ -238,7 +238,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         if (!taskJsonFile.exists()) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_ATOM_CONF_INVALID,
-                arrayOf("$TASK_JSON_NAME")
+                arrayOf(TASK_JSON_NAME)
             )
         }
         val taskJsonMap: Map<String, Any>
@@ -251,7 +251,8 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
             releaseInfo = JsonUtil.mapTo(releaseInfoMap as Map<String, Any>, ReleaseInfo::class.java)
         } catch (e: JsonProcessingException) {
             return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID
+                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                arrayOf("releaseInfo")
             )
         }
         // 新增插件
@@ -261,7 +262,8 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
                 projectCode = releaseInfo.projectId,
                 atomCode = releaseInfo.atomCode,
                 name = releaseInfo.name,
-                language = releaseInfo.language
+                language = releaseInfo.language,
+                frontendType = releaseInfo.configInfo.frontendType
             )
         )
         if (addMarketAtomResult.isNotOk()) {
@@ -316,7 +318,11 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
                 }
             }
         } catch (ignored: Throwable) {
-            logger.error("BKSystemErrorMonitor|getQualityJsonContent|$atomCode|error=${ignored.message}", ignored)
+            logger.warn("BKSystemErrorMonitor|archive atom file fail|$atomCode|error=${ignored.message}", ignored)
+            return Result(
+                data = false,
+                message = ignored.message
+            )
         } finally {
             zipFile.delete()
             FileSystemUtils.deleteRecursively(File(atomPath).parentFile)
@@ -338,7 +344,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
                 versionContent = releaseInfo.versionInfo.versionContent,
                 publisher = releaseInfo.versionInfo.publisher,
                 labelIdList = releaseInfo.labelIdList,
-                frontendType = releaseInfo.frontendType,
+                frontendType = releaseInfo.configInfo.frontendType,
                 logoUrl = releaseInfo.logoUrl,
                 classifyCode = releaseInfo.classifyCode
             )

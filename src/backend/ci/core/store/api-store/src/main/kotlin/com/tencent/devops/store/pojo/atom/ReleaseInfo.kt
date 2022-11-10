@@ -54,8 +54,8 @@ data class ReleaseInfo(
     var logoUrl: String,
     @ApiModelProperty("支持的操作系统", required = true)
     val os: ArrayList<String>,
-    @ApiModelProperty(value = "前端UI渲染方式", required = true)
-    val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL,
+    @ApiModelProperty(value = "插件配置信息", required = true)
+    val configInfo: AtomConfigInfo,
     @ApiModelProperty("插件所属范畴", required = true)
     val category: AtomCategoryEnum,
     @ApiModelProperty("所属插件分类代码", required = true)
