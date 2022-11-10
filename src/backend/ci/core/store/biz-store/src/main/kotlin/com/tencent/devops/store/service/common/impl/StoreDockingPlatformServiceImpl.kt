@@ -142,4 +142,8 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
             records = storeDockingPlatformInfos ?: emptyList()
         )
     }
+
+    override fun isPlatformCodeRegistered(platformCode: String): Boolean {
+        return storeDockingPlatformDao.isPlatformCodeRegistered(dslContext, platformCode)
+    }
 }

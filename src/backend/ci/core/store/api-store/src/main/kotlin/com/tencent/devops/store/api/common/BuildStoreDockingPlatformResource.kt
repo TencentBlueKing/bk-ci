@@ -35,6 +35,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -60,5 +61,14 @@ interface BuildStoreDockingPlatformResource {
         storeCode: String,
         @ApiParam("平台列表集合")
         platformCodes: Set<String>
+    ): Result<Boolean>
+
+    @ApiOperation("判断平台Code是否已注册")
+    @GET
+    @Path("/codes/{platformCode}/validate")
+    fun isPlatformCodeRegistered(
+        @ApiParam("标识", required = true)
+        @PathParam("platformCode")
+        platformCode: String
     ): Result<Boolean>
 }
