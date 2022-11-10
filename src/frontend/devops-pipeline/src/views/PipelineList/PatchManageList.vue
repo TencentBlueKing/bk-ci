@@ -35,6 +35,7 @@
             is-patch
             :add-to-dialog-show="addToDialogShow"
             :pipeline-list="selected"
+            :has-manage-permission="hasManagePermission"
             @done="refreshList"
             @close="togglePatchAddTo"
         />
