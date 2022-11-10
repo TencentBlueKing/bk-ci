@@ -948,7 +948,15 @@ class TemplateFacadeService @Autowired constructor(
         val template = if (version == null && versionName.isNullOrBlank()) {
             latestTemplate
         } else {
-            templateDao.getTemplate(dslContext = dslContext, version = version, versionName = versionName)
+            if (version == null) {
+                templateDao.getTemplate(
+                    dslContext = dslContext,
+                    templateId = templateId,
+                    versionName = versionName
+                )
+            } else {
+                templateDao.getTemplate(dslContext = dslContext, version = version)
+            }
         }
         val currentVersion = TemplateVersion(
             template.version,
