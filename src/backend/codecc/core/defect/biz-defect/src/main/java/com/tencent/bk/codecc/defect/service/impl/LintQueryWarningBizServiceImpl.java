@@ -122,6 +122,8 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     @Autowired
     private CheckerSetRepository checkerSetRepository;
 
+    private static final int FIXED_VAL_IN_DB = DefectStatus.NEW.value() | DefectStatus.FIXED.value();
+
     @Override
     public int getSubmitStepNum()
     {
@@ -239,6 +241,11 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
                             lastAnalyzeTimeMap.get(defectV2Entity.getToolName())));
                     defectVO.setSeverity(defectVO.getSeverity() == ComConstants.PROMPT_IN_DB
                         ? ComConstants.PROMPT : defectVO.getSeverity());
+                    //如果是快照查，需要把已修复变更为待修复
+                    if(StringUtils.isNotBlank(queryWarningReq.getBuildId())
+                            && defectVO.getStatus() == FIXED_VAL_IN_DB){
+                        defectVO.setStatus(DefectStatus.NEW.value());
+                    }
                     return defectVO;
                 }).collect(Collectors.toList());
 

@@ -521,6 +521,14 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService {
         log.info("lastCodeRepoSet: {}\ncurrCodeRepoSet:{}",
                 GsonUtils.toJson(lastCodeRepos),
                 GsonUtils.toJson(codeRepos));
+        if (CollectionUtils.isNotEmpty(codeRepos)) {
+            List<String> branches = codeRepos.stream().map(CodeRepoVO::getBranch).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(branches) && branches.contains("devops-virtual-branch")) {
+                //虚拟分支，默认变更
+                log.info("has devops-virtual-branch repo change");
+                return true;
+            }
+        }
         if (lastCodeRepos != null && codeRepos != null && lastCodeRepos.size() == codeRepos.size()) {
             Set<String> lastCodeRepoSet = lastCodeRepos.stream().map(repo -> String.format("%s_%s",
                     PathUtils.formatRepoUrlToHttp(repo.getUrl() == null ? "" : repo.getUrl()),
