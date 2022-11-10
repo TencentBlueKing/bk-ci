@@ -7,28 +7,34 @@ defineProps<{
 </script>
 
 <template>
-  <section class="manage-header">
-    <bk-breadcrumb
-      class="manage-breadcrumb"
-      separator="/"
-    >
-      <bk-breadcrumb-item
-        to="www"
+  <section class="header-wrapper">
+    <div class="manage-header">
+      <bk-breadcrumb
+        class="manage-breadcrumb"
+        separator="/"
       >
-        项目管理
-        <template #separator>
-          <angle-right class="manage-icon" />
-        </template>
-      </bk-breadcrumb-item>
-      <bk-breadcrumb-item>
-        {{ name }}
-      </bk-breadcrumb-item>
-    </bk-breadcrumb>
-    <slot></slot>
+        <bk-breadcrumb-item
+          to="list"
+        >
+          项目管理
+          <template #separator>
+            <angle-right class="manage-icon" />
+          </template>
+        </bk-breadcrumb-item>
+        <bk-breadcrumb-item>
+          {{ name }}
+        </bk-breadcrumb-item>
+      </bk-breadcrumb>
+      <slot></slot>
+    </div>
   </section>
 </template>
 
 <style lang="postcss" scoped>
+.header-wrapper {
+  display: flex;
+  flex-direction: column;
+}
 .manage-header {
   height: 60px;
   background: #FFFFFF;
