@@ -46,27 +46,32 @@
                         :name="option">
                     </bk-option>
                 </bk-select>
-                 <bk-select v-model="filterData.event"
+                 <bk-select
+                    v-model="filterData.event"
                     class="filter-item"
                     :placeholder="$t('pipeline.event')"
+                    :loading="isLoadingEvent"
                     multiple
                     searchable
-                    :loading="isLoadingEvent"
                     @toggle="toggleFilterEvent"
                 >
-                    <bk-option v-for="event in eventList"
+                    <bk-option
+                        v-for="event in eventList"
                         :key="event.id"
                         :id="event.id"
                         :name="event.name">
                     </bk-option>
                 </bk-select>
-                <bk-select v-model="filterData[filter.id]"
-                    v-for="filter in filterList" :key="filter.id"
-                    class="filter-item"
+                <bk-select
+                    v-for="filter in filterList"
+                    :key="filter.id"
                     :placeholder="filter.placeholder"
+                    class="filter-item"
                     multiple
+                    @change="(val) => handleStatusChange(val, filter.id)"
                 >
-                    <bk-option v-for="option in filter.data"
+                    <bk-option
+                        v-for="option in filter.data"
                         :key="option.id"
                         :id="option.id"
                         :name="option.name">
@@ -129,7 +134,7 @@
                     <template slot-scope="props">
                         <opt-menu>
                             <li @click="cancelBuild(props.row)"
-                                v-if="['RUNNING', 'PREPARE_ENV', 'QUEUE', 'LOOP_WAITING', 'CALL_WAITING', 'REVIEWING'].includes(props.row.buildHistory.status)"
+                                v-if="['RUNNING', 'PREPARE_ENV', 'QUEUE', 'LOOP_WAITING', 'CALL_WAITING', 'REVIEWING', 'TRIGGER_REVIEWING'].includes(props.row.buildHistory.status)"
                                 v-bk-tooltips="computedOptToolTip"
                                 :class="{ disabled: !curPipeline.enabled || !permission }"
                             >{{$t('pipeline.cancelBuild')}}</li>
@@ -327,9 +332,14 @@
                         id: 'status',
                         placeholder: this.$t('status'),
                         data: [
-                            { name: this.$t('pipeline.succeed'), id: 'SUCCEED' },
-                            { name: this.$t('pipeline.failed'), id: 'FAILED' },
-                            { name: this.$t('pipeline.canceled'), id: 'CANCELED' }
+                            { name: this.$t('pipeline.succeed'), val: ['SUCCEED'], id: 'succeed' },
+                            { name: this.$t('pipeline.failed'), val: ['FAILED'], id: 'failed' },
+                            { name: this.$t('pipeline.canceled'), val: ['CANCELED'], id: 'canceled' },
+                            { name: this.$t('pipeline.queue'), val: ['QUEUE', 'QUEUE_CACHE'], id: 'queue' },
+                            { name: this.$t('pipeline.queueTimeout'), val: ['QUEUE_TIMEOUT'], id: 'queueTimeout' },
+                            { name: this.$t('pipeline.running'), val: ['RUNNING'], id: 'running' },
+                            { name: this.$t('pipeline.reviewing'), val: ['REVIEWING', 'TRIGGER_REVIEWING'], id: 'reviewing' },
+                            { name: this.$t('pipeline.stageSuccess'), val: ['STAGE_SUCCESS'], id: 'stageSuccess' },
                         ]
                     }
                 ],
@@ -443,6 +453,12 @@
 
             getIconClass (status) {
                 return [getPipelineStatusClass(status), ...getPipelineStatusCircleIconCls(status)]
+            },
+
+            handleStatusChange (val, id) {
+                const filter = this.filterList.find(filter => filter.id === id)
+                const options = filter.data.filter(data => val.includes(data.id))
+                this.filterData[id] = options.map(opstion => opstion.val).flat()
             },
 
             toggleFilterBranch (isOpen) {

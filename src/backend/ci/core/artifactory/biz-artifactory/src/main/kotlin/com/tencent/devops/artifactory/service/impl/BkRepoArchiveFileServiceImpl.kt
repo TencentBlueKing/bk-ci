@@ -225,7 +225,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             metadata = searchProps.props,
             page = page ?: 1,
             pageSize = pageSize ?: DEFAULT_PAGESIZE
-        )
+        ).records
         return Page(
             count = nodeList.size.toLong(),
             page = page ?: 1,
@@ -351,7 +351,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             metadata = mapOf(),
             page = 1,
             pageSize = DOWNLOAD_FILE_URL_LIMIT
-        ).map {
+        ).records.map {
             generateFileDownloadUrl(fileChannelType, "${artifactoryInfo.projectId}/$repoName/${it.fullPath}", fullUrl)
         }
         if (fileUrls.isEmpty()) {
@@ -377,7 +377,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             metadata = emptyMap(),
             page = 1,
             pageSize = ACROSS_PROJECT_COPY_LIMIT
-        )
+        ).records
 
         fileNodes.forEach {
             bkRepoClient.copy(

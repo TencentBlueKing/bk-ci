@@ -84,4 +84,15 @@ interface AtomReleaseService {
         releaseFlag: Boolean,
         atomReleaseRequest: AtomReleaseRequest
     ): Result<Boolean>
+
+    /**
+     * error.json数据入库
+     */
+    fun syncAtomErrorCodeConfig(
+        atomCode: String,
+        atomVersion: String,
+        userId: String,
+        repositoryHashId: String?,
+        branch: String?
+    )
 }

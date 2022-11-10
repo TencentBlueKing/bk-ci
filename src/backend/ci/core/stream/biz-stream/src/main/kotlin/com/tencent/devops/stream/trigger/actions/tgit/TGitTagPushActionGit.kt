@@ -40,7 +40,6 @@ import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -68,7 +67,6 @@ class TGitTagPushActionGit(
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.TAG_PUSH)
 
-    override lateinit var data: ActionData
     override fun event() = data.event as GitTagPushEvent
 
     override val api: TGitApiService
