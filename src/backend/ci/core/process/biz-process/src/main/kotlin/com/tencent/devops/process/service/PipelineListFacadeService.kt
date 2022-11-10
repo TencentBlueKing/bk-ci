@@ -233,7 +233,7 @@ class PipelineListFacadeService @Autowired constructor(
         val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
             projectId = projectId,
             channelCode = ChannelCode.BS,
-            pipelineIds = pipelineIdList)
+            pipelineIds = resultPipelineIds)
         if (buildPipelineRecords.isNotEmpty) {
             pipelines.addAll(
                 buildPipelines(
