@@ -248,7 +248,7 @@ class KubernetesContainerService @Autowired constructor(
                 this, "下发创建构建机请求成功，builderName: $builderName 等待机器创建..."
             )
 
-            val (taskStatus, failedMsg) = kubernetesTaskClient.waitTaskFinish(userId, taskId)
+/*            val (taskStatus, failedMsg) = kubernetesTaskClient.waitTaskFinish(userId, taskId)
 
             if (taskStatus == TaskStatusEnum.SUCCEEDED) {
                 // 启动成功
@@ -256,7 +256,7 @@ class KubernetesContainerService @Autowired constructor(
                     "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
                         "create kubernetes vm success, wait vm start..."
                 )
-                logsPrinter.printLogs(this, "构建机创建成功，等待机器启动...")
+                logsPrinter.printLogs(this, "构建机创建成功，等待机器启动...")*/
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲
                 clearExceptionBuilder(builderName, poolNo)
@@ -267,7 +267,7 @@ class KubernetesContainerService @Autowired constructor(
                     "${ConstantsMessage.TROUBLE_SHOOTING}构建机创建失败:${failedMsg ?: taskStatus.message}"
                 )
             }
-            return Pair(startBuilder(dispatchMessages, builderName, poolNo, cpu, mem, disk), builderName)
+            return Pair(taskId, builderName)
         }
     }
 
