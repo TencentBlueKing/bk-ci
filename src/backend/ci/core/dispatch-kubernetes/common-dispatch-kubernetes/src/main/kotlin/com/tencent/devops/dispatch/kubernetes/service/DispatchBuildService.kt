@@ -349,7 +349,7 @@ class DispatchBuildService @Autowired constructor(
             disk = threadLocalDisk.get()
         )
 
-        checkStartTask(poolNo, taskId, builderName, dockerRoutingType, false, projectId)
+        checkStartTask(poolNo, taskId, builderName, dockerRoutingType, projectId)
     }
 
     private fun DispatchMessage.startBuilder(
@@ -367,7 +367,7 @@ class DispatchBuildService @Autowired constructor(
             disk = threadLocalDisk.get()
         )
 
-        checkStartTask(poolNo, taskId, builderName, dockerRoutingType, false, projectId)
+        checkStartTask(poolNo, taskId, builderName, dockerRoutingType, projectId)
     }
 
     fun buildAndPushImage(
@@ -385,7 +385,6 @@ class DispatchBuildService @Autowired constructor(
         taskId: String,
         builderName: String,
         dockerRoutingType: DockerRoutingType,
-        clearErrorBuilder: Boolean,
         projectId: String
     ) {
         val dispatchBuild = containerServiceFactory.load(projectId)
@@ -441,9 +440,7 @@ class DispatchBuildService @Autowired constructor(
                 executeCount = executeCount ?: 1
             )
         } else {
-            if (clearErrorBuilder) {
-                clearExceptionBuilder(dockerRoutingType, builderName, projectId)
-            }
+            clearExceptionBuilder(dockerRoutingType, builderName, projectId)
             // 重置资源池状态
             dispatchKubernetesBuildDao.updateStatus(
                 dslContext = dslContext,
