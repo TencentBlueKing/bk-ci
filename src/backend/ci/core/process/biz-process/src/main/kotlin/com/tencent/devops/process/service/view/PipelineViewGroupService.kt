@@ -639,7 +639,7 @@ class PipelineViewGroupService @Autowired constructor(
         if (projected != false) {
             val classifiedPipelineIds = getClassifiedPipelineIds(projectId)
             val unclassifiedCount =
-                pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds,ChannelCode.BS)
+                pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds, ChannelCode.BS)
             summaries.add(
                 0, PipelineNewViewSummary(
                     id = PIPELINE_VIEW_UNCLASSIFIED,
