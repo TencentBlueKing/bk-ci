@@ -25,7 +25,6 @@ import com.tencent.devops.process.yaml.v2.parameter.ParametersType
 import com.tencent.devops.process.yaml.v2.parsers.template.models.ExpressionBlock
 import org.apache.commons.text.StringEscapeUtils
 import org.apache.tools.ant.filters.StringInputStream
-import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
