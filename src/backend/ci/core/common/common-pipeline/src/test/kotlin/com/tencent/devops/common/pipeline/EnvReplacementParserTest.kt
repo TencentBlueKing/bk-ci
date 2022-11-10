@@ -465,8 +465,7 @@ for (const key in variables) {
 
 console.log("全局配置", variables)
 let branch = ${'$'}{{ ci.branch }}
-let branchs = branch.split("/")
-"""
+let branchs = branch.split("/")"""
         val data = mapOf(
             "variables.is_lint" to "true",
             "variables.is_build" to "false",
@@ -486,8 +485,7 @@ for (const key in variables) {
 
 console.log("全局配置", variables)
 let branch = master
-let branchs = branch.split("/")
-"""
+let branchs = branch.split("/")"""
         Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
     }
 

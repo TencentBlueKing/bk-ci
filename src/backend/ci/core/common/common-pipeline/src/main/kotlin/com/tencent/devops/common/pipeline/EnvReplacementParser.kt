@@ -155,7 +155,7 @@ object EnvReplacementParser {
             strReader.close()
             bufferReader.close()
         }
-        return newValue.toString()
+        return newValue.toString().removeSuffix("\n")
     }
 
     /**
