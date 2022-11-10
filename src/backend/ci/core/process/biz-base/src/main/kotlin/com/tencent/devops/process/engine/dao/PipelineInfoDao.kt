@@ -247,7 +247,8 @@ class PipelineInfoDao {
         limit: Int,
         offset: Int,
         deleteFlag: Boolean? = false,
-        timeDescFlag: Boolean = true
+        timeDescFlag: Boolean = true,
+        channelCode: ChannelCode? = null
     ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -256,6 +257,9 @@ class PipelineInfoDao {
             }
             if (null != deleteFlag) {
                 conditions.add(DELETE.eq(deleteFlag))
+            }
+            if (null != channelCode) {
+                conditions.add(CHANNEL.eq(channelCode.name))
             }
             val baseQuery = dslContext.selectFrom(this).where(conditions)
             if (timeDescFlag) {

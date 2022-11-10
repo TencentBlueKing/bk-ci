@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -538,7 +539,8 @@ class PipelineViewGroupService @Autowired constructor(
                 projectId = projectId,
                 offset = offset,
                 limit = step,
-                deleteFlag = if (includeDelete) null else false
+                deleteFlag = if (includeDelete) null else false,
+                channelCode = ChannelCode.BS
             ) ?: emptyList<TPipelineInfoRecord>()
             if (subPipelineInfos.isEmpty()) {
                 break
