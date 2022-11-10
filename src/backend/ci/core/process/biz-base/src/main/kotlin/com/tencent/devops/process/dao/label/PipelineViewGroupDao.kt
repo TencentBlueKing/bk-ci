@@ -206,4 +206,13 @@ class PipelineViewGroupDao {
                 .fetch().getValues(0, String::class.java)
         }
     }
+
+    fun delete(dslContext: DSLContext, projectId: String, pipelineId: String): Boolean {
+        with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute() > 0
+        }
+    }
 }
