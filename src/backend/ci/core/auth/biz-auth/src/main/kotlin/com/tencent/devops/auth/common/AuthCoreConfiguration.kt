@@ -33,6 +33,8 @@ import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.event.RefreshBroadCastEvent
 import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
 import com.tencent.devops.auth.service.AuthUserBlackListService
+import com.tencent.devops.auth.service.UserPermissionService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
@@ -52,6 +54,15 @@ class AuthCoreConfiguration {
 
     @Bean
     fun refreshDispatch(streamBridge: StreamBridge) = AuthRefreshDispatch(streamBridge)
+
+    @Bean
+    fun refreshEventListener(
+        @Autowired userPermissionService: UserPermissionService,
+        @Autowired iamCacheService: IamCacheService
+        ) = AuthRefreshEventListener(
+        userPermissionService = userPermissionService,
+        iamCacheService = iamCacheService
+    )
 
     @EventConsumer(StreamBinding.EXCHANGE_AUTH_REFRESH_FANOUT, STREAM_CONSUMER_GROUP, true)
     fun authRefreshEventListener(
