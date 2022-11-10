@@ -675,13 +675,15 @@ class PipelineInfoDao {
     fun countExcludePipelineIds(
         dslContext: DSLContext,
         projectId: String,
-        excludePipelineIds: List<String>
+        excludePipelineIds: List<String>,
+        channelCode: ChannelCode? = null
     ): Int {
         with(T_PIPELINE_INFO) {
             return dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.notIn(excludePipelineIds))
+                .let { if (channelCode == null) it else it.and(CHANNEL.eq(channelCode.name)) }
                 .fetchOne()?.value1() ?: 0
         }
     }
