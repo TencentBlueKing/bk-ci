@@ -122,25 +122,27 @@ object EnvReplacementParser {
         try {
             var line = bufferReader.readLine()
             while (line != null) {
-                val onceResult = findExpressions(line).let { blocks ->
-                    if (blocks.isEmpty()) {
-                        line
-                    } else {
-                        parseExpressionLine(
-                            value = line,
-                            blocks = blocks,
-                            context = context,
-                            nameValues = nameValues
-                        )
-                    }
+                // 跳过空行和注释行
+                val blocks = findExpressions(line)
+                if (line.isBlank() || blocks.isEmpty()) {
+                    newValue.append(line).append("\n")
+                    line = bufferReader.readLine()
+                    continue
                 }
-                val newLine = findExpressions(onceResult).let { blocks ->
-                    if (blocks.isEmpty()) {
+                val onceResult = parseExpressionLine(
+                    value = line,
+                    blocks = blocks,
+                    context = context,
+                    nameValues = nameValues
+                )
+
+                val newLine = findExpressions(onceResult).let {
+                    if (it.isEmpty()) {
                         onceResult
                     } else {
                         parseExpressionLine(
                             value = onceResult,
-                            blocks = blocks,
+                            blocks = it,
                             context = context,
                             nameValues = nameValues
                         )
@@ -153,7 +155,7 @@ object EnvReplacementParser {
             strReader.close()
             bufferReader.close()
         }
-        return newValue.toString().removeSuffix("\n")
+        return newValue.toString()
     }
 
     /**

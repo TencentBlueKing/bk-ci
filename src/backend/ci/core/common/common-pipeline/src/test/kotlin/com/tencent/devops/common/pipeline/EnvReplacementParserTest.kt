@@ -472,7 +472,23 @@ let branchs = branch.split("/")
             "variables.is_build" to "false",
             "ci.branch" to "master"
         )
-        println(EnvReplacementParser.parse(command1, data, true))
+        val result = """
+let variables = {
+  "is_lint": true,
+  "is_build": false
+}
+// 如果没有设置相关变量
+for (const key in variables) {
+  variables[key] = variables[key].trim()
+  if (variables[key].includes("${'$'}{{")) variables[key] = ""
+  if (variables[key] == "none") variables[key] = ""
+}
+
+console.log("全局配置", variables)
+let branch = master
+let branchs = branch.split("/")
+"""
+        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
     }
 
     private fun parseAndEquals(
