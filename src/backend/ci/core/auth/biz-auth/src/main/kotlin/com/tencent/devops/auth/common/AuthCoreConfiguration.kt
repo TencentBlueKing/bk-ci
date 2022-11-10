@@ -54,7 +54,7 @@ class AuthCoreConfiguration {
     fun refreshDispatch(streamBridge: StreamBridge) = AuthRefreshDispatch(streamBridge)
 
     @EventConsumer(StreamBinding.EXCHANGE_AUTH_REFRESH_FANOUT, STREAM_CONSUMER_GROUP, true)
-    fun pipelineWebSocketIn(
+    fun authRefreshEventListener(
         @Autowired refreshListener: AuthRefreshEventListener
     ): Consumer<Message<RefreshBroadCastEvent>> {
         return Consumer { event: Message<RefreshBroadCastEvent> ->
