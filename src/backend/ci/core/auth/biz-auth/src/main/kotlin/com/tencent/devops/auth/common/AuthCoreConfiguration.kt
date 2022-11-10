@@ -59,7 +59,7 @@ class AuthCoreConfiguration {
     fun refreshEventListener(
         @Autowired userPermissionService: UserPermissionService,
         @Autowired iamCacheService: IamCacheService
-        ) = AuthRefreshEventListener(
+    ) = AuthRefreshEventListener(
         userPermissionService = userPermissionService,
         iamCacheService = iamCacheService
     )
