@@ -666,7 +666,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("PipelineInfo有数据")
         fun test_1() {
             every {
-                pipelineInfoDao.listPipelineInfoByProject(anyDslContext(), any(), any(), any(), any())
+                pipelineInfoDao.listPipelineInfoByProject(anyDslContext(), any(), any(), any(), any(), any(), any())
             } returns dslContext.mockResult(T_PIPELINE_INFO, pi)
             self.invokePrivate<List<TPipelineInfoRecord>>("allPipelineInfos", "test", false).let {
                 Assertions.assertEquals(it!!.size, 1)
@@ -678,7 +678,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("PipelineInfo无数据")
         fun test_2() {
             every {
-                pipelineInfoDao.listPipelineInfoByProject(anyDslContext(), any(), any(), any(), any())
+                pipelineInfoDao.listPipelineInfoByProject(anyDslContext(), any(), any(), any(), any(), any(), any())
             } returns dslContext.mockResult(T_PIPELINE_INFO)
             self.invokePrivate<List<TPipelineInfoRecord>>("allPipelineInfos", "test", false).let {
                 Assertions.assertEquals(it!!.size, 0)
