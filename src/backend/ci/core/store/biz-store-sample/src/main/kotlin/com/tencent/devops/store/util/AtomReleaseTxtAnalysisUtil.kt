@@ -27,24 +27,20 @@
 
 package com.tencent.devops.store.util
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.ZipUtil
-import com.tencent.devops.store.api.common.OpStoreLogoResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -52,8 +48,6 @@ import java.net.URL
 import java.nio.file.Files
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 
 object AtomReleaseTxtAnalysisUtil {
 
@@ -71,6 +65,8 @@ object AtomReleaseTxtAnalysisUtil {
         atomPath: String,
         client: Client
     ): String {
+        val pathList = mutableListOf<String>()
+        val result = mutableMapOf<String, String>()
         var descriptionText = description
             if (description.startsWith("http") && description.endsWith(".md")) {
                 // 读取远程文件
@@ -93,12 +89,21 @@ object AtomReleaseTxtAnalysisUtil {
                     file.delete()
                 }
             }
-        return regexAnalysis(
+        regexAnalysis(
             userId = userId,
             input = descriptionText,
             atomPath = atomPath,
-            client = client
+            client = client,
+            pathList = pathList,
+            result = result
         )
+        val uploadFileToPathResult = uploadFileToPath(
+            pathList = pathList,
+            client = client,
+            atomPath = atomPath,
+            result = result
+        )
+        return filePathReplace(uploadFileToPathResult.toMutableMap(), description)
     }
 
     private fun getAtomBasePath(): String {
@@ -109,12 +114,12 @@ object AtomReleaseTxtAnalysisUtil {
         userId: String,
         input: String,
         atomPath: String,
-        client: Client
-    ): String {
+        client: Client,
+        pathList: MutableList<String>,
+        result: MutableMap<String, String>
+    ) {
         val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
         val matcher: Matcher = pattern.matcher(input)
-        val pathList = mutableListOf<String>()
-        val result = mutableMapOf<String, String>()
         while (matcher.find()) {
             val path = matcher.group(2).replace("\"", "").removePrefix(fileSeparator)
             if (path.endsWith(".md")) {
@@ -124,29 +129,38 @@ object AtomReleaseTxtAnalysisUtil {
                         userId = userId,
                         input = file.readText(),
                         atomPath = atomPath,
-                        client = client
+                        client = client,
+                        pathList = pathList,
+                        result = result
                     )
                 }
             }
             pathList.add(path)
         }
-        return filePathReplace(
-            pathList = pathList,
-            client = client,
-            atomPath = atomPath,
-            result = result,
-            descriptionContent = input
-        )
     }
 
     private fun filePathReplace(
-        pathList: List<String>,
-        client: Client,
-        atomPath: String,
         result: MutableMap<String, String>,
         descriptionContent: String
     ): String {
         var content = descriptionContent
+        // 替换资源路径
+        result.forEach {
+            val analysisPattern: Pattern = Pattern.compile("(\\\$\\{\\{indexFile\\(\"${it.key}\"\\)}})")
+            val analysisMatcher: Matcher = analysisPattern.matcher(content)
+            content = analysisMatcher.replaceFirst(
+                "![](${it.value.replace(fileSeparator, "\\$fileSeparator")})"
+            )
+        }
+        return content
+    }
+
+    private fun uploadFileToPath(
+        pathList: List<String>,
+        client: Client,
+        atomPath: String,
+        result: MutableMap<String, String>
+    ): Map<String, String> {
         val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class)
         pathList.forEach {
             val file = File("$atomPath${fileSeparator}file${fileSeparator}$it")
@@ -172,25 +186,10 @@ object AtomReleaseTxtAnalysisUtil {
                 file.delete()
             }
         }
-        // 替换资源路径
-        result.forEach {
-            val analysisPattern: Pattern = Pattern.compile("(\\\$\\{\\{indexFile\\(\"${it.key}\"\\)}})")
-            val analysisMatcher: Matcher = analysisPattern.matcher(content)
-            content = analysisMatcher.replaceFirst(
-                "![](${it.value.replace(fileSeparator, "\\$fileSeparator")})"
-            )
-        }
-        return content
+        return result
     }
 
-    fun logoUrlAnalysis(
-        userId: String,
-        logoUrl: String,
-        atomPath: String,
-        client: Client
-    ): Result<String> {
-        var result = logoUrl
-        var results: Result<String> = Result(result)
+    fun logoUrlAnalysis(logoUrl: String): Result<String> {
         // 远程资源不做处理
         if (!logoUrl.startsWith("http")) {
             // 正则解析
@@ -199,38 +198,16 @@ object AtomReleaseTxtAnalysisUtil {
             val relativePath = if (matcher.find()) {
                 matcher.group(2).replace("\"", "")
             } else null
-            if (relativePath.isNullOrBlank()) {
-                results = MessageCodeUtil.generateResponseDataObject(
+            return if (relativePath.isNullOrBlank()) {
+                MessageCodeUtil.generateResponseDataObject(
                     StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
                     arrayOf("releaseInfo.logoUrl")
                 )
-            }
-            val logoFile =
-                File("$atomPath${fileSeparator}file$fileSeparator${relativePath?.removePrefix(fileSeparator)}")
-            if (logoFile.exists()) {
-                val uploadStoreLogoResult = client.get(OpStoreLogoResource::class).uploadStoreLogo(
-                    userId = userId,
-                    contentLength = logoFile.length(),
-                    inputStream = logoFile.inputStream(),
-                    disposition = FormDataContentDisposition(
-                        "form-data; name=\"logo\"; filename=\"${logoFile.name}\""
-                    )
-                )
-                if (uploadStoreLogoResult.isOk()) {
-                    result = uploadStoreLogoResult.data!!.logoUrl!!
-                    results = Result(result)
-                } else {
-                    results = Result(
-                        data = logoUrl,
-                        status = uploadStoreLogoResult.status,
-                        message = uploadStoreLogoResult.message
-                    )
-                }
             } else {
-                logger.warn("uploadStoreLogo fail logoName:${logoFile.name}")
+                Result(relativePath)
             }
         }
-        return results
+        return Result(logoUrl)
     }
 
     // 生成压缩文件
@@ -238,28 +215,7 @@ object AtomReleaseTxtAnalysisUtil {
         val zipPath = getAtomBasePath() +
                 "$fileSeparator$BK_CI_ATOM_DIR$fileSeparator$userId$fileSeparator$atomCode" +
                 "$fileSeparator$atomCode.zip"
-        val zipOutputStream = ZipOutputStream(FileOutputStream(zipPath))
-        val files = File(atomPath).listFiles()
-        files?.forEach { file ->
-            if (!file.isDirectory) {
-                zipOutputStream.putNextEntry(ZipEntry(file.name))
-                try {
-                    val input = FileInputStream(file)
-                    val byteArray = ByteArray(FILE_DEFAULT_SIZE)
-                    var len = input.read(byteArray)
-                    while (len != -1) {
-                        while (len != -1) {
-                            zipOutputStream.write(byteArray, 0, len)
-                            len = input.read(byteArray)
-                        }
-                    }
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-            }
-        }
-        zipOutputStream.finish()
-        zipOutputStream.closeEntry()
+        ZipUtil.zipDir(File(atomPath), zipPath)
         return zipPath
     }
 
@@ -298,17 +254,16 @@ object AtomReleaseTxtAnalysisUtil {
         version: String,
         file: File,
         os: String
-    ): Result<String?> {
+    ): Result<Boolean?> {
         val serviceUrl = "$serviceUrlPrefix/service/artifactories/archiveAtom" +
                 "?userId=$userId&projectCode=$projectCode&atomId=$atomId&atomCode=$atomCode" +
                 "&version=$version&releaseType=$releaseType&os=$os"
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body()!!.string()
-            logger.warn("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
-            return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
+            return Result(true)
         }
     }
 
