@@ -105,7 +105,7 @@ BEGIN
                     AND TABLE_NAME = 'T_PROJECT'
                     AND COLUMN_NAME = 'subjectScopes') THEN
     ALTER TABLE T_PROJECT
-        ADD `subjectScopes` varchar(2000) DEFAULT NULL COMMENT '最大可授权人员范围';
+        ADD `subjectScopes` text DEFAULT NULL COMMENT '最大可授权人员范围';
     END IF;
 
     COMMIT;
