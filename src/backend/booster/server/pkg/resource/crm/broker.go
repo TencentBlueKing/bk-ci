@@ -182,7 +182,7 @@ type Broker struct {
 }
 
 const (
-	brokerIDRandomLength = 3
+	brokerIDRandomLength = 5
 
 	brokerTrackerTimeGap   = 1 * time.Second
 	brokerCoolingTime      = 10 * time.Minute
