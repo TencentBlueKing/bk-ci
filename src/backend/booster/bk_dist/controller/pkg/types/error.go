@@ -20,6 +20,7 @@ var (
 	ErrHostSlotOverLimit            = fmt.Errorf("host slot over limit")
 	ErrHostNoFound                  = fmt.Errorf("host no found")
 	ErrWorkNoFound                  = fmt.Errorf("work no found")
+	ErrNoWork                       = fmt.Errorf("not any work")
 	ErrNoAvailableHostSlotFound     = fmt.Errorf("no available host slot found")
 	ErrWorkResourceCannotBeSet      = fmt.Errorf("work resource can not be set")
 	ErrWorkSettingsCannotBeSet      = fmt.Errorf("work settings can not be set")

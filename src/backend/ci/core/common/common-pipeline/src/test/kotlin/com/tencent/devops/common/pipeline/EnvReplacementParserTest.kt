@@ -449,6 +449,46 @@ internal class EnvReplacementParserTest {
         Assertions.assertEquals("echo true", EnvReplacementParser.parse(command11, data, true))
     }
 
+    @Test
+    fun parseExpressionTestData1() {
+        val command1 = """
+let variables = {
+  "is_lint": ${'$'}{{ variables.is_lint }},
+  "is_build": ${'$'}{{ variables.is_build }}
+}
+// 如果没有设置相关变量
+for (const key in variables) {
+  variables[key] = variables[key].trim()
+  if (variables[key].includes("${'$'}{{")) variables[key] = ""
+  if (variables[key] == "none") variables[key] = ""
+}
+
+console.log("全局配置", variables)
+let branch = ${'$'}{{ ci.branch }}
+let branchs = branch.split("/")"""
+        val data = mapOf(
+            "variables.is_lint" to "true",
+            "variables.is_build" to "false",
+            "ci.branch" to "master"
+        )
+        val result = """
+let variables = {
+  "is_lint": true,
+  "is_build": false
+}
+// 如果没有设置相关变量
+for (const key in variables) {
+  variables[key] = variables[key].trim()
+  if (variables[key].includes("${'$'}{{")) variables[key] = ""
+  if (variables[key] == "none") variables[key] = ""
+}
+
+console.log("全局配置", variables)
+let branch = master
+let branchs = branch.split("/")"""
+        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
+    }
+
     private fun parseAndEquals(
         data: Map<String, String>,
         template: String,
