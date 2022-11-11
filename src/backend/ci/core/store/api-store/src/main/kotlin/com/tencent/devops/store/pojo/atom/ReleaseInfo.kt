@@ -28,7 +28,6 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
