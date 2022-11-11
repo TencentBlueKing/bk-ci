@@ -501,7 +501,6 @@ class StreamBasicSettingDao {
                 .where(ID.`in`(idList)).execute()
         }
     }
-
     fun getProjectByGitDomain(
         dslContext: DSLContext,
         gitDomain: String,

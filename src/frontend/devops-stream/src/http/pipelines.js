@@ -35,8 +35,7 @@ export default {
 
     getDownloadLogFromArtifactory ({ projectId, pipelineId, buildId, tag, executeCount }) {
         return api.get(`${ARTIFACTORY_PREFIX}/user/artifactories/log/plugin/${projectId}/${pipelineId}/${buildId}/${tag}/${executeCount}`).then((res) => {
-            const data = res.data || {}
-            return data.url || ''
+            return res.url || ''
         })
     },
 
