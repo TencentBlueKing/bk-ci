@@ -46,6 +46,7 @@ import org.springframework.messaging.Message
 import java.util.function.Consumer
 
 @Configuration
+@Suppress("TooManyFunctions")
 class AuthCoreConfiguration {
 
     companion object {
@@ -56,7 +57,7 @@ class AuthCoreConfiguration {
     fun refreshDispatch(streamBridge: StreamBridge) = AuthRefreshDispatch(streamBridge)
 
     @Bean
-    fun refreshEventListener(
+    fun authRefreshEventListener(
         @Autowired userPermissionService: UserPermissionService,
         @Autowired iamCacheService: IamCacheService
     ) = AuthRefreshEventListener(
@@ -65,7 +66,7 @@ class AuthCoreConfiguration {
     )
 
     @EventConsumer(StreamBinding.EXCHANGE_AUTH_REFRESH_FANOUT, STREAM_CONSUMER_GROUP, true)
-    fun authRefreshEventListener(
+    fun refreshEventListener(
         @Autowired refreshListener: AuthRefreshEventListener
     ): Consumer<Message<RefreshBroadCastEvent>> {
         return Consumer { event: Message<RefreshBroadCastEvent> ->
