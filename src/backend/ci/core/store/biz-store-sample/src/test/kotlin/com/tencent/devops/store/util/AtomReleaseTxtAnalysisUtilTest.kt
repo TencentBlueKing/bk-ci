@@ -35,12 +35,11 @@ class AtomReleaseTxtAnalysisUtilTest {
     @Test
     fun regexAnalysisTest() {
         val input = "插件发布测试描述:\${{indexFile(\"cat2.png\")}}||插件发布测试描述:\${{indexFile(\"cat.png\")}}"
-        val atomPath = ""
         val pathList = mutableListOf<String>()
         val result = mutableMapOf<String, String>()
         AtomReleaseTxtAnalysisUtil.regexAnalysis(
             input = input,
-            atomPath = atomPath,
+            atomPath = "",
             pathList = pathList
         )
         pathList.forEach {
