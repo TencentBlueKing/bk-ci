@@ -262,12 +262,13 @@ class ProjectDao {
     fun create(
         dslContext: DSLContext,
         userId: String,
-        logoAddress: String,
+        logoAddress: String?,
         projectCreateInfo: ProjectCreateInfo,
         userDeptDetail: UserDeptDetail,
         projectId: String,
         channelCode: ProjectChannelCode? = ProjectChannelCode.BS,
-        needApproval: Boolean? = false
+        needApproval: Boolean? = false,
+        subjectScopesStr: String
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
@@ -294,7 +295,8 @@ class ProjectDao {
                 CREATOR_CENTER_NAME,
                 CHANNEL,
                 ENABLED,
-                PROPERTIES
+                PROPERTIES,
+                SUBJECTSCOPES
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -312,7 +314,7 @@ class ProjectDao {
                 LocalDateTime.now(),
                 projectCreateInfo.projectType,
                 if (needApproval!!) ApproveStatus.CREATE_PENDING.status else ApproveStatus.APPROVED.status,
-                logoAddress,
+                logoAddress ?: "",
                 userDeptDetail.bgName,
                 userDeptDetail.deptName,
                 userDeptDetail.centerName,
@@ -320,12 +322,21 @@ class ProjectDao {
                 true,
                 projectCreateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
-                }
+                },
+                subjectScopesStr
             ).execute()
         }
     }
 
-    fun update(dslContext: DSLContext, userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Int {
+    fun update(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        projectUpdateInfo: ProjectUpdateInfo,
+        subjectScopesStr: String,
+        needApproval: Boolean,
+        logoAddress: String?
+    ): Int {
         with(TProject.T_PROJECT) {
             val update = dslContext.update(this)
                 .set(PROJECT_NAME, projectUpdateInfo.projectName)
@@ -339,6 +350,10 @@ class ProjectDao {
                 .set(ENGLISH_NAME, projectUpdateInfo.englishName)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
+            if (!needApproval) {
+                update.set(SUBJECTSCOPES, subjectScopesStr)
+            }
+            logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
             return update.where(PROJECT_ID.eq(projectId)).execute()
         }
@@ -626,6 +641,18 @@ class ProjectDao {
                 .from(this)
                 .where(ROUTER_TAG.eq(routeTag))
                 .fetch(ENGLISH_NAME, String::class.java)
+        }
+    }
+
+    fun updateProjectStatusByEnglishName(
+        dslContext: DSLContext,
+        projectCode: String,
+        statusEnum: ApproveStatus
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(APPROVAL_STATUS, statusEnum.status).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
         }
     }
 }

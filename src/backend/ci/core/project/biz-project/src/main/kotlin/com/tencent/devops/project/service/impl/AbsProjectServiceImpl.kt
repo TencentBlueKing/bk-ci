@@ -27,6 +27,9 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -45,6 +48,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
@@ -61,6 +65,7 @@ import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
@@ -93,7 +98,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService
+    private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
+    private val objectMapper: ObjectMapper
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -161,9 +167,32 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
             validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
         }
-
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
+        val subjectScopes = projectCreateInfo.subjectScopes
+        val needApproval = createExtInfo.needApproval
+        val iamSubjectScopes: ArrayList<ManagerScopes> = ArrayList()
+        if (subjectScopes == null) {
+            iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
+        } else {
+            subjectScopes.forEach {
+                when (it.type) {
+                    ALL_MEMBERS -> {
+                        iamSubjectScopes.add(
+                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS)
+                        )
+                    }
+                    DEPARTMENT -> {
+                        iamSubjectScopes.add(
+                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT), it.id)
+                        )
+                    }
+                    else -> {
+                        iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.USER), it.id))
+                    }
+                }
+            }
+        }
         try {
             if (createExtInfo.needAuth!!) {
                 // 注册项目到权限中心
@@ -175,8 +204,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         resourceName = projectCreateInfo.projectName
                     ),
                     userDeptDetail = userDeptDetail,
-                    subjectScopes = projectCreateInfo.subjectScopes,
-                    needApproval = createExtInfo.needApproval
+                    subjectScopes = subjectScopes,
+                    iamSubjectScopes = iamSubjectScopes,
+                    needApproval = needApproval,
+                    reason = projectCreateInfo.description
                 )
             }
         } catch (e: PermissionForbiddenException) {
@@ -191,33 +222,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
+                val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
                 val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
-                //todo 若授权人员范围处理并落库
-                projectDao.create(
-                    dslContext = context,
-                    userId = userId,
-                    logoAddress = "",
-                    projectCreateInfo = projectInfo,
-                    userDeptDetail = userDeptDetail,
-                    projectId = projectId,
-                    channelCode = projectChannel,
-                    needApproval = createExtInfo.needApproval
-                )
                 // 上传logo
                 val logo = projectCreateInfo.logo
                 var logoFile: File? = null
+                var logoAddress: String? = null
                 if (logo != null) {
                     try {
                         logoFile = FileUtil.convertTempFile(logo)
-                        val logoAddress = saveLogoAddress(userId, projectCreateInfo.englishName, logoFile!!)
-                        projectDao.updateLogoAddress(context, userId, projectId, logoAddress)
-                        projectDispatcher.dispatch(
-                            ProjectUpdateLogoBroadCastEvent(
-                                userId = userId,
-                                projectId = projectId,
-                                logoAddr = logoAddress
-                            )
-                        )
+                        logoAddress = saveLogoAddress(userId, projectCreateInfo.englishName, logoFile)
                     } catch (e: Exception) {
                         logger.warn("fail update projectLogo", e)
                         throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
@@ -225,6 +239,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         logoFile?.delete()
                     }
                 }
+                projectDao.create(
+                    dslContext = context,
+                    userId = userId,
+                    logoAddress = logoAddress,
+                    projectCreateInfo = projectInfo,
+                    userDeptDetail = userDeptDetail,
+                    projectId = projectId,
+                    channelCode = projectChannel,
+                    needApproval = needApproval,
+                    subjectScopesStr = subjectScopesStr
+                )
                 try {
                     createExtProjectInfo(
                         userId = userId,
@@ -233,6 +258,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         projectCreateInfo = projectInfo,
                         createExtInfo = createExtInfo
                     )
+                    // 修改bcs的logo
+                    if (logo != null) {
+                        projectDispatcher.dispatch(
+                            ProjectUpdateLogoBroadCastEvent(
+                                userId = userId,
+                                projectId = projectId,
+                                logoAddr = logoAddress!!
+                            )
+                        )
+                    }
                 } catch (e: Exception) {
                     logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
                     projectDao.delete(dslContext, projectId)
@@ -317,7 +352,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userId: String,
         englishName: String,
         projectUpdateInfo: ProjectUpdateInfo,
-        accessToken: String?
+        accessToken: String?,
+        needApproval: Boolean?
     ): Boolean {
         validate(
             validateType = ProjectValidateType.project_name,
@@ -327,30 +363,76 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
+        val subjectScopes = projectUpdateInfo.subjectScopes
+        val iamSubjectScopes: ArrayList<ManagerScopes> = ArrayList()
+        // 考虑对于原有的老项目，其可授权范围本来就为空，是否要强行给他设置为全公司，还是原样
+        if (subjectScopes == null) {
+            iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
+        } else {
+            subjectScopes.forEach {
+                when (it.type) {
+                    ALL_MEMBERS -> {
+                        iamSubjectScopes.add(
+                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS)
+                        )
+                    }
+                    DEPARTMENT -> {
+                        iamSubjectScopes.add(
+                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT), it.id)
+                        )
+                    }
+                    else -> {
+                        iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.USER), it.id))
+                    }
+                }
+            }
+        }
+
         try {
             updateInfoReplace(projectUpdateInfo)
             try {
+                val projectInfo = projectDao.getByEnglishName(
+                    dslContext = dslContext,
+                    englishName = englishName
+                ) ?: throw NotFoundException("项目 -$englishName 不存在")
+                val projectId = projectInfo.projectId
+                val logo = projectUpdateInfo.logo
+                var logoFile: File? = null
+                var logoAddress: String? = null
+                if (logo != null) {
+                    try {
+                        logoFile = FileUtil.convertTempFile(logo)
+                        logoAddress = saveLogoAddress(userId, projectUpdateInfo.englishName, logoFile)
+                    } catch (e: Exception) {
+                        logger.warn("fail update projectLogo", e)
+                        throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
+                    } finally {
+                        logoFile?.delete()
+                    }
+                }
+                modifyProjectAuthResource(
+                    projectCode = projectUpdateInfo.englishName,
+                    projectName = projectUpdateInfo.projectName,
+                    userId = userId,
+                    projectInfo = projectInfo,
+                    subjectScopes = subjectScopes,
+                    iamSubjectScopes = iamSubjectScopes,
+                    needApproval = needApproval!!
+                )
+
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    val projectId = projectDao.getByEnglishName(
-                        dslContext = dslContext,
-                        englishName = englishName
-                    )?.projectId ?: throw NotFoundException("项目 -$englishName 不存在")
-                    // 若为内部版v3且网页调用并且若私密项目或者最大可授权人员范围改变，则要进入审核
-                    // modifyProjectAuthResource，然后直接return
-                    // 以上条件不满足，则代码继续走
-
+                    val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
                     projectDao.update(
                         dslContext = context,
                         userId = userId,
                         projectId = projectId,
-                        projectUpdateInfo = projectUpdateInfo
+                        projectUpdateInfo = projectUpdateInfo,
+                        subjectScopesStr = subjectScopesStr,
+                        needApproval = needApproval,
+                        logoAddress = logoAddress
                     )
-                    modifyProjectAuthResource(
-                        projectUpdateInfo.englishName,
-                        projectUpdateInfo.projectName
-                    )
-                    // 若返回false，私密字段则直接修改，若不是，私密字段，要等到回调再去修改
+
                     if (!projectUpdateInfo.secrecy) {
                         redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
                     } else {
@@ -363,6 +445,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             projectInfo = projectUpdateInfo
                         )
                     )
+                    if (logo != null) {
+                        projectDispatcher.dispatch(
+                            ProjectUpdateLogoBroadCastEvent(
+                                userId = userId,
+                                projectId = projectId,
+                                logoAddr = logoAddress!!
+                            )
+                        )
+                    }
                 }
                 success = true
             } catch (e: DuplicateKeyException) {
@@ -774,11 +865,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userDeptDetail: UserDeptDetail
     ): ProjectCreateInfo
 
-    abstract fun modifyProjectAuthResource(projectCode: String, projectName: String)
+    abstract fun modifyProjectAuthResource(
+        projectCode: String,
+        projectName: String,
+        userId: String,
+        projectInfo: TProjectRecord,
+        iamSubjectScopes: List<ManagerScopes>?,
+        subjectScopes: List<SubjectScope>?,
+        needApproval: Boolean
+    )
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
+        private const val ALL_MEMBERS = "*"
+        private const val DEPARTMENT = "department"
     }
 }
