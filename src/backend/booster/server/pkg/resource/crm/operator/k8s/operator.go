@@ -657,7 +657,6 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 	}
 	storageRequest := ""
 	storageLimitRequest := ""
-	blog.Errorf("%v", o.conf.BcsStoragePerInstance)
 	if o.conf.BcsStoragePerInstance > 0.0 {
 		storageRequest = fmt.Sprintf("ephemeral-storage: %.2fGi", o.conf.BcsStoragePerInstance)
 		storageLimitRequest = storageRequest
