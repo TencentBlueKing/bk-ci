@@ -236,31 +236,26 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
     }
 
     @Override
-    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, String dimension, Set<String> statusSet, String checkerSet)
-    {
+    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, String dimension,
+            Set<String> statusSet, String checkerSet, String buildId) {
         List<CCNDefectEntity> ccnDefectEntityList = ccnDefectRepository.findByTaskIdAndStatus(
                 taskId, DefectStatus.NEW.value());
 
         Set<String> authorSet = new TreeSet<>();
         Set<String> defectPaths = new TreeSet<>();
-        if (CollectionUtils.isNotEmpty(ccnDefectEntityList))
-        {
+        if (CollectionUtils.isNotEmpty(ccnDefectEntityList)) {
             ccnDefectEntityList.forEach(defect ->
             {
                 // 设置作者
-                if (defect.getAuthor() != null)
-                {
+                if (defect.getAuthor() != null) {
                     authorSet.add(defect.getAuthor());
                 }
 
                 // 获取所有警告文件的相对路径
                 String relativePath = PathUtils.getRelativePath(defect.getUrl(), defect.getRelPath());
-                if (StringUtils.isNotBlank(relativePath))
-                {
+                if (StringUtils.isNotBlank(relativePath)) {
                     defectPaths.add(relativePath);
-                }
-                else
-                {
+                } else {
                     defectPaths.add(defect.getFilePath());
                 }
             });
@@ -269,7 +264,8 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         queryWarningPageInitRspVO.setAuthorList(authorSet);
 
         // 处理文件树
-        TreeService treeService = treeServiceBizServiceFactory.createBizService(toolName, ComConstants.BusinessType.TREE_SERVICE.value(), TreeService.class);
+        TreeService treeService = treeServiceBizServiceFactory.createBizService(toolName,
+                ComConstants.BusinessType.TREE_SERVICE.value(), TreeService.class);
         TreeNodeVO treeNode = treeService.getTreeNode(taskId, defectPaths);
         queryWarningPageInitRspVO.setFilePathTree(treeNode);
 

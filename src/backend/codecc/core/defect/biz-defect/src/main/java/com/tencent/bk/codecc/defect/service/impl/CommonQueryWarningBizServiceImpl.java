@@ -321,7 +321,8 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
     }
 
     @Override
-    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, String dimension, Set<String> statusSet, String checkerSet) {
+    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, String dimension,
+            Set<String> statusSet, String checkerSet, String buildId) {
         // Coverity告警管理的页面的下拉框初始化不再通过单独的接口返回，而是通过告警列表查询接口一并返回
         return null;
     }

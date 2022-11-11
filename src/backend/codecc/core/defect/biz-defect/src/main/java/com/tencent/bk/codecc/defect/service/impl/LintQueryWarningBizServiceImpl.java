@@ -485,8 +485,8 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     }
 
     @Override
-    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, String dimension, Set<String> statusSet, String checkerSet)
-    {
+    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, String dimension,
+            Set<String> statusSet, String checkerSet, String buildId) {
         long beginTime = System.currentTimeMillis();
 
         QueryWarningPageInitRspVO rspVO = new QueryWarningPageInitRspVO();
@@ -497,51 +497,63 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
             return rspVO;
         }
 
+        // 快照查补偿处理
+        if (StringUtils.isNotEmpty(buildId) && CollectionUtils.isNotEmpty(statusSet)) {
+            String newStatusStr = String.valueOf(DefectStatus.NEW.value());
+            String fixedStatusStr = String.valueOf(DefectStatus.FIXED.value());
+
+            if (statusSet.contains(newStatusStr)) {
+                statusSet.add(newStatusStr);
+                statusSet.add(fixedStatusStr);
+            } else {
+                // 快照查，不存在已修复
+                statusSet.remove(newStatusStr);
+                statusSet.remove(fixedStatusStr);
+            }
+        }
+
         // 根据状态过滤后获取规则，处理人、文件路径
         List<LintFileVO> fileInfos = lintDefectV2Dao.getCheckerAuthorPathForPageInit(taskId, toolNameSet, statusSet);
         log.info("get file info size is: {}, task id: {}, tool name: {}", fileInfos.size(), taskId, toolNameSet);
         Set<String> authors = new HashSet<>();
         Set<String> checkerList = new HashSet<>();
         Set<String> defectPaths = new TreeSet<>();
-        if (CollectionUtils.isNotEmpty(fileInfos))
-        {
+        if (CollectionUtils.isNotEmpty(fileInfos)) {
             fileInfos.forEach(fileInfo ->
             {
                 // 设置作者
-                if (CollectionUtils.isNotEmpty(fileInfo.getAuthorList()))
-                {
-                    Set<String> authorSet = fileInfo.getAuthorList().stream().filter(StringUtils::isNotEmpty).collect(Collectors.toSet());
+                if (CollectionUtils.isNotEmpty(fileInfo.getAuthorList())) {
+                    Set<String> authorSet = fileInfo.getAuthorList().stream().filter(StringUtils::isNotEmpty)
+                            .collect(Collectors.toSet());
                     authors.addAll(authorSet);
                 }
 
                 // 设置规则
-                if (CollectionUtils.isNotEmpty(fileInfo.getCheckerList()))
-                {
+                if (CollectionUtils.isNotEmpty(fileInfo.getCheckerList())) {
                     checkerList.addAll(fileInfo.getCheckerList());
                 }
 
                 // 获取所有警告文件的相对路径
                 String relativePath = PathUtils.getRelativePath(fileInfo.getUrl(), fileInfo.getRelPath());
-                if (StringUtils.isNotBlank(relativePath))
-                {
+                if (StringUtils.isNotBlank(relativePath)) {
                     defectPaths.add(relativePath);
-                }
-                else
-                {
+                } else {
                     defectPaths.add(fileInfo.getFilePath());
                 }
             });
         }
 
         // 处理文件树
-        TreeService treeService = treeServiceBizServiceFactory.createBizService(toolNameSet.get(0), ComConstants.BusinessType.TREE_SERVICE.value(), TreeService.class);
+        TreeService treeService = treeServiceBizServiceFactory.createBizService(toolNameSet.get(0),
+                ComConstants.BusinessType.TREE_SERVICE.value(), TreeService.class);
         TreeNodeVO treeNode = treeService.getTreeNode(taskId, defectPaths);
         rspVO.setFilePathTree(treeNode);
 
         rspVO.setAuthorList(authors);
         rspVO.setCheckerList(handleCheckerList(toolNameSet, checkerList, checkerSet));
 
-        log.info("======================getCheckerAuthorPathForPageInit cost: {}", System.currentTimeMillis() - beginTime);
+        log.info("======================getCheckerAuthorPathForPageInit cost: {}",
+                System.currentTimeMillis() - beginTime);
         return rspVO;
     }
 
@@ -698,6 +710,14 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
                 rspVO.setMaskCount(rspVO.getMaskCount() + it.getDefectCount());
             }
         });
+
+        // 若是快照查，则修正统计；快照查已移除"已修复"状态
+        if (StringUtils.isNotEmpty(defectQueryReqVO.getBuildId())) {
+            // 已忽略、已屏蔽在多分支下是共享的；而待修复与已修复是互斥的
+            rspVO.setExistCount(rspVO.getExistCount() + rspVO.getFixCount());
+            rspVO.setFixCount(0);
+        }
+
         defectQueryReqVO.setStatus(condStatusSet);
     }
 

@@ -72,10 +72,12 @@ public interface IQueryWarningBizService
      * @return
      */
     QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId,
-                                                                 String toolName,
-                                                                 String dimension,
-                                                                 Set<String> statusSet,
-                                                                 String checkerSet);
+            String toolName,
+            String dimension,
+            Set<String> statusSet,
+            String checkerSet,
+            String buildId
+            );
 
     /**
      * 告警管理页面初始化

@@ -103,8 +103,8 @@ public class CLOCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     }
 
     @Override
-    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, String dimension, Set<String> statusSet, String checkerSet)
-    {
+    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, String dimension,
+            Set<String> statusSet, String checkerSet, String buildId) {
         return new QueryWarningPageInitRspVO();
     }
 

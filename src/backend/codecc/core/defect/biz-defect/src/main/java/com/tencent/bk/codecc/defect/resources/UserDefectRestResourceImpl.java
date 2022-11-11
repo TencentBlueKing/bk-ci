@@ -105,7 +105,7 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource {
         if (StringUtils.isNotEmpty(status)) {
             statusSet = Sets.newHashSet(List2StrUtil.fromString(status, ComConstants.STRING_SPLIT));
         }
-        return new Result<>(queryWarningBizService.processQueryWarningPageInitRequest(taskId, toolName, null, statusSet, null));
+        return new Result<>(queryWarningBizService.processQueryWarningPageInitRequest(taskId, toolName, null, statusSet, null, null));
     }
 
     @Override
@@ -124,7 +124,7 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource {
         if (StringUtils.isNotEmpty(status)) {
             statusSet = Sets.newHashSet(List2StrUtil.fromString(status, ComConstants.STRING_SPLIT));
         }
-        return new Result<>(queryWarningBizService.processQueryWarningPageInitRequest(taskId, toolName, dimension, statusSet, checkerSet));
+        return new Result<>(queryWarningBizService.processQueryWarningPageInitRequest(taskId, toolName, dimension, statusSet, checkerSet, null));
     }
 
     @Override
