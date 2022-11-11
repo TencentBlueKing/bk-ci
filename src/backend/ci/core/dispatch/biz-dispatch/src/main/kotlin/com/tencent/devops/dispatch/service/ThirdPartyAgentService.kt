@@ -359,6 +359,18 @@ class ThirdPartyAgentService @Autowired constructor(
             throw NotFoundException("Fail to get the agent")
         }
 
+        // 有些并发情况可能会导致在finish时AgentBuild状态没有被置为Done在这里改一下
+        val buildRecord = thirdPartyAgentBuildDao.get(dslContext, buildInfo.buildId, buildInfo.vmSeqId)
+        if (buildRecord != null && (buildRecord.status != PipelineTaskStatus.DONE.status ||
+                    buildRecord.status != PipelineTaskStatus.FAILURE.status)
+        ) {
+            thirdPartyAgentBuildDao.updateStatus(
+                dslContext = dslContext,
+                id = buildRecord.id,
+                status = PipelineTaskStatus.DONE
+            )
+        }
+
         client.get(ServiceBuildResource::class).workerBuildFinish(
             projectId = projectId,
             pipelineId = if (buildInfo.pipelineId.isNullOrBlank()) "dummyPipelineId" else buildInfo.pipelineId!!,
