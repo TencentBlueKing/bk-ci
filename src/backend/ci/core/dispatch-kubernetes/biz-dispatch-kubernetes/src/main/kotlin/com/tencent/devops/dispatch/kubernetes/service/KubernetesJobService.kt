@@ -63,6 +63,13 @@ class KubernetesJobService @Autowired constructor(
 
     override val slaveEnv = "Kubernetes"
 
+    companion object {
+        // kubernetes构建Job默认request配置
+        private const val DEFAULT_JOB_REQUEST_CPU = 1
+        private const val DEFAULT_JOB_REQUEST_MEM = 1024
+        private const val DEFAULT_JOB_REQUEST_DISK = 100
+    }
+
     override fun createJob(userId: String, jobReq: DispatchJobReq): DispatchTaskResp {
         val job = with(jobReq) {
             Job(
@@ -77,10 +84,10 @@ class KubernetesJobService @Autowired constructor(
                     KubernetesDockerRegistry(registry.host, registry.username!!, registry.password!!)
                 },
                 resource = KubernetesResource(
-                    requestCPU = cpu.toString(),
-                    requestDisk = "${disk}G",
-                    requestDiskIO = "1",
-                    requestMem = "${memory}Mi",
+                    requestCPU = DEFAULT_JOB_REQUEST_CPU.toString(),
+                    requestDisk = "${DEFAULT_JOB_REQUEST_DISK}G",
+                    requestDiskIO = "0",
+                    requestMem = "${DEFAULT_JOB_REQUEST_MEM}Mi",
                     limitCpu = cpu.toString(),
                     limitDisk = "${disk}G",
                     limitDiskIO = "1",
