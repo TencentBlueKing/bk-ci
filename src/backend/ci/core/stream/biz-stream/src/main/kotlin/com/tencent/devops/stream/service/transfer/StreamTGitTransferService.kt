@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.service.transfer
 
-import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
