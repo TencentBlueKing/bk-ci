@@ -610,6 +610,14 @@ class ProjectDao {
         }
     }
 
+    fun updateSubjectScopesByCode(dslContext: DSLContext, projectCode: String, SubjectScopesStr: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(SUBJECTSCOPES, SubjectScopesStr).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
     fun updatePropertiesByCode(dslContext: DSLContext, projectCode: String, properties: ProjectProperties): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
