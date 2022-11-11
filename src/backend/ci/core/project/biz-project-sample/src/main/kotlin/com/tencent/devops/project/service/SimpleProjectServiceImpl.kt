@@ -158,7 +158,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         projectName: String,
         userId: String,
         projectInfo: TProjectRecord,
-        iamSubjectScopes: List<ManagerScopes>?,
+        iamSubjectScopes: List<ManagerScopes>,
         subjectScopes: List<SubjectScope>?,
         needApproval: Boolean
     ) {

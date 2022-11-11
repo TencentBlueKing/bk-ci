@@ -366,6 +366,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val subjectScopes = projectUpdateInfo.subjectScopes
         val iamSubjectScopes: ArrayList<ManagerScopes> = ArrayList()
         // 考虑对于原有的老项目，其可授权范围本来就为空，是否要强行给他设置为全公司，还是原样
+        // 假设上线时，统一刷数据，刷成可授权人员范围为全公司
         if (subjectScopes == null) {
             iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
         } else {
@@ -870,7 +871,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectName: String,
         userId: String,
         projectInfo: TProjectRecord,
-        iamSubjectScopes: List<ManagerScopes>?,
+        iamSubjectScopes: List<ManagerScopes>,
         subjectScopes: List<SubjectScope>?,
         needApproval: Boolean
     )
