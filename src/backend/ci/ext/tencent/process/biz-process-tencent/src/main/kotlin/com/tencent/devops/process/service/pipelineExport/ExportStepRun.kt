@@ -163,7 +163,11 @@ object ExportStepRun {
 
     private fun removeExcessIndentation(value: String): String {
         val regex = Regex("\\n(\\t+|\\s+)\\n")
-        return value.replace(regex, "\n\n")
+        return removeEndWhitespace(value.replace(regex, "\n\n").trim())
+    }
+
+    private fun removeEndWhitespace(value: String): String {
+        return value.split("\n").joinToString(separator = "\n") { it.trimEnd() }
     }
 
     private fun checkConflictOutput(
