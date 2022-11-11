@@ -10,21 +10,21 @@
 package disttask
 
 import (
-	"bytes"
+	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
-	"github.com/opesun/goquery"
 
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
 	"github.com/Tencent/bk-ci/src/booster/common/codec"
 	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
 	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
-	"github.com/Tencent/bk-ci/src/booster/common/version"
 	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
@@ -34,26 +34,21 @@ import (
 
 // ListClientVersion handle the http request for listing client version
 func ListClientVersion(req *restful.Request, resp *restful.Response) {
-	url := version.DisttaskRepo
-	res, err := goquery.ParseUrl(url)
+	f, err := os.Open("./data/VersionList.txt")
 	if err != nil {
-		blog.Errorf("list client version failed, err: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListVersionFailed, Message: err.Error()})
+		blog.Error("List Version error:(%v)", err)
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
 	}
+	defer f.Close()
+
 	result := make([]string, 0, 100)
-	nodes := res.Find("a")
-	for _, v := range nodes {
-		buf := &bytes.Buffer{}
-		version.Search(buf, v)
-		s := buf.String()
-		if strings.HasPrefix(s, "install_v") {
-			i1 := strings.Index(s, "_v")
-			i2 := strings.Index(s, ".sh")
-			if i2 < i1 {
-				continue
-			}
-			result = append(result, s[i1+1:i2])
+	r := bufio.NewReader(f)
+	for {
+		s, _, c := r.ReadLine()
+		if c == io.EOF {
+			break
 		}
+		result = append(result, string(s))
 	}
 	sort.Sort(sort.Reverse(sort.StringSlice(result)))
 	api.ReturnRest(&api.RestResponse{Resp: resp, Data: result})
