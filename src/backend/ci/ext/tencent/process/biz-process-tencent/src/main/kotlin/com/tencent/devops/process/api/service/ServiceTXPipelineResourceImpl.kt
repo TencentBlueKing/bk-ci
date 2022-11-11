@@ -33,7 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.PipelineExportV2YamlData
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.service.PipelineListFacadeService
-import com.tencent.devops.process.service.TXPipelineExportService
+import com.tencent.devops.process.service.pipelineExport.TXPipelineExportService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
