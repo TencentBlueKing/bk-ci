@@ -84,4 +84,10 @@ interface StoreDockingPlatformService {
         page: Int = 1,
         pageSize: Int = 10
     ): Page<StoreDockingPlatformInfo>?
+
+    /**
+     * 判断对接平台Code是否已注册
+     * @param platformCode 平台Code
+     */
+    fun isPlatformCodeRegistered(platformCode: String): Boolean
 }

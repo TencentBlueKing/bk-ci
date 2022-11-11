@@ -215,16 +215,6 @@ class PipelineListFacadeService @Autowired constructor(
     ): List<Pipeline> {
         val resultPipelineIds = mutableSetOf<String>()
 
-        val pipelines = listPermissionPipeline(
-            userId = userId,
-            projectId = projectId,
-            page = null,
-            pageSize = null,
-            sortType = PipelineSortType.CREATE_TIME,
-            channelCode = ChannelCode.BS,
-            checkPermission = false
-        )
-
         if (pipelineIdList != null) {
             resultPipelineIds.addAll(pipelineIdList)
         }
@@ -239,11 +229,22 @@ class PipelineListFacadeService @Autowired constructor(
             resultPipelineIds.addAll(templatePipelineIds)
         }
 
-        return if (resultPipelineIds.isEmpty()) {
-            pipelines.records
-        } else {
-            pipelines.records.filter { it.pipelineId in resultPipelineIds }
+        val pipelines = mutableListOf<Pipeline>()
+        val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            pipelineIds = resultPipelineIds)
+        if (buildPipelineRecords.isNotEmpty) {
+            pipelines.addAll(
+                buildPipelines(
+                    pipelineInfoRecords = buildPipelineRecords,
+                    favorPipelines = emptyList(),
+                    authPipelines = emptyList(),
+                    projectId = projectId
+                )
+            )
         }
+        return pipelines
     }
 
     fun listPermissionPipeline(
