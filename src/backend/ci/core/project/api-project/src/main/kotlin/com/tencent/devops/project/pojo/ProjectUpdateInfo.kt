@@ -29,6 +29,7 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.io.InputStream
 
 @ApiModel("项目-修改模型")
 data class ProjectUpdateInfo(
@@ -72,5 +73,9 @@ data class ProjectUpdateInfo(
     @ApiModelProperty("是否保密")
     var secrecy: Boolean = false,
     @ApiModelProperty("项目相关配置")
-    val properties: ProjectProperties? = null
+    val properties: ProjectProperties? = null,
+    @ApiModelProperty("项目最大可授权人员范围")
+    val subjectScopes: List<SubjectScope>? = emptyList(),
+    @ApiModelProperty("logo文件")
+    val logo: InputStream? = null
 )

@@ -54,6 +54,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
+import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.SubjectScope
 
 @Suppress("ALL", "UNUSED")
 @Service
@@ -67,7 +71,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectDispatcher: ProjectDispatcher,
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
-    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService
+    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
+    objectMapper: ObjectMapper
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -78,7 +83,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectDispatcher = projectDispatcher,
     authPermissionApi = authPermissionApi,
     projectAuthServiceCode = projectAuthServiceCode,
-    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService
+    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
+    objectMapper = objectMapper
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -147,10 +153,23 @@ class SimpleProjectServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
+    override fun modifyProjectAuthResource(
+        projectCode: String,
+        projectName: String,
+        userId: String,
+        projectInfo: TProjectRecord,
+        iamSubjectScopes: List<ManagerScopes>?,
+        subjectScopes: List<SubjectScope>?,
+        needApproval: Boolean
+    ) {
         projectPermissionService.modifyResource(
             projectCode = projectCode,
-            projectName = projectName
+            projectName = projectName,
+            userId = userId,
+            projectInfo = projectInfo,
+            iamSubjectScopes = iamSubjectScopes,
+            subjectScopes = subjectScopes,
+            needApproval = needApproval
         )
     }
 

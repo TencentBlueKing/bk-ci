@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
@@ -34,6 +35,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -82,7 +84,15 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun modifyResource(projectCode: String, projectName: String) {
+    override fun modifyResource(
+        projectCode: String,
+        projectName: String,
+        userId: String,
+        projectInfo: TProjectRecord,
+        iamSubjectScopes: List<ManagerScopes>?,
+        subjectScopes: List<SubjectScope>?,
+        needApproval: Boolean
+    ) {
         authResourceApi.modifyResource(
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
@@ -107,7 +117,10 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
         userDeptDetail: UserDeptDetail?,
-        subjectScopes: List<SubjectScope>?
+        subjectScopes: List<SubjectScope>?,
+        iamSubjectScopes: List<ManagerScopes>?,
+        needApproval: Boolean?,
+        reason: String
     ): String {
         val projectList = mutableListOf<ResourceRegisterInfo>()
         projectList.add(resourceRegisterInfo)

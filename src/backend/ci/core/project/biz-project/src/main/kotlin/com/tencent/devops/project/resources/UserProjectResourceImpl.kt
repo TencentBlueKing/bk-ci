@@ -54,8 +54,10 @@ class UserProjectResourceImpl @Autowired constructor(
     }
 
     override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
-        return Result(projectService.getByEnglishName(userId, projectId, accessToken)
-            ?: throw OperationException("项目不存在"))
+        return Result(
+            projectService.getByEnglishName(userId, projectId, accessToken)
+                ?: throw OperationException("项目不存在")
+        )
     }
 
     override fun getContainEmpty(userId: String, projectId: String, accessToken: String?): Result<ProjectVO?> {
@@ -68,7 +70,7 @@ class UserProjectResourceImpl @Autowired constructor(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
             accessToken = accessToken,
-            createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true),
+            createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true, needApproval = true),
             projectChannel = ProjectChannelCode.BS
         )
 
@@ -81,7 +83,15 @@ class UserProjectResourceImpl @Autowired constructor(
         projectUpdateInfo: ProjectUpdateInfo,
         accessToken: String?
     ): Result<Boolean> {
-        return Result(projectService.update(userId, englishName = projectId, projectUpdateInfo, accessToken))
+        return Result(
+            projectService.update(
+                userId = userId,
+                englishName = projectId,
+                projectUpdateInfo = projectUpdateInfo,
+                accessToken = accessToken,
+                needApproval = true
+            )
+        )
     }
 
     override fun enable(
@@ -118,11 +128,13 @@ class UserProjectResourceImpl @Autowired constructor(
     }
 
     override fun hasPermission(userId: String, projectId: String, permission: AuthPermission): Result<Boolean> {
-        return Result(projectService.verifyUserProjectPermission(
-            accessToken = null,
-            userId = userId,
-            projectId = projectId,
-            permission = permission
-        ))
+        return Result(
+            projectService.verifyUserProjectPermission(
+                accessToken = null,
+                userId = userId,
+                projectId = projectId,
+                permission = permission
+            )
+        )
     }
 }

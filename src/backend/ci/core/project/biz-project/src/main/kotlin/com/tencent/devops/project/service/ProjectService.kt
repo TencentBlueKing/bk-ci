@@ -94,7 +94,8 @@ interface ProjectService {
         userId: String,
         englishName: String,
         projectUpdateInfo: ProjectUpdateInfo,
-        accessToken: String?
+        accessToken: String?,
+        needApproval: Boolean? = false
     ): Boolean
 
     /**

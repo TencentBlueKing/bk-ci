@@ -27,8 +27,10 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 
@@ -45,12 +47,23 @@ interface ProjectPermissionService {
         accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
         userDeptDetail: UserDeptDetail?,
-        subjectScopes: List<SubjectScope>?
+        subjectScopes: List<SubjectScope>?,
+        iamSubjectScopes: List<ManagerScopes>?,
+        needApproval: Boolean?,
+        reason: String
     ): String
 
     fun deleteResource(projectCode: String)
 
-    fun modifyResource(projectCode: String, projectName: String)
+    fun modifyResource(
+        projectCode: String,
+        projectName: String,
+        userId: String,
+        projectInfo: TProjectRecord,
+        iamSubjectScopes: List<ManagerScopes>?,
+        subjectScopes: List<SubjectScope>?,
+        needApproval: Boolean
+    )
 
     fun getUserProjects(userId: String): List<String>
 
