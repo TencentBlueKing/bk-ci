@@ -207,15 +207,12 @@ class StreamTGitTransferService @Autowired constructor(
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
         // 更改为每次都进行重定向授权
-        return Result(
-            AuthorizeResult(
-                HTTP_403, client.get(ServiceOauthResource::class).getAuthUrl(
-                    userId = userId,
-                    redirectUrlType = redirectUrlType,
-                    redirectUrl = redirectUrl,
-                    gitProjectId = gitProjectId
-                ).data!!
-            )
+        return client.get(ServiceOauthResource::class).isOAuth(
+            userId = userId,
+            redirectUrlType = redirectUrlType,
+            redirectUrl = redirectUrl,
+            gitProjectId = gitProjectId,
+            refreshToken = true
         )
     }
 
