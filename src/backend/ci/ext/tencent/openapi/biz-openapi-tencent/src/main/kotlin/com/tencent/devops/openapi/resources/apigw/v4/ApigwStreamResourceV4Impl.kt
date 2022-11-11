@@ -16,6 +16,7 @@ import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
 import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.OpenapiTriggerReq
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
@@ -87,6 +88,21 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             triggerBuildReq = triggerBuildReq
+        )
+    }
+
+    override fun nameToPipelineId(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        yamlPath: String
+    ): Result<StreamGitProjectPipeline> {
+        logger.info("STREAM_V4|nameToPipelineId|$userId|$projectId|$yamlPath")
+        return client.get(ServiceStreamTriggerResource::class).nameToPipelineId(
+            userId = userId,
+            projectId = projectId,
+            yamlPath = yamlPath
         )
     }
 
