@@ -48,6 +48,7 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
+import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchService
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
@@ -55,6 +56,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -70,7 +72,8 @@ class ThirdPartyAgentService @Autowired constructor(
     private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
+    private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
+    private val dispatchService: DispatchService
 ) {
 
     fun queueBuild(
@@ -309,7 +312,10 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun finishBuild(buildId: String, vmSeqId: String?, success: Boolean) {
+    fun finishBuild(event: PipelineAgentShutdownEvent) {
+        val buildId = event.buildId
+        val vmSeqId = event.vmSeqId
+        val success = event.buildResult
         if (vmSeqId.isNullOrBlank()) {
             val records = thirdPartyAgentBuildDao.list(dslContext, buildId)
             if (records.isEmpty()) {
@@ -317,10 +323,18 @@ class ThirdPartyAgentService @Autowired constructor(
             }
             records.forEach {
                 finishBuild(it, success)
+                if (it.dockerInfo != null) {
+                    // 第三方构建机可能是docker构建机时需要在这里删除docker类型的redisKey
+                    dispatchService.shutdown(event)
+                }
             }
         } else {
             val record = thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId) ?: return
             finishBuild(record, success)
+            if (record.dockerInfo != null) {
+                // 第三方构建机可能是docker构建机时需要在这里删除docker类型的redisKey
+                dispatchService.shutdown(event)
+            }
         }
     }
 

@@ -111,12 +111,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
     override fun shutdown(event: PipelineAgentShutdownEvent) {
         try {
-            thirdPartyAgentBuildService.finishBuild(
-                buildId = event.buildId,
-                vmSeqId = event.vmSeqId,
-                success = event.buildResult
-            )
-            dispatchService.shutdown(event)
+            thirdPartyAgentBuildService.finishBuild(event)
         } finally {
             try {
                 sendDispatchMonitoring(
