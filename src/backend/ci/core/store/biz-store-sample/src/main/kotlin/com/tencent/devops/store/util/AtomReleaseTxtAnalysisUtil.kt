@@ -60,7 +60,6 @@ object AtomReleaseTxtAnalysisUtil {
     private const val FILE_DEFAULT_SIZE = 1024
 
     fun descriptionAnalysis(
-        userId: String,
         description: String,
         atomPath: String,
         client: Client
@@ -90,12 +89,9 @@ object AtomReleaseTxtAnalysisUtil {
                 }
             }
         regexAnalysis(
-            userId = userId,
             input = descriptionText,
             atomPath = atomPath,
-            client = client,
-            pathList = pathList,
-            result = result
+            pathList = pathList
         )
         val uploadFileToPathResult = uploadFileToPath(
             pathList = pathList,
@@ -110,13 +106,10 @@ object AtomReleaseTxtAnalysisUtil {
         return System.getProperty("java.io.tmpdir").removeSuffix(fileSeparator)
     }
 
-    private fun regexAnalysis(
-        userId: String,
+    fun regexAnalysis(
         input: String,
         atomPath: String,
-        client: Client,
-        pathList: MutableList<String>,
-        result: MutableMap<String, String>
+        pathList: MutableList<String>
     ) {
         val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
         val matcher: Matcher = pattern.matcher(input)
@@ -126,12 +119,9 @@ object AtomReleaseTxtAnalysisUtil {
                 val file = File("$atomPath${fileSeparator}file${fileSeparator}$path")
                 if (file.exists()) {
                     return regexAnalysis(
-                        userId = userId,
                         input = file.readText(),
                         atomPath = atomPath,
-                        client = client,
-                        pathList = pathList,
-                        result = result
+                        pathList = pathList
                     )
                 }
             }
@@ -139,7 +129,7 @@ object AtomReleaseTxtAnalysisUtil {
         }
     }
 
-    private fun filePathReplace(
+    fun filePathReplace(
         result: MutableMap<String, String>,
         descriptionContent: String
     ): String {

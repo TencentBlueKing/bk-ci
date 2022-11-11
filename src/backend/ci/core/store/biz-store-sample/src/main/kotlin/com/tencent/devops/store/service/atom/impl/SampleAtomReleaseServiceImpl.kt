@@ -312,7 +312,6 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         releaseInfo.description = AtomReleaseTxtAnalysisUtil.descriptionAnalysis(
             description = releaseInfo.description,
             atomPath = atomPath,
-            userId = userId,
             client = client
         )
         taskJsonMap["releaseInfo"] = releaseInfo.toJsonString()
