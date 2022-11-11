@@ -28,7 +28,9 @@
 package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.ManagerService
@@ -50,6 +52,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -63,6 +66,7 @@ import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -105,7 +109,8 @@ class TxProjectServiceImpl @Autowired constructor(
     private val bsAuthTokenApi: BSAuthTokenApi,
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    objectMapper: ObjectMapper
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -116,7 +121,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDispatcher = projectDispatcher,
     authPermissionApi = authPermissionApi,
     projectAuthServiceCode = projectAuthServiceCode,
-    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService
+    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
+    objectMapper = objectMapper
 ) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -319,11 +325,24 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
-        // 判断是否是网页调起的且是v3的，且私密项目和最大可授权人员字段被修改
-        // 是则去发起审批，并且返回true
-        // 若不是则直接 fasle
-        return
+    override fun modifyProjectAuthResource(
+        projectCode: String,
+        projectName: String,
+        userId: String,
+        projectInfo: TProjectRecord,
+        iamSubjectScopes: List<ManagerScopes>?,
+        subjectScopes: List<SubjectScope>?,
+        needApproval: Boolean
+    ) {
+        projectPermissionService.modifyResource(
+            projectCode = projectCode,
+            projectName = projectName,
+            userId = userId,
+            projectInfo = projectInfo,
+            iamSubjectScopes = iamSubjectScopes,
+            subjectScopes = subjectScopes,
+            needApproval = needApproval
+        )
     }
 
     fun getInfoByEnglishName(englishName: String): ProjectVO? {

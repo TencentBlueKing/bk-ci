@@ -28,6 +28,7 @@
 
 package com.tencent.devops.project.listener
 
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
@@ -42,5 +43,5 @@ data class TxIamV3CreateEvent(
     override var delayMills: Int = 0,
     val resourceRegisterInfo: ResourceRegisterInfo,
     var iamProjectId: String?,
-    val subjectScopes: List<SubjectScope>? = emptyList()
+    val subjectScopes: List<ManagerScopes>? = emptyList()
 ) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)

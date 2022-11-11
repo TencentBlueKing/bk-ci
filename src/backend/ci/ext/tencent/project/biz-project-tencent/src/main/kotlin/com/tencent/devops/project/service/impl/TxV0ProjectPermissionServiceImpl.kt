@@ -29,6 +29,7 @@ package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -37,10 +38,11 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
-import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.SubjectScope
@@ -72,7 +74,9 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
         projectCreateInfo: ResourceRegisterInfo,
         userDeptDetail: UserDeptDetail?,
         subjectScopes: List<SubjectScope>?,
-        needApproval: Boolean?
+        iamSubjectScopes: List<ManagerScopes>?,
+        needApproval: Boolean?,
+        reason: String
     ): String {
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
         // 创建AUTH项目
@@ -114,7 +118,15 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
         // 内部版用不到
     }
 
-    override fun modifyResource(projectCode: String, projectName: String) {
+    override fun modifyResource(
+        projectCode: String,
+        projectName: String,
+        userId: String,
+        projectInfo: TProjectRecord,
+        iamSubjectScopes: List<ManagerScopes>?,
+        subjectScopes: List<SubjectScope>?,
+        needApproval: Boolean
+    ) {
         authResourceApi.modifyResource(
             serviceCode = bsProjectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,

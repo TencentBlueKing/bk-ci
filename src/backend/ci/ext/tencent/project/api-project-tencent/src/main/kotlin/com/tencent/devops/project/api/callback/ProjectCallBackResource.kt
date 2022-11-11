@@ -27,10 +27,12 @@
 
 package com.tencent.devops.project.api.callback
 
+import com.tencent.devops.project.api.pojo.ItsmCallBackInfo
 import com.tencent.devops.project.pojo.CallbackRequestDTO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -45,8 +47,9 @@ interface ProjectCallBackResource {
 
     @Path("/create_callback")
     @POST
-    @ApiOperation("创建项目回调")
-    fun createProjectCallBack(
-        callbackRequestDTO: CallbackRequestDTO
+    @ApiOperation("处理Itsm项目创建回调")
+    fun handleItsmProjectCreateCallBack(
+        @ApiParam(value = "itsm回调内容", required = true)
+        itsmCallBackInfo: ItsmCallBackInfo
     ): Result<Boolean>
 }

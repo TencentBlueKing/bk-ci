@@ -48,6 +48,10 @@ object IamGroupUtils {
             "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
     }
 
+    fun buildManagerUpdateDescription(projectName: String, userId: String): String {
+        return "$projectName 分级管理员, 由$userId 修改于" +
+            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+    }
     fun renameSystemLable(groupName: String): String {
         return groupName.substringAfterLast("-")
     }

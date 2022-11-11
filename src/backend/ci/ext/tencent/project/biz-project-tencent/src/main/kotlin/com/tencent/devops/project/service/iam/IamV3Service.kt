@@ -63,8 +63,10 @@ import com.tencent.devops.project.pojo.SubjectScope
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
+@Service
 class IamV3Service @Autowired constructor(
     val iamManagerService: ManagerService,
     val iamConfiguration: IamConfiguration,
@@ -140,7 +142,7 @@ class IamV3Service @Autowired constructor(
         }
     }
 
-    private fun batchCreateDefaultGroups(
+    fun batchCreateDefaultGroups(
         userId: String,
         gradeManagerId: Int,
         projectCode: String,
@@ -189,21 +191,8 @@ class IamV3Service @Autowired constructor(
     private fun createGradeManager(
         userId: String,
         resourceRegisterInfo: ResourceRegisterInfo,
-        subjectScopes: List<SubjectScope>?
+        subjectScopes: List<ManagerScopes>?
     ): String {
-        val iamSubjectScopes: ArrayList<ManagerScopes> = ArrayList()
-        // 若授权人员范围为空，则设置为全部人员
-        if (subjectScopes == null) {
-            iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), "*"))
-        } else {
-            subjectScopes.forEach {
-                if (it.type == DEPARTMENT) {
-                    iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT), it.id))
-                } else {
-                    iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.USER), it.id))
-                }
-            }
-        }
         val authorizationScopes = AuthorizationUtils.buildManagerResources(
             projectId = resourceRegisterInfo.resourceCode,
             projectName = resourceRegisterInfo.resourceName,
@@ -214,7 +203,7 @@ class IamV3Service @Autowired constructor(
             .description(IamGroupUtils.buildManagerDescription(resourceRegisterInfo.resourceName, userId))
             .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
-            .subject_scopes(iamSubjectScopes).build()
+            .subject_scopes(subjectScopes).build()
         return iamManagerService.createManager(createManagerDTO).toString()
     }
 

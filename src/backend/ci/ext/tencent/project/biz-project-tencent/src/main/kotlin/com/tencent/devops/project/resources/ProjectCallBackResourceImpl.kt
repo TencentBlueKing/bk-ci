@@ -29,6 +29,7 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.callback.ProjectCallBackResource
+import com.tencent.devops.project.api.pojo.ItsmCallBackInfo
 import com.tencent.devops.project.pojo.CallbackRequestDTO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectCallBackSevice
@@ -38,8 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ProjectCallBackResourceImpl @Autowired constructor(
     private val projectCallBackSevice: ProjectCallBackSevice
 ) : ProjectCallBackResource {
-    override fun createProjectCallBack(callbackRequestDTO: CallbackRequestDTO): Result<Boolean> {
-        projectCallBackSevice.createProjectCallBack(callbackRequestDTO)
+    override fun handleItsmProjectCreateCallBack(itsmCallBackInfo: ItsmCallBackInfo): Result<Boolean> {
+        projectCallBackSevice.createProjectCallBack(itsmCallBackInfo)
         return Result(true)
     }
 }

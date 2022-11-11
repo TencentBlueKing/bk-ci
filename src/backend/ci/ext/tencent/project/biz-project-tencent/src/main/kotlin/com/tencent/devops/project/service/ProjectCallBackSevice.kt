@@ -27,16 +27,85 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.project.pojo.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.CallbackApplicationDTO
+import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.api.pojo.ItsmCallBackInfo
+import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
+import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.service.iam.IamV3Service
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class ProjectCallBackSevice @Autowired constructor(
     private val dslContext: DSLContext,
+    private val iamManagerService: ManagerService,
+    private val projectDao: ProjectDao,
+    private val projectApprovalCallbackDao: ProjectApprovalCallbackDao,
+    private val iamV3Service: IamV3Service
 ) {
-    fun createProjectCallBack(callbackRequestDTO: CallbackRequestDTO) {
-        TODO("Not yet implemented")
+    fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
+        logger.info("createProjectCallBack: itsmCallBackInfo = $itsmCallBackInfo")
+        val sn = itsmCallBackInfo.sn
+        val approveResult = itsmCallBackInfo.approveResult.toBoolean()
+        // 蓝盾数据库存储的回调信息
+        val callBackInfo = projectApprovalCallbackDao.getCallbackBySn(dslContext, sn)
+            ?: throw OperationException(
+                MessageCodeUtil.getCodeLanMessage
+                (ProjectMessageCode.QUERY_PROJECT_CALLBACK_APPLICATION_FAIL)
+            )
+        val englishName = callBackInfo.englishName
+        val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
+            ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
+        val callBackId = callBackInfo.callbackId
+        val currentStatus = itsmCallBackInfo.currentStatus
+        if (approveResult) {
+            // 调起iam处理分级管理员创建申请
+            val callbackApplicationDTO = CallbackApplicationDTO
+                .builder()
+                .sn(sn)
+                .currentStatus(currentStatus)
+                .approveResult(approveResult).build()
+            val iamCallbackApplication = iamManagerService.handleCallbackApplication(callBackId, callbackApplicationDTO)
+            val gradeManagerId = iamCallbackApplication.roleId
+            // 创建默认组
+            iamV3Service.batchCreateDefaultGroups(
+                userId = callBackInfo.applicant,
+                gradeManagerId = gradeManagerId,
+                projectCode = englishName,
+                projectName = projectInfo.projectName
+            )
+            // 项目关联分级管理id
+            projectDao.updateRelationByCode(
+                dslContext = dslContext,
+                projectCode = englishName,
+                relationId = gradeManagerId.toString()
+            )
+            // 修改状态
+            projectDao.updateProjectStatusByEnglishName(
+                dslContext = dslContext,
+                projectCode = englishName,
+                statusEnum = ApproveStatus.APPROVED
+            )
+            // 发成功创建消息给用户
+        } else {
+            // 修改状态
+            projectDao.updateProjectStatusByEnglishName(
+                dslContext = dslContext,
+                projectCode = englishName,
+                statusEnum = ApproveStatus.REJECT
+            )
+            // 发成功创建消息给用户
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectCallBackSevice::class.java)
     }
 }

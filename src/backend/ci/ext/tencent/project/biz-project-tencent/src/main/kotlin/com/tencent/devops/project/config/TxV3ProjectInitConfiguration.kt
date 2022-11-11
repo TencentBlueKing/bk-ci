@@ -29,9 +29,11 @@ package com.tencent.devops.project.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -60,13 +62,23 @@ class TxV3ProjectInitConfiguration {
         bkAuthProperties: BkAuthProperties,
         projectDispatcher: ProjectDispatcher,
         client: Client,
-        tokenService: ClientTokenService
+        tokenService: ClientTokenService,
+        iamConfiguration: IamConfiguration,
+        iamManagerService: ManagerService,
+        projectApprovalCallbackDao: ProjectApprovalCallbackDao,
+        dslContext: DSLContext,
+        projectDao: ProjectDao
     ): ProjectPermissionService = TxV3ProjectPermissionServiceImpl(
         objectMapper = objectMapper,
         authProperties = bkAuthProperties,
         projectDispatcher = projectDispatcher,
         client = client,
-        tokenService = tokenService
+        tokenService = tokenService,
+        iamConfiguration = iamConfiguration,
+        iamManagerService = iamManagerService,
+        projectApprovalCallbackDao = projectApprovalCallbackDao,
+        dslContext = dslContext,
+        projectDao = projectDao
     )
 
     @Bean
