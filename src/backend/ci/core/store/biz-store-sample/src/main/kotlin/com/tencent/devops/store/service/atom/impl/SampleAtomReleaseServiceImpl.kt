@@ -316,6 +316,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
             client = client
         )
         taskJsonMap["releaseInfo"] = releaseInfo.toJsonString()
+        // 将替换好的文本写入task.json文件
         val taskJson = taskJsonMap.toJsonString()
         val fileOutputStream = taskJsonFile.outputStream()
         fileOutputStream.use {
