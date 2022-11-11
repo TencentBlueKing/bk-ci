@@ -345,7 +345,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
                 }
             }
         } catch (ignored: Throwable) {
-            logger.warn("BKSystemErrorMonitor|archive atom file fail|$atomCode|error=${ignored.message}", ignored)
+            logger.warn("BKSystemErrorMonitor|archive atom file fail|$atomCode|error=${ignored.message}")
             return Result(
                 data = false,
                 message = ignored.message
