@@ -49,14 +49,14 @@ class MetricsListenerConfiguration {
     }
 
     @Bean
-    fun buildEndDataReportListener(
+    fun buildEndMetricsDataReportListener(
         @Autowired metricsDataReportService: MetricsDataReportService
     ) = BuildEndMetricsDataReportListener(
         metricsDataReportService = metricsDataReportService
     )
 
     @EventConsumer(StreamBinding.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT, STREAM_CONSUMER_GROUP)
-    fun buildEndMetricsDataReportListener(
+    fun buildEndDataReportListener(
         @Autowired listener: BuildEndMetricsDataReportListener
     ): Consumer<Message<BuildEndMetricsBroadCastEvent>> {
         return Consumer { event: Message<BuildEndMetricsBroadCastEvent> ->
@@ -65,14 +65,14 @@ class MetricsListenerConfiguration {
     }
 
     @Bean
-    fun labelChangeDataSyncListener(
+    fun labelChangeMetricsDataSyncListener(
         @Autowired syncPipelineRelateLabelDataService: SyncPipelineRelateLabelDataService
     ) = LabelChangeMetricsDataSyncListener(
         syncPipelineRelateLabelDataService = syncPipelineRelateLabelDataService
     )
 
     @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT, STREAM_CONSUMER_GROUP)
-    fun labelChangeMetricsDataSyncListener(
+    fun labelChangeDataSyncListener(
         @Autowired listener: LabelChangeMetricsDataSyncListener
     ): Consumer<Message<LabelChangeMetricsBroadCastEvent>> {
         return Consumer { event: Message<LabelChangeMetricsBroadCastEvent> ->

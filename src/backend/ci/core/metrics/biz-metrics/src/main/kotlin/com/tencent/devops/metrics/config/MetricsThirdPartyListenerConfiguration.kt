@@ -44,20 +44,27 @@ import java.util.function.Consumer
 class MetricsThirdPartyListenerConfiguration {
 
     @Bean
-    fun codeCheckDailyListener(
+    fun codeCheckDailyMessageListener(
         @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
     ) = CodeCheckDailyMessageListener(
         metricsThirdPlatformDataReportFacadeService = thirdPlatformDataReportFacadeService
     )
 
     @EventConsumer(EXCHANGE_METRICS_STATISTIC_CODECC_DAILY, STREAM_CONSUMER_GROUP)
-    fun codeCheckDailyMessageListener(
+    fun codeCheckDailyListener(
         @Autowired listener: CodeCheckDailyMessageListener
     ): Consumer<Message<String>> {
         return Consumer { event: Message<String> ->
             listener.execute(event.payload)
         }
     }
+
+    @Bean
+    fun qualityReportDailyMessageListener(
+        @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
+    ) = QualityReportDailyMessageListener(
+        metricsThirdPlatformDataReportFacadeService = thirdPlatformDataReportFacadeService
+    )
 
     @EventConsumer(StreamBinding.EXCHANGE_QUALITY_DAILY_FANOUT, STREAM_CONSUMER_GROUP)
     fun metricsQualityDailyReportListener(
@@ -67,6 +74,13 @@ class MetricsThirdPartyListenerConfiguration {
             listener.execute(event.payload)
         }
     }
+
+    @Bean
+    fun turboDailyReportMessageListener(
+        @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
+    ) = TurboDailyReportMessageListener(
+        metricsThirdPlatformDataReportFacadeService = thirdPlatformDataReportFacadeService
+    )
 
     @EventConsumer(EXCHANGE_METRICS_STATISTIC_TURBO_DAILY, STREAM_CONSUMER_GROUP)
     fun metricsTurboDailyReportListener(
