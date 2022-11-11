@@ -114,7 +114,7 @@ spec:
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
           lifecycle:
-              PreStop:
+              preStop:
                 exec:
                   command:
                   - /bin/bash
