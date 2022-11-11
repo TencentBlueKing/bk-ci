@@ -111,7 +111,7 @@ class TXPipelineExportServiceTest {
 
     private fun getRepoInfo(
         projectId: String,
-        repositoryConfig: RepositoryConfig,
+        repositoryConfig: RepositoryConfig
     ): Repository? = null
 
     @Test

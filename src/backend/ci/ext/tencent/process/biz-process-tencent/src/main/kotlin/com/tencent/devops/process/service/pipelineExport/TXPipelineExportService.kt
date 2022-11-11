@@ -81,7 +81,7 @@ class TXPipelineExportService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val storeImageHelper: StoreImageHelper,
     private val scmProxyService: ScmProxyService,
-    private val client: Client,
+    private val client: Client
 ) {
 
     companion object {
@@ -113,7 +113,7 @@ class TXPipelineExportService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        isGitCI: Boolean = false,
+        isGitCI: Boolean = false
     ): PipelineExportV2YamlData {
         val pair = generateV2Yaml(
             userId = userId,
@@ -129,7 +129,7 @@ class TXPipelineExportService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         isGitCI: Boolean = false,
-        exportFile: Boolean = false,
+        exportFile: Boolean = false
     ): Triple<String, Model, Map<String, List<List<PipelineExportV2YamlConflictMapItem>>>> {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -202,7 +202,7 @@ class TXPipelineExportService @Autowired constructor(
 
     fun doParseModel(
         allInfo: PipelineExportInfo,
-        context: PipelineExportContext,
+        context: PipelineExportContext
     ): Triple<String, Model, Map<String, List<List<PipelineExportV2YamlConflictMapItem>>>> {
         // 将所有插件ID按编排顺序刷新
         var stepCount = 1
@@ -296,7 +296,7 @@ class TXPipelineExportService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         model: Model,
-        isGitCI: Boolean,
+        isGitCI: Boolean
     ): StringBuilder {
 
         val yamlSb = StringBuilder()
@@ -363,7 +363,7 @@ class TXPipelineExportService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        dispatchType: StoreDispatchType,
+        dispatchType: StoreDispatchType
     ): Pair<String, String?> {
         try {
             when (dispatchType.imageType) {

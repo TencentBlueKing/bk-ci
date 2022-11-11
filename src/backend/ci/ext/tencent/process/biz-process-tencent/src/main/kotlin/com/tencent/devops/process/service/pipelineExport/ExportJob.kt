@@ -32,7 +32,7 @@ object ExportJob {
         allInfo: PipelineExportInfo,
         context: PipelineExportContext,
         stage: Stage,
-        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem
     ): Map<String, PreJob>? {
         val jobs = mutableMapOf<String, PreJob>()
         stage.containers.forEach {
@@ -227,7 +227,7 @@ object ExportJob {
     }
 
     private fun getMatrixFromJob(
-        matrixControlOption: MatrixControlOption?,
+        matrixControlOption: MatrixControlOption?
     ): Strategy? {
         if (matrixControlOption == null) {
             return null

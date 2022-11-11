@@ -36,7 +36,7 @@ object ExportStage {
                 allInfo = allInfo,
                 context = context,
                 stage = stage,
-                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem,
+                pipelineExportV2YamlConflictMapItem = pipelineExportV2YamlConflictMapItem
             ) ?: return@forEach
             val tags = mutableListOf<String>()
             val stageTagsMap = allInfo.stageTags?.map {

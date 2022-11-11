@@ -61,7 +61,7 @@ class V1GitCIEventService @Autowired constructor(
     private val websocketService: StreamWebsocketService,
     private val gitRequestEventBuildDao: V1GitRequestEventBuildDao,
     private val eventMessageUtil: V1StreamTriggerMessageUtils,
-    private val redisOperation: RedisOperation,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -75,7 +75,7 @@ class V1GitCIEventService @Autowired constructor(
         eventId: Long,
         reason: String,
         reasonDetail: String?,
-        branch: String?,
+        branch: String?
     ): Long {
         return saveNotBuildEvent(
             gitProjectId = gitProjectId,
@@ -109,7 +109,7 @@ class V1GitCIEventService @Autowired constructor(
         sendCommitCheck: Boolean,
         commitCheckBlock: Boolean,
         version: String?,
-        branch: String?,
+        branch: String?
     ): Long {
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
@@ -165,7 +165,7 @@ class V1GitCIEventService @Autowired constructor(
         sendCommitCheck: Boolean,
         commitCheckBlock: Boolean,
         version: String?,
-        branch: String?,
+        branch: String?
     ): Long {
         return saveBuildNotBuildEvent(
             userId = userId,
@@ -199,7 +199,7 @@ class V1GitCIEventService @Autowired constructor(
         gitProjectId: Long,
         gitEvent: V1GitRequestEvent? = null,
         version: String?,
-        branch: String?,
+        branch: String?
     ): Long {
         var messageId = -1L
         val event = gitEvent ?: (
@@ -244,7 +244,7 @@ class V1GitCIEventService @Autowired constructor(
     }
 
     fun deletePipelineBuildHistory(
-        pipelineIds: Set<String>,
+        pipelineIds: Set<String>
     ): Pair<Int, Int> {
         val notBuildcnt = gitRequestEventNotBuildDao.deleteNotBuildByPipelineIds(dslContext, pipelineIds)
         val buildcnt = gitRequestEventBuildDao.deleteBuildByPipelineIds(dslContext, pipelineIds)

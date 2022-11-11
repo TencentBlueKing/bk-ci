@@ -65,7 +65,7 @@ data class GitCodeRepoAtomParam(
     var channelCode: String? = null,
 
 // 重试时检出的commitId
-    var retryStartPoint: String? = null,
+    var retryStartPoint: String? = null
 ) {
     @JsonIgnore
     fun getBranch(): String? {

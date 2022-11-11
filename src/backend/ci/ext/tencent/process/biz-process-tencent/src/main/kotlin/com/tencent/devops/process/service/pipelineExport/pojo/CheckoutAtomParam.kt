@@ -202,7 +202,7 @@ data class CheckoutAtomParam(
     /**
      * 归档的缓存路径
      */
-    val cachePath: String? = null,
+    val cachePath: String? = null
 ) {
     constructor(input: GitCodeRepoAtomParam) : this(
         pullType = input.pullType?.name,

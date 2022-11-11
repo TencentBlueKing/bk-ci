@@ -108,7 +108,7 @@ object ExportCondition {
     fun parseStepIfFiled(
         context: PipelineExportContext,
         step: Element,
-        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem?,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem?
     ): String? {
         return when (step.additionalOptions?.runCondition) {
             RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
@@ -215,7 +215,7 @@ object ExportCondition {
         allInfo: PipelineExportInfo,
         context: PipelineExportContext,
         value: Any,
-        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem
     ): Any {
         if (value is String) {
             return ExportStepRun.replaceStringWithDoubleCurlyBraces(

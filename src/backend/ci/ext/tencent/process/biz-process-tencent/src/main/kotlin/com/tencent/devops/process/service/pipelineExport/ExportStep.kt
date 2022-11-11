@@ -1,7 +1,5 @@
 package com.tencent.devops.process.service.pipelineExport
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -33,7 +31,7 @@ object ExportStep {
         allInfo: PipelineExportInfo,
         context: PipelineExportContext,
         job: Container,
-        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem
     ): List<PreStep> {
         val stepList = mutableListOf<PreStep>()
 

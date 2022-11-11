@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 data class RunAtomParam(
     val shell: String? = null,
     val script: String? = null,
-    val charsetType: CharsetType? = null,
+    val charsetType: CharsetType? = null
 ) {
     enum class CharsetType {
         /*默认类型*/

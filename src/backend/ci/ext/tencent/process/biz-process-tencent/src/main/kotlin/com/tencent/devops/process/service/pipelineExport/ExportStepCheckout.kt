@@ -28,7 +28,7 @@ object ExportStepCheckout {
 
     private fun parseGitCodeRepo(
         allInfo: PipelineExportInfo,
-        inputMap: MutableMap<String, Any>?,
+        inputMap: MutableMap<String, Any>?
     ): MutableMap<String, Any> {
         val input = kotlin.runCatching { JsonUtil.anyTo(inputMap, object : TypeReference<GitCodeRepoAtomParam>() {}) }
             .getOrElse {
@@ -61,7 +61,7 @@ object ExportStepCheckout {
 
     private fun parseGitCodeRepoCommon(
         allInfo: PipelineExportInfo,
-        inputMap: MutableMap<String, Any>?,
+        inputMap: MutableMap<String, Any>?
     ): MutableMap<String, Any> {
         val input =
             kotlin.runCatching { JsonUtil.anyTo(inputMap, object : TypeReference<GitCodeRepoCommonAtomParam>() {}) }
@@ -87,7 +87,7 @@ object ExportStepCheckout {
 
     private fun parseCheckout(
         allInfo: PipelineExportInfo,
-        inputMap: MutableMap<String, Any>?,
+        inputMap: MutableMap<String, Any>?
     ): MutableMap<String, Any> {
         val input = kotlin.runCatching { JsonUtil.anyTo(inputMap, object : TypeReference<CheckoutAtomParam>() {}) }
             .getOrElse {
@@ -123,7 +123,7 @@ object ExportStepCheckout {
         timeoutMinutes: Int?,
         continueOnError: Boolean?,
         retryTimes: Int?,
-        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem
     ): Boolean {
         if (inputMap == null || atomCode.isBlank() || !checkoutAtomCodeSet.contains(atomCode)) return false
         logger.info(

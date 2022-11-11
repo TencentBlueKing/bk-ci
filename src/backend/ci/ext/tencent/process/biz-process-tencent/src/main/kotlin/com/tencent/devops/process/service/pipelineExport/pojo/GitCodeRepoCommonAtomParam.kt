@@ -40,7 +40,7 @@ data class GitCodeRepoCommonAtomParam(
     val noScmVariable: Boolean? = null,
 
     @JsonProperty("pipeline.start.channel")
-    var channelCode: String? = "",
+    var channelCode: String? = ""
 ) {
     @JsonIgnore
     fun getBranch(): String? {

@@ -31,7 +31,7 @@ object ExportStepRun {
         timeoutMinutes: Int?,
         continueOnError: Boolean?,
         retryTimes: Int?,
-        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem
     ): Boolean {
         if (inputMap == null || atomCode.isBlank() || !RUN_ATOM_NAME.contains(atomCode)) return false
         logger.info(
@@ -171,7 +171,7 @@ object ExportStepRun {
         context: PipelineExportContext,
         key: String,
         existingOutputElements: MutableList<MarketBuildAtomElementWithLocation>,
-        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
+        pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem
     ) {
         val distinctMap = HashMap<String?, MarketBuildAtomElementWithLocation>()
         existingOutputElements.forEach {
