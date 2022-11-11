@@ -181,7 +181,8 @@ class BkRepoCustomDirService @Autowired constructor(
         includeFolder: Boolean,
         deep: Boolean,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        modifiedTimeDesc: Boolean
     ): Page<FileInfo> {
         val result = bkRepoClient.listFilePage(
             userId = userId,
@@ -191,7 +192,8 @@ class BkRepoCustomDirService @Autowired constructor(
             includeFolders = includeFolder,
             deep = deep,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            modifiedTimeDesc = modifiedTimeDesc
         )
         val fileInfoList = result.records.map { it.toFileInfo() }
         return Page(result.pageNumber, result.pageSize, result.totalRecords, fileInfoList)

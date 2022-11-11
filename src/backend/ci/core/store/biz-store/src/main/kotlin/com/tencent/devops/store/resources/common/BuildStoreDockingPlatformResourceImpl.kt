@@ -32,11 +32,13 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.BuildStoreDockingPlatformResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreDockingPlatformRelService
+import com.tencent.devops.store.service.common.StoreDockingPlatformService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildStoreDockingPlatformResourceImpl @Autowired constructor(
-    private val storeDockingPlatformRelService: StoreDockingPlatformRelService
+    private val storeDockingPlatformRelService: StoreDockingPlatformRelService,
+    private val storeDockingPlatformService: StoreDockingPlatformService
 ) : BuildStoreDockingPlatformResource {
 
     override fun addStoreDockingPlatforms(
@@ -49,5 +51,9 @@ class BuildStoreDockingPlatformResourceImpl @Autowired constructor(
             storeType = storeType,
             platformCodes = platformCodes
         ))
+    }
+
+    override fun isPlatformCodeRegistered(platformCode: String): Result<Boolean> {
+        return Result(storeDockingPlatformService.isPlatformCodeRegistered(platformCode))
     }
 }
