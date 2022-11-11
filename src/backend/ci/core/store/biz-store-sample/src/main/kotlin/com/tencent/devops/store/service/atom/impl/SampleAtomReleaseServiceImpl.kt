@@ -46,6 +46,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.store.api.common.OpStoreLogoResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
@@ -271,16 +272,42 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         }
         val atomId = addMarketAtomResult.data!!
         // 解析logoUrl
-        val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(
-            userId = userId,
-            logoUrl = releaseInfo.logoUrl,
-            atomPath = atomPath,
-            client = client
-        )
+        val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
         if (logoUrlAnalysisResult.isNotOk()) {
-            return Result(data = false, message = logoUrlAnalysisResult.message)
+            return Result(
+                data = false,
+                status = logoUrlAnalysisResult.status,
+                message = logoUrlAnalysisResult.message
+            )
         }
-        releaseInfo.logoUrl = logoUrlAnalysisResult.data!!
+        val relativePath = logoUrlAnalysisResult.data
+        val logoFile = File("$atomPath${File.separator}file" +
+                    "${File.separator}${relativePath?.removePrefix(File.separator)}")
+        logger.info("uploadStoreLogo logoFilePath:${logoFile.path}")
+        var uploadStoreLogoResult = Result(data = true, status = 0)
+        if (logoFile.exists()) {
+            val result = client.get(OpStoreLogoResource::class).uploadStoreLogo(
+                userId = userId,
+                contentLength = logoFile.length(),
+                inputStream = logoFile.inputStream(),
+                disposition = FormDataContentDisposition(
+                    "form-data; name=\"logo\"; filename=\"${logoFile.name}\""
+                )
+            )
+            if (result.isOk()) {
+                releaseInfo.logoUrl = result.data!!.logoUrl!!
+            } else {
+                uploadStoreLogoResult = Result(
+                    data = false,
+                    status = uploadStoreLogoResult.status,
+                    message = uploadStoreLogoResult.message
+                )
+            }
+        } else {
+            logger.warn("uploadStoreLogo fail logoName:${logoFile.name}")
+            uploadStoreLogoResult = Result(data = false, message = "upload store logo fail")
+        }
+        if (uploadStoreLogoResult.isNotOk()) return uploadStoreLogoResult
         // 解析description
         releaseInfo.description = AtomReleaseTxtAnalysisUtil.descriptionAnalysis(
             description = releaseInfo.description,
