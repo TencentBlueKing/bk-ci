@@ -26,7 +26,18 @@
                 />
             </bk-form-item>
             <bk-form-item :label="$t('label')">
+                <span class="pipeline-label-action-span">
+                    <router-link target="_blank" :to="addLabelRoute" class="pipeline-label-action-span-btn">
+                        <logo name="plus" size="18" />
+                        {{$t('addLabel')}}
+                    </router-link>
+                    <span @click="refreshLabel" class="pipeline-label-action-span-btn">
+                        <logo name="refresh" size="16" />
+                        {{$t('editPage.atomForm.reflash')}}
+                    </span>
+                </span>
                 <PipelineLabelSelector
+                    ref="labelSelector"
                     v-model="initTags"
                     @change="updateDynamicGroup"
                 />
@@ -71,10 +82,13 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import PipelineLabelSelector from '@/components/PipelineLabelSelector'
+    import Logo from '@/components/Logo'
+
     export default {
         name: 'copy-pipeline-dialog',
         components: {
-            PipelineLabelSelector
+            PipelineLabelSelector,
+            Logo
         },
         mixins: [piplineActionMixin],
         props: {
@@ -106,6 +120,12 @@
                 'staticPipelineGroups',
                 'dynamicPipelineGroups'
             ]),
+            addLabelRoute () {
+                return {
+                    name: 'pipelinesGroup'
+
+                }
+            },
             formModel () {
                 return [
                     {
@@ -169,6 +189,9 @@
             initName () {
                 return this.pipeline?.pipelineName ? `${this.pipeline?.pipelineName}_copy` : ''
             },
+            refreshLabel () {
+                this.$refs?.labelSelector.init?.()
+            },
             async updateDynamicGroup (tags) {
                 this.isMatching = true
                 this.model.labels = Object.values(tags).flat()
@@ -220,6 +243,31 @@
     }
 </script>
 
-<style>
+<style lang="scss">
+    @import '@/scss/conf';
+    .pipeline-label-action-span {
+        position: absolute;
+        right: 0;
+        top: -32px;
+        display: grid;
+        grid-gap: 20px;
+        grid-template-columns: repeat(2, auto);
+        .pipeline-label-action-span-btn {
+            color: $primaryColor;
+            position: relative;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            >:first-child {
+                margin-right: 6px;
+            }
+            &:first-child::before {
+                content: '|';
+                position: absolute;
+                right: -13px;
+                color: #DCDEE5;
+            }
+        }
 
+    }
 </style>

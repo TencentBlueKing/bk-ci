@@ -1,5 +1,5 @@
 <template>
-    <ul class="pipeline-label-selector">
+    <ul class="pipeline-label-selector" v-bkloading="{ isLoading }">
         <li
             v-for="item in tagSelectModelList"
             :key="item.id"
@@ -64,6 +64,7 @@
                 'requestTagList'
             ]),
             async init () {
+                if (this.isLoading) return
                 this.isLoading = true
                 await this.requestTagList(this.$route.params)
                 this.updateValue()

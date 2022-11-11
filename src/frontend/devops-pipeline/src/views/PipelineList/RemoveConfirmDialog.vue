@@ -7,8 +7,6 @@
         header-position="left"
         :draggable="false"
         :loading="isBusy"
-        @cancel="handleClose"
-        @confirm="handleSubmit"
     >
         <p class="remove-confirm-desc" v-if="isRemoveType" v-html="$t('removeConfirmTips', [groupName])">
         </p>
@@ -16,22 +14,28 @@
             <span class="delete-pipeline-warning-icon">
                 <i class="devops-icon icon-exclamation" />
             </span>
-            <h2 class="remove-confirm-title">
-                {{ $t('deletePipelineConfirm') }}
+
+            <h2 v-if="removedPipelines.length === 0" class="remove-confirm-title">
+                {{ $t('无流水线待删除') }}
             </h2>
-            <p class="remove-confirm-desc">
-                {{$t('deletePipelineConfirmDesc')}}
-            </p>
-            <bk-alert
-                v-if="noPermissionPipelineLength > 0"
-                type="warning"
-                class="no-permission-pipeline-alert"
-                :title="$t('hasNoPermissionPipelineTips', [noPermissionPipelineLength])"
-                closable
-                :close-text="$t('removeNoPermissionPipeline')"
-                @close="removeNoPermissionPipeline"
-            >
-            </bk-alert>
+            <template v-else>
+                <h2 class="remove-confirm-title">
+                    {{ $t('deletePipelineConfirm') }}
+                </h2>
+                <p class="remove-confirm-desc">
+                    {{$t('deletePipelineConfirmDesc')}}
+                </p>
+                <bk-alert
+                    v-if="noPermissionPipelineLength > 0"
+                    type="warning"
+                    class="no-permission-pipeline-alert"
+                    :title="$t('hasNoPermissionPipelineTips', [noPermissionPipelineLength])"
+                    closable
+                    :close-text="$t('removeNoPermissionPipeline')"
+                    @close="removeNoPermissionPipeline"
+                >
+                </bk-alert>
+            </template>
         </template>
 
         <ul v-if="removedPipelines.length" class="operate-pipeline-list">
@@ -66,6 +70,15 @@
                 </div>
             </li>
         </ul>
+        <footer slot="footer">
+            <bk-button
+                theme="primary"
+                :disabled="removedPipelines.length === 0"
+                @click="handleSubmit">
+                {{$t('delete')}}
+            </bk-button>
+            <bk-button @click="handleClose">{{$t('cancel')}}</bk-button>
+        </footer>
     </bk-dialog>
 </template>
 
@@ -223,8 +236,8 @@
                 }
             },
             handleClose () {
-                this.hideNoPermissionPipeline = false
                 this.$emit('close')
+                this.hideNoPermissionPipeline = false
             },
             calcOverPos () {
                 const tagMargin = 6
@@ -237,8 +250,6 @@
                         const viewPortWidth = groupNameBoxWidth - (groupNameLength > 1 ? moreTagWidth : 0)
                         let sumTagWidth = 0
                         let tagVisbleCount = 0
-
-                        console.log(viewPortWidth, moreTagWidth)
 
                         this.$refs[`groupName_${index}`]?.every((groupName) => {
                             sumTagWidth += groupName.$el.offsetWidth + tagMargin

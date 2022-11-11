@@ -110,7 +110,9 @@
                                 show
                                 :show-icon="false"
                             >
-                                <div @click.stop class="pipeline-group-tree-node" slot-scope="{ node, data }">
+                                <div @click.stop :class="['pipeline-group-tree-node', {
+                                    'is-delete': data.deleted
+                                }]" slot-scope="{ node, data }">
                                     <bk-checkbox
                                         v-bind="isChecked(data.id)"
                                         :disabled="data.disabled"
@@ -122,6 +124,7 @@
                                     >
                                         {{data.name}}
                                     </bk-checkbox>
+                                    <span class="pipeline-group-tree-node-desc" v-if="data.deleted">{{ $t('deleted') }}</span>
                                     <span v-if="data.hasChild">（{{ data.children.length }}）</span>
                                 </div>
                             </bk-big-tree>
@@ -500,7 +503,8 @@
                             .filter(pipeline => !pipeline.delete || pipeline.viewId === group.id)
                             .map(pipeline => ({
                                 id: pipeline.pipelineId,
-                                name: pipeline.pipelineName
+                                name: pipeline.pipelineName,
+                                deleted: pipeline.delete
                             }))
                     }
                 }, [])
@@ -794,6 +798,12 @@
 
                             font-size: 12px;
                             height: 32px;
+                            &.is-delete {
+                                justify-content: space-between;
+                                .bk-checkbox-text {
+                                    text-decoration: line-through;
+                                }
+                            }
                             // TODO: ugly overwrite
                             .last-checked.is-checked {
                                 .bk-checkbox {
@@ -801,6 +811,7 @@
                                     background-color: #8F9DF6;
                                 }
                             }
+
                             .pipeline-group-tree-node-checkbox {
                                 display: inline-flex;
                                 .bk-checkbox-text {
@@ -808,8 +819,8 @@
                                     flex: 1;
                                 }
                             }
-                            .pipeline-group-tree-node-added {
-                                color: #C4C6CC;
+                            .pipeline-group-tree-node-desc {
+                                color: #c4c4c4;
                             }
                             .add-pipeline-btn {
                                 display: flex;

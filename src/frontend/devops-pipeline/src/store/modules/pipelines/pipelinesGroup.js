@@ -168,6 +168,15 @@ const mutations = {
 }
 
 const actions = {
+    async requestGroupPipelineCount (_, { projectId, viewId }) {
+        try {
+            const { data } = await ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}/pipelineCount`)
+            return data
+        } catch (error) {
+            console.error(error)
+            return false
+        }
+    },
     requestPipelineCount (_, { projectId }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectId}/getCount`)
     },
@@ -345,7 +354,7 @@ const actions = {
     },
     async fetchPipelineGroups (_ctx, { projectId, pipelineId }) {
         try {
-            const { data } = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/pipelineViews/listViews/projects/${projectId}/pipelines/${pipelineId}`)
+            const { data } = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/pipelines/${pipelineId}/listViews`)
             return data.map(({ id, name }) => ({
                 id,
                 name

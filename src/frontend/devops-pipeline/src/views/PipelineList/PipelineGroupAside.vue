@@ -45,7 +45,6 @@
                         :key="item.id"
                         @click="switchViewId(item.id)"
                     >
-
                         <logo v-if="item.icon" size="12" class="pipeline-group-item-icon" :name="item.icon" />
                         <bk-input
                             v-if="item.id === editingGroupId"
@@ -58,7 +57,19 @@
                         <span v-else class="pipeline-group-item-name">
                             {{item.name}}
                         </span>
-                        <span class="pipeline-group-item-sum">{{item.pipelineCount}}</span>
+                        <span
+                            v-if="$route.params.viewId === item.id && hasDeleteCount"
+                            class="pipeline-group-item-sum has-delete-count"
+                        >
+                            <span class="normal-count">{{currentGroupPipelineCount.normalCount}}</span>
+                            <span class="delete-count">
+                                <logo name="delete" size="8" />
+                                {{currentGroupPipelineCount.deleteCount}}
+                            </span>
+                        </span>
+                        <span v-else class="pipeline-group-item-sum">
+                            {{item.pipelineCount}}
+                        </span>
                         <span @click.stop>
                             <ext-menu :class="{ hidden: item.actions.length <= 0 }" :data="item" :config="item.actions" />
                         </span>
@@ -146,6 +157,12 @@
                     personalViewList: true,
                     projectViewList: true
                 },
+                currentGroupPipelineCount: {
+                    loading: false,
+                    deleteCount: 0,
+                    normalCount: 0
+                },
+                hasDeleteCount: false,
                 isAdding: false,
                 isAddPipelineGroupDialogShow: false,
                 newPipelineGroup: {
@@ -233,7 +250,8 @@
                 'addPipelineGroup',
                 'updatePipelineGroup',
                 'deletePipelineGroup',
-                'toggleStickyTop'
+                'toggleStickyTop',
+                'requestGroupPipelineCount'
             ]),
             checkGroupNameValid (name) {
                 return this.newPipelineGroup.projected !== this.groupNamesMap[name]?.projected
@@ -384,14 +402,32 @@
                 })
                     this.$refs.newPipelineGroupForm?.clearError?.()
             },
-            switchViewId (id) {
-                if (id !== this.$route.params.viewId) {
-                    cacheViewId(this.$route.params.projectId, id)
+            async updateGroupPipelineCount (viewId) {
+                this.currentGroupPipelineCount.loading = true
+                this.hasDeleteCount = false
+                const res = await this.requestGroupPipelineCount({
+                    projectId: this.$route.params.projectId,
+                    viewId
+                })
+
+                if (res) {
+                    this.currentGroupPipelineCount = res
+                    this.hasDeleteCount = res.deleteCount > 0
+                } else {
+                    this.hasDeleteCount = false
+                    this.currentGroupPipelineCount.loading = false
+                }
+            },
+            switchViewId (viewId) {
+                if (viewId !== this.$route.params.viewId) {
+                    this.updateGroupPipelineCount(viewId)
+
+                    cacheViewId(this.$route.params.projectId, viewId)
                     this.$router.push({
                         name: 'PipelineManageList',
                         params: {
                             ...this.$route.params,
-                            viewId: id
+                            viewId
                         }
                     })
                 }
@@ -530,14 +566,38 @@
                 @include ellipsis();
             }
             .pipeline-group-item-sum {
-                @include ellipsis();
-                width: 30px;
+                display: flex;
                 font-size: 12px;
                 background: #F0F1F5;
                 border-radius: 8px;
-                text-align: center;
+
+                justify-content: center;
+                width: 30px;
                 margin: 0 6px;
                 color: #979BA5;
+                transition: all .3s ease;
+                &.has-delete-count {
+                    width: 60px;
+                    .normal-count {
+                        background: white;
+                    }
+                }
+                .normal-count,
+                .delete-count {
+                    @include ellipsis();
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: auto;
+                    border-radius: 8px;
+                    width: 30px;
+                    &.delete-count {
+                        color: #C4C6CC;
+                        >:first-child {
+                            margin-right: 2px;
+                        }
+                    }
+                }
             }
 
             &.sticky-top {
@@ -552,7 +612,7 @@
                 .pipeline-group-item-name {
                     color: $primaryColor;
                 }
-                .pipeline-group-item-sum {
+                .pipeline-group-item-sum:not(.has-delete-count) {
                     background: white;
                 }
             }

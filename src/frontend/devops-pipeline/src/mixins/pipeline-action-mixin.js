@@ -162,7 +162,7 @@ export default {
                 MY_PIPELINE_VIEW_ID,
                 UNCLASSIFIED_PIPELINE_VIEW_ID
             ].includes(this.$route.params.viewId)
-            const isDynamicGroup = this.currentGroup.viewType === 1
+            const isDynamicGroup = this.currentGroup?.viewType === 1
             return [
                 {
                     text: (pipeline.hasCollect ? this.$t('uncollect') : this.$t('collect')),

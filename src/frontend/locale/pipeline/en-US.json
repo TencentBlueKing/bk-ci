@@ -1081,5 +1081,6 @@
   "lastModify": "最后修改",
   "projectedGroupDisableTips": "只有管理员\\CI管理员可以创建项目可见的流水线组",
   "groupEditDisableTips": "只有管理员\\CI管理员可以对项目流水线组添加\\移出流水线",
-  "noDeletePipelines": "删除流水线列表为空"
+  "noDeletePipelines": "删除流水线列表为空",
+  "deleted": "Deleted"
 }
