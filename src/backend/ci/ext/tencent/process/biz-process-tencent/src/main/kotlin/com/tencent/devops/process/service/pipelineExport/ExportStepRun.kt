@@ -93,7 +93,7 @@ object ExportStepRun {
     }
 
     fun parseSetEnv(script: String): String {
-        val regex = Regex("setEnv\\s+(\"?.*\"?)\\s*\\n?")
+        val regex = Regex("setEnv\\s+([^\\n]*)")
         val foundMatches = regex.findAll(script)
         var formatScript: String = script
         foundMatches.forEach { result ->
@@ -103,11 +103,12 @@ object ExportStepRun {
             val key = keyAndValue[0].removeSurrounding("\"")
             val value = keyValueStr.removePrefix(keyAndValue[0]).trim().removeSurrounding("\"")
             formatScript =
-                formatScript.replace(result.value, "echo \"::set-output name=$key::$value\"\n")
+                formatScript.replace(result.value, "echo \"::set-output name=$key::$value\"")
         }
         return formatScript
     }
 
+    @Suppress("NestedBlockDepth")
     fun replaceStringWithDoubleCurlyBraces(
         allInfo: PipelineExportInfo,
         context: PipelineExportContext,
@@ -158,16 +159,16 @@ object ExportStepRun {
             }
             newValue = newValue.replace(matcher.group(), realValue)
         }
-        return removeExcessIndentation(newValue)
-    }
-
-    private fun removeExcessIndentation(value: String): String {
-        val regex = Regex("\\n(\\t+|\\s+)\\n")
-        return removeEndWhitespace(value.replace(regex, "\n\n").trim())
+        return removeEndWhitespace(newValue)
     }
 
     private fun removeEndWhitespace(value: String): String {
-        return value.split("\n").joinToString(separator = "\n") { it.trimEnd() }
+        return value.split("\n").asSequence()
+            .filter { it.isNotBlank() }
+            .joinToString(separator = "\n") {
+                // 替换制表符，不然导出yaml格式会乱
+                it.replace("\t", "    ").trimEnd()
+            }
     }
 
     private fun checkConflictOutput(
