@@ -76,8 +76,8 @@ object PulsarConsumerFactory {
             if (!topicsPattern.isNullOrEmpty()) {
                 consumer.topicsPattern(topicsPattern)
             }
-            if (group.isNullOrEmpty()) {
-                consumer.subscriptionName("$subscriptionName-anonymous-${UUIDUtil.generate().substring(0, 8)}")
+            if (group.isNullOrEmpty() && subscriptionName.isNotBlank()) {
+                consumer.subscriptionName(subscriptionName)
             } else {
                 consumer.subscriptionName(group)
             }

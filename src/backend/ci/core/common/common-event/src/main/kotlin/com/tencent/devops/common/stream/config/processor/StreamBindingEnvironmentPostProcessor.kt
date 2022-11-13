@@ -57,14 +57,14 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
 
     private fun createPropertySource(environment: ConfigurableEnvironment): PropertiesPropertySource {
         with(Properties()) {
-//            val hostName = if (environment is StandardEnvironment) {
-//                val springCloudClientHostInfo = environment.propertySources.find {
-//                    it.name == "springCloudClientHostInfo"
-//                }?.source as LinkedHashMap<*, *>
-//                springCloudClientHostInfo["spring.cloud.client.hostname"].toString()
-//            } else {
-//                "anonymous.${UUIDUtil.generate().substring(0, 8)}"
-//            }
+            val hostName = if (environment is StandardEnvironment) {
+                val springCloudClientHostInfo = environment.propertySources.find {
+                    it.name == "springCloudClientHostInfo"
+                }?.source as LinkedHashMap<*, *>
+                springCloudClientHostInfo["spring.cloud.client.hostname"].toString()
+            } else {
+                "anonymous.${UUIDUtil.generate().substring(0, 8)}"
+            }
 
             // 如果未配置服务使用的binder类型，则使用全局默认binder类型
             // 如果均未配置则不进行注解的反射解析
@@ -107,7 +107,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 definition.add(bindingName)
                 // 如果注解中指定了订阅组，则直接设置
                 // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
-                setBindings(bindingName, consumer)
+                setBindings(bindingName, consumer, hostName)
             }
 
             // 反射扫描所有带有 StreamConsumer 注解的bean类型
@@ -128,7 +128,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 definition.add(bindingName)
                 // 如果注解中指定了订阅组，则直接设置
                 // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
-                setBindings(bindingName, consumer)
+                setBindings(bindingName, consumer, hostName)
             }
 
             // 声明所有扫描结果的函数式声明
@@ -139,7 +139,8 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
 
     private fun Properties.setBindings(
         bindingName: String,
-        consumer: EventConsumer
+        consumer: EventConsumer,
+        hostName: String
     ) {
         // TODO Kafka 场景缺少特定配置
         val bindingPrefix = "spring.cloud.stream.bindings.$bindingName-in-0"
@@ -150,6 +151,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
             // 如果队列匿名则在消费者销毁后删除该队列
             setProperty("$rabbitPropPrefix.consumer.durableSubscription", "true")
             setProperty("$pulsarPropPrefix.consumer.subscriptionMode", SubscriptionMode.NonDurable.name)
+            setProperty("$pulsarPropPrefix.consumer.subscriptionName", hostName)
         } else {
             setProperty("$bindingPrefix.group",  consumer.group)
         }
