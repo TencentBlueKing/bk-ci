@@ -408,13 +408,20 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 			task.InheritSetting.LeastCPU = task.InheritSetting.RequestCPU
 		}
 	}
+
+	crmMgr := de.getCrMgr(tb.Client.QueueName)
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try creating task(%s) failed: crmMgr is null", EngineName, task.ID)
+		return errors.New("crmMgr is null")
+	}
+
 	task.InheritSetting.WorkerVersion = worker.WorkerVersion
 	task.InheritSetting.Scene = project.Scene
 	task.InheritSetting.ExtraProjectSetting = project.Extra
 	task.InheritSetting.ExtraWorkerSetting = worker.Extra
 
 	task.Operator.AppName = task.ID
-	task.Operator.Namespace = de.getCrMgr(tb.Client.QueueName).GetNamespace()
+	task.Operator.Namespace = crmMgr.GetNamespace()
 	task.Operator.Image = worker.Image
 	de.setTaskIstResource(task, tb.Client.QueueName)
 	task.Operator.RequestProcessPerUnit = ev.ProcessPerUnit
@@ -595,6 +602,10 @@ func (de *disttaskEngine) launchDirectTask(task *distTask, tb *engine.TaskBasic,
 
 func (de *disttaskEngine) launchCRMTask(task *distTask, tb *engine.TaskBasic, queueName string) error {
 	crmMgr := de.getCrMgr(task.InheritSetting.QueueName)
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try launching crm task(%s) failed: crmMgr is null", EngineName, tb.ID)
+		return errors.New("crmMgr is null")
+	}
 	var err error
 
 	envJobInt := int(task.Operator.RequestCPUPerUnit)
@@ -766,7 +777,10 @@ func (de *disttaskEngine) launchDirectDone(task *distTask) (bool, error) {
 
 func (de *disttaskEngine) launchCRMDone(task *distTask) (bool, error) {
 	crmMgr := de.getCrMgr(task.InheritSetting.QueueName)
-
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try launch crm task(%s) done failed: crmMgr is null", EngineName, task.ID)
+		return false, errors.New("crmMgr is null")
+	}
 	// if still preparing, then it's not need to get service info
 	isPreparing, err := crmMgr.IsServicePreparing(task.ID)
 	if err != nil {
@@ -961,8 +975,12 @@ func (de *disttaskEngine) initBrokers() error {
 				ContainerDir: v.ContainerDir,
 			}
 		}
-
-		if err = de.getCrMgr(broker.City).AddBroker(
+		crmMgr := de.getCrMgr(broker.City)
+		if crmMgr == nil {
+			blog.Errorf("engine(%s) init broker(%s) failed: crmMgr is null", EngineName, brokerName)
+			return errors.New("crmMgr is null")
+		}
+		if err = crmMgr.AddBroker(
 			brokerName, crm.StrategyConst, crm.NewConstBrokerStrategy(broker.ConstNum), crm.BrokerParam{
 				Param: crm.ResourceParam{
 					City:     getQueueNamePure(broker.City),
