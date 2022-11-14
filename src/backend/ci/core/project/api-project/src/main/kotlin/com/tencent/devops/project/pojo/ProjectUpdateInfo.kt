@@ -79,5 +79,5 @@ data class ProjectUpdateInfo(
     @ApiModelProperty("logo文件")
     val logo: InputStream? = null,
     @ApiModelProperty("是否权限私密")
-    val authSecrecy: Boolean?
+    val authSecrecy: Boolean? = null
 )

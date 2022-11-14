@@ -13,19 +13,26 @@ class ProjectApprovalCallbackDao {
         applicant: String,
         englishName: String,
         callbackId: String,
-        sn: String
+        sn: String,
+        subjectScopes: String,
+        approveType: Int? = null
     ): Int {
         with(TProjectApprovalCallback.T_PROJECT_APPROVAL_CALLBACK) {
             return dslContext.insertInto(
                 this,
                 APPLICANT,
                 ENGLISH_NAME,
-                CALLBACK_ID, SN
+                CALLBACK_ID,
+                SN,
+                SUBJECT_SCOPES,
+                APPROVE_TYPE
             ).values(
                 applicant,
                 englishName,
                 callbackId,
-                sn
+                sn,
+                subjectScopes,
+                approveType ?: 0
             ).execute()
         }
     }
