@@ -192,6 +192,8 @@ open class DefaultModelCheckPlugin constructor(
                 params = arrayOf(stage.name!!, group.name)
             )
         }
+        PipelineUtils.checkStageReviewParam(stage.checkIn?.reviewParams)
+
         stage.checkIn?.timeout = if (stage.checkIn?.timeout in 1..(Timeout.DEFAULT_STAGE_TIMEOUT_HOURS * 30)) {
             stage.checkIn?.timeout
         } else {

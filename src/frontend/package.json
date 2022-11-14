@@ -58,7 +58,11 @@
     ]
   },
   "dependencies": {
+    "babel-plugin-istanbul": "6.1.1",
+    "core-js": "3.26.0",
+    "css-loader": "6.0.0",
     "cross-env": "^7.0.3",
+    "eslint-plugin-vue": "6.2.2",
     "glob-parent": "5.1.2",
     "uuid": "^8.3.2"
   }

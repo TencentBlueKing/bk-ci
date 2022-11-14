@@ -81,6 +81,7 @@ type Actionresult struct {
 	Succeed   bool
 	Outputmsg string
 	Errormsg  string
+	Exitcode  int
 }
 
 func uniqueAndCheck(strlist []string, allindex map[string]bool) []string {

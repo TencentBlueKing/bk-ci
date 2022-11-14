@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.trigger.actions.tgit
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
@@ -49,7 +48,6 @@ import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -78,7 +76,6 @@ import java.util.Date
 @Suppress("ALL")
 class TGitPushActionGit(
     private val dslContext: DSLContext,
-    private val client: Client,
     private val apiService: TGitApiService,
     private val streamEventService: StreamEventService,
     private val streamTimerService: StreamTimerService,
@@ -97,7 +94,6 @@ class TGitPushActionGit(
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.PUSH)
 
-    override lateinit var data: ActionData
     override fun event() = data.event as GitPushEvent
 
     override val api: TGitApiService
@@ -353,13 +349,9 @@ class TGitPushActionGit(
             userId = data.getUserId(),
             checkCreateAndUpdate = event().create_and_update
         )
-        val params = GitActionCommon.getStartParams(
-            action = this,
-            triggerOn = triggerOn
-        )
         return TriggerResult(
             trigger = isMatch,
-            startParams = params,
+            triggerOn = triggerOn,
             timeTrigger = isTime,
             deleteTrigger = isDelete
         )

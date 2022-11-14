@@ -1,6 +1,5 @@
 package com.tencent.devops.buildless
 
-import com.google.common.collect.Interners
 import com.tencent.devops.buildless.common.ErrorCodeEnum
 import com.tencent.devops.buildless.config.BuildLessConfig
 import com.tencent.devops.buildless.exception.BuildLessException
@@ -25,8 +24,6 @@ class ContainerPoolExecutor @Autowired constructor(
     private val rejectedExecutionFactory: RejectedExecutionFactory,
     private val buildLessContainerService: BuildLessContainerService
 ) {
-
-    private val stringPool = Interners.newWeakInterner<String>()
 
     fun execute(buildLessStartInfo: BuildLessStartInfo) {
         with(buildLessStartInfo) {
@@ -84,7 +81,7 @@ class ContainerPoolExecutor @Autowired constructor(
     }
 
     fun getContainerStatus(containerId: String): BuildLessPoolInfo? {
-        synchronized(stringPool.intern(containerId)) {
+        synchronized(containerId.intern()) {
             return redisUtils.getBuildLessPoolContainer(containerId)
         }
     }
@@ -92,7 +89,7 @@ class ContainerPoolExecutor @Autowired constructor(
     fun clearTimeoutContainers() {
         val containerList = buildLessContainerService.getDockerRunTimeoutContainers()
         containerList.forEach {
-            synchronized(stringPool.intern(CommonUtils.formatContainerId(it))) {
+            synchronized(CommonUtils.formatContainerId(it).intern()) {
                 buildLessContainerService.stopContainer("clear timeout", "", it)
             }
         }

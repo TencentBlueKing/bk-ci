@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
@@ -81,6 +82,7 @@ import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.utils.BuildUtils
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -734,6 +736,18 @@ class PipelineBuildFacadeService(
                     buildId = buildId,
                     buildParameters = pipelineParamMap.values.toList()
                 )
+                if (parameters[PIPELINE_START_TASK_ID] != null) {
+                    buildLogPrinter.addLines(
+                        buildId = buildId,
+                        logMessages = pipelineParamMap.map {
+                            LogMessage(
+                                message = "${it.key}=${it.value.value}",
+                                timestamp = System.currentTimeMillis(),
+                                tag = parameters[PIPELINE_START_TASK_ID]?.toString() ?: ""
+                            )
+                        }
+                    )
+                }
             }
             return buildId
         } finally {
@@ -969,6 +983,8 @@ class PipelineBuildFacadeService(
                 params = arrayOf(stageId)
             )
         }
+        PipelineUtils.checkStageReviewParam(reviewRequest?.reviewParams)
+
         val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
         try {
@@ -978,7 +994,8 @@ class PipelineBuildFacadeService(
                     pipelineInfo = pipelineInfo,
                     model = null,
                     startType = StartType.MANUAL,
-                    setting = setting
+                    setting = setting,
+                    buildId = buildId
                 )
             )
 
@@ -1465,11 +1482,11 @@ class PipelineBuildFacadeService(
         updateTimeDesc: Boolean? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 1000
+        val pageSizeNotNull = pageSize ?: 50
         val sqlLimit =
-            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimitMaxSize(pageNotNull, pageSizeNotNull) else null
         val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 1000
+        val limit = sqlLimit?.limit ?: 50
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
@@ -1515,7 +1532,7 @@ class PipelineBuildFacadeService(
             )
             return BuildHistoryPage(
                 page = pageNotNull,
-                pageSize = pageSizeNotNull,
+                pageSize = limit,
                 count = result.history.count,
                 records = result.history.records,
                 hasDownloadPermission = result.hasDownloadPermission,
@@ -1556,14 +1573,11 @@ class PipelineBuildFacadeService(
         updateTimeDesc: Boolean? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
-        var pageSizeNotNull = pageSize ?: 50
-        if (pageNotNull > 50) {
-            pageSizeNotNull = 50
-        }
+        val pageSizeNotNull = pageSize ?: 50
         val sqlLimit =
             if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
         val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 50
+        val limit = sqlLimit?.limit ?: 1000
 
         val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
 
@@ -1654,7 +1668,7 @@ class PipelineBuildFacadeService(
             )
             return BuildHistoryPage(
                 page = pageNotNull,
-                pageSize = pageSizeNotNull,
+                pageSize = limit,
                 count = result.history.count,
                 records = result.history.records,
                 hasDownloadPermission = result.hasDownloadPermission,
@@ -2074,21 +2088,13 @@ class PipelineBuildFacadeService(
                         params = arrayOf(buildId)
                     )
                 }
-                // 按原有的启动参数组装启动参数
-                val startParameters = mutableMapOf<String, String>()
-                buildInfo.buildParameters?.map {
-                    startParameters.put(it.key, it.value.toString())
-                }
+
                 // 目标构建已经结束,直接按原有启动参数新发起一次构建,此次构建会遵循流水线配置的串行阈值
                 if (buildInfo.status.isFinish()) {
-                    // 发起新构建
-                    return buildManualStartup(
-                        userId = buildInfo.startUser,
-                        startType = StartType.MANUAL,
+                    return buildRestartPipeline(
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        values = startParameters,
-                        channelCode = ChannelCode.BS
+                        buildInfo = buildInfo
                     )
                 }
 
@@ -2102,14 +2108,10 @@ class PipelineBuildFacadeService(
                     userId = userId,
                     buildStatus = BuildStatus.CANCELED
                 )
-                // 发起新构建
-                return buildManualStartup(
-                    userId = buildInfo.startUser,
-                    startType = StartType.MANUAL,
+                return buildRestartPipeline(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    values = startParameters,
-                    channelCode = ChannelCode.BS
+                    buildInfo = buildInfo
                 )
             }
         } finally {
@@ -2121,6 +2123,43 @@ class PipelineBuildFacadeService(
             defaultMessage = MessageCodeUtil.getCodeMessage(ProcessMessageCode.ERROR_RESTART_EXSIT, arrayOf(buildId)),
             params = arrayOf(buildId)
         )
+    }
+
+    private fun buildRestartPipeline(
+        projectId: String,
+        pipelineId: String,
+        buildInfo: BuildInfo
+    ): String {
+        // 按原有的启动参数组装启动参数
+        val startParameters = mutableMapOf<String, String>()
+        buildInfo.buildParameters?.map {
+            startParameters.put(it.key, it.value.toString())
+        }
+        val startType = StartType.toStartType(buildInfo.trigger)
+        // 发起新构建
+        return if (startType == StartType.WEB_HOOK) {
+            webhookBuildParameterService.getBuildParameters(buildId = buildInfo.buildId)?.forEach { param ->
+                startParameters[param.key] = param.value.toString()
+            }
+            webhookTriggerPipelineBuild(
+                userId = buildInfo.startUser,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                parameters = startParameters,
+                checkPermission = false,
+                startType = startType
+            )!!
+        } else {
+            // 发起新构建
+            buildManualStartup(
+                userId = buildInfo.startUser,
+                startType = StartType.MANUAL,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                values = startParameters,
+                channelCode = ChannelCode.BS
+            )
+        }
     }
 
     private fun checkPipelineInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo {

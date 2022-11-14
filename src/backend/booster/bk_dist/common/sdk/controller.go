@@ -52,7 +52,8 @@ type ControllerWorkSDK interface {
 // this is working under a single job
 type WorkJob interface {
 	ExecuteRemoteTask(req *BKDistCommand) (*BKDistResult, error)
-	ExecuteLocalTask(commands []string, workdir string) (*LocalTaskResult, error)
+	// return http code / http message / execute result / execute error
+	ExecuteLocalTask(commands []string, workdir string) (int, string, *LocalTaskResult, error)
 	SendRemoteFile2All(req []FileDesc) error
 }
 
@@ -127,6 +128,7 @@ type ControllerConfig struct {
 	DisableFileLock    bool
 	AutoResourceMgr    bool
 	ResIdleSecsForFree int
+	SendCork           bool
 }
 
 // Target return the server ip and port of controller

@@ -70,6 +70,10 @@ class AuthTaskServiceImpl @Autowired constructor(
         return taskRepository.findByProjectId(projectId).filter { it.taskMember.contains(user) }.map { it.pipelineId }.toSet()
     }
 
+    override fun queryPipelineListByProjectId(projectId: String): Set<String> {
+        return taskRepository.findByProjectId(projectId).map { it.pipelineId }.toSet()
+    }
+
     override fun queryTaskListForUser(user: String, projectId: String, actions: Set<String>): Set<String> {
         return taskRepository.findByProjectId(projectId).map { it.taskId.toString() }.toSet()
     }
@@ -82,5 +86,9 @@ class AuthTaskServiceImpl @Autowired constructor(
 
     override fun queryTaskListByPipelineIds(pipelineIds: Set<String>): Set<String> {
         return taskRepository.findByPipelineIdIn(pipelineIds).map { it.taskId.toString() }.toSet()
+    }
+
+    override fun queryPipelineIdsByTaskIds(taskIds: Set<Long>): Set<String> {
+        return taskRepository.findByTaskIdIn(taskIds).filter { it.pipelineId != null }.map { it.pipelineId }.toSet()
     }
 }

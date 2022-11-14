@@ -41,18 +41,21 @@ import com.tencent.devops.common.webhook.pojo.code.git.isMrMergeEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.pojo.ChangeYamlList
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.StreamMrInfo
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
@@ -61,13 +64,13 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitFileInfo
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitMrInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
-import com.tencent.devops.stream.pojo.ChangeYamlList
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
@@ -76,11 +79,14 @@ import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
 import com.tencent.devops.stream.util.StreamCommonUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.util.Base64
 import java.util.Date
 
 class TGitMrActionGit(
+    private val dslContext: DSLContext,
+    private val streamSettingDao: StreamBasicSettingDao,
     private val apiService: TGitApiService,
     private val mrConflictCheck: MergeConflictCheck,
     private val pipelineDelete: PipelineDelete,
@@ -94,7 +100,6 @@ class TGitMrActionGit(
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.MERGE_REQUEST)
 
-    override lateinit var data: ActionData
     override fun event() = data.event as GitMergeRequestEvent
 
     override val mrIId: String
@@ -120,7 +125,7 @@ class TGitMrActionGit(
                 search = this.data.eventCommon.userId
             ).find { it.userId == this.data.eventCommon.userId }?.accessLevel
 
-            accessLevel != null && accessLevel >= 30
+            accessLevel != null && accessLevel >= GitAccessLevelEnum.DEVELOPER.level
         } catch (error: ErrorCodeException) {
             false
         }
@@ -129,21 +134,24 @@ class TGitMrActionGit(
             this.data.setting.triggerReviewSetting.whitelist
         val checkProjectInWhiteList = this.data.eventCommon.gitProjectId in
             this.data.setting.triggerReviewSetting.whitelist
-        return (checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
-            checkUserInWhiteList ||
-            checkProjectInWhiteList
+        return (
+            (checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
+                checkUserInWhiteList ||
+                checkProjectInWhiteList
+            ) && forkMrYamlList().isEmpty()
     }
 
     override fun getMrId() = event().object_attributes.id
 
     override fun getMrReviewers(): List<String> {
         return try {
-            api.getMrReview(
+            val mrReviewInfo = data.context.gitMrReviewInfo ?: api.getMrReview(
                 cred = getGitCred(),
                 gitProjectId = event().object_attributes.target_project_id.toString(),
                 mrId = event().object_attributes.id.toString(),
                 retry = ApiRequestRetryInfo(true)
-            )?.reviewers?.map { it.username } ?: emptyList()
+            )
+            mrReviewInfo?.reviewers?.map { it.username } ?: emptyList()
         } catch (e: Throwable) {
             logger.error("tGit get mr reviewers error: ${e.message}", e)
             emptyList()
@@ -173,7 +181,7 @@ class TGitMrActionGit(
         } ?: TGitCred(data.setting.enableUser)
     }
 
-    override fun init(): BaseAction? {
+    override fun init(): BaseAction {
         return initCommonData()
     }
 
@@ -199,6 +207,47 @@ class TGitMrActionGit(
         )
         return this
     }
+
+    override fun initCacheData() {
+        val event = event()
+        // 初始化setting
+        if (!data.isSettingInitialized) {
+            val gitCIBasicSetting = streamSettingDao.getSetting(dslContext, event.object_attributes.target_project_id)
+            if (null != gitCIBasicSetting) {
+                data.setting = StreamTriggerSetting(gitCIBasicSetting)
+            }
+        }
+        if (data.isSettingInitialized) {
+            try {
+                data.context.gitMrInfo = apiService.getMrInfo(
+                    cred = getGitCred(),
+                    gitProjectId = data.eventCommon.gitProjectId,
+                    mrId = event.object_attributes.id.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )?.baseInfo
+                data.context.gitMrReviewInfo = apiService.getMrReview(
+                    cred = getGitCred(),
+                    gitProjectId = event.object_attributes.target_project_id.toString(),
+                    mrId = event.object_attributes.id.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )
+            } catch (e: Throwable) {
+                logger.warn("TGit MR action cache mrInfo/mrReviewInfo error", e)
+            }
+        }
+    }
+
+    override fun tryGetMrInfoFromCache(): TGitMrInfo? {
+        return data.context.gitMrInfo?.let {
+            TGitMrInfo(
+                mergeStatus = it.mergeStatus ?: "",
+                baseCommit = it.baseCommit
+            )
+        }
+    }
+
+    override fun needUpdateLastModifyUser(filePath: String) =
+        super.needUpdateLastModifyUser(filePath) && !checkMrForkAction()
 
     override fun isStreamDeleteAction() = event().isDeleteEvent()
 
@@ -230,7 +279,7 @@ class TGitMrActionGit(
         if (event().object_attributes.action == TGitMergeActionKind.MERGE.value) {
             return true
         }
-        return mrConflictCheck.checkMrConflict(this, path2PipelineExists)
+        return true
     }
 
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {
@@ -414,7 +463,7 @@ class TGitMrActionGit(
         return if (data.context.mrInfo != null) {
             data.context.mrInfo!!
         } else {
-            val mergeRequest = apiService.getMrInfo(
+            val mergeRequest = tryGetMrInfoFromCache() ?: apiService.getMrInfo(
                 cred = getGitCred(),
                 gitProjectId = event().object_attributes.target_project_id.toString(),
                 mrId = event().object_attributes.id.toString(),
@@ -540,13 +589,9 @@ class TGitMrActionGit(
             userId = data.getUserId(),
             mrAction = mrAction
         )
-        val params = GitActionCommon.getStartParams(
-            action = this,
-            triggerOn = triggerOn
-        )
         return TriggerResult(
             trigger = isMatch,
-            startParams = params,
+            triggerOn = triggerOn,
             timeTrigger = false,
             deleteTrigger = false
         )

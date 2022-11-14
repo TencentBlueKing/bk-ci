@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -157,6 +158,27 @@ func (s *Sandbox) ExecScripts(src string) (int, error) {
 	return s.execCommand(caller)
 }
 
+// ExecScriptsWithMessage run the scripts and return the output
+func (s *Sandbox) ExecScriptsWithMessage(src string) (int, []byte, []byte, error) {
+	caller, options := GetCallerAndOptions()
+
+	s.spa = &syscall.SysProcAttr{
+		CmdLine:    fmt.Sprintf("%s %s", options, src),
+		HideWindow: true,
+	}
+
+	var outBuf, errBuf bytes.Buffer
+	s.Stdout = &outBuf
+	s.Stderr = &errBuf
+
+	code, err := s.execCommand(caller)
+	if err != nil && code != ExitErrorCode && len(errBuf.Bytes()) == 0 {
+		return code, outBuf.Bytes(), []byte(err.Error()), err
+	}
+
+	return code, outBuf.Bytes(), errBuf.Bytes(), err
+}
+
 // StartScripts start the scripts, not wait
 func (s *Sandbox) StartScripts(src string) (*exec.Cmd, error) {
 	caller, options := GetCallerAndOptions()
@@ -300,7 +322,7 @@ func (s *Sandbox) startCommand(name string, arg ...string) (*exec.Cmd, error) {
 	if !strings.HasPrefix(name, ".") {
 		name, err = s.LookPath(name)
 	}
-	
+
 	var cmd *exec.Cmd
 	if s.Ctx != nil {
 		cmd = exec.CommandContext(s.Ctx, name, arg...)

@@ -10,6 +10,8 @@
 package resource
 
 import (
+	"time"
+
 	"github.com/Tencent/bk-ci/src/booster/common/codec"
 	v2 "github.com/Tencent/bk-ci/src/booster/server/pkg/api/v2"
 )
@@ -59,6 +61,7 @@ type Res struct {
 	status        Status
 	taskInfo      *v2.RespTaskInfo
 	heartbeatInfo []byte
+	applyTime     time.Time
 }
 
 func (r *Res) heartbeatData() []byte {
@@ -79,7 +82,10 @@ func (r *Res) needHeartBeat() bool {
 }
 
 func (r *Res) canRelease() bool {
-	return r.status == ResourceApplying || r.status == ResourceApplySucceed || r.status == ResourceReleaseFailed
+	return r.status == ResourceApplying ||
+		r.status == ResourceApplySucceed ||
+		r.status == ResourceReleaseFailed ||
+		r.status == ResourceApplyFailed
 }
 
 func (r *Res) isReleaseStatus() bool {

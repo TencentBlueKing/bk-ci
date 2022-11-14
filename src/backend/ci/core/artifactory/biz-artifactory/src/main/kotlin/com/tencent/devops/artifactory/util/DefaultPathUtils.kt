@@ -30,6 +30,7 @@ package com.tencent.devops.artifactory.util
 import com.tencent.devops.common.api.util.UUIDUtil
 import java.io.File
 import java.nio.file.Files
+import java.util.regex.Pattern
 
 @Suppress("ALL")
 object DefaultPathUtils {
@@ -81,5 +82,18 @@ object DefaultPathUtils {
             throw IllegalArgumentException("Path $path doesn't contain buildId")
         }
         return roads[1]
+    }
+
+    /**
+     * 根据manifest文件路径解析镜像名称和版本
+     * eg: /jq/manifest/1.0.0/manifest.json
+     */
+    fun getImageNameAndVersion(manifestPath: String): Pair<String, String> {
+        val pattern = Pattern.compile("/(.*)/manifest/(.*)/manifest.json")
+        val matcher = pattern.matcher(manifestPath)
+        if (!matcher.find()) {
+            throw IllegalArgumentException("illegal manifestPath: $manifestPath")
+        }
+        return Pair(matcher.group(1), matcher.group(2))
     }
 }

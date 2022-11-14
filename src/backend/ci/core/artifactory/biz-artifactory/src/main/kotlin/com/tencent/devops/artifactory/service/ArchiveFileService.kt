@@ -236,6 +236,7 @@ interface ArchiveFileService {
         includeFolder: Boolean?,
         deep: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        modifiedTimeDesc: Boolean?
     ): Page<FileInfo>
 }

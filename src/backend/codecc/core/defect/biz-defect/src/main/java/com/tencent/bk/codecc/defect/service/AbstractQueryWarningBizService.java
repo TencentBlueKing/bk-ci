@@ -34,7 +34,6 @@ import com.tencent.bk.codecc.defect.model.CLOCStatisticEntity;
 import com.tencent.bk.codecc.defect.model.CodeCommentEntity;
 import com.tencent.bk.codecc.defect.model.DefectEntity;
 import com.tencent.bk.codecc.defect.model.LintStatisticEntity;
-import com.tencent.bk.codecc.defect.model.StatisticEntity;
 import com.tencent.bk.codecc.defect.utils.ConvertUtil;
 import com.tencent.bk.codecc.defect.vo.*;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO;
@@ -721,9 +720,9 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 
             content = pipelineScmService.getFileContentOauth(oauthUserId, GitUtil.INSTANCE.getProjectName(url),
                 relPath, (revision != null ? revision : branch));
-        }
-        else
-        {
+        } else if (projectId != null && (projectId.startsWith("git_") || projectId.startsWith("github_"))) {
+            content = pipelineScmService.getStreamFileContent(projectId, userId, url, relPath, revision, branch);
+        }else {
             content = pipelineScmService.getFileContent(taskId, repoId, relPath, revision, branch, subModule, createFrom);
         }
 

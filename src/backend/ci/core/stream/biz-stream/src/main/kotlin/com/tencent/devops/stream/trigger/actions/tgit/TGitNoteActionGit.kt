@@ -38,7 +38,6 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -62,7 +61,7 @@ import org.springframework.stereotype.Service
 class TGitNoteActionGit @Autowired constructor(
     private val dslContext: DSLContext,
     private val apiService: TGitApiService,
-    private val gitCheckService: GitCheckService,
+    gitCheckService: GitCheckService,
     private val basicSettingDao: StreamBasicSettingDao
 ) : TGitActionGit(apiService, gitCheckService), GitBaseAction {
 
@@ -72,7 +71,6 @@ class TGitNoteActionGit @Autowired constructor(
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.NOTE)
 
-    override lateinit var data: ActionData
     override fun event() = data.event as GitNoteEvent
 
     override val api: TGitApiService
@@ -122,7 +120,30 @@ class TGitNoteActionGit @Autowired constructor(
             userId = event.user.username,
             gitProjectName = GitUtils.getProjectName(event.repository.homepage)
         )
+        this.data.context.gitDefaultBranchLatestCommitInfo = defaultBranch to latestCommit?.toGitCommit()
         return this
+    }
+
+    override fun initCacheData() {
+        val event = event()
+        if (data.isSettingInitialized && event.mergeRequest != null) {
+            try {
+                data.context.gitMrInfo = apiService.getMrInfo(
+                    cred = getGitCred(),
+                    gitProjectId = data.eventCommon.gitProjectId,
+                    mrId = event.mergeRequest!!.id.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )?.baseInfo
+                data.context.gitMrReviewInfo = apiService.getMrReview(
+                    cred = getGitCred(),
+                    gitProjectId = event.mergeRequest!!.target_project_id.toString(),
+                    mrId = event.mergeRequest!!.id.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )
+            } catch (ignore: Throwable) {
+                logger.warn("TGit note action cache mrInfo/mrReviewInfo error", ignore)
+            }
+        }
     }
 
     override fun isStreamDeleteAction() = event().isDeleteEvent()
@@ -140,13 +161,13 @@ class TGitNoteActionGit @Autowired constructor(
         return false
     }
 
-    override fun checkProjectConfig() {}
+    override fun checkProjectConfig() = Unit
 
     override fun checkMrConflict(path2PipelineExists: Map<String, StreamTriggerPipeline>): Boolean {
         return true
     }
 
-    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
+    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) = Unit
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         return GitActionCommon.getYamlPathList(
@@ -172,10 +193,10 @@ class TGitNoteActionGit @Autowired constructor(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val (isTrigger, startParams) = GitActionCommon.matchAndStartParams(this, triggerOn)
+        val (isTrigger, _) = GitActionCommon.matchAndStartParams(this, triggerOn, onlyMatch = true)
         return TriggerResult(
             trigger = TriggerBody(isTrigger),
-            startParams = startParams,
+            triggerOn = triggerOn,
             timeTrigger = false,
             deleteTrigger = false
         )

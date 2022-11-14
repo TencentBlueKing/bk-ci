@@ -18,6 +18,7 @@ codecc_env_03="./bin/03-userdef/codecc.env"
 
 set_env03 (){
   for kv in "$@"; do
+    grep -qxF "$kv" "$codecc_env_default" 2>/dev/null || echo "$kv" >> "$codecc_env_default"
     if ! grep -q "^${kv%%=*}=[^ ]" "$codecc_env_03" 2>/dev/null; then  # 非空则不覆盖.
       echo "SET_ENV03: $codecc_env_03 中未曾赋值，新增 $kv"
       [[ "$kv" =~ ^[A-Z0-9_]+=$ ]] && echo -e "\033[31;1m注意：\033[m$kv 赋值为空，请检查蓝鲸是否安装正确
@@ -86,4 +87,3 @@ fi
 
 echo "合并env."
 ./bin/merge_env.sh codecc &>/dev/null || true
-

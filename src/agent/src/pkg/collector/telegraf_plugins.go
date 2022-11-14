@@ -14,4 +14,4 @@ import (
 	_ "github.com/influxdata/telegraf/plugins/outputs/influxdb"
 )
 
-// 将生成telegraf需要用到的插件依赖，这些插件会执行响应的 init() 函数来加入到 telegraf.config 中，才能生成相关的 telegraf agent
+// 将生成telegraf需要用到的插件依赖，这些插件会执行相应的 init() 函数来加入到 telegraf.config 中，才能生成相关的 telegraf agent。

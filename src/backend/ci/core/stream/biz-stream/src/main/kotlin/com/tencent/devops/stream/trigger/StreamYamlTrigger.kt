@@ -50,6 +50,7 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.context.TriggerCache
@@ -135,8 +136,10 @@ class StreamYamlTrigger @Autowired constructor(
                     "Matcher is false, return, gitProjectId: ${action.data.getGitProjectId()}, " +
                     "eventId: ${action.data.context.requestEventId}"
             )
-            throw StreamTriggerException(action, TriggerReason.TRIGGER_NOT_MATCH,
-                reasonParams = listOf(triggerEvent.second.trigger.notTriggerReason ?: ""))
+            throw StreamTriggerException(
+                action, TriggerReason.TRIGGER_NOT_MATCH,
+                reasonParams = listOf(triggerEvent.second.trigger.notTriggerReason ?: "")
+            )
         }
 
         val yamlContent = action.getYamlContent(filePath)
@@ -247,7 +250,7 @@ class StreamYamlTrigger @Autowired constructor(
         val tr = if (triggerEvent?.second != null) {
             TriggerResult(
                 trigger = triggerEvent.second.trigger,
-                startParams = triggerEvent.second.startParams,
+                triggerOn = triggerEvent.second.triggerOn,
                 timeTrigger = false,
                 deleteTrigger = false,
                 repoHookName = null
@@ -262,9 +265,7 @@ class StreamYamlTrigger @Autowired constructor(
                 "${pipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
                 "isTiming=$isTiming|isDelete=$isDelete|repoHookName=$repoHookName"
         )
-
-        val noNeedTrigger = !isTrigger && !isTiming && !isDelete && repoHookName.isNullOrEmpty()
-        if (noNeedTrigger) {
+        if (tr.noNeedTrigger()) {
             logger.warn(
                 "StreamYamlTrigger|triggerBuild|pipelineId|" +
                     "${pipeline.pipelineId}|" +
@@ -277,6 +278,8 @@ class StreamYamlTrigger @Autowired constructor(
                 reasonParams = listOf(notTriggerReason ?: "")
             )
         }
+
+        val startParams = GitActionCommon.getStartParams(action, tr.triggerOn)
 
         // 替换yaml模板
         val yamlReplaceResult = prepareCIBuildYaml(action) ?: return false
@@ -310,6 +313,7 @@ class StreamYamlTrigger @Autowired constructor(
             yamlBuild.gitStartBuild(
                 action = action,
                 triggerResult = tr,
+                startParams = startParams,
                 yaml = yamlObject,
                 gitBuildId = null,
                 // 没有触发只有特殊任务的需要保存一下蓝盾流水线
@@ -329,6 +333,7 @@ class StreamYamlTrigger @Autowired constructor(
             yamlBuild.gitStartBuild(
                 action = action,
                 triggerResult = tr,
+                startParams = startParams,
                 yaml = yamlObject,
                 gitBuildId = null,
                 // 没有触发只有特殊任务的不需要保存蓝盾流水线
@@ -363,6 +368,7 @@ class StreamYamlTrigger @Autowired constructor(
             yamlBuild.gitStartBuild(
                 action = action,
                 triggerResult = tr,
+                startParams = startParams,
                 yaml = yamlObject,
                 gitBuildId = gitBuildId,
                 onlySavePipeline = false,
