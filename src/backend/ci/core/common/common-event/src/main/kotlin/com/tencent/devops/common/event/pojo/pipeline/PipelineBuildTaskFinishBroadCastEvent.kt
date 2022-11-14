@@ -34,7 +34,7 @@ import com.tencent.devops.common.stream.constants.StreamBinding
 /**
  * 构建结束的广播事件，用于通知等
  */
-@Event(destination = StreamBinding.EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT)
+@Event(destination = StreamBinding.EXCHANGE_PIPELINE_BUILD_TASK_FINISH_FANOUT)
 data class PipelineBuildTaskFinishBroadCastEvent(
     override val source: String,
     override val projectId: String,

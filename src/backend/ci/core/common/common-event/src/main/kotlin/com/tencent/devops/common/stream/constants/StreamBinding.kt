@@ -89,10 +89,7 @@ object StreamBinding {
     const val EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT = "engine.pipeline.build.cancel.fanout"
 
     // 插件结束后续广播exchange ====================================
-    const val EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT = "engine.pipeline.build.element.finish"
-
-    // 接收上述广播的队列
-    const val QUEUE_PIPELINE_BUILD_ELEMENT_FINISH_LAMBDA = "q.engine.pipeline.build.element.lambda"
+    const val EXCHANGE_PIPELINE_BUILD_TASK_FINISH_FANOUT = "engine.pipeline.build.task.finish"
 
     // 定时变更广播exchange ====================================
     const val EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT = "engine.pipeline.timer.change"
