@@ -200,7 +200,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .check-atom-form {
         .choose-item {
             margin-right: 30px;
@@ -208,5 +208,8 @@
         .check-suggest {
             margin-top: 0px;
         }
+    }
+    ::v-deep .bk-label-text {
+        font-weight: bold;
     }
 </style>
