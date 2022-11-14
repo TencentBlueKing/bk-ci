@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package distcc
 
 import (
@@ -62,6 +71,7 @@ type EngineConfig struct {
 
 	LeastJobServer         int
 	JobServerTimesToCPU    float64
+	QueueShareType         map[string]engine.QueueShareType
 	Brokers                []config.EngineDistCCBrokerConfig
 	QueueResourceAllocater map[string]config.ResourceAllocater
 }
@@ -91,8 +101,12 @@ func NewDistccEngine(conf EngineConfig, mgr, k8sCrmMgr crm.HandlerWithUser,
 	}
 
 	egn := &distccEngine{
-		conf:          conf,
-		publicQueue:   engine.NewStagingTaskQueue(),
+		conf: conf,
+		publicQueueMap: map[string]engine.StagingTaskQueue{
+			publicQueueDefault:    engine.NewStagingTaskQueue(),
+			publicQueueK8SDefault: engine.NewStagingTaskQueue(),
+			publicQueueK8SWindows: engine.NewStagingTaskQueue(),
+		},
 		mysql:         m,
 		mgr:           mgr,
 		k8sCrmMgr:     k8sCrmMgr,
@@ -108,11 +122,17 @@ func NewDistccEngine(conf EngineConfig, mgr, k8sCrmMgr crm.HandlerWithUser,
 	return egn, nil
 }
 
+const (
+	publicQueueDefault    = "default"
+	publicQueueK8SDefault = "k8s_default"
+	publicQueueK8SWindows = "k8s_windows"
+)
+
 type distccEngine struct {
-	conf        EngineConfig
-	publicQueue engine.StagingTaskQueue
-	mysql       MySQL
-	mgr         crm.HandlerWithUser
+	conf           EngineConfig
+	mysql          MySQL
+	publicQueueMap map[string]engine.StagingTaskQueue
+	mgr            crm.HandlerWithUser
 
 	// k8s container resource manager
 	k8sCrmMgr crm.HandlerWithUser
@@ -132,11 +152,15 @@ func (de *distccEngine) Name() engine.TypeName {
 func (de *distccEngine) SelectFirstTaskBasic(tqg *engine.TaskQueueGroup, queueName string) (*engine.TaskBasic, error) {
 	tb, err := tqg.GetQueue(queueName).First()
 	if err == engine.ErrorNoTaskInQueue {
-
+		publicQueue := de.getPublicQueueByQueueName(queueName)
+		if publicQueue == nil || !de.canTakeFromPublicQueue(queueName) {
+			// some queue should not share resources with others.
+			return nil, engine.ErrorNoTaskInQueue
+		}
 		// get first valid task from public queue
 		// if task not exist in queue group, just delete it from public queue.
 		for {
-			tb, err = de.publicQueue.First()
+			tb, err = publicQueue.First()
 			if err == engine.ErrorNoTaskInQueue {
 				return nil, err
 			}
@@ -145,7 +169,7 @@ func (de *distccEngine) SelectFirstTaskBasic(tqg *engine.TaskQueueGroup, queueNa
 				break
 			}
 
-			_ = de.publicQueue.Delete(tb.ID)
+			_ = publicQueue.Delete(tb.ID)
 		}
 	}
 
@@ -494,7 +518,10 @@ func (de *distccEngine) launchTask(tb *engine.TaskBasic, queueName string) error
 	})
 	// add task into public queue
 	if err == engine.ErrorNoEnoughResources {
-		de.publicQueue.Add(tb)
+		if publicQueue := de.getPublicQueueByQueueName(queueName); publicQueue != nil &&
+			de.canGiveToPublicQueue(queueName) {
+			publicQueue.Add(tb)
+		}
 		return err
 	}
 	if err != nil {
@@ -901,6 +928,63 @@ func (de *distccEngine) initBrokers() error {
 	}
 
 	return nil
+}
+
+func (de *distccEngine) canTakeFromPublicQueue(queueName string) bool {
+	if de.conf.QueueShareType == nil {
+		return true
+	}
+
+	t, ok := de.conf.QueueShareType[queueName]
+	if !ok {
+		return true
+	}
+
+	switch t {
+	case engine.QueueShareTypeAllAllowed, engine.QueueShareTypeOnlyTakeFromPublic:
+		return true
+	default:
+		return false
+	}
+}
+
+func (de *distccEngine) canGiveToPublicQueue(queueName string) bool {
+	if de.conf.QueueShareType == nil {
+		return true
+	}
+
+	t, ok := de.conf.QueueShareType[queueName]
+	if !ok {
+		return true
+	}
+
+	switch t {
+	case engine.QueueShareTypeAllAllowed, engine.QueueShareTypeOnlyGiveToPublic:
+		return true
+	default:
+		return false
+	}
+}
+
+func (de *distccEngine) getPublicQueueByQueueName(queueName string) engine.StagingTaskQueue {
+	key := ""
+
+	switch getQueueNameHeader(queueName) {
+	case "":
+		key = publicQueueDefault
+	case queueNameHeaderK8SDefault:
+		key = publicQueueK8SDefault
+	case queueNameHeaderK8SWin:
+		key = publicQueueK8SWindows
+	default:
+		return nil
+	}
+
+	if _, ok := de.publicQueueMap[key]; !ok {
+		return nil
+	}
+
+	return de.publicQueueMap[key]
 }
 
 func brokerName(conf config.EngineDistCCBrokerConfig) string {

@@ -44,8 +44,9 @@ type ServerConfig struct {
 	EngineApisJobConfig EngineApisJobConfig `json:"engine_apisjob"`
 
 	// engine distcc settings
-	DistCCQueueList    []string           `json:"distcc_queue_list" value:"[]" usage:"queue name list for engine distcc"`
-	EngineDistCCConfig EngineDistCCConfig `json:"engine_distcc"`
+	DistCCQueueList      []string                         `json:"distcc_queue_list" value:"[]" usage:"queue name list for engine distcc"`
+	DistccQueueShareType map[string]engine.QueueShareType `json:"distcc_queue_share_type" usage:"queue name map for share type, default is all allowed"`
+	EngineDistCCConfig   EngineDistCCConfig               `json:"engine_distcc"`
 
 	DisttaskQueueList      []string                         `json:"disttask_queue_list" value:"[]" usage:"queue name list for engine disttask"`
 	DisttaskQueueShareType map[string]engine.QueueShareType `json:"disttask_queue_share_type" usage:"queue name map for share type, default is all allowed"`
