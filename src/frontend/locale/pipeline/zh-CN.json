@@ -570,6 +570,7 @@
     "outputReport": "产出物报告",
     "canceller": "取消人",
     "executor": "执行人",
+    "trigger": "触发人",
     "executionTime": "执行耗时",
     "noCodeRecords": "暂时没有代码变更记录",
     "commitIdsRange": "提示：本次流水线的版本号变化范围：",
