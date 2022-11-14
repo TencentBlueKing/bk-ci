@@ -51,7 +51,7 @@ interface BuildPublishersResource {
 
     @ApiOperation("同步新增发布者信息")
     @POST
-    @Path("/publisher/add")
+    @Path("/add")
     fun synAddPublisherData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
@@ -62,7 +62,7 @@ interface BuildPublishersResource {
 
     @ApiOperation("同步删除发布者信息")
     @DELETE
-    @Path("/publisher/delete")
+    @Path("/delete")
     fun synDeletePublisherData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
@@ -73,7 +73,7 @@ interface BuildPublishersResource {
 
     @ApiOperation("同步更新发布者信息")
     @POST
-    @Path("/publisher/update")
+    @Path("/update")
     fun synUpdatePublisherData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
