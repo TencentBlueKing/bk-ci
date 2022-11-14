@@ -170,7 +170,7 @@ func (cc *TaskCC) preExecute(command []string) (*dcSDK.BKDistCommand, error) {
 	// debugRecordFileName(fmt.Sprintf("cc: start pre execute for: %v", command))
 
 	cc.originArgs = command
-	responseFile, args, err := ensureCompiler(command)
+	responseFile, args, err := ensureCompiler(command, cc.sandbox.Dir)
 	if err != nil {
 		blog.Warnf("cc: pre execute ensure compiler %v: %v", args, err)
 		return nil, err
@@ -290,7 +290,7 @@ func (cc *TaskCC) postExecute(r *dcSDK.BKDistResult) error {
 	if len(r.Results[0].ResultFiles) > 0 {
 		for _, f := range r.Results[0].ResultFiles {
 			if f.Buffer != nil {
-				if err := saveResultFile(&f); err != nil {
+				if err := saveResultFile(&f, cc.sandbox.Dir); err != nil {
 					blog.Errorf("cc: failed to save file [%s]", f.FilePath)
 					return err
 				}

@@ -146,38 +146,6 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun searchFile(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        regexPath: String,
-        customized: Boolean,
-        page: Int?,
-        pageSize: Int?
-    ): Result<FileInfoPage<FileInfo>> {
-        TODO("not implemented")
-    }
-
-    override fun searchFileAndPropertyByAnd(
-        userId: String,
-        projectId: String,
-        page: Int?,
-        pageSize: Int?,
-        searchProps: List<Property>
-    ): Result<FileInfoPage<FileInfo>> {
-        TODO("not implemented")
-    }
-
-    override fun searchFileAndPropertyByOr(
-        userId: String,
-        projectId: String,
-        page: Int?,
-        pageSize: Int?,
-        searchProps: List<Property>
-    ): Result<FileInfoPage<FileInfo>> {
-        TODO("not implemented")
-    }
-
     override fun searchCustomFiles(
         userId: String,
         projectId: String,
@@ -219,7 +187,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         includeFolder: Boolean?,
         deep: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        modifiedTimeDesc: Boolean?
     ): Result<Page<FileInfo>> {
         val fileList = archiveFileService.listCustomFiles(
             userId = userId,
@@ -228,7 +197,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             includeFolder = includeFolder,
             deep = deep,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            modifiedTimeDesc = modifiedTimeDesc
         )
         return Result(fileList)
     }

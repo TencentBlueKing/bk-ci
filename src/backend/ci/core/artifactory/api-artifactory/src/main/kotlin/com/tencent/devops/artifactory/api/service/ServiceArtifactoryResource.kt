@@ -252,76 +252,6 @@ interface ServiceArtifactoryResource {
         searchProps: List<Property>
     ): Result<FileInfoPage<FileInfo>>
 
-    @ApiOperation("根据元数据获取文件和元数据(无排序)")
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/searchFile")
-    @Path("/{projectId}/{pipelineId}/{buildId}/searchFile")
-    @POST
-    fun searchFile(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("通配路径", required = false, defaultValue = "1")
-        @QueryParam("regexPath")
-        regexPath: String,
-        @ApiParam("是否自定义", required = false, defaultValue = "1")
-        @QueryParam("customized")
-        customized: Boolean,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<FileInfoPage<FileInfo>>
-
-    @ApiOperation("根据元数据获取文件和元数据(无排序),searchProps条件为and")
-    // @Path("/projects/{projectId}/searchFileAndPropertyByAnd")
-    @Path("/{projectId}/searchFileAndPropertyByAnd")
-    @POST
-    fun searchFileAndPropertyByAnd(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("元数据", required = true)
-        searchProps: List<Property>
-    ): Result<FileInfoPage<FileInfo>>
-
-    @ApiOperation("根据元数据获取文件和元数据(无排序),searchProps条件为or")
-    // @Path("/projects/{projectId}/searchFileAndPropertyByOr")
-    @Path("/{projectId}/searchFileAndPropertyByOr")
-    @POST
-    fun searchFileAndPropertyByOr(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("元数据", required = true)
-        searchProps: List<Property>
-    ): Result<FileInfoPage<FileInfo>>
-
     @ApiOperation("获取匹配到的自定义仓库文件")
     // @Path("/projects/{projectId}/searchCustomFiles")
     @Path("/{projectId}/searchCustomFiles")
@@ -399,6 +329,9 @@ interface ServiceArtifactoryResource {
         page: Int?,
         @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("是否按modifiedTime倒序排列", required = false, defaultValue = "false")
+        @QueryParam("modifiedTimeDesc")
+        modifiedTimeDesc: Boolean?
     ): Result<Page<FileInfo>>
 }

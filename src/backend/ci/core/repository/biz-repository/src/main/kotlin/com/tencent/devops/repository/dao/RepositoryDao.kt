@@ -358,4 +358,32 @@ class RepositoryDao {
                 .execute()
         }
     }
+
+    fun getProjectIdByGitDomain(
+        dslContext: DSLContext,
+        gitDomain: String,
+        limit: Int,
+        offset: Int
+    ): List<String> {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.select(PROJECT_ID).from(this)
+                .where(URL.like("%$gitDomain%"))
+                .groupBy(PROJECT_ID)
+                .limit(limit).offset(offset)
+                .fetchInto(String::class.java)
+        }
+    }
+
+    fun updateGitDomainByProjectId(
+        dslContext: DSLContext,
+        oldGitDomain: String,
+        newGitDomain: String,
+        projectId: String
+    ): Int {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.update(this).set(URL, DSL.replace(URL, oldGitDomain, newGitDomain))
+                .where(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
 }
