@@ -39,7 +39,7 @@ object StreamMQ {
     const val QUEUE_STREAM_TRIGGER_PIPELINE_EVENT = "stream.trigger.pipeline.event"
 
     // 定时变更广播exchange ====================================
-    const val EXCHANGE_STREAM_TIMER_CHANGE_FANOUT = "stream.engine.timer.change"
+    const val EXCHANGE_STREAM_TIMER_CHANGE_FANOUT = "stream.engine.timer.change.fanout"
 
     const val QUEUE_STREAM_TIMER = "stream.engine.timer.build"
 }
