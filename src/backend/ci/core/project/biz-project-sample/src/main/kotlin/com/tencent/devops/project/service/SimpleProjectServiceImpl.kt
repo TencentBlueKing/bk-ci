@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
@@ -47,6 +48,7 @@ import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
 import org.jooq.DSLContext
@@ -54,10 +56,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
-import com.tencent.devops.model.project.tables.records.TProjectRecord
-import com.tencent.devops.project.pojo.SubjectScope
 
 @Suppress("ALL", "UNUSED")
 @Service
@@ -154,22 +152,10 @@ class SimpleProjectServiceImpl @Autowired constructor(
     }
 
     override fun modifyProjectAuthResource(
-        projectCode: String,
-        projectName: String,
-        userId: String,
-        projectInfo: TProjectRecord,
-        iamSubjectScopes: List<ManagerScopes>,
-        subjectScopes: List<SubjectScope>?,
-        needApproval: Boolean
+        resourceUpdateInfo: ResourceUpdateInfo
     ) {
         projectPermissionService.modifyResource(
-            projectCode = projectCode,
-            projectName = projectName,
-            userId = userId,
-            projectInfo = projectInfo,
-            iamSubjectScopes = iamSubjectScopes,
-            subjectScopes = subjectScopes,
-            needApproval = needApproval
+            resourceUpdateInfo = resourceUpdateInfo
         )
     }
 

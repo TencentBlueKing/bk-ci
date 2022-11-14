@@ -269,7 +269,8 @@ class ProjectDao {
         projectId: String,
         channelCode: ProjectChannelCode? = ProjectChannelCode.BS,
         needApproval: Boolean? = false,
-        subjectScopesStr: String
+        subjectScopesStr: String,
+        authSecrecy: Boolean?
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
@@ -297,7 +298,8 @@ class ProjectDao {
                 CHANNEL,
                 ENABLED,
                 PROPERTIES,
-                SUBJECTSCOPES
+                SUBJECTSCOPES,
+                IS_AUTH_SECRECY
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -324,7 +326,8 @@ class ProjectDao {
                 projectCreateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
                 },
-                subjectScopesStr
+                subjectScopesStr,
+                authSecrecy?.let { authSecrecy }
             ).execute()
         }
     }

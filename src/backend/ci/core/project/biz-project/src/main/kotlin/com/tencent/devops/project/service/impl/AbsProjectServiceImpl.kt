@@ -48,7 +48,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
@@ -64,8 +63,9 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
@@ -195,19 +195,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         try {
             if (createExtInfo.needAuth!!) {
-                // 注册项目到权限中心
-                projectId = projectPermissionService.createResources(
+                val resourceCreateInfo = ResourceCreateInfo(
                     userId = userId,
                     accessToken = accessToken,
+                    userDeptDetail = userDeptDetail,
+                    iamSubjectScopes = iamSubjectScopes,
+                    projectCreateInfo = projectCreateInfo,
+                    needApproval = needApproval
+                )
+                // 注册项目到权限中心
+                projectId = projectPermissionService.createResources(
                     resourceRegisterInfo = ResourceRegisterInfo(
                         resourceCode = projectCreateInfo.englishName,
                         resourceName = projectCreateInfo.projectName
                     ),
-                    userDeptDetail = userDeptDetail,
-                    subjectScopes = subjectScopes,
-                    iamSubjectScopes = iamSubjectScopes,
-                    needApproval = needApproval,
-                    reason = projectCreateInfo.description
+                    resourceCreateInfo = resourceCreateInfo
                 )
             }
         } catch (e: PermissionForbiddenException) {
@@ -248,7 +250,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectId = projectId,
                     channelCode = projectChannel,
                     needApproval = needApproval,
-                    subjectScopesStr = subjectScopesStr
+                    subjectScopesStr = subjectScopesStr,
+                    authSecrecy = projectCreateInfo.authSecrecy
                 )
                 try {
                     createExtProjectInfo(
@@ -411,16 +414,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         logoFile?.delete()
                     }
                 }
-                modifyProjectAuthResource(
-                    projectCode = projectUpdateInfo.englishName,
-                    projectName = projectUpdateInfo.projectName,
+                val resourceUpdateInfo = ResourceUpdateInfo(
                     userId = userId,
-                    projectInfo = projectInfo,
-                    subjectScopes = subjectScopes,
-                    iamSubjectScopes = iamSubjectScopes,
-                    needApproval = needApproval!!
+                    projectUpdateInfo = projectUpdateInfo,
+                    projectInfo = ProjectUtils.packagingBean(projectInfo),
+                    needApproval = needApproval!!,
+                    iamSubjectScopes = iamSubjectScopes
                 )
-
+                modifyProjectAuthResource(resourceUpdateInfo = resourceUpdateInfo)
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
@@ -867,13 +868,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     ): ProjectCreateInfo
 
     abstract fun modifyProjectAuthResource(
-        projectCode: String,
-        projectName: String,
-        userId: String,
-        projectInfo: TProjectRecord,
-        iamSubjectScopes: List<ManagerScopes>,
-        subjectScopes: List<SubjectScope>?,
-        needApproval: Boolean
+        resourceUpdateInfo: ResourceUpdateInfo
     )
 
     companion object {
