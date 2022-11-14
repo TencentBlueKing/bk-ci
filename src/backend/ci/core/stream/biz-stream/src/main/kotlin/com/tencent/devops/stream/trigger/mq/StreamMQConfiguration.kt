@@ -36,7 +36,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBr
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.MQ
+import com.tencent.devops.stream.constant.StreamMQ
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -166,7 +166,7 @@ class StreamMQConfiguration {
         actionFactory = actionFactory
     )
 
-    @EventConsumer(MQ.QUEUE_STREAM_TRIGGER_PIPELINE_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamMQ.QUEUE_STREAM_TRIGGER_PIPELINE_EVENT, STREAM_CONSUMER_GROUP)
     fun triggerListener(
         @Autowired streamTriggerListener: StreamTriggerListener
     ): Consumer<Message<StreamTriggerEvent>> {
@@ -190,7 +190,7 @@ class StreamMQConfiguration {
         exHandler = exHandler
     )
 
-    @EventConsumer(MQ.QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamMQ.QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT, STREAM_CONSUMER_GROUP)
     fun conflictCheckListener(
         @Autowired checkListener: StreamMrConflictCheckListener
     ): Consumer<Message<StreamMrConflictCheckEvent>> {
@@ -206,7 +206,7 @@ class StreamMQConfiguration {
         steamRequestService = steamRequestService
     )
 
-    @EventConsumer(MQ.QUEUE_STREAM_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamMQ.QUEUE_STREAM_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
     fun requestListener(
         @Autowired requestListener: StreamRequestListener
     ): Consumer<Message<StreamRequestEvent>> {
@@ -236,7 +236,7 @@ class StreamMQConfiguration {
         githubApiService = githubApiService
     )
 
-    @EventConsumer(MQ.QUEUE_STREAM_TIMER, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamMQ.QUEUE_STREAM_TIMER, STREAM_CONSUMER_GROUP)
     fun timerBuildListener(
         @Autowired buildListener: StreamTimerBuildListener
     ): Consumer<Message<StreamTimerBuildEvent>> {
@@ -255,7 +255,7 @@ class StreamMQConfiguration {
     )
 
     // 每个实例都需要刷新自己维护的定时任务
-    @EventConsumer(MQ.EXCHANGE_STREAM_TIMER_CHANGE_FANOUT, STREAM_CONSUMER_GROUP, true)
+    @EventConsumer(StreamMQ.EXCHANGE_STREAM_TIMER_CHANGE_FANOUT, STREAM_CONSUMER_GROUP, true)
     fun timerChangerListener(
         @Autowired buildListener: StreamTimerChangerListener
     ): Consumer<Message<StreamChangeEvent>> {

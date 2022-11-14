@@ -27,34 +27,19 @@
 
 package com.tencent.devops.stream.constant
 
-object MQ {
-
-    // 接受流水线结束的广播事件
-    const val QUEUE_PIPELINE_BUILD_FINISH_STREAM = "q.engine.pipeline.build.stream"
-
-    // 接受stage审核和红线的广播事件
-    const val QUEUE_PIPELINE_BUILD_REVIEW_STREAM = "q.engine.pipeline.build.review.stream"
-    const val QUEUE_PIPELINE_BUILD_QUALITY_CHECK_STREAM = "q.engine.pipeline.build.quality.check.stream"
+object StreamMQ {
 
     // Stream webhook请求
-    const val EXCHANGE_STREAM_REQUEST_EVENT = "e.stream.request.event"
-    const val ROUTE_STREAM_REQUEST_EVENT = "r.stream.request.event"
-    const val QUEUE_STREAM_REQUEST_EVENT = "q.stream.request.event"
+    const val QUEUE_STREAM_REQUEST_EVENT = "stream.request.event"
 
     // Stream Mr webhook 冲突检查
-    const val EXCHANGE_STREAM_MR_CONFLICT_CHECK_EVENT = "e.stream.mr.conflict.check.event"
-    const val ROUTE_STREAM_MR_CONFLICT_CHECK_EVENT = "r.stream.mr.conflict.check.event"
-    const val QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT = "q.stream.mr.conflict.check.event"
+    const val QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT = "stream.mr.conflict.check.event"
 
     // Stream 每条流水线的触发构建请求
-    const val EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT = "e.stream.trigger.pipeline.event"
-    const val ROUTE_STREAM_TRIGGER_PIPELINE_EVENT = "r.stream.trigger.pipeline.event"
-    const val QUEUE_STREAM_TRIGGER_PIPELINE_EVENT = "q.stream.trigger.pipeline.event"
+    const val QUEUE_STREAM_TRIGGER_PIPELINE_EVENT = "stream.trigger.pipeline.event"
 
     // 定时变更广播exchange ====================================
-    const val ENGINE_STREAM_LISTENER_EXCHANGE = "e.engine.stream.listener"
-    const val EXCHANGE_STREAM_TIMER_CHANGE_FANOUT = "e.engine.stream.timer.change"
+    const val EXCHANGE_STREAM_TIMER_CHANGE_FANOUT = "stream.engine.timer.change"
 
-    const val ROUTE_STREAM_TIMER = "r.engine.stream.timer"
-    const val QUEUE_STREAM_TIMER = "q.engine.stream.timer"
+    const val QUEUE_STREAM_TIMER = "stream.engine.timer.build"
 }

@@ -30,13 +30,13 @@ package com.tencent.devops.stream.trigger.mq.streamTrigger
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
+import com.tencent.devops.stream.constant.StreamMQ
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
 import org.slf4j.MDC
 
-@Event(MQ.QUEUE_STREAM_TRIGGER_PIPELINE_EVENT)
+@Event(StreamMQ.QUEUE_STREAM_TRIGGER_PIPELINE_EVENT)
 data class StreamTriggerEvent(
     val traceId: String? = MDC.get(TraceTag.BIZID),
     val eventStr: String,

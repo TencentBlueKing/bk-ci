@@ -29,13 +29,13 @@ package com.tencent.devops.stream.trigger.mq.streamMrConflict
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
-import com.tencent.devops.stream.constant.MQ
+import com.tencent.devops.stream.constant.StreamMQ
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
 
-@Event(MQ.QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT)
+@Event(StreamMQ.QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT)
 data class StreamMrConflictCheckEvent(
     val eventStr: String,
     val actionCommonData: EventCommonData,
