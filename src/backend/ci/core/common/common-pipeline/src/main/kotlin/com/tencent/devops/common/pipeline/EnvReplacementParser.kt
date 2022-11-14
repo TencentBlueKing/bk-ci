@@ -72,7 +72,7 @@ object EnvReplacementParser {
             try {
                 val (context, nameValues) = contextPair
                     ?: getCustomExecutionContextByMap(contextMap)
-                    ?: return value
+                    ?: return ""
                 parseExpression(
                     value = value,
                     context = context,
@@ -80,7 +80,7 @@ object EnvReplacementParser {
                 )
             } catch (ignore: Throwable) {
                 logger.warn("[$value]|EnvReplacementParser expression invalid: ", ignore)
-                value
+                ""
             }
         } else {
             ObjectReplaceEnvVarUtil.replaceEnvVar(value, contextMap).let {
@@ -179,7 +179,7 @@ object EnvReplacementParser {
                             if (it is PipelineContextData) it.fetchValue() else it
                         }?.let {
                             JsonUtil.toJson(it, false)
-                        } ?: return@nextBlock
+                        } ?: ""
                 } catch (ignore: ExpressionParseException) {
                     return@nextBlock
                 }
