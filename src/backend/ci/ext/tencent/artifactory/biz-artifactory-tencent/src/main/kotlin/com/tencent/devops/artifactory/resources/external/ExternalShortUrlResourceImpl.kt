@@ -31,13 +31,17 @@ import com.tencent.devops.artifactory.api.external.ExternalShortUrlResource
 import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
+import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 @RestResource
 class ExternalShortUrlResourceImpl @Autowired constructor(
     private val shortUrlService: ShortUrlService
 ) : ExternalShortUrlResource {
-    override fun visitShortUrl(urlId: String, response: HttpServletResponse) {
-        response.sendRedirect(shortUrlService.getRedirectUrl(urlId))
+    override fun visitShortUrl(urlId: String, request: HttpServletRequest, response: HttpServletResponse) {
+        val redirectUrl = shortUrlService.getRedirectUrl(urlId)
+        val link = if (redirectUrl.contains("?")) "&" else "?"
+        val tail = request.parameterNames.asSequence().joinToString("&") { it + "=" + request.getParameter(it) }
+        response.sendRedirect(redirectUrl + (if (tail.isNotEmpty()) (link + tail) else ""))
     }
 }

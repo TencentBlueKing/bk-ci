@@ -53,7 +53,7 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
-import com.tencent.devops.repository.pojo.git.GitCreateFile
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
@@ -2253,7 +2253,7 @@ class GitService @Autowired constructor(
     fun gitCreateFile(
         gitProjectId: String,
         token: String,
-        gitCreateFile: GitCreateFile,
+        gitOperationFile: GitOperationFile,
         tokenType: TokenTypeEnum
     ): Boolean {
         val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/files")
@@ -2263,12 +2263,45 @@ class GitService @Autowired constructor(
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json;charset=utf-8"),
-                    JsonUtil.toJson(gitCreateFile)
+                    JsonUtil.toJson(gitOperationFile)
                 )
             )
             .build()
         OkhttpUtils.doHttp(request).use {
             logger.info("request: $request Start to create file resp: $it")
+            if (!it.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(it)
+            }
+            return true
+        }
+    }
+
+    fun tGitUpdateFile(
+        repoUrl: String?,
+        repoName: String,
+        token: String,
+        gitOperationFile: GitOperationFile,
+        tokenType: TokenTypeEnum
+    ): Boolean {
+        val apiUrl = if (repoUrl.isNullOrBlank()) {
+            gitConfig.gitApiUrl
+        } else {
+            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
+        }
+        val encode = URLEncoder.encode(repoName, "utf-8")
+        val url = StringBuilder("$apiUrl/projects/$encode/repository/files")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .put(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"),
+                    JsonUtil.toJson(gitOperationFile)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request Start to update file resp: $it")
             if (!it.isSuccessful) {
                 throw GitCodeUtils.handleErrorMessage(it)
             }

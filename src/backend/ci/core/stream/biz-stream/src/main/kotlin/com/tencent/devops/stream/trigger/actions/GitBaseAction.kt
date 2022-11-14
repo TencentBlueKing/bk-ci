@@ -53,4 +53,7 @@ interface GitBaseAction : BaseAction {
     fun getWebhookCommitList(page: Int, pageSize: Int): List<WebhookCommit> = emptyList()
 
     override fun getStartType() = StartType.WEB_HOOK
+
+    override fun needUpdateLastModifyUser(filePath: String) =
+        !getChangeSet().isNullOrEmpty() && getChangeSet()?.contains(filePath) == true
 }

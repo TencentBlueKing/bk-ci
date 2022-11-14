@@ -55,9 +55,11 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.service.code.EventCacheService
+import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.PushKindFilter
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
@@ -68,13 +70,19 @@ import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import java.util.Date
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
 class TGitPushTriggerHandler(
-    private val eventCacheService: EventCacheService
+    private val eventCacheService: EventCacheService,
+    private val gitScmService: GitScmService,
+    // stream没有这个配置
+    @Autowired(required = false)
+    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry? = null
 ) : GitHookTriggerHandler<GitPushEvent> {
 
     companion object {
@@ -152,6 +160,7 @@ class TGitPushTriggerHandler(
                 commits?.first()?.message ?: "",
                 pipelineId
             )
+            var pushChangeFiles: Set<String>? = null
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
                     if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
@@ -173,6 +182,7 @@ class TGitPushTriggerHandler(
                         }
                         changeFiles
                     }
+                    pushChangeFiles = eventPaths
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = pathFilterType,
@@ -189,7 +199,18 @@ class TGitPushTriggerHandler(
                 checkCreateAndUpdate = event.create_and_update,
                 actionList = convert(webHookParams.includePushAction)
             )
-            return listOf(skipCiFilter, pathFilter, commitMessageFilter, pushKindFilter)
+            val thirdFilter = ThirdFilter(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = event,
+                changeFiles = pushChangeFiles,
+                enableThirdFilter = enableThirdFilter,
+                thirdUrl = thirdUrl,
+                thirdSecretToken = thirdSecretToken,
+                gitScmService = gitScmService,
+                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
+            )
+            return listOf(skipCiFilter, pathFilter, commitMessageFilter, pushKindFilter, thirdFilter)
         }
     }
 

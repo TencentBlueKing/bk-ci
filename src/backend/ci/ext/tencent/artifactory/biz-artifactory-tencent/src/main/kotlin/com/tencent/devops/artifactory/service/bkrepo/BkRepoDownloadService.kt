@@ -365,7 +365,7 @@ open class BkRepoDownloadService @Autowired constructor(
                 metadata = mapOf(),
                 page = 0,
                 pageSize = 10000
-            ).forEach {
+            ).records.forEach {
                 fileList.add(RepoUtils.toFileDetail(it))
             }
         }
