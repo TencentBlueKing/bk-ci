@@ -338,7 +338,8 @@ class ProjectDao {
         projectUpdateInfo: ProjectUpdateInfo,
         subjectScopesStr: String,
         needApproval: Boolean,
-        logoAddress: String?
+        logoAddress: String?,
+        authSecrecy: Boolean?
     ): Int {
         with(TProject.T_PROJECT) {
             val update = dslContext.update(this)
@@ -355,6 +356,7 @@ class ProjectDao {
                 .set(UPDATOR, userId)
             if (!needApproval) {
                 update.set(SUBJECTSCOPES, subjectScopesStr)
+                authSecrecy?.let { update.set(IS_AUTH_SECRECY, authSecrecy) }
             }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }

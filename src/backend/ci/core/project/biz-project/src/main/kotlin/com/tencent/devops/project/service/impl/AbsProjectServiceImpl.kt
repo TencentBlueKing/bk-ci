@@ -432,7 +432,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         projectUpdateInfo = projectUpdateInfo,
                         subjectScopesStr = subjectScopesStr,
                         needApproval = needApproval,
-                        logoAddress = logoAddress
+                        logoAddress = logoAddress,
+                        authSecrecy = projectUpdateInfo.authSecrecy
                     )
 
                     if (!projectUpdateInfo.secrecy) {
