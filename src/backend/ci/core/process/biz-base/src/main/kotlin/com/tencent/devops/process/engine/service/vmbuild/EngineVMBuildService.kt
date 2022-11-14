@@ -611,7 +611,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 return
             }
 
-            if (taskStatus.isFinish() ) {
+            if (taskStatus.isFinish()) {
                 LOG.warn("ENGINE|BCT_END_TASK|$buildId|$projectId|j($vmSeqId)|${result.taskId}|$taskStatus")
                 return
             }
