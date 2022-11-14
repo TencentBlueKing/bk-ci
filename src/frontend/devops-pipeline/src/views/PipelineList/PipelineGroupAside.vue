@@ -235,6 +235,7 @@
             }
         },
         created () {
+            this.updateGroupPipelineCount(this.$route.params.viewId)
             this.refreshPipelineGroup()
         },
         mounted () {
