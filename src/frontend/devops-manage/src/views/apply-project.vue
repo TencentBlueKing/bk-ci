@@ -9,7 +9,7 @@ const { t } = useI18n();
   <section class="content-wrapper">
     <manage-header
       class="manage-header"
-      name="申请新建项目"
+      :name="t('申请新建项目')"
     />
     <article class="apply-project-content">
       <section class="create-project-form">

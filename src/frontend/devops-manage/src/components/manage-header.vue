@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { AngleRight } from 'bkui-vue/lib/icon';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 defineProps<{
   name: string
@@ -14,9 +16,9 @@ defineProps<{
         separator="/"
       >
         <bk-breadcrumb-item
-          to="list"
+          to="/list"
         >
-          项目管理
+          {{ t('项目管理') }}
           <template #separator>
             <angle-right class="manage-icon" />
           </template>
