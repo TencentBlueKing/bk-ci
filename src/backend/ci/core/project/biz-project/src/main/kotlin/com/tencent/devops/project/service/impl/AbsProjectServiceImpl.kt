@@ -48,6 +48,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
@@ -417,11 +418,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 val resourceUpdateInfo = ResourceUpdateInfo(
                     userId = userId,
                     projectUpdateInfo = projectUpdateInfo,
-                    projectInfo = ProjectUtils.packagingBean(projectInfo),
                     needApproval = needApproval!!,
                     iamSubjectScopes = iamSubjectScopes
                 )
-                modifyProjectAuthResource(resourceUpdateInfo = resourceUpdateInfo)
+                modifyProjectAuthResource(
+                    projectInfo = projectInfo,
+                    resourceUpdateInfo = resourceUpdateInfo
+                )
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
@@ -869,6 +872,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     ): ProjectCreateInfo
 
     abstract fun modifyProjectAuthResource(
+        projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     )
 

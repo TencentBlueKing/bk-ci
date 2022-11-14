@@ -32,6 +32,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -65,6 +66,7 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun modifyResource(
+        projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     ) {
         return
