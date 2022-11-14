@@ -97,14 +97,4 @@ interface AtomReleaseService {
         repositoryHashId: String?,
         branch: String?
     )
-
-    /**
-     * 一键部署发布插件
-     */
-    fun releaseAtom(
-        userId: String,
-        atomCode: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<Boolean>
 }

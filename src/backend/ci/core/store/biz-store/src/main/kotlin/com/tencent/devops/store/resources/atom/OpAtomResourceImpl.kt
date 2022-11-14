@@ -127,7 +127,7 @@ class OpAtomResourceImpl @Autowired constructor(
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<Boolean> {
-        return atomReleaseService.releaseAtom(
+        return opAtomService.releaseAtom(
             userId = userId,
             atomCode = atomCode,
             inputStream = inputStream,

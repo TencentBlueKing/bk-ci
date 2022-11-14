@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.util
+package com.tencent.devops.store.utils
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
@@ -116,7 +116,7 @@ object AtomReleaseTxtAnalysisUtil {
         while (matcher.find()) {
             val path = matcher.group(2).replace("\"", "").removePrefix(fileSeparator)
             if (path.endsWith(".md")) {
-                val file = File("$atomPath${fileSeparator}file${fileSeparator}$path")
+                val file = File("$atomPath${fileSeparator}file$fileSeparator$path")
                 if (file.exists()) {
                     return regexAnalysis(
                         input = file.readText(),
@@ -153,7 +153,7 @@ object AtomReleaseTxtAnalysisUtil {
     ): Map<String, String> {
         val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class)
         pathList.forEach {
-            val file = File("$atomPath${fileSeparator}file${fileSeparator}$it")
+            val file = File("$atomPath${fileSeparator}file$fileSeparator$it")
             try {
                 if (file.exists()) {
                     val uploadFileResult = CommonUtils.serviceUploadFileToPath(

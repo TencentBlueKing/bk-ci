@@ -27,9 +27,6 @@
 
 package com.tencent.devops.store.service.atom.impl
 
-import com.fasterxml.jackson.core.JsonProcessingException
-import com.tencent.bkrepo.common.api.util.toJsonString
-import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -43,7 +40,6 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.api.common.OpStoreLogoResource
@@ -51,22 +47,14 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
-import com.tencent.devops.store.pojo.atom.ReleaseInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.SampleAtomReleaseService
-import com.tencent.devops.store.util.AtomReleaseTxtAnalysisUtil
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.springframework.util.FileSystemUtils
-import java.io.File
-import java.io.InputStream
-import java.nio.charset.Charset
 
 @Service
 class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServiceImpl() {
@@ -222,173 +210,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
     }
 
-    override fun releaseAtom(
-        userId: String,
-        atomCode: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<Boolean> {
-        // 解压插件包到临时目录
-        val atomPath = AtomReleaseTxtAnalysisUtil.unzipFile(
-            userId = userId,
-            atomCode = atomCode,
-            inputStream = inputStream,
-            disposition = disposition
-        )
-        val taskJsonFile = File("$atomPath$fileSeparator$TASK_JSON_NAME")
-        if (!taskJsonFile.exists()) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_ATOM_CONF_INVALID,
-                arrayOf(TASK_JSON_NAME)
-            )
-        }
-        val taskJsonMap: Map<String, Any>
-        val releaseInfo: ReleaseInfo
-        // 解析task.json文件
-        try {
-            val taskJsonStr = taskJsonFile.readText(Charset.forName("UTF-8"))
-            taskJsonMap = JsonUtil.toMap(taskJsonStr).toMutableMap()
-            val releaseInfoMap = taskJsonMap["releaseInfo"]
-            releaseInfo = JsonUtil.mapTo(releaseInfoMap as Map<String, Any>, ReleaseInfo::class.java)
-        } catch (e: JsonProcessingException) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                arrayOf("releaseInfo")
-            )
-        }
-        // 新增插件
-        val addMarketAtomResult = addMarketAtom(
-            userId,
-            MarketAtomCreateRequest(
-                projectCode = releaseInfo.projectId,
-                atomCode = releaseInfo.atomCode,
-                name = releaseInfo.name,
-                language = releaseInfo.language,
-                frontendType = releaseInfo.configInfo.frontendType
-            )
-        )
-        if (addMarketAtomResult.isNotOk()) {
-            return Result(data = false, message = addMarketAtomResult.message)
-        }
-        val atomId = addMarketAtomResult.data!!
-        // 解析logoUrl
-        val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
-        if (logoUrlAnalysisResult.isNotOk()) {
-            return Result(
-                data = false,
-                status = logoUrlAnalysisResult.status,
-                message = logoUrlAnalysisResult.message
-            )
-        }
-        val relativePath = logoUrlAnalysisResult.data
-        val logoFile = File("$atomPath${File.separator}file" +
-                    "${File.separator}${relativePath?.removePrefix(File.separator)}")
-        logger.info("uploadStoreLogo logoFilePath:${logoFile.path}")
-        var uploadStoreLogoResult = Result(data = true, status = 0)
-        if (logoFile.exists()) {
-            val result = client.get(OpStoreLogoResource::class).uploadStoreLogo(
-                userId = userId,
-                contentLength = logoFile.length(),
-                inputStream = logoFile.inputStream(),
-                disposition = FormDataContentDisposition(
-                    "form-data; name=\"logo\"; filename=\"${logoFile.name}\""
-                )
-            )
-            if (result.isOk()) {
-                releaseInfo.logoUrl = result.data!!.logoUrl!!
-            } else {
-                uploadStoreLogoResult = Result(
-                    data = false,
-                    status = uploadStoreLogoResult.status,
-                    message = uploadStoreLogoResult.message
-                )
-            }
-        } else {
-            logger.warn("uploadStoreLogo fail logoName:${logoFile.name}")
-            uploadStoreLogoResult = Result(data = false, message = "upload store logo fail")
-        }
-        if (uploadStoreLogoResult.isNotOk()) return uploadStoreLogoResult
-        // 解析description
-        releaseInfo.description = AtomReleaseTxtAnalysisUtil.descriptionAnalysis(
-            description = releaseInfo.description,
-            atomPath = atomPath,
-            client = client
-        )
-        taskJsonMap["releaseInfo"] = releaseInfo.toJsonString()
-        // 将替换好的文本写入task.json文件
-        val taskJson = taskJsonMap.toJsonString()
-        val fileOutputStream = taskJsonFile.outputStream()
-        fileOutputStream.use {
-            it.write(taskJson.toByteArray(charset("utf-8")))
-        }
-        // 归档插件包
-        val zipFile = File(AtomReleaseTxtAnalysisUtil.zipFiles(userId, atomCode, atomPath))
-        try {
-            if (zipFile.exists()) {
-                val archiveAtomResult = AtomReleaseTxtAnalysisUtil.serviceArchiveAtomFile(
-                    userId = userId,
-                    projectCode = releaseInfo.projectId,
-                    atomId = atomId,
-                    atomCode = releaseInfo.atomCode,
-                    version = releaseInfo.versionInfo.version,
-                    serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class),
-                    releaseType = releaseInfo.versionInfo.releaseType.name,
-                    file = zipFile,
-                    os = JsonUtil.toJson(releaseInfo.os)
-                )
-                if (archiveAtomResult.isNotOk()) {
-                    return Result(
-                        data = false,
-                        status = archiveAtomResult.status,
-                        message = archiveAtomResult.message
-                    )
-                }
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("BKSystemErrorMonitor|archive atom file fail|$atomCode|error=${ignored.message}")
-            return Result(
-                data = false,
-                message = ignored.message
-            )
-        } finally {
-            zipFile.delete()
-            FileSystemUtils.deleteRecursively(File(atomPath).parentFile)
-        }
-        // 升级插件
-        val updateMarketAtomResult = updateMarketAtom(
-            userId,
-            releaseInfo.projectId,
-            MarketAtomUpdateRequest(
-                atomCode = releaseInfo.atomCode,
-                name = releaseInfo.name,
-                category = releaseInfo.category,
-                jobType = releaseInfo.jobType,
-                os = releaseInfo.os,
-                summary = releaseInfo.summary,
-                description = releaseInfo.description,
-                version = releaseInfo.versionInfo.version,
-                releaseType = releaseInfo.versionInfo.releaseType,
-                versionContent = releaseInfo.versionInfo.versionContent,
-                publisher = releaseInfo.versionInfo.publisher,
-                labelIdList = releaseInfo.labelIdList,
-                frontendType = releaseInfo.configInfo.frontendType,
-                logoUrl = releaseInfo.logoUrl,
-                classifyCode = releaseInfo.classifyCode
-            )
-        )
-        if (updateMarketAtomResult.isNotOk()) {
-            return Result(
-                data = false,
-                status = updateMarketAtomResult.status,
-                message = updateMarketAtomResult.message
-            )
-        }
-        // 确认测试通过
-        return passTest(userId, atomId)
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(SampleAtomReleaseServiceImpl::class.java)
-        private val fileSeparator: String = System.getProperty("file.separator")
     }
 }

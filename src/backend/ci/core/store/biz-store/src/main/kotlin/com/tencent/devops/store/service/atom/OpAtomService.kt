@@ -34,6 +34,8 @@ import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import java.io.InputStream
 
 interface OpAtomService {
 
@@ -68,4 +70,14 @@ interface OpAtomService {
      * 审核插件
      */
     fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean>
+
+    /**
+     * 一键部署发布插件
+     */
+    fun releaseAtom(
+        userId: String,
+        atomCode: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean>
 }
