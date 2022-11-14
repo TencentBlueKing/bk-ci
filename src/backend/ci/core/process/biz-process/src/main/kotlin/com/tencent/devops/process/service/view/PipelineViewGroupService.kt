@@ -650,7 +650,7 @@ class PipelineViewGroupService @Autowired constructor(
                     createTime = LocalDateTime.now().timestamp(),
                     updateTime = LocalDateTime.now().timestamp(),
                     creator = "admin",
-                    top = true,
+                    top = false,
                     viewType = PipelineViewType.UNCLASSIFIED,
                     pipelineCount = unclassifiedCount
                 )
