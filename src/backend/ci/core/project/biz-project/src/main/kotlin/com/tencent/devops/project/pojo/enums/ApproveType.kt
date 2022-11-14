@@ -27,22 +27,16 @@
 
 package com.tencent.devops.project.pojo.enums
 
-enum class ApproveStatus(val status: Int) {
-    // 创建审批中
-    CREATE_PENDING(1),
+enum class ApproveType(val type: Int) {
+    // 创建审批
+    CREATE_APPROVE(0),
 
-    // 审批通过
-    CREATE_APPROVED(2),
+    // 仅权限保密字段修改发起的审批
+    AUTH_SECRECY_APPROVE(1),
 
-    // 创建中审批拒绝
-    CREATE_REJECT(3),
+    // 仅项目可授权人员范围修改发起的审批
+    SUBJECT_SCOPES_APPROVE(2),
 
-    // 修改审批中
-    UPDATE_PENDING(4),
-
-    // 修改审批拒绝
-    UPDATE_REJECT(5),
-
-    // 修改审批通过
-    UPDATE_APPROVED(6)
+    // 两者均被修改发起的审批
+    ALL_CHANGE_APPROVE(3),
 }

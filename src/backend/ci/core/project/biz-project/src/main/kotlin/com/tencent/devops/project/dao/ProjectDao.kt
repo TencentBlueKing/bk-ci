@@ -246,7 +246,7 @@ class ProjectDao {
                     paasProject.remark,
                     paasProject.updated_at?.time,
                     paasProject.use_bk,
-                    ApproveStatus.APPROVED.status,
+                    ApproveStatus.CREATE_APPROVED.status,
                     true
                 )
                 .execute()
@@ -315,7 +315,7 @@ class ProjectDao {
                 userId,
                 LocalDateTime.now(),
                 projectCreateInfo.projectType,
-                if (needApproval!!) ApproveStatus.CREATE_PENDING.status else ApproveStatus.APPROVED.status,
+                if (needApproval!!) ApproveStatus.CREATE_PENDING.status else ApproveStatus.CREATE_APPROVED.status,
                 logoAddress ?: "",
                 userDeptDetail.bgName,
                 userDeptDetail.deptName,
@@ -354,9 +354,11 @@ class ProjectDao {
                 .set(ENGLISH_NAME, projectUpdateInfo.englishName)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
-            if (!needApproval) {
+            if (needApproval) {
                 update.set(SUBJECTSCOPES, subjectScopesStr)
                 authSecrecy?.let { update.set(IS_AUTH_SECRECY, authSecrecy) }
+            } else {
+                update.set(APPROVAL_STATUS, ApproveStatus.UPDATE_PENDING.status)
             }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
