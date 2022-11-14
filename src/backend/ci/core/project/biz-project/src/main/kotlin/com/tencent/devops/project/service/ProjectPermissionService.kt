@@ -29,6 +29,7 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 
@@ -48,6 +49,7 @@ interface ProjectPermissionService {
     fun deleteResource(projectCode: String)
 
     fun modifyResource(
+        projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     )
 

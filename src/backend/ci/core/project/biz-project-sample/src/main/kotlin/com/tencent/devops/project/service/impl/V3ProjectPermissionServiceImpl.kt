@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ResourceCreateInfo
@@ -95,6 +96,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun modifyResource(
+        projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     ) {
         return
@@ -138,12 +140,12 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         permission: AuthPermission
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = projectAuthServiceCode,
-                resourceType = projectResourceType,
-                resourceCode = projectCode,
-                projectCode = projectCode,
-                permission = permission
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = projectResourceType,
+            resourceCode = projectCode,
+            projectCode = projectCode,
+            permission = permission
         )
     }
 
