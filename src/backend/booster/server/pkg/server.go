@@ -580,6 +580,7 @@ func (s *Server) initDistccEngine(
 			MysqlTableOption: s.conf.EngineDistCCConfig.MysqlTableOption,
 		},
 		QueueResourceAllocater: InitAllocater(s.conf.DistCCQueueList, s.conf.EngineDistCCConfig.QueueResourceAllocater),
+		QueueShareType:         s.conf.DistccQueueShareType,
 		Rd:                     s.rd,
 		ClusterID:              s.conf.ContainerResourceConfig.BcsClusterID,
 		CPUPerInstance:         s.conf.ContainerResourceConfig.BcsCPUPerInstance,

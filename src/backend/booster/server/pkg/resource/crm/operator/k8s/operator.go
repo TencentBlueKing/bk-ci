@@ -380,14 +380,11 @@ func (o *operator) getFederationResource(clusterID string) ([]*op.NodeInfo, erro
 		}
 		totalIst := float64(result.Data.Total)
 		nodeInfoList = append(nodeInfoList, &op.NodeInfo{
-			IP:        clusterID + "-" + ns + "-" + ist.Platform + "-" + ist.Group,
-			Hostname:  clusterID + "-" + ns + "-" + ist.Platform + "-" + ist.Group,
-			DiskTotal: totalIst,
-			MemTotal:  totalIst * ist.MemPerInstance,
-			CPUTotal:  totalIst * ist.CPUPerInstance,
-			DiskUsed:  0,
-			MemUsed:   0,
-			CPUUsed:   0,
+			IP:       clusterID + "-" + ns + "-" + ist.Platform + "-" + ist.Group,
+			Hostname: clusterID + "-" + ns + "-" + ist.Platform + "-" + ist.Group,
+			DiskLeft: totalIst,
+			MemLeft:  totalIst * ist.MemPerInstance,
+			CPULeft:  totalIst * ist.CPUPerInstance,
 			Attributes: map[string]string{
 				op.AttributeKeyPlatform: ist.Platform,
 				op.AttributeKeyCity:     ist.Group,

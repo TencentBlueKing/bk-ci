@@ -664,7 +664,10 @@ func (rm *resourceManager) getServiceInfo(resourceID, user string) (*op.ServiceI
 			resourceID, user, err)
 		return nil, err
 	}
-
+	if _, ok := rm.handlerMap[user]; !ok {
+		blog.Errorf("crm: get service info for resource(%s) user(%s), get handlerMap nil", resourceID, user)
+		return nil, fmt.Errorf("handlerMap nil")
+	}
 	info, err := rm.operator.GetServerStatus(rm.conf.BcsClusterID, rm.handlerMap[user].GetNamespace(), targetID)
 	if err != nil {
 		blog.Errorf("crm: get service info for resource(%s) target(%s) user(%s) failed: %v",
@@ -808,6 +811,10 @@ func (rm *resourceManager) launch(
 			blog.Errorf("crm: try get free instances for resource(%s) user(%s) failed: %v",
 				resourceID, user, err)
 			return err
+		}
+		if _, ok := rm.handlerMap[user]; !ok {
+			blog.Errorf("crm: try get free instances for resource(%s) user(%s), get handlerMap nil", resourceID, user)
+			return fmt.Errorf("handlerMap nil")
 		}
 
 		r.noReadyInstance = instance
@@ -962,6 +969,10 @@ func (rm *resourceManager) release(resourceID, user string) error {
 			return err
 		}
 	} else {
+		if _, ok := rm.handlerMap[user]; !ok {
+			blog.Errorf("crm: release service with resource(%s) for user(%s), get handlerMap nil", resourceID, user)
+			return fmt.Errorf("handlerMap nil")
+		}
 		if err = rm.operator.ReleaseServer(rm.conf.BcsClusterID, rm.handlerMap[user].GetNamespace(), resourceID); err != nil {
 			blog.Errorf("crm: release service with resource(%s) for user(%s) failed: %v",
 				resourceID, user, err)
