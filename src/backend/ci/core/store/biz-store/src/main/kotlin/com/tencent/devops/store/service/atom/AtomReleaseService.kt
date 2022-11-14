@@ -30,11 +30,9 @@ package com.tencent.devops.store.service.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
-import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import com.tencent.devops.store.pojo.common.StoreProcessInfo
 
 @Suppress("ALL")
 interface AtomReleaseService {
