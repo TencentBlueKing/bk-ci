@@ -323,7 +323,7 @@ internal class EnvReplacementParserTest {
                 "echo envs.env_c=c, env_c=\$env_c\n" +
                 "echo envs.env_d=d, env_d=\$env_d\n" +
                 "echo envs.env_e=e, env_e=\$env_e\n" +
-                "echo envs.a=\${{ envs.a }}, a=\$a\n" +
+                "echo envs.a=, a=\$a\n" +
                 "echo settings.sensitive.password=\${{ settings.sensitive.password }}\n" +
                 "echo ::set-output name=a::i am a at step_1",
             onlyExpression = true
@@ -465,6 +465,7 @@ for (const key in variables) {
 
 console.log("全局配置", variables)
 let branch = ${'$'}{{ ci.branch }}
+let branch1 = ${'$'}{{ ci.branch1 }}
 let branchs = branch.split("/")"""
         val data = mapOf(
             "variables.is_lint" to "true",
@@ -485,6 +486,7 @@ for (const key in variables) {
 
 console.log("全局配置", variables)
 let branch = master
+let branch1 = 
 let branchs = branch.split("/")"""
         Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
     }
