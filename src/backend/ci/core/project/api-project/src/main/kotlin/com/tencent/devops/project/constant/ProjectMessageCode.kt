@@ -78,4 +78,6 @@ object ProjectMessageCode {
     const val USER_NOT_PROJECT_USER = "2119032" // 目标用户非该项目成员
     const val USER_NOT_CREATE_PERM = "2119033" // 无创建项目权限，请申请权限
     const val PROJECT_ASSIGN_DATASOURCE_FAIL = "2119034" // 无法为项目分配可用的数据源
+    const val PEM_UPDATE_FAIL = "2119035" // 权限中心修改项目失败3
+    const val PROJECT_UPDATE_FAIL = "2119036" // 修改项目错误
 }
