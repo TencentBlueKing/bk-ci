@@ -358,7 +358,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     needApproval = needApproval!!,
                     iamSubjectScopes = iamSubjectScopes
                 )
-                modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
+                try {
+                    modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
+                } catch (e: Exception) {
+                    logger.warn("权限中心修改项目信息： $resourceUpdateInfo", e)
+                    throw OperationException(
+                        MessageCodeUtil.getCodeLanMessage(
+                            messageCode = ProjectMessageCode.PEM_UPDATE_FAIL,
+                            defaultMessage = "Error modifying project information in permission center:$e"
+                        )
+                    )
+                }
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
@@ -399,7 +409,20 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 success = true
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+                throw OperationException(
+                    MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProjectMessageCode.PROJECT_NAME_EXIST,
+                        defaultMessage = "project name exist : $e "
+                    )
+                )
+            } catch (e: Exception) {
+                logger.warn("update project failed :$projectUpdateInfo", e)
+                throw OperationException(
+                    MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProjectMessageCode.PROJECT_UPDATE_FAIL,
+                        defaultMessage = "update project failed: $e "
+                    )
+                )
             }
         } finally {
             projectJmxApi.execute(ProjectJmxApi.PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
