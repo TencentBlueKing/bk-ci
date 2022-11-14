@@ -326,7 +326,7 @@ class ProjectDao {
                     JsonUtil.toJson(it, false)
                 },
                 subjectScopesStr,
-                authSecrecy?.let { authSecrecy }
+                authSecrecy ?: false
             ).execute()
         }
     }
@@ -368,6 +368,23 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
                 .set(PROJECT_NAME, projectName)
+                .where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun updateProjectByEnglish(
+        dslContext: DSLContext,
+        subjectScopesStr: String,
+        authSecrecy: Boolean,
+        projectCode: String,
+        statusEnum: ApproveStatus
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(SUBJECTSCOPES, subjectScopesStr)
+                .set(IS_AUTH_SECRECY, authSecrecy)
+                .set(APPROVAL_STATUS, statusEnum.status)
                 .where(ENGLISH_NAME.eq(projectCode))
                 .execute()
         }

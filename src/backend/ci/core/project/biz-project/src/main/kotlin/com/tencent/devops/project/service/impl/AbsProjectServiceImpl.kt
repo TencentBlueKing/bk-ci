@@ -67,6 +67,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
@@ -172,28 +173,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var projectId = defaultProjectId
         val subjectScopes = projectCreateInfo.subjectScopes
         val needApproval = createExtInfo.needApproval
-        val iamSubjectScopes: ArrayList<ManagerScopes> = ArrayList()
-        if (subjectScopes == null) {
-            iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
-        } else {
-            subjectScopes.forEach {
-                when (it.type) {
-                    ALL_MEMBERS -> {
-                        iamSubjectScopes.add(
-                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS)
-                        )
-                    }
-                    DEPARTMENT -> {
-                        iamSubjectScopes.add(
-                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT), it.id)
-                        )
-                    }
-                    else -> {
-                        iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.USER), it.id))
-                    }
-                }
-            }
-        }
+        val iamSubjectScopes = getIamSubjectScopes(subjectScopes)
+        logger.info("create project : iamSubjectScopes = $iamSubjectScopes")
         try {
             if (createExtInfo.needAuth!!) {
                 val resourceCreateInfo = ResourceCreateInfo(
@@ -229,19 +210,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
                 // 上传logo
                 val logo = projectCreateInfo.logo
-                var logoFile: File? = null
-                var logoAddress: String? = null
-                if (logo != null) {
-                    try {
-                        logoFile = FileUtil.convertTempFile(logo)
-                        logoAddress = saveLogoAddress(userId, projectCreateInfo.englishName, logoFile)
-                    } catch (e: Exception) {
-                        logger.warn("fail update projectLogo", e)
-                        throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
-                    } finally {
-                        logoFile?.delete()
-                    }
-                }
+                val logoAddress = getLogoAddress(userId, logo, projectCreateInfo.englishName)
                 projectDao.create(
                     dslContext = context,
                     userId = userId,
@@ -272,18 +241,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             )
                         )
                     }
+                    // 为项目分配数据源
+                    shardingRoutingRuleAssignService.assignShardingRoutingRule(
+                        channelCode = projectChannel,
+                        routingName = projectCreateInfo.englishName,
+                        moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
+                    )
                 } catch (e: Exception) {
                     logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
                     projectDao.delete(dslContext, projectId)
                     throw e
                 }
-                // 为项目分配数据源
-                shardingRoutingRuleAssignService.assignShardingRoutingRule(
-                    channelCode = projectChannel,
-                    routingName = projectCreateInfo.englishName,
-                    moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
-                )
-                // todo 私密项目待了解
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
@@ -366,35 +334,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         val startEpoch = System.currentTimeMillis()
         var success = false
-        validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
         val subjectScopes = projectUpdateInfo.subjectScopes
-        val iamSubjectScopes: ArrayList<ManagerScopes> = ArrayList()
+        validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
         // 考虑对于原有的老项目，其可授权范围本来就为空，是否要强行给他设置为全公司，还是原样
         // 假设上线时，统一刷数据，刷成可授权人员范围为全公司
-        if (subjectScopes == null) {
-            iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
-        } else {
-            subjectScopes.forEach {
-                when (it.type) {
-                    ALL_MEMBERS -> {
-                        iamSubjectScopes.add(
-                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS)
-                        )
-                    }
-                    DEPARTMENT -> {
-                        iamSubjectScopes.add(
-                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT), it.id)
-                        )
-                    }
-                    else -> {
-                        iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.USER), it.id))
-                    }
-                }
-            }
-        }
-
+        val iamSubjectScopes = getIamSubjectScopes(subjectScopes)
+        logger.info(
+            "update project : $userId | $englishName | $projectUpdateInfo | " +
+                "$needApproval | $iamSubjectScopes"
+        )
         try {
-            updateInfoReplace(projectUpdateInfo)
             try {
                 val projectInfo = projectDao.getByEnglishName(
                     dslContext = dslContext,
@@ -402,32 +351,18 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 ) ?: throw NotFoundException("项目 -$englishName 不存在")
                 val projectId = projectInfo.projectId
                 val logo = projectUpdateInfo.logo
-                var logoFile: File? = null
-                var logoAddress: String? = null
-                if (logo != null) {
-                    try {
-                        logoFile = FileUtil.convertTempFile(logo)
-                        logoAddress = saveLogoAddress(userId, projectUpdateInfo.englishName, logoFile)
-                    } catch (e: Exception) {
-                        logger.warn("fail update projectLogo", e)
-                        throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
-                    } finally {
-                        logoFile?.delete()
-                    }
-                }
+                val logoAddress = getLogoAddress(userId, logo, englishName)
                 val resourceUpdateInfo = ResourceUpdateInfo(
                     userId = userId,
                     projectUpdateInfo = projectUpdateInfo,
                     needApproval = needApproval!!,
                     iamSubjectScopes = iamSubjectScopes
                 )
-                modifyProjectAuthResource(
-                    projectInfo = projectInfo,
-                    resourceUpdateInfo = resourceUpdateInfo
-                )
+                modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
+                    logger.info("subjectScopesStr : $subjectScopesStr")
                     projectDao.update(
                         dslContext = context,
                         userId = userId,
@@ -438,12 +373,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         logoAddress = logoAddress,
                         authSecrecy = projectUpdateInfo.authSecrecy
                     )
-
-                    if (!projectUpdateInfo.secrecy) {
-                        redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
-                    } else {
-                        redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
-                    }
                     projectDispatcher.dispatch(
                         ProjectUpdateBroadCastEvent(
                             userId = userId,
@@ -452,6 +381,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         )
                     )
                     if (logo != null) {
+                        logger.info("logoAddress : $logoAddress")
                         projectDispatcher.dispatch(
                             ProjectUpdateLogoBroadCastEvent(
                                 userId = userId,
@@ -460,6 +390,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             )
                         )
                     }
+                }
+                if (!projectUpdateInfo.secrecy) {
+                    redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
+                } else {
+                    redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
                 }
                 success = true
             } catch (e: DuplicateKeyException) {
@@ -875,6 +810,53 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     )
+
+    private fun getIamSubjectScopes(subjectScopes: List<SubjectScope>?): List<ManagerScopes> {
+        val iamSubjectScopes: ArrayList<ManagerScopes> = ArrayList()
+        if (subjectScopes == null) {
+            iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
+        } else {
+            subjectScopes.forEach {
+                when (it.type) {
+                    ALL_MEMBERS -> {
+                        iamSubjectScopes.add(
+                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS)
+                        )
+                    }
+                    DEPARTMENT -> {
+                        iamSubjectScopes.add(
+                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT), it.id)
+                        )
+                    }
+                    else -> {
+                        iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.USER), it.id))
+                    }
+                }
+            }
+        }
+        return iamSubjectScopes
+    }
+
+    private fun getLogoAddress(
+        userId: String,
+        logo: InputStream?,
+        englishName: String
+    ): String? {
+        var logoFile: File? = null
+        var logoAddress: String? = null
+        if (logo != null) {
+            try {
+                logoFile = FileUtil.convertTempFile(logo)
+                logoAddress = saveLogoAddress(userId, englishName, logoFile)
+            } catch (e: Exception) {
+                logger.warn("fail update projectLogo", e)
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
+            } finally {
+                logoFile?.delete()
+            }
+        }
+        return logoAddress
+    }
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
