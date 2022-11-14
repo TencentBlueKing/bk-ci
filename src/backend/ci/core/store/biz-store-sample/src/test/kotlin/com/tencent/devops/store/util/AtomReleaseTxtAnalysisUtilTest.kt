@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.util
 
+import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
