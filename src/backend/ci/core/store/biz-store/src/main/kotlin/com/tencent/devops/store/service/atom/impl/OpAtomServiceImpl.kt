@@ -42,6 +42,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.api.common.OpStoreLogoResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
@@ -343,7 +344,7 @@ class OpAtomServiceImpl @Autowired constructor(
         if (!taskJsonFile.exists()) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_ATOM_CONF_INVALID,
-                arrayOf("$TASK_JSON_NAME")
+                arrayOf(TASK_JSON_NAME)
             )
         }
         val taskJsonMap: Map<String, Any>
@@ -356,7 +357,8 @@ class OpAtomServiceImpl @Autowired constructor(
             releaseInfo = JsonUtil.mapTo(releaseInfoMap as Map<String, Any>, ReleaseInfo::class.java)
         } catch (e: JsonProcessingException) {
             return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID
+                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                arrayOf("releaseInfo")
             )
         }
         // 新增插件
@@ -366,7 +368,8 @@ class OpAtomServiceImpl @Autowired constructor(
                 projectCode = releaseInfo.projectId,
                 atomCode = releaseInfo.atomCode,
                 name = releaseInfo.name,
-                language = releaseInfo.language
+                language = releaseInfo.language,
+                frontendType = releaseInfo.configInfo.frontendType
             )
         )
         if (addMarketAtomResult.isNotOk()) {
@@ -374,24 +377,50 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         val atomId = addMarketAtomResult.data!!
         // 解析logoUrl
-        val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(
-            userId = userId,
-            logoUrl = releaseInfo.logoUrl,
-            atomPath = atomPath,
-            client = client
-        )
+        val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
         if (logoUrlAnalysisResult.isNotOk()) {
-            return Result(data = false, message = logoUrlAnalysisResult.message)
+            return Result(
+                data = false,
+                status = logoUrlAnalysisResult.status,
+                message = logoUrlAnalysisResult.message
+            )
         }
-        releaseInfo.logoUrl = logoUrlAnalysisResult.data!!
+        val relativePath = logoUrlAnalysisResult.data
+        val logoFile = File("$atomPath${File.separator}file" +
+                "${File.separator}${relativePath?.removePrefix(File.separator)}")
+        logger.info("uploadStoreLogo logoFilePath:${logoFile.path}")
+        var uploadStoreLogoResult = Result(data = true, status = 0)
+        if (logoFile.exists()) {
+            val result = client.get(OpStoreLogoResource::class).uploadStoreLogo(
+                userId = userId,
+                contentLength = logoFile.length(),
+                inputStream = logoFile.inputStream(),
+                disposition = FormDataContentDisposition(
+                    "form-data; name=\"logo\"; filename=\"${logoFile.name}\""
+                )
+            )
+            if (result.isOk()) {
+                releaseInfo.logoUrl = result.data!!.logoUrl!!
+            } else {
+                uploadStoreLogoResult = Result(
+                    data = false,
+                    status = uploadStoreLogoResult.status,
+                    message = uploadStoreLogoResult.message
+                )
+            }
+        } else {
+            logger.warn("uploadStoreLogo fail logoName:${logoFile.name}")
+            uploadStoreLogoResult = Result(data = false, message = "upload store logo fail")
+        }
+        if (uploadStoreLogoResult.isNotOk()) return uploadStoreLogoResult
         // 解析description
         releaseInfo.description = AtomReleaseTxtAnalysisUtil.descriptionAnalysis(
             description = releaseInfo.description,
             atomPath = atomPath,
-            userId = userId,
             client = client
         )
         taskJsonMap["releaseInfo"] = releaseInfo.toJsonString()
+        // 将替换好的文本写入task.json文件
         val taskJson = taskJsonMap.toJsonString()
         val fileOutputStream = taskJsonFile.outputStream()
         fileOutputStream.use {
@@ -421,7 +450,11 @@ class OpAtomServiceImpl @Autowired constructor(
                 }
             }
         } catch (ignored: Throwable) {
-            logger.error("BKSystemErrorMonitor|getQualityJsonContent|$atomCode|error=${ignored.message}", ignored)
+            logger.warn("BKSystemErrorMonitor|archive atom file fail|$atomCode|error=${ignored.message}")
+            return Result(
+                data = false,
+                message = ignored.message
+            )
         } finally {
             zipFile.delete()
             FileSystemUtils.deleteRecursively(File(atomPath).parentFile)
@@ -443,7 +476,7 @@ class OpAtomServiceImpl @Autowired constructor(
                 versionContent = releaseInfo.versionInfo.versionContent,
                 publisher = releaseInfo.versionInfo.publisher,
                 labelIdList = releaseInfo.labelIdList,
-                frontendType = releaseInfo.frontendType,
+                frontendType = releaseInfo.configInfo.frontendType,
                 logoUrl = releaseInfo.logoUrl,
                 classifyCode = releaseInfo.classifyCode
             )
