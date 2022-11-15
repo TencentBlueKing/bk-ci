@@ -37,8 +37,9 @@
                             @change="(checked) => handleChecked(checked, data)"
                         >
                             {{data.name}}
-                        </bk-checkbox>
 
+                        </bk-checkbox>
+                        <span v-if="data.hasChild">({{ data.children.length }})</span>
                         <span class="added-pipeline-group-desc" v-bk-tooltips="data.tooltips" v-if="data.desc">
                             {{data.desc}}
                         </span>
@@ -72,6 +73,9 @@
 
 <script>
     import { mapState, mapActions, mapGetters } from 'vuex'
+    import {
+        UNCLASSIFIED_PIPELINE_VIEW_ID
+    } from '@/store/constants'
     export default {
         props: {
             pipeline: {
@@ -122,48 +126,56 @@
                 return this.allPipelineGroup.reduce((acc, group) => {
                     const index = group.projected ? 1 : 0
                     const isDynamicGroup = group.viewType === 1
-                    const needManage = group.projected && !this.hasManagePermission
-                    let desc = null
-                    let sortPos = 0
-                    switch (true) {
-                        case this.savedPipelineGroupMap[group.id]:
-                            desc = 'added'
-                            sortPos = 1
-                            break
-                        case isDynamicGroup:
-                            desc = 'dynamicGroup'
-                            sortPos = 2
-                            break
-                        case needManage:
-                            desc = 'err403'
-                            sortPos = 3
-                            break
+                    const isUnclassifyGroup = group.id === UNCLASSIFIED_PIPELINE_VIEW_ID
+                    if (!isUnclassifyGroup) {
+                        const needManage = group.projected && !this.hasManagePermission
+                        let desc = null
+                        let sortPos = 0
+                        switch (true) {
+                            case this.savedPipelineGroupMap[group.id]:
+                                desc = 'added'
+                                sortPos = 1
+                                break
+                            case isDynamicGroup:
+                                desc = 'dynamicGroup'
+                                sortPos = 2
+                                break
+                            case needManage:
+                                desc = 'err403'
+                                sortPos = 3
+                                break
+                        }
+                        acc[index].children.push({
+                            ...group,
+                            disabled: isDynamicGroup || this.savedPipelineGroupMap[group.id] || needManage,
+                            tooltips: {
+                                ...tooltips,
+                                disabled: !needManage
+                            },
+                            sortPos,
+                            desc: this.$t(desc),
+                            isDynamicGroup
+                        })
                     }
-                    acc[index].children.push({
-                        ...group,
-                        disabled: isDynamicGroup || this.savedPipelineGroupMap[group.id] || needManage,
-                        tooltips: {
-                            ...tooltips,
-                            disabled: !needManage
-                        },
-                        sortPos,
-                        desc: this.$t(desc),
-                        isDynamicGroup
-                    })
                     return acc
                 }, [{
                     id: 'personal',
                     name: this.$t('personalPipelineGroup'),
+                    hasChild: true,
                     children: []
                 }, {
                     id: 'projected',
                     name: this.$t('projectPipelineGroup'),
+                    hasChild: true,
                     disabled: !this.hasManagePermission,
                     tooltips,
                     children: []
                 }]).map(node => {
                     node.children.sort((a, b) => a.sortPos - b.sortPos)
-                    return node
+                    return {
+                        ...node,
+                        disabled: node.children <= 0 || node.disabled
+                    }
                 })
             },
             selectedGroupIdMap () {
@@ -347,14 +359,12 @@
                         height: 32px;
                         .add-to-pipeline-checkbox {
                             display: inline-flex;
-                            flex: 1;
                             align-items: center;
                             .bk-checkbox-text {
                                 @include ellipsis();
                                 flex: 1;
                             }
                         }
-
                         .added-pipeline-group-desc {
                             color: #c4c4c4;
                         }

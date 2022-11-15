@@ -1,25 +1,27 @@
 <template>
-    <infinite-scroll
-        ref="infiniteScroll"
-        :data-fetcher="fetchList"
-        :page-size="defaultPageSize"
-        scroll-box-class-name="pipeline-list-box"
-        v-slot="slotProps"
-    >
-        <PipelineListEmpty class="pipeline-card-list-empty-tips" v-if="slotProps.list.length === 0"></PipelineListEmpty>
-        <ul v-else class="pipelines-card-view-list">
-            <li v-for="pipeline of slotProps.list" :key="pipeline.pipelineId">
-                <pipeline-card
-                    :pipeline="pipeline"
-                    :remove-handler="removeHandler"
-                    :exec-pipeline="execPipeline"
-                    :apply-permission="applyPermission"
-                >
-                </pipeline-card>
-            </li>
-        </ul>
+    <main class="pipeline-card-view-box">
+        <infinite-scroll
+            ref="infiniteScroll"
+            :data-fetcher="fetchList"
+            :page-size="defaultPageSize"
+            scroll-box-class-name="pipeline-card-view-box"
+            v-slot="slotProps"
+        >
+            <PipelineListEmpty class="pipeline-card-list-empty-tips" v-if="slotProps.list.length === 0"></PipelineListEmpty>
+            <ul v-else class="pipelines-card-view-list">
+                <li v-for="pipeline of slotProps.list" :key="pipeline.pipelineId">
+                    <pipeline-card
+                        :pipeline="pipeline"
+                        :remove-handler="removeHandler"
+                        :exec-pipeline="execPipeline"
+                        :apply-permission="applyPermission"
+                    >
+                    </pipeline-card>
+                </li>
+            </ul>
 
-    </infinite-scroll>
+        </infinite-scroll>
+    </main>
 </template>
 
 <script>
@@ -87,6 +89,10 @@
 <style lang="scss">
     @import '@/scss/mixins/ellipsis';
     @import '@/scss/conf';
+    .pipeline-card-view-box {
+        height: 100%;
+        overflow: auto;
+    }
     .pipeline-card-list-empty-tips {
         width: 100%;
         height: 100%;

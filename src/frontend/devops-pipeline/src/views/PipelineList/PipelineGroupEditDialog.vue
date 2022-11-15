@@ -107,7 +107,6 @@
                                 :data="pipleinGroupTree"
                                 node-key="id"
                                 :default-expanded-nodes="defaultExpandedNodes"
-                                show
                                 :show-icon="false"
                             >
                                 <div @click.stop :class="['pipeline-group-tree-node', {
@@ -115,7 +114,7 @@
                                 }]" slot-scope="{ node, data }">
                                     <bk-checkbox
                                         v-bind="isChecked(data.id)"
-                                        :disabled="data.disabled"
+                                        :disabled="!data.checkable"
                                         :class="{
                                             'pipeline-group-tree-node-checkbox': true,
                                             'last-checked': savedPipelineInfos.has(data.id)
@@ -188,7 +187,7 @@
                                 </div>
                             </bk-popover>
                             <span
-                                v-if="!isDynamicGroup && pipeline.isRemoved || pipeline.isAdded"
+                                v-if="!isDynamicGroup && (pipeline.isRemoved || pipeline.isAdded)"
                                 v-bk-tooltips="pipeline.tooltips"
                                 class="pipeline-operate-btn"
                                 @click="togglePipeline(pipeline, index)"
@@ -495,17 +494,19 @@
                     ...dict.personalViewList,
                     ...dict.projectViewList
                 ].map(groupItem => {
+                    const children = groupItem.pipelineList
+                        .filter(pipeline => !pipeline.delete || pipeline.viewId === group.id)
+                        .map(pipeline => ({
+                            id: pipeline.pipelineId,
+                            name: pipeline.pipelineName,
+                            deleted: pipeline.delete
+                        }))
                     return {
                         id: groupItem.viewId,
                         name: groupItem.viewName,
                         hasChild: true,
-                        children: groupItem.pipelineList
-                            .filter(pipeline => !pipeline.delete || pipeline.viewId === group.id)
-                            .map(pipeline => ({
-                                id: pipeline.pipelineId,
-                                name: pipeline.pipelineName,
-                                deleted: pipeline.delete
-                            }))
+                        checkable: children.length > 0,
+                        children
                     }
                 }, [])
                 this.pipelineGroupMap = pipelineGroupMap

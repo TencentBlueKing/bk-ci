@@ -1,26 +1,30 @@
 <template>
     <ul class="pipeline-label-selector" v-bkloading="{ isLoading }">
-        <li
-            v-for="item in tagSelectModelList"
-            :key="item.id"
-        >
-            <label class="pipeline-selector-label"> {{item.name}} </label>
-            <bk-select
-                class="sub-label-select"
-                :value="labelIdMap[item.id]"
-                @change="item.handleChange"
-                multiple
+        <template v-if="tagSelectModelList.length > 0">
+            <li
+                v-for="item in tagSelectModelList"
+                :key="item.id"
             >
-                <bk-option
-                    v-for="label in item.labels"
-                    :key="label.id"
-                    :id="label.id"
-                    :name="label.name"
+                <label class="pipeline-selector-label"> {{item.name}} </label>
+                <bk-select
+                    class="sub-label-select"
+                    :value="labelIdMap[item.id]"
+                    @change="item.handleChange"
+                    multiple
                 >
-                </bk-option>
-            </bk-select>
-        </li>
-
+                    <bk-option
+                        v-for="label in item.labels"
+                        :key="label.id"
+                        :id="label.id"
+                        :name="label.name"
+                    >
+                    </bk-option>
+                </bk-select>
+            </li>
+        </template>
+        <span class="no-label-placeholder" v-else>
+            {{$t('noLabels')}}
+        </span>
     </ul>
 </template>
 
@@ -64,8 +68,9 @@
                 'requestTagList'
             ]),
             async init () {
-                if (this.isLoading) return
-                this.isLoading = true
+                if (this.isLoading) {
+                    this.isLoading = true
+                }
                 await this.requestTagList(this.$route.params)
                 this.updateValue()
                 this.isLoading = false
@@ -108,6 +113,13 @@
                 overflow: hidden;
             }
 
+        }
+        .no-label-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #979BA5;
+            font-size: 12px;
         }
     }
 </style>

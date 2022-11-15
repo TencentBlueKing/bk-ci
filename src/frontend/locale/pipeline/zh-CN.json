@@ -999,7 +999,7 @@
   "projectViewList": "项目流水线组",
   "personalViewList": "我的流水线组",
   "patchManage": "批量管理",
-  "searchPipelinePlaceholder": "流水线名称/创建人/流水线组/自定义属性",
+  "searchPipelinePlaceholder": "流水线名称/创建人/流水线组/标签",
   "ownGroupName": "所在项目流水线组",
   "latestExec": "最近执行",
   "addPipelineGroup": "创建流水线组",
@@ -1047,7 +1047,7 @@
   "patchAddTo": "批量添加至",
   "patchDelete": "批量删除",
   "exitPatch": "退出管理",
-  "patchSearchInputPlaceholder": "流水线名称/创建人/流水线组/自定义属性",
+  "patchSearchInputPlaceholder": "流水线名称/创建人/流水线组/标签",
   "labelGroupNameSuc": "标签组名称保存成功",
   "labelGroupNameErr": "标签组名称保存成功",
   "labelDeleteConfirm": "确认删除该标签",
@@ -1090,5 +1090,7 @@
   "groupEditDisableTips": "只有管理员\\CI管理员可以对项目流水线组添加\\移出流水线",
   "noDeletePipelines": "删除流水线列表为空",
   "deleted": "已删除",
-  "addLabel": "新建标签"
+  "addLabel": "新建标签",
+  "noLabels": "当前项目暂无标签",
+  "deleteAlready": "流水线已删除"
 }

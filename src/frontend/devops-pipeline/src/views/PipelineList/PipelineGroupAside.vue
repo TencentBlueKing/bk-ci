@@ -14,8 +14,13 @@
                 </div>
             </header>
             <article class="pipeline-group-container">
-                <div class="pipeline-group-classify-block" v-for="block in pipelineGroupTree" :key="block.title">
-                    <h3 @click="toggle(block.id)" class="pipeline-group-classify-header">
+                <template v-for="block in pipelineGroupTree">
+                    <h3
+                        @click="toggle(block.id)"
+                        class="pipeline-group-classify-header"
+                        :style="`top: ${block.stickyTop}`"
+                        :key="block.title"
+                    >
                         <i :class="['devops-icon', 'pipeline-group-item-icon', {
                             'icon-down-shape': block.show,
                             'icon-right-shape': !block.show
@@ -34,47 +39,49 @@
                             </bk-button>
                         </span>
                     </h3>
-                    <div
-                        :class="{
-                            'pipeline-group-item': true,
-                            'sticky-top': item.top,
-                            active: $route.params.viewId === item.id
-                        }"
-                        v-if="block.show"
-                        v-for="item in block.children"
-                        :key="item.id"
-                        @click="switchViewId(item.id)"
-                    >
-                        <logo v-if="item.icon" size="12" class="pipeline-group-item-icon" :name="item.icon" />
-                        <bk-input
-                            v-if="item.id === editingGroupId"
-                            v-bk-focus="1"
-                            :disabled="renaming"
-                            @blur="submitRename(item)"
-                            @enter="submitRename(item)"
-                            v-model="newViewName"
-                        />
-                        <span v-else class="pipeline-group-item-name">
-                            {{item.name}}
-                        </span>
-                        <span
-                            v-if="$route.params.viewId === item.id && hasDeleteCount"
-                            class="pipeline-group-item-sum has-delete-count"
+                    <div class="pipeline-group-block" :key="block.title">
+                        <div
+                            :class="{
+                                'pipeline-group-item': true,
+                                'sticky-top': item.top,
+                                active: $route.params.viewId === item.id
+                            }"
+                            v-if="block.show"
+                            v-for="item in block.children"
+                            :key="item.id"
+                            @click="switchViewId(item.id)"
                         >
-                            <span class="normal-count">{{currentGroupPipelineCount.normalCount}}</span>
-                            <span class="delete-count">
-                                <logo name="delete" size="8" />
-                                {{currentGroupPipelineCount.deleteCount}}
+                            <logo v-if="item.icon" size="12" class="pipeline-group-item-icon" :name="item.icon" />
+                            <bk-input
+                                v-if="item.id === editingGroupId"
+                                v-bk-focus="1"
+                                :disabled="renaming"
+                                @blur="submitRename(item)"
+                                @enter="submitRename(item)"
+                                v-model="newViewName"
+                            />
+                            <span v-else class="pipeline-group-item-name">
+                                {{item.name}}
                             </span>
-                        </span>
-                        <span v-else class="pipeline-group-item-sum">
-                            {{item.pipelineCount}}
-                        </span>
-                        <span @click.stop>
-                            <ext-menu :class="{ hidden: item.actions.length <= 0 }" :data="item" :config="item.actions" />
-                        </span>
+                            <span
+                                v-if="$route.params.viewId === item.id && hasDeleteCount"
+                                class="pipeline-group-item-sum has-delete-count"
+                            >
+                                <span class="normal-count">{{currentGroupPipelineCount.normalCount}}</span>
+                                <span class="delete-count">
+                                    <logo name="delete" size="8" />
+                                    {{currentGroupPipelineCount.deleteCount}}
+                                </span>
+                            </span>
+                            <span v-else class="pipeline-group-item-sum">
+                                {{item.pipelineCount}}
+                            </span>
+                            <span @click.stop>
+                                <ext-menu :class="{ hidden: item.actions.length <= 0 }" :data="item" :config="item.actions" />
+                            </span>
+                        </div>
                     </div>
-                </div>
+                </template>
             </article>
         </div>
         <footer :class="['recycle-pipeline-group-footer', {
@@ -202,6 +209,7 @@
                     tooltips: {
                         disalbed: true
                     },
+                    stickyTop: '50px',
                     children: this.pipelineGroupDict.personalViewList.map((view) => ({
                         ...view,
                         icon: 'pipelineGroup',
@@ -215,6 +223,7 @@
                     projected: true,
                     disabled: !this.hasManagePermission,
                     tooltips: this.projectedGroupDisableTips,
+                    stickyTop: '90px',
                     children: this.pipelineGroupDict.projectViewList.map((view) => ({
                         ...view,
                         icon: view.id === UNCLASSIFIED_PIPELINE_VIEW_ID ? 'unGroup' : 'pipelineGroup',
@@ -497,13 +506,6 @@
             }
         }
 
-        .pipeline-group-classify-block {
-            padding-bottom: 12px;
-            transition: all 0.3s ease;
-            &:not(:last-child) {
-                border-bottom: 1px solid #DCDEE5;
-            }
-        }
         .pipeline-group-classify-header {
             display: flex;
             align-items: center;
@@ -517,6 +519,7 @@
             background: white;
             top: 50px;
             z-index: 1;
+
             .pipeline-group-header-name {
                 flex: 1;
             }
@@ -524,6 +527,13 @@
                 display: flex;
                 align-items: center;
                 font-size: 0;
+            }
+        }
+        .pipeline-group-block {
+            transition: all 0.3s ease;
+            padding-bottom: 12px;
+            &:not(:last-child) {
+                border-bottom: 1px solid #DCDEE5;
             }
         }
         .pipeline-group-aside-main {

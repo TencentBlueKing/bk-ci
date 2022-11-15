@@ -62,7 +62,7 @@
         <template v-else-if="isDeleteView">
             <bk-table-column :label="$t('restore.createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
             <bk-table-column :label="$t('restore.deleteTime')" sortable="custom" prop="updateTime" :formatter="formatTime" />
-            <bk-table-column :label="$t('restore.deleter')" prop="lastModifyUser" column-key="lastModifyUser">
+            <bk-table-column :label="$t('restore.deleter')" prop="lastModifyUser" key="lastModifyUser">
                 <span slot-scope="props">
                     {{ props.row.lastModifyUser }}
                 </span>
@@ -70,7 +70,10 @@
         </template>
         <template v-else>
             <bk-table-column :label="$t('latestExec')" key="latestBuildStatus">
-                <div slot-scope="props" class="pipeline-latest-exec-cell">
+                <span v-if="props.row.delete" slot-scope="props">
+                    {{$t('deleteAlready')}}
+                </span>
+                <div v-else slot-scope="props" class="pipeline-latest-exec-cell">
                     <pipeline-status-icon :status="props.row.latestBuildStatus" />
                     <div class="pipeline-exec-msg">
                         <template v-if="props.row.latestBuildNum">
@@ -103,14 +106,14 @@
                 </div>
             </bk-table-column>
             <bk-table-column width="200" :label="$t('lastExecTime')" prop="latestBuildStartDate" key="latestBuildStatus">
-                <template slot-scope="props">
+                <template v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.latestBuildStartDate }}</p>
                     <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
                     <p v-else class="desc">{{props.row.duration}}</p>
                 </template>
             </bk-table-column>
             <bk-table-column width="200" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
-                <template slot-scope="props">
+                <template v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.updater }}</p>
                     <p class="desc">{{props.row.updateDate}}</p>
                 </template>

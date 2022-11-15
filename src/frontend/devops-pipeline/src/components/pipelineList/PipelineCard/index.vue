@@ -217,6 +217,8 @@
                 display: flex;
                 align-items: center;
                 .bk-pipeline-card-trigger-btn {
+                    display: inline-flex;
+                    cursor: pointer;
                     margin: 0 8px;
                     &.disabled {
                         color: #DCDEE5;
