@@ -30,14 +30,13 @@
                 >
                     <div @click.stop class="add-to-pipeline-group-tree-node" slot-scope="{ node, data }">
                         <bk-checkbox
-                            ext-cls="add-to-pipeline-checkbox"
+                            :ext-cls="`add-to-pipeline-checkbox ${data.hasChild ? '' : 'child-checkbox'}`"
                             :disabled="data.disabled"
                             :value="isChecked(data)"
                             :indeterminate="isIndeterminate(data)"
                             @change="(checked) => handleChecked(checked, data)"
                         >
                             {{data.name}}
-
                         </bk-checkbox>
                         <span v-if="data.hasChild">({{ data.children.length }})</span>
                         <span class="added-pipeline-group-desc" v-bk-tooltips="data.tooltips" v-if="data.desc">
@@ -360,6 +359,10 @@
                         .add-to-pipeline-checkbox {
                             display: inline-flex;
                             align-items: center;
+                            padding-right: 8px;
+                            &.child-checkbox {
+                                flex: 1;
+                            }
                             .bk-checkbox-text {
                                 @include ellipsis();
                                 flex: 1;
@@ -367,6 +370,7 @@
                         }
                         .added-pipeline-group-desc {
                             color: #c4c4c4;
+
                         }
                     }
                 }

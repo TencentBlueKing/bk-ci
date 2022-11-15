@@ -227,7 +227,8 @@
         watch: {
             '$route.params.viewId': function (viewId) {
                 this.requestList({
-                    viewId
+                    viewId,
+                    page: 1
                 })
             },
             sortType: function (newSort) {
