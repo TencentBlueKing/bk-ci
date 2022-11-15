@@ -127,16 +127,6 @@ class MetricsThirdPartyListenerConfiguration {
     }
 
     @Bean
-    fun metricsQualityDailyReportQueue() = Queue(QUEUE_QUALITY_DAILY_EVENT)
-
-    @Bean
-    fun metricsQualityDailyReportExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(EXCHANGE_QUALITY_DAILY_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
     fun metricsQualityDailyQueueBind(
         @Autowired metricsQualityDailyReportQueue: Queue,
         @Autowired metricsQualityDailyReportExchange: FanoutExchange
