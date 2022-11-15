@@ -295,8 +295,6 @@ func (o *operator) request(method, uri string, requestHeader http.Header, data [
 		err = fmt.Errorf("crm: failed to request, http(%d)%s: %s", r.StatusCode, r.Status, uri)
 		return
 	}
-
-	return
 }
 
 //FederationResourceParam define
@@ -356,7 +354,7 @@ func (o *operator) getFederationTotalNum(url string, ist config.InstanceType) (F
 	}
 
 	if err = codec.DecJSON(res, &result); err != nil {
-		blog.Errorf("k8s operator: get federation decode url(%s) param(%v) token(%v) failed: %v", param, header, err)
+		blog.Errorf("k8s operator: get federation decode url(%s) param(%v) token(%v) failed: %v", url, param, header, err)
 		return result, err
 	}
 	return result, nil
