@@ -27,12 +27,11 @@
 
 package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.pojo.IEvent
-import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.annotation.RabbitEvent
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import io.swagger.annotations.ApiModelProperty
 
-@Event(destination = StreamBinding.EXCHANGE_QUALITY_DAILY_FANOUT)
+@RabbitEvent(exchange = MQ.EXCHANGE_QUALITY_DAILY_FANOUT)
 data class QualityReportEvent(
     @ApiModelProperty("统计时间")
     val statisticsTime: String,
@@ -42,4 +41,4 @@ data class QualityReportEvent(
     val interceptedCount: Int,
     @ApiModelProperty("红线执行总次数")
     val totalCount: Int
-) : IEvent()
+)

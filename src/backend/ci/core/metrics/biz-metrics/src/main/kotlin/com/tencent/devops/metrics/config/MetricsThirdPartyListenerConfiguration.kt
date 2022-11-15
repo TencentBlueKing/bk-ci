@@ -29,6 +29,8 @@ package com.tencent.devops.metrics.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.Tools
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_QUALITY_DAILY_FANOUT
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_QUALITY_DAILY_EVENT
 import com.tencent.devops.metrics.listener.CodeCheckDailyMessageListener
 import com.tencent.devops.metrics.listener.QualityReportDailyMessageListener
 import com.tencent.devops.metrics.listener.TurboDailyReportMessageListener
@@ -169,8 +171,6 @@ class MetricsThirdPartyListenerConfiguration {
     }
 
     companion object {
-        private const val QUEUE_QUALITY_DAILY_EVENT = "q.metrics.quality.daily.exchange.queue"
-        private const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.metrics.quality.daily.exchange.fanout"
         private const val QUEUE_METRICS_STATISTIC_CODECC_DAILY = "q.metrics.statistic.codecc.daily"
         private const val EXCHANGE_METRICS_STATISTIC_CODECC_DAILY = "e.metrics.statistic.codecc.daily"
         private const val QUEUE_METRICS_STATISTIC_TURBO_DAILY = "q.metrics.statistic.turbo.daily"
