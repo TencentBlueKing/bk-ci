@@ -50,6 +50,11 @@ import org.springframework.context.annotation.Configuration
 class MetricsThirdPartyListenerConfiguration {
 
     @Bean
+    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
+        return RabbitAdmin(connectionFactory)
+    }
+
+    @Bean
     fun receiveCodeCheckDailyMessageQueue() = Queue(QUEUE_METRICS_STATISTIC_CODECC_DAILY)
 
     @Bean
