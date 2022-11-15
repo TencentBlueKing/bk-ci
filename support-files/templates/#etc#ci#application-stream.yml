@@ -40,3 +40,6 @@ github:
 gateway:
   url: __BK_CI_HOST__
   reportPrefix: __BK_CI_STREAM_REPORT_PREFIX__
+
+badge:
+  serverUrl: __BK_CI_BADGE_SERVER_URL__
