@@ -295,6 +295,7 @@ func (o *operator) request(method, uri string, requestHeader http.Header, data [
 		err = fmt.Errorf("crm: failed to request, http(%d)%s: %s", r.StatusCode, r.Status, uri)
 		return
 	}
+	return
 }
 
 //FederationResourceParam define

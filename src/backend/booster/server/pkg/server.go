@@ -459,6 +459,7 @@ func (s *Server) initK8sResourceManagers() (k8sRm crm.ResourceManager,
 	}
 
 	k8sRm, err = s.initContainerResourceManager(&k8sConf, s.rd)
+	return
 }
 
 func (s *Server) initEngineList() ([]engine.Engine, error) {
