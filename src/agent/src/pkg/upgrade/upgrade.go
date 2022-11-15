@@ -44,7 +44,7 @@ import (
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
-//JdkVersion jdk版本信息缓存
+// JdkVersion jdk版本信息缓存
 var JdkVersion struct {
 	JdkFileModTime time.Time
 	// 版本信息，原子级的 []string
@@ -117,10 +117,10 @@ func agentUpgrade() {
 	}
 }
 
-//syncJdkVersion 同步jdk版本信息
+// syncJdkVersion 同步jdk版本信息
 func syncJdkVersion() ([]string, error) {
 	// 获取jdk文件状态以及时间
-	stat, err := os.Stat(config.GetJavaDir())
+	stat, err := os.Stat(config.GAgentConfig.JdkDirPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			logs.Error("syncJdkVersion no jdk dir find", err)
@@ -134,7 +134,9 @@ func syncJdkVersion() ([]string, error) {
 	if JdkVersion.Version.Load() == nil {
 		version, err := getJdkVersion()
 		if err != nil {
-			return nil, err
+			// 拿取错误时直接下载新的
+			logs.Error("syncJdkVersion getJdkVersion err", err)
+			return nil, nil
 		}
 		JdkVersion.Version.Swap(version)
 		JdkVersion.JdkFileModTime = nowModTime
@@ -148,7 +150,9 @@ func syncJdkVersion() ([]string, error) {
 
 	version, err := getJdkVersion()
 	if err != nil {
-		return nil, err
+		// 拿取错误时直接下载新的
+		logs.Error("syncJdkVersion getJdkVersion err", err)
+		return nil, nil
 	}
 	JdkVersion.Version.Swap(version)
 	JdkVersion.JdkFileModTime = nowModTime

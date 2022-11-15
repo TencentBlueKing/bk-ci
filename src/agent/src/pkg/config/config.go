@@ -63,6 +63,8 @@ const (
 	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
 	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
+	// 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
+	KeyJdkDirPath = "devops.agent.jdk.dir.path"
 )
 
 // AgentConfig Agent 配置
@@ -82,6 +84,7 @@ type AgentConfig struct {
 	IgnoreLocalIps    string
 	BatchInstallKey   string
 	LogsKeepHours     int
+	JdkDirPath        string
 }
 
 // AgentEnv Agent 环境配置
@@ -279,6 +282,12 @@ func LoadAgentConfig() error {
 		logsKeepHours = 96
 	}
 
+	jdkDirPath := conf.Section("").Key(KeyJdkDirPath).String()
+	// 如果路径为空，是第一次，需要主动去拿一次
+	if jdkDirPath == "" {
+		jdkDirPath = getJavaDir()
+	}
+
 	GAgentConfig.LogsKeepHours = logsKeepHours
 
 	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
@@ -312,6 +321,8 @@ func LoadAgentConfig() error {
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
 	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
 	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)
+	GAgentConfig.JdkDirPath = jdkDirPath
+	logs.Info("jdkDirPath: ", GAgentConfig.JdkDirPath)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -333,6 +344,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyDetectShell + "=" + strconv.FormatBool(GAgentConfig.DetectShell) + "\n")
 	content.WriteString(KeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
 	content.WriteString(KeyLogsKeepHours + "=" + strconv.Itoa(GAgentConfig.LogsKeepHours) + "\n")
+	content.WriteString(KeyJdkDirPath + "=" + GAgentConfig.JdkDirPath + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {
@@ -354,28 +366,23 @@ func (a *AgentConfig) GetAuthHeaderMap() map[string]string {
 
 // GetJava 获取本地java命令路径
 func GetJava() string {
-	workDir := systemutil.GetWorkDir()
 	if systemutil.IsMacos() {
-		if _, err := os.Stat(workDir + "/jdk/Contents/Home/bin/java"); err != nil && !os.IsExist(err) {
-			return workDir + "/jre/Contents/Home/bin/java"
-		}
-		return workDir + "/jdk/Contents/Home/bin/java"
-	} else if systemutil.IsWindows() {
-		// win程序在获取文件状态时需要指定文件扩展名，但是运行时非shell应用不需要
-		if _, err := os.Stat(workDir + "/jdk/bin/java.exe"); err != nil && !os.IsExist(err) {
-			return workDir + "/jre/bin/java"
-		}
-		return workDir + "/jdk/bin/java"
+		return GAgentConfig.JdkDirPath + "/Contents/Home/bin/java"
 	} else {
-		if _, err := os.Stat(workDir + "/jdk/bin/java"); err != nil && !os.IsExist(err) {
-			return workDir + "/jre/bin/java"
-		}
-		return workDir + "/jdk/bin/java"
+		return GAgentConfig.JdkDirPath + "/bin/java"
 	}
 }
 
-// GetJavaDir 获取本地java文件夹
-func GetJavaDir() string {
+func SaveJdkDir(dir string) {
+	if dir == GAgentConfig.JdkDirPath {
+		return
+	}
+	GAgentConfig.JdkDirPath = dir
+	GAgentConfig.SaveConfig()
+}
+
+// getJavaDir 获取本地java文件夹
+func getJavaDir() string {
 	workDir := systemutil.GetWorkDir()
 	if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
 		return workDir + "/jre"
