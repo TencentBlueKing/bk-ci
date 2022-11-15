@@ -27,56 +27,114 @@
 
 package com.tencent.devops.metrics.config
 
-import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.pojo.measure.BuildEndMetricsBroadCastEvent
-import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastEvent
-import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.dispatcher.pipeline.Tools
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.metrics.listener.BuildEndMetricsDataReportListener
 import com.tencent.devops.metrics.listener.LabelChangeMetricsDataSyncListener
-import com.tencent.devops.metrics.service.MetricsDataReportService
-import com.tencent.devops.metrics.service.SyncPipelineRelateLabelDataService
+import org.springframework.amqp.core.Binding
+import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.FanoutExchange
+import org.springframework.amqp.core.Queue
+import org.springframework.amqp.rabbit.connection.ConnectionFactory
+import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.messaging.Message
-import java.util.function.Consumer
 
 @Configuration
 class MetricsListenerConfiguration {
 
+    @Bean
+    fun buildEndMetricsDataReportQueue() = Queue(QUEUE_BUILD_END_METRICS_DATA_REPORT)
+
+    /**
+     * 插件监控数据上报广播交换机
+     */
+    @Bean
+    fun buildEndMetricsDataReportFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun buildEndMetricsDataReportQueueBind(
+        @Autowired buildEndMetricsDataReportQueue: Queue,
+        @Autowired buildEndMetricsDataReportFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(buildEndMetricsDataReportQueue)
+            .to(buildEndMetricsDataReportFanoutExchange)
+    }
+
+    @Bean
+    fun buildEndMetricsDataReportListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired buildEndMetricsDataReportQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired listener: BuildEndMetricsDataReportListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = buildEndMetricsDataReportQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = listener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 1000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 5,
+            maxConcurrency = 50
+        )
+    }
+
+    @Bean
+    fun pipelineLabelChangeMetricsDataSyncQueue() = Queue(QUEUE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC)
+
+    /**
+     * 流水线标签变化数据同步广播交换机
+     */
+    @Bean
+    fun pipelineLabelChangeMetricsDataSyncFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun pipelineLabelChangeMetricsDataSyncQueueBind(
+        @Autowired pipelineLabelChangeMetricsDataSyncQueue: Queue,
+        @Autowired pipelineLabelChangeMetricsDataSyncFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineLabelChangeMetricsDataSyncQueue)
+            .to(pipelineLabelChangeMetricsDataSyncFanoutExchange)
+    }
+
+    @Bean
+    fun pipelineLabelChangeMetricsDataSyncListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pipelineLabelChangeMetricsDataSyncQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired listener: LabelChangeMetricsDataSyncListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = pipelineLabelChangeMetricsDataSyncQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = listener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 1000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 1,
+            maxConcurrency = 10
+        )
+    }
+
     companion object {
-        const val STREAM_CONSUMER_GROUP = "metrics-service"
-    }
-
-    @Bean
-    fun buildEndMetricsDataReportListener(
-        @Autowired metricsDataReportService: MetricsDataReportService
-    ) = BuildEndMetricsDataReportListener(
-        metricsDataReportService = metricsDataReportService
-    )
-
-    @EventConsumer(StreamBinding.EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT, STREAM_CONSUMER_GROUP)
-    fun buildEndDataReportListener(
-        @Autowired listener: BuildEndMetricsDataReportListener
-    ): Consumer<Message<BuildEndMetricsBroadCastEvent>> {
-        return Consumer { event: Message<BuildEndMetricsBroadCastEvent> ->
-            listener.execute(event.payload)
-        }
-    }
-
-    @Bean
-    fun labelChangeMetricsDataSyncListener(
-        @Autowired syncPipelineRelateLabelDataService: SyncPipelineRelateLabelDataService
-    ) = LabelChangeMetricsDataSyncListener(
-        syncPipelineRelateLabelDataService = syncPipelineRelateLabelDataService
-    )
-
-    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT, STREAM_CONSUMER_GROUP)
-    fun labelChangeDataSyncListener(
-        @Autowired listener: LabelChangeMetricsDataSyncListener
-    ): Consumer<Message<LabelChangeMetricsBroadCastEvent>> {
-        return Consumer { event: Message<LabelChangeMetricsBroadCastEvent> ->
-            listener.execute(event.payload)
-        }
+        private const val QUEUE_BUILD_END_METRICS_DATA_REPORT = "q.build.end.metrics.data.report.queue"
+        private const val QUEUE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC =
+            "q.pipeline.label.change.metrics.data.sync.queue"
     }
 }

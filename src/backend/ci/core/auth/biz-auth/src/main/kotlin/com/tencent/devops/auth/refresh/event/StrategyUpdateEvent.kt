@@ -28,7 +28,6 @@
 package com.tencent.devops.auth.refresh.event
 
 import com.tencent.devops.auth.entity.StrategyChangeType
-import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.annotation.RabbitEvent
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
