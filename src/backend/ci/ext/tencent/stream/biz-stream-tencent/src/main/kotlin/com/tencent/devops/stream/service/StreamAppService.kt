@@ -130,7 +130,6 @@ class StreamAppService @Autowired constructor(
                     displayName = it.displayName,
                     enabled = it.enabled,
                     creator = it.creator,
-                    latestBuildInfo = null,
                     latestBuildBranch = null
                 )
             }
@@ -155,7 +154,6 @@ class StreamAppService @Autowired constructor(
                 displayName = displayName,
                 enabled = enabled,
                 creator = creator,
-                latestBuildInfo = null,
                 latestBuildBranch = null
             )
         }

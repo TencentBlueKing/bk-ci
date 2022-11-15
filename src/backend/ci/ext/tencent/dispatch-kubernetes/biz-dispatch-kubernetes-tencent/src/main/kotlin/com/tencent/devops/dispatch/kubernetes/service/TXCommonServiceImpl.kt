@@ -25,20 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.common
+package com.tencent.devops.dispatch.kubernetes.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.TxOpMigrateStoreLogoResource
-import com.tencent.devops.store.service.common.TxOpMigrateStoreLogoService
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
-@RestResource
-class TxOpMigrateStoreLogoResourceImpl @Autowired constructor(
-    private val txOpMigrateStoreLogoService: TxOpMigrateStoreLogoService
-) : TxOpMigrateStoreLogoResource {
-
-    override fun migrateStoreLogo(): Result<Boolean> {
-        return Result(txOpMigrateStoreLogoService.migrateStoreLogo())
+@Service
+class TXCommonServiceImpl @Autowired constructor(
+    private val commonConfig: CommonConfig
+) : CommonService {
+    override fun getProxyUrl(realUrl: String): String {
+        return "${commonConfig.devopsIdcProxyGateway}/proxy-devnet?" +
+            "url=${URLEncoder.encode(realUrl, "UTF-8")}"
     }
 }

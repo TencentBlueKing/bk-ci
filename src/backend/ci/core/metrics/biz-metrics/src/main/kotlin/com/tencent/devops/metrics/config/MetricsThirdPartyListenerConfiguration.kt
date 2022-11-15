@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
 import com.tencent.devops.metrics.listener.CodeCheckDailyMessageListener
@@ -40,13 +41,11 @@ import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.lang.Integer.max
 
 @Configuration
 class MetricsThirdPartyListenerConfiguration {
@@ -81,27 +80,17 @@ class MetricsThirdPartyListenerConfiguration {
         @Autowired listener: CodeCheckDailyMessageListener,
         @Autowired metricsMessageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(metricsMessageConverter)
-        val container = getContainer(connectionFactory, rabbitAdmin, adapter)
-        container.setQueueNames(receiveCodeCheckDailyMessageQueue.name)
-        return container
-    }
-
-    fun getContainer(
-        connectionFactory: ConnectionFactory,
-        rabbitAdmin: RabbitAdmin,
-        adapter: MessageListenerAdapter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(max(10, 1))
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(10)
-        container.setMismatchedQueuesFatal(true)
-        container.setMessageListener(adapter)
-        return container
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = receiveCodeCheckDailyMessageQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = listener,
+            messageConverter = metricsMessageConverter,
+            startConsumerMinInterval = 1000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 5,
+            maxConcurrency = 20
+        )
     }
 
     @Bean
@@ -130,11 +119,17 @@ class MetricsThirdPartyListenerConfiguration {
         @Autowired listener: QualityReportDailyMessageListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        val container = getContainer(connectionFactory, rabbitAdmin, adapter)
-        container.setQueueNames(metricsQualityDailyReportQueue.name)
-        return container
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = metricsQualityDailyReportQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = listener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 1000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 5,
+            maxConcurrency = 20
+        )
     }
 
     @Bean
@@ -163,11 +158,17 @@ class MetricsThirdPartyListenerConfiguration {
         @Autowired listener: TurboDailyReportMessageListener,
         @Autowired metricsMessageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(metricsMessageConverter)
-        val container = getContainer(connectionFactory, rabbitAdmin, adapter)
-        container.setQueueNames(metricsTurboDailyReportQueue.name)
-        return container
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = metricsTurboDailyReportQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = listener,
+            messageConverter = metricsMessageConverter,
+            startConsumerMinInterval = 1000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 5,
+            maxConcurrency = 20
+        )
     }
 
     companion object {

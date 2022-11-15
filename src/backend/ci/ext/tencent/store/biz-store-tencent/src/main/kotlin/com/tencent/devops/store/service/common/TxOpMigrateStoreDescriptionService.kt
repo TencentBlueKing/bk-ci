@@ -25,25 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.common
+package com.tencent.devops.store.service.common
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+interface TxOpMigrateStoreDescriptionService {
 
-@Api(tags = ["OP_STORE_LOGO"], description = "OP-商店-logo")
-@Path("/op/store/logo")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface TxOpMigrateStoreLogoResource {
-
-    @ApiOperation("迁移logo")
-    @PUT
-    @Path("/migrate")
-    fun migrateStoreLogo(): Result<Boolean>
+    /**
+     * 迁移商店组件描述引用文件
+     */
+    fun migrateStoreDescription(): Boolean
 }

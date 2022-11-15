@@ -30,6 +30,7 @@ package com.tencent.devops.stream.resources.user
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamPipelineResource
 import com.tencent.devops.stream.permission.StreamPermissionService
@@ -55,6 +56,11 @@ class UserStreamPipelineResourceImpl @Autowired constructor(
     ): Result<Page<StreamGitProjectPipeline>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(
             pipelineService.getPipelineList(
                 userId = userId,
@@ -74,6 +80,11 @@ class UserStreamPipelineResourceImpl @Autowired constructor(
     ): Result<StreamGitPipelineDir> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(
             pipelineService.getPipelineDirList(
                 userId = userId,
@@ -90,6 +101,11 @@ class UserStreamPipelineResourceImpl @Autowired constructor(
     ): Result<StreamGitProjectPipeline?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         val pipeline = pipelineService.getPipelineById(
             pipelineId = pipelineId
         ) ?: return Result(null)
@@ -107,7 +123,12 @@ class UserStreamPipelineResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(
+            userId = userId,
+            projectId = projectId,
+            gitProjectId = gitProjectId,
+            permission = AuthPermission.EDIT
+        )
         return Result(
             pipelineService.enablePipeline(
                 userId = userId,
@@ -127,6 +148,11 @@ class UserStreamPipelineResourceImpl @Autowired constructor(
     ): Result<List<StreamGitProjectPipeline>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(
             pipelineService.getPipelineListWithoutHistory(
                 userId = userId,

@@ -177,7 +177,8 @@ class ExpressionParserTest {
             "!0 => true",
             "!'0' => false",
             "!null => true",
-            "!'' => true"
+            "!'' => true",
+            "!opTest.strBool => true"
         ]
     )
     fun operatorNotTest(not: String) {

@@ -67,7 +67,7 @@
                         :name="event.name">
                     </bk-option>
                 </bk-select>
-                <bk-select v-model="filterData[filter.id]"
+                <bk-select
                     v-for="filter in filterList"
                     :key="filter.id"
                     :placeholder="filter.placeholder"
