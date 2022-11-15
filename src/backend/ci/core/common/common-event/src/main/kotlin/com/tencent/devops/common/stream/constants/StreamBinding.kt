@@ -169,10 +169,10 @@ object StreamBinding {
     const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "engine.atom.monitor.data.report.fanout"
 
     // 蓝盾构建结束后metrics数据上报事件广播
-    const val EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT = "engine.build.end.metrics.data.report.fanout"
+    const val EXCHANGE_BUILD_END_METRICS_DATA_REPORT_FANOUT = "metrics.engine.build.end.data.report.fanout"
     // 流水线标签变化metrics数据同步广播
     const val EXCHANGE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT =
-        "e.pipeline.label.change.metrics.data.sync.fanout"
+        "metrics.pipeline.label.change.data.sync.fanout"
 
     // webhook锁
     const val QUEUE_GIT_WEBHOOK_UNLOCK_EVENT = "webhook.unlock.event"

@@ -83,7 +83,6 @@ class PulsarInboundChannelAdapter(
                         consumerProperties = extendedConsumerProperties,
                         messageListener = messageListener,
                         pulsarProperties = pulsarProperties,
-                        concurrency = extendedConsumerProperties.concurrency,
                         pulsarClient = client
                     )
                     consumers.add(consumer)
