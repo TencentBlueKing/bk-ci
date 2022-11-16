@@ -570,7 +570,7 @@ interface ServiceBuildResource {
         endBeginTime: String? = null
     ): Result<List<BuildHistory>>
 
-    @ApiOperation("获取流水线构建历史")
+    @ApiOperation("获取流水线构建历史, 返回buildid")
     @GET
     @Path("/{projectId}/batch_builds_no_need_pipelineId")
     fun getBuildsNoNeedPipelineId(
