@@ -39,10 +39,10 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
         get() = true
 
     override val runPlugInAtomCode: String?
-        get() = null
+        get() = "run"
 
     override val runPlugInVersion: String?
-        get() = null
+        get() = "1.*"
 
     override val defaultImage: String
         get() = "http://mirrors.tencent.com/ci/tlinux3_ci:1.5.0"
