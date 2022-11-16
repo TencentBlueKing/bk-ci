@@ -389,7 +389,7 @@ class PipelineViewService @Autowired constructor(
         isCreate: Boolean,
         viewId: Long? = null
     ) {
-        if (pipelineView.name.length > 60) {
+        if (pipelineView.name.length > 16) {
             logger.warn("over pipeline view name , user:$userId , project:$projectId")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_VIEW_OVER_NAME_LENGTH,
