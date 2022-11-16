@@ -147,6 +147,7 @@
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import Logo from '@/components/Logo'
     import { PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+    import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
     import { getCacheViewId } from '@/utils/util'
     import {
         ALL_PIPELINE_VIEW_ID
@@ -273,10 +274,13 @@
 
         mounted () {
             webSocketMessage.installWsMessage(this.$refs.pipelineBox?.updatePipelineStatus)
+            bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
+            bus.$on(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
         },
 
         beforeDestroy () {
             webSocketMessage.unInstallWsMessage()
+            bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
         },
 
         methods: {

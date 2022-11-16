@@ -83,6 +83,7 @@
 
 <style lang="scss">
     .bk-pipeline-list-empty-tips {
+        font-size: 12px;
         .bk-pipeline-list-empty-tips-desc {
             color: #979BA5;
             margin: 8px 0;

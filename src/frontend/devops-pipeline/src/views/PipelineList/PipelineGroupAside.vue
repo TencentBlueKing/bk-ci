@@ -140,7 +140,6 @@
         UNCLASSIFIED_PIPELINE_VIEW_ID
     } from '@/store/constants'
     import { cacheViewId } from '@/utils/util'
-    import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
 
@@ -246,13 +245,6 @@
         created () {
             this.updateGroupPipelineCount(this.$route.params.viewId)
             this.refreshPipelineGroup()
-        },
-        mounted () {
-            bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
-            bus.$on(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
-        },
-        beforeDestroy () {
-            bus.$off(ADD_TO_PIPELINE_GROUP, this.handleAddToGroup)
         },
         methods: {
             ...mapActions('pipelines', [
