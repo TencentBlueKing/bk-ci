@@ -28,13 +28,11 @@
 package com.tencent.devops.store.utils
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreLogoResource

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
