@@ -36,7 +36,7 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
     private val channelCode = ChannelCode.BS
 
     override val marketRunTask: Boolean
-        get() = false
+        get() = true
 
     override val runPlugInAtomCode: String?
         get() = null
