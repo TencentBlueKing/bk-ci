@@ -186,7 +186,7 @@
                     this.isBusy = true
                     const list = this.isRemoveType ? this.pipelineList : this.hasPermissionPipelines
                     if (list.length === 0) {
-                        throw Error('noDeletePipelines')
+                        throw Error(this.$t('noDeletePipelines'))
                     }
                     const params = {
                         projectId: this.$route.params.projectId,
@@ -194,10 +194,13 @@
                     }
 
                     if (this.isRemoveType) {
-                        await this.removePipelineFromGroup({
+                        const { data } = await this.removePipelineFromGroup({
                             ...params,
                             viewId: this.groupId
                         })
+                        if (!data) {
+                            throw Error(this.$t('removedPipelineError'))
+                        }
                         const res = [
                             {
                                 id: UNCLASSIFIED_PIPELINE_VIEW_ID,
@@ -209,7 +212,6 @@
                             }
                         ]
                         res.forEach(item => {
-                            console.log(item)
                             this.$store.commit('pipelines/UPDATE_PIPELINE_GROUP', {
                                 id: item.id,
                                 body: {

@@ -1088,5 +1088,6 @@
   "deleted": "Deleted",
   "addLabel": "新建标签",
   "noLabels": "当前项目暂无标签",
-  "deleteAlready": "Deleted"
+  "deleteAlready": "Deleted",
+  "removedPipelineError": "移除流水线失败"
 }

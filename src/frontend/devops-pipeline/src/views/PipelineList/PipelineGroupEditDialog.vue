@@ -499,7 +499,8 @@
                         .map(pipeline => ({
                             id: pipeline.pipelineId,
                             name: pipeline.pipelineName,
-                            deleted: pipeline.delete
+                            deleted: pipeline.delete,
+                            checkable: true
                         }))
                     return {
                         id: groupItem.viewId,

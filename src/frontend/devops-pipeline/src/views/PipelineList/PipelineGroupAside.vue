@@ -337,7 +337,7 @@
                     this.resetEditing()
                 } catch (error) {
                     message = error.message || error
-                    theme = 'danger'
+                    theme = 'error'
                 } finally {
                     this.renaming = false
                     this.$bkMessage({
@@ -361,7 +361,7 @@
                     this.refreshPipelineGroup()
                 } catch (error) {
                     message = error.message || error
-                    theme = 'danger'
+                    theme = 'error'
                 } finally {
                     this.isSticking = false
                     this.$bkMessage({
@@ -382,7 +382,7 @@
                     })
                 } catch (error) {
                     message = error.message || error
-                    theme = 'danger'
+                    theme = 'error'
                 } finally {
                     this.isDeleting = false
                     this.$bkMessage({

@@ -726,13 +726,14 @@
                 }
             }
             .right-temp-info {
-                background-color: white;
                 flex: 1;
                 border-left: 1px solid $borderWeightColor;
                 padding: 20px 0 20px 20px;
                 display: flex;
                 flex-direction: column;
-                background-color: #fff;
+                background-color: white;
+                overflow: hidden;
+
                 .temp-info-detail {
                     overflow: auto;
                     padding-right: 20px;
