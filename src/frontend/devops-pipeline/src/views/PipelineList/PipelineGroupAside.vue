@@ -119,6 +119,7 @@
             <footer slot="footer">
                 <bk-button
                     theme="primary"
+                    :disabled="!isValidGroupName"
                     @click="submitPipelineAdd"
                 >
                     {{$t('confirm')}}
@@ -171,6 +172,7 @@
                 hasDeleteCount: false,
                 isAdding: false,
                 isAddPipelineGroupDialogShow: false,
+                isValidGroupName: false,
                 newPipelineGroup: {
                     name: '',
                     projected: false
@@ -192,11 +194,16 @@
             groupNameRules () {
                 return [{
                     validator: this.checkGroupNameValid,
-                    message: (val) => this.$t('pipelineGroupRepeatTips', [val]),
-                    trigger: 'blur'
-                }, {
-                    required: true,
-                    message: '',
+                    message: (val) => {
+                        switch (true) {
+                            case val.length === 0:
+                                return this.$t('groupNameNotAllowEmpty')
+                            case val.length > 16:
+                                return this.$t('groupNameTooLong')
+                            default:
+                                return this.$t('pipelineGroupRepeatTips', [val])
+                        }
+                    },
                     trigger: 'blur'
                 }]
             },
@@ -256,7 +263,9 @@
                 'requestGroupPipelineCount'
             ]),
             checkGroupNameValid (name) {
-                return this.newPipelineGroup.projected !== this.groupNamesMap[name]?.projected
+                const valid = this.newPipelineGroup.projected !== this.groupNamesMap[name]?.projected && name.length <= 16 && name.length > 0
+                this.isValidGroupName = valid
+                return valid
             },
             goRecycleBin () {
                 this.switchViewId(DELETED_VIEW_ID)
@@ -437,7 +446,10 @@
             async submitPipelineAdd () {
                 if (this.isAdding) return false
                 const formValid = await this.$refs.newPipelineGroupForm?.validate?.()
-                if (!formValid) return false
+
+                if (!formValid) {
+                    return false
+                }
                 let message = this.$t('addPipelineGroupSuc')
                 let theme = 'success'
                 try {

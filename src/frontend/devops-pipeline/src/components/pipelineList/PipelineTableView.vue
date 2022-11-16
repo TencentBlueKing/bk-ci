@@ -60,16 +60,12 @@
             <bk-table-column width="200" :label="$t('creator')" prop="creator" />
         </template>
         <template v-else-if="isDeleteView">
-            <bk-table-column :label="$t('restore.createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
-            <bk-table-column :label="$t('restore.deleteTime')" sortable="custom" prop="updateTime" :formatter="formatTime" />
-            <bk-table-column :label="$t('restore.deleter')" prop="lastModifyUser" key="lastModifyUser">
-                <span slot-scope="props">
-                    {{ props.row.lastModifyUser }}
-                </span>
-            </bk-table-column>
+            <bk-table-column key="createTime" :label="$t('restore.createTime')" sortable="custom" prop="createTime" sort :formatter="formatTime" />
+            <bk-table-column key="updateTime" :label="$t('restore.deleteTime')" sortable="custom" prop="updateTime" :formatter="formatTime" />
+            <bk-table-column key="lastModifyUser" :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
         </template>
         <template v-else>
-            <bk-table-column :label="$t('latestExec')" key="latestBuildStatus">
+            <bk-table-column :label="$t('latestExec')">
                 <span v-if="props.row.delete" slot-scope="props">
                     {{$t('deleteAlready')}}
                 </span>
@@ -105,7 +101,7 @@
                     </div>
                 </div>
             </bk-table-column>
-            <bk-table-column width="200" :label="$t('lastExecTime')" prop="latestBuildStartDate" key="latestBuildStatus">
+            <bk-table-column width="200" :label="$t('lastExecTime')" prop="latestBuildStartDate">
                 <template v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.latestBuildStartDate }}</p>
                     <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
@@ -171,6 +167,7 @@
     import ExtMenu from '@/components/pipelineList/extMenu'
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import {
+        DELETED_VIEW_ID,
         ALL_PIPELINE_VIEW_ID
     } from '@/store/constants'
     import { convertTime, isShallowEqual } from '@/utils/util'
@@ -221,6 +218,11 @@
             maxheight () {
                 console.log(this.$refs?.pipelineTable?.$el?.parent)
                 return this.$refs?.pipelineTable?.$el?.parent?.clientHeight
+            },
+            isDeleteView () {
+                console.log(this.$route.params, 'this.$route.params', this.$route.params.viewId === DELETED_VIEW_ID)
+
+                return this.$route.params.viewId === DELETED_VIEW_ID
             }
         },
 
@@ -305,7 +307,7 @@
                         ...this.filterParams,
                         ...query
                     })
-
+                    console.log(records, this.isDeleteView)
                     Object.assign(this.pagination, {
                         count,
                         current: page

@@ -1093,5 +1093,7 @@
   "addLabel": "新建标签",
   "noLabels": "当前项目暂无标签",
   "deleteAlready": "流水线已删除",
-  "removedPipelineError": "移除流水线失败"
+  "removedPipelineError": "移除流水线失败",
+  "groupNameTooLong": "流水线组名称长度不能超过16个字符",
+  "groupNameNotAllowEmpty": "流水线组名称不能为空"
 }

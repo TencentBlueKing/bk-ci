@@ -204,7 +204,7 @@
                         const res = [
                             {
                                 id: UNCLASSIFIED_PIPELINE_VIEW_ID,
-                                num: list.filter(pipeline => pipeline.viewNames.length === 1).length
+                                num: list.filter(pipeline => pipeline.viewNames?.length === 1).length
                             },
                             {
                                 id: this.groupId,

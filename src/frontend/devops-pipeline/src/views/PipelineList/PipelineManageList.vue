@@ -150,7 +150,8 @@
     import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
     import { getCacheViewId } from '@/utils/util'
     import {
-        ALL_PIPELINE_VIEW_ID
+        ALL_PIPELINE_VIEW_ID,
+        DELETED_VIEW_ID
     } from '@/store/constants'
 
     const TABLE_LAYOUT = 'table'
@@ -198,6 +199,9 @@
             ]),
             isAllPipelineView () {
                 return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
+            },
+            isDeleteView () {
+                return this.$route.params.viewId === DELETED_VIEW_ID
             },
             isTableLayout () {
                 return this.isDeleteView || this.layout === TABLE_LAYOUT

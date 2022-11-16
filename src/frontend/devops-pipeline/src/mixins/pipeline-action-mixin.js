@@ -41,9 +41,6 @@ export default {
         ...mapGetters('pipelines', [
             'groupMap'
         ]),
-        isDeleteView () {
-            return this.$route.params.viewId === DELETED_VIEW_ID
-        },
         currentGroup () {
             return this.groupMap?.[this.$route.params.viewId]
         }
@@ -80,7 +77,7 @@ export default {
             try {
                 const { viewId, ...restQuery } = query
                 if (viewId === DELETED_VIEW_ID) {
-                    return await this.requestRecyclePipelineList({
+                    return this.requestRecyclePipelineList({
                         projectId: this.$route.params.projectId,
                         ...query
                     })
