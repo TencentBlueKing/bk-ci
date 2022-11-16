@@ -113,6 +113,13 @@ spec:
           - mountPath: /data/workspace/websocket/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
       volumes:
       - hostPath:
           path: /data
