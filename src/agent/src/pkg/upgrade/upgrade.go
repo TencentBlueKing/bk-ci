@@ -124,6 +124,8 @@ func syncJdkVersion() ([]string, error) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			logs.Error("syncJdkVersion no jdk dir find", err)
+			// jdk版本置为空，否则会一直保持有版本的状态
+			JdkVersion.Version.Swap(nil)
 			return nil, nil
 		}
 		return nil, errors.Wrap(err, "agent check jdk dir error")
@@ -152,6 +154,7 @@ func syncJdkVersion() ([]string, error) {
 	if err != nil {
 		// 拿取错误时直接下载新的
 		logs.Error("syncJdkVersion getJdkVersion err", err)
+		JdkVersion.Version.Swap(nil)
 		return nil, nil
 	}
 	JdkVersion.Version.Swap(version)
