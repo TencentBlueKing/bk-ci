@@ -521,6 +521,24 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getBuildsNoNeedPipelineId(
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?,
+        channelCode: ChannelCode
+    ): Result<List<String>> {
+        return Result(
+            pipelineBuildFacadeService.getBuildsNoNeedPipelineId(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildStatus = buildStatus,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
     override fun getPipelineLatestBuildByIds(
         projectId: String,
         pipelineIds: List<String>
