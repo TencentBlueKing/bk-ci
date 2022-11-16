@@ -1,3 +1,4 @@
+const path = require('path')
 
 module.exports = {
   host: process.env.BK_APP_HOST,
@@ -8,4 +9,15 @@ module.exports = {
   open: false,
   replaceStatic: false,
   typescript: true,
+  chainWebpack (config) {
+    config.resolve
+      .modules
+      .clear()
+      .add(path.join(__dirname, 'node_modules'))
+
+    config.resolveLoader
+      .modules
+      .clear()
+      .add(path.join(__dirname, 'node_modules'))
+  }
 };
