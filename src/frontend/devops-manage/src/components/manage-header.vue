@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { AngleRight } from 'bkui-vue/lib/icon';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 defineProps<{
   name: string
@@ -7,28 +9,34 @@ defineProps<{
 </script>
 
 <template>
-  <section class="manage-header">
-    <bk-breadcrumb
-      class="manage-breadcrumb"
-      separator="/"
-    >
-      <bk-breadcrumb-item
-        to="www"
+  <section class="header-wrapper">
+    <div class="manage-header">
+      <bk-breadcrumb
+        class="manage-breadcrumb"
+        separator="/"
       >
-        项目管理
-        <template #separator>
-          <angle-right class="manage-icon" />
-        </template>
-      </bk-breadcrumb-item>
-      <bk-breadcrumb-item>
-        {{ name }}
-      </bk-breadcrumb-item>
-    </bk-breadcrumb>
-    <slot></slot>
+        <bk-breadcrumb-item
+          to="/list"
+        >
+          {{ t('项目管理') }}
+          <template #separator>
+            <angle-right class="manage-icon" />
+          </template>
+        </bk-breadcrumb-item>
+        <bk-breadcrumb-item>
+          {{ name }}
+        </bk-breadcrumb-item>
+      </bk-breadcrumb>
+      <slot></slot>
+    </div>
   </section>
 </template>
 
 <style lang="postcss" scoped>
+.header-wrapper {
+  display: flex;
+  flex-direction: column;
+}
 .manage-header {
   height: 60px;
   background: #FFFFFF;

@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import ManageHeader from '@/components/manage-header.vue';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
-const manageTabs = ref(['项目信息', '用户组']);
-const activeTab = ref('项目信息');
+const manageTabs = ref([t('项目信息'), t('用户组')]);
+const activeTab = ref(t('项目信息'));
 </script>
 
 <template>
   <manage-header
-    name="项目名称"
+    :name="'项目名称'"
   >
     <span class="manage-tabs">
       <span

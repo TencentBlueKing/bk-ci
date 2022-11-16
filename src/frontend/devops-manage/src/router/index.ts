@@ -5,6 +5,7 @@ import {
 
 const HomeEntry = () => import(/* webpackChunkName: "Manage" */ '../app.vue');
 const ApplyProject = () => import(/* webpackChunkName: "Apply" */ '../views/apply-project.vue');
+const ProjectList = () => import(/* webpackChunkName: "Manage" */ '../views/project-list.vue');
 // 项目管理
 const ManageEntry = () => import(/* webpackChunkName: "Manage" */ '../views/manage/manage-entry.vue');
 const EditProject = () => import(/* webpackChunkName: "Manage" */ '../views/manage/project/edit-project.vue');
@@ -22,6 +23,10 @@ export default createRouter({
         {
           path: 'apply',
           component: ApplyProject,
+        },
+        {
+          path: 'list',
+          component: ProjectList,
         },
         {
           path: 'manage',
