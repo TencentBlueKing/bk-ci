@@ -93,7 +93,7 @@ class StreamHistoryService @Autowired constructor(
             pipelineId = search?.pipelineId,
             event = search?.event?.map { it.value }?.toSet(),
             commitMsg = search?.commitMsg,
-            buildStatus = search?.status?.map { it.name }?.toSet(),
+            buildStatus = null,
             pipelineIds = search?.pipelineIds,
             buildIds = buildIds?.toSet()
         )
@@ -115,7 +115,7 @@ class StreamHistoryService @Autowired constructor(
             pipelineId = search?.pipelineId,
             event = search?.event?.map { it.value }?.toSet(),
             commitMsg = search?.commitMsg,
-            buildStatus = search?.status?.map { it.name }?.toSet(),
+            buildStatus = null,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset,
             pipelineIds = search?.pipelineIds,
