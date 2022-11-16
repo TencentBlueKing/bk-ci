@@ -204,4 +204,7 @@
     .mt14 {
         margin-top: 14px !important;
     }
+    .remark-input {
+        height: 300px;
+    }
 </style>
