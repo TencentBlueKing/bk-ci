@@ -27,9 +27,11 @@
 
 package com.tencent.devops.common.pipeline.utils
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -167,5 +169,133 @@ object ModelUtils {
         if (element.canRetry == true) { // 先记录可重试的执行失败插件
             failElements.add(element)
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun generateBuildModelDetail(
+        baseModelMap: MutableMap<String, Any>,
+        modelFieldRecordMap: Map<String, Any>
+    ): Map<String, Any> {
+        // 遍历变量字段map集合
+        modelFieldRecordMap.forEach { (fieldRecordName, fieldRecordValue) ->
+            if (!isCollectionType(fieldRecordValue)) {
+                // 如果字段不是集合类型，则直接替换流水线基础模型同字段的值
+                baseModelMap[fieldRecordName] = fieldRecordValue
+            } else if (baseModelMap[fieldRecordName] == null) {
+                // 如果基础模型字段值为空，则直接拿变量集合中的字段值覆盖
+                baseModelMap[fieldRecordName] = fieldRecordValue
+            } else {
+                if (fieldRecordValue is Map<*, *> && !fieldRecordValue.isNullOrEmpty()) {
+                    val baseDataMap = baseModelMap[fieldRecordName] as MutableMap<String, Any>
+                    val varDataMap = fieldRecordValue as MutableMap<String, Any>
+                    baseModelMap[fieldRecordName] = generateBuildModelDetail(baseDataMap, varDataMap)
+                } else if (fieldRecordValue is List<*> && !fieldRecordValue.isNullOrEmpty()) {
+                    val baseDataList = baseModelMap[fieldRecordName] as MutableList<Any>
+                    val varDataList = fieldRecordValue as MutableList<Any>
+                    handleListField(baseDataList, varDataList)
+                }
+            }
+        }
+        return baseModelMap
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun handleListField(baseDataList: MutableList<Any>, recordDataList: MutableList<Any>) {
+        println("baseDataList-pre:$baseDataList,varDataList-pre:$recordDataList")
+        recordDataList.forEachIndexed { index, listItemObj ->
+            if (!isCollectionType(listItemObj)) {
+                println("index:$index,listItemObj:$listItemObj")
+                if (index > baseDataList.size - 1) {
+                    println("add listItemObj:$listItemObj")
+                    baseDataList.add(listItemObj)
+                } else {
+                    baseDataList[index] = listItemObj
+                }
+            } else {
+                if (listItemObj is Map<*, *> && !listItemObj.isNullOrEmpty()) {
+                    val baseListItemDataMap = baseDataList[index] as MutableMap<String, Any>
+                    val varListItemDataMap = listItemObj as MutableMap<String, Any>
+                    if (index > baseDataList.size - 1) {
+                        baseDataList.add(generateBuildModelDetail(baseListItemDataMap, varListItemDataMap))
+                    } else {
+                        baseDataList[index] = generateBuildModelDetail(baseListItemDataMap, varListItemDataMap)
+                    }
+                } else if (listItemObj is List<*> && !listItemObj.isNullOrEmpty()) {
+                    val baseListItemDataList = if (index > baseDataList.size - 1) {
+                        val emptyList = mutableListOf<Any>()
+                        baseDataList.add(emptyList)
+                        emptyList
+                    } else {
+                        baseDataList[index] as MutableList<Any>
+                    }
+                    val varListItemDataList = listItemObj as MutableList<Any>
+                    handleListField(baseListItemDataList, varListItemDataList)
+                }
+            }
+        }
+        println("baseDataList-after:$baseDataList,varDataList-after:$recordDataList")
+    }
+
+    @JvmStatic
+    fun main(args: Array<String>) {
+        val model = Model(
+            name = "123456",
+            desc = "abcdef",
+            stages = mutableListOf(
+                Stage(
+                    id = "stage1",
+                    name = "stage-name1",
+                    status = "BUILDING"
+                )
+            )
+        )
+        val modelMap = JsonUtil.toMutableMap(model)
+        println(modelMap)
+        val jsonStr = "{\n" +
+            "  \"name\" : \"哈哈\",\n" +
+            "  \"desc\" : \"测试\",\n" +
+            "  \"stages\" : [ {\n" +
+            "    \"id\" : \"stage-11\",\n" +
+            "    \"name\" : \"stage-name-11\",\n" +
+            "    \"status\" : \"BUILDING\",\n" +
+            "    \"dataList\" : [ 1,2,3]\n" +
+            "  } ]\n" +
+            "}"
+        val baseModelMap = mutableMapOf(
+            "name" to "哈哈",
+            "desc" to "测试",
+            "stages" to mutableListOf(
+                mutableMapOf(
+                    "id" to "stage-11",
+                    "name" to "stage-name-11",
+                    "status" to "BUILDING",
+                    "dataList" to mutableListOf(
+                        mutableListOf(1,2),
+                        mutableListOf(4,5,6)
+                    )
+                )
+            )
+        )
+        val pipelineMap = mutableMapOf(
+            "name" to "哈哈",
+            "desc" to "测试",
+            "stages" to listOf(
+                mapOf(
+                    "id" to "stage-111",
+                    "name" to "stage-name-111",
+                    "dataList" to listOf<List<Any>>(
+                        listOf(8,2,5),
+                        listOf(),
+                        listOf(7,8,9)
+                    )
+                )
+            )
+        )
+        println(pipelineMap)
+        println(JsonUtil.toJson(generateBuildModelDetail(baseModelMap, pipelineMap)))
+    }
+
+    fun isCollectionType(obj: Any): Boolean {
+        return obj is Map<*, *> || obj is List<*> || obj is Set<*>
     }
 }
