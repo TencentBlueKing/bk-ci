@@ -157,27 +157,6 @@ object CommonUtils {
         }
     }
 
-    fun serviceUploadFileToPath(
-        userId: String,
-        serviceUrlPrefix: String,
-        file: File,
-        fileType: String,
-        projectId: String,
-        path: String
-    ): Result<String?> {
-        val serviceUrl = "$serviceUrlPrefix/service/artifactories/file/uploadToPath" +
-                "?userId=$userId&projectId=$projectId&path=$path&fileType=$fileType"
-        logger.info("the serviceUrl is:$serviceUrl")
-        OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
-            val responseContent = response.body()!!.string()
-            logger.error("uploadFileToPath responseContent is: $responseContent")
-            if (!response.isSuccessful) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-            }
-            return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
-        }
-    }
-
     /**
      * 获取语言信息
      * @return local语言信息

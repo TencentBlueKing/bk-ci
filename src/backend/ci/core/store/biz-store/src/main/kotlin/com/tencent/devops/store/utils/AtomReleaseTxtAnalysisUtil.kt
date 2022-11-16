@@ -37,6 +37,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.ZipUtil
+import com.tencent.devops.store.api.common.ServiceStoreLogoResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
@@ -60,6 +61,7 @@ object AtomReleaseTxtAnalysisUtil {
     private const val FILE_DEFAULT_SIZE = 1024
 
     fun descriptionAnalysis(
+        userId: String,
         description: String,
         atomPath: String,
         client: Client
@@ -94,6 +96,7 @@ object AtomReleaseTxtAnalysisUtil {
             pathList = pathList
         )
         val uploadFileToPathResult = uploadFileToPath(
+            userId = userId,
             pathList = pathList,
             client = client,
             atomPath = atomPath,
@@ -146,26 +149,27 @@ object AtomReleaseTxtAnalysisUtil {
     }
 
     private fun uploadFileToPath(
+        userId: String,
         pathList: List<String>,
         client: Client,
         atomPath: String,
         result: MutableMap<String, String>
     ): Map<String, String> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class)
+        client.getServiceUrl(ServiceArchiveAtomFileResource::class)
         pathList.forEach {
             val file = File("$atomPath${fileSeparator}file$fileSeparator$it")
             try {
                 if (file.exists()) {
-                    val uploadFileResult = CommonUtils.serviceUploadFileToPath(
-                        userId = BKREPO_DEFAULT_USER,
-                        projectId = BKREPO_STORE_PROJECT_ID,
-                        serviceUrlPrefix = serviceUrlPrefix,
-                        file = file,
-                        fileType = FileTypeEnum.BK_STATIC.name,
-                        path = "${UUIDUtil.generate()}${file.name.substring(file.name.indexOf("."))}"
+                    val uploadFileResult = client.get(ServiceStoreLogoResource::class).uploadStoreLogo(
+                        userId = userId,
+                        contentLength = file.length(),
+                        inputStream = file.inputStream(),
+                        disposition = FormDataContentDisposition(
+                            "form-data; name=\"logo\"; filename=\"${file.name}\""
+                        )
                     )
                     if (uploadFileResult.isOk()) {
-                        result[it] = uploadFileResult.data!!
+                        result[it] = uploadFileResult.data!!.logoUrl!!
                     } else {
                         logger.warn("upload file result is fail, file path:$it")
                     }

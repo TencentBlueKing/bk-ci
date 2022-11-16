@@ -417,7 +417,8 @@ class OpAtomServiceImpl @Autowired constructor(
         releaseInfo.description = AtomReleaseTxtAnalysisUtil.descriptionAnalysis(
             description = releaseInfo.description,
             atomPath = atomPath,
-            client = client
+            client = client,
+            userId = userId
         )
         taskJsonMap["releaseInfo"] = releaseInfo.toJsonString()
         // 将替换好的文本写入task.json文件
