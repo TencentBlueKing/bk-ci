@@ -42,7 +42,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.api.common.OpStoreLogoResource
+import com.tencent.devops.store.api.common.ServiceStoreLogoResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
@@ -391,7 +391,7 @@ class OpAtomServiceImpl @Autowired constructor(
         logger.info("uploadStoreLogo logoFilePath:${logoFile.path}")
         var uploadStoreLogoResult = Result(data = true, status = 0)
         if (logoFile.exists()) {
-            val result = client.get(OpStoreLogoResource::class).uploadStoreLogo(
+            val result = client.get(ServiceStoreLogoResource::class).uploadStoreLogo(
                 userId = userId,
                 contentLength = logoFile.length(),
                 inputStream = logoFile.inputStream(),
@@ -475,7 +475,7 @@ class OpAtomServiceImpl @Autowired constructor(
                 releaseType = releaseInfo.versionInfo.releaseType,
                 versionContent = releaseInfo.versionInfo.versionContent,
                 publisher = releaseInfo.versionInfo.publisher,
-                labelIdList = releaseInfo.labelIdList,
+                labelIdList = releaseInfo.labelCodes,
                 frontendType = releaseInfo.configInfo.frontendType,
                 logoUrl = releaseInfo.logoUrl,
                 classifyCode = releaseInfo.classifyCode

@@ -25,21 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.ServiceStoreLogoResource
+import com.tencent.devops.store.pojo.common.Logo
+import com.tencent.devops.store.pojo.common.StoreLogoInfo
+import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
+import com.tencent.devops.store.service.common.StoreLogoService
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 
-@ApiModel("版本信息")
-data class VersionInfo(
-    @ApiModelProperty("发布者", required = true)
-    val publisher: String,
-    @ApiModelProperty("发布类型", required = true)
-    val releaseType: ReleaseTypeEnum,
-    @ApiModelProperty("插件版本", required = true)
-    val version: String,
-    @ApiModelProperty("版本日志内容", required = true)
-    val versionContent: String
-)
+@RestResource
+class ServiceStoreLogoResourceImpl @Autowired constructor(
+    private val storeLogoService: StoreLogoService
+) : ServiceStoreLogoResource {
+
+    override fun uploadStoreLogo(
+        userId: String,
+        contentLength: Long,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<StoreLogoInfo?> {
+        return storeLogoService.uploadStoreLogo(
+            userId = userId,
+            contentLength = contentLength,
+            inputStream = inputStream,
+            disposition = disposition
+        )
+    }
+}

@@ -820,7 +820,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             logger.error("BKSystemErrorMonitor|getTaskJsonContent|$atomCode|error=${ignored.message}", ignored)
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
-                params = arrayOf("$TASK_JSON_NAME")
+                params = arrayOf(TASK_JSON_NAME)
             )
         }
         if (null == taskJsonStr || !JsonSchemaUtil.validateJson(taskJsonStr)) {

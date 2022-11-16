@@ -62,14 +62,13 @@ data class ReleaseInfo(
     @ApiModelProperty("适用Job类型", required = true)
     val jobType: JobTypeEnum,
     @JsonProperty(value = "labelIdList", required = false)
-    @ApiModelProperty("标签id集合", name = "labelIdList")
-    val labelIdList: ArrayList<String>? = null,
+    @ApiModelProperty("标签id集合", name = "labelCodes")
+    val labelCodes: ArrayList<String>? = null,
     @ApiModelProperty("版本信息", required = true)
     val versionInfo: VersionInfo,
     @ApiModelProperty("插件简介", required = true)
-    @field:BkField(maxLength = 1024)
+    @field:BkField(maxLength = 256)
     val summary: String,
     @ApiModelProperty("插件描述", required = true)
-    @field:BkField(maxLength = 1024)
     var description: String
 )
