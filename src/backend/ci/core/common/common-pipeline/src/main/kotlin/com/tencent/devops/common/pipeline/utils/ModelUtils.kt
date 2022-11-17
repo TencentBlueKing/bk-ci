@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -171,6 +172,12 @@ object ModelUtils {
         }
     }
 
+    /**
+     * 根据流水线基础模型map集合和构建变量模型map集合生成完整的构建模型map集合
+     * @param baseModelMap 流水线基础模型map集合
+     * @param modelFieldRecordMap 构建变量模型map集合
+     * @return 完整的构建模型map集合
+     */
     @Suppress("UNCHECKED_CAST")
     fun generateBuildModelDetail(
         baseModelMap: MutableMap<String, Any>,
@@ -178,7 +185,7 @@ object ModelUtils {
     ): Map<String, Any> {
         // 遍历变量字段map集合
         modelFieldRecordMap.forEach { (fieldRecordName, fieldRecordValue) ->
-            if (!isCollectionType(fieldRecordValue)) {
+            if (!ReflectUtil.isCollectionType(fieldRecordValue)) {
                 // 如果字段不是集合类型，则直接替换流水线基础模型同字段的值
                 baseModelMap[fieldRecordName] = fieldRecordValue
             } else if (baseModelMap[fieldRecordName] == null) {
@@ -186,42 +193,54 @@ object ModelUtils {
                 baseModelMap[fieldRecordName] = fieldRecordValue
             } else {
                 if (fieldRecordValue is Map<*, *> && !fieldRecordValue.isNullOrEmpty()) {
+                    // 如果变量字段类型为map，则进行递归合并
                     val baseDataMap = baseModelMap[fieldRecordName] as MutableMap<String, Any>
                     val varDataMap = fieldRecordValue as MutableMap<String, Any>
                     baseModelMap[fieldRecordName] = generateBuildModelDetail(baseDataMap, varDataMap)
                 } else if (fieldRecordValue is List<*> && !fieldRecordValue.isNullOrEmpty()) {
+                    // 如果变量字段类型为list，则遍历list进行递归合并
                     val baseDataList = baseModelMap[fieldRecordName] as MutableList<Any>
                     val varDataList = fieldRecordValue as MutableList<Any>
-                    handleListField(baseDataList, varDataList)
+                    handleListFieldMergeBus(baseDataList, varDataList)
                 }
             }
         }
         return baseModelMap
     }
 
+    /**
+     * 处理list变量合并逻辑
+     * @param baseDataList 流水线基础模型list集合
+     * @param recordDataList 构建变量模型list集合
+     */
     @Suppress("UNCHECKED_CAST")
-    private fun handleListField(baseDataList: MutableList<Any>, recordDataList: MutableList<Any>) {
-        println("baseDataList-pre:$baseDataList,varDataList-pre:$recordDataList")
+    private fun handleListFieldMergeBus(baseDataList: MutableList<Any>, recordDataList: MutableList<Any>) {
         recordDataList.forEachIndexed { index, listItemObj ->
-            if (!isCollectionType(listItemObj)) {
-                println("index:$index,listItemObj:$listItemObj")
+            // 判断构建变量模型list集合中的对象是否是集合类型
+            if (!ReflectUtil.isCollectionType(listItemObj)) {
                 if (index > baseDataList.size - 1) {
-                    println("add listItemObj:$listItemObj")
+                    // 如果基础模型list集合中没有该对象则直接添加
                     baseDataList.add(listItemObj)
                 } else {
+                    // 如果基础模型list集合中有该对象则直接覆盖
                     baseDataList[index] = listItemObj
                 }
             } else {
                 if (listItemObj is Map<*, *> && !listItemObj.isNullOrEmpty()) {
-                    val baseListItemDataMap = baseDataList[index] as MutableMap<String, Any>
-                    val varListItemDataMap = listItemObj as MutableMap<String, Any>
-                    if (index > baseDataList.size - 1) {
-                        baseDataList.add(generateBuildModelDetail(baseListItemDataMap, varListItemDataMap))
+                    val baseListItemDataMap = if (index > baseDataList.size - 1) {
+                        // 如果基础模型list集合中没有该对象则在添加一个空map集合用于合并
+                        val emptyMap = mutableMapOf<String, Any>()
+                        baseDataList.add(emptyMap)
+                        emptyMap
                     } else {
-                        baseDataList[index] = generateBuildModelDetail(baseListItemDataMap, varListItemDataMap)
+                        baseDataList[index] as MutableMap<String, Any>
                     }
+                    val varListItemDataMap = listItemObj as MutableMap<String, Any>
+                    // 对map类型对象进行递归合并
+                    baseDataList[index] = generateBuildModelDetail(baseListItemDataMap, varListItemDataMap)
                 } else if (listItemObj is List<*> && !listItemObj.isNullOrEmpty()) {
                     val baseListItemDataList = if (index > baseDataList.size - 1) {
+                        // 如果基础模型list集合中没有该对象则在添加一个空list集合用于合并
                         val emptyList = mutableListOf<Any>()
                         baseDataList.add(emptyList)
                         emptyList
@@ -229,73 +248,10 @@ object ModelUtils {
                         baseDataList[index] as MutableList<Any>
                     }
                     val varListItemDataList = listItemObj as MutableList<Any>
-                    handleListField(baseListItemDataList, varListItemDataList)
+                    // 对list类型对象进行递归合并
+                    handleListFieldMergeBus(baseListItemDataList, varListItemDataList)
                 }
             }
         }
-        println("baseDataList-after:$baseDataList,varDataList-after:$recordDataList")
-    }
-
-    @JvmStatic
-    fun main(args: Array<String>) {
-        val model = Model(
-            name = "123456",
-            desc = "abcdef",
-            stages = mutableListOf(
-                Stage(
-                    id = "stage1",
-                    name = "stage-name1",
-                    status = "BUILDING"
-                )
-            )
-        )
-        val modelMap = JsonUtil.toMutableMap(model)
-        println(modelMap)
-        val jsonStr = "{\n" +
-            "  \"name\" : \"哈哈\",\n" +
-            "  \"desc\" : \"测试\",\n" +
-            "  \"stages\" : [ {\n" +
-            "    \"id\" : \"stage-11\",\n" +
-            "    \"name\" : \"stage-name-11\",\n" +
-            "    \"status\" : \"BUILDING\",\n" +
-            "    \"dataList\" : [ 1,2,3]\n" +
-            "  } ]\n" +
-            "}"
-        val baseModelMap = mutableMapOf(
-            "name" to "哈哈",
-            "desc" to "测试",
-            "stages" to mutableListOf(
-                mutableMapOf(
-                    "id" to "stage-11",
-                    "name" to "stage-name-11",
-                    "status" to "BUILDING",
-                    "dataList" to mutableListOf(
-                        mutableListOf(1,2),
-                        mutableListOf(4,5,6)
-                    )
-                )
-            )
-        )
-        val pipelineMap = mutableMapOf(
-            "name" to "哈哈",
-            "desc" to "测试",
-            "stages" to listOf(
-                mapOf(
-                    "id" to "stage-111",
-                    "name" to "stage-name-111",
-                    "dataList" to listOf<List<Any>>(
-                        listOf(8,2,5),
-                        listOf(),
-                        listOf(7,8,9)
-                    )
-                )
-            )
-        )
-        println(pipelineMap)
-        println(JsonUtil.toJson(generateBuildModelDetail(baseModelMap, pipelineMap)))
-    }
-
-    fun isCollectionType(obj: Any): Boolean {
-        return obj is Map<*, *> || obj is List<*> || obj is Set<*>
     }
 }
