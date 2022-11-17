@@ -99,7 +99,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         fileChannelType: FileChannelTypeEnum,
         logo: Boolean?
     ): String {
-        val path = file.path
+        val path = file.name
         val destPath = filePath ?: DefaultPathUtils.randomFileName(path.substring(path.indexOf(".") + 1))
         val metadata = mutableMapOf<String, String>()
         metadata["shaContent"] = file.inputStream().use { ShaUtils.sha1InputStream(it) }
