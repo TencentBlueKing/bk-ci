@@ -19,5 +19,7 @@ module.exports = {
       .modules
       .clear()
       .add(path.join(__dirname, 'node_modules'))
+
+    return config
   }
 };
