@@ -88,6 +88,7 @@ class StreamUserMessageService @Autowired constructor(
         userId: String,
         messageType: UserMessageType?,
         haveRead: Boolean?,
+        messageId: String?,
         page: Int,
         pageSize: Int
     ): Page<UserMessageRecord> {
@@ -105,6 +106,7 @@ class StreamUserMessageService @Autowired constructor(
                 projectId = projectId,
                 userId = null,
                 messageType = messageType,
+                messageId = messageId,
                 haveRead = haveRead
             )
         } else {
@@ -113,6 +115,7 @@ class StreamUserMessageService @Autowired constructor(
                 projectId = "",
                 userId = userId,
                 messageType = messageType,
+                messageId = messageId,
                 haveRead = haveRead
             )
         }
@@ -133,6 +136,7 @@ class StreamUserMessageService @Autowired constructor(
                 userId = null,
                 messageType = messageType,
                 haveRead = haveRead,
+                messageId = messageId,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset
             )!!
@@ -143,6 +147,7 @@ class StreamUserMessageService @Autowired constructor(
                 userId = userId,
                 messageType = messageType,
                 haveRead = haveRead,
+                messageId = messageId,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset
             )!!
