@@ -65,6 +65,7 @@
     "cross-env": "^7.0.3",
     "eslint-plugin-vue": "6.2.2",
     "glob-parent": "5.1.2",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "vue-eslint-parser": "^9.0.2"
   }
 }

@@ -58,7 +58,7 @@
                                 :disabled="renaming"
                                 @blur="submitRename(item)"
                                 @enter="submitRename(item)"
-                                v-model="newViewName"
+                                v-model.trim="newViewName"
                             />
                             <span v-else class="pipeline-group-item-name">
                                 {{item.name}}
@@ -101,7 +101,7 @@
         >
             <bk-form ref="newPipelineGroupForm" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
                 <bk-form-item property="name" :rules="groupNameRules" :label="$t('pipelineGroupName')">
-                    <bk-input v-model="newPipelineGroup.name" />
+                    <bk-input v-model.trim="newPipelineGroup.name" />
                 </bk-form-item>
                 <bk-form-item required property="projected" :label="$t('visibleRange')">
                     <bk-radio-group class="pipeline-group-visible-range-group" v-model="newPipelineGroup.projected">
@@ -209,7 +209,7 @@
             },
             pipelineGroupTree () {
                 return [{
-                    title: `${this.$t('personalViewList')}(${this.pipelineGroupDict.personalViewList.length})`,
+                    title: `${this.$t('personalViewList')}(${this.pipelineGroupDict.personalViewList.length - 2})`,
                     id: 'personalViewList',
                     show: this.showClassify.personalViewList,
                     tooltips: {
@@ -223,7 +223,7 @@
                         actions: this.pipelineGroupActions(view)
                     }))
                 }, {
-                    title: `${this.$t('projectViewList')}(${this.pipelineGroupDict.projectViewList.length})`,
+                    title: `${this.$t('projectViewList')}(${this.pipelineGroupDict.projectViewList.length - 1})`,
                     id: 'projectViewList',
                     show: this.showClassify.projectViewList,
                     projected: true,
@@ -278,15 +278,20 @@
             },
             pipelineGroupActions (group) {
                 if (this.fixedGroupIdSet.has(group.id)) return []
+                const hasPermission = !group.projected || this.hasManagePermission
                 return [
-                    {
-                        text: this.$t('rename'),
-                        disabled: this.renaming,
-                        handler: (group) => {
-                            this.editingGroupId = group.id
-                            this.newViewName = group.name
-                        }
-                    },
+                    ...(hasPermission
+                        ? [
+                            {
+                                text: this.$t('rename'),
+                                disabled: this.renaming,
+                                handler: (group) => {
+                                    this.editingGroupId = group.id
+                                    this.newViewName = group.name
+                                }
+                            }
+                        ]
+                        : []),
                     // {
                     //     text: this.$t('pipelineGroupAuth'),
                     //     handler: () => {
@@ -303,21 +308,25 @@
                         disabled: this.isSticking,
                         handler: () => this.stickTop(group)
                     },
-                    {
-                        text: this.$t('delete'),
-                        disabled: this.isDeleting,
-                        handler: () => {
-                            this.$bkInfo({
-                                type: 'warning',
-                                title: this.$t('deleteGroupTitle', [group.name]),
-                                subTitle: this.$t('deleteGroupTips'),
-                                cancelText: this.$t('close'),
-                                confirmFn: () => {
-                                    this.deleteGroup(group)
+                    ...(hasPermission
+                        ? [
+                            {
+                                text: this.$t('delete'),
+                                disabled: this.isDeleting,
+                                handler: () => {
+                                    this.$bkInfo({
+                                        type: 'warning',
+                                        title: this.$t('deleteGroupTitle', [group.name]),
+                                        subTitle: this.$t('deleteGroupTips'),
+                                        cancelText: this.$t('close'),
+                                        confirmFn: () => {
+                                            this.deleteGroup(group)
+                                        }
+                                    })
                                 }
-                            })
-                        }
-                    }
+                            }
+                        ]
+                        : [])
                 ]
             },
             toggle (id) {
@@ -336,6 +345,9 @@
                     return
                 }
                 try {
+                    if (!this.newViewName) {
+                        throw new Error(this.$t('groupNameNotAllowEmpty'))
+                    }
                     this.renaming = true
                     await this.updatePipelineGroup({
                         projectId: this.$route.params.projectId,
@@ -346,6 +358,7 @@
                     this.resetEditing()
                 } catch (error) {
                     message = error.message || error
+                    console.log(message)
                     theme = 'error'
                 } finally {
                     this.renaming = false
