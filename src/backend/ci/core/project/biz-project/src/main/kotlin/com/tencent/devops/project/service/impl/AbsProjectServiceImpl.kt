@@ -70,6 +70,7 @@ import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.SubjectScope
+import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
@@ -841,6 +842,47 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return updateCount > 0
     }
 
+    override fun cancelCreateProject(userId: String, projectId: String): Boolean {
+        var success = false
+        val projectInfo = projectDao.get(dslContext, projectId) ?: throw InvalidParamException("项目不存在")
+        val status = projectInfo.approvalStatus
+        if (status != ApproveStatus.CREATE_PENDING.status
+            || status != ApproveStatus.CREATE_REJECT.status) {
+            logger.warn(
+                "The project can't be cancel！ : ${projectInfo.englishName}"
+            )
+            throw OperationException(
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                    defaultMessage = "The project can be canceled only it under approval or " +
+                        "rejected during creation！| EnglishName=${projectInfo.englishName}"
+                )
+            )
+        }
+        try {
+            val isIamCancelSuccess = cancelCreateAuthProject(
+                status = projectInfo.approvalStatus,
+                projectCode = projectInfo.englishName
+            )
+            if (isIamCancelSuccess) {
+                projectDao.delete(
+                    dslContext = dslContext,
+                    projectId = projectId
+                )
+            }
+            success = true
+        } catch (e: Exception) {
+            logger.warn("The project cancel creation failed ： ${projectInfo.englishName}", e)
+            throw OperationException(
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                    defaultMessage = "The project cancel creation failed ： ${projectInfo.englishName}"
+                )
+            )
+        }
+        return success
+    }
+
     override fun getProjectByName(projectName: String): ProjectVO? {
         return projectDao.getProjectByName(dslContext, projectName)
     }
@@ -883,6 +925,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     )
+
+    abstract fun cancelCreateAuthProject(
+        status: Int,
+        projectCode: String
+    ): Boolean
 
     private fun getIamSubjectScopes(subjectScopes: List<SubjectScope>?): List<ManagerScopes> {
         val iamSubjectScopes: ArrayList<ManagerScopes> = ArrayList()

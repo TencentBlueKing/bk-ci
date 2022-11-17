@@ -99,4 +99,8 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
             projectCode = projectCode
         ).data ?: false
     }
+
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return true
+    }
 }
