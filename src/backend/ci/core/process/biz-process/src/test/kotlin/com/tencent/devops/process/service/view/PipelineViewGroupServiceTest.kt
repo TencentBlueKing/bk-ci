@@ -792,8 +792,14 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             pvCopy.isProject = false
             pvCopy.createUser = "other"
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
-            self.bulkRemove("true", "test", br).let {
-                Assertions.assertEquals(it, false)
+            try {
+                self.bulkRemove("true", "test", br)
+            } catch (e: Exception) {
+                Assertions.assertThrows(ErrorCodeException::class.java) { throw e }
+                Assertions.assertEquals(
+                    (e as ErrorCodeException).errorCode,
+                    ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION
+                )
             }
         }
 
@@ -805,8 +811,14 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             pvCopy.isProject = true
             pvCopy.createUser = "other"
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
-            self.bulkRemove("false", "test", br).let {
-                Assertions.assertEquals(it, false)
+            try {
+                self.bulkRemove("false", "test", br)
+            } catch (e: Exception) {
+                Assertions.assertThrows(ErrorCodeException::class.java) { throw e }
+                Assertions.assertEquals(
+                    (e as ErrorCodeException).errorCode,
+                    ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION
+                )
             }
         }
 
