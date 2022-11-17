@@ -7,6 +7,7 @@
     "build": "bk-cli-service-webpack build",
     "server": "node ./paas-server/index.js",
     "lint:style": "stylelint **/*.{html,vue,css,sass,scss,less} --fix",
+    "public": "bk-cli-service-webpack build",
     "public:dev": "bk-cli-service-webpack build",
     "public:test": "bk-cli-service-webpack build",
     "public:master": "bk-cli-service-webpack build",
@@ -21,7 +22,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bkui-vue": "0.0.1-beta.213",
+    "bkui-vue": "0.0.1-beta.217",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.23",
     "vue": "^3.2.41",
