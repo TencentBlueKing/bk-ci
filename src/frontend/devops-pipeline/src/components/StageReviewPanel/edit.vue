@@ -24,6 +24,7 @@
                     name="reviewDesc"
                     :editable="!disabled"
                     :value="reviewDesc"
+                    :subfield="false"
                     :toolbars="toolbars"
                     :external-link="false"
                     :box-shadow="false"
