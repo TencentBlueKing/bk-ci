@@ -9,6 +9,7 @@
             :toolbars="toolbars"
             :external-link="false"
             :box-shadow="false"
+            :subfield="false"
             preview-background="#fff"
             @change="(val, render) => handleChange(name, val)"
         />
@@ -35,8 +36,11 @@
         overflow: hidden;
         white-space: pre-wrap;
         height: 300px;
-        &.show-more {
-            display: block;
-        }
+    }
+    .remark-input {
+        width: 100% !important;
+    }
+    ::v-deep .v-note-show {
+        overflow-y: visible !important;
     }
 </style>
