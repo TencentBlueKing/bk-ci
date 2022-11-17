@@ -36,8 +36,10 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -433,31 +435,79 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 获取所有项目信息
      */
-    override fun list(userId: String, accessToken: String?, enabled: Boolean?): List<ProjectVO> {
+    override fun list(
+        userId: String,
+        accessToken: String?,
+        enabled: Boolean?,
+        approved: Boolean?
+    ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-
+            //todo 修改拉取策略，只拉取拥有查看权限的项目
             val projects = getProjectFromAuth(userId, accessToken)
-            if (projects.isEmpty()) {
+            if (projects.isEmpty() && approved!!) {
                 return emptyList()
             }
             val list = ArrayList<ProjectVO>()
-            projectDao.listByEnglishName(
-                dslContext = dslContext,
-                englishNameList = projects,
-                offset = null,
-                limit = null,
-                searchName = null,
-                enabled = enabled
-            ).map {
-                list.add(ProjectUtils.packagingBean(it))
+            if (projects.isNotEmpty()) {
+                projectDao.listByEnglishName(
+                    dslContext = dslContext,
+                    englishNameList = projects,
+                    offset = null,
+                    limit = null,
+                    searchName = null,
+                    enabled = enabled
+                ).map {
+                    list.add(ProjectUtils.packagingBean(it))
+                }
+            }
+            // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
+            if (!approved!!) {
+                projectDao.listUnapprovedByUserId(
+                    dslContext = dslContext,
+                    userId = userId
+                )?.map { list.add(ProjectUtils.packagingBean(it)) }
             }
             success = true
             return list
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
+    override fun listProjectsWithoutPermissions(
+        userId: String,
+        accessToken: String?,
+        englishName: String?,
+        page: Int,
+        pageSize: Int
+    ): Pagination<String> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val iamProjects = getProjectFromAuth(userId, accessToken)
+            val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+            val list = ArrayList<String>()
+            projectDao.listProjectsWithoutPermissions(
+                dslContext = dslContext,
+                englishName = englishName,
+                projects = iamProjects,
+                offset = sqlLimit.offset,
+                limit = sqlLimit.limit
+            )?.map { list.add(it.value1()) } ?: emptyList()
+            if (list.isEmpty()) {
+                return Pagination(false, emptyList())
+            }
+            success = true
+            return Pagination(
+                hasNext = list.size == pageSize,
+                records = list
+            )
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects without permissions")
         }
     }
 

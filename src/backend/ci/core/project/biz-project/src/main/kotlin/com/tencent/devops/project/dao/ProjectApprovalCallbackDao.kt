@@ -2,6 +2,7 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TProjectApprovalCallback
 import com.tencent.devops.model.project.tables.records.TProjectApprovalCallbackRecord
+import com.tencent.devops.project.pojo.enums.ApproveType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -32,7 +33,7 @@ class ProjectApprovalCallbackDao {
                 callbackId,
                 sn,
                 subjectScopes,
-                approveType ?: 0
+                approveType ?: ApproveType.CREATE_APPROVE.type
             ).execute()
         }
     }

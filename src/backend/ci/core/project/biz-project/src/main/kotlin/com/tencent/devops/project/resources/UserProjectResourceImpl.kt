@@ -28,6 +28,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectResource
@@ -49,8 +50,31 @@ class UserProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService
 ) : UserProjectResource {
 
-    override fun list(userId: String, accessToken: String?, enabled: Boolean?): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId, accessToken, enabled))
+    override fun list(
+        userId: String,
+        accessToken: String?,
+        enabled: Boolean?,
+        approved: Boolean?
+    ): Result<List<ProjectVO>> {
+        return Result(projectService.list(userId, accessToken, enabled, approved))
+    }
+
+    override fun listProjectsWithoutPermissions(
+        userId: String,
+        accessToken: String?,
+        englishName: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Pagination<String>> {
+        return Result(
+            projectService.listProjectsWithoutPermissions(
+                userId = userId,
+                accessToken = accessToken,
+                englishName = englishName,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {

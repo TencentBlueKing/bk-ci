@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
@@ -73,8 +74,32 @@ interface UserProjectResource {
         accessToken: String?,
         @ApiParam("是否启用", required = false)
         @QueryParam("enabled")
-        enabled: Boolean?
+        enabled: Boolean?,
+        @ApiParam("是否拉取审批通过的项目", required = false)
+        @QueryParam("approved")
+        approved: Boolean? = true
     ): Result<List<ProjectVO>>
+
+    @GET
+    @Path("/listProjectsWithoutPermissions/{english_name}")
+    @ApiOperation("查询无权限的项目")
+    fun listProjectsWithoutPermissions(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?,
+        @ApiParam("项目英文名", required = false)
+        @QueryParam("english_name")
+        englishName: String? = null,
+        @ApiParam("页目", required = false)
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("每页数目", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Pagination<String>>
 
     @GET
     @Path("/{english_name}")

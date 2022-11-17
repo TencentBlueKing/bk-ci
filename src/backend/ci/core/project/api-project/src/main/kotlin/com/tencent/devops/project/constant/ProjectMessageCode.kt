@@ -78,6 +78,8 @@ object ProjectMessageCode {
     const val USER_NOT_PROJECT_USER = "2119032" // 目标用户非该项目成员
     const val USER_NOT_CREATE_PERM = "2119033" // 无创建项目权限，请申请权限
     const val PROJECT_ASSIGN_DATASOURCE_FAIL = "2119034" // 无法为项目分配可用的数据源
-    const val PEM_UPDATE_FAIL = "2119035" // 权限中心修改项目失败3
-    const val PROJECT_UPDATE_FAIL = "2119036" // 修改项目错误
+    const val QUERY_PROJECT_CALLBACK_APPLICATION_FAIL = "2119035" // 查询不到有效的项目审批回调单
+    const val PEM_UPDATE_FAIL = "2119036" // 权限中心修改项目失败
+    const val PROJECT_UPDATE_FAIL = "2119037" // 修改项目错误
+    const val VERIFY_ITSM_TOKEN_FAIL = "2119038" // 检验ITSM的token失败
 }

@@ -497,6 +497,50 @@ class ProjectDao {
         }
     }
 
+    // 拉取用户未审核通过的项目，即未在iam注册的项目
+    fun listUnapprovedByUserId(
+        dslContext: DSLContext,
+        userId: String
+    ): Result<TProjectRecord>? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(
+                    APPROVAL_STATUS.`in`(
+                        listOf(
+                            ApproveStatus.CREATE_REJECT.status,
+                            ApproveStatus.CREATE_PENDING.status
+                        )
+                    )
+                ).and(CREATOR.eq(userId))
+                .fetch()
+        }
+    }
+
+    fun listProjectsWithoutPermissions(
+        dslContext: DSLContext,
+        englishName: String?,
+        projects: List<String>?,
+        offset: Int,
+        limit: Int
+    ): Result<Record1<String>>? {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(ENGLISH_NAME).from(this)
+                .where(
+                    APPROVAL_STATUS.notIn(
+                        listOf(
+                            ApproveStatus.CREATE_REJECT.status,
+                            ApproveStatus.CREATE_PENDING.status
+                        )
+                    )
+                )
+                .let { if (projects.isNullOrEmpty()) it else it.and(ENGLISH_NAME.notIn(projects)) }
+                .let { if (englishName == null) it else it.and(ENGLISH_NAME.like("%$englishName%")) }
+                .limit(limit)
+                .offset(offset)
+                .fetch()
+        }
+    }
+
     fun updateProjectFromOp(dslContext: DSLContext, projectInfoRequest: OpProjectUpdateInfoRequest) {
         with(TProject.T_PROJECT) {
             val step = dslContext.update(this)
