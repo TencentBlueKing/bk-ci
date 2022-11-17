@@ -101,14 +101,15 @@ abstract class AbsPermissionProjectService @Autowired constructor(
 
     override fun getUserProjects(userId: String): List<String> {
         val viewAction = PROJECT_VIEW
-        val managerAction = ALL_ACTION
+        // todo ALL_ACTION要去除，权限数据需要迁移，只展示有查看权限的项目
+        // val managerAction = ALL_ACTION
         val actionDTOs = mutableListOf<ActionDTO>()
         val viewActionDto = ActionDTO()
         viewActionDto.id = viewAction
-        val managerActionDto = ActionDTO()
-        managerActionDto.id = managerAction
+        // val managerActionDto = ActionDTO()
+        // managerActionDto.id = managerAction
         actionDTOs.add(viewActionDto)
-        actionDTOs.add(managerActionDto)
+        // actionDTOs.add(managerActionDto)
         val actionPolicyDTOs = policyService.batchGetPolicyByActionList(userId, actionDTOs, null) ?: return emptyList()
         logger.info("[IAM] getUserProjects: actionPolicyDTOs = $actionPolicyDTOs")
         val projectCodes = mutableSetOf<String>()
