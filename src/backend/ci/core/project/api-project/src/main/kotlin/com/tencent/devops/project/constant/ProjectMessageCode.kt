@@ -81,4 +81,5 @@ object ProjectMessageCode {
     const val QUERY_PROJECT_CALLBACK_APPLICATION_FAIL = "2119035" // 查询不到有效的项目审批回调单
     const val PEM_UPDATE_FAIL = "2119036" // 权限中心修改项目失败
     const val PROJECT_UPDATE_FAIL = "2119037" // 修改项目错误
+    const val VERIFY_ITSM_TOKEN_FAIL = "2119038" // 检验ITSM的token失败
 }

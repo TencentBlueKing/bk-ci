@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -114,7 +115,20 @@ interface ProjectService {
     /**
      * 获取所有项目信息
      */
-    fun list(userId: String, accessToken: String?, enabled: Boolean? = null): List<ProjectVO>
+    fun list(
+        userId: String,
+        accessToken: String?,
+        enabled: Boolean? = null,
+        approved: Boolean?
+    ): List<ProjectVO>
+
+    fun listProjectsWithoutPermissions(
+        userId: String,
+        accessToken: String?,
+        englishName: String?,
+        page: Int,
+        pageSize: Int
+    ): Pagination<String>
 
     fun list(userId: String): List<ProjectVO>
 
