@@ -60,7 +60,7 @@ object StreamPipelineUtils {
         streamUrl: String,
         gitProjectId: String,
         messageId: String
-    ) = "$streamUrl/notifications#$gitProjectId?id=$messageId"
+    ) = "$streamUrl/notifications?id=$messageId#$gitProjectId"
 
     fun createEmptyPipelineAndSetting(displayName: String) = PipelineModelAndSetting(
         model = Model(
