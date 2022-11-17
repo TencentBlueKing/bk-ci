@@ -16,7 +16,7 @@ defineProps<{
         separator="/"
       >
         <bk-breadcrumb-item
-          to="/list"
+          :to="{ name: 'list' }"
         >
           {{ t('项目管理') }}
           <template #separator>
