@@ -318,6 +318,7 @@ class PipelineViewService @Autowired constructor(
         context: DSLContext? = null
     ): Long {
         try {
+            pipelineView.name = pipelineView.name.trim()
             checkForUpset(context, projectId, userId, pipelineView, true)
             val filters = if (pipelineView.viewType == PipelineViewType.DYNAMIC) {
                 objectMapper.writerFor(object :
@@ -389,11 +390,11 @@ class PipelineViewService @Autowired constructor(
         isCreate: Boolean,
         viewId: Long? = null
     ) {
-        if (pipelineView.name.length > 16) {
-            logger.warn("over pipeline view name , user:$userId , project:$projectId")
+        if (pipelineView.name.isEmpty() || pipelineView.name.length > 16) {
+            logger.warn("pipeline view name is illegal , user:$userId , project:$projectId")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_VIEW_OVER_NAME_LENGTH,
-                defaultMessage = "pipeline group name is too long"
+                errorCode = ProcessMessageCode.ERROR_VIEW_NAME_ILLEGAL,
+                defaultMessage = "pipeline group name is illegal , the length is limited to 1~16"
             )
         }
         if (isCreate) {
@@ -405,7 +406,7 @@ class PipelineViewService @Autowired constructor(
             )
             val limit = if (pipelineView.projected) PROJECT_VIEW_LIMIT else PERSONAL_VIEW_LIMIT
 
-            if (countForLimit > limit) {
+            if (countForLimit + 1 >= limit) {
                 logger.warn("exceed the limit for create , project:$projectId , user:$userId , view:$pipelineView")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_VIEW_EXCEED_THE_LIMIT,

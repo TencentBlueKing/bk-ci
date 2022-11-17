@@ -10,7 +10,7 @@ data class PipelineViewForm(
     @ApiModelProperty("ID", required = false)
     val id: String? = null,
     @ApiModelProperty("视图名称", required = false)
-    val name: String,
+    var name: String,
     @ApiModelProperty("是否项目", required = false)
     val projected: Boolean,
     @ApiModelProperty("流水线组类型,1--动态,2--静态")
