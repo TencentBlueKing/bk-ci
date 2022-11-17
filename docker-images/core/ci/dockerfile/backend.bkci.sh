@@ -25,6 +25,7 @@ java_argv+=(
   "-Dbksvc=bk-ci-$MS_NAME"
   "-Dspring.cloud.kubernetes.config.sources[0].name=${RELEASE_NAME:-bkci}-${CHART_NAME:-bk-ci}-common"
   "-Dspring.cloud.kubernetes.config.sources[1].name=${RELEASE_NAME:-bkci}-${CHART_NAME:-bk-ci}-${MS_NAME}"
+  "-Dspring.main.allow-bean-definition-overriding=true"
   "-Dservice-suffix="
   "-Dspring.profiles.active=local,dev"
   "-Dspring.application.name=$MS_NAME"

@@ -68,7 +68,6 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
-import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
 import com.tencent.devops.common.archive.util.closeQuietly
@@ -81,6 +80,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okio.BufferedSink
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Sort.Direction
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import java.io.File
@@ -100,7 +100,7 @@ class BkRepoClient constructor(
 ) {
 
     private fun getGatewayUrl(): String {
-        return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+        return HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)
     }
 
     fun useBkRepo(): Boolean {
@@ -249,14 +249,17 @@ class BkRepoClient constructor(
         includeFolders: Boolean = false,
         deep: Boolean = false,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        modifiedTimeDesc: Boolean
     ): Page<NodeInfo> {
         logger.info(
             "listFilePage, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path," +
                 " includeFolders: $includeFolders, deep: $deep, page: $page, pageSize: $pageSize"
         )
+        val direction = if (modifiedTimeDesc) Direction.DESC.name else Direction.ASC.name
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/page/$projectId/$repoName/$path" +
-            "?deep=$deep&includeFolder=$includeFolders&includeMetadata=true&pageNumber=$page&pageSize=$pageSize"
+            "?deep=$deep&includeFolder=$includeFolders&includeMetadata=true&pageNumber=$page&pageSize=$pageSize" +
+            "&sortProperty=lastModifiedDate&direction=$direction"
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
@@ -565,7 +568,7 @@ class BkRepoClient constructor(
             metadata = mapOf(),
             page = 0,
             pageSize = 10000
-        ).map {
+        ).records.map {
             BkRepoFile(
                 fullPath = it.fullPath,
                 displayPath = it.fullPath,
@@ -823,7 +826,7 @@ class BkRepoClient constructor(
         metadata: Map<String, String>, // eq and
         page: Int,
         pageSize: Int
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByRepoAndMetadata, userId: $userId, projectId: $projectId, repoNames: $repoNames," +
                 " fileNames: $fileNames, metadata: $metadata, page: $page, pageSize: $pageSize"
@@ -860,7 +863,7 @@ class BkRepoClient constructor(
         metadata: Map<String, String>, // eq and
         page: Int,
         pageSize: Int
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByPathEqOrNameMatchOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
                     " repoNames: $repoNames, filePaths: $filePaths, fileNames: $fileNames, metadata: $metadata," +
@@ -906,7 +909,7 @@ class BkRepoClient constructor(
         metadata: Map<String, String>, // eq and
         page: Int,
         pageSize: Int
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByPathNamePairOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
                 " repoNames: $repoNames, pathNamePairs: $pathNamePairs, metadata: $metadata," +
@@ -943,7 +946,7 @@ class BkRepoClient constructor(
         repoNames: List<String>,
         fullPathPatterns: List<String>,
         metadata: Map<String, String>
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByPattern, userId: $userId, projectId: $projectId, repoNames: $repoNames," +
                     " fullPathPatterns: $fullPathPatterns, metadata: $metadata"
@@ -976,7 +979,7 @@ class BkRepoClient constructor(
         includeFolders: Boolean = false,
         page: Int = 1,
         pageSize: Int = 10000
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "listFileByQuery, userId: $userId, projectId: $projectId, repoName: $repoName," +
                     " path: $path, includeFolders: $includeFolders"
@@ -1035,7 +1038,7 @@ class BkRepoClient constructor(
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
     }
 
-    private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): List<QueryNodeInfo> {
+    private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): QueryData {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
         val queryModel = QueryModel(
             page = PageLimit(page, pageSize),
@@ -1046,7 +1049,7 @@ class BkRepoClient constructor(
         return query(userId, projectId, queryModel)
     }
 
-    private fun query(userId: String, projectId: String, queryModel: QueryModel): List<QueryNodeInfo> {
+    private fun query(userId: String, projectId: String, queryModel: QueryModel): QueryData {
         logger.info("query, userId: $userId, queryModel: $queryModel")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/search"
         val requestBody = objectMapper.writeValueAsString(queryModel)
@@ -1061,7 +1064,7 @@ class BkRepoClient constructor(
                     requestBody
                 )
             ).build()
-        return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!.records
+        return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
     }
 
     private fun doRequest(request: Request): okhttp3.Response {

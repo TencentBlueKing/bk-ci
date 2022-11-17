@@ -113,11 +113,7 @@ class DockerHostClient @Autowired constructor(
             vmSeqId = dispatchMessage.vmSeqId.toInt(),
             secretKey = dispatchMessage.secretKey,
             status = PipelineTaskStatus.RUNNING,
-            zone = if (null == dispatchMessage.zone) {
-                Zone.SHENZHEN.name
-            } else {
-                dispatchMessage.zone!!.name
-            },
+            zone = Zone.SHENZHEN.name,
             dockerIp = dockerIp,
             poolNo = poolNo,
             startupMessage = JsonUtil.toJson(Pool(
@@ -181,11 +177,7 @@ class DockerHostClient @Autowired constructor(
             vmSeqId = event.vmSeqId.toInt(),
             secretKey = secretKey,
             status = PipelineTaskStatus.RUNNING,
-            zone = if (null == event.zone) {
-                Zone.SHENZHEN.name
-            } else {
-                event.zone!!.name
-            },
+            zone = Zone.SHENZHEN.name,
             dockerIp = agentLessDockerIp,
             poolNo = 0
         )

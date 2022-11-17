@@ -38,7 +38,7 @@ object Versions {
     const val PinyinPlus = "1.0"
     const val ShardingSphere = "5.2.0"
     const val Oshi = "5.8.3"
-    const val Leaf = "1.0.1-RELEASE"
+    const val Leaf = "1.0.2-RELEASE"
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
     const val Pulsar = "2.7.2"

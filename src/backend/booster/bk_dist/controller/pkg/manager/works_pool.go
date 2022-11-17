@@ -80,6 +80,17 @@ func (wp *worksPool) getWork(workID string) (*types.Work, error) {
 	return work, nil
 }
 
+func (wp *worksPool) getFirstWork() (*types.Work, error) {
+	wp.RLock()
+	defer wp.RUnlock()
+
+	for _, work := range wp.works {
+		return work, nil
+	}
+
+	return nil, types.ErrNoWork
+}
+
 func (wp *worksPool) find(projectID, scene string, batchMode bool) *types.Work {
 	wp.RLock()
 	defer wp.RUnlock()
