@@ -476,7 +476,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 projectCode = action.getProjectCode(),
                 event = event,
                 gitProjectId = action.data.getGitProjectId().toLong(),
-                messageType = UserMessageType.ONLY_SUCCESS
+                messageType = UserMessageType.ONLY_SUCCESS,
+                isSave = true
             )
 
             if (action is StreamRepoTriggerAction) {

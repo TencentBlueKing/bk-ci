@@ -18,6 +18,7 @@ import (
 	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/idleloop/pkg"
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/conf"
 
 	"github.com/shirou/gopsutil/process"
 	commandCli "github.com/urfave/cli"
@@ -25,6 +26,7 @@ import (
 
 // mainProcess do the make process:
 func mainProcess(c *commandCli.Context) error {
+	initialLogDir(getLogDir(c.String(FlagLogDir)))
 	setLogLevel(c.String(FlagLog))
 
 	// get the new obj
@@ -93,4 +95,21 @@ func setLogLevel(level string) {
 		// default to be error printer.
 		blog.SetStderrLevel(blog.StderrLevelInfo)
 	}
+}
+
+func initialLogDir(dir string) {
+	blog.InitLogs(conf.LogConfig{
+		LogDir:       dir,
+		LogMaxNum:    10,
+		LogMaxSize:   500,
+		AlsoToStdErr: false,
+	})
+}
+
+func getLogDir(dir string) string {
+	if dir == "" {
+		return dcUtil.GetLogsDir()
+	}
+
+	return dir
 }

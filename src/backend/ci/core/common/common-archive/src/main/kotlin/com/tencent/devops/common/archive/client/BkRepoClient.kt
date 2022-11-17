@@ -80,6 +80,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okio.BufferedSink
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Sort.Direction
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import java.io.File
@@ -99,7 +100,7 @@ class BkRepoClient constructor(
 ) {
 
     private fun getGatewayUrl(): String {
-        return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+        return HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)
     }
 
     fun useBkRepo(): Boolean {
@@ -248,14 +249,17 @@ class BkRepoClient constructor(
         includeFolders: Boolean = false,
         deep: Boolean = false,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        modifiedTimeDesc: Boolean
     ): Page<NodeInfo> {
         logger.info(
             "listFilePage, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path," +
                 " includeFolders: $includeFolders, deep: $deep, page: $page, pageSize: $pageSize"
         )
+        val direction = if (modifiedTimeDesc) Direction.DESC.name else Direction.ASC.name
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/page/$projectId/$repoName/$path" +
-            "?deep=$deep&includeFolder=$includeFolders&includeMetadata=true&pageNumber=$page&pageSize=$pageSize"
+            "?deep=$deep&includeFolder=$includeFolders&includeMetadata=true&pageNumber=$page&pageSize=$pageSize" +
+            "&sortProperty=lastModifiedDate&direction=$direction"
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)

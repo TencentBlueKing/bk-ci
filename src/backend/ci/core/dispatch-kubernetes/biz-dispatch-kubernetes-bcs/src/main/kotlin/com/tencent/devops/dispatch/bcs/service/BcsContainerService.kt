@@ -188,7 +188,7 @@ class BcsContainerService @Autowired constructor(
                 userId = userId,
                 bcsBuilder = BcsBuilder(
                     name = builderName,
-                    image = "$name:$tag",
+                    image = "$host/$name:$tag",
                     registry = DockerRegistry(host, userName, password),
                     cpu = cpu,
                     mem = mem,

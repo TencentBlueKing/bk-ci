@@ -58,6 +58,13 @@ type Mgr struct {
 
 // Init do the initialization for local manager
 func (m *Mgr) Init() {
+	blog.Infof("local: init for work:%s", m.work.ID())
+}
+
+// Start start resource slots for local manager
+func (m *Mgr) Start() {
+	blog.Infof("local: start for work:%s", m.work.ID())
+
 	settings := m.work.Basic().Settings()
 	m.resource = newResource(settings.LocalTotalLimit, settings.UsageLimit)
 
