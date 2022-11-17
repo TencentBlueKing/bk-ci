@@ -149,6 +149,10 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
+`    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return true
+    }
+
     companion object {
         private val projectResourceType = AuthResourceType.PROJECT
     }

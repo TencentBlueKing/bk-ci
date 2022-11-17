@@ -64,6 +64,10 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return true
+    }
+
     override fun getUserProjects(userId: String): List<String> {
         return authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,

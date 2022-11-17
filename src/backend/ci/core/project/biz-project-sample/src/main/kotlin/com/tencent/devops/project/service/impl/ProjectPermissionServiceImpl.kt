@@ -130,4 +130,8 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return true
     }
+
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return true
+    }
 }

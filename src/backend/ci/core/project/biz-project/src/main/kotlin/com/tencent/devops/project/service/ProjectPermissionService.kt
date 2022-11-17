@@ -63,4 +63,9 @@ interface ProjectPermissionService {
         userId: String,
         permission: AuthPermission
     ): Boolean
+
+    fun cancelCreateAuthProject(
+        status: Int,
+        projectCode: String
+    ): Boolean
 }

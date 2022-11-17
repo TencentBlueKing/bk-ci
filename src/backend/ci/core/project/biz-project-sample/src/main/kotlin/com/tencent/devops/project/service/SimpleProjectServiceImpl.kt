@@ -162,6 +162,10 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun cancelCreateAuthProject(status: Int, projectCode: String) :Boolean{
+        return projectPermissionService.cancelCreateAuthProject(status, projectCode)
+    }
+
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
         return true
     }

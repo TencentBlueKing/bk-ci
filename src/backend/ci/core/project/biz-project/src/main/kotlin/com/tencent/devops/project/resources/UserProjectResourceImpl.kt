@@ -161,4 +161,13 @@ class UserProjectResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun cancelCreateProject(userId: String, projectId: String): Result<Boolean> {
+        return Result(
+            projectService.cancelCreateProject(
+                userId = userId,
+                projectId = projectId
+            )
+        )
+    }
 }
