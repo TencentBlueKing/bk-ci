@@ -140,6 +140,6 @@ interface ServiceGitBasicSettingResource {
         gitProjectId: Long? = null,
         @ApiParam(value = "是否刷新token", required = false)
         @QueryParam("refreshToken")
-        refreshToken: Boolean? = false
+        refreshToken: Boolean? = true
     ): Result<AuthorizeResult>
 }

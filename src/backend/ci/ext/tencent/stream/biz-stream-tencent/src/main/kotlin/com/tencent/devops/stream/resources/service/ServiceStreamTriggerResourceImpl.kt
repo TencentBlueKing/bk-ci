@@ -3,6 +3,7 @@ package com.tencent.devops.stream.resources.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
@@ -10,11 +11,13 @@ import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.OpenapiTriggerReq
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
 import com.tencent.devops.stream.service.StreamGitTokenService
+import com.tencent.devops.stream.service.StreamPipelineService
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.service.StreamYamlService
 import com.tencent.devops.stream.trigger.ManualTriggerService
@@ -30,7 +33,8 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
     private val streamScmService: StreamScmService,
     private val streamGitTokenService: StreamGitTokenService,
     private val manualTriggerService: ManualTriggerService,
-    private val streamYamlService: StreamYamlService
+    private val streamYamlService: StreamYamlService,
+    private val streamPipelineService: StreamPipelineService
 ) : ServiceStreamTriggerResource {
 
     companion object {
@@ -136,11 +140,23 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
     }
 
     override fun checkYaml(userId: String, yamlCheck: StreamYamlCheck): Result<String> {
+        logger.info("STREAM_TRIGGER_SERVICE|checkYaml|$userId|$yamlCheck")
         return streamYamlService.checkYaml(
             originYaml = yamlCheck.originYaml,
             templateType = yamlCheck.templateType?.let { TemplateType.valueOf(it) },
             isCiFile = yamlCheck.checkCiFile
         )
+    }
+
+    override fun nameToPipelineId(
+        userId: String,
+        projectId: String,
+        yamlPath: String
+    ): Result<StreamGitProjectPipeline> {
+        logger.info("STREAM_TRIGGER_SERVICE|nameToPipelineId|$userId|$projectId|$yamlPath")
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId, AuthPermission.VIEW)
+        return Result(streamPipelineService.getPipelineInfoByYamlPath(gitProjectId, yamlPath))
     }
 
     private fun checkParam(userId: String) {

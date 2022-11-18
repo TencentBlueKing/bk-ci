@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.service
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
@@ -54,6 +55,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class StreamPipelineService @Autowired constructor(
@@ -119,7 +121,6 @@ class StreamPipelineService @Autowired constructor(
                     displayName = it.displayName,
                     enabled = it.enabled,
                     creator = it.creator,
-                    latestBuildInfo = null,
                     latestBuildBranch = pipelineBranchMap[it.pipelineId] ?: "master",
                     yamlLink = genYamlLink(
                         pathWithNamespace = basicSetting?.pathWithNamespace,
@@ -183,7 +184,6 @@ class StreamPipelineService @Autowired constructor(
                 displayName = it.displayName,
                 enabled = it.enabled,
                 creator = it.creator,
-                latestBuildInfo = null,
                 latestBuildBranch = null
             )
         }
@@ -205,11 +205,33 @@ class StreamPipelineService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = null,
             latestBuildBranch = null
         )
     }
 
+    fun getPipelineInfoByYamlPath(
+        gitProjectId: Long,
+        yamlPath: String
+    ): StreamGitProjectPipeline {
+        logger.info("getPipelineInfoByYamlPath|getPipelineById|pipeline|$gitProjectId|$yamlPath")
+        val pipeline = getPipelineByFile(
+            gitProjectId, yamlPath
+        ) ?: throw CustomException(
+            Response.Status.NOT_FOUND,
+            "project $gitProjectId not found pipeline who is $yamlPath"
+        )
+        return StreamGitProjectPipeline(
+            gitProjectId = pipeline.gitProjectId,
+            pipelineId = pipeline.pipelineId,
+            filePath = pipeline.filePath,
+            displayName = pipeline.displayName,
+            enabled = pipeline.enabled,
+            creator = pipeline.creator,
+            latestBuildBranch = null
+        )
+    }
+
+    @Suppress("ReturnCount")
     fun enablePipeline(
         userId: String,
         gitProjectId: Long,

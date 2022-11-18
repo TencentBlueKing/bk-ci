@@ -329,4 +329,10 @@ class StoreDockingPlatformDao {
             )
         }
     }
+
+    fun isPlatformCodeRegistered(dslContext: DSLContext, platformCode: String): Boolean {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.selectFrom(this).where(PLATFORM_CODE.eq(platformCode)).fetchOne() != null
+        }
+    }
 }

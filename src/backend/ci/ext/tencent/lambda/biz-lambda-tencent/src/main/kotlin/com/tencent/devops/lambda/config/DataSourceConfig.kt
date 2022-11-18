@@ -72,6 +72,29 @@ class DataSourceConfig {
     }
 
     @Bean
+    fun storeDataSource(
+        @Value("\${spring.datasource.store.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.store.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.store.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.store.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.store.leakDetectionThreshold:#{0}}")
+        datasouceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-Store",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasouceLeakDetectionThreshold = datasouceLeakDetectionThreshold
+        )
+    }
+
+    @Bean
     fun lambdaDataSource(
         @Value("\${spring.datasource.lambda.url}")
         datasourceUrl: String,
