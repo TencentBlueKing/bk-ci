@@ -45,12 +45,12 @@ class ReportDao {
         dslContext: DSLContext,
         buildId: String,
         taskId: String
-    ): Result<Record2<String, String>> {
+    ): Record2<String, String>? {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
             return dslContext.select(ATOM_CODE, TASK_NAME).from(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
-                .fetch()
+                .fetchOne()
         }
     }
 
