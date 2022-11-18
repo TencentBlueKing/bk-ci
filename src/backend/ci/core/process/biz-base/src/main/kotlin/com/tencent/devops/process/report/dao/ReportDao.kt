@@ -29,6 +29,7 @@ package com.tencent.devops.process.report.dao
 
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.TReport
+import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TReportRecord
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
@@ -40,39 +41,23 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 @Repository
 class ReportDao {
-    fun getAtomCode(
+    fun getAtomInfo(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         buildId: String,
         taskId: String
-    ): String? {
+    ): TPipelineBuildTaskRecord? {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
-            return dslContext.select(ATOM_CODE).from(this)
+            return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
-                .fetchOne(0, String::class.java)
+                .fetchOne(0, TPipelineBuildTaskRecord::class.java)
         }
     }
 
-    fun getTaskName(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        taskId: String
-    ): String? {
-        with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
-            return dslContext.select(TASK_NAME).from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_ID.eq(buildId))
-                .and(TASK_ID.eq(taskId))
-                .fetchOne(0, String::class.java)
-        }
-    }
 
     fun create(
         dslContext: DSLContext,
