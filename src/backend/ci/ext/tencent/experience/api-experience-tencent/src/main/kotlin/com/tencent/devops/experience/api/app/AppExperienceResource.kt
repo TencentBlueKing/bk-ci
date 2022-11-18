@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
+import com.tencent.devops.experience.pojo.AppExperienceInstallPackage
 import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
@@ -61,6 +62,7 @@ import javax.ws.rs.core.MediaType
 @Path("/app/experiences")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@SuppressWarnings("LongParameterList", "TooManyFunctions")
 interface AppExperienceResource {
 
     @ApiOperation("获取体验列表")
@@ -247,4 +249,25 @@ interface AppExperienceResource {
         @QueryParam("projectId")
         projectId: String
     ): Result<List<OuterSelectorVO>>
+
+    @ApiOperation("体验对应的安装包列表")
+    @Path("/{experienceHashId}/installPackages")
+    @GET
+    fun installPackages(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: Int,
+        @ApiParam("版本号", required = true)
+        @HeaderParam(AUTH_HEADER_APP_VERSION)
+        appVersion: String?,
+        @ApiParam("组织", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
+        organization: String? = null,
+        @ApiParam("体验ID", required = true)
+        @PathParam("experienceHashId")
+        experienceHashId: String
+    ): Result<Pagination<AppExperienceInstallPackage>>
 }
