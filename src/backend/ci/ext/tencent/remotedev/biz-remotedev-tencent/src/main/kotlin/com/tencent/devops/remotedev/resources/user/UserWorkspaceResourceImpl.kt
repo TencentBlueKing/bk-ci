@@ -25,23 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.resources
+package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.github.GithubAppUrl
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
+import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
+import com.tencent.devops.remotedev.pojo.Workspace
 
 @RestResource
 @Suppress("ALL")
-class UserRemoteDevResourceImpl constructor(
+class UserWorkspaceResourceImpl constructor(
 
-) : UserRemoteDevResource {
-    override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
+) : UserWorkspaceResource {
+
+    override fun getAuthorizedGitRepository(userId: String): Result<GithubAppUrl> {
         TODO("Not yet implemented")
     }
 
-    override fun updateRemoteDevSettings(userId: String, remoteDevSettings: RemoteDevSettings): Result<Boolean> {
+    override fun createWorkspace(userId: String, workspace: Workspace): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun startWorkspace(userId: String, workspaceId: Long): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun shareWorkspace(userId: String, workspaceId: Long, sharedUser: String): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteWorkspace(userId: String, workspaceId: Long): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getWorkspaceList(userId: String): Result<Workspace> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getWorkspaceDetail(userId: String, workspaceId: Long): Result<Workspace> {
         TODO("Not yet implemented")
     }
 }

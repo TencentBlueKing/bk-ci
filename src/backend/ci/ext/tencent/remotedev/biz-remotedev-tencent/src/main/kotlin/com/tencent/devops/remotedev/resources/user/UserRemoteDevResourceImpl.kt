@@ -25,23 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.resources
+package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.github.GithubAppUrl
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
-import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
-import com.tencent.devops.remotedev.api.user.UserWsTemplateResource
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
-import com.tencent.devops.remotedev.pojo.Workspace
 
 @RestResource
 @Suppress("ALL")
-class UserWsTemplateResourceImpl constructor(
+class UserRemoteDevResourceImpl constructor(
 
-) : UserWsTemplateResource {
-    override fun getWorkspaceTemplateList(userId: String): Result<Workspace> {
+) : UserRemoteDevResource {
+    override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
+        TODO("Not yet implemented")
+    }
+
+    override fun updateRemoteDevSettings(userId: String, remoteDevSettings: RemoteDevSettings): Result<Boolean> {
         TODO("Not yet implemented")
     }
 }

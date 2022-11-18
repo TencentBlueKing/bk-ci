@@ -25,47 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.resources
+package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.github.GithubAppUrl
-import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
-import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
-import com.tencent.devops.remotedev.pojo.RemoteDevSettings
-import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.api.user.UserWsTemplateResource
+import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
+import com.tencent.devops.remotedev.service.WorkspaceTemplateService
 
 @RestResource
 @Suppress("ALL")
-class UserWorkspaceResourceImpl constructor(
+class UserWsTemplateResourceImpl constructor(
+    private val workspaceTemplateService: WorkspaceTemplateService
 
-) : UserWorkspaceResource {
-
-    override fun getAuthorizedGitRepository(userId: String): Result<GithubAppUrl> {
-        TODO("Not yet implemented")
-    }
-
-    override fun createWorkspace(userId: String, workspace: Workspace): Result<Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun startWorkspace(userId: String, workspaceId: Long): Result<Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun shareWorkspace(userId: String, workspaceId: Long, sharedUser: String): Result<Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun deleteWorkspace(userId: String, workspaceId: Long): Result<Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getWorkspaceList(userId: String): Result<Workspace> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getWorkspaceDetail(userId: String, workspaceId: Long): Result<Workspace> {
-        TODO("Not yet implemented")
+) : UserWsTemplateResource {
+    override fun getWorkspaceTemplateList(userId: String): Result<List<WorkspaceTemplate>> {
+        return Result(workspaceTemplateService.getWorkspaceTemplateList(userId) ?: emptyList())
     }
 }
