@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -250,5 +251,16 @@ interface UserProjectResource {
         @ApiParam("项目ID", required = true)
         @PathParam("project_id")
         projectId: String
+    ): Result<Boolean>
+
+    @ApiOperation("申请加入项目")
+    @Path("/applyToJoinProject/{project_id}")
+    @POST
+    fun applyToJoinProject(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("申请加入项目实体类", required = true)
+        applicationInfo: ApplicationInfo
     ): Result<Boolean>
 }

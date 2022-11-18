@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 
@@ -67,5 +68,10 @@ interface ProjectPermissionService {
     fun cancelCreateAuthProject(
         status: Int,
         projectCode: String
+    ): Boolean
+
+    fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo
     ): Boolean
 }

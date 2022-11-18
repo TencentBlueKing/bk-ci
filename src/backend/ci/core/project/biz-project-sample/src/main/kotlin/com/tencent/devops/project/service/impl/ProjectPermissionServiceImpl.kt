@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -132,6 +133,10 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return true
+    }
+
+    override fun createRoleGroupApplication(userId: String, applicationInfo: ApplicationInfo): Boolean {
         return true
     }
 }
