@@ -43,18 +43,15 @@ import java.time.LocalDateTime
 class ReportDao {
     fun getAtomInfo(
         dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
         buildId: String,
         taskId: String
-    ): TPipelineBuildTaskRecord? {
+    ): Triple<String?, String?, String?> {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_ID.eq(buildId))
+            val fetchOne = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
                 .fetchOne(0, TPipelineBuildTaskRecord::class.java)
+            return Triple(fetchOne?.atomCode,fetchOne?.taskName, null)
         }
     }
 
