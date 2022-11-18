@@ -154,8 +154,8 @@ object AtomReleaseTxtAnalysisUtil {
         result: MutableMap<String, String>
     ): Map<String, String> {
         client.getServiceUrl(ServiceArchiveAtomFileResource::class)
-        pathList.forEach {
-            val file = File("$atomPath${fileSeparator}file$fileSeparator$it")
+        pathList.forEach { path ->
+            val file = File("$atomPath${fileSeparator}file$fileSeparator$path")
             try {
                 if (file.exists()) {
                     val uploadFileResult = client.get(ServiceStoreLogoResource::class).uploadStoreLogo(
@@ -165,11 +165,9 @@ object AtomReleaseTxtAnalysisUtil {
                         disposition = FormDataContentDisposition(
                             "form-data; name=\"logo\"; filename=\"${file.name}\""
                         )
-                    )
-                    if (uploadFileResult.isOk()) {
-                        result[it] = uploadFileResult.data!!.logoUrl!!
-                    } else {
-                        logger.warn("upload file result is fail, file path:$it")
+                    ).data
+                    uploadFileResult?.let { storeLogoInfo ->
+                        result[path] = storeLogoInfo.logoUrl!!
                     }
                 } else {
                     logger.warn("Resource file does not exist:${file.path}")
