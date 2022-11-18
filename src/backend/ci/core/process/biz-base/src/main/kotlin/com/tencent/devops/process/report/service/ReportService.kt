@@ -72,11 +72,11 @@ class ReportService @Autowired constructor(
         reportType: ReportTypeEnum,
         reportEmail: ReportEmail? = null
     ) {
-        val (atomCode, taskName) = reportDao.getAtomInfo(
+        val taskInfo = reportDao.getAtomInfo(
                 dslContext = dslContext,
                 buildId = buildId,
                 taskId = taskId
-        )
+        )[0]
 
         val indexFilePath = if (reportType == ReportTypeEnum.INTERNAL) {
             Paths.get(indexFile).normalize().toString()
@@ -105,8 +105,8 @@ class ReportService @Autowired constructor(
                 indexFile = indexFilePath,
                 name = name,
                 type = reportType.name,
-                atomCode = atomCode ?: "",
-                taskName = taskName ?: "",
+                atomCode = taskInfo.value1() ?: "",
+                taskName = taskInfo.value2() ?: "",
                 id = client.get(ServiceAllocIdResource::class).generateSegmentId("REPORT").data
             )
 //        } else {

@@ -33,6 +33,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TReportRecord
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -45,13 +46,12 @@ class ReportDao {
         dslContext: DSLContext,
         buildId: String,
         taskId: String
-    ): Triple<String?, String?, String?> {
+    ): Result<Record2<String, String>> {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
-            val fetchOne = dslContext.selectFrom(this)
+            return dslContext.select(ATOM_CODE, TASK_NAME).from(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
-                .fetchOne(0, TPipelineBuildTaskRecord::class.java)
-            return Triple(fetchOne?.atomCode,fetchOne?.taskName, null)
+                .fetch()
         }
     }
 
