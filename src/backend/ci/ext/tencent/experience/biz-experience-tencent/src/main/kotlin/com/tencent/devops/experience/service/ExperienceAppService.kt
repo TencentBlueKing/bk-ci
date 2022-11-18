@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -54,6 +55,7 @@ import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
+import com.tencent.devops.experience.pojo.AppExperienceInstallPackage
 import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
@@ -63,6 +65,7 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.time.LocalDateTime
@@ -82,7 +85,8 @@ class ExperienceAppService(
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val experiencePushSubscribeDao: ExperiencePushSubscribeDao,
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val experienceService: ExperienceService
 ) {
 
     private val executorService = Executors.newFixedThreadPool(2)
@@ -432,5 +436,56 @@ class ExperienceAppService(
         }
 
         return experienceBaseService.toAppExperiences(userId, records)
+    }
+
+    fun installPackages(
+        userId: String,
+        platform: Int,
+        appVersion: String?,
+        organization: String?,
+        experienceHashId: String
+    ): Pagination<AppExperienceInstallPackage> {
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        if (!experienceBaseService.userCanExperience(userId, experienceId, organization == ORGANIZATION_OUTER)) {
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "没有查询该体验的权限。",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
+            )
+        }
+        val experience = experienceDao.get(dslContext, experienceId)
+        val projectId = experience.projectId
+        val artifactoryPath = experience.artifactoryPath
+        val artifactoryType =
+            com.tencent.devops.experience.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType)
+        val detailPermission = try {
+            experienceService.hasArtifactoryPermission(
+                userId = userId,
+                projectId = projectId,
+                path = artifactoryPath,
+                artifactoryType = artifactoryType,
+                permission = Permission.VIEW
+            )
+        } catch (e: Exception) {
+            logger.warn("get permission failed!", e)
+            false
+        }
+        return Pagination(
+            false,
+            listOf(
+                AppExperienceInstallPackage(
+                    name = experience.name,
+                    projectId = projectId,
+                    path = artifactoryPath,
+                    artifactoryType = artifactoryType.name,
+                    detailPermission = detailPermission,
+                    size = experience.size
+                )
+            )
+        )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceAppService::class.java)
     }
 }
