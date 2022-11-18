@@ -2,7 +2,7 @@
     <bk-dialog
         :value="isShow"
         width="960"
-        ext-cls="pipeline-group-edit-dialog"
+        ext-cls="pipeline-group-edit-dialog auto-height-dialog"
         scrollable
         :quick-close="false"
         :close-icon="false"

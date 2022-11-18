@@ -28,6 +28,7 @@
 @import './animation';
 @import './form';
 @import './mixins/scroller.scss';
+@import '@/scss/dialog-position';
 
 @include scroller(#a5a5a5, 9px);
 html,

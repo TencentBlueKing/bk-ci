@@ -73,7 +73,7 @@
         <footer slot="footer">
             <bk-button
                 theme="primary"
-                :disabled="removedPipelines.length === 0"
+                :disabled="hasPermissionPipelines.length === 0"
                 @click="handleSubmit">
                 {{$t('delete')}}
             </bk-button>

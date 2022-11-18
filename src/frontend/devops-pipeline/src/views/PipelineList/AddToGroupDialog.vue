@@ -1,6 +1,6 @@
 <template>
     <bk-dialog
-        ext-cls="add-group-dialog"
+        ext-cls="add-group-dialog auto-height-dialog"
         width="800"
         :value="addToDialogShow"
         :close-icon="false"

@@ -2,6 +2,7 @@
     <bk-dialog
         width="480"
         v-model="isCopyDialogShow"
+        ext-cls="auto-height-dialog"
         :title="$t('newlist.copyPipeline')"
         :mask-close="false"
         :close-icon="false"

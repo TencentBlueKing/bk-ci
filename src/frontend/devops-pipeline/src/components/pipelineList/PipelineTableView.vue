@@ -38,17 +38,25 @@
             </template>
         </bk-table-column>
         <bk-table-column v-if="isAllPipelineView || isPatchView || isDeleteView" width="250" :label="$t('ownGroupName')" prop="viewNames">
-            <div class="pipeline-group-box-cell" slot-scope="props">
-                <div class="group-name-tag-box">
+            <div :ref="`belongsGroupBox_${props.$index}`" class="pipeline-group-box-cell" slot-scope="props">
+                <template v-if="pipelineGroups[props.$index].visibleGroups">
                     <bk-tag
                         ext-cls="pipeline-group-name-tag"
-                        v-for="(viewName, index) in props.row.viewNames"
+                        :ref="`groupName_${props.$index}`"
+                        v-for="(viewName, index) in pipelineGroups[props.$index].visibleGroups"
                         :key="index"
                         @click="goGroup(viewName)"
                     >
                         {{viewName}}
                     </bk-tag>
-                </div>
+                    <bk-tag
+                        :ref="`groupNameMore_${props.$index}`"
+                        v-if="pipelineGroups[props.$index].showMore"
+                        v-bk-tooltips="pipelineGroups[props.$index].hiddenGroups.join(',')"
+                    >
+                        +{{ pipelineGroups[props.$index].showMore }}
+                    </bk-tag>
+                </template>
             </div>
         </bk-table-column>
         <template v-if="isPatchView">
@@ -202,6 +210,7 @@
                     limit: 20,
                     count: 0
                 },
+                visibleTagCountList: {},
                 sortField: {
                     prop: this.sortType,
                     order: this.$route.query.collation ?? ORDER_ENUM.descending
@@ -223,6 +232,27 @@
                 console.log(this.$route.params, 'this.$route.params', this.$route.params.viewId === DELETED_VIEW_ID)
 
                 return this.$route.params.viewId === DELETED_VIEW_ID
+            },
+            pipelineGroups () {
+                const res = this.pipelineList.map((pipeline, index) => {
+                    const { viewNames } = pipeline
+                    const visibleCount = this.visibleTagCountList[index]
+                    console.log(visibleCount)
+                    if (visibleCount >= 1) {
+                        return {
+                            visibleGroups: viewNames.slice(0, visibleCount),
+                            hiddenGroups: viewNames.slice(visibleCount),
+                            showMore: viewNames.length - visibleCount
+                        }
+                    }
+                    return {
+                        visibleGroups: viewNames,
+                        hiddenGroups: [],
+                        showMore: viewNames?.length ?? 0
+                    }
+                })
+                console.log(res)
+                return res
             }
         },
 
@@ -307,12 +337,15 @@
                         ...this.filterParams,
                         ...query
                     })
-                    console.log(records, this.isDeleteView)
                     Object.assign(this.pagination, {
                         count,
                         current: page
                     })
                     this.pipelineList = records
+                    if (this.isAllPipelineView) {
+                        this.visibleTagCountList = {}
+                        setTimeout(this.calcOverPos, 100)
+                    }
                 } catch (e) {
                     console.error(e)
                 } finally {
@@ -330,6 +363,33 @@
                 if (res) {
                     this.refresh()
                 }
+            },
+            calcOverPos () {
+                const tagMargin = 6
+
+                this.visibleTagCountList = this.pipelineList.reduce((acc, pipeline, index) => {
+                    if (Array.isArray(pipeline.viewNames)) {
+                        const groupNameBoxWidth = this.$refs[`belongsGroupBox_${index}`].clientWidth * 2
+                        const groupNameLength = pipeline.viewNames.length
+                        const moreTag = this.$refs?.[`groupNameMore_${index}`]?.$el
+                        const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
+                        const viewPortWidth = groupNameBoxWidth - (groupNameLength > 1 ? moreTagWidth : 0)
+                        let sumTagWidth = 0
+                        let tagVisbleCount = 0
+
+                        this.$refs[`groupName_${index}`]?.every((groupName) => {
+                            sumTagWidth += groupName.$el.offsetWidth + tagMargin
+                            console.log(groupNameBoxWidth, viewPortWidth, moreTagWidth, sumTagWidth, groupName.$el.offsetWidth)
+                            const isOverSize = sumTagWidth > viewPortWidth
+                            !isOverSize && tagVisbleCount++
+                            return !isOverSize
+                        })
+
+                        acc[index] = tagVisbleCount
+                    }
+                    return acc
+                }, {})
+                console.log(this.visibleTagCountList)
             }
         }
     }

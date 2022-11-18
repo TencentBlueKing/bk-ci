@@ -399,9 +399,12 @@
     }
     .pipeline-group-box-cell {
         display: flex;
+        width: 100%;
+        flex-wrap: wrap;
     }
     .pipeline-group-name-tag {
         @include ellipsis();
+        flex-shrink: 0;
         max-width: 100px;
     }
     .pipeline-list-box {
