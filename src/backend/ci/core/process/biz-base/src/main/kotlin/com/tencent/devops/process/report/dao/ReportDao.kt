@@ -29,7 +29,6 @@ package com.tencent.devops.process.report.dao
 
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.TReport
-import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TReportRecord
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
