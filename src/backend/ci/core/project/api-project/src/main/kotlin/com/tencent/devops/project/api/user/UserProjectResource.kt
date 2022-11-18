@@ -75,7 +75,7 @@ interface UserProjectResource {
         @ApiParam("是否启用", required = false)
         @QueryParam("enabled")
         enabled: Boolean?,
-        @ApiParam("是否拉取审批通过的项目", required = false)
+        @ApiParam("是否拉取未审批通过的项目，若为false，会拉取审批[未通过+通过]的项目", required = false)
         @QueryParam("approved")
         approved: Boolean? = true
     ): Result<List<ProjectVO>>
@@ -90,16 +90,16 @@ interface UserProjectResource {
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?,
-        @ApiParam("项目英文名", required = false)
-        @QueryParam("english_name")
-        englishName: String? = null,
+        @ApiParam("项目名", required = false)
+        @QueryParam("projectName")
+        projectName: String? = null,
         @ApiParam("页目", required = false)
         @QueryParam("page")
         page: Int,
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int
-    ): Result<Pagination<String>>
+    ): Result<Pagination<ProjectVO>>
 
     @GET
     @Path("/{english_name}")
@@ -241,14 +241,14 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @ApiOperation("取消创建项目")
-    @Path("/cancelCreateProject/{projectId}")
-    @GET
+    @Path("/cancelCreateProject/{project_id}")
+    @PUT
     fun cancelCreateProject(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
+        @PathParam("project_id")
         projectId: String
     ): Result<Boolean>
 }

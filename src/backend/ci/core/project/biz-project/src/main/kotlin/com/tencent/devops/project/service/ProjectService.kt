@@ -125,10 +125,10 @@ interface ProjectService {
     fun listProjectsWithoutPermissions(
         userId: String,
         accessToken: String?,
-        englishName: String?,
+        projectName: String?,
         page: Int,
         pageSize: Int
-    ): Pagination<String>
+    ): Pagination<ProjectVO>
 
     fun list(userId: String): List<ProjectVO>
 
