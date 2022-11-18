@@ -100,6 +100,7 @@ class BkRepoService @Autowired constructor(
             ArtifactoryType.PIPELINE -> {
                 bkRepoPipelineDirService.list(userId, projectId, path)
             }
+
             ArtifactoryType.CUSTOM_DIR -> {
                 bkRepoCustomDirService.list(userId, projectId, path)
             }
@@ -161,8 +162,10 @@ class BkRepoService @Autowired constructor(
         argPath: String,
         properties: Map<String, String>
     ) {
-        logger.info("setProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "argPath: $argPath, properties: $properties")
+        logger.info(
+            "setProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                    "argPath: $argPath, properties: $properties"
+        )
         if (properties.isEmpty()) {
             logger.info("property empty")
             return
@@ -177,8 +180,10 @@ class BkRepoService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): List<Property> {
-        logger.info("getProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType," +
-            " path: $path")
+        logger.info(
+            "getProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType," +
+                    " path: $path"
+        )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val matadataMap =
             bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
@@ -303,8 +308,10 @@ class BkRepoService @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): List<AppFileInfo> {
-        logger.info("getBuildFileList, userId: $userId, projectId: $projectId," +
-                " pipelineId: $pipelineId, buildId: $buildId")
+        logger.info(
+            "getBuildFileList, userId: $userId, projectId: $projectId," +
+                    " pipelineId: $pipelineId, buildId: $buildId"
+        )
         pipelineService.validatePermission(
             userId,
             projectId,
@@ -344,9 +351,11 @@ class BkRepoService @Autowired constructor(
                         }
                         flag
                     }
+
                     it.name.endsWith(".shell.apk") -> {
                         true
                     }
+
                     it.name.endsWith(".ipa") && !it.name.endsWith("_enterprise_sign.ipa") -> {
                         val enterpriseSignFileName = "${it.path.removeSuffix(".ipa")}_enterprise_sign.ipa"
                         var flag = true
@@ -357,9 +366,11 @@ class BkRepoService @Autowired constructor(
                         }
                         flag
                     }
+
                     it.name.endsWith("_enterprise_sign.ipa") -> {
                         true
                     }
+
                     else -> {
                         false
                     }
@@ -703,8 +714,10 @@ class BkRepoService @Autowired constructor(
         fullPath: String,
         ttl: Int
     ): String {
-        logger.info("externalDownloadUrl, creatorId: $creatorId, userId: $userId," +
-                " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
+        logger.info(
+            "externalDownloadUrl, creatorId: $creatorId, userId: $userId," +
+                    " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl"
+        )
         val shareUri = bkRepoClient.createShareUri(
             creatorId = creatorId,
             projectId = projectId,
