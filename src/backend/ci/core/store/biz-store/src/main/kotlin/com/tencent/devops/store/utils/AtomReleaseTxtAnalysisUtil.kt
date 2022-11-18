@@ -156,25 +156,22 @@ object AtomReleaseTxtAnalysisUtil {
         client.getServiceUrl(ServiceArchiveAtomFileResource::class)
         pathList.forEach { path ->
             val file = File("$atomPath${fileSeparator}file$fileSeparator$path")
-            try {
-                if (file.exists()) {
-                    val uploadFileResult = client.get(ServiceStoreLogoResource::class).uploadStoreLogo(
-                        userId = userId,
-                        contentLength = file.length(),
-                        inputStream = file.inputStream(),
-                        disposition = FormDataContentDisposition(
-                            "form-data; name=\"logo\"; filename=\"${file.name}\""
-                        )
-                    ).data
-                    uploadFileResult?.let { storeLogoInfo ->
-                        result[path] = storeLogoInfo.logoUrl!!
-                    }
-                } else {
-                    logger.warn("Resource file does not exist:${file.path}")
+            if (file.exists()) {
+                val uploadFileResult = client.get(ServiceStoreLogoResource::class).uploadStoreLogo(
+                    userId = userId,
+                    contentLength = file.length(),
+                    inputStream = file.inputStream(),
+                    disposition = FormDataContentDisposition(
+                        "form-data; name=\"logo\"; filename=\"${file.name}\""
+                    )
+                ).data
+                uploadFileResult?.let { storeLogoInfo ->
+                    result[path] = storeLogoInfo.logoUrl!!
                 }
-            } finally {
-                file.delete()
+            } else {
+                logger.warn("Resource file does not exist:${file.path}")
             }
+            file.delete()
         }
         return result
     }
