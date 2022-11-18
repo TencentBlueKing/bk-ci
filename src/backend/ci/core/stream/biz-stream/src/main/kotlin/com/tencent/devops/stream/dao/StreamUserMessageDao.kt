@@ -198,7 +198,7 @@ class StreamUserMessageDao {
                 dsl.and(USER_ID.eq(userId))
             }
             return dsl.and(MESSAGE_ID.eq(messageId))
-                .fetchOne()
+                .fetch().first()
         }
     }
 
