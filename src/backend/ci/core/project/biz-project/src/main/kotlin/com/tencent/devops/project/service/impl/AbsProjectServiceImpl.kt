@@ -481,23 +481,25 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun listProjectsWithoutPermissions(
         userId: String,
         accessToken: String?,
-        englishName: String?,
+        projectName: String?,
         page: Int,
         pageSize: Int
-    ): Pagination<String> {
+    ): Pagination<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
             val iamProjects = getProjectFromAuth(userId, accessToken)
             val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-            val list = ArrayList<String>()
+            val list = ArrayList<ProjectVO>()
             projectDao.listProjectsWithoutPermissions(
                 dslContext = dslContext,
-                englishName = englishName,
+                projectName = projectName,
                 projects = iamProjects,
                 offset = sqlLimit.offset,
                 limit = sqlLimit.limit
-            )?.map { list.add(it.value1()) } ?: emptyList()
+            )?.map {
+                list.add(ProjectUtils.packagingBean(it))
+            } ?: emptyList()
             if (list.isEmpty()) {
                 return Pagination(false, emptyList())
             }
@@ -833,7 +835,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun relationIamProject(projectCode: String, relationId: String): Boolean {
-        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw InvalidParamException("项目不存在")
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode)
+            ?: throw InvalidParamException("项目不存在")
         val currentRelationId = projectInfo.relationId
         if (!currentRelationId.isNullOrEmpty()) {
             throw InvalidParamException("$projectCode 已绑定IAM分级管理员")

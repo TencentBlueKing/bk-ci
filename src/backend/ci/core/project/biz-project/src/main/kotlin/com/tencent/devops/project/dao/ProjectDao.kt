@@ -536,13 +536,13 @@ class ProjectDao {
 
     fun listProjectsWithoutPermissions(
         dslContext: DSLContext,
-        englishName: String?,
+        projectName: String?,
         projects: List<String>?,
         offset: Int,
         limit: Int
-    ): Result<Record1<String>>? {
+    ): Result<TProjectRecord>? {
         with(TProject.T_PROJECT) {
-            return dslContext.select(ENGLISH_NAME).from(this)
+            return dslContext.selectFrom(this)
                 .where(
                     APPROVAL_STATUS.notIn(
                         listOf(
@@ -553,7 +553,7 @@ class ProjectDao {
                 )
                 .and(IS_AUTH_SECRECY.eq(false))
                 .let { if (projects.isNullOrEmpty()) it else it.and(ENGLISH_NAME.notIn(projects)) }
-                .let { if (englishName == null) it else it.and(ENGLISH_NAME.like("%$englishName%")) }
+                .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%$projectName%")) }
                 .limit(limit)
                 .offset(offset)
                 .fetch()

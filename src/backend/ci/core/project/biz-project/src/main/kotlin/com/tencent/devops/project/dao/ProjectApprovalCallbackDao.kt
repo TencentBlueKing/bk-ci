@@ -46,4 +46,13 @@ class ProjectApprovalCallbackDao {
             return dslContext.selectFrom(this).where(SN.eq(sn)).fetchAny()
         }
     }
+
+    fun getCallbackByEnglishName(
+        dslContext: DSLContext,
+        projectCode: String
+    ): TProjectApprovalCallbackRecord? {
+        with(TProjectApprovalCallback.T_PROJECT_APPROVAL_CALLBACK) {
+            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(projectCode)).fetchAny()
+        }
+    }
 }

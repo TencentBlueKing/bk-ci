@@ -62,15 +62,15 @@ class UserProjectResourceImpl @Autowired constructor(
     override fun listProjectsWithoutPermissions(
         userId: String,
         accessToken: String?,
-        englishName: String?,
+        projectName: String?,
         page: Int,
         pageSize: Int
-    ): Result<Pagination<String>> {
+    ): Result<Pagination<ProjectVO>> {
         return Result(
             projectService.listProjectsWithoutPermissions(
                 userId = userId,
                 accessToken = accessToken,
-                englishName = englishName,
+                projectName = projectName,
                 page = page,
                 pageSize = pageSize
             )
