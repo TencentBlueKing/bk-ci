@@ -40,6 +40,7 @@ import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableRuleConfiguration
 import org.apache.shardingsphere.sharding.api.config.strategy.sharding.NoneShardingStrategyConfiguration
 import org.apache.shardingsphere.sharding.api.config.strategy.sharding.StandardShardingStrategyConfiguration
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -68,6 +69,7 @@ class BkShardingDataSourceConfiguration {
         private const val STANDARD = "STANDARD"
         private const val ALGORITHM_CLASS_NAME = "algorithmClassName"
         private const val CLASS_BASED = "CLASS_BASED"
+        private val logger = LoggerFactory.getLogger(BkShardingDataSourceConfiguration::class.java)
     }
 
     @Value("\${sharding.log.switch:false}")
@@ -220,6 +222,8 @@ class BkShardingDataSourceConfiguration {
             "${DATA_SOURCE_NAME_PREFIX}0.$tableName"
         }
         val shardingTableRuleConfig = ShardingTableRuleConfiguration(tableName, actualDataNodes)
+        logger.info("BkShardingDataSourceConfiguration table:$tableName|databaseShardingStrategy:" +
+            "$databaseShardingStrategy|tableShardingStrategy:$tableShardingStrategy|actualDataNodes:$actualDataNodes ")
         // 设置表的分库策略
         shardingTableRuleConfig.databaseShardingStrategy = if (databaseShardingStrategy != null) {
             StandardShardingStrategyConfiguration(databaseShardingField, DB_SHARDING_ALGORITHM_NAME)
