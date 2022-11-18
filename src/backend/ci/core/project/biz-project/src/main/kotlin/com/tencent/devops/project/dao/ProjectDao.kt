@@ -37,7 +37,6 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.enums.ApprovalStatusEnum
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -175,11 +174,9 @@ class ProjectDao {
     ): Result<TProjectRecord>? {
         with(TProject.T_PROJECT) {
             val conditions = mutableListOf<Condition>()
-
             bgId?.let { conditions.add(BG_ID.eq(bgId)) }
             deptId?.let { conditions.add(DEPT_ID.eq(deptId)) }
             centerId?.let { conditions.add(CENTER_ID.eq(centerId)) }
-
             if (!bgName.isNullOrBlank()) conditions.add(BG_NAME.like("%${URLDecoder.decode(bgName, "UTF-8")}%"))
             if (!deptName.isNullOrBlank()) conditions.add(DEPT_NAME.like("%${URLDecoder.decode(deptName, "UTF-8")}%"))
             if (!centerName.isNullOrBlank()) {

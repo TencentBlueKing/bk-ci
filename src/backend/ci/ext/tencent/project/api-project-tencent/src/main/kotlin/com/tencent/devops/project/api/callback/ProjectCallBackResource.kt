@@ -39,8 +39,8 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["PROJECT_CALLBACK"], description = "项目-回调")
-@Path("/service/callback")
+@Api(tags = ["PROJECT_CALLBACK"], description = "项目-itsm-回调")
+@Path("/open/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ProjectCallBackResource {
@@ -49,6 +49,14 @@ interface ProjectCallBackResource {
     @POST
     @ApiOperation("处理Itsm项目创建回调")
     fun handleItsmProjectCreateCallBack(
+        @ApiParam(value = "itsm回调内容", required = true)
+        itsmCallBackInfo: ItsmCallBackInfo
+    ): Result<Boolean>
+
+    @Path("/update_callback")
+    @POST
+    @ApiOperation("处理Itsm项目编辑回调")
+    fun handleItsmProjectUpdateCallBack(
         @ApiParam(value = "itsm回调内容", required = true)
         itsmCallBackInfo: ItsmCallBackInfo
     ): Result<Boolean>

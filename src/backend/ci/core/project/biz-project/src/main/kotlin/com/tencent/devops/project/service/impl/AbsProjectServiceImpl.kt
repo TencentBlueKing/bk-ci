@@ -340,8 +340,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         val subjectScopes = projectUpdateInfo.subjectScopes
         validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
-        // 考虑对于原有的老项目，其可授权范围本来就为空，是否要强行给他设置为全公司，还是原样
-        // 假设上线时，统一刷数据，刷成可授权人员范围为全公司
+        // 考虑对于原有的老项目，其可授权范围本来就为空，上线时，统一刷数据，刷成可授权人员范围为全公司
         val iamSubjectScopes = getIamSubjectScopes(subjectScopes)
         logger.info(
             "update project : $userId | $englishName | $projectUpdateInfo | " +
@@ -446,7 +445,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            //todo 修改拉取策略，只拉取拥有查看权限的项目
+            //修改拉取策略，只拉取拥有查看权限的项目
             val projects = getProjectFromAuth(userId, accessToken)
             if (projects.isEmpty() && approved!!) {
                 return emptyList()
@@ -896,7 +895,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         return true
     }
-
 
     override fun getProjectByName(projectName: String): ProjectVO? {
         return projectDao.getProjectByName(dslContext, projectName)

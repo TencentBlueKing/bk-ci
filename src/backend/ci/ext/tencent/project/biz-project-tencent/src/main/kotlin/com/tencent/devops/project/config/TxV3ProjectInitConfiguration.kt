@@ -62,23 +62,13 @@ class TxV3ProjectInitConfiguration {
         bkAuthProperties: BkAuthProperties,
         projectDispatcher: ProjectDispatcher,
         client: Client,
-        tokenService: ClientTokenService,
-        iamConfiguration: IamConfiguration,
-        iamManagerService: ManagerService,
-        projectApprovalCallbackDao: ProjectApprovalCallbackDao,
-        dslContext: DSLContext,
-        projectDao: ProjectDao
+        tokenService: ClientTokenService
     ): ProjectPermissionService = TxV3ProjectPermissionServiceImpl(
         objectMapper = objectMapper,
         authProperties = bkAuthProperties,
         projectDispatcher = projectDispatcher,
         client = client,
-        tokenService = tokenService,
-        iamConfiguration = iamConfiguration,
-        iamManagerService = iamManagerService,
-        projectApprovalCallbackDao = projectApprovalCallbackDao,
-        dslContext = dslContext,
-        projectDao = projectDao
+        tokenService = tokenService
     )
 
     @Bean

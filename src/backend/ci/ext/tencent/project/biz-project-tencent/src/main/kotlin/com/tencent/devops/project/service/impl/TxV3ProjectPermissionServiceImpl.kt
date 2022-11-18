@@ -28,45 +28,33 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.project.pojo.AuthProjectForCreateResult
+import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectPermissionService
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
-import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
-import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
-import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthProperties
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.model.project.tables.records.TProjectRecord
-import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
-import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
-import com.tencent.devops.project.pojo.AuthProjectForCreateResult
+import com.tencent.devops.project.pojo.ApplicationInfo
+import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.SubjectScope
-import com.tencent.devops.project.pojo.enums.ApproveStatus
-import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ProjectPermissionService
-import com.tencent.devops.project.service.iam.AuthorizationUtils
 import okhttp3.MediaType
-import okhttp3.Request
-import okhttp3.RequestBody
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 class TxV3ProjectPermissionServiceImpl @Autowired constructor(
@@ -74,12 +62,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     val authProperties: BkAuthProperties,
     val projectDispatcher: ProjectDispatcher,
     val client: Client,
-    val tokenService: ClientTokenService,
-    val iamConfiguration: IamConfiguration,
-    val iamManagerService: ManagerService,
-    val projectApprovalCallbackDao: ProjectApprovalCallbackDao,
-    val dslContext: DSLContext,
-    val projectDao: ProjectDao
+    val tokenService: ClientTokenService
 ) : ProjectPermissionService {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -97,67 +80,27 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun createResources(
-        userId: String,
-        accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?,
-        subjectScopes: List<SubjectScope>?,
-        iamSubjectScopes: List<ManagerScopes>?,
-        needApproval: Boolean?,
-        reason: String
+        resourceCreateInfo: ResourceCreateInfo
     ): String {
+        val userId = resourceCreateInfo.userId
+        val accessToken = resourceCreateInfo.accessToken
+        val userDeptDetail = resourceCreateInfo.userDeptDetail
+        // TODO: (V3创建项目未完全迁移完前，需双写V0,V3)
         // 同步创建V0项目
-        // val projectId = createResourcesToV0(userId, accessToken, resourceRegisterInfo, userDeptDetail)
-        if (needApproval!!) {
-            if (subjectScopes == null) {
-                throw OperationException("The maximum authorized scope cannot be empty!!")
-            }
-            val projectCode = resourceRegisterInfo.resourceCode
-            val projectName = resourceRegisterInfo.resourceName
-            val authorizationScopes = AuthorizationUtils.buildManagerResources(
-                projectId = projectCode,
-                projectName = projectName,
-                iamConfiguration = iamConfiguration
+        val projectId = createResourcesToV0(userId, accessToken, resourceRegisterInfo, userDeptDetail)
+        // 异步创建V3项目
+        projectDispatcher.dispatch(
+            TxIamV3CreateEvent(
+                userId = userId,
+                retryCount = 0,
+                delayMills = 1000,
+                resourceRegisterInfo = resourceRegisterInfo,
+                projectId = projectId,
+                iamProjectId = null
             )
-            val callbackId = UUIDUtil.generate()
-            val gradeManagerApplicationCreateDTO: GradeManagerApplicationCreateDTO = GradeManagerApplicationCreateDTO
-                .builder()
-                .name("$SYSTEM_DEFAULT_NAME-$projectName")
-                .description(IamGroupUtils.buildManagerDescription(projectCode, userId))
-                .members(arrayListOf(userId))
-                .authorizationScopes(authorizationScopes)
-                .subjectScopes(iamSubjectScopes)
-                .syncPerm(true)
-                .applicant(userId)
-                .reason(reason)
-                .callbackId(callbackId)
-                //todo 需补充
-                .callbackUrl("xxx").build()
-            val createGradeManagerApplication =
-                iamManagerService.createGradeManagerApplication(gradeManagerApplicationCreateDTO)
-            // 存储审批单
-            projectApprovalCallbackDao.create(
-                dslContext = dslContext,
-                applicant = userId,
-                englishName = projectCode,
-                callbackId = callbackId,
-                sn = createGradeManagerApplication.sn
-            )
-        } else {
-            // 若不需要审批，则直接异步创建分级管理员和默认用户组
-            projectDispatcher.dispatch(
-                TxIamV3CreateEvent(
-                    userId = userId,
-                    retryCount = 0,
-                    delayMills = 1000,
-                    resourceRegisterInfo = resourceRegisterInfo,
-                    projectId = "",
-                    iamProjectId = null,
-                    subjectScopes = iamSubjectScopes
-                )
-            )
-        }
-        return ""
+        )
+        return projectId
     }
 
     override fun deleteResource(projectCode: String) {
@@ -166,66 +109,11 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun modifyResource(
-        projectCode: String,
-        projectName: String,
-        userId: String,
         projectInfo: TProjectRecord,
-        iamSubjectScopes: List<ManagerScopes>?,
-        subjectScopes: List<SubjectScope>?,
-        needApproval: Boolean
+        resourceUpdateInfo: ResourceUpdateInfo
     ) {
-        if (needApproval && subjectScopes == null) {
-            throw OperationException("The maximum authorized scope cannot be empty!!")
-        }
-        if (
-            JsonUtil.to(projectInfo.subjectscopes, object : TypeReference<ArrayList<ManagerScopes>>() {})
-                .sortedBy { managerScopes -> managerScopes.id }
-            == iamSubjectScopes!!.sortedBy { managerScopes -> managerScopes.id }
-        ) {
-            return
-        }
-
-        if (needApproval) {
-            val authorizationScopes = AuthorizationUtils.buildManagerResources(
-                projectId = projectCode,
-                projectName = projectName,
-                iamConfiguration = iamConfiguration
-            )
-            val callbackId = UUIDUtil.generate()
-            val gradeManagerApplicationUpdateDTO: GradeManagerApplicationUpdateDTO = GradeManagerApplicationUpdateDTO
-                .builder()
-                .name("$SYSTEM_DEFAULT_NAME-$projectName")
-                .description(IamGroupUtils.buildManagerUpdateDescription(projectCode, userId))
-                .authorizationScopes(authorizationScopes)
-                .subjectScopes(iamSubjectScopes)
-                .syncPerm(true)
-                .applicant(userId)
-                .reason(IamGroupUtils.buildManagerUpdateDescription(projectCode, userId))
-                .callbackId(callbackId)
-                //todo 需补充
-                .callbackUrl("xxx").build()
-            val updateGradeManagerApplication =
-                iamManagerService.updateGradeManagerApplication(
-                    projectInfo.relationId, gradeManagerApplicationUpdateDTO
-                )
-            // 修改项目状态
-            projectDao.updateProjectStatusByEnglishName(
-                dslContext = dslContext,
-                projectCode = projectInfo.englishName,
-                statusEnum = ApproveStatus.UPDATE_PENDING
-            )
-            // 存储审批单
-            projectApprovalCallbackDao.create(
-                dslContext = dslContext,
-                applicant = userId,
-                englishName = projectCode,
-                callbackId = callbackId,
-                sn = updateGradeManagerApplication.sn
-            )
-        } else {
-            //直接修改
-            return
-        }
+        // 资源都在接入方本地，无需修改iam侧数据
+        return
     }
 
     override fun getUserProjects(userId: String): List<String> {
@@ -238,6 +126,14 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     override fun getUserProjectsAvailable(userId: String): Map<String, String> {
         // TODO:
         return emptyMap()
+    }
+
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return true
+    }
+
+    override fun createRoleGroupApplication(userId: String, applicationInfo: ApplicationInfo): Boolean {
+        return true
     }
 
     override fun verifyUserProjectPermission(
@@ -310,8 +206,5 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(TxV3ProjectPermissionServiceImpl::class.java)
-        private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
-        private const val SYSTEM_DEFAULT_NAME = "蓝盾"
-        private const val DEPARTMENT = "department"
     }
 }

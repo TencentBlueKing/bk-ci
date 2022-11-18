@@ -29,7 +29,6 @@ package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -43,10 +42,11 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
+import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.SubjectScope
-import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import okhttp3.MediaType
 import okhttp3.Request
@@ -69,16 +69,13 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
     private val authUrl = authProperties.url
 
     override fun createResources(
-        userId: String,
-        accessToken: String?,
-        projectCreateInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?,
-        subjectScopes: List<SubjectScope>?,
-        iamSubjectScopes: List<ManagerScopes>?,
-        needApproval: Boolean?,
-        reason: String
+        resourceRegisterInfo: ResourceRegisterInfo,
+        resourceCreateInfo: ResourceCreateInfo
     ): String {
-        val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
+        val accessToken = resourceCreateInfo.accessToken
+        val userId = resourceCreateInfo.userId
+        val userDeptDetail = resourceCreateInfo.userDeptDetail
+        val param: MutableMap<String, String> = mutableMapOf("project_code" to resourceRegisterInfo.resourceCode)
         // 创建AUTH项目
         val newAccessToken = if (accessToken.isNullOrBlank()) {
             param["creator"] = userId
@@ -119,20 +116,15 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun modifyResource(
-        projectCode: String,
-        projectName: String,
-        userId: String,
         projectInfo: TProjectRecord,
-        iamSubjectScopes: List<ManagerScopes>?,
-        subjectScopes: List<SubjectScope>?,
-        needApproval: Boolean
+        resourceUpdateInfo: ResourceUpdateInfo
     ) {
         authResourceApi.modifyResource(
             serviceCode = bsProjectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
-            projectCode = projectCode,
-            resourceCode = projectCode,
-            resourceName = projectName
+            projectCode = resourceUpdateInfo.projectUpdateInfo.englishName,
+            resourceCode = resourceUpdateInfo.projectUpdateInfo.englishName,
+            resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
         )
     }
 
@@ -190,6 +182,14 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
             resourceType = AuthResourceType.PROJECT,
             authPermission = permission
         )
+    }
+
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return true
+    }
+
+    override fun createRoleGroupApplication(userId: String, applicationInfo: ApplicationInfo): Boolean {
+        return true
     }
 
     companion object {

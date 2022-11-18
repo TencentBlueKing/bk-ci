@@ -30,7 +30,6 @@ package com.tencent.devops.project.service.impl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.ManagerService
@@ -57,6 +56,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectForList
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -65,8 +65,8 @@ import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -170,17 +170,31 @@ class TxProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-    override fun list(userId: String, accessToken: String?, enabled: Boolean?): List<ProjectVO> {
+    override fun list(
+        userId: String,
+        accessToken: String?,
+        enabled: Boolean?,
+        approved: Boolean?
+    ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
-
             val englishNames = getProjectFromAuth(userId, accessToken).toSet()
-            if (englishNames.isEmpty()) {
+            if (englishNames.isEmpty() && approved!!) {
                 return emptyList()
             }
-            val list = ArrayList<ProjectVO>(englishNames.size)
-            projectDao.listByCodes(dslContext, englishNames, enabled = enabled).map {
-                list.add(ProjectUtils.packagingBean(it))
+            val list = ArrayList<ProjectVO>()
+            if (englishNames.isNotEmpty()) {
+                projectDao.listByCodes(dslContext, englishNames, enabled = enabled)
+                    .map {
+                        list.add(ProjectUtils.packagingBean(it))
+                    }
+            }
+            // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
+            if (!approved!!) {
+                projectDao.listUnapprovedByUserId(
+                    dslContext = dslContext,
+                    userId = userId
+                )?.map { list.add(ProjectUtils.packagingBean(it)) }
             }
             return list
         } finally {
@@ -326,22 +340,26 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun modifyProjectAuthResource(
-        projectCode: String,
-        projectName: String,
-        userId: String,
         projectInfo: TProjectRecord,
-        iamSubjectScopes: List<ManagerScopes>?,
-        subjectScopes: List<SubjectScope>?,
-        needApproval: Boolean
+        resourceUpdateInfo: ResourceUpdateInfo
     ) {
         projectPermissionService.modifyResource(
-            projectCode = projectCode,
-            projectName = projectName,
-            userId = userId,
             projectInfo = projectInfo,
-            iamSubjectScopes = iamSubjectScopes,
-            subjectScopes = subjectScopes,
-            needApproval = needApproval
+            resourceUpdateInfo = resourceUpdateInfo
+        )
+    }
+
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return projectPermissionService.cancelCreateAuthProject(
+            status = status,
+            projectCode = projectCode
+        )
+    }
+
+    override fun createRoleGroupApplication(userId: String, applicationInfo: ApplicationInfo): Boolean {
+        return projectPermissionService.createRoleGroupApplication(
+            userId = userId,
+            applicationInfo = applicationInfo
         )
     }
 
