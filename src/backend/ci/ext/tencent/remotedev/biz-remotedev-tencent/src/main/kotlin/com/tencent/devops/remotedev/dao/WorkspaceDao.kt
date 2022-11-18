@@ -27,14 +27,12 @@
 
 package com.tencent.devops.remotedev.dao
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class WorkspaceDao {
@@ -94,7 +92,7 @@ class WorkspaceDao {
     ) {
         with(TWorkspace.T_WORKSPACE) {
             dslContext.update(this)
-                .set(STATUS, status)
+                .set(STATUS, status.toInt())
                 .where(ID.eq(workspaceId))
                 .execute()
         }

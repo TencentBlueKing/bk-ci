@@ -65,13 +65,15 @@ interface OpWsTemplateResource {
     @ApiOperation("更新工作空间模板")
     @PUT
     @Path("/update")
-    fun getWorkspaceTemplateList(
+    fun updateWorkspaceTemplate(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "模板ID", required = true)
+        workspaceTemplateId: Long,
         @ApiParam(value = "模板信息", required = true)
         workspaceTemplate: WorkspaceTemplate
-    ): Result<Workspace>
+    ): Result<Boolean>
 
     @ApiOperation("删除工作空间模板")
     @DELETE

@@ -102,3 +102,16 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
                                                        PRIMARY KEY (`ID`) USING BTREE,
                                                        KEY `uni_1` (`USER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '用户远程开发配置表';
+
+-- ----------------------------
+-- Table structure for T_WORKSPACE_SHARED 工作空间共享记录
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WORKSPACE_SHARED` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+    `WORKSPACE_ID` bigint(20) NOT NULL DEFAULT 0 COMMENT '工作空间ID',
+    `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
+    `SHARED_USER` varchar(64) NOT NULL DEFAULT '' COMMENT '被共享的用户',
+    `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`) USING BTREE,
+    KEY `uni_1` (`WORKSPACE_ID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '工作空间共享记录表';
