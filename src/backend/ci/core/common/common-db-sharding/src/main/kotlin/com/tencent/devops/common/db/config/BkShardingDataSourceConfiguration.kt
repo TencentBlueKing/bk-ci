@@ -207,8 +207,7 @@ class BkShardingDataSourceConfiguration {
             } else {
                 "$DATA_SOURCE_NAME_PREFIX\${0..$lastDsIndex}.${tableName}_\${0..$lastTableIndex}"
             }
-        } else if (databaseShardingStrategy != null && tableShardingStrategy != null &&
-            tableShardingStrategy != TableShardingStrategyEnum.SHARDING) {
+        } else if (databaseShardingStrategy != null && tableShardingStrategy != TableShardingStrategyEnum.SHARDING) {
             // 生成分库场景下的节点规则
             if (databaseShardingStrategy == DatabaseShardingStrategyEnum.SPECIFY) {
                 "${DATA_SOURCE_NAME_PREFIX}0.$tableName"
