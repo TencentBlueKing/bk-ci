@@ -55,14 +55,6 @@ BEGIN
 	IF NOT EXISTS(SELECT 1
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_REPORT'
-                    AND INDEX_NAME = 'ELEMENT_IDX') THEN
-        ALTER TABLE T_REPORT ADD INDEX `ELEMENT_IDX` (`ELEMENT_ID`);
-    END IF;
-
-	IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
                     AND INDEX_NAME = 'idx_BUILD_TASK') THEN
         ALTER TABLE T_PIPELINE_BUILD_TASK ADD INDEX `idx_BUILD_TASK` (`BUILD_ID`,`TASK_ID`);
