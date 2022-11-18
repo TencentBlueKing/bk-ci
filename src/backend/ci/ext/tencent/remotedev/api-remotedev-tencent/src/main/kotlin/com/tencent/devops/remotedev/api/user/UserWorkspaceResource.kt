@@ -120,7 +120,7 @@ interface UserWorkspaceResource {
 
     //todo 获取运行日志的接口
 
-    @ApiOperation("获取用户工作空间列表")
+    @ApiOperation("获取用户工作空间详情")
     @GET
     @Path("/detail/workspaces/{workspaceId}")
     fun getWorkspaceDetail(
