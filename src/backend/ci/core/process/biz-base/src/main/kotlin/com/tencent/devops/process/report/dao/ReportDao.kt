@@ -58,7 +58,6 @@ class ReportDao {
         }
     }
 
-
     fun create(
         dslContext: DSLContext,
         projectId: String,
