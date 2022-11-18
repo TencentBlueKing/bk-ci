@@ -158,9 +158,6 @@ class BkShardingDataSourceConfiguration {
             dbShardingAlgorithmProps.setProperty(ALGORITHM_CLASS_NAME, databaseAlgorithmClassName)
             shardingRuleConfig.shardingAlgorithms[DB_SHARDING_ALGORITHM_NAME] =
                 AlgorithmConfiguration(CLASS_BASED, dbShardingAlgorithmProps)
-            // 设置分库默认策略
-            shardingRuleConfig.defaultDatabaseShardingStrategy =
-                StandardShardingStrategyConfiguration(databaseShardingField, DB_SHARDING_ALGORITHM_NAME)
         }
         // 生成table分片算法配置
         if (!tableAlgorithmClassName.isNullOrBlank()) {
@@ -169,9 +166,6 @@ class BkShardingDataSourceConfiguration {
             tableShardingAlgorithmProps.setProperty(ALGORITHM_CLASS_NAME, tableAlgorithmClassName)
             shardingRuleConfig.shardingAlgorithms[TABLE_SHARDING_ALGORITHM_NAME] =
                 AlgorithmConfiguration(CLASS_BASED, tableShardingAlgorithmProps)
-            // 设置分表默认策略
-            shardingRuleConfig.defaultTableShardingStrategy =
-                StandardShardingStrategyConfiguration(tableShardingField, TABLE_SHARDING_ALGORITHM_NAME)
         }
         val dataSourceProperties = Properties()
         // 是否打印SQL解析和改写日志
