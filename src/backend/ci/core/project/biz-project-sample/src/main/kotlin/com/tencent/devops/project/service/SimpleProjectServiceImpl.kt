@@ -45,6 +45,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
@@ -60,7 +61,7 @@ import java.io.File
 
 @Suppress("ALL", "UNUSED")
 @Service
-class SimpleProjectServiceImpl @Autowired constructor(
+abstract class SimpleProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
     dslContext: DSLContext,
     projectDao: ProjectDao,
@@ -162,8 +163,15 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun cancelCreateAuthProject(status: Int, projectCode: String) :Boolean{
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
         return projectPermissionService.cancelCreateAuthProject(status, projectCode)
+    }
+
+    override fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo
+    ): Boolean {
+        return projectPermissionService.createRoleGroupApplication(userId, applicationInfo)
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {

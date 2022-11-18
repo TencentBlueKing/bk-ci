@@ -59,6 +59,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -886,6 +887,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return success
     }
 
+    override fun applyToJoinProject(userId: String, applicationInfo: ApplicationInfo): Boolean {
+        var success = false
+        val projectInfo = projectDao.get(dslContext, applicationInfo.projectId) ?: throw InvalidParamException("项目不存在")
+        createRoleGroupApplication(
+            userId = userId,
+            applicationInfo = applicationInfo
+        )
+        return true
+    }
+
+
     override fun getProjectByName(projectName: String): ProjectVO? {
         return projectDao.getProjectByName(dslContext, projectName)
     }
@@ -932,6 +944,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     abstract fun cancelCreateAuthProject(
         status: Int,
         projectCode: String
+    ): Boolean
+
+    abstract fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo
     ): Boolean
 
     private fun getIamSubjectScopes(subjectScopes: List<SubjectScope>?): List<ManagerScopes> {

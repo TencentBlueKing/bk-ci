@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectResource
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
@@ -167,6 +168,15 @@ class UserProjectResourceImpl @Autowired constructor(
             projectService.cancelCreateProject(
                 userId = userId,
                 projectId = projectId
+            )
+        )
+    }
+
+    override fun applyToJoinProject(userId: String, applicationInfo: ApplicationInfo): Result<Boolean> {
+        return Result(
+            projectService.applyToJoinProject(
+                userId = userId,
+                applicationInfo = applicationInfo
             )
         )
     }
