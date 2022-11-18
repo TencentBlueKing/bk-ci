@@ -10,7 +10,7 @@ data class EmailSignatureConfig(
     @ApiModelProperty("密钥key")
     override val secretKey: String,
     @ApiModelProperty("地域参数，用来标识希望操作哪个地域的数据")
-    override val region: String,
+    override val region: String
 ) : TencentCloudSignatureConfig(
     httpRequestMethod = "POST",
     service = "ses",

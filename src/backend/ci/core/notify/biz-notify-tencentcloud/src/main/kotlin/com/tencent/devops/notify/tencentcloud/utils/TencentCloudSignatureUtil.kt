@@ -4,13 +4,12 @@ import com.tencent.devops.notify.tencentcloud.pojo.TencentCloudSignatureConfig
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
-import java.util.TimeZone
 import java.util.Date
+import java.util.TimeZone
 import java.util.TreeMap
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import javax.xml.bind.DatatypeConverter
-
 
 object TencentCloudSignatureUtil {
     private val UTF8 = StandardCharsets.UTF_8
@@ -73,8 +72,8 @@ object TencentCloudSignatureUtil {
         val signature = DatatypeConverter.printHexBinary(hmac256(secretSigning, stringToSign)).toLowerCase()
 
         // ************* 步骤 4：拼接 Authorization *************
-        val authorization = (algorithm + " " + "Credential=" + config.secretId + "/" + credentialScope + ", "
-            + "SignedHeaders=" + signedHeaders + ", " + "Signature=" + signature)
+        val authorization = (algorithm + " " + "Credential=" + config.secretId + "/" + credentialScope + ", " +
+            "SignedHeaders=" + signedHeaders + ", " + "Signature=" + signature)
         val headers = TreeMap<String, String>()
         headers["Authorization"] = authorization
         headers["Content-Type"] = CT_JSON

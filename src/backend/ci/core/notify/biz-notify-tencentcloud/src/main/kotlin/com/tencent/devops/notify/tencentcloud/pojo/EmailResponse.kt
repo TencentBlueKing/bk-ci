@@ -1,6 +1,6 @@
 package com.tencent.devops.notify.tencentcloud.pojo
-import com.fasterxml.jackson.annotation.JsonProperty
 
+import com.fasterxml.jackson.annotation.JsonProperty
 
 data class EmailResponse(
     @JsonProperty("Response")

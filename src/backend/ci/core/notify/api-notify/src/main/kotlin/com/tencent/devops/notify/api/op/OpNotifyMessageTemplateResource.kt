@@ -123,7 +123,7 @@ interface OpNotifyMessageTemplateResource {
         templateId: String,
         @ApiParam("腾讯云ses 模板id", required = true)
         @QueryParam("sesTemplateId")
-        sesTemplateId: Int?,
+        sesTemplateId: Int?
     ): Result<Boolean>
 
     @ApiOperation("删除消息通知模板")
