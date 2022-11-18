@@ -167,6 +167,7 @@ CREATE TABLE IF NOT EXISTS `T_COMMON_NOTIFY_MESSAGE_TEMPLATE`
     `BODY`               mediumtext  NOT NULL COMMENT '邮件内容',
     `BODY_FORMAT`        tinyint(4)  NOT NULL COMMENT '邮件格式（0:文本 1:html网页）',
     `EMAIL_TYPE`         tinyint(4)  NOT NULL COMMENT '邮件类型（0:外部邮件 1:内部邮件）',
+    `TENCENT_CLOUD_TEMPLATE_ID`           int(11)     NULL     COMMENT '腾讯云邮件模板id',
     `CREATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`ID`),

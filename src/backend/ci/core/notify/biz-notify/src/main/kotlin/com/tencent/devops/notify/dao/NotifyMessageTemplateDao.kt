@@ -349,6 +349,14 @@ class NotifyMessageTemplateDao {
         }
     }
 
+    fun updateTXSESTemplateId(dslContext: DSLContext, templateId: String, sesTemplateId: Int?): Boolean {
+        with(TEmailsNotifyMessageTemplate.T_EMAILS_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.update(this).set(TENCENT_CLOUD_TEMPLATE_ID, sesTemplateId).where(
+                COMMON_TEMPLATE_ID.eq(templateId)
+            ).execute() == 1
+        }
+    }
+
     /**
      * 删除邮件类型的消息通知模板信息
      */

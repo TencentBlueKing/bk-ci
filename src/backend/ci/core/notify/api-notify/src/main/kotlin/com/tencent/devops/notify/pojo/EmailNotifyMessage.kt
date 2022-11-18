@@ -38,26 +38,42 @@ open class EmailNotifyMessage : BaseMessage() {
 
     @ApiModelProperty("邮件格式", allowableValues = "0,1", dataType = "int")
     var format: EnumEmailFormat = EnumEmailFormat.PLAIN_TEXT
+
     @ApiModelProperty("邮件类型", allowableValues = "0,1", dataType = "int")
     var type: EnumEmailType = EnumEmailType.OUTER_MAIL
+
     @ApiModelProperty("通知接收者")
     private val receivers: MutableSet<String> = mutableSetOf()
+
     @ApiModelProperty("邮件抄送接收者")
     private val cc: MutableSet<String> = mutableSetOf()
+
     @ApiModelProperty("邮件密送接收者")
     private val bcc: MutableSet<String> = mutableSetOf()
+
     @ApiModelProperty("邮件内容")
     var body: String = ""
+
     @ApiModelProperty("邮件发送者")
     var sender: String = "DevOps"
+
     @ApiModelProperty("邮件标题")
     var title: String = ""
+
     @ApiModelProperty("优先级", allowableValues = "-1,1,1", dataType = "int")
     var priority: EnumNotifyPriority = EnumNotifyPriority.HIGH
+
     @ApiModelProperty("通知来源", allowableValues = "0,1", dataType = "int")
     var source: EnumNotifySource = EnumNotifySource.BUSINESS_LOGIC
+
     @ApiModelProperty("codecc邮件附件内容")
     var codeccAttachFileContent: Map<String, String>? = mapOf()
+
+    @ApiModelProperty("邮件内容，可替代的上下文集合[腾讯云邮件服务只支持传模板参数形式]")
+    var variables: Map<String, String>? = mapOf()
+
+    @ApiModelProperty("腾讯云邮件模板id")
+    var tencentCloudTemplateId: Int? = null
 
     fun addReceiver(receiver: String) {
         receivers.add(receiver)
@@ -114,7 +130,9 @@ open class EmailNotifyMessage : BaseMessage() {
     }
 
     override fun toString(): String {
-        return String.format("title(%s), sender(%s), receivers(%s), cc(%s), bcc(%s), body(email html do not show) ",
-                title, sender, receivers, cc, bcc/*, body*/)
+        return String.format(
+            "title(%s), sender(%s), receivers(%s), cc(%s), bcc(%s), body(email html do not show) ",
+            title, sender, receivers, cc, bcc/*, body*/
+        )
     }
 }

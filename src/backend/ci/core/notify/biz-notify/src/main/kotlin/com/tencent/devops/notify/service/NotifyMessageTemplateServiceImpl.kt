@@ -468,6 +468,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     ) {
     }
 
+    override fun updateTXSESTemplateId(userId: String, templateId: String, sesTemplateId: Int?): Result<Boolean> {
+        logger.info("updateTXSESTemplateId|$userId|$templateId|$sesTemplateId")
+        return Result(notifyMessageTemplateDao.updateTXSESTemplateId(dslContext, templateId, sesTemplateId))
+    }
+
     /**
      * 删除消息模板
      * @param templateId 消息模板ID
@@ -485,10 +490,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 JsonUtil.getObjectMapper().readValue(notifyTypeStr, List::class.java) as ArrayList<String>
             logger.info("删除消息模板子表信息：$notifyType ${NotifyType.EMAIL} ${notifyType == NotifyType.EMAIL.name}")
             when (notifyType) {
-                NotifyType.EMAIL.name -> {
+                NotifyType.EMAIL.name  -> {
                     notifyMessageTemplateDao.deleteEmailsNotifyMessageTemplate(context, templateId)
                 }
-                NotifyType.RTX.name -> {
+                NotifyType.RTX.name    -> {
                     notifyMessageTemplateDao.deleteRtxNotifyMessageTemplate(context, templateId)
                 }
                 NotifyType.WECHAT.name -> {
@@ -555,7 +560,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     sendNotifyMessageTemplateRequest = request,
                     title = title,
                     body = body,
-                    sender = emailTplRecord.sender
+                    sender = emailTplRecord.sender,
+                    variables = request.titleParams?.plus(request.bodyParams ?: emptyMap()) ?: emptyMap(),
+                    tencentCloudTemplateId = emailTplRecord.tencentCloudTemplateId
                 )
             }
         }
@@ -668,7 +675,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 )
 
         val notifyContext = when (request.notifyType.name) {
-            NotifyType.EMAIL.name -> {
+            NotifyType.EMAIL.name  -> {
                 val emailTplRecord = notifyMessageTemplateDao.getEmailNotifyMessageTemplate(
                     dslContext,
                     commonNotifyMessageTemplateRecord.id
@@ -677,7 +684,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 val body = replaceContentParams(request.bodyParams, emailTplRecord.body)
                 NotifyContext(title, body)
             }
-            NotifyType.RTX.name -> {
+            NotifyType.RTX.name    -> {
                 val rtxTplRecord = notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                     dslContext = dslContext,
                     commonTemplateId = commonNotifyMessageTemplateRecord.id
@@ -695,7 +702,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 val body = replaceContentParams(request.bodyParams, wechatTplRecord.body)
                 NotifyContext(title, body)
             }
-            else -> null
+            else                   -> null
         }
         return Result(notifyContext)
     }
@@ -748,7 +755,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
         title: String,
         body: String,
-        sender: String
+        sender: String,
+        variables: Map<String, String>,
+        tencentCloudTemplateId: Int?
     ) {
         logger.info("sendEmailNotifyMessage:\ntitle:$title,\nbody:$body")
         val commonTemplateId = commonNotifyMessageTemplate.id
@@ -767,6 +776,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         }
         emailNotifyMessage.title = title
         emailNotifyMessage.body = body
+        emailNotifyMessage.variables = variables
+        emailNotifyMessage.tencentCloudTemplateId = tencentCloudTemplateId
         emailNotifyMessage.priority = EnumNotifyPriority.parse(commonNotifyMessageTemplate.priority.toString())
         emailNotifyMessage.source = EnumNotifySource.parse(commonNotifyMessageTemplate.source.toInt())
             ?: EnumNotifySource.BUSINESS_LOGIC
