@@ -468,6 +468,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     ) {
     }
 
+    override fun updateTXSESTemplateId(userId: String, templateId: String, sesTemplateId: Int?): Result<Boolean> {
+        logger.info("updateTXSESTemplateId|$userId|$templateId|$sesTemplateId")
+        return Result(notifyMessageTemplateDao.updateTXSESTemplateId(dslContext, templateId, sesTemplateId))
+    }
+
     /**
      * 删除消息模板
      * @param templateId 消息模板ID
@@ -555,7 +560,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     sendNotifyMessageTemplateRequest = request,
                     title = title,
                     body = body,
-                    sender = emailTplRecord.sender
+                    sender = emailTplRecord.sender,
+                    variables = request.titleParams?.plus(request.bodyParams ?: emptyMap()) ?: emptyMap(),
+                    tencentCloudTemplateId = emailTplRecord.tencentCloudTemplateId
                 )
             }
         }
@@ -748,7 +755,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
         title: String,
         body: String,
-        sender: String
+        sender: String,
+        variables: Map<String, String>,
+        tencentCloudTemplateId: Int?
     ) {
         logger.info("sendEmailNotifyMessage:\ntitle:$title,\nbody:$body")
         val commonTemplateId = commonNotifyMessageTemplate.id
@@ -767,6 +776,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         }
         emailNotifyMessage.title = title
         emailNotifyMessage.body = body
+        emailNotifyMessage.variables = variables
+        emailNotifyMessage.tencentCloudTemplateId = tencentCloudTemplateId
         emailNotifyMessage.priority = EnumNotifyPriority.parse(commonNotifyMessageTemplate.priority.toString())
         emailNotifyMessage.source = EnumNotifySource.parse(commonNotifyMessageTemplate.source.toInt())
             ?: EnumNotifySource.BUSINESS_LOGIC
