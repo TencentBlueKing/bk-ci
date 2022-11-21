@@ -41,7 +41,7 @@ class BuildPublishersResourceImpl @Autowired constructor(
     private val publishersDataService: PublishersDataService
 ) : BuildPublishersResource {
 
-    @SensitiveApiPermission("syn_publisher_data")
+//    @SensitiveApiPermission("syn_publisher_data")
     override fun synAddPublisherData(userId: String, publishers: List<PublishersRequest>): Result<Int> {
         return Result(publishersDataService.createPublisherData(userId, publishers))
     }
