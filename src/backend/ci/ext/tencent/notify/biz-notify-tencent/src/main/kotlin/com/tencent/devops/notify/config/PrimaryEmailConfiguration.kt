@@ -1,4 +1,4 @@
-package com.tencent.devops.notify.blueking.config
+package com.tencent.devops.notify.config
 
 import com.tencent.devops.common.notify.utils.TOF4Service
 import com.tencent.devops.common.notify.utils.TOFConfiguration
@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 
 @Configuration
-class EmailConfiguration {
+class PrimaryEmailConfiguration {
 
     @Bean
     @Primary
