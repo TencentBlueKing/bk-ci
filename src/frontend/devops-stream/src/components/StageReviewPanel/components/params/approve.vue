@@ -1,6 +1,6 @@
 <template>
     <section v-if="computedShowParam">
-        <span class="review-subtitle">{{$t('pipeline.customVariable')}}</span>
+        <span class="review-subtitle">{{$t('pipeline.customVariables')}}</span>
         <ul>
             <li v-for="(param, index) in params" :key="index" class="review-params">
                 <bk-input disabled :value="getParamKey(param)" class="review-param-item"></bk-input>

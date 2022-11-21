@@ -31,12 +31,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
-import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
 import com.tencent.devops.dispatch.kubernetes.common.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_SECRET_KEY
@@ -52,7 +50,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImageInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
@@ -247,27 +244,7 @@ class KubernetesContainerService @Autowired constructor(
             logsPrinter.printLogs(
                 this, "下发创建构建机请求成功，builderName: $builderName 等待机器创建..."
             )
-
-            val (taskStatus, failedMsg) = kubernetesTaskClient.waitTaskFinish(userId, taskId)
-
-            if (taskStatus == TaskStatusEnum.SUCCEEDED) {
-                // 启动成功
-                logger.info(
-                    "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
-                        "create kubernetes vm success, wait vm start..."
-                )
-                logsPrinter.printLogs(this, "构建机创建成功，等待机器启动...")
-            } else {
-                // 清除构建异常容器，并重新置构建池为空闲
-                clearExceptionBuilder(builderName, poolNo)
-                throw BuildFailureException(
-                    ErrorCodeEnum.CREATE_VM_ERROR.errorType,
-                    ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
-                    ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}构建机创建失败:${failedMsg ?: taskStatus.message}"
-                )
-            }
-            return Pair(startBuilder(dispatchMessages, builderName, poolNo, cpu, mem, disk), builderName)
+            return Pair(taskId, builderName)
         }
     }
 
@@ -298,32 +275,6 @@ class KubernetesContainerService @Autowired constructor(
                     command = listOf("/bin/sh", entrypoint)
                 )
             )
-        }
-    }
-
-    private fun DispatchMessage.clearExceptionBuilder(builderName: String, poolNo: Int) {
-        try {
-            // 下发删除，不管成功失败
-            logger.info("[$buildId]|[$vmSeqId] Delete builder, userId: $userId, builderName: $builderName")
-
-            dispatchKubernetesBuildDao.updateStatus(
-                dslContext = dslContext,
-                dispatchType = dockerRoutingType ?: DockerRoutingType.KUBERNETES.name,
-                pipelineId = pipelineId,
-                vmSeqId = vmSeqId,
-                poolNo = poolNo,
-                status = DispatchBuilderStatus.IDLE.status
-            )
-
-            kubernetesBuilderClient.operateBuilder(
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                userId = userId,
-                name = builderName,
-                param = DeleteBuilderParams()
-            )
-        } catch (e: Exception) {
-            logger.error("[$buildId]|[$vmSeqId] delete builder failed", e)
         }
     }
 
