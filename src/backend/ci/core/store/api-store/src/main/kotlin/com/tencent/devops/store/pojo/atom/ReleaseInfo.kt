@@ -58,7 +58,7 @@ data class ReleaseInfo(
     val classifyCode: String,
     @ApiModelProperty("适用Job类型", required = true)
     val jobType: JobTypeEnum,
-    @JsonProperty(value = "labelIdList", required = false)
+    @JsonProperty(value = "labelCodes", required = false)
     @ApiModelProperty("标签id集合", name = "labelCodes")
     val labelCodes: ArrayList<String>? = null,
     @ApiModelProperty("版本信息", required = true)
