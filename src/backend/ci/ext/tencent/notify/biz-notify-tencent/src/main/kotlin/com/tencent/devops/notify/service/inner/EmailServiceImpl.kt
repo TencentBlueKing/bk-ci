@@ -55,10 +55,11 @@ import com.tencent.devops.notify.service.EmailService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.stream.Collectors
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 
-@Service
+@org.springframework.context.annotation.Configuration
+@ConditionalOnProperty(prefix = "notify", name = ["emailChannel"], havingValue = "blueking", matchIfMissing = true)
 class EmailServiceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val emailNotifyDao: EmailNotifyDao,
