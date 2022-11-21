@@ -239,7 +239,7 @@
             sortList () {
                 return [
                     {
-                        id: PIPELINE_SORT_FILED.piplineName,
+                        id: PIPELINE_SORT_FILED.pipelineName,
                         name: this.$t('newlist.orderByAlpha')
                     }, {
                         id: PIPELINE_SORT_FILED.createTime,
