@@ -201,6 +201,11 @@ func (t *tracker) isFinishStarting(taskID string, egn engine.Engine) bool {
 
 	tb.Status.Ready()
 	tb.Status.Start()
+
+	blog.Info("tracker: task(%s) launch deployment at %s, launch success at %s, request pod num %d, real pod num %d",
+		taskID, tb.Status.LaunchTime.String(), tb.Status.StartTime.String(),
+		task.GetRequestInstance(), len(task.WorkerList()))
+		
 	tb.Status.Message = messageTaskRunning
 	blog.Infof("tracker: task(%s) is ready at start_time(%s)", taskID, tb.Status.StartTime.String())
 	if err = t.layer.UpdateTaskBasic(tb); err != nil {

@@ -91,6 +91,11 @@ func (t *fastbuildTask) WorkerList() []string {
 	return t.WorkerIPList
 }
 
+//GetRequestInstance define
+func (t *fastbuildTask) GetRequestInstance() int {
+	return 0
+}
+
 // do not support dump.
 func (t *fastbuildTask) Dump() []byte {
 	return []byte("")

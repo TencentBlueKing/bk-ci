@@ -12,6 +12,7 @@ package dcc
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
@@ -273,6 +274,21 @@ func getServerSets(req *restful.Request) (*commonTypes.DistccServerSets, error) 
 	return &serverSets, nil
 }
 
+func pruneGccVersion(gccVersion string) string {
+	if len(gccVersion) <= 1 {
+		return gccVersion
+	}
+	_, err := strconv.ParseInt(gccVersion[len(gccVersion)-1:], 10, 0)
+	if err == nil {
+		return gccVersion
+	}
+	idx := strings.LastIndex(gccVersion, "_")
+	if idx <= 0 {
+		return gccVersion
+	}
+	return gccVersion[0:idx]
+}
+
 func getTaskInfo(taskID string) (*commonTypes.DistccServerInfo, error) {
 	tb, te, err := defaultManager.GetTask(taskID)
 	if err != nil {
@@ -307,7 +323,7 @@ func getTaskInfo(taskID string) (*commonTypes.DistccServerInfo, error) {
 		TaskID:        tb.ID,
 		Status:        commonTypes.ServerStatusType(tb.Status.Status),
 		Message:       message,
-		GccVersion:    data.GccVersion,
+		GccVersion:    pruneGccVersion(data.GccVersion),
 		Cmds:          data.Commands,
 		Envs:          data.Environments,
 		UnsetEnvs:     data.UnsetEnvironments,
