@@ -27,6 +27,7 @@
 
 dependencies {
     api(project(":ext:tencent:notify:biz-notify-tencent")) // 内部版实现
+    api(project(":core:notify:biz-notify-tencentcloud")) // 对接腾讯云实现
 }
 
 
