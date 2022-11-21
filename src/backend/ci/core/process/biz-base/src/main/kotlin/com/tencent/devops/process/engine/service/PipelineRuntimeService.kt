@@ -101,6 +101,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.context.StartBuildContext
 import com.tencent.devops.process.engine.control.DependOnUtils
+import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -987,30 +988,35 @@ class PipelineRuntimeService @Autowired constructor(
                     val concurrencyGroup = if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
                         setting.concurrencyGroup
                     } else null
-
-                    pipelineBuildDao.create(
-                        dslContext = transactionContext,
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineInfo.pipelineId,
-                        buildId = buildId,
-                        version = startParamMap[PIPELINE_VERSION].toString().toInt(),
-                        buildNum = buildNum,
-                        trigger = context.startType.name,
-                        status = startBuildStatus,
-                        startUser = context.userId,
-                        triggerUser = context.triggerUser,
-                        taskCount = context.taskCount,
-                        firstTaskId = context.firstTaskId,
-                        channelCode = context.channelCode,
-                        parentBuildId = context.parentBuildId,
-                        parentTaskId = context.parentTaskId,
-                        buildParameters = originStartParams,
-                        webhookType = startParamMap[PIPELINE_WEBHOOK_TYPE],
-                        webhookInfo = getWebhookInfo(startParamMap),
-                        buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG]),
-                        buildNumAlias = buildNumAlias,
-                        concurrencyGroup = concurrencyGroup
-                    )
+                    val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, pipelineInfo.version)
+                    try {
+                        pipelineVersionLock.lock()
+                        pipelineBuildDao.create(
+                            dslContext = transactionContext,
+                            projectId = pipelineInfo.projectId,
+                            pipelineId = pipelineInfo.pipelineId,
+                            buildId = buildId,
+                            version = startParamMap[PIPELINE_VERSION].toString().toInt(),
+                            buildNum = buildNum,
+                            trigger = context.startType.name,
+                            status = startBuildStatus,
+                            startUser = context.userId,
+                            triggerUser = context.triggerUser,
+                            taskCount = context.taskCount,
+                            firstTaskId = context.firstTaskId,
+                            channelCode = context.channelCode,
+                            parentBuildId = context.parentBuildId,
+                            parentTaskId = context.parentTaskId,
+                            buildParameters = originStartParams,
+                            webhookType = startParamMap[PIPELINE_WEBHOOK_TYPE],
+                            webhookInfo = getWebhookInfo(startParamMap),
+                            buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG]),
+                            buildNumAlias = buildNumAlias,
+                            concurrencyGroup = concurrencyGroup
+                        )
+                    } finally {
+                        pipelineVersionLock.unlock()
+                    }
                     // detail记录,未正式启动，先排队状态
                     buildDetailDao.create(
                         dslContext = transactionContext,

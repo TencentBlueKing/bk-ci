@@ -226,15 +226,6 @@ class PipelineBuildDao {
         }
     }
 
-    fun deletePipelineBuilds(dslContext: DSLContext, projectId: String, pipelineId: String) {
-        with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.delete(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .execute()
-        }
-    }
-
     fun listPipelineBuildInfo(
         dslContext: DSLContext,
         projectId: String,
@@ -930,6 +921,23 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId)))).fetchAny()
+        }
+    }
+
+    fun countBuildNumByVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(VERSION.eq(version))
+            dslContext.selectCount().from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }
