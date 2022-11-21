@@ -304,6 +304,7 @@ class TxProjectServiceImpl @Autowired constructor(
 
         // 请求V3的项目,流量必须指向到v3,需指定项目头
         val iamV3List = getV3UserProject(userId!!)
+        // todo 得加多一个v3-RABC 的tag 获取项目
         logger.info("$userId V3 project: $iamV3List")
         val projectList = mutableSetOf<String>()
         projectList.addAll(iamV0List)

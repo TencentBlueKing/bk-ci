@@ -72,6 +72,9 @@ class TencentProjectEventListener @Autowired constructor(
                 is TxIamV5CreateEvent -> {
                     iamV5Service?.createIamV5Project(event)
                 }
+                is TxIamV5CreateApplicationEvent -> {
+                    iamV5Service?.createIamApplicationProject(event)
+                }
             }
         } catch (ex: Exception) {
             logger.error("project listener execute error", ex)

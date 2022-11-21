@@ -28,8 +28,10 @@
 
 package com.tencent.devops.project.service.iam
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
@@ -45,6 +47,8 @@ import com.tencent.devops.auth.api.service.ServiceGroupStrategyResource
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.StrategyEntity
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -55,14 +59,18 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
-import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import com.tencent.devops.project.listener.TxIamV5CreateEvent
+import com.tencent.devops.project.listener.TxIamV5CreateApplicationEvent
+import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.service.impl.TxV5ProjectPermissionServiceImpl
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
@@ -74,11 +82,14 @@ class IamV5Service @Autowired constructor(
     val dslContext: DSLContext,
     val projectDispatcher: ProjectDispatcher,
     val client: Client,
-    val userDao: UserDao
+    val projectApprovalCallbackDao: ProjectApprovalCallbackDao,
+    val objectMapper: ObjectMapper
 ) {
+    @Value("\${itsm.callback.url.create:#{null}}")
+    private val itsmCreateCallBackUrl: String = ""
     fun createIamV5Project(event: TxIamV5CreateEvent) {
         val watcher = Watcher(id = "IAM|CreateProject|${event.projectId}|${event.userId}")
-        logger.info("start create iamV3 project: $event")
+        logger.info("start create iamV5 project: $event")
         try {
             val resourceRegisterInfo = event.resourceRegisterInfo
             val userId = event.userId
@@ -94,7 +105,7 @@ class IamV5Service @Autowired constructor(
                     resourceRegisterInfo = resourceRegisterInfo,
                     subjectScopes = event.subjectScopes
                 )
-                logger.info("iamV3 project gradeManagerId: $gradeManagerId")
+                logger.info("iamV5 project gradeManagerId: $gradeManagerId")
                 watcher.start("batchCreateDefaultGroups")
                 // 批量创建默认用户组
                 batchCreateDefaultGroups(
@@ -128,7 +139,7 @@ class IamV5Service @Autowired constructor(
             } else {
                 logger.warn("create iam projectFail, ${resourceRegisterInfo.resourceCode} not find")
             }
-            // 修改V3项目对应的projectId
+            // 修改V5项目对应的projectId
             if (relationIam && !event.iamProjectId.isNullOrEmpty()) {
                 projectDao.updateRelationByCode(
                     dslContext,
@@ -142,6 +153,100 @@ class IamV5Service @Autowired constructor(
         }
     }
 
+    fun createIamApplicationProject(event: TxIamV5CreateApplicationEvent) {
+        logger.info("start create iamV5 project: $event")
+        try {
+            val resourceRegisterInfo = event.resourceRegisterInfo
+            val projectCode = resourceRegisterInfo.resourceCode
+            var isProjectCreateSuccess = false
+            if (event.retryCount < 10) {
+                logger.info("start create Iam Application Project $event")
+                val projectInfo = projectDao.getByEnglishName(dslContext, projectCode)
+                if (projectInfo == null) {
+                    event.retryCount = event.retryCount + 1
+                    event.delayMills = 1000
+                    projectDispatcher.dispatch(event)
+                    return
+                } else {
+                    isProjectCreateSuccess = true
+                }
+            } else {
+                logger.warn("create iam projectFail, ${resourceRegisterInfo.resourceCode} not find")
+            }
+            if (isProjectCreateSuccess) {
+                val userId = event.userId
+                val projectName = resourceRegisterInfo.resourceName
+                val iamSubjectScopes = event.subjectScopes
+                val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
+                createGradeManagerApplication(
+                    projectCode = projectCode,
+                    projectName = projectName,
+                    userId = userId,
+                    iamSubjectScopes = iamSubjectScopes,
+                    // todo 创建原因
+                    reason = event.reason,
+                    subjectScopesStr = subjectScopesStr
+                )
+            }
+        } catch (e: Exception) {
+          logger.warn("权限中心创建项目失败： $event", e)
+          throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
+        }
+    }
+    private fun createGradeManagerApplication(
+        projectCode: String,
+        projectName: String,
+        userId: String,
+        iamSubjectScopes: List<ManagerScopes>,
+        reason: String,
+        subjectScopesStr: String
+    ) {
+        if (itsmCreateCallBackUrl.isBlank()) {
+            throw OperationException("Itsm call back url can not be empty！")
+        }
+        val authorizationScopes = AuthorizationUtils.buildManagerResources(
+            projectId = projectCode,
+            projectName = projectName,
+            iamConfiguration = iamConfiguration
+        )
+        val callbackId = UUIDUtil.generate()
+        val gradeManagerApplicationCreateDTO: GradeManagerApplicationCreateDTO = GradeManagerApplicationCreateDTO
+            .builder()
+            .name("${SYSTEM_DEFAULT_NAME}-$projectName")
+            .description(IamGroupUtils.buildManagerDescription(projectCode, userId))
+            .members(arrayListOf(userId))
+            .authorizationScopes(authorizationScopes)
+            .subjectScopes(iamSubjectScopes)
+            .syncPerm(true)
+            .applicant(userId)
+            .reason(reason)
+            .callbackId(callbackId)
+            // todo 需补充
+            .callbackUrl(itsmCreateCallBackUrl)
+            .content("xxx")
+            .title("xxx")
+            .build()
+        TxV5ProjectPermissionServiceImpl.logger.info("gradeManagerApplicationCreateDTO : $gradeManagerApplicationCreateDTO")
+        val createGradeManagerApplication =
+            iamManagerService.createGradeManagerApplication(gradeManagerApplicationCreateDTO)
+        dslContext.transaction { configuration ->
+            // 存储审批单
+            projectApprovalCallbackDao.create(
+              dslContext = dslContext,
+              applicant = userId,
+              englishName = projectCode,
+              callbackId = callbackId,
+              sn = createGradeManagerApplication.sn,
+              subjectScopes = subjectScopesStr
+            )
+            // 修改状态
+            projectDao.updateProjectStatusByEnglishName(
+              dslContext = dslContext,
+              projectCode = projectCode,
+              statusEnum = ApproveStatus.CREATE_PENDING
+            )
+        }
+    }
     fun batchCreateDefaultGroups(
         userId: String,
         gradeManagerId: Int,

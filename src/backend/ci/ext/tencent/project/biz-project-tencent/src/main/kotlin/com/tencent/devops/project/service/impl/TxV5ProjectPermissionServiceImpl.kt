@@ -32,7 +32,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
@@ -55,12 +55,12 @@ import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV5CreateEvent
+import com.tencent.devops.project.listener.TxIamV5CreateApplicationEvent
 import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ApproveType
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -70,6 +70,7 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -90,6 +91,9 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
     @Value("\${iam.v0.url:#{null}}")
     private val v0IamUrl: String = ""
 
+    @Value("\${itsm.callback.url.update:#{null}}")
+    private val itsmUpdateCallBackUrl: String = ""
+
     // 校验用户是否是项目成员
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
@@ -106,29 +110,33 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
         resourceCreateInfo: ResourceCreateInfo
     ): String {
         val needApproval = resourceCreateInfo.needApproval
-        val subjectScopes = resourceCreateInfo.projectCreateInfo.subjectScopes
         val iamSubjectScopes = resourceCreateInfo.iamSubjectScopes
         val userId = resourceCreateInfo.userId
         val reason = resourceCreateInfo.projectCreateInfo.description
-        logger.info("createResources : $needApproval|$subjectScopes|$iamSubjectScopes|$userId|$reason")
-        // 同步创建V0项目
-        // val projectId = createResourcesToV0(userId, accessToken, resourceRegisterInfo, userDeptDetail)
+        logger.info("createResources : $needApproval|$iamSubjectScopes|$userId|$reason")
+        // todo 是否要同步创建V0项目
         checkParams(
             needApproval = needApproval!!,
-            subjectScopes = subjectScopes,
+            subjectScopes = resourceCreateInfo.projectCreateInfo.subjectScopes,
             authSecrecy = resourceCreateInfo.projectCreateInfo.authSecrecy
         )
+        if (iamSubjectScopes.isEmpty()) {
+            iamSubjectScopes.add(ManagerScopes(
+                ManagerScopesEnum.getType(ManagerScopesEnum.ALL),
+                ALL_MEMBERS
+            ))
+        }
         if (needApproval) {
-            val projectCode = resourceRegisterInfo.resourceCode
-            val projectName = resourceRegisterInfo.resourceName
-            val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
-            createGradeManagerApplication(
-                projectCode = projectCode,
-                projectName = projectName,
-                userId = userId,
-                iamSubjectScopes = iamSubjectScopes,
-                reason = reason,
-                subjectScopesStr = subjectScopesStr
+            projectDispatcher.dispatch(
+                TxIamV5CreateApplicationEvent(
+                    userId = userId,
+                    retryCount = 0,
+                    delayMills = 1000,
+                    resourceRegisterInfo = resourceRegisterInfo,
+                    projectId = "",
+                    subjectScopes = iamSubjectScopes,
+                    reason = reason
+                )
             )
         } else {
             // 若不需要审批，则直接异步创建分级管理员和默认用户组
@@ -163,10 +171,8 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
         val userId = resourceUpdateInfo.userId
         val approvalStatus = projectInfo.approvalStatus
         val reason = resourceUpdateInfo.projectUpdateInfo.description
-        val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
         // 数据库中的最大可授权人员范围
         val dbSubjectscopes = JsonUtil.to(
-            // todo 等待查询接口封装projectVO
             projectInfo.subjectscopes, object : TypeReference<ArrayList<ManagerScopes>>() {}
         )
         logger.info(
@@ -178,29 +184,40 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
             subjectScopes = resourceUpdateInfo.projectUpdateInfo.subjectScopes,
             authSecrecy = resourceUpdateInfo.projectUpdateInfo.authSecrecy
         )
-
+        if (iamSubjectScopes.isEmpty()) {
+            iamSubjectScopes.add(ManagerScopes(
+                ManagerScopesEnum.getType(ManagerScopesEnum.ALL),
+                ALL_MEMBERS
+            ))
+        }
+        val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
         if (approvalStatus == ApproveStatus.CREATE_PENDING.status
             || approvalStatus == ApproveStatus.UPDATE_PENDING.status
         ) {
-            throw OperationException("正在审批中的项目不允许修改！")
+            throw OperationException("The project is under approval, modification is not allowed！")
         }
-        // 编辑发起审批分为两种：1、项目已创建或修改审核通过，修改项目发起的审批。2、项目创建被拒绝审批通过，再次修改项目发起的审批
+        // 编辑发起审批分为两种：1、项目已创建成功或修改审核通过，修改项目发起的审批。2、项目创建被拒绝审批通过，再次修改项目发起的审批
         if (approvalStatus == ApproveStatus.CREATE_REJECT.status) {
-            // 项目创建被拒绝审批通过，再次修改项目发起的审批
+            // 项目创建被拒绝审批通过，再次修改项目发起的审批，此时直接发起创建分级管理员申请
             if (!needApproval) {
-                throw OperationException("必须从页面发起修改申请！")
+                throw OperationException("Modifications must be made through the bkci client！")
             }
-            createGradeManagerApplication(
-                projectCode = projectCode,
-                projectName = projectName,
-                userId = userId,
-                iamSubjectScopes = iamSubjectScopes,
-                reason = reason,
-                subjectScopesStr = subjectScopesStr
+            projectDispatcher.dispatch(
+                TxIamV5CreateApplicationEvent(
+                    userId = userId,
+                    retryCount = 0,
+                    delayMills = 1000,
+                    resourceRegisterInfo = ResourceRegisterInfo(
+                        resourceCode = projectCode,
+                        resourceName = projectName
+                    ),
+                    projectId = "",
+                    subjectScopes = iamSubjectScopes,
+                    reason = reason
+                )
             )
         } else {
             val isAuthSecrecyChange = projectInfo.isAuthSecrecy != resourceUpdateInfo.projectUpdateInfo.authSecrecy
-            // todo 注意，这一步有问题
             val isSubjectScopesChange = (dbSubjectscopes.toSet() != iamSubjectScopes.toSet())
             logger.info("v5 modifyResource :$isAuthSecrecyChange|$isAuthSecrecyChange")
             // 若可授权人员范围和私密字段未改变，直接结束
@@ -220,7 +237,7 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
                 )
             } else {
                 if (approvalStatus != ApproveStatus.CREATE_APPROVED.status) {
-                    throw OperationException("必须从页面发起修改申请！")
+                    throw OperationException("Modifications must be made through the bkci client！")
                 }
                 updateManager(
                     projectCode = projectCode,
@@ -255,50 +272,6 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
         iamManagerService.updateManager(relationId, updateManagerDTO)
     }
 
-    private fun createGradeManagerApplication(
-        projectCode: String,
-        projectName: String,
-        userId: String,
-        iamSubjectScopes: List<ManagerScopes>,
-        reason: String,
-        subjectScopesStr: String
-    ) {
-        val authorizationScopes = AuthorizationUtils.buildManagerResources(
-            projectId = projectCode,
-            projectName = projectName,
-            iamConfiguration = iamConfiguration
-        )
-        val callbackId = UUIDUtil.generate()
-        val gradeManagerApplicationCreateDTO: GradeManagerApplicationCreateDTO = GradeManagerApplicationCreateDTO
-            .builder()
-            .name("$SYSTEM_DEFAULT_NAME-$projectName")
-            .description(IamGroupUtils.buildManagerDescription(projectCode, userId))
-            .members(arrayListOf(userId))
-            .authorizationScopes(authorizationScopes)
-            .subjectScopes(iamSubjectScopes)
-            .syncPerm(true)
-            .applicant(userId)
-            .reason(reason)
-            .callbackId(callbackId)
-            // todo 需补充
-            .callbackUrl("xxx")
-            .content("xxx")
-            .title("xxx")
-            .build()
-        logger.info("gradeManagerApplicationCreateDTO : $gradeManagerApplicationCreateDTO")
-        val createGradeManagerApplication =
-            iamManagerService.createGradeManagerApplication(gradeManagerApplicationCreateDTO)
-        // 存储审批单
-        projectApprovalCallbackDao.create(
-            dslContext = dslContext,
-            applicant = userId,
-            englishName = projectCode,
-            callbackId = callbackId,
-            sn = createGradeManagerApplication.sn,
-            subjectScopes = subjectScopesStr
-        )
-    }
-
     private fun updateGradeManagerApplication(
         projectCode: String,
         projectName: String,
@@ -325,42 +298,45 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
             .reason(IamGroupUtils.buildManagerUpdateDescription(projectCode, userId))
             .callbackId(callbackId)
             // todo 需补充
-            .callbackUrl("xxx")
+            .callbackUrl(itsmUpdateCallBackUrl)
             .content("xxx")
             .title("xxx")
             .build()
         logger.info("gradeManagerApplicationUpdateDTO : $gradeManagerApplicationUpdateDTO")
         val updateGradeManagerApplication =
             iamManagerService.updateGradeManagerApplication(projectInfo.relationId, gradeManagerApplicationUpdateDTO)
-        // 修改项目状态
-        projectDao.updateProjectStatusByEnglishName(
-            dslContext = dslContext,
-            projectCode = projectInfo.englishName,
-            statusEnum = ApproveStatus.UPDATE_PENDING
-        )
-        // todo 有问题
-        val approveType = if (isAuthSecrecyChange) ApproveType.AUTH_SECRECY_APPROVE.type
-        else if (isSubjectScopesChange) ApproveType.SUBJECT_SCOPES_APPROVE.type
-        else ApproveType.ALL_CHANGE_APPROVE.type
-        logger.info("approveType : $approveType")
-        // 存储审批单
-        projectApprovalCallbackDao.create(
-            dslContext = dslContext,
-            applicant = userId,
-            englishName = projectCode,
-            callbackId = callbackId,
-            sn = updateGradeManagerApplication.sn,
-            subjectScopes = subjectScopesStr,
-            approveType = approveType
-        )
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+
+            val approveType = if (isAuthSecrecyChange && isSubjectScopesChange) ApproveType.ALL_CHANGE_APPROVE.type
+            else if (isSubjectScopesChange) ApproveType.SUBJECT_SCOPES_APPROVE.type
+            else ApproveType.AUTH_SECRECY_APPROVE.type
+            logger.info("approveType : $approveType")
+            // 修改项目状态
+            projectDao.updateProjectStatusByEnglishName(
+                dslContext = context,
+                projectCode = projectInfo.englishName,
+                statusEnum = ApproveStatus.UPDATE_PENDING
+            )
+            // 存储审批单
+            projectApprovalCallbackDao.create(
+                dslContext = context,
+                applicant = userId,
+                englishName = projectCode,
+                callbackId = callbackId,
+                sn = updateGradeManagerApplication.sn,
+                subjectScopes = subjectScopesStr,
+                approveType = approveType
+            )
+        }
     }
 
     private fun checkParams(
         needApproval: Boolean,
-        subjectScopes: List<SubjectScope>?,
+        subjectScopes: ArrayList<ManagerScopes>?,
         authSecrecy: Boolean?
     ) {
-        if (needApproval && (subjectScopes == null || authSecrecy == null)) {
+        if (needApproval && (subjectScopes!!.isEmpty() || authSecrecy == null)) {
             throw OperationException("The maximum authorized scope or auth secrecy cannot be empty!!")
         }
     }
@@ -463,8 +439,7 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(TxV5ProjectPermissionServiceImpl::class.java)
-        private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
         private const val SYSTEM_DEFAULT_NAME = "蓝盾"
-        private const val DEPARTMENT = "department"
+        private const val ALL_MEMBERS = "*"
     }
 }

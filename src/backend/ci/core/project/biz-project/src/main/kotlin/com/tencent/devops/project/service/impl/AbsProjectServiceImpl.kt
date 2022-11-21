@@ -199,7 +199,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: PermissionForbiddenException) {
             throw e
         } catch (e: Exception) {
-            logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
+            logger.warn("Failed to create project in permission center： $projectCreateInfo", e)
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
         }
         if (projectId.isNullOrEmpty()) {
@@ -350,7 +350,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 val projectInfo = projectDao.getByEnglishName(
                     dslContext = dslContext,
                     englishName = englishName
-                ) ?: throw NotFoundException("项目 -$englishName 不存在")
+                ) ?: throw NotFoundException("project - $englishName is not exist!")
                 val projectId = projectInfo.projectId
                 val logo = projectUpdateInfo.logo
                 val logoAddress = getLogoAddress(userId, logo, englishName)
@@ -363,7 +363,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 try {
                     modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
                 } catch (e: Exception) {
-                    logger.warn("权限中心修改项目信息： $resourceUpdateInfo", e)
+                    logger.warn("Error modifying project information in permission center：" +
+                            "$resourceUpdateInfo", e)
                     throw OperationException(
                         MessageCodeUtil.getCodeLanMessage(
                             messageCode = ProjectMessageCode.PEM_UPDATE_FAIL,
@@ -978,6 +979,5 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
         private const val ALL_MEMBERS = "*"
-        private const val DEPARTMENT = "department"
     }
 }

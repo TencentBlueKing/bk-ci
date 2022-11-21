@@ -67,8 +67,12 @@ class ProjectCallBackSevice @Autowired constructor(
     @Value("\${esb.secret:#{null}}")
     val appSecret: String? = null
 
+    @Value("\${itsm.verify.token.url:#{null}}")
+    private val verifyItsmTokenUrl: String = ""
+
     fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         val sn = itsmCallBackInfo.sn
+        // 校验token
         checkItsmToken(itsmCallBackInfo.token, sn)
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         // 蓝盾数据库存储的回调信息
@@ -108,11 +112,11 @@ class ProjectCallBackSevice @Autowired constructor(
                     projectName = projectInfo.projectName
                 )
             } catch (e: Exception) {
-                logger.warn("Failed to create a grade manager in the authority center:$englishName|$sn|$callBackId", e)
+                logger.warn("Failed to create a grade manager in the permission center:$englishName|$sn|$callBackId", e)
                 throw OperationException(
                     MessageCodeUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.PEM_UPDATE_FAIL,
-                        defaultMessage = "Failed to create a grade manager in the authority center!"
+                        defaultMessage = "Failed to create a grade manager in the permission center!"
                     )
                 )
             }
@@ -158,14 +162,14 @@ class ProjectCallBackSevice @Autowired constructor(
         checkItsmToken(itsmCallBackInfo.token, sn)
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         // 蓝盾数据库存储的回调信息
-        val callBackInfo = projectApprovalCallbackDao.getCallbackBySn(dslContext, sn)
+        val dbCallBackInfo = projectApprovalCallbackDao.getCallbackBySn(dslContext, sn)
             ?: throw OperationException(
                 MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.QUERY_PROJECT_CALLBACK_APPLICATION_FAIL,
                     defaultMessage = "The itsm callback application does not exist!| sn = $sn"
                 )
             )
-        val englishName = callBackInfo.englishName
+        val englishName = dbCallBackInfo.englishName
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
             ?: throw OperationException(
                 MessageCodeUtil.getCodeLanMessage(
@@ -173,7 +177,7 @@ class ProjectCallBackSevice @Autowired constructor(
                     defaultMessage = "The project does not exist! | englishName = $englishName"
                 )
             )
-        val callBackId = callBackInfo.callbackId
+        val callBackId = dbCallBackInfo.callbackId
         val currentStatus = itsmCallBackInfo.currentStatus
         var authSecrecy = projectInfo.isAuthSecrecy
         logger.info(
@@ -183,8 +187,8 @@ class ProjectCallBackSevice @Autowired constructor(
         try {
             if (approveResult) {
                 // 若最大可授权人员范围被修改，则需要调起Iam处理单据
-                if (callBackInfo.approveType == ApproveType.SUBJECT_SCOPES_APPROVE.type
-                    || callBackInfo.approveType == ApproveType.ALL_CHANGE_APPROVE.type) {
+                if (dbCallBackInfo.approveType == ApproveType.SUBJECT_SCOPES_APPROVE.type
+                    || dbCallBackInfo.approveType == ApproveType.ALL_CHANGE_APPROVE.type) {
                     // 调起iam处理分级管理员修改申请
                     val callbackApplicationDTO = CallbackApplicationDTO
                         .builder()
@@ -193,14 +197,14 @@ class ProjectCallBackSevice @Autowired constructor(
                         .approveResult(approveResult).build()
                     iamManagerService.handleCallbackApplication(callBackId, callbackApplicationDTO)
                 }
-                if (callBackInfo.approveType == ApproveType.AUTH_SECRECY_APPROVE.type
-                    || callBackInfo.approveType == ApproveType.ALL_CHANGE_APPROVE.type) {
+                if (dbCallBackInfo.approveType == ApproveType.AUTH_SECRECY_APPROVE.type
+                    || dbCallBackInfo.approveType == ApproveType.ALL_CHANGE_APPROVE.type) {
                     // 修改项目的权限保密字段
                     authSecrecy = !authSecrecy
                 }
                 projectDao.updateProjectByEnglish(
                     dslContext = dslContext,
-                    subjectScopesStr = callBackInfo.subjectScopes,
+                    subjectScopesStr = dbCallBackInfo.subjectScopes,
                     authSecrecy = authSecrecy,
                     projectCode = englishName,
                     statusEnum = ApproveStatus.UPDATE_APPROVED
@@ -227,8 +231,6 @@ class ProjectCallBackSevice @Autowired constructor(
     }
 
     private fun checkItsmToken(token: String, sn: String) {
-        // 生产 :http://api.open.woa.com/api/c/compapi/v2/itsm/token/verify/
-        val url = "http://stag.api.open.woa.com/api/c/compapi/v2/itsm/token/verify/"
         val param: MutableMap<String, String?> = mutableMapOf()
         param["bk_app_secret"] = appSecret
         param["token"] = token
@@ -236,12 +238,12 @@ class ProjectCallBackSevice @Autowired constructor(
         val content = objectMapper.writeValueAsString(param)
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val requestBody = RequestBody.create(mediaType, content)
-        val request = Request.Builder().url(url)
+        val request = Request.Builder().url(verifyItsmTokenUrl)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                logger.warn("Itsm request failed url:$url response $it")
+                logger.warn("Itsm request failed url:$verifyItsmTokenUrl response $it")
                 // 请求错误
                 throw RemoteServiceException("Itsm request failed, response: ($it)")
             }

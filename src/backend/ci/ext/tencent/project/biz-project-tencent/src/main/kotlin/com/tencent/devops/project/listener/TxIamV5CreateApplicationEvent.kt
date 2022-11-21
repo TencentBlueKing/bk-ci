@@ -35,12 +35,12 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 
 @Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
-data class TxIamV5CreateEvent(
+data class TxIamV5CreateApplicationEvent(
     override val userId: String,
     override val projectId: String,
     override var retryCount: Int = 0,
     override var delayMills: Int = 0,
     val resourceRegisterInfo: ResourceRegisterInfo,
-    var iamProjectId: String?,
-    val subjectScopes: List<ManagerScopes>? = emptyList()
+    val subjectScopes: ArrayList<ManagerScopes>,
+    val reason: String
 ) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)
