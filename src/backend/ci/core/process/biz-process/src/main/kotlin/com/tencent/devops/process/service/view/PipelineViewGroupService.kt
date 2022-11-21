@@ -457,6 +457,7 @@ class PipelineViewGroupService @Autowired constructor(
         return PipelineViewPreview(addedPipelineInfos, removedPipelineInfos, reservePipelineInfos)
     }
 
+    @SuppressWarnings("LongMethod", "ComplexMethod")
     fun dict(userId: String, projectId: String): PipelineViewDict {
         // 流水线信息
         val pipelineInfoMap = allPipelineInfos(projectId, true).associateBy { it.pipelineId }
