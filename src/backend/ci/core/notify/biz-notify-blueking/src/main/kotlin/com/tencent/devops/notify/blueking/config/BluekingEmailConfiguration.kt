@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration
 import com.tencent.devops.common.notify.utils.Configuration as NotifyConfig
 
 @Configuration
-class EmailConfiguration {
+class BluekingEmailConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "notify", name = ["emailChannel"], havingValue = "blueking")
