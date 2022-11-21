@@ -64,7 +64,7 @@ class SendCommitCheck @Autowired constructor(
         private const val BUILD_RUNNING_DESC = "Running."
         private const val BUILD_STAGE_SUCCESS_DESC =
             "Warning: your pipeline「%s」 is stage succeed. Rejected by %s, reason is %s."
-        private const val BUILD_SUCCESS_DESC = "Successful in %sm."
+        private const val BUILD_SUCCESS_DESC = "Successful in %s."
         private const val BUILD_CANCEL_DESC = "Your pipeline「%s」 was cancelled."
         private const val BUILD_FAILED_DESC = "Failing after %sm."
         private const val BUILD_GATE_REVIEW_DESC =
