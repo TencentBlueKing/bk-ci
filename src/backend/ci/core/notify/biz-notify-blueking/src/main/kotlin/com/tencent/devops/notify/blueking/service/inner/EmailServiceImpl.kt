@@ -54,8 +54,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import java.util.stream.Collectors
 
-@org.springframework.context.annotation.Configuration
-@ConditionalOnProperty(prefix = "notify", name = ["emailChannel"], havingValue = "blueking", matchIfMissing = true)
 @Suppress("ALL")
 class EmailServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,

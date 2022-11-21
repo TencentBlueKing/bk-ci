@@ -1,4 +1,4 @@
-package com.tencent.devops.notify.wework.config
+package com.tencent.devops.notify.tencentcloud.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration

@@ -47,20 +47,17 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.service.EmailService
+import com.tencent.devops.notify.tencentcloud.config.TencentCloudConfiguration
 import com.tencent.devops.notify.tencentcloud.pojo.EmailBody
 import com.tencent.devops.notify.tencentcloud.pojo.EmailResponse
 import com.tencent.devops.notify.tencentcloud.pojo.EmailSignatureConfig
 import com.tencent.devops.notify.tencentcloud.pojo.Template
 import com.tencent.devops.notify.tencentcloud.utils.TencentCloudSignatureUtil
-import com.tencent.devops.notify.wework.config.TencentCloudConfiguration
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import java.util.stream.Collectors
 
-@org.springframework.context.annotation.Configuration
-@ConditionalOnProperty(prefix = "notify", name = ["emailChannel"], havingValue = "tencentCloud")
 @Suppress("ALL")
 class TencentCloudEmailServiceImpl @Autowired constructor(
     private val emailNotifyDao: EmailNotifyDao,
@@ -195,7 +192,7 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
                 throw ErrorCodeException(
                     errorCode = ERROR_NOTIFY_TENCENT_CLOUD_EMAIL_SEND_FAIL,
                     defaultMessage = "通知服务：腾讯云邮件通知发送失败,${it.response.error.message} " +
-                        "返回错误码 ${it.response.error.code}",
+                            "返回错误码 ${it.response.error.code}",
                     params = arrayOf(it.response.error.code)
                 )
             }
