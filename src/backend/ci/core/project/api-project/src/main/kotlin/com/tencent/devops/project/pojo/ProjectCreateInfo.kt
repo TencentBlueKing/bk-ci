@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.pojo
 
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.io.InputStream
@@ -70,7 +71,7 @@ data class ProjectCreateInfo(
     @ApiModelProperty("项目相关配置")
     val properties: ProjectProperties? = null,
     @ApiModelProperty("项目最大可授权人员范围")
-    val subjectScopes: List<SubjectScope>? = emptyList(),
+    var subjectScopes: ArrayList<ManagerScopes>? = ArrayList(),
     @ApiModelProperty("logo文件")
     val logo: InputStream? = null,
     @ApiModelProperty("是否权限私密")
