@@ -366,7 +366,7 @@ class OpAtomServiceImpl @Autowired constructor(
             userId,
             MarketAtomCreateRequest(
                 projectCode = releaseInfo.projectId,
-                atomCode = releaseInfo.atomCode,
+                atomCode = atomCode,
                 name = releaseInfo.name,
                 language = releaseInfo.language,
                 frontendType = releaseInfo.configInfo.frontendType
@@ -435,7 +435,7 @@ class OpAtomServiceImpl @Autowired constructor(
                     userId = userId,
                     projectCode = releaseInfo.projectId,
                     atomId = atomId,
-                    atomCode = releaseInfo.atomCode,
+                    atomCode = atomCode,
                     version = releaseInfo.versionInfo.version,
                     serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class),
                     releaseType = releaseInfo.versionInfo.releaseType.name,
@@ -465,7 +465,7 @@ class OpAtomServiceImpl @Autowired constructor(
             userId,
             releaseInfo.projectId,
             MarketAtomUpdateRequest(
-                atomCode = releaseInfo.atomCode,
+                atomCode = atomCode,
                 name = releaseInfo.name,
                 category = releaseInfo.category,
                 jobType = releaseInfo.jobType,
