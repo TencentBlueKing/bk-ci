@@ -70,7 +70,6 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.SubjectScope
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -175,17 +174,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
-        val subjectScopes = projectCreateInfo.subjectScopes
+        val subjectScopes = projectCreateInfo.subjectScopes!!
         val needApproval = createExtInfo.needApproval
-        val iamSubjectScopes = getIamSubjectScopes(subjectScopes)
-        logger.info("create project : iamSubjectScopes = $iamSubjectScopes")
+        logger.info("create project : subjectScopes = $subjectScopes")
         try {
             if (createExtInfo.needAuth!!) {
                 val resourceCreateInfo = ResourceCreateInfo(
                     userId = userId,
                     accessToken = accessToken,
                     userDeptDetail = userDeptDetail,
-                    iamSubjectScopes = iamSubjectScopes,
+                    iamSubjectScopes = subjectScopes,
                     projectCreateInfo = projectCreateInfo,
                     needApproval = needApproval
                 )
@@ -210,7 +208,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
+                if (subjectScopes.isEmpty()) {
+                    subjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
+                }
+                val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
                 val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
                 // 上传logo
                 val logo = projectCreateInfo.logo
@@ -263,7 +264,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: DuplicateKeyException) {
             logger.warn("Duplicate project $projectCreateInfo", e)
             if (createExtInfo.needAuth) {
-                // todo 待确定，切换v3后，是否需要做其他操作
+                // todo 待确定，切换v3-RBAC后，是否需要做其他操作
                 deleteAuth(projectId, accessToken)
             }
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
@@ -338,14 +339,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         val startEpoch = System.currentTimeMillis()
         var success = false
-        val subjectScopes = projectUpdateInfo.subjectScopes
+        val subjectScopes = projectUpdateInfo.subjectScopes!!
         validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
-        // 考虑对于原有的老项目，其可授权范围本来就为空，是否要强行给他设置为全公司，还是原样
-        // 假设上线时，统一刷数据，刷成可授权人员范围为全公司
-        val iamSubjectScopes = getIamSubjectScopes(subjectScopes)
         logger.info(
             "update project : $userId | $englishName | $projectUpdateInfo | " +
-                "$needApproval | $iamSubjectScopes"
+                "$needApproval | $subjectScopes"
         )
         try {
             try {
@@ -360,7 +358,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     userId = userId,
                     projectUpdateInfo = projectUpdateInfo,
                     needApproval = needApproval!!,
-                    iamSubjectScopes = iamSubjectScopes
+                    iamSubjectScopes = subjectScopes
                 )
                 try {
                     modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
@@ -375,7 +373,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
+                    // 修改时，若传递的可授权人员范围为空，则直接用全公司
+                    if (subjectScopes.isEmpty()) {
+                        subjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
+                    }
+                    val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
                     logger.info("subjectScopesStr : $subjectScopesStr")
                     projectDao.update(
                         dslContext = context,
@@ -446,7 +448,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            //todo 修改拉取策略，只拉取拥有查看权限的项目
+            //todo 修改拉取策略，只拉取拥有查看权限的项目  v3保留
             val projects = getProjectFromAuth(userId, accessToken)
             if (projects.isEmpty() && approved!!) {
                 return emptyList()
@@ -950,32 +952,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userId: String,
         applicationInfo: ApplicationInfo
     ): Boolean
-
-    private fun getIamSubjectScopes(subjectScopes: List<SubjectScope>?): List<ManagerScopes> {
-        val iamSubjectScopes: ArrayList<ManagerScopes> = ArrayList()
-        if (subjectScopes == null) {
-            iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
-        } else {
-            subjectScopes.forEach {
-                when (it.type) {
-                    ALL_MEMBERS -> {
-                        iamSubjectScopes.add(
-                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS)
-                        )
-                    }
-                    DEPARTMENT -> {
-                        iamSubjectScopes.add(
-                            ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT), it.id)
-                        )
-                    }
-                    else -> {
-                        iamSubjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.USER), it.id))
-                    }
-                }
-            }
-        }
-        return iamSubjectScopes
-    }
 
     private fun getLogoAddress(
         userId: String,

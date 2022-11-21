@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.pojo
 
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -156,7 +157,7 @@ data class ProjectVO(
     @ApiModelProperty("项目其他配置")
     val properties: ProjectProperties?,
     @ApiModelProperty("项目最大可授权人员范围")
-    val subjectScopes: List<SubjectScope>?,
+    val subjectScopes: ArrayList<ManagerScopes>?,
     @ApiModelProperty("是否权限私密")
     val authSecrecy: Boolean?
 )
