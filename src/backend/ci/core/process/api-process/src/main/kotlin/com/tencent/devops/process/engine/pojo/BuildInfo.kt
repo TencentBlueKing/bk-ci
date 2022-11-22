@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.code.WebhookInfo
+import com.tencent.devops.process.pojo.pipeline.RepositoryTriggerInfo
 
 data class BuildInfo(
     val projectId: String,
@@ -57,6 +59,10 @@ data class BuildInfo(
     val retryFlag: Boolean? = null,
     val concurrencyGroup: String? = null,
     val webhookInfo: WebhookInfo? = null,
+    val buildMsg: String? = null,
+    val material: List<PipelineBuildMaterial>? = null,
+    val remark: String? = null,
+    val repositoryTriggerInfo: RepositoryTriggerInfo? = null,
     val errorType: Int? = null,
     val errorCode: Int? = null,
     val errorMsg: String? = null

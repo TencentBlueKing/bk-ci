@@ -266,6 +266,16 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getBuildDetailByExecuteCount(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ): Result<ModelDetail> {
+        TODO("Not yet implemented")
+    }
+
     override fun getBuildDetailByBuildNo(
         userId: String,
         projectId: String,

@@ -66,16 +66,20 @@ data class ModelDetail(
     val latestVersion: Int,
     @ApiModelProperty("最新一次的构建buildNo", required = true)
     val latestBuildNum: Int,
-    @ApiModelProperty("最近修改人", required = true)
+    @ApiModelProperty("最近修改人", required = false)
     val lastModifyUser: String?,
     @ApiModelProperty("执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
     val executeTime: Long = 0,
     @ApiModelProperty("触发审核人列表", required = false)
     val triggerReviewers: List<String>? = null,
-    @ApiModelProperty("编排文件版本号", required = true)
-    val pipelineVersion: Int,
+    @ApiModelProperty("查询的执行次数", required = false)
+    val executeCount: Int? = 1,
     @ApiModelProperty("构建信息", required = false)
     var buildMsg: String?,
     @ApiModelProperty("原材料", required = false)
-    val material: List<PipelineBuildMaterial>?
+    val material: List<PipelineBuildMaterial>?,
+    @ApiModelProperty("备注", required = false)
+    val remark: String?,
+    @ApiModelProperty("代码库触发信息", required = false)
+    val repositoryTriggerInfo: RepositoryTriggerInfo?
 )

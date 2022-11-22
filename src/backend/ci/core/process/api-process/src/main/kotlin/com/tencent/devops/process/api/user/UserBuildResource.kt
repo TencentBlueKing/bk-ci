@@ -236,6 +236,27 @@ interface UserBuildResource {
         buildId: String
     ): Result<ModelDetail>
 
+    @ApiOperation("根据执行次数获取构建详情")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detailByCount")
+    fun getBuildDetailByExecuteCount(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("构建ID", required = true)
+        @QueryParam("executeCount")
+        executeCount: Int
+    ): Result<ModelDetail>
+
     @ApiOperation("获取构建详情")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/buildNo/{buildNo}/detail")
