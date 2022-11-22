@@ -147,4 +147,12 @@ class QualityHisMetadataDao {
                 .execute()
         }
     }
+
+    fun deleteHisMetaByBuildId(dslContext: DSLContext, buildId: String): Int {
+        return with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
 }
