@@ -96,6 +96,11 @@ func (t *fastbuildTask) GetRequestInstance() int {
 	return 0
 }
 
+// GetWorkerCount get the worker count.
+func (t *fastbuildTask) GetWorkerCount() int {
+	return len(t.WorkerIPList)
+}
+
 // do not support dump.
 func (t *fastbuildTask) Dump() []byte {
 	return []byte("")
