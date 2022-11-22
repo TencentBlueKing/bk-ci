@@ -74,6 +74,11 @@ func (dt *distccTask) WorkerList() []string {
 	return nil
 }
 
+//GetRequestInstance define
+func (dt *distccTask) GetRequestInstance() int {
+	return dt.Operator.RequestInstance
+}
+
 // Dump do not support dump.
 func (dt *distccTask) Dump() []byte {
 	data := dt.CustomData(nil).(CustomData)

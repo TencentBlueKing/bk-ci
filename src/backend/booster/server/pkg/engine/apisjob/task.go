@@ -96,6 +96,11 @@ func (t *apisTask) WorkerList() []string {
 	return t.WorkerIPList
 }
 
+// GetRequestInstance define
+func (t *apisTask) GetRequestInstance() int {
+	return t.ContainerSetting.RequestInstance
+}
+
 // Dump get dump data from task.
 func (t *apisTask) Dump() []byte {
 	var data []byte
