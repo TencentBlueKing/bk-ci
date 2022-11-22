@@ -252,7 +252,8 @@ class PipelineListFacadeService @Autowired constructor(
         val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
             projectId = projectId,
             channelCode = ChannelCode.BS,
-            pipelineIds = resultPipelineIds)
+            pipelineIds = resultPipelineIds
+        )
         if (buildPipelineRecords.isNotEmpty) {
             pipelines.addAll(
                 buildPipelines(
@@ -537,7 +538,25 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             val pipelineList = mutableListOf<Pipeline>()
             val totalSize = totalAvailablePipelineSize + totalInvalidPipelineSize
-            if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
+            if (includeDelete) {
+                handlePipelineQueryList(
+                    pipelineList = pipelineList,
+                    projectId = projectId,
+                    channelCode = channelCode,
+                    sortType = sortType,
+                    pipelineIds = pipelineIds,
+                    favorPipelines = favorPipelines,
+                    authPipelines = authPipelines,
+                    viewId = viewId,
+                    pipelineFilterParamList = pipelineFilterParamList,
+                    permissionFlag = null,
+                    page = page,
+                    pageSize = pageSize,
+                    includeDelete = true,
+                    collation = collation,
+                    userId = userId
+                )
+            } else if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
                 // 判断可用的流水线是否已到最后一页
                 val totalAvailablePipelinePage = PageUtil.calTotalPage(pageSize, totalAvailablePipelineSize)
                 if (page < totalAvailablePipelinePage) {
