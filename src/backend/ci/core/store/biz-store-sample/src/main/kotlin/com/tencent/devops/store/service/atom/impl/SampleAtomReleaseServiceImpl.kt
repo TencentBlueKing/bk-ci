@@ -58,6 +58,8 @@ import org.springframework.stereotype.Service
 @Service
 class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServiceImpl() {
 
+    private val logger = LoggerFactory.getLogger(SampleAtomReleaseServiceImpl::class.java)
+
     override fun handleAtomPackage(
         marketAtomCreateRequest: MarketAtomCreateRequest,
         userId: String,
@@ -207,9 +209,5 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         }
 
         return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(SampleAtomReleaseServiceImpl::class.java)
     }
 }
