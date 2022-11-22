@@ -1,6 +1,16 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package distcc
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -22,6 +32,8 @@ import (
 )
 
 const (
+	queueNameHeaderSymbol = "://"
+
 	// EngineName define the engine name
 	EngineName = "distcc"
 
@@ -33,18 +45,42 @@ const (
 	daemonStatsURL = "http://%s:%d/"
 )
 
-// EngineConfig
+type queueNameHeader string
+
+const (
+	queueNameHeaderK8SWin     queueNameHeader = "K8S_WIN"
+	queueNameHeaderK8SDefault queueNameHeader = "K8S"
+)
+
+// EngineConfig define distcc engine
 type EngineConfig struct {
 	engine.MySQLConf
 	Rd rd.RegisterDiscover
 
-	ClusterID              string
-	CPUPerInstance         float64
-	MemPerInstance         float64
+	// k8s cluster info
+	K8SCRMClusterID      string
+	K8SCRMCPUPerInstance float64
+	K8SCRMMemPerInstance float64
+
+	// k8s cluster list info
+	K8SClusterList map[string]K8sClusterInfo
+
+	ClusterID      string
+	CPUPerInstance float64
+	MemPerInstance float64
+
 	LeastJobServer         int
 	JobServerTimesToCPU    float64
+	QueueShareType         map[string]engine.QueueShareType
 	Brokers                []config.EngineDistCCBrokerConfig
 	QueueResourceAllocater map[string]config.ResourceAllocater
+}
+
+//K8sClusterInfo define
+type K8sClusterInfo struct {
+	K8SCRMClusterID      string
+	K8SCRMCPUPerInstance float64
+	K8SCRMMemPerInstance float64
 }
 
 const distCCRunningLongestTime = 6 * time.Hour
@@ -56,7 +92,8 @@ var preferences = engine.Preferences{
 // NewDistccEngine get a new distcc engine
 // EngineConfig:   describe the basic config of engine including mysql config
 // HandleWithUser: registered from a container resource manager, used to handle the resources and launch tasks.
-func NewDistccEngine(conf EngineConfig, mgr crm.HandlerWithUser) (engine.Engine, error) {
+func NewDistccEngine(conf EngineConfig, mgr, k8sCrmMgr crm.HandlerWithUser,
+	k8sListCrmMgr map[string]crm.HandlerWithUser) (engine.Engine, error) {
 	m, err := NewMySQL(conf.MySQLConf)
 	if err != nil {
 		blog.Errorf("engine(%s) get new mysql(%+v) failed: %v", EngineName, conf.MySQLConf, err)
@@ -64,10 +101,16 @@ func NewDistccEngine(conf EngineConfig, mgr crm.HandlerWithUser) (engine.Engine,
 	}
 
 	egn := &distccEngine{
-		conf:        conf,
-		publicQueue: engine.NewStagingTaskQueue(),
-		mysql:       m,
-		mgr:         mgr,
+		conf: conf,
+		publicQueueMap: map[string]engine.StagingTaskQueue{
+			publicQueueDefault:    engine.NewStagingTaskQueue(),
+			publicQueueK8SDefault: engine.NewStagingTaskQueue(),
+			publicQueueK8SWindows: engine.NewStagingTaskQueue(),
+		},
+		mysql:         m,
+		mgr:           mgr,
+		k8sCrmMgr:     k8sCrmMgr,
+		k8sListCrmMgr: k8sListCrmMgr,
 	}
 	if err = egn.initBrokers(); err != nil {
 		blog.Errorf("engine(%s) init brokers failed: %v", EngineName, err)
@@ -79,11 +122,23 @@ func NewDistccEngine(conf EngineConfig, mgr crm.HandlerWithUser) (engine.Engine,
 	return egn, nil
 }
 
+const (
+	publicQueueDefault    = "default"
+	publicQueueK8SDefault = "k8s_default"
+	publicQueueK8SWindows = "k8s_windows"
+)
+
 type distccEngine struct {
-	conf        EngineConfig
-	publicQueue engine.StagingTaskQueue
-	mysql       MySQL
-	mgr         crm.HandlerWithUser
+	conf           EngineConfig
+	mysql          MySQL
+	publicQueueMap map[string]engine.StagingTaskQueue
+	mgr            crm.HandlerWithUser
+
+	// k8s container resource manager
+	k8sCrmMgr crm.HandlerWithUser
+
+	// k8s resource manager list
+	k8sListCrmMgr map[string]crm.HandlerWithUser
 }
 
 // Name get the engine name
@@ -97,11 +152,15 @@ func (de *distccEngine) Name() engine.TypeName {
 func (de *distccEngine) SelectFirstTaskBasic(tqg *engine.TaskQueueGroup, queueName string) (*engine.TaskBasic, error) {
 	tb, err := tqg.GetQueue(queueName).First()
 	if err == engine.ErrorNoTaskInQueue {
-
+		publicQueue := de.getPublicQueueByQueueName(queueName)
+		if publicQueue == nil || !de.canTakeFromPublicQueue(queueName) {
+			// some queue should not share resources with others.
+			return nil, engine.ErrorNoTaskInQueue
+		}
 		// get first valid task from public queue
 		// if task not exist in queue group, just delete it from public queue.
 		for {
-			tb, err = de.publicQueue.First()
+			tb, err = publicQueue.First()
 			if err == engine.ErrorNoTaskInQueue {
 				return nil, err
 			}
@@ -110,7 +169,7 @@ func (de *distccEngine) SelectFirstTaskBasic(tqg *engine.TaskQueueGroup, queueNa
 				break
 			}
 
-			_ = de.publicQueue.Delete(tb.ID)
+			_ = publicQueue.Delete(tb.ID)
 		}
 	}
 
@@ -306,19 +365,29 @@ func (de *distccEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 			task.Client.LeastCPU = task.Client.RequestCPU
 		}
 	}
-	task.Operator.ClusterID = de.conf.ClusterID
-	task.Operator.AppName = task.ID
-	task.Operator.Namespace = EngineName
-	task.Operator.Image = gcc.Image
-	// if ban resources, then request and least instance is 0
-	if !task.Client.BanAllBooster && !task.Client.BanDistCC {
-		task.Operator.RequestInstance = (int(task.Client.RequestCPU) + int(de.conf.CPUPerInstance) - 1) /
-			int(de.conf.CPUPerInstance)
-		task.Operator.LeastInstance = (int(task.Client.LeastCPU) + int(de.conf.CPUPerInstance) - 1) /
-			int(de.conf.CPUPerInstance)
+
+	crmMgr := de.getCrMgr(tb.Client.QueueName)
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try creating task(%s) failed: crmMgr is null", EngineName, task.ID)
+		return errors.New("crmMgr is null")
 	}
-	task.Operator.RequestCPUPerUnit = de.conf.CPUPerInstance
-	task.Operator.RequestMemPerUnit = de.conf.MemPerInstance
+	task.Operator.ClusterID = de.getClusterID(tb.Client.QueueName)
+	task.Operator.AppName = task.ID
+	task.Operator.Namespace = crmMgr.GetNamespace()
+	task.Operator.Image = gcc.Image
+
+	queueName := tb.Client.QueueName
+	ist := crmMgr.GetInstanceType(getPlatform(queueName), getQueueNamePure(queueName))
+	cpuPerInstance := ist.CPUPerInstance
+	memPerInstance := ist.MemPerInstance
+	if !task.Client.BanAllBooster && !task.Client.BanDistCC {
+		task.Operator.RequestInstance = (int(task.Client.RequestCPU) + int(cpuPerInstance) - 1) /
+			int(cpuPerInstance)
+		task.Operator.LeastInstance = (int(task.Client.LeastCPU) + int(cpuPerInstance) - 1) /
+			int(cpuPerInstance)
+	}
+	task.Operator.RequestCPUPerUnit = cpuPerInstance
+	task.Operator.RequestMemPerUnit = memPerInstance
 
 	if err = de.updateTask(task); err != nil {
 		blog.Errorf("engine(%s) try creating task, update task(%s) failed: %v", EngineName, tb.ID, err)
@@ -326,6 +395,22 @@ func (de *distccEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	}
 	blog.Infof("engine(%s) success to create task(%s)", EngineName, tb.ID)
 	return nil
+}
+
+func (de *distccEngine) getClusterID(queueName string) string {
+	switch getQueueNameHeader(queueName) {
+	case queueNameHeaderK8SDefault, queueNameHeaderK8SWin:
+		for qNames, cluster := range de.conf.K8SClusterList {
+			for _, qName := range strings.Split(qNames, ",") {
+				if queueName == strings.TrimSpace(qName) {
+					return cluster.K8SCRMClusterID
+				}
+			}
+		}
+		return de.conf.K8SCRMClusterID
+	default:
+		return de.conf.ClusterID
+	}
 }
 
 // ExtraData describe the data in task creation from client.
@@ -376,7 +461,23 @@ func (de *distccEngine) updateTask(task *distccTask) error {
 	return nil
 }
 
-func (de *distccEngine) launchTask(tb *engine.TaskBasic, city string) error {
+func (de *distccEngine) getCrMgr(queueName string) crm.HandlerWithUser {
+	switch getQueueNameHeader(queueName) {
+	case queueNameHeaderK8SDefault, queueNameHeaderK8SWin:
+		for qNames, mgr := range de.k8sListCrmMgr {
+			for _, qName := range strings.Split(qNames, ",") {
+				if queueName == strings.TrimSpace(qName) {
+					return mgr
+				}
+			}
+		}
+		return de.k8sCrmMgr //default k8s cluster
+	default:
+		return de.mgr
+	}
+}
+
+func (de *distccEngine) launchTask(tb *engine.TaskBasic, queueName string) error {
 	task, err := de.getTask(tb.ID)
 	if err != nil {
 		blog.Errorf("engine(%s) try launching task, get task(%s) failed: %v", EngineName, tb.ID, err)
@@ -389,10 +490,15 @@ func (de *distccEngine) launchTask(tb *engine.TaskBasic, city string) error {
 	}
 
 	// init resource conditions
-	task.Client.City = city
-	if err = de.mgr.Init(tb.ID, crm.ResourceParam{
-		City:     task.Client.City,
-		Platform: "linux",
+	pureQueueName := getQueueNamePure(queueName)
+	crmMgr := de.getCrMgr(queueName)
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try launching task(%s) failed: crmMgr is null", EngineName, task.ID)
+		return errors.New("crmMgr is null")
+	}
+	if err = crmMgr.Init(tb.ID, crm.ResourceParam{
+		City:     pureQueueName,
+		Platform: getPlatform(queueName),
 		Env: map[string]string{
 			envAllow: strings.Join(append(de.getServerIPList(), task.Client.SourceIP), ","),
 			envJob:   strconv.Itoa(int(task.Operator.RequestCPUPerUnit)),
@@ -408,7 +514,7 @@ func (de *distccEngine) launchTask(tb *engine.TaskBasic, city string) error {
 		return err
 	}
 
-	err = de.mgr.Launch(tb.ID, city, func(availableInstance int) (int, error) {
+	err = crmMgr.Launch(tb.ID, pureQueueName, func(availableInstance int) (int, error) {
 		if availableInstance < task.Operator.LeastInstance {
 			return 0, engine.ErrorNoEnoughResources
 		}
@@ -422,7 +528,10 @@ func (de *distccEngine) launchTask(tb *engine.TaskBasic, city string) error {
 	})
 	// add task into public queue
 	if err == engine.ErrorNoEnoughResources {
-		de.publicQueue.Add(tb)
+		if publicQueue := de.getPublicQueueByQueueName(queueName); publicQueue != nil &&
+			de.canGiveToPublicQueue(queueName) {
+			publicQueue.Add(tb)
+		}
 		return err
 	}
 	if err != nil {
@@ -473,11 +582,15 @@ func (de *distccEngine) launchDone(taskID string) (bool, error) {
 		blog.Errorf("engine(%s) try checking service info, get task(%s) failed: %v", EngineName, taskID, err)
 		return false, err
 	}
-
+	crmMgr := de.getCrMgr(task.Client.City)
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try launch done task(%s) failed: crmMgr is null", EngineName, task.ID)
+		return false, errors.New("crmMgr is null")
+	}
 	info := &operator.ServiceInfo{}
 	if !task.Client.BanAllBooster && !task.Client.BanDistCC {
 		// if still preparing, then it's not need to get service info
-		isPreparing, err := de.mgr.IsServicePreparing(taskID)
+		isPreparing, err := crmMgr.IsServicePreparing(taskID)
 		if err != nil {
 			blog.Errorf("engine(%s) try checking service info, check if service preparing(%s) failed: %v",
 				EngineName, taskID, err)
@@ -487,7 +600,7 @@ func (de *distccEngine) launchDone(taskID string) (bool, error) {
 			return false, nil
 		}
 
-		info, err = de.mgr.GetServiceInfo(taskID)
+		info, err = crmMgr.GetServiceInfo(taskID)
 		if err != nil {
 			blog.Errorf("engine(%s) try checking service info, get info(%s) failed: %v", EngineName, taskID, err)
 			return false, err
@@ -619,8 +732,18 @@ func (de *distccEngine) collectStatsInfo(uri string) (*ds.StatsInfo, error) {
 }
 
 func (de *distccEngine) releaseTask(taskID string) error {
+	task, err := de.getTask(taskID)
+	if err != nil {
+		blog.Errorf("engine(%s) try release task, get task(%s) failed: %v", EngineName, taskID, err)
+		return err
+	}
+	crmMgr := de.getCrMgr(task.Client.City)
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try releasing crm task, release task(%s) failed: crmMgr is null", EngineName, task.ID)
+		return errors.New("crmMgr is null")
+	}
 	blog.Infof("engine(%s) try to release task(%s)", EngineName, taskID)
-	if err := de.mgr.Release(taskID); err != nil && err != crm.ErrorResourceNoExist {
+	if err := crmMgr.Release(taskID); err != nil && err != crm.ErrorResourceNoExist {
 		blog.Errorf("engine(%s) try releasing task, release task(%s) failed: %v", EngineName, taskID, err)
 		return err
 	}
@@ -736,6 +859,7 @@ type Message struct {
 	MessageGetCMakeArgs MessageGetCMakeArgs `json:"get_cmake_args"`
 }
 
+//MessageType define
 type MessageType int
 
 const (
@@ -788,12 +912,16 @@ func (de *distccEngine) initBrokers() error {
 				EngineName, brokerName, broker.GccVersion, err)
 			return err
 		}
-
-		if err = de.mgr.AddBroker(
+		crmMgr := de.getCrMgr(broker.City)
+		if crmMgr == nil {
+			blog.Errorf("engine(%s) init broker(%s) failed: crmMgr is null", EngineName, brokerName)
+			return errors.New("crmMgr is null")
+		}
+		if err = crmMgr.AddBroker(
 			brokerName, crm.StrategyConst, crm.NewConstBrokerStrategy(broker.ConstNum), crm.BrokerParam{
 				Param: crm.ResourceParam{
-					City:     broker.City,
-					Platform: "linux",
+					City:     getQueueNamePure(broker.City),
+					Platform: getPlatform(broker.City),
 					Env: map[string]string{
 						envAllow: broker.Allow,
 						envJob:   fmt.Sprintf("%d", broker.JobPerInstance),
@@ -820,6 +948,115 @@ func (de *distccEngine) initBrokers() error {
 	return nil
 }
 
+func (de *distccEngine) canTakeFromPublicQueue(queueName string) bool {
+	if de.conf.QueueShareType == nil {
+		return true
+	}
+
+	t, ok := de.conf.QueueShareType[queueName]
+	if !ok {
+		return true
+	}
+
+	switch t {
+	case engine.QueueShareTypeAllAllowed, engine.QueueShareTypeOnlyTakeFromPublic:
+		return true
+	default:
+		return false
+	}
+}
+
+func (de *distccEngine) canGiveToPublicQueue(queueName string) bool {
+	if de.conf.QueueShareType == nil {
+		return true
+	}
+
+	t, ok := de.conf.QueueShareType[queueName]
+	if !ok {
+		return true
+	}
+
+	switch t {
+	case engine.QueueShareTypeAllAllowed, engine.QueueShareTypeOnlyGiveToPublic:
+		return true
+	default:
+		return false
+	}
+}
+
+func (de *distccEngine) getPublicQueueByQueueName(queueName string) engine.StagingTaskQueue {
+	key := ""
+
+	switch getQueueNameHeader(queueName) {
+	case "":
+		key = publicQueueDefault
+	case queueNameHeaderK8SDefault:
+		key = publicQueueK8SDefault
+	case queueNameHeaderK8SWin:
+		key = publicQueueK8SWindows
+	default:
+		return nil
+	}
+
+	if _, ok := de.publicQueueMap[key]; !ok {
+		return nil
+	}
+
+	return de.publicQueueMap[key]
+}
+
 func brokerName(conf config.EngineDistCCBrokerConfig) string {
-	return strings.ReplaceAll(fmt.Sprintf("%s-%s", conf.City, conf.GccVersion), ".", "-")
+	header := ""
+	switch getQueueNameHeader(conf.City) {
+	case queueNameHeaderK8SDefault:
+		header = "k-"
+	case queueNameHeaderK8SWin:
+		header = "kw-"
+	}
+	return strings.ReplaceAll(fmt.Sprintf("%s%s-%s", header, getQueueNamePure(conf.City), conf.GccVersion), ".", "-")
+}
+
+func getQueueNameHeader(queueName string) queueNameHeader {
+	index := strings.Index(queueName, queueNameHeaderSymbol)
+	if index < 0 {
+		return ""
+	}
+
+	header := queueNameHeader(queueName[:index])
+	switch header {
+	case queueNameHeaderK8SWin, queueNameHeaderK8SDefault:
+		return header
+	default:
+		return ""
+	}
+}
+
+func getPlatform(queueName string) string {
+	switch getQueueNameHeader(queueName) {
+	case queueNameHeaderK8SWin:
+		return "windows"
+	default:
+		return "linux"
+	}
+}
+
+func getQueueNamePure(queueName string) string {
+	header := getQueueNameHeader(queueName)
+	if header == "" {
+		return queueName
+	}
+
+	return strings.TrimPrefix(queueName, fmt.Sprintf("%s%s", header, queueNameHeaderSymbol))
+}
+
+//GetK8sInstanceKey get instance type from queueName
+func GetK8sInstanceKey(queueName string) *config.InstanceType {
+	header := getQueueNameHeader(queueName)
+	if header == queueNameHeaderK8SDefault || header == queueNameHeaderK8SWin {
+		return &config.InstanceType{
+			Group:    getQueueNamePure(queueName),
+			Platform: getPlatform(queueName),
+		}
+	}
+	return nil
 }
