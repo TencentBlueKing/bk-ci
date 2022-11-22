@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -70,5 +71,11 @@ data class ModelDetail(
     @ApiModelProperty("执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
     val executeTime: Long = 0,
     @ApiModelProperty("触发审核人列表", required = false)
-    val triggerReviewers: List<String>? = null
+    val triggerReviewers: List<String>? = null,
+    @ApiModelProperty("编排文件版本号", required = true)
+    val pipelineVersion: Int,
+    @ApiModelProperty("构建信息", required = false)
+    var buildMsg: String?,
+    @ApiModelProperty("原材料", required = false)
+    val material: List<PipelineBuildMaterial>?
 )

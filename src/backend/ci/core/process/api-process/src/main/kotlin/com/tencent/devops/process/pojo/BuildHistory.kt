@@ -60,7 +60,7 @@ data class BuildHistory(
     val isMobileStart: Boolean = false,
     @ApiModelProperty("原材料", required = false)
     val material: List<PipelineBuildMaterial>?,
-    @ApiModelProperty("排队于", required = false)
+    @ApiModelProperty("排队于（毫秒时间戳）", required = false)
     val queueTime: Long?,
     @ApiModelProperty("构件列表", required = false)
     val artifactList: List<FileInfo>?,
