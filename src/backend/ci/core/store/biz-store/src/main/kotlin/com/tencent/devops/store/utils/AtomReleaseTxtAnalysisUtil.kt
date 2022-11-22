@@ -107,7 +107,7 @@ object AtomReleaseTxtAnalysisUtil {
         return System.getProperty("java.io.tmpdir").removeSuffix(fileSeparator)
     }
 
-    fun regexAnalysis(
+    private fun regexAnalysis(
         input: String,
         atomPath: String,
         pathList: MutableList<String>
@@ -119,16 +119,16 @@ object AtomReleaseTxtAnalysisUtil {
             val path = matcher.group(2).replace("\"", "").removePrefix(fileSeparator)
             if (path.endsWith(".md")) {
                 val file = File("$atomPath${fileSeparator}file$fileSeparator$path")
-                descriptionContent = file.readText()
                 if (file.exists()) {
-                    return regexAnalysis(
-                        input = descriptionContent,
+                    descriptionContent = regexAnalysis(
+                        input = file.readText(),
                         atomPath = atomPath,
                         pathList = pathList
                     )
                 }
+            } else {
+                pathList.add(path)
             }
-            pathList.add(path)
         }
         return descriptionContent
     }
