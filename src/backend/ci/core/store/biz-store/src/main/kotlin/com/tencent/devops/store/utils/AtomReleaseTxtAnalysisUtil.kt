@@ -88,7 +88,7 @@ object AtomReleaseTxtAnalysisUtil {
                     file.delete()
                 }
             }
-        regexAnalysis(
+        descriptionText = regexAnalysis(
             input = descriptionText,
             atomPath = atomPath,
             pathList = pathList
@@ -100,7 +100,7 @@ object AtomReleaseTxtAnalysisUtil {
             atomPath = atomPath,
             result = result
         )
-        return filePathReplace(uploadFileToPathResult.toMutableMap(), description)
+        return filePathReplace(uploadFileToPathResult.toMutableMap(), descriptionText)
     }
 
     private fun getAtomBasePath(): String {
@@ -111,16 +111,18 @@ object AtomReleaseTxtAnalysisUtil {
         input: String,
         atomPath: String,
         pathList: MutableList<String>
-    ) {
+    ): String {
+        var descriptionContent = input
         val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
-        val matcher: Matcher = pattern.matcher(input)
+        val matcher: Matcher = pattern.matcher(descriptionContent)
         while (matcher.find()) {
             val path = matcher.group(2).replace("\"", "").removePrefix(fileSeparator)
             if (path.endsWith(".md")) {
                 val file = File("$atomPath${fileSeparator}file$fileSeparator$path")
+                descriptionContent = file.readText()
                 if (file.exists()) {
                     return regexAnalysis(
-                        input = file.readText(),
+                        input = descriptionContent,
                         atomPath = atomPath,
                         pathList = pathList
                     )
@@ -128,6 +130,7 @@ object AtomReleaseTxtAnalysisUtil {
             }
             pathList.add(path)
         }
+        return descriptionContent
     }
 
     fun filePathReplace(

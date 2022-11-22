@@ -49,6 +49,7 @@ import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.ClassifyDao
+import com.tencent.devops.store.dao.common.LabelDao
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
@@ -84,6 +85,7 @@ import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.time.LocalDateTime
+import java.util.ArrayList
 
 @Service
 @Suppress("LongParameterList", "LongMethod", "ReturnCount")
@@ -96,6 +98,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val marketAtomVersionLogDao: MarketAtomVersionLogDao,
     private val atomQualityService: AtomQualityService,
     private val atomNotifyService: AtomNotifyService,
+    private val serviceStoreLogoResource: ServiceStoreLogoResource,
+    private val labelDao: LabelDao,
     private val atomReleaseService: AtomReleaseService,
     private val storeWebsocketService: StoreWebsocketService,
     private val redisOperation: RedisOperation,
@@ -391,7 +395,7 @@ class OpAtomServiceImpl @Autowired constructor(
         logger.info("uploadStoreLogo logoFilePath:${logoFile.path}")
         var uploadStoreLogoResult = Result(data = true, status = 0)
         if (logoFile.exists()) {
-            val result = client.get(ServiceStoreLogoResource::class).uploadStoreLogo(
+            val result = serviceStoreLogoResource.uploadStoreLogo(
                 userId = userId,
                 contentLength = logoFile.length(),
                 inputStream = logoFile.inputStream(),
@@ -460,6 +464,10 @@ class OpAtomServiceImpl @Autowired constructor(
             zipFile.delete()
             FileSystemUtils.deleteRecursively(File(atomPath).parentFile)
         }
+        val labelIds = if (releaseInfo.labelCodes != null) {
+            labelDao.getIdsByCodes(dslContext, releaseInfo.labelCodes!!, 0)
+        } else emptyList()
+
         // 升级插件
         val updateMarketAtomResult = atomReleaseService.updateMarketAtom(
             userId,
@@ -476,7 +484,7 @@ class OpAtomServiceImpl @Autowired constructor(
                 releaseType = releaseInfo.versionInfo.releaseType,
                 versionContent = releaseInfo.versionInfo.versionContent,
                 publisher = releaseInfo.versionInfo.publisher,
-                labelIdList = releaseInfo.labelCodes,
+                labelIdList = ArrayList(labelIds),
                 frontendType = releaseInfo.configInfo.frontendType,
                 logoUrl = releaseInfo.logoUrl,
                 classifyCode = releaseInfo.classifyCode
