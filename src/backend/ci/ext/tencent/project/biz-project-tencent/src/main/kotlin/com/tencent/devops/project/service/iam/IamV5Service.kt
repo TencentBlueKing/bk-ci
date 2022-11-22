@@ -97,9 +97,9 @@ class IamV5Service @Autowired constructor(
             val projectName = resourceRegisterInfo.resourceName
             var relationIam = false
             if (event.retryCount == 0) {
-                logger.info("start create iam V3 project $event")
+                logger.info("start create iam V5 project $event")
                 watcher.start("createProject")
-                // 创建iamV3分级管理员
+                // 创建iamV5分级管理员
                 val gradeManagerId = createGradeManager(
                     userId = userId,
                     resourceRegisterInfo = resourceRegisterInfo,
@@ -189,10 +189,11 @@ class IamV5Service @Autowired constructor(
                 )
             }
         } catch (e: Exception) {
-          logger.warn("权限中心创建项目失败： $event", e)
-          throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
+            logger.warn("权限中心创建项目失败： $event", e)
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
         }
     }
+
     private fun createGradeManagerApplication(
         projectCode: String,
         projectName: String,
@@ -232,21 +233,22 @@ class IamV5Service @Autowired constructor(
         dslContext.transaction { configuration ->
             // 存储审批单
             projectApprovalCallbackDao.create(
-              dslContext = dslContext,
-              applicant = userId,
-              englishName = projectCode,
-              callbackId = callbackId,
-              sn = createGradeManagerApplication.sn,
-              subjectScopes = subjectScopesStr
+                dslContext = dslContext,
+                applicant = userId,
+                englishName = projectCode,
+                callbackId = callbackId,
+                sn = createGradeManagerApplication.sn,
+                subjectScopes = subjectScopesStr
             )
             // 修改状态
             projectDao.updateProjectStatusByEnglishName(
-              dslContext = dslContext,
-              projectCode = projectCode,
-              statusEnum = ApproveStatus.CREATE_PENDING
+                dslContext = dslContext,
+                projectCode = projectCode,
+                statusEnum = ApproveStatus.CREATE_PENDING
             )
         }
     }
+
     fun batchCreateDefaultGroups(
         userId: String,
         gradeManagerId: Int,
@@ -402,7 +404,7 @@ class IamV5Service @Autowired constructor(
         projectCode: String,
         group: DefaultGroupType
     ) {
-        logger.info("iamV3 createDefaultGroup : ${group.value}")
+        logger.info("iamV5 createDefaultGroup : ${group.value}")
         val actions = getGroupStrategy(group)
         if (actions.first.isNotEmpty()) {
             val authorizationScopes = buildCreateAuthorizationScopes(actions.first, projectCode)
@@ -562,6 +564,6 @@ class IamV5Service @Autowired constructor(
         private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
         private const val SYSTEM_DEFAULT_NAME = "蓝盾"
         private const val DEPARTMENT = "department"
-        val logger = LoggerFactory.getLogger(IamV3Service::class.java)
+        val logger = LoggerFactory.getLogger(IamV5Service::class.java)
     }
 }
