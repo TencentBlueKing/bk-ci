@@ -362,7 +362,7 @@
             &.executing {
                 font-size: 14px;
             }
-            &.icon-exclamation, &.icon-exclamation-triangle, &.icon-clock {
+            &.icon-exclamation, &.icon-exclamation-triangle, &.icon-clock, &.stream-reviewing-2 {
                 font-size: 24px;
             }
             &.running {

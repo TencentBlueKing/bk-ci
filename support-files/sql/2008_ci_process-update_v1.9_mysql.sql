@@ -76,6 +76,22 @@ BEGIN
         alter table T_PIPELINE_BUILD_COMMITS add column `ACTION` varchar(64) DEFAULT NULL;
     END IF;
 
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_REPORT'
+                        AND COLUMN_NAME = 'TASK_NAME') THEN
+        alter table T_REPORT add column `TASK_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '任务名称';
+    END IF;
+
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_REPORT'
+                        AND COLUMN_NAME = 'ATOM_CODE') THEN
+        alter table T_REPORT add column `ATOM_CODE` varchar(128) NOT NULL DEFAULT '' COMMENT '插件的唯一标识';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

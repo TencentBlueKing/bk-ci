@@ -72,6 +72,9 @@ class AgentGrayUtils constructor(
         private const val USE_DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:use_default_file_gateway"
         private const val PARALLEL_UPGRADE_COUNT = "environment.thirdparty.agent.parallel.upgrade.count"
         private const val DEFAULT_PARALLEL_UPGRADE_COUNT = 50
+
+        private const val AGENT_PRIORITY_UPGRADE_PROJECT_SET = "environment:thirdparty:agent.priority.upgrade.project"
+        private const val AGENT_NOT_UPGRADE_PROJECT_SET = "environment:thirdparty:agent.not.upgrade.project"
     }
 
     fun checkForceUpgrade(agentHashId: String, type: AgentUpgradeType?): Boolean {
@@ -253,5 +256,19 @@ class AgentGrayUtils constructor(
 
     fun getDefaultParallelUpgradeCount(): Int {
         return DEFAULT_PARALLEL_UPGRADE_COUNT
+    }
+
+    fun getPriorityUpgradeProjects(): Set<String> {
+        return (redisOperation.getSetMembers(
+            key = AGENT_PRIORITY_UPGRADE_PROJECT_SET,
+            isDistinguishCluster = true
+        ) ?: return emptySet()).filter { it.isNotBlank() }.toSet()
+    }
+
+    fun getNotUpgradeProjects(): Set<String> {
+        return (redisOperation.getSetMembers(
+            key = AGENT_NOT_UPGRADE_PROJECT_SET,
+            isDistinguishCluster = true
+        ) ?: return emptySet()).filter { it.isNotBlank() }.toSet()
     }
 }

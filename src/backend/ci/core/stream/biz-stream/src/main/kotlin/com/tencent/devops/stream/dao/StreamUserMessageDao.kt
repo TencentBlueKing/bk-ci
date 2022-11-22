@@ -192,15 +192,15 @@ class StreamUserMessageDao {
         projectId: String,
         userId: String?,
         messageId: String
-    ): Boolean {
+    ): TGitUserMessageRecord? {
         with(TGitUserMessage.T_GIT_USER_MESSAGE) {
-            val dsl = dslContext.selectCount().from(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
             if (userId != null) {
                 dsl.and(USER_ID.eq(userId))
             }
             return dsl.and(MESSAGE_ID.eq(messageId))
-                .fetchOne(0, Int::class.java)!! > 0
+                .fetch().first()
         }
     }
 
@@ -215,8 +215,8 @@ class StreamUserMessageDao {
             dslContext.update(this)
                 .set(MESSAGE_TYPE, messageType.name)
                 .where(PROJECT_ID.eq(projectId))
+                .and(USER_ID.eq(userId))
                 .and(MESSAGE_ID.eq(messageId))
-                .and(MESSAGE_TYPE.eq(messageType.name))
                 .execute()
         }
     }

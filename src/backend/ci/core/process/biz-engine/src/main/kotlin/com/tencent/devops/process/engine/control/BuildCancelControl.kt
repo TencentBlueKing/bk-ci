@@ -59,6 +59,7 @@ import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -289,6 +290,10 @@ class BuildCancelControl @Autowired constructor(
                 containerBuildStatus != BuildStatus.RUNNING || // 运行中的返回Stage流程进行闭环处理
                 dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED // 非运行中的判断是否有依赖
             ) {
+                // 删除redis中取消构建操作标识
+                redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
+                redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false))
+                // 更新job状态
                 val switchedStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)
                 pipelineContainerService.updateContainerStatus(
                     projectId = projectId,
