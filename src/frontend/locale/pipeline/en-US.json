@@ -572,6 +572,7 @@
     "outputReport": "Report",
     "canceller": "Canceller",
     "executor": "Executor",
+    "trigger": "Trigger",
     "executionTime": "Duration",
     "noCodeRecords": " No records of changed codes at the moment",
     "commitIdsRange": " Note: range of changed version number in this pipeline: ",
