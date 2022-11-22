@@ -83,6 +83,11 @@ func (dt *distccTask) WorkerList() []string {
 	return nil
 }
 
+//GetRequestInstance define
+func (dt *distccTask) GetRequestInstance() int {
+	return dt.Operator.RequestInstance
+}
+
 // Dump encode task data into json bytes
 func (dt *distccTask) Dump() []byte {
 	data := dt.CustomData(nil).(distcc.CustomData)
