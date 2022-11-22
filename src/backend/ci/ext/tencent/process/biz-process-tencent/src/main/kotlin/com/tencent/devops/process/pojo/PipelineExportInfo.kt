@@ -25,42 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.models.step
+package com.tencent.devops.process.pojo
 
-import com.fasterxml.jackson.annotation.JsonFilter
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.v2.models.MetaData
-import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
-import com.tencent.devops.process.yaml.v2.models.YamlMetaData
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.store.pojo.atom.GetRelyAtom
 
-/**
- * 为了方便产生中间变量的过度类和Step一模一样
- */
-@JsonFilter(YAME_META_DATA_JSON_FILTER)
-data class PreStep(
-    val checkout: String?,
-    val name: String?,
-    val id: String?,
-    @ApiModelProperty(name = "if")
-    @JsonProperty("if")
-    val ifFiled: String?,
-    @ApiModelProperty(name = "if-modify")
-    @JsonProperty("if-modify")
-    val ifModify: List<String>? = null,
-    val uses: String?,
-    val with: Map<String, Any?>?,
-    @ApiModelProperty(name = "timeout-minutes")
-    @JsonProperty("timeout-minutes")
-    val timeoutMinutes: Int?,
-    @ApiModelProperty(name = "continue-on-error")
-    @JsonProperty("continue-on-error")
-    val continueOnError: Boolean?,
-    @ApiModelProperty(name = "retry-times")
-    @JsonProperty("retry-times")
-    val retryTimes: Int?,
-    val env: Map<String, Any?>? = emptyMap(),
-    val run: String?,
-    val shell: String?,
-    override val yamlMetaData: MetaData? = null
-) : YamlMetaData
+data class PipelineExportInfo(
+    val userId: String,
+    var model: Model,
+    val pipelineInfo: PipelineInfo,
+    val stageTags: List<PipelineStageTag>?,
+    val labels: List<String>,
+    val isGitCI: Boolean = false,
+    val exportFile: Boolean = false,
+    val getImageNameAndCredentials: (
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        dispatchType: StoreDispatchType
+    ) -> Pair<String, String?>,
+    val getAtomRely: (
+        elementInfo: GetRelyAtom
+    ) -> Map<String, Map<String, Any>>?,
+    val getRepoInfo: (
+        projectId: String,
+        repositoryConfig: RepositoryConfig
+    ) -> Repository?
+)

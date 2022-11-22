@@ -25,42 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v2.models.step
+package com.tencent.devops.process.pojo
 
-import com.fasterxml.jackson.annotation.JsonFilter
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.v2.models.MetaData
-import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
-import com.tencent.devops.process.yaml.v2.models.YamlMetaData
-import io.swagger.annotations.ApiModelProperty
+@Suppress("MaximumLineLength", "MaxLineLength")
+class PipelineExportContext {
+    lateinit var variables: Map<String, String>
+    lateinit var yamlSb: StringBuilder
+    lateinit var output2Elements: MutableMap</*outputName*/String, MutableList<MarketBuildAtomElementWithLocation>>
+    lateinit var outputConflictMap: MutableMap</*字段*/String, MutableList<List</*定位信息*/PipelineExportV2YamlConflictMapItem>>>
 
-/**
- * 为了方便产生中间变量的过度类和Step一模一样
- */
-@JsonFilter(YAME_META_DATA_JSON_FILTER)
-data class PreStep(
-    val checkout: String?,
-    val name: String?,
-    val id: String?,
-    @ApiModelProperty(name = "if")
-    @JsonProperty("if")
-    val ifFiled: String?,
-    @ApiModelProperty(name = "if-modify")
-    @JsonProperty("if-modify")
-    val ifModify: List<String>? = null,
-    val uses: String?,
-    val with: Map<String, Any?>?,
-    @ApiModelProperty(name = "timeout-minutes")
-    @JsonProperty("timeout-minutes")
-    val timeoutMinutes: Int?,
-    @ApiModelProperty(name = "continue-on-error")
-    @JsonProperty("continue-on-error")
-    val continueOnError: Boolean?,
-    @ApiModelProperty(name = "retry-times")
-    @JsonProperty("retry-times")
-    val retryTimes: Int?,
-    val env: Map<String, Any?>? = emptyMap(),
-    val run: String?,
-    val shell: String?,
-    override val yamlMetaData: MetaData? = null
-) : YamlMetaData
+    fun initAll(): PipelineExportContext {
+        variables = emptyMap()
+        yamlSb = StringBuilder()
+        output2Elements = mutableMapOf()
+        outputConflictMap = mutableMapOf()
+        return this
+    }
+}
