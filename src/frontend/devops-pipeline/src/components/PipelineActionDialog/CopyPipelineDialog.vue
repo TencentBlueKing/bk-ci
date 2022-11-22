@@ -30,6 +30,7 @@
         <PipelineGroupSelector
             class="pipeline-group-selector-form"
             v-model="groupValue"
+            :has-manage-permission="isManage"
             ref="pipelineGroupSelector"
             :pipeline-name="model.name"
         />
@@ -39,7 +40,7 @@
 <script>
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import PipelineGroupSelector from './PipelineGroupSelector'
-    import { mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         name: 'copy-pipeline-dialog',
@@ -68,6 +69,9 @@
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'isManage'
+            ]),
             formModel () {
                 return [
                     {
