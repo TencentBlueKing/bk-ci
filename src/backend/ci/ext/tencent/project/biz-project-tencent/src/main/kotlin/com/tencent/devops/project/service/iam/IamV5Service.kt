@@ -42,7 +42,7 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
-import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.api.service.ServiceGroupStrategyResource
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.StrategyEntity
@@ -76,7 +76,7 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class IamV5Service @Autowired constructor(
-    val iamManagerService: ManagerService,
+    val iamManagerService: V2ManagerService,
     val iamConfiguration: IamConfiguration,
     val projectDao: ProjectDao,
     val dslContext: DSLContext,
@@ -303,13 +303,15 @@ class IamV5Service @Autowired constructor(
             projectName = resourceRegisterInfo.resourceName,
             iamConfiguration = iamConfiguration
         )
-        val createManagerDTO = CreateManagerDTO.builder().system(iamConfiguration.systemId)
+        val createManagerDTO = CreateManagerDTO.builder()
             .name("$SYSTEM_DEFAULT_NAME-${resourceRegisterInfo.resourceName}")
             .description(IamGroupUtils.buildManagerDescription(resourceRegisterInfo.resourceName, userId))
             .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
-            .subject_scopes(subjectScopes).build()
-        return iamManagerService.createManager(createManagerDTO).toString()
+            .subject_scopes(subjectScopes)
+            //todo 是否同步创建用户组
+            .build()
+        return iamManagerService.createManagerV2(createManagerDTO).toString()
     }
 
     private fun createManagerGroup(userId: String, gradeManagerId: Int, projectCode: String, projectName: String) {
@@ -322,14 +324,14 @@ class IamV5Service @Autowired constructor(
         defaultGroups.add(defaultGroup)
         val managerRoleGroup = ManagerRoleGroupDTO.builder().groups(defaultGroups).build()
         // 创建组
-        val roleId = iamManagerService.batchCreateRoleGroup(gradeManagerId, managerRoleGroup)
+        val roleId = iamManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroup)
         val groupMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
         val groupMembers = mutableListOf<ManagerMember>()
         groupMembers.add(groupMember)
         val expired = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_AT)
         val managerMemberGroup = ManagerMemberGroupDTO.builder().members(groupMembers).expiredAt(expired).build()
         // 项目创建人添加至管理员分组
-        iamManagerService.createRoleGroupMember(roleId, managerMemberGroup)
+        iamManagerService.createRoleGroupMemberV2(roleId, managerMemberGroup)
         createManagerPermission(projectCode, projectName, roleId)
     }
 
@@ -357,7 +359,7 @@ class IamV5Service @Autowired constructor(
             .system(iamConfiguration.systemId)
             .resources(managerResources)
             .build()
-        iamManagerService.createRolePermission(roleId, permission)
+        iamManagerService.grantRoleGroupV2(roleId, permission)
     }
 
     private fun createDefaultGroup(
@@ -375,7 +377,7 @@ class IamV5Service @Autowired constructor(
         defaultGroups.add(defaultGroup)
         val managerRoleGroup = ManagerRoleGroupDTO.builder().groups(defaultGroups).build()
         // 创建默认组
-        val roleId = iamManagerService.batchCreateRoleGroup(gradeManagerId, managerRoleGroup)
+        val roleId = iamManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroup)
         // 赋予权限
         try {
             when (defaultGroupType) {
@@ -386,7 +388,7 @@ class IamV5Service @Autowired constructor(
                 DefaultGroupType.PM -> addIamGroupAction(roleId, projectCode, DefaultGroupType.PM)
             }
         } catch (e: Exception) {
-            iamManagerService.deleteRoleGroup(roleId)
+            iamManagerService.deleteRoleGroupV2(roleId)
             logger.warn(
                 "create iam group permission fail : projectCode = $projectCode |" +
                     " iamRoleId = $roleId | groupInfo = ${defaultGroupType.value}", e
@@ -404,12 +406,12 @@ class IamV5Service @Autowired constructor(
         val actions = getGroupStrategy(group)
         if (actions.first.isNotEmpty()) {
             val authorizationScopes = buildCreateAuthorizationScopes(actions.first, projectCode)
-            iamManagerService.createRolePermission(roleId, authorizationScopes)
+            iamManagerService.grantRoleGroupV2(roleId, authorizationScopes)
         }
         if (actions.second.isNotEmpty()) {
             actions.second.forEach { (resource, actions) ->
                 val groupAuthorizationScopes = buildOtherAuthorizationScopes(actions, projectCode, resource)
-                iamManagerService.createRolePermission(roleId, groupAuthorizationScopes)
+                iamManagerService.grantRoleGroupV2(roleId, groupAuthorizationScopes)
             }
         }
     }

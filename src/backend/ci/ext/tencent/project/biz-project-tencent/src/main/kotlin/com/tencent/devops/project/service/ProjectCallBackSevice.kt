@@ -30,7 +30,7 @@ package com.tencent.devops.project.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.sdk.iam.dto.CallbackApplicationDTO
-import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -55,7 +55,7 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectCallBackSevice @Autowired constructor(
     private val dslContext: DSLContext,
-    private val iamManagerService: ManagerService,
+    private val iamManagerService: V2ManagerService,
     private val projectDao: ProjectDao,
     private val projectApprovalCallbackDao: ProjectApprovalCallbackDao,
     private val iamV5Service: IamV5Service,

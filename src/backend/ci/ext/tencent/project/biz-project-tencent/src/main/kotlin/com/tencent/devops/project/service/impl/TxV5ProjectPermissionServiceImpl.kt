@@ -36,7 +36,7 @@ import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
-import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.OperationException
@@ -82,7 +82,7 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService,
     val iamConfiguration: IamConfiguration,
-    val iamManagerService: ManagerService,
+    val iamManagerService: V2ManagerService,
     val projectApprovalCallbackDao: ProjectApprovalCallbackDao,
     val dslContext: DSLContext,
     val projectDao: ProjectDao
@@ -269,7 +269,7 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
             .subjectScopes(iamSubjectScopes)
             .build()
         logger.info("updateManager : $updateManagerDTO")
-        iamManagerService.updateManager(relationId, updateManagerDTO)
+        iamManagerService.updateManagerV2(relationId, updateManagerDTO)
     }
 
     private fun updateGradeManagerApplication(
@@ -307,7 +307,6 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
             iamManagerService.updateGradeManagerApplication(projectInfo.relationId, gradeManagerApplicationUpdateDTO)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-
             val approveType = if (isAuthSecrecyChange && isSubjectScopesChange) ApproveType.ALL_CHANGE_APPROVE.type
             else if (isSubjectScopesChange) ApproveType.SUBJECT_SCOPES_APPROVE.type
             else ApproveType.AUTH_SECRECY_APPROVE.type
