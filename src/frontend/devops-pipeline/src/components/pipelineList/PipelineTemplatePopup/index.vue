@@ -23,7 +23,6 @@
                 <div class="template-content" :style="{ height: viewHeight }">
                     <div class="left-temp-list">
                         <template v-if="tempList.length && !showPreview">
-
                             <div class="search-row-content" v-if="(tempTypeIndex === tempTypeList.length - 1)">
                                 <div class="search-input-row">
                                     <input class="bk-form-input" type="text" :placeholder="$t('newlist.tempSearchTips')"
@@ -99,6 +98,8 @@
                                         <PipelineGroupSelector
                                             v-model="groupValue"
                                             :pipeline-name="newPipelineName"
+                                            ref="pipelineGroupSelector"
+                                            :has-manage-permission="isManage"
                                         />
                                     </section>
                                     <div v-else style="margin-bottom: 15px">
@@ -192,6 +193,9 @@
             ...mapState('common', [
                 'pipelineTemplate',
                 'templateCategory'
+            ]),
+            ...mapState('pipelines', [
+                'isManage'
             ]),
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
@@ -546,8 +550,7 @@
             min-height: 530px;
             .search-row-content {
                 display: flex;
-                margin-top: 20px;
-                margin-left: 35px;
+                margin: 0 20px 20px 0;
             }
             .search-input-row {
                 padding: 0 10px;
@@ -555,6 +558,7 @@
                 height: 36px;
                 border: 1px solid #dde4eb;
                 background-color: #fff;
+                flex-shrink: 0;
                 .bk-form-input {
                     padding: 0;
                     border: 0;
@@ -574,8 +578,10 @@
             }
             .search-category {
                 margin-left: 10px;
+                display: flex;
+                flex: 1;
                 > span {
-                    width: 98px;
+                    flex: 1;
                     display: inline-block;
                     height: 36px;
                     line-height: 36px;

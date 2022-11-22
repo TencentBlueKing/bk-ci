@@ -251,6 +251,7 @@ const actions = {
                 ...body
             }
         ])
+        return data.id
     },
     /**
      * 获取流水线分组详情

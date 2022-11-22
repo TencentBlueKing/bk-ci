@@ -12,7 +12,7 @@
                 </h3>
                 <p class="bk-pipeline-card-summary">
                     <span>
-                        <logo size="12" name="complement" />
+                        <logo size="12" name="record" />
                         {{pipeline.buildCount}}次
                     </span>
                     <span v-if="pipeline.viewNames" class="pipeline-group-names-span">

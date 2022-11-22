@@ -8,6 +8,7 @@
         :close-icon="false"
         :auto-close="false"
         header-position="left"
+        :loading="isSubmiting"
         @confirm="submit"
         @cancel="cancel"
     >
@@ -29,6 +30,7 @@
         <PipelineGroupSelector
             class="pipeline-group-selector-form"
             v-model="groupValue"
+            ref="pipelineGroupSelector"
             :pipeline-name="model.name"
         />
     </bk-dialog>
@@ -37,6 +39,7 @@
 <script>
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import PipelineGroupSelector from './PipelineGroupSelector'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'copy-pipeline-dialog',
@@ -116,18 +119,22 @@
             }
         },
         methods: {
+            ...mapActions('pipelines', [
+                'requestGetGroupLists'
+            ]),
             initName () {
                 return this.pipeline?.pipelineName ? `${this.pipeline?.pipelineName}_copy` : ''
             },
             async submit () {
                 this.isSubmiting = true
-
                 const res = await this.copy({
                     ...this.model,
                     ...this.groupValue
                 }, this.pipeline)
+                
                 this.isSubmiting = false
                 if (res) {
+                    this.requestGetGroupLists(this.$route.params)
                     this.cancel()
                     this.$emit('done')
                 }
@@ -141,6 +148,7 @@
                     labels: [],
                     staticViews: []
                 }
+                this.$refs.pipelineGroupSelector?.reset?.()
                 this.$refs.copyForm?.clearError?.()
             },
             cancel () {

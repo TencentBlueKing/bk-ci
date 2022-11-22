@@ -2,7 +2,7 @@
     <main class="pipeline-list-main">
         <h5 class="current-pipeline-group-name">{{currentViewName}}</h5>
         <header class="pipeline-list-main-header">
-            <div class="pipeline-list-main-header-left-area">
+            <div>
                 <bk-button
                     :disabled="!isSelected"
                     @click="togglePatchAddTo"
@@ -15,7 +15,7 @@
                 >
                     {{$t('patchDelete')}}
                 </bk-button>
-                <bk-button text @click="exitPatch">{{$t('exitPatch')}}</bk-button>
+                <bk-button class="exit-patch-text-btn" text @click="exitPatch">{{$t('exitPatch')}}</bk-button>
 
             </div>
             <div class="pipeline-list-main-header-right-area">
@@ -35,7 +35,6 @@
             is-patch
             :add-to-dialog-show="addToDialogShow"
             :pipeline-list="selected"
-            :has-manage-permission="hasManagePermission"
             @done="refreshList"
             @close="togglePatchAddTo"
         />
@@ -63,9 +62,6 @@
             PipelineTableView,
             AddToGroupDialog,
             RemoveConfirmDialog
-        },
-        props: {
-            hasManagePermission: Boolean
         },
         data () {
             const { page, pageSize, sortType, collation, ...restQuery } = this.$route.query
@@ -120,3 +116,9 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+  .exit-patch-text-btn {
+    margin-left: 12px;
+  }
+</style>

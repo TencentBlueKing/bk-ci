@@ -11,7 +11,7 @@
                 <span>{{currentViewName}}</span>
             </h5>
             <header class="pipeline-list-main-header">
-                <div class="pipeline-list-main-header-left-area">
+                <div>
                     <bk-dropdown-menu trigger="click">
                         <bk-button theme="primary" icon="plus" slot="dropdown-trigger">
                             {{$t('newlist.addPipeline')}}
@@ -90,7 +90,6 @@
         <add-to-group-dialog
             :add-to-dialog-show="pipelineActionState.addToDialogShow"
             :pipeline="pipelineActionState.activePipeline"
-            :has-manage-permission="hasManagePermission"
             @close="closeAddToDialog"
             @done="refresh"
         />
@@ -123,7 +122,6 @@
             :is-show.sync="importPipelinePopupShow"
         />
         <pipeline-group-edit-dialog
-            :has-manage-permission="hasManagePermission"
             :group="activeGroup"
             @close="handleCloseEditCount"
             @done="refresh"
@@ -171,9 +169,6 @@
             PipelineGroupEditDialog
         },
         mixins: [piplineActionMixin],
-        props: {
-            hasManagePermission: Boolean
-        },
         data () {
             const { page, pageSize, sortType, collation, ...restQuery } = this.$route.query
             return {
@@ -195,7 +190,8 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'pipelineActionState'
+                'pipelineActionState',
+                'isManage'
             ]),
             isAllPipelineView () {
                 return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
@@ -216,7 +212,7 @@
                 return this.currentGroup?.i18nKey ? this.$t(this.currentGroup.i18nKey) : (this.currentGroup?.name ?? '')
             },
             canNotMangeProjectedGroup () {
-                return this.currentGroup?.projected && !this.hasManagePermission
+                return this.currentGroup?.projected && !this.isManage
             },
             pipelineGroupType () {
                 if (this.currentGroup?.viewType > 0) {
@@ -265,6 +261,7 @@
                         this.refresh()
                     }
                     this.checkHasCreatePermission()
+                    this.handleCloseEditCount()
                 })
             },
             '$route.params.viewId': function () {

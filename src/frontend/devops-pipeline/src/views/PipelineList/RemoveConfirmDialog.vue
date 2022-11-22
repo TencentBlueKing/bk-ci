@@ -6,7 +6,6 @@
         :title="title"
         header-position="left"
         :draggable="false"
-        :loading="isBusy"
     >
         <p class="remove-confirm-desc" v-if="isRemoveType" v-html="$t('removeConfirmTips', [groupName])">
         </p>
@@ -73,9 +72,10 @@
         <footer slot="footer">
             <bk-button
                 theme="primary"
-                :disabled="hasPermissionPipelines.length === 0"
+                :loading="isBusy"
+                :disabled="noPermissionPipelineLength > 0 || hasPermissionPipelines.length === 0"
                 @click="handleSubmit">
-                {{$t('delete')}}
+                {{confirmTxt}}
             </bk-button>
             <bk-button @click="handleClose">{{$t('cancel')}}</bk-button>
         </footer>
@@ -85,9 +85,6 @@
 <script>
     import { mapState, mapActions, mapGetters } from 'vuex'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
-    import {
-        UNCLASSIFIED_PIPELINE_VIEW_ID
-    } from '@/store/constants'
     export default {
         mixins: [piplineActionMixin],
         props: {
@@ -134,6 +131,9 @@
             title () {
                 return this.isRemoveType ? this.$t('removeFrom') : ''
             },
+            confirmTxt () {
+                return this.$t(this.isRemoveType ? 'removeFrom' : 'delete')
+            },
             hasPermissionPipelines () {
                 return this.pipelineList.filter(pipeline => pipeline.hasPermission)
             },
@@ -174,7 +174,8 @@
         methods: {
             ...mapActions('pipelines', [
                 'removePipelineFromGroup',
-                'patchDeletePipelines'
+                'patchDeletePipelines',
+                'requestGetGroupLists'
             ]),
             removeNoPermissionPipeline () {
                 this.hideNoPermissionPipeline = true
@@ -201,27 +202,10 @@
                         if (!data) {
                             throw Error(this.$t('removedPipelineError'))
                         }
-                        const res = [
-                            {
-                                id: UNCLASSIFIED_PIPELINE_VIEW_ID,
-                                num: list.filter(pipeline => pipeline.viewNames?.length === 1).length
-                            },
-                            {
-                                id: this.groupId,
-                                num: -list.length
-                            }
-                        ]
-                        res.forEach(item => {
-                            this.$store.commit('pipelines/UPDATE_PIPELINE_GROUP', {
-                                id: item.id,
-                                body: {
-                                    pipelineCount: this.groupMap[item.id].pipelineCount + item.num
-                                }
-                            })
-                        })
                     } else {
                         await this.patchDeletePipelines(params)
                     }
+                    this.requestGetGroupLists(this.$route.params)
                     this.$showTips({
                         message: this.$t(this.isRemoveType ? 'removeSuc' : 'deleteSuc'),
                         theme: 'success'
