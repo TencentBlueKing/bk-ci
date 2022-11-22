@@ -25,6 +25,8 @@ type TaskExtension interface {
 
 	GetRequestInstance() int
 
+	GetWorkerCount() int
+
 	// dump the task data
 	Dump() []byte
 

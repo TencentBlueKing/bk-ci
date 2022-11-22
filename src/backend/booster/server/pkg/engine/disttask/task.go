@@ -60,6 +60,11 @@ func (dt *distTask) GetRequestInstance() int {
 	return dt.Operator.RequestInstance
 }
 
+// GetWorkerCount get the worker count.
+func (dt *distTask) GetWorkerCount() int {
+	return dt.Stats.WorkerCount
+}
+
 // Dump do not support dump.
 func (dt *distTask) Dump() []byte {
 	return dt.CustomData(nil).([]byte)
