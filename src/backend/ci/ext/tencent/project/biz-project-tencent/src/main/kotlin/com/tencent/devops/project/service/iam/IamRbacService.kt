@@ -63,10 +63,9 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
-import com.tencent.devops.project.listener.TxIamV5CreateEvent
-import com.tencent.devops.project.listener.TxIamV5CreateApplicationEvent
+import com.tencent.devops.project.listener.TxIamRbacCreateEvent
+import com.tencent.devops.project.listener.TxIamRbacCreateApplicationEvent
 import com.tencent.devops.project.pojo.enums.ApproveStatus
-import com.tencent.devops.project.service.impl.TxV5ProjectPermissionServiceImpl
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,7 +74,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
-class IamV5Service @Autowired constructor(
+class IamRbacService @Autowired constructor(
     val iamManagerService: V2ManagerService,
     val iamConfiguration: IamConfiguration,
     val projectDao: ProjectDao,
@@ -87,7 +86,7 @@ class IamV5Service @Autowired constructor(
 ) {
     @Value("\${itsm.callback.url.create:#{null}}")
     private val itsmCreateCallBackUrl: String = ""
-    fun createIamV5Project(event: TxIamV5CreateEvent) {
+    fun createIamRbacProject(event: TxIamRbacCreateEvent) {
         val watcher = Watcher(id = "IAM|CreateProject|${event.projectId}|${event.userId}")
         logger.info("start create iamV5 project: $event")
         try {
@@ -97,9 +96,9 @@ class IamV5Service @Autowired constructor(
             val projectName = resourceRegisterInfo.resourceName
             var relationIam = false
             if (event.retryCount == 0) {
-                logger.info("start create iam V5 project $event")
+                logger.info("start create iam RBAC project $event")
                 watcher.start("createProject")
-                // 创建iamV5分级管理员
+                // 创建iamRBAC分级管理员
                 val gradeManagerId = createGradeManager(
                     userId = userId,
                     resourceRegisterInfo = resourceRegisterInfo,
@@ -137,9 +136,9 @@ class IamV5Service @Autowired constructor(
                     relationIam = true
                 }
             } else {
-                logger.warn("create iam projectFail, ${resourceRegisterInfo.resourceCode} not find")
+                logger.warn("create iam projet Fail, ${resourceRegisterInfo.resourceCode} not find")
             }
-            // 修改V5项目对应的projectId
+            // 修改项目对应的relationId
             if (relationIam && !event.iamProjectId.isNullOrEmpty()) {
                 projectDao.updateRelationByCode(
                     dslContext,
@@ -153,8 +152,8 @@ class IamV5Service @Autowired constructor(
         }
     }
 
-    fun createIamApplicationProject(event: TxIamV5CreateApplicationEvent) {
-        logger.info("start create iamV5 project: $event")
+    fun createIamApplicationProject(event: TxIamRbacCreateApplicationEvent) {
+        logger.info("start create iam RBAC project: $event")
         try {
             val resourceRegisterInfo = event.resourceRegisterInfo
             val projectCode = resourceRegisterInfo.resourceCode
@@ -171,7 +170,7 @@ class IamV5Service @Autowired constructor(
                     isProjectCreateSuccess = true
                 }
             } else {
-                logger.warn("create iam projectFail, ${resourceRegisterInfo.resourceCode} not find")
+                logger.warn("create iam project Fail, ${resourceRegisterInfo.resourceCode} not find")
             }
             if (isProjectCreateSuccess) {
                 val userId = event.userId
@@ -227,7 +226,7 @@ class IamV5Service @Autowired constructor(
             .content("xxx")
             .title("xxx")
             .build()
-        TxV5ProjectPermissionServiceImpl.logger.info("gradeManagerApplicationCreateDTO : $gradeManagerApplicationCreateDTO")
+        logger.info("gradeManagerApplicationCreateDTO : $gradeManagerApplicationCreateDTO")
         val createGradeManagerApplication =
             iamManagerService.createGradeManagerApplication(gradeManagerApplicationCreateDTO)
         dslContext.transaction { configuration ->
@@ -564,6 +563,6 @@ class IamV5Service @Autowired constructor(
         private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
         private const val SYSTEM_DEFAULT_NAME = "蓝盾"
         private const val DEPARTMENT = "department"
-        val logger = LoggerFactory.getLogger(IamV5Service::class.java)
+        val logger = LoggerFactory.getLogger(IamRbacService::class.java)
     }
 }

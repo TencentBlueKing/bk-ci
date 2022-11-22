@@ -41,7 +41,7 @@ import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ApproveType
-import com.tencent.devops.project.service.iam.IamV5Service
+import com.tencent.devops.project.service.iam.IamRbacService
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -58,7 +58,7 @@ class ProjectCallBackSevice @Autowired constructor(
     private val iamManagerService: V2ManagerService,
     private val projectDao: ProjectDao,
     private val projectApprovalCallbackDao: ProjectApprovalCallbackDao,
-    private val iamV5Service: IamV5Service,
+    private val iamV5Service: IamRbacService,
     private val objectMapper: ObjectMapper
 ) {
     @Value("\${esb.code:#{null}}")

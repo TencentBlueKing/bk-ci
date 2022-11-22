@@ -39,7 +39,7 @@ import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.IamV3Service
-import com.tencent.devops.project.service.impl.TxV5ProjectPermissionServiceImpl
+import com.tencent.devops.project.service.impl.TxRbacProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.V3ProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
@@ -82,7 +82,7 @@ class TxV3ProjectInitConfiguration {
         projectApprovalCallbackDao: ProjectApprovalCallbackDao,
         dslContext: DSLContext,
         projectDao: ProjectDao
-    ): ProjectPermissionService = TxV5ProjectPermissionServiceImpl(
+    ): ProjectPermissionService = TxRbacProjectPermissionServiceImpl(
         objectMapper = objectMapper,
         authProperties = bkAuthProperties,
         projectDispatcher = projectDispatcher,

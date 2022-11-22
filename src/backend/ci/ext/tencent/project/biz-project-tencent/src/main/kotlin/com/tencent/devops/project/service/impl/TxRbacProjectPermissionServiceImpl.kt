@@ -54,8 +54,8 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
-import com.tencent.devops.project.listener.TxIamV5CreateEvent
-import com.tencent.devops.project.listener.TxIamV5CreateApplicationEvent
+import com.tencent.devops.project.listener.TxIamRbacCreateEvent
+import com.tencent.devops.project.listener.TxIamRbacCreateApplicationEvent
 import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ResourceCreateInfo
@@ -75,7 +75,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
-class TxV5ProjectPermissionServiceImpl @Autowired constructor(
+class TxRbacProjectPermissionServiceImpl @Autowired constructor(
     val objectMapper: ObjectMapper,
     val authProperties: BkAuthProperties,
     val projectDispatcher: ProjectDispatcher,
@@ -128,7 +128,7 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
         }
         if (needApproval) {
             projectDispatcher.dispatch(
-                TxIamV5CreateApplicationEvent(
+                TxIamRbacCreateApplicationEvent(
                     userId = userId,
                     retryCount = 0,
                     delayMills = 1000,
@@ -141,7 +141,7 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
         } else {
             // 若不需要审批，则直接异步创建分级管理员和默认用户组
             projectDispatcher.dispatch(
-                TxIamV5CreateEvent(
+                TxIamRbacCreateEvent(
                     userId = userId,
                     retryCount = 0,
                     delayMills = 1000,
@@ -176,7 +176,7 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
             projectInfo.subjectscopes, object : TypeReference<ArrayList<ManagerScopes>>() {}
         )
         logger.info(
-            "v5 modifyResource : $needApproval|$iamSubjectScopes|$projectCode|" +
+            "Rbac modifyResource : $needApproval|$iamSubjectScopes|$projectCode|" +
                 "$projectName|$dbSubjectscopes"
         )
         checkParams(
@@ -203,7 +203,7 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
                 throw OperationException("Modifications must be made through the bkci client！")
             }
             projectDispatcher.dispatch(
-                TxIamV5CreateApplicationEvent(
+                TxIamRbacCreateApplicationEvent(
                     userId = userId,
                     retryCount = 0,
                     delayMills = 1000,
@@ -219,7 +219,7 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
         } else {
             val isAuthSecrecyChange = projectInfo.isAuthSecrecy != resourceUpdateInfo.projectUpdateInfo.authSecrecy
             val isSubjectScopesChange = (dbSubjectscopes.toSet() != iamSubjectScopes.toSet())
-            logger.info("v5 modifyResource :$isAuthSecrecyChange|$isAuthSecrecyChange")
+            logger.info("Rbac modifyResource :$isAuthSecrecyChange|$isAuthSecrecyChange")
             // 若可授权人员范围和私密字段未改变，直接结束
             if (!isAuthSecrecyChange && !isSubjectScopesChange) {
                 return
@@ -437,7 +437,7 @@ class TxV5ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(TxV5ProjectPermissionServiceImpl::class.java)
+        val logger = LoggerFactory.getLogger(TxRbacProjectPermissionServiceImpl::class.java)
         private const val SYSTEM_DEFAULT_NAME = "蓝盾"
         private const val ALL_MEMBERS = "*"
     }
