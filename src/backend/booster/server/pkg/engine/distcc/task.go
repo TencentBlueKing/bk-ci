@@ -79,6 +79,11 @@ func (dt *distccTask) GetRequestInstance() int {
 	return dt.Operator.RequestInstance
 }
 
+// GetWorkerCount get the worker count.
+func (dt *distccTask) GetWorkerCount() int {
+	return dt.Stats.CompilerCount
+}
+
 // Dump do not support dump.
 func (dt *distccTask) Dump() []byte {
 	data := dt.CustomData(nil).(CustomData)

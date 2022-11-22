@@ -101,6 +101,11 @@ func (t *apisTask) GetRequestInstance() int {
 	return t.ContainerSetting.RequestInstance
 }
 
+// GetWorkerCount get the worker count.
+func (t *apisTask) GetWorkerCount() int {
+	return len(t.WorkerIPList)
+}
+
 // Dump get dump data from task.
 func (t *apisTask) Dump() []byte {
 	var data []byte
