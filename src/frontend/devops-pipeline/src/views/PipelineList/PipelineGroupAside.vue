@@ -401,6 +401,7 @@
                         ...view
                     })
                     this.requestGetGroupLists(this.$route.params)
+                    this.switchViewId(UNCLASSIFIED_PIPELINE_VIEW_ID)
                 } catch (error) {
                     message = error.message || error
                     theme = 'error'
