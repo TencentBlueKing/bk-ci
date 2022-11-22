@@ -105,7 +105,7 @@ object AtomReleaseTxtAnalysisUtil {
         return System.getProperty("java.io.tmpdir").removeSuffix(fileSeparator)
     }
 
-    private fun regexAnalysis(
+    fun regexAnalysis(
         input: String,
         atomPath: String,
         pathList: MutableList<String>
