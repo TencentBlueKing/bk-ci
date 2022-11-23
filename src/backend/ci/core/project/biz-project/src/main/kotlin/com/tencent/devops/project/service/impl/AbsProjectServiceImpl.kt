@@ -343,7 +343,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
         logger.info(
             "update project : $userId | $englishName | $projectUpdateInfo | " +
-                    "$needApproval | $subjectScopes"
+                "$needApproval | $subjectScopes"
         )
         try {
             try {
@@ -363,8 +363,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 try {
                     modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
                 } catch (e: Exception) {
-                    logger.warn("Error modifying project information in permission center：" +
-                            "$resourceUpdateInfo", e)
+                    logger.warn(
+                        "Error modifying project information in permission center：" +
+                            "$resourceUpdateInfo", e
+                    )
                     throw OperationException(
                         MessageCodeUtil.getCodeLanMessage(
                             messageCode = ProjectMessageCode.PEM_UPDATE_FAIL,
@@ -862,7 +864,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
                     defaultMessage = "The project can be canceled only it under approval or " +
-                            "rejected during creation！| EnglishName=${projectInfo.englishName}"
+                        "rejected during creation！| EnglishName=${projectInfo.englishName}"
                 )
             )
         }
@@ -893,11 +895,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun applyToJoinProject(userId: String, applicationInfo: ApplicationInfo): Boolean {
         var success = false
         val projectInfo = projectDao.get(dslContext, applicationInfo.projectId) ?: throw InvalidParamException("项目不存在")
-        createRoleGroupApplication(
+        val gradeManagerId = projectInfo.relationId
+        success = createRoleGroupApplication(
             userId = userId,
-            applicationInfo = applicationInfo
+            applicationInfo = applicationInfo,
+            gradeManagerId = gradeManagerId
         )
-        return true
+        return success
     }
 
     override fun getProjectByName(projectName: String): ProjectVO? {
@@ -950,7 +954,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun createRoleGroupApplication(
         userId: String,
-        applicationInfo: ApplicationInfo
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
     ): Boolean
 
     private fun getLogoAddress(
