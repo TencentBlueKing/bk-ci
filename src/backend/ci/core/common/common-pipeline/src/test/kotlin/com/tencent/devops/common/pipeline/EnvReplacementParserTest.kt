@@ -323,7 +323,7 @@ internal class EnvReplacementParserTest {
                 "echo envs.env_c=c, env_c=\$env_c\n" +
                 "echo envs.env_d=d, env_d=\$env_d\n" +
                 "echo envs.env_e=e, env_e=\$env_e\n" +
-                "echo envs.a=\${{ envs.a }}, a=\$a\n" +
+                "echo envs.a=, a=\$a\n" +
                 "echo settings.sensitive.password=\${{ settings.sensitive.password }}\n" +
                 "echo ::set-output name=a::i am a at step_1",
             onlyExpression = true

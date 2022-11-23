@@ -179,7 +179,7 @@ object EnvReplacementParser {
                             if (it is PipelineContextData) it.fetchValue() else it
                         }?.let {
                             JsonUtil.toJson(it, false)
-                        } ?: return@nextBlock
+                        } ?: ""
                 } catch (ignore: ExpressionParseException) {
                     return@nextBlock
                 }
