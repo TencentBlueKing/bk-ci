@@ -241,7 +241,8 @@ class TaskControl @Autowired constructor(
         if (buildStatus.isPassiveStop() || buildStatus.isCancel()) {
             terminateSubPipeline(buildId, buildTask)
         }
-        if (buildStatus.isFailure() && !FastKillUtils.isTerminateCode(errorCode)) { // 失败的任务 并且不是需要终止的错误码
+        // 失败的任务并且不是需要前置终止的情况才允许自动重试
+        if (buildStatus.isFailure() && !actionType.isTerminate() && !FastKillUtils.isTerminateCode(errorCode)) {
             // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
             if (pipelineTaskService.isRetryWhenFail(buildTask.projectId, taskId, buildId)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_FIN|$stageId|j($containerId)|t($taskId)|RetryFail")
