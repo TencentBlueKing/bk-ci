@@ -40,6 +40,7 @@ CREATE TABLE `T_WORKSPACE_TEMPLATE`  (
                                          `NAME` varchar(64) NOT NULL COMMENT '模板名称',
                                          `IMAGE` varchar(256) NOT NULL DEFAULT ''  COMMENT '模板镜像',
                                          `SOURCE` varchar(64) NOT NULL DEFAULT ''  COMMENT '模板来源',
+                                         `LOGO` varchar(256) NOT NULL DEFAULT ''  COMMENT '模板LOGO',
                                          `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '模板描述',
                                          `CREATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '最初创建人',
                                          `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

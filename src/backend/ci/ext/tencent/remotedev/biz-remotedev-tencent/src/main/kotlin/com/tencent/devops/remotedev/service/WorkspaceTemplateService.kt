@@ -97,6 +97,7 @@ class WorkspaceTemplateService  @Autowired constructor(
                      image = it.image,
                      name = it.name,
                      source = it.source,
+                     logo = it.logo,
                      description = it.description
                  )
              )

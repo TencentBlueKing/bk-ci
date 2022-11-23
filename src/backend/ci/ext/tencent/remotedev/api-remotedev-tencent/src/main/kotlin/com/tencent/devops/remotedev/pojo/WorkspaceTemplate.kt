@@ -40,6 +40,8 @@ data class WorkspaceTemplate(
     val name: String,
     @ApiModelProperty("模板来源")
     val source: String,
+    @ApiModelProperty("模板LOGO")
+    val logo: String,
     @ApiModelProperty("模板描述")
     val description: String
 )
