@@ -221,10 +221,10 @@ class IamRbacService @Autowired constructor(
             .applicant(userId)
             .reason(reason)
             .callbackId(callbackId)
-            // todo 需补充
             .callbackUrl(itsmCreateCallBackUrl)
-            .content("xxx")
-            .title("xxx")
+            // todo 需补充
+            .content(mapOf("test" to "test"))
+            .title("蓝盾创建项目申请")
             .build()
         logger.info("gradeManagerApplicationCreateDTO : $gradeManagerApplicationCreateDTO")
         val createGradeManagerApplication =
@@ -311,6 +311,7 @@ class IamRbacService @Autowired constructor(
             .authorization_scopes(authorizationScopes)
             .subject_scopes(subjectScopes)
             //todo 是否同步创建用户组
+            .sync_perm(true)
             .build()
         return iamManagerService.createManagerV2(createManagerDTO).toString()
     }

@@ -357,10 +357,15 @@ class TxProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun createRoleGroupApplication(userId: String, applicationInfo: ApplicationInfo): Boolean {
+    override fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
+    ): Boolean {
         return projectPermissionService.createRoleGroupApplication(
             userId = userId,
-            applicationInfo = applicationInfo
+            applicationInfo = applicationInfo,
+            gradeManagerId = gradeManagerId
         )
     }
 

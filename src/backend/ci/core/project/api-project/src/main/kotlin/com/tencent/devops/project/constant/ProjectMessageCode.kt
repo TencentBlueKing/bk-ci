@@ -83,4 +83,5 @@ object ProjectMessageCode {
     const val PROJECT_UPDATE_FAIL = "2119037" // 修改项目错误
     const val VERIFY_ITSM_TOKEN_FAIL = "2119038" // 检验ITSM的token失败
     const val CANCEL_PROJECT_CREATE_FAIL = "2119039" // 取消创建项目失败
+    const val APPLY_TO_JOIN_PROJECT_FAIL = "2119040" // 申请加入项目失败
 }

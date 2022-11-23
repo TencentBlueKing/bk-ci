@@ -34,6 +34,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
+import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
@@ -121,10 +123,12 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
             authSecrecy = resourceCreateInfo.projectCreateInfo.authSecrecy
         )
         if (iamSubjectScopes.isEmpty()) {
-            iamSubjectScopes.add(ManagerScopes(
-                ManagerScopesEnum.getType(ManagerScopesEnum.ALL),
-                ALL_MEMBERS
-            ))
+            iamSubjectScopes.add(
+                ManagerScopes(
+                    ManagerScopesEnum.getType(ManagerScopesEnum.ALL),
+                    ALL_MEMBERS
+                )
+            )
         }
         if (needApproval) {
             projectDispatcher.dispatch(
@@ -185,14 +189,16 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
             authSecrecy = resourceUpdateInfo.projectUpdateInfo.authSecrecy
         )
         if (iamSubjectScopes.isEmpty()) {
-            iamSubjectScopes.add(ManagerScopes(
-                ManagerScopesEnum.getType(ManagerScopesEnum.ALL),
-                ALL_MEMBERS
-            ))
+            iamSubjectScopes.add(
+                ManagerScopes(
+                    ManagerScopesEnum.getType(ManagerScopesEnum.ALL),
+                    ALL_MEMBERS
+                )
+            )
         }
         val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
-        if (approvalStatus == ApproveStatus.CREATE_PENDING.status
-            || approvalStatus == ApproveStatus.UPDATE_PENDING.status
+        if (approvalStatus == ApproveStatus.CREATE_PENDING.status ||
+            approvalStatus == ApproveStatus.UPDATE_PENDING.status
         ) {
             throw OperationException("The project is under approval, modification is not allowed！")
         }
@@ -262,11 +268,14 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
             projectName = projectName,
             iamConfiguration = iamConfiguration
         )
+        val gradeManagerDetail = iamManagerService.getGradeManagerDetail(relationId)
         val updateManagerDTO: UpdateManagerDTO = UpdateManagerDTO.builder()
             .name("$SYSTEM_DEFAULT_NAME-$projectName")
-            .description(IamGroupUtils.buildManagerUpdateDescription(projectCode, userId))
+            .description(gradeManagerDetail.description)
             .authorizationScopes(authorizationScopes)
             .subjectScopes(iamSubjectScopes)
+            .members(gradeManagerDetail.members)
+            .syncPerm(gradeManagerDetail.syncPerm)
             .build()
         logger.info("updateManager : $updateManagerDTO")
         iamManagerService.updateManagerV2(relationId, updateManagerDTO)
@@ -288,19 +297,21 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
             iamConfiguration = iamConfiguration
         )
         val callbackId = UUIDUtil.generate()
+        val gradeManagerDetail = iamManagerService.getGradeManagerDetail(projectInfo.relationId)
         val gradeManagerApplicationUpdateDTO = GradeManagerApplicationUpdateDTO.builder()
             .name("$SYSTEM_DEFAULT_NAME-$projectName")
-            .description(IamGroupUtils.buildManagerUpdateDescription(projectCode, userId))
+            .description(gradeManagerDetail.description)
             .authorizationScopes(authorizationScopes)
             .subjectScopes(iamSubjectScopes)
-            .syncPerm(true)
+            .syncPerm(gradeManagerDetail.syncPerm)
             .applicant(userId)
+            .members(gradeManagerDetail.members)
             .reason(IamGroupUtils.buildManagerUpdateDescription(projectCode, userId))
             .callbackId(callbackId)
-            // todo 需补充
             .callbackUrl(itsmUpdateCallBackUrl)
-            .content("xxx")
-            .title("xxx")
+            // todo 需补充
+            .content(mapOf("test" to "test"))
+            .title("蓝盾修改项目申请")
             .build()
         logger.info("gradeManagerApplicationUpdateDTO : $gradeManagerApplicationUpdateDTO")
         val updateGradeManagerApplication =
@@ -422,7 +433,9 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
 
     override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
         var success = false
-        if (status == ApproveStatus.CREATE_PENDING.status) {
+        if (status == ApproveStatus.CREATE_PENDING.status ||
+            status == ApproveStatus.CREATE_REJECT.status
+        ) {
             val callbackRecord = projectApprovalCallbackDao.getCallbackByEnglishName(
                 dslContext = dslContext,
                 projectCode = projectCode
@@ -432,7 +445,24 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         return success
     }
 
-    override fun createRoleGroupApplication(userId: String, applicationInfo: ApplicationInfo): Boolean {
+    override fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
+    ): Boolean {
+        val v2PageInfoDTO = V2PageInfoDTO()
+        v2PageInfoDTO.page = 1
+        v2PageInfoDTO.pageSize = 10
+        val viewProjectPermissionGroup = iamManagerService.getGradeManagerRoleGroupV2(
+            gradeManagerId, VIEW_PROJECT_PERMISSION_GROUP_NAME, v2PageInfoDTO
+        )
+        val groupId = viewProjectPermissionGroup.results[0].id
+        val applicationInfo = ApplicationDTO.builder()
+            .groupId(listOf(groupId)).applicant(userId)
+            .reason(applicationInfo.reason)
+            .expiredAt(applicationInfo.expireTime.toLong())
+            .build()
+        iamManagerService.createRoleGroupApplicationV2(applicationInfo)
         return true
     }
 
@@ -440,5 +470,6 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         val logger = LoggerFactory.getLogger(TxRbacProjectPermissionServiceImpl::class.java)
         private const val SYSTEM_DEFAULT_NAME = "蓝盾"
         private const val ALL_MEMBERS = "*"
+        private const val VIEW_PROJECT_PERMISSION_GROUP_NAME = "查看项目权限组"
     }
 }
