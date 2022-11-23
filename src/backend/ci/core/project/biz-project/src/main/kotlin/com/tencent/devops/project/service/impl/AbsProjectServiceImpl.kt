@@ -894,13 +894,25 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun applyToJoinProject(userId: String, applicationInfo: ApplicationInfo): Boolean {
         var success = false
-        val projectInfo = projectDao.get(dslContext, applicationInfo.projectId) ?: throw InvalidParamException("项目不存在")
+        val projectInfo = projectDao.get(dslContext, applicationInfo.projectId)
+            ?: throw InvalidParamException("project is not exist!|$applicationInfo.projectId")
         val gradeManagerId = projectInfo.relationId
-        success = createRoleGroupApplication(
-            userId = userId,
-            applicationInfo = applicationInfo,
-            gradeManagerId = gradeManagerId
-        )
+        try {
+            createRoleGroupApplication(
+                userId = userId,
+                applicationInfo = applicationInfo,
+                gradeManagerId = gradeManagerId
+            )
+            success = true
+        } catch (e: Exception) {
+            logger.warn("Apply to join project failed ：${projectInfo.englishName}|$applicationInfo")
+            throw OperationException(
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.APPLY_TO_JOIN_PROJECT_FAIL,
+                    defaultMessage = "Apply to join project failed  ： ${projectInfo.englishName}|$applicationInfo"
+                )
+            )
+        }
         return success
     }
 
