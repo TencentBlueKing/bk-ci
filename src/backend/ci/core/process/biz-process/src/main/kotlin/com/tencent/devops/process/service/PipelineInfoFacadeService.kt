@@ -552,7 +552,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineSettingFacadeService.saveSetting(
                     userId = userId,
                     setting = newSetting,
-                    dispatchPipelineUpdateEvent = false
+                    dispatchPipelineUpdateEvent = false,
+                    updateLabels = false
                 )
             }
             return newPipelineId
