@@ -382,6 +382,13 @@ class PipelineInfoFacadeService @Autowired constructor(
                 val bulkAdd = PipelineViewBulkAdd(pipelineIds = listOf(pipelineId), viewIds = model.staticViews)
                 pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd)
 
+                // 添加到动态分组
+                pipelineViewGroupService.updateGroupAfterPipelineCreate(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId
+                )
+
                 success = true
                 return pipelineId
             } catch (duplicateKeyException: DuplicateKeyException) {
