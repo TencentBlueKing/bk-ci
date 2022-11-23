@@ -2,8 +2,8 @@
     <section class="job-log">
         <bk-log-search :execute-count="executeCount" @change-execute="changeExecute" class="log-tools">
             <template v-slot:tool>
-                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? 'Hide Debug Log' : 'Show Debug Log' }}</li>
-                <li class="more-button" @click="downloadLog">Download Log</li>
+                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? $t('hideDebugLog') : $t('showDebugLog') }}</li>
+                <li class="more-button" @click="downloadLog">{{ $t('downloadLog') }}</li>
             </template>
         </bk-log-search>
         <bk-multiple-log ref="multipleLog"
