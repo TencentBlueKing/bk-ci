@@ -105,7 +105,11 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun createRoleGroupApplication(userId: String, applicationInfo: ApplicationInfo): Boolean {
+    override fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
+    ): Boolean {
         return true
     }
 }

@@ -72,6 +72,7 @@ interface ProjectPermissionService {
 
     fun createRoleGroupApplication(
         userId: String,
-        applicationInfo: ApplicationInfo
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
     ): Boolean
 }

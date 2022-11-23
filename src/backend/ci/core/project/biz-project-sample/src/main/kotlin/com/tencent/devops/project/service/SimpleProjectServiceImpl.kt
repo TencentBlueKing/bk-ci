@@ -169,9 +169,10 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun createRoleGroupApplication(
         userId: String,
-        applicationInfo: ApplicationInfo
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
     ): Boolean {
-        return projectPermissionService.createRoleGroupApplication(userId, applicationInfo)
+        return projectPermissionService.createRoleGroupApplication(userId, applicationInfo, gradeManagerId)
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
