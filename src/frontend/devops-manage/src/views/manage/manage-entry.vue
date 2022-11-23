@@ -2,10 +2,33 @@
 import ManageHeader from '@/components/manage-header.vue';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import {
+  useRouter,
+} from 'vue-router';
+const router = useRouter();
 const { t } = useI18n();
 
-const manageTabs = ref([t('项目信息'), t('用户组')]);
+const manageTabs = ref([
+  {
+    title: t('项目信息'),
+    name: 'show',
+  },
+  {
+    title: t('用户组'),
+    name: 'group',
+  },
+  {
+    title: t('拓展管理'),
+    name: 'expand',
+  },
+]);
 const activeTab = ref(t('项目信息'));
+const handleChangeTab = (manageTab: any) => {
+  activeTab.value = manageTab.title;
+  router.push({
+    name: manageTab.name,
+  });
+};
 </script>
 
 <template>
@@ -15,14 +38,14 @@ const activeTab = ref(t('项目信息'));
     <span class="manage-tabs">
       <span
         v-for="manageTab in manageTabs"
-        :key="manageTab"
+        :key="manageTab.name"
         :class="{
           'manage-tab': true,
-          active: activeTab === manageTab
+          active: activeTab === manageTab.title
         }"
-        @click="activeTab = manageTab"
+        @click="handleChangeTab(manageTab)"
       >
-        {{ manageTab }}
+        {{ manageTab.title }}
       </span>
     </span>
   </manage-header>

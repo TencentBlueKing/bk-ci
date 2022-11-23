@@ -11,6 +11,7 @@ const EditProject = () => import(/* webpackChunkName: "Manage" */ '../views/mana
 const ShowProject = () => import(/* webpackChunkName: "Manage" */ '../views/manage/project/show-project.vue');
 // 用户组管理
 const UserGroup = () => import(/* webpackChunkName: "Manage" */ '../views/manage/group/user-group.vue');
+const ExpandManage = () => import(/* webpackChunkName: "Manage" */ '../views/manage/expand/list.vue');
 
 const router = createRouter({
   history: createWebHistory('manage'),
@@ -43,6 +44,11 @@ const router = createRouter({
               path: 'group',
               name: 'group',
               component: UserGroup,
+            },
+            {
+              path: 'expand',
+              name: 'expand',
+              component: ExpandManage,
             },
           ],
         },
