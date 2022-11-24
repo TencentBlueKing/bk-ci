@@ -26,7 +26,7 @@ const router = createRouter({
           component: ApplyProject,
         },
         {
-          path: '/:projectId',
+          path: '/:projectCode',
           component: ManageEntry,
           redirect: () => ({ name: 'show' }),
           children: [
