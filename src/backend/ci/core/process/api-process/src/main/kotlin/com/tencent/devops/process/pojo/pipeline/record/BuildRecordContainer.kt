@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
-import com.tencent.devops.common.pipeline.container.Container
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -50,7 +49,7 @@ data class BuildRecordContainer(
     @ApiModelProperty("执行次数", required = true)
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
-    val containerVar: Container, // TODO 替换成只有变量的内容
+    val containerVar: Map<String, Any>,
     @ApiModelProperty("是否为构建矩阵组", required = false)
     val matrixGroupFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵组", required = false)

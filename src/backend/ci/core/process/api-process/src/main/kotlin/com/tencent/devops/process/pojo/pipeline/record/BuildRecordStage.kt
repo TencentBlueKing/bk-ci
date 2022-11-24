@@ -27,8 +27,6 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
-import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -51,7 +49,7 @@ data class BuildRecordStage(
     @ApiModelProperty("执行次数", required = true)
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
-    val stageVar: Stage, // TODO 替换成只有变量的内容
+    val stageVar: Map<String, Any>,
     @ApiModelProperty("开始时间", required = false)
     val startTime: Long?,
     @ApiModelProperty("结束时间", required = false)

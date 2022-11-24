@@ -27,9 +27,6 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -48,7 +45,7 @@ data class BuildRecordPipeline(
     @ApiModelProperty("执行次数", required = true)
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
-    val pipelineVar: Model, // TODO 替换成只有变量的内容
+    val pipelineVar: Map<String, Any>,
     @ApiModelProperty("触发人", required = true)
     val startUser: String,
     @ApiModelProperty("触发器", required = true)

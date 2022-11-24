@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -52,7 +51,7 @@ data class BuildRecordTask(
     @ApiModelProperty("执行次数", required = true)
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
-    val taskVar: Element, // TODO 替换成只有变量的内容
+    val taskVar: Map<String, Any>,
     @ApiModelProperty("市场插件标识", required = true)
     val atomCode: Int,
     @ApiModelProperty("开始时间", required = false)

@@ -62,7 +62,7 @@ class PipelineRepositoryVersionService constructor(
             )
             if (count > 0) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD
                 )
             }
         } finally {

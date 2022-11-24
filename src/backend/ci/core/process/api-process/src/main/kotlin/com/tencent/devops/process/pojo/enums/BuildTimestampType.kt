@@ -26,22 +26,13 @@
  */
 package com.tencent.devops.process.pojo.enums
 
-enum class BuildTimestampType(val value: String) {
-    STAGE_CHECK_IN_WAITING("stageCheckInWaiting"),
-    STAGE_CHECK_OUT_WAITING("stageCheckOutWaiting"),
-    JOB_MUTEX_WAITING("jobMutexWaiting"),
-    JOB_CONTAINER_STARTUP("jobContainerStartup"),
-    JOB_CONTAINER_SHUTDOWN("jobMutexShutdown"),
-    TASK_ATOM_LOADING("taskAtomLoading"),
-    TASK_REVIEW_WAITING("reviewWaiting"),
-    UNKNOWN("unknown");
-
-    companion object {
-        fun get(value: String): BuildTimestampType {
-            values().forEach {
-                if (value == it.value) return it
-            }
-            return UNKNOWN
-        }
-    }
+enum class BuildTimestampType {
+    STAGE_CHECK_IN_WAITING,
+    STAGE_CHECK_OUT_WAITING,
+    JOB_MUTEX_WAITING,
+    JOB_CONTAINER_STARTUP,
+    JOB_CONTAINER_SHUTDOWN,
+    TASK_ATOM_LOADING,
+    TASK_REVIEW_WAITING,
+    UNKNOWN;
 }
