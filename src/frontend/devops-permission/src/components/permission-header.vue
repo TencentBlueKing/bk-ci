@@ -1,0 +1,68 @@
+<script setup lang="ts">
+import { AngleRight } from 'bkui-vue/lib/icon';
+
+defineProps<{
+  navs: { name: string, url: string }[]
+}>();
+
+const goToUrl = (url) => {
+  if (url) {
+    location = url
+  }
+}
+</script>
+
+<template>
+  <section class="header-wrapper">
+    <div class="permission-header">
+      <bk-breadcrumb
+        class="permission-breadcrumb"
+        separator="/"
+      >
+        <bk-breadcrumb-item
+          v-for="(nav, index) in navs"
+          :class="{
+            'bk-breadcrumb-item-inner': nav.url
+          }"
+          @click.native.stop="goToUrl(nav.url)"
+        >
+          {{ nav.name }}
+          <template
+            #separator
+            v-if="index < navs.length - 1"
+          >
+            <angle-right class="permission-icon" />
+          </template>
+        </bk-breadcrumb-item>
+      </bk-breadcrumb>
+    </div>
+  </section>
+</template>
+
+<style lang="postcss" scoped>
+.header-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.permission-header {
+  height: 60px;
+  background: #FFFFFF;
+  box-shadow: 0 2px 5px 0 rgba(51,60,72,0.03);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 25px;
+}
+.permission-icon {
+  font-size: 18px;
+  margin-right: 1px;
+}
+.bk-breadcrumb-item {
+  :deep(.bk-breadcrumb-item-inner) {
+    color: #313238;
+  }
+  :deep(.is-link) {
+    color: #3A84FF;
+  }
+}
+</style>
