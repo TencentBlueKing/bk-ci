@@ -25,13 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.api.user
+package com.tencent.devops.dispatch.kubernetes.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.github.GithubAppUrl
-import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -45,90 +45,57 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间")
-@Path("/user/workspace")
+@Api(tags = ["SERVICE_DISPATCH_KUBERNETES_REMOTE_DEV"], description = "远程开发接口模块")
+@Path("/service/remotedev")
+@ServiceInterface("dispatch-kubernetes") // 指明接入到哪个微服务
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserWorkspaceResource {
-
-    @ApiOperation("获取用户已授权代码库列表")
-    @GET
-    @Path("/repository/get")
-    fun getAuthorizedGitRepository(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<GithubAppUrl>
+interface ServiceRemoteDevResource {
 
     @ApiOperation("创建新的工作空间")
     @POST
-    @Path("/create")
+    @Path("/workspaces/create")
     fun createWorkspace(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间描述", required = false)
-        workspace: Workspace
+        @ApiParam("工作空间请求报文", required = false)
+        workspaceReq: WorkspaceReq
     ): Result<String>
 
     @ApiOperation("开启工作空间")
     @POST
-    @Path("/start/workspaces/{workspaceId}")
+    @Path("/workspaces/{workspaceName}/start")
     fun startWorkspace(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("工作空间ID", required = false)
-        @PathParam("workspaceId")
-        workspaceId: Long
-    ): Result<Boolean>
-
-    @ApiOperation("分享工作空间")
-    @POST
-    @Path("/share/workspaces/{workspaceId}")
-    fun shareWorkspace(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("工作空间ID", required = false)
-        @PathParam("workspaceId")
-        workspaceId: Long,
-        @ApiParam("分享用户", required = false)
-        sharedUser: String
+        @PathParam("workspaceName")
+        workspaceName: String
     ): Result<Boolean>
 
     @ApiOperation("删除工作空间")
     @DELETE
-    @Path("/delete/workspaces/{workspaceId}")
+    @Path("/workspaces/{workspaceName}/delete")
     fun deleteWorkspace(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("工作空间ID", required = false)
-        @PathParam("workspaceId")
-        workspaceId: Long
+        @PathParam("workspaceName")
+        workspaceName: String
     ): Result<Boolean>
 
-    @ApiOperation("获取用户工作空间列表")
+    @ApiOperation("获取远程工作空间连接")
     @GET
-    @Path("/list")
-    fun getWorkspaceList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Workspace>
-
-    //todo 获取运行日志的接口
-
-    @ApiOperation("获取用户工作空间详情")
-    @GET
-    @Path("/detail/workspaces/{workspaceId}")
-    fun getWorkspaceDetail(
+    @Path("/workspaces/{workspaceName}/url")
+    fun getWorkspaceUrl(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("工作空间ID", required = false)
-        @PathParam("workspaceId")
-        workspaceId: Long
-    ): Result<Workspace>
+        @PathParam("workspaceName")
+        workspaceName: String
+    ): Result<String?>
 }

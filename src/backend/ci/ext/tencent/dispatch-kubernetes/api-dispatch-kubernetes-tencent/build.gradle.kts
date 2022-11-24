@@ -25,13 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
-
-enum class WorkspaceStatus {
-    PREPARING,
-    RUNNING,
-    STOPPED,
-    SLEEP,
-    DELETED,
-    EXCEPTION
+dependencies {
+    api(project(":core:dispatch-kubernetes:api-dispatch-kubernetes"))
 }
