@@ -100,8 +100,9 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     }
 
     override fun getUserProjects(userId: String): List<String> {
+        // v3 会拉取用户有 PROJECT_VIEW+ALL_ACTION的项目，rbac会拉取出用户有PROJECT_VIEW的项目
+        // 所以要拉出v3(PROJECT_VIEW+ALL_ACTION)就会包含rbac(PROJECT_VIEW)的项目
         val viewAction = PROJECT_VIEW
-        // todo 对于v3-RABC  ALL_ACTION要去除
         val managerAction = ALL_ACTION
         val actionDTOs = mutableListOf<ActionDTO>()
         val viewActionDto = ActionDTO()
