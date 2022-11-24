@@ -451,7 +451,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            //todo 修改拉取策略，只拉取拥有查看权限的项目  v3保留
             val projects = getProjectFromAuth(userId, accessToken)
             if (projects.isEmpty() && approved!!) {
                 return emptyList()

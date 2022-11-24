@@ -131,6 +131,9 @@ class TxProjectServiceImpl @Autowired constructor(
     @Value("\${tag.v3:#{null}}")
     private var v3Tag: String = ""
 
+    @Value("\${tag.rbac:#{null}}")
+    private var rbacTag: String = ""
+
     @Value("\${tag.auto:#{null}}")
     private val autoTag: String? = null
 
@@ -304,7 +307,6 @@ class TxProjectServiceImpl @Autowired constructor(
 
         // 请求V3的项目,流量必须指向到v3,需指定项目头
         val iamV3List = getV3UserProject(userId!!)
-        // todo 得加多一个v3-RABC 的tag 获取项目
         logger.info("$userId V3 project: $iamV3List")
         val projectList = mutableSetOf<String>()
         projectList.addAll(iamV0List)
@@ -466,26 +468,31 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     private fun getV3UserProject(userId: String): List<String>? {
-        if (v3Tag.isBlank()) {
+        if (v3Tag.isBlank() && rbacTag.isBlank()) {
             return emptyList()
         }
-        logger.info("getV3userProject tag: $v3Tag")
-        try {
-            return bkTag.invokeByTag(v3Tag) {
-                try {
+        logger.info("getUserProject tag: v3Tag=$v3Tag|rbacTag=$rbacTag")
+        return try {
+            if (!v3Tag.isBlank()) {
+                bkTag.invokeByTag(v3Tag) {
                     // 请求V3的项目,流量必须指向到v3,需指定项目头
                     client.get(ServiceProjectAuthResource::class).getUserProjects(
                         userId = userId,
                         token = tokenService.getSystemToken(null)!!
                     ).data
-                } catch (e: Exception) {
-                    logger.warn("ServiceGitForAppResource is error", e)
-                    return@invokeByTag null
+                }
+            } else {
+                bkTag.invokeByTag(rbacTag) {
+                    // 请求rbac的项目,流量必须指向到rbac,需指定项目头
+                    client.get(ServiceProjectAuthResource::class).getUserProjects(
+                        userId = userId,
+                        token = tokenService.getSystemToken(null)!!
+                    ).data
                 }
             }
         } catch (e: Exception) {
             // 为防止V0,V3发布存在时间差,导致项目列表拉取异常
-            logger.warn("getV3Project fail $userId $e")
+            logger.warn("get iam Project fail $userId $e")
             return emptyList()
         }
     }
