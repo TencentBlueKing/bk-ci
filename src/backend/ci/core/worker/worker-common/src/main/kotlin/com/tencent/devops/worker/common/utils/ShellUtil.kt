@@ -37,6 +37,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
 import java.nio.file.Files
+import java.util.regex.Pattern
 
 @Suppress("ALL")
 object ShellUtil {
@@ -142,8 +143,11 @@ object ShellUtil {
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
                 // --bug=75509999 Agent环境变量中替换掉破坏性字符
-                val clean = value.replace(specialCharToReplace, "")
-                command.append("export $name='$clean'\n")
+                // 过滤掉中文汉字和中文字符
+                if (!isContainChinese(name)){
+                    val clean = value.replace(specialCharToReplace, "")
+                    command.append("export $name='$clean'\n")
+                }
             }
         }
         if (buildEnvs.isNotEmpty()) {
@@ -184,10 +188,18 @@ object ShellUtil {
             command.append("set +e\n")
         }
 
-        command.append(setEnv.replace(oldValue = "##resultFile##",
-            newValue = "\"${File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath}\""))
-        command.append(setGateValue.replace(oldValue = "##gateValueFile##",
-            newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""))
+        command.append(
+            setEnv.replace(
+                oldValue = "##resultFile##",
+                newValue = "\"${File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath}\""
+            )
+        )
+        command.append(
+            setGateValue.replace(
+                oldValue = "##gateValueFile##",
+                newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""
+            )
+        )
         command.append(". ${userScriptFile.absolutePath}")
         userScriptFile.writeText(script)
         file.writeText(command.toString())
@@ -232,5 +244,16 @@ object ShellUtil {
 
     private fun specialEnv(key: String): Boolean {
         return specialKey.any { key.contains(it) }
+    }
+
+    private fun isContainChinese(str: String): Boolean {
+        val pattern = Pattern.compile(
+            "[\u4E00-\u9FA5|\\！|\\，|\\。|\\（|\\）|\\《|\\》|\\“|\\”|\\？|\\：|\\；|\\【|\\】]"
+        )
+        val matcher = pattern.matcher(str)
+        if (matcher.find()) {
+            return true
+        }
+        return false
     }
 }
