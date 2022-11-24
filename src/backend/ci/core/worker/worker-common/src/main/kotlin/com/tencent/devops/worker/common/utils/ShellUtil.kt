@@ -188,18 +188,10 @@ object ShellUtil {
             command.append("set +e\n")
         }
 
-        command.append(
-            setEnv.replace(
-                oldValue = "##resultFile##",
-                newValue = "\"${File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath}\""
-            )
-        )
-        command.append(
-            setGateValue.replace(
-                oldValue = "##gateValueFile##",
-                newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""
-            )
-        )
+        command.append(setEnv.replace(oldValue = "##resultFile##",
+            newValue = "\"${File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath}\""))
+        command.append(setGateValue.replace(oldValue = "##gateValueFile##",
+            newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""))
         command.append(". ${userScriptFile.absolutePath}")
         userScriptFile.writeText(script)
         file.writeText(command.toString())
