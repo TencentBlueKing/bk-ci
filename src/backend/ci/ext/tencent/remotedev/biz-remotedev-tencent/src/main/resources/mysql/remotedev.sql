@@ -72,8 +72,8 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_HISTORY` (
                                                      `WORKSPACE_ID` bigint(20) NOT NULL DEFAULT 0 COMMENT '工作空间ID',
                                                      `STARTER` varchar(64) NOT NULL DEFAULT '' COMMENT '启动人',
                                                      `STOPPER` varchar(64) NOT NULL DEFAULT '' COMMENT '停止人',
-                                                     `START_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '开始时间',
-                                                     `END_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '结束时间',
+                                                     `START_TIME` timestamp NULL DEFAULT NULL COMMENT '开始时间',
+                                                     `END_TIME` timestamp NULL DEFAULT NULL COMMENT '结束时间',
                                                      `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
                                                      `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 
