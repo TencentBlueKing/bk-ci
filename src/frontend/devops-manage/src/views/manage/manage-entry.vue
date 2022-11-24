@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import ManageHeader from '@/components/manage-header.vue';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   useRouter,
+  useRoute,
 } from 'vue-router';
 const router = useRouter();
+const route = useRoute();
 const { t } = useI18n();
 
 const manageTabs = ref([
@@ -22,6 +24,8 @@ const manageTabs = ref([
     name: 'expand',
   },
 ]);
+
+const routeName = route.name;
 const activeTab = ref(t('项目信息'));
 const handleChangeTab = (manageTab: any) => {
   activeTab.value = manageTab.title;
@@ -29,6 +33,13 @@ const handleChangeTab = (manageTab: any) => {
     name: manageTab.name,
   });
 };
+const initActiveTab = () => {
+  const tab = manageTabs.value.find(tab => tab.name === routeName);
+  activeTab.value = tab?.title || t('项目信息');
+};
+onMounted(() => {
+  initActiveTab();
+});
 </script>
 
 <template>

@@ -1,70 +1,3 @@
-<script setup lang="ts">
-import { ref  } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { InfoBox } from 'bkui-vue';
-const { t } = useI18n();
-const activeTab = ref('管理员');
-
-const groupList = ref([
-  {
-    name: '管理员',
-    id: 1,
-    user: 10,
-    group: 10,
-  },
-  {
-    name: '查看项目权限组',
-    id: 2,
-    user: 10,
-    group: 10,
-  },
-  {
-    name: '开发人员',
-    user: 10,
-    group: 10,
-  },
-  {
-    name: '产品人员',
-    user: 10,
-    group: 10,
-  },
-  {
-    name: '测试人员',
-    user: 10,
-    group: 10,
-  },
-  {
-    name: '运维人员',
-    user: 10,
-    group: 10,
-  },
-  {
-    name: '质管人员',
-    user: 10,
-    group: 10,
-  },
-]);
-
-const handleDeleteGroup = (group: any) => {
-  InfoBox({
-    title: t('是否删除用户组', [group.name]),
-    contentAlign: 'center',
-    headerAlign: 'center',
-    footerAlign: 'center',
-    onConfirm() {
-      return '';
-    },
-  });
-};
-const handleChangeTab = (group: any) => {
-  activeTab.value = group.name;
-};
-
-const handleCreateGroup = () => {
-  activeTab.value = '';
-};
-</script>
-
 <template>
   <article class="group-aside">
     <section class="group-list">
@@ -97,7 +30,7 @@ const handleCreateGroup = () => {
               :disabled="[1, 2].includes(group.id)"
               text
               @click="handleDeleteGroup(group)">
-              {{ t('删除') }}
+              {{ $t('删除') }}
             </bk-button>
           </template>
         </bk-popover>
@@ -108,18 +41,107 @@ const handleCreateGroup = () => {
         @click="handleCreateGroup">
         <span class="add-group-btn">
           <i class="manage-icon manage-icon-add-fill add-icon"></i>
-          {{ t('新建用户组') }}
+          {{ $t('新建用户组') }}
         </span>
       </div>
     </section>
+    <div class="close-btn">
+      <bk-button @click="handleCloseManage">{{ $t('关闭权限管理') }}</bk-button>
+    </div>
   </article>
 </template>
+
+<script lang="ts">
+import { InfoBox } from 'bkui-vue';
+
+export default {
+  name: 'GroupAside',
+  props: {
+  },
+  data() {
+    return {
+      activeTab: '管理员',
+      groupList: [
+        {
+          name: '管理员',
+          id: 1,
+          user: 10,
+          group: 10,
+        },
+        {
+          name: '查看项目权限组',
+          id: 2,
+          user: 10,
+          group: 10,
+        },
+        {
+          name: '开发人员',
+          user: 10,
+          group: 10,
+          id: 3,
+        },
+        {
+          name: '产品人员',
+          user: 10,
+          group: 10,
+          id: 4,
+        },
+        {
+          name: '测试人员',
+          user: 10,
+          group: 10,
+          id: 5,
+        },
+        {
+          name: '运维人员',
+          user: 10,
+          group: 10,
+          id: 6,
+        },
+        {
+          name: '质管人员',
+          user: 10,
+          group: 10,
+          id: 7,
+        },
+      ],
+    };
+  },
+  mounted() {
+  },
+  methods: {
+    handleDeleteGroup(group: any) {
+      InfoBox({
+        title: this.$t('是否删除用户组', [group.name]),
+        contentAlign: 'center',
+        headerAlign: 'center',
+        footerAlign: 'center',
+        onConfirm() {
+          return '';
+        },
+      });
+    },
+    handleChangeTab(group: any) {
+      this.activeTab = group.name;
+    },
+    handleCreateGroup() {
+      this.activeTab = '';
+    },
+    handleCloseManage() {
+      console.log('关闭权限管理');
+    },
+  },
+};
+</script>
 
 <style lang="postcss" scoped>
   .group-aside {
     width: 240px;
     height: 100%;
     background-color: #FAFBFD;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
   .group-list {
     margin-top: 8px;
@@ -210,4 +232,9 @@ const handleCreateGroup = () => {
       padding: 0;
     }
   }
+  .close-btn {
+    margin-bottom: 20px;
+    text-align: center;
+  }
 </style>
+
