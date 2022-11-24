@@ -144,7 +144,7 @@ object ShellUtil {
             commonEnv.forEach { (name, value) ->
                 // --bug=75509999 Agent环境变量中替换掉破坏性字符
                 // 过滤掉中文汉字和中文字符
-                if (!isContainChinese(name)){
+                if (!isContainChinese(name)) {
                     val clean = value.replace(specialCharToReplace, "")
                     command.append("export $name='$clean'\n")
                 }
