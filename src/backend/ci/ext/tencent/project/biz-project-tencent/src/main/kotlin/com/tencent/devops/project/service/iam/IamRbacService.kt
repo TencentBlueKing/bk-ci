@@ -84,7 +84,7 @@ class IamRbacService @Autowired constructor(
     val projectApprovalCallbackDao: ProjectApprovalCallbackDao,
     val objectMapper: ObjectMapper
 ) {
-    @Value("\${itsm.callback.url.create:#{null}}")
+    @Value("\${itsm.callback.create.url:#{null}}")
     private val itsmCreateCallBackUrl: String = ""
     fun createIamRbacProject(event: TxIamRbacCreateEvent) {
         val watcher = Watcher(id = "IAM|CreateProject|${event.projectId}|${event.userId}")

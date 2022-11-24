@@ -93,7 +93,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
     @Value("\${iam.v0.url:#{null}}")
     private val v0IamUrl: String = ""
 
-    @Value("\${itsm.callback.url.update:#{null}}")
+    @Value("\${itsm.callback.update.url:#{null}}")
     private val itsmUpdateCallBackUrl: String = ""
 
     // 校验用户是否是项目成员
