@@ -42,7 +42,7 @@ class ProjectApprovalCallbackDao {
         dslContext: DSLContext,
         sn: String
     ): TProjectApprovalCallbackRecord? {
-        with(TProjectApprovalCallback.T_PROJECT_APPROVAL_CALLBACK) {
+        with(TProjectApprovalCallback.T_PROJECT_APPROVAL_CALLBACK){
             return dslContext.selectFrom(this).where(SN.eq(sn)).fetchAny()
         }
     }
@@ -52,7 +52,7 @@ class ProjectApprovalCallbackDao {
         projectCode: String
     ): TProjectApprovalCallbackRecord? {
         with(TProjectApprovalCallback.T_PROJECT_APPROVAL_CALLBACK) {
-            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(projectCode)).fetchAny()
+            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(projectCode)).orderBy(CREATE_TIME.desc()).fetchAny()
         }
     }
 }
