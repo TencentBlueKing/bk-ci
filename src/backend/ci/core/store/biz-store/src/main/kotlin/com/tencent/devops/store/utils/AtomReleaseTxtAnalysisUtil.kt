@@ -28,11 +28,14 @@
 package com.tencent.devops.store.utils
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
+import com.tencent.devops.artifactory.api.service.ServiceFileResource
+import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreLogoResource
@@ -158,17 +161,15 @@ object AtomReleaseTxtAnalysisUtil {
         pathList.forEach { path ->
             val file = File("$atomPath${fileSeparator}file$fileSeparator$path")
             if (file.exists()) {
-                val uploadFileResult = client.get(ServiceStoreLogoResource::class).uploadStoreLogo(
+                val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
+                val fileUrl = CommonUtils.serviceUploadFile(
                     userId = userId,
-                    contentLength = file.length(),
-                    inputStream = file.inputStream(),
-                    disposition = FormDataContentDisposition(
-                        "form-data; name=\"logo\"; filename=\"${file.name}\""
-                    )
+                    serviceUrlPrefix = serviceUrlPrefix,
+                    file = file,
+                    fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
+                    logo = true
                 ).data
-                uploadFileResult?.let { storeLogoInfo ->
-                    result[path] = storeLogoInfo.logoUrl!!
-                }
+                fileUrl?.let { result[path] = fileUrl }
             } else {
                 logger.warn("Resource file does not exist:${file.path}")
             }
