@@ -197,7 +197,7 @@
             },
             sortType: {
                 type: String,
-                default: 'CREATE_TIME'
+                default: PIPELINE_SORT_FILED.createTime
             }
         },
         data () {
@@ -319,8 +319,8 @@
             },
             handleSort ({ prop, order }) {
                 Object.assign(this.sortField, {
-                    order: prop ? ORDER_ENUM[order] : undefined,
-                    prop: PIPELINE_SORT_FILED[prop]
+                    order: prop ? ORDER_ENUM[order] : ORDER_ENUM.descending,
+                    prop: PIPELINE_SORT_FILED[prop] ?? PIPELINE_SORT_FILED.createTime
                 })
                 this.$nextTick(this.requestList)
             },
