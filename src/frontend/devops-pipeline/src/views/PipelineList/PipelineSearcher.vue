@@ -73,7 +73,9 @@
                             name: item.name
                         }))
                     },
-                    ...this.tagGroupList.map(item => ({
+                    ...this.tagGroupList.filter(item =>
+                        Array.isArray(item.labels) && item.labels.length > 0
+                    ).map(item => ({
                         classify: PIPELINE_FILTER_LABELS,
                         id: item.id,
                         name: item.name,

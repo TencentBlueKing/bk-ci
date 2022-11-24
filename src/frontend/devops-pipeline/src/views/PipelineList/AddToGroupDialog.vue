@@ -89,10 +89,6 @@
                 type: Boolean,
                 default: false
             },
-            hasManagePermission: {
-                type: Boolean,
-                default: false
-            },
             addToDialogShow: Boolean
         },
         data () {
@@ -105,7 +101,8 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'allPipelineGroup'
+                'allPipelineGroup',
+                'isManage'
             ]),
             ...mapGetters('pipelines', [
                 'groupMap'
@@ -120,14 +117,14 @@
                 const tooltips = {
                     content: this.$t('groupEditDisableTips'),
                     delay: 500,
-                    disabled: this.hasManagePermission
+                    disabled: this.isManage
                 }
                 return this.allPipelineGroup.reduce((acc, group) => {
                     const index = group.projected ? 1 : 0
                     const isDynamicGroup = group.viewType === 1
                     const isUnclassifyGroup = group.id === UNCLASSIFIED_PIPELINE_VIEW_ID
                     if (!isUnclassifyGroup) {
-                        const needManage = group.projected && !this.hasManagePermission
+                        const needManage = group.projected && !this.isManage
                         let desc = null
                         let sortPos = 0
                         switch (true) {
@@ -166,7 +163,7 @@
                     id: 'projected',
                     name: this.$t('projectPipelineGroup'),
                     hasChild: true,
-                    disabled: !this.hasManagePermission,
+                    disabled: !this.isManage,
                     tooltips,
                     children: []
                 }]).map(node => {
@@ -291,18 +288,7 @@
                         pipelineIds,
                         viewIds
                     })
-                    if (!this.isPatch) {
-                        this.requestGetGroupLists(this.$route.params)
-                    } else {
-                        viewIds.forEach(id => {
-                            this.$store.commit('pipelines/UPDATE_PIPELINE_GROUP', {
-                                id,
-                                body: {
-                                    pipelineCount: this.groupMap[id].pipelineCount + pipelineIds.length ?? 0
-                                }
-                            })
-                        })
-                    }
+                    this.requestGetGroupLists(this.$route.params)
                     this.handleClose()
                     this.$emit('done')
                 } catch (e) {

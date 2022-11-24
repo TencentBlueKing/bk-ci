@@ -108,7 +108,7 @@
                         <bk-radio :value="false">{{$t('personalVis')}}</bk-radio>
                         <bk-radio
                             v-bk-tooltips="projectedGroupDisableTips"
-                            :disabled="!hasManagePermission"
+                            :disabled="!isManage"
                             :value="true"
                         >
                             {{$t('projectVis')}}
@@ -149,9 +149,6 @@
             Logo,
             ExtMenu
         },
-        props: {
-            hasManagePermission: Boolean
-        },
         data () {
             return {
                 DELETED_VIEW_ID,
@@ -183,7 +180,8 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'sumViews'
+                'sumViews',
+                'isManage'
             ]),
             ...mapGetters('pipelines', [
                 'pipelineGroupDict',
@@ -204,7 +202,7 @@
                                 return this.$t('pipelineGroupRepeatTips', [val])
                         }
                     },
-                    trigger: 'blur'
+                    trigger: 'change'
                 }]
             },
             pipelineGroupTree () {
@@ -218,7 +216,7 @@
                     stickyTop: '50px',
                     children: this.pipelineGroupDict.personalViewList.map((view) => ({
                         ...view,
-                        icon: 'pipelineGroup',
+                        icon: view.icon ?? 'pipelineGroup',
                         name: view.i18nKey ? this.$t(view.i18nKey) : view.name,
                         actions: this.pipelineGroupActions(view)
                     }))
@@ -227,7 +225,7 @@
                     id: 'projectViewList',
                     show: this.showClassify.projectViewList,
                     projected: true,
-                    disabled: !this.hasManagePermission,
+                    disabled: !this.isManage,
                     tooltips: this.projectedGroupDisableTips,
                     stickyTop: '90px',
                     children: this.pipelineGroupDict.projectViewList.map((view) => ({
@@ -240,7 +238,7 @@
             projectedGroupDisableTips () {
                 return {
                     content: this.$t('projectedGroupDisableTips'),
-                    disabled: this.hasManagePermission
+                    disabled: this.isManage
                 }
             }
         },
@@ -278,7 +276,7 @@
             },
             pipelineGroupActions (group) {
                 if (this.fixedGroupIdSet.has(group.id)) return []
-                const hasPermission = !group.projected || this.hasManagePermission
+                const hasPermission = !group.projected || this.isManage
                 return [
                     ...(hasPermission
                         ? [
@@ -402,6 +400,8 @@
                         projectId: this.$route.params.projectId,
                         ...view
                     })
+                    this.requestGetGroupLists(this.$route.params)
+                    this.switchViewId(UNCLASSIFIED_PIPELINE_VIEW_ID)
                 } catch (error) {
                     message = error.message || error
                     theme = 'error'
@@ -467,7 +467,7 @@
                 let theme = 'success'
                 try {
                     this.isAdding = true
-                    await this.addPipelineGroup({
+                    const viewId = await this.addPipelineGroup({
                         ...this.newPipelineGroup,
                         projectId: this.$route.params.projectId,
                         viewType: 2,
@@ -477,6 +477,7 @@
                         pipelineCount: 0
                     })
                     this.closeAddPipelineGroupDialog()
+                    this.switchViewId(viewId)
                 } catch (e) {
                     message = e.message || e
                     theme = 'error'

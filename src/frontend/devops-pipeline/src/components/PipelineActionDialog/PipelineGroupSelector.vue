@@ -44,13 +44,16 @@
                 v-model="staticViews"
                 @change="emitChange"
             >
-                <bk-option
-                    v-for="group in staticPipelineGroups"
-                    :key="group.id"
-                    :id="group.id"
+                <bk-option-group
+                    v-for="(group, index) in visibleStaticGroups"
                     :name="group.name"
-                >
-                </bk-option>
+                    :key="index">
+                    <bk-option v-for="option in group.children"
+                        :key="option.id"
+                        :id="option.id"
+                        :name="option.name">
+                    </bk-option>
+                </bk-option-group>
             </bk-select>
         </bk-form-item>
     </bk-form>
@@ -78,6 +81,10 @@
             value: {
                 type: Object,
                 requied: true
+            },
+            hasManagePermission: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -100,8 +107,34 @@
             addLabelRoute () {
                 return {
                     name: 'pipelinesGroup'
-
                 }
+            },
+            visibleStaticGroups () {
+                const staticGroups = [
+                    {
+                        name: this.$t('personalViewList'),
+                        children: []
+                    }
+                ]
+                if (this.hasManagePermission) {
+                    staticGroups.push({
+                        name: this.$t('projectViewList'),
+                        children: []
+                    })
+                }
+                return this.staticPipelineGroups.reduce((acc, group) => {
+                    const pos = group.projected ? 1 : 0
+                    if (acc[pos]) {
+                        acc[pos].children.push(group)
+                    }
+                    return acc
+                }, staticGroups)
+            }
+        },
+        watch: {
+            value (val) {
+                this.labels = val?.labels ?? []
+                this.staticViews = val?.staticViews ?? []
             }
         },
         created () {

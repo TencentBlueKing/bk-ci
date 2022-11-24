@@ -8,7 +8,7 @@
         :close-icon="false"
         :draggable="false"
     >
-        <section v-bkloading="{ isLoading }" v-if="group" class="pipeline-group-edit-dialog-main">
+        <section v-if="group" class="pipeline-group-edit-dialog-main">
             <aside class="pipeline-group-edit-source">
                 <header class="pipeline-group-edit-header">{{ title }}</header>
                 <div class="group-form-item">
@@ -32,13 +32,14 @@
                                 <bk-radio value="OR">{{$t('view.or')}}</bk-radio>
                             </bk-radio-group>
                         </div>
-                        <bk-table class="group-filters-table" :data="formatFilters">
+                        <bk-table class="group-filters-table" height="100%" :data="formatFilters">
                             <bk-table-column width="152" :label="$t('view.key')">
                                 <template slot-scope="props">
                                     <bk-select
+                                        :key="props.key"
                                         :clearable="false"
                                         v-model="props.row.id"
-                                        @change="handleFilterTypeChange(props.row, props.$index)"
+                                        @change="handleFilterTypeChange(props.row)"
                                     >
                                         <bk-option
                                             v-for="item in filterTypes"
@@ -50,8 +51,13 @@
                                 </template>
                             </bk-table-column>
                             <bk-table-column :label="$t('view.value')" prop="value">
-                                <div class="group-filter-value-cell" slot-scope="props">
-                                    <bk-form :label-width="0" :ref="`dynamicForms_${props.$index}`" :model="props.row" class="group-filter-value-input">
+                                <div :title="props.row.key" :key="props.row.key" class="group-filter-value-cell" slot-scope="props">
+                                    <bk-form
+                                        :label-width="0"
+                                        :ref="`dynamicForms_${props.row.key}`"
+                                        :model="props.row"
+                                        class="group-filter-value-input"
+                                    >
                                         <bk-form-item v-if="props.row.id === NAME_FILTER_TYPE" v-bind="getDynamicFilterConf(props.row.id, props.row)">
                                             <bk-input
                                                 :placeholder="$t('view.nameTips')"
@@ -85,7 +91,7 @@
                                         <bk-button theme="normal" text @click="removeFilter(props)">
                                             <i class="devops-icon icon-minus-circle" />
                                         </bk-button>
-                                        <bk-button theme="normal" text @click="addFilters">
+                                        <bk-button theme="normal" text @click="addFilters(props.$index)">
                                             <i class="devops-icon icon-plus-circle" />
                                         </bk-button>
                                     </span>
@@ -230,6 +236,9 @@
         FILTER_BY_LABEL,
         VIEW_CONDITION
     } from '@/utils/pipelineConst'
+    import {
+        hashID
+    } from '@/utils/util'
 
     const defaultFilter = {
         '@type': NAME_FILTER_TYPE,
@@ -245,10 +254,6 @@
             group: {
                 type: Object,
                 required: true
-            },
-            hasManagePermission: {
-                type: Boolean,
-                default: false
             }
         },
         data () {
@@ -274,7 +279,7 @@
                 previewTime: null,
                 model: {
                     viewType: this.group?.viewType ?? 2,
-                    pipelineIds: new Set(this.group?.pipelineIds),
+                    pipelineIds: new Set(this.group?.pipelineIds ?? []),
                     filters: [{
                         ...defaultFilter
                     }],
@@ -409,7 +414,8 @@
                 'requestGroupListsDict',
                 'requestTagList',
                 'updatePipelineGroup',
-                'previewGroupResult'
+                'previewGroupResult',
+                'requestGetGroupLists'
             ]),
             isChecked (id) {
                 return this.parentCheckStatusMap[id] ?? {
@@ -487,7 +493,10 @@
                 this.model = {
                     viewType: groupDetail.viewType ?? group.viewType,
                     pipelineIds: new Set(groupDetail.pipelineIds),
-                    filters: groupDetail.filters.length > 0 ? groupDetail.filters : this.model.filters,
+                    filters: (groupDetail.filters.length > 0 ? groupDetail.filters : this.model.filters).map(filter => ({
+                        ...filter,
+                        key: hashID()
+                    })),
                     logic: groupDetail.logic
                 }
                 this.pipleinGroupTree = [
@@ -557,16 +566,15 @@
                 root.children.forEach(child => this.handleCheck(checked, child))
             },
             async handleCheck (checked, data) {
-                this.updatePipelineIds(data.id, checked)
                 const previewPipeline = this.generatePreviewPipeline({
                     pipelineId: data.id,
                     pipelineName: data.name
                 })
                 if (checked) {
-                    if (this.savedPipelineInfos.has(data.id)) {
+                    if (this.savedPipelineInfos.has(data.id) && !this.model.pipelineIds.has(data.id)) {
                         this.preview.reservePipelineInfos.push(previewPipeline)
                         this.preview.removedPipelineInfos = this.preview.removedPipelineInfos.filter(pip => pip.pipelineId !== data.id)
-                    } else {
+                    } else if (!this.model.pipelineIds.has(data.id)) {
                         this.preview.addedPipelineInfos.push(previewPipeline)
                     }
                 } else {
@@ -577,6 +585,7 @@
                         this.preview.addedPipelineInfos = this.preview.addedPipelineInfos.filter(pip => pip.pipelineId !== data.id)
                     }
                 }
+                this.updatePipelineIds(data.id, checked)
             },
             togglePipeline (pipeline, index) {
                 const { isRemoved, isAdded, pipelineId } = pipeline
@@ -592,9 +601,12 @@
                 this.updatePipelineIds(pipelineId, checked)
             },
             updatePipelineIds (id, checked) {
+                console.log(this.model.pipelineIds.length, id, checked, this.model.pipelineIds.has(id))
                 if (this.model.pipelineIds.has(id) && !checked) {
+                    console.log('delete')
                     this.model.pipelineIds.delete(id)
                 } else if (!this.model.pipelineIds.has(id)) {
+                    console.log('add')
                     this.model.pipelineIds.add(id)
                 }
                 this.model.pipelineIds = new Set(this.model.pipelineIds)
@@ -640,38 +652,44 @@
                     this.loading = false
                 }
             },
-            handleFilterTypeChange (filter, index) {
-                this.$refs[`dynamicForms_${index}`]?.clearError?.()
+            handleFilterTypeChange (filter) {
+                this.$refs[`dynamicForms_${filter.key}`]?.clearError?.()
                 switch (filter.id) {
                     case NAME_FILTER_TYPE:
                         filter.condition = VIEW_CONDITION.LIKE
                         filter['@type'] = NAME_FILTER_TYPE
-                        filter.pipelineName = ''
+                        filter.userIds = []
+                        filter.labelIds = []
                         break
                     case CREATOR_FILTER_TYPE:
                         filter.condition = VIEW_CONDITION.INCLUDE
                         filter['@type'] = CREATOR_FILTER_TYPE
-                        filter.userIds = []
+                        filter.pipelineName = ''
+                        filter.labelIds = []
                         break
                     default:
                         filter['@type'] = FILTER_BY_LABEL
                         filter.groupId = filter.id
-                        filter.labelIds = []
+                        filter.pipelineName = ''
+                        filter.userIds = []
                 }
             },
-            addFilters () {
-                this.model.filters.push({
+            addFilters (index) {
+                this.model.filters.splice(index + 1, 0, {
+                    key: hashID(),
                     ...defaultFilter
                 })
             },
             removeFilter ({ $index }) {
                 if (this.model.filters.length === 1) {
                     this.model.filters.splice($index, 1, {
-                        ...defaultFilter
+                        ...defaultFilter,
+                        key: hashID()
                     })
                 } else {
                     this.model.filters.splice($index, 1)
                 }
+                console.log(this.model.filters)
             },
             async handleSubmit () {
                 if (this.isSubmiting) return
@@ -684,9 +702,9 @@
                         projectId: this.$route.params.projectId,
                         ...this.group,
                         ...this.model,
-                        pipelineCount: this.isDynamicGroup ? this.totalPreviewCount : pipelineIds.length,
                         pipelineIds: pipelineIds
                     })
+                    this.requestGetGroupLists(this.$route.params)
                     this.handleClose()
                     this.$emit('done')
                 } catch (error) {
@@ -729,16 +747,24 @@
     @import '@/scss/conf';
     @import '@/scss/mixins/ellipsis';
     .pipeline-group-edit-dialog {
+        .bk-dialog-content {
+          height: calc(80vh - 50px);
+        }
         .bk-dialog-tool {
             display: none;
         }
         .bk-dialog-body {
             padding: 0;
+            position: relative;
         }
         .pipeline-group-edit-dialog-main {
             display: flex;
             overflow: hidden;
-            height: 666px;
+            position: absolute !important;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
             .pipeline-group-edit-source,
             .pipeline-group-edit-preview {
                 display: flex;

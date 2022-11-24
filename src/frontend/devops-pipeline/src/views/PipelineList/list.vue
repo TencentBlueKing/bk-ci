@@ -1,39 +1,16 @@
 <template>
     <section class="pipeline-group-section">
-        <pipeline-group-aside :has-manage-permission="hasManagePermission" />
-        <router-view :has-manage-permission="hasManagePermission" />
+        <pipeline-group-aside />
+        <router-view />
     </section>
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import PipelineGroupAside from './PipelineGroupAside'
 
     export default {
         components: {
             PipelineGroupAside
-        },
-        data () {
-            return {
-                hasManagePermission: false
-            }
-        },
-        watch: {
-            '$route.params.projectId': {
-                handler: function () {
-                    this.$nextTick(this.checkHasManagePermission)
-                },
-                immediate: true
-            }
-        },
-        methods: {
-            ...mapActions('pipelines', [
-                'checkViewManageAuth'
-            ]),
-            async checkHasManagePermission () {
-                const res = await this.checkViewManageAuth(this.$route.params)
-                this.hasManagePermission = res
-            }
         }
     }
 </script>
