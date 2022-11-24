@@ -27,9 +27,12 @@
 
 package com.tencent.devops.common.pipeline.utils
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -166,6 +169,89 @@ object ModelUtils {
 
         if (element.canRetry == true) { // 先记录可重试的执行失败插件
             failElements.add(element)
+        }
+    }
+
+    /**
+     * 根据流水线基础模型map集合和构建变量模型map集合生成完整的构建模型map集合
+     * @param baseModelMap 流水线基础模型map集合
+     * @param modelFieldRecordMap 构建变量模型map集合
+     * @return 完整的构建模型map集合
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun generateBuildModelDetail(
+        baseModelMap: MutableMap<String, Any>,
+        modelFieldRecordMap: Map<String, Any>
+    ): Map<String, Any> {
+        // 遍历变量字段map集合
+        modelFieldRecordMap.forEach { (fieldRecordName, fieldRecordValue) ->
+            if (!ReflectUtil.isCollectionType(fieldRecordValue)) {
+                // 如果字段不是集合类型，则直接替换流水线基础模型同字段的值
+                baseModelMap[fieldRecordName] = fieldRecordValue
+            } else if (baseModelMap[fieldRecordName] == null) {
+                // 如果基础模型字段值为空，则直接拿变量集合中的字段值覆盖
+                baseModelMap[fieldRecordName] = fieldRecordValue
+            } else {
+                if (fieldRecordValue is Map<*, *> && !fieldRecordValue.isNullOrEmpty()) {
+                    // 如果变量字段类型为map，则进行递归合并
+                    val baseDataMap = baseModelMap[fieldRecordName] as MutableMap<String, Any>
+                    val varDataMap = fieldRecordValue as MutableMap<String, Any>
+                    baseModelMap[fieldRecordName] = generateBuildModelDetail(baseDataMap, varDataMap)
+                } else if (fieldRecordValue is List<*> && !fieldRecordValue.isNullOrEmpty()) {
+                    // 如果变量字段类型为list，则遍历list进行递归合并
+                    val baseDataList = baseModelMap[fieldRecordName] as MutableList<Any>
+                    val varDataList = fieldRecordValue as MutableList<Any>
+                    handleListFieldMergeBus(baseDataList, varDataList)
+                }
+            }
+        }
+        return baseModelMap
+    }
+
+    /**
+     * 处理list变量合并逻辑
+     * @param baseDataList 流水线基础模型list集合
+     * @param recordDataList 构建变量模型list集合
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun handleListFieldMergeBus(baseDataList: MutableList<Any>, recordDataList: MutableList<Any>) {
+        recordDataList.forEachIndexed { index, listItemObj ->
+            // 判断构建变量模型list集合中的对象是否是集合类型
+            if (!ReflectUtil.isCollectionType(listItemObj)) {
+                if (index > baseDataList.size - 1) {
+                    // 如果基础模型list集合中没有该对象则直接添加
+                    baseDataList.add(listItemObj)
+                } else {
+                    // 如果基础模型list集合中有该对象则直接覆盖
+                    baseDataList[index] = listItemObj
+                }
+            } else {
+                if (listItemObj is Map<*, *> && !listItemObj.isNullOrEmpty()) {
+                    val baseListItemDataMap = if (index > baseDataList.size - 1) {
+                        // 如果基础模型list集合中没有该对象则在添加一个空map集合用于合并
+                        val emptyMap = mutableMapOf<String, Any>()
+                        baseDataList.add(emptyMap)
+                        emptyMap
+                    } else {
+                        baseDataList[index] as MutableMap<String, Any>
+                    }
+                    val varListItemDataMap = listItemObj as MutableMap<String, Any>
+                    // 对map类型对象进行递归合并
+                    baseDataList[index] = generateBuildModelDetail(baseListItemDataMap, varListItemDataMap)
+                } else if (listItemObj is List<*> && !listItemObj.isNullOrEmpty()) {
+                    val baseListItemDataList = if (index > baseDataList.size - 1) {
+                        // 如果基础模型list集合中没有该对象则在添加一个空list集合用于合并
+                        val emptyList = mutableListOf<Any>()
+                        baseDataList.add(emptyList)
+                        emptyList
+                    } else {
+                        baseDataList[index] as MutableList<Any>
+                    }
+                    val varListItemDataList = listItemObj as MutableList<Any>
+                    // 对list类型对象进行递归合并
+                    handleListFieldMergeBus(baseListItemDataList, varListItemDataList)
+                }
+            }
         }
     }
 }

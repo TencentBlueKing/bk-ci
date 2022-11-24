@@ -25,25 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.util
+package com.tencent.devops.process.engine.control.lock
 
-/**
- *
- * @version 1.0
- */
-object ReflectUtil {
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-    fun isNativeType(bean: Any): Boolean {
-        return bean is Int ||
-            bean is Long ||
-            bean is Double ||
-            bean is Float ||
-            bean is Short ||
-            bean is Byte ||
-            bean is Boolean
-    }
-
-    fun isCollectionType(obj: Any): Boolean {
-        return obj is Map<*, *> || obj is Collection<*>
-    }
-}
+class PipelineVersionLock(redisOperation: RedisOperation, pipelineId: String, version: Int) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:pipeline:$pipelineId:version:$version",
+        expiredTimeInSeconds = 30
+    )
