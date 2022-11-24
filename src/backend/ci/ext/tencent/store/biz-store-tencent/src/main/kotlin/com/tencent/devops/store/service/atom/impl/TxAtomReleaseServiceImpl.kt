@@ -677,7 +677,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             val atomMarketInitPipelineReq = AtomMarketInitPipelineReq(
                 pipelineModel = pipelineModel,
                 script = script,
-                atomBaseInfo = atomBaseInfo
+                atomBaseInfo = atomBaseInfo,
+                validOsNameFlag = validOsNameFlag,
+                validOsArchFlag = validOsArchFlag
             )
             val atomMarketInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initAtomMarketPipeline(userId, initProjectCode, atomMarketInitPipelineReq).data
