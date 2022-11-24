@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -14,17 +15,29 @@ var logs *logrus.Logger
 func Init(filepath string) error {
 	logInfo := logrus.New()
 
-	logInfo.Out = &lumberjack.Logger{
-		Filename:  filepath,
-		MaxAge:    7,
-		LocalTime: true,
+	lumLog := &lumberjack.Logger{
+		Filename:   filepath,
+		MaxAge:     7,
+		MaxBackups: 7,
+		LocalTime:  true,
 	}
 
+	logInfo.Out = lumLog
+
 	logInfo.SetFormatter(&MyFormatter{})
+
+	go DoDailySplitLog(filepath, lumLog)
 
 	logs = logInfo
 
 	return nil
+}
+
+// DebugInit 初始化为debug模式下的log，将日志输出到标准输出流，只是为了单元测试使用
+func DebugInit() {
+	logInfo := logrus.New()
+	logInfo.SetOutput(os.Stdout)
+	logs = logInfo
 }
 
 type MyFormatter struct{}
@@ -37,7 +50,7 @@ func (m *MyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		b = &bytes.Buffer{}
 	}
 
-	timestamp := entry.Time.Format("2006/01/02 15:04:01.002")
+	timestamp := entry.Time.Format("2006-01-02 15:04:05.000")
 	var newLog string
 
 	//HasCaller()为true才会有调用信息
