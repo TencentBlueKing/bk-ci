@@ -25,13 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.dispatch.kubernetes.service.factory
 
-enum class WorkspaceStatus {
-    PREPARING,
-    RUNNING,
-    STOPPED,
-    SLEEP,
-    DELETED,
-    EXCEPTION
+import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class RemoteDevServiceFactory @Autowired constructor(
+    private val dockerRoutingSdkService: DockerRoutingSdkService
+) {
+    fun load(projectId: String): RemoteDevInterface {
+        val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(projectId)
+        return SpringContextUtil.getBean(
+            RemoteDevInterface::class.java,
+            dockerRoutingType.name.toLowerCase() + "RemoteDevService"
+        )
+    }
 }

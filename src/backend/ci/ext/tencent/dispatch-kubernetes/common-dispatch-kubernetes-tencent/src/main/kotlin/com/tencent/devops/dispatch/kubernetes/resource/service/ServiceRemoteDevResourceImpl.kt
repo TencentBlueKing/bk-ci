@@ -25,13 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.dispatch.kubernetes.resource.service
 
-enum class WorkspaceStatus {
-    PREPARING,
-    RUNNING,
-    STOPPED,
-    SLEEP,
-    DELETED,
-    EXCEPTION
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceRemoteDevResourceImpl @Autowired constructor(
+    private val remoteDevService: RemoteDevService
+) : ServiceRemoteDevResource {
+    override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Result<String> {
+        return Result(remoteDevService.createWorkspace(userId, workspaceReq))
+    }
+
+    override fun startWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(remoteDevService.startWorkspace(userId, workspaceName))
+    }
+
+    override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(remoteDevService.deleteWorkspace(userId, workspaceName))
+    }
+
+    override fun getWorkspaceUrl(userId: String, workspaceName: String): Result<String?> {
+        return Result(remoteDevService.getWorkspaceUrl(userId, workspaceName))
+    }
+
 }

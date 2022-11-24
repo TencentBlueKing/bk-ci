@@ -26,22 +26,9 @@
  */
 
 dependencies {
-    api(project(":ext:tencent:process:common-pipeline-yaml-tencent"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:common:common-kafka-tencent"))
-    api(project(":ext:tencent:common:common-wechatwork"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
+    api(project(":ext:tencent:dispatch-kubernetes:api-dispatch-kubernetes-tencent"))
     api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
     api(project(":ext:tencent:remotedev:model-remotedev-tencent"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:project:api-project-op"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:repository:api-repository-tencent"))
-    api(project(":ext:tencent:notify:api-notify-tencent"))
-    api(project(":ext:tencent:common:common-notify-tencent"))
 
     testImplementation(project(":core:common:common-test"))
 }

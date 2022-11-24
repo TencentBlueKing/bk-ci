@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.dao
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -40,9 +41,10 @@ class WorkspaceDao {
     fun createWorkspace(
         userId: String,
         workspace: Workspace,
+        workspaceStatus: WorkspaceStatus,
         dslContext: DSLContext
-    ) {
-        with(TWorkspace.T_WORKSPACE) {
+    ): Long {
+        return with(TWorkspace.T_WORKSPACE) {
             dslContext.insertInto(
                 this,
                 USER_ID,
@@ -55,7 +57,8 @@ class WorkspaceDao {
                 IMAGE_PATH,
                 CPU,
                 MEMORY,
-                DISK
+                DISK,
+                STATUS
             )
                 .values(
                     userId,
@@ -69,7 +72,10 @@ class WorkspaceDao {
                     8,
                     16,
                     100,
-                ).execute()
+                    workspaceStatus.ordinal
+                )
+                .returning(ID)
+                .fetchOne()!!.id
 
         }
     }
@@ -85,14 +91,29 @@ class WorkspaceDao {
         }
     }
 
-    fun updateWorkspaceStatus(
+    fun updateWorkspaceName(
         workspaceId: Long,
-        status: String,
+        name: String,
+        status: WorkspaceStatus,
         dslContext: DSLContext
     ) {
         with(TWorkspace.T_WORKSPACE) {
             dslContext.update(this)
-                .set(STATUS, status.toInt())
+                .set(STATUS, status.ordinal)
+                .set(NAME, name)
+                .where(ID.eq(workspaceId))
+                .execute()
+        }
+    }
+
+    fun updateWorkspaceStatus(
+        workspaceId: Long,
+        status: WorkspaceStatus,
+        dslContext: DSLContext
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(STATUS, status.ordinal)
                 .where(ID.eq(workspaceId))
                 .execute()
         }

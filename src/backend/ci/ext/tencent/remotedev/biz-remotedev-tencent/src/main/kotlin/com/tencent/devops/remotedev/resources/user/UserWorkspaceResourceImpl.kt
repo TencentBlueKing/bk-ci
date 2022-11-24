@@ -30,42 +30,41 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.github.GithubAppUrl
-import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
-import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.service.WorkspaceService
 
 @RestResource
 @Suppress("ALL")
 class UserWorkspaceResourceImpl constructor(
-
+    private val workspaceService: WorkspaceService
 ) : UserWorkspaceResource {
 
     override fun getAuthorizedGitRepository(userId: String): Result<GithubAppUrl> {
-        TODO("Not yet implemented")
+        return Result(workspaceService.getAuthorizedGitRepository(userId))
     }
 
-    override fun createWorkspace(userId: String, workspace: Workspace): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun createWorkspace(userId: String, workspace: Workspace): Result<String> {
+        return Result(workspaceService.createWorkspace(userId, workspace))
     }
 
     override fun startWorkspace(userId: String, workspaceId: Long): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(workspaceService.startWorkspace(userId, workspaceId))
     }
 
     override fun shareWorkspace(userId: String, workspaceId: Long, sharedUser: String): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(workspaceService.shareWorkspace(userId, workspaceId, sharedUser))
     }
 
     override fun deleteWorkspace(userId: String, workspaceId: Long): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(workspaceService.deleteWorkspace(userId, workspaceId))
     }
 
     override fun getWorkspaceList(userId: String): Result<Workspace> {
-        TODO("Not yet implemented")
+        return Result(workspaceService.getWorkspaceList(userId))
     }
 
     override fun getWorkspaceDetail(userId: String, workspaceId: Long): Result<Workspace> {
-        TODO("Not yet implemented")
+        return Result(workspaceService.getWorkspaceDetail(userId, workspaceId))
     }
 }
