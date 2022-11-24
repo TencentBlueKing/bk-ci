@@ -318,6 +318,7 @@ class PipelineInfoDao {
         }
     }
 
+    @SuppressWarnings("ComplexMethod")
     fun listDeletePipelineIdByProject(
         dslContext: DSLContext,
         projectId: String,

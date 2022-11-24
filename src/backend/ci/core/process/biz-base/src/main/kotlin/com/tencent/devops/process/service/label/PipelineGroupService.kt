@@ -421,7 +421,8 @@ class PipelineGroupService @Autowired constructor(
                 }
             )
         )
-        logger.info("LableChangeMetricsBroadCastEvent： updatePipelineLabel-create $projectId|$pipelineId|$labelIdArr|$labelIds")
+        logger.info("LableChangeMetricsBroadCastEvent： " +
+                "updatePipelineLabel-create $projectId|$pipelineId|$labelIdArr|$labelIds")
     }
 
     private fun pipelineLabelSegmentIdPairs(labelIdArr: Set<Long>): MutableList<Pair<Long, Long?>> {
