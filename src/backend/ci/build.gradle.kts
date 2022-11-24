@@ -1,5 +1,5 @@
 plugins {
-    id("com.tencent.devops.boot") version "0.0.6"
+    id("com.tencent.devops.boot") version "0.0.7-SNAPSHOT"
     detektCheck
 }
 
@@ -99,9 +99,12 @@ allprojects {
                 entry("pinyin-plus")
             }
             dependency("com.perforce:p4java:${Versions.p4}")
-            dependency("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.JacksonDatatypeJsr}")
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
+            }
+            dependencySet("org.eclipse.jgit:${Versions.jgit}") {
+                entry("org.eclipse.jgit")
+                entry("org.eclipse.jgit.ssh.jsch")
             }
         }
     }
@@ -118,6 +121,7 @@ allprojects {
         it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
         it.exclude("com.zaxxer", "HikariCP-java7")
         it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
+        it.exclude("org.bouncycastle", "bcutil-jdk15on")
     }
     // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656
     dependencies {

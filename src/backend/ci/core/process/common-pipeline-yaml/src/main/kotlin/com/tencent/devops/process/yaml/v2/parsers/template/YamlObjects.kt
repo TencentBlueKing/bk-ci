@@ -272,7 +272,7 @@ object YamlObjects {
     }
 
     fun getYamlMetaData(fromPath: String, yamlMetaData: Any): MetaData {
-        val metaData = transValue<Map<String, String>>(fromPath, "yamlMetaData", yamlMetaData)
+        val metaData = transValue<Map<String, Any>>(fromPath, "yamlMetaData", yamlMetaData)
         if (metaData["templateInfo"] == null) {
             return MetaData(templateInfo = null)
         }

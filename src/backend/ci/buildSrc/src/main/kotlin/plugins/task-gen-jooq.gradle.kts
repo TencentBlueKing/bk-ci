@@ -42,15 +42,18 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
     "misc" -> {
         listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
     }
+
     "statistics" -> {
         listOf("process", "project", "openapi")
     }
+
     "lambda" -> {
         listOf("process", "project", "lambda", "store")
     }
     "gitci" -> {
         listOf("stream")
     }
+
     else -> listOf(moduleName)
 }
 
@@ -141,10 +144,10 @@ jooq {
         }
     }
 
-    tasks.getByName<AbstractCompile>("compileKotlin") {
-        destinationDir = File("build/generated-src")
-        tasks.matching { it is JooqGenerate }.forEach {
-            dependsOn(it.name)
-        }
+}
+
+tasks.getByName<AbstractCompile>("compileKotlin") {
+    tasks.matching { it is JooqGenerate }.forEach {
+        dependsOn(it.name)
     }
 }
