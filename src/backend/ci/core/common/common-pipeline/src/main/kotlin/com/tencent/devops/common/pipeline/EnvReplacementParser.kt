@@ -72,7 +72,7 @@ object EnvReplacementParser {
             try {
                 val (context, nameValues) = contextPair
                     ?: getCustomExecutionContextByMap(contextMap)
-                    ?: return ""
+                    ?: return value
                 parseExpression(
                     value = value,
                     context = context,
@@ -80,7 +80,7 @@ object EnvReplacementParser {
                 )
             } catch (ignore: Throwable) {
                 logger.warn("[$value]|EnvReplacementParser expression invalid: ", ignore)
-                ""
+                value
             }
         } else {
             ObjectReplaceEnvVarUtil.replaceEnvVar(value, contextMap).let {
