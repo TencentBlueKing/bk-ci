@@ -38,7 +38,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.ZipUtil
-import com.tencent.devops.store.api.common.ServiceStoreLogoResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
