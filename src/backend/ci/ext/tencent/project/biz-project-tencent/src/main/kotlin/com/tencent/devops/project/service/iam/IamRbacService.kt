@@ -404,7 +404,7 @@ class IamRbacService @Autowired constructor(
         projectCode: String,
         group: DefaultGroupType
     ) {
-        logger.info("iamV5 createDefaultGroup : ${group.value}")
+        logger.info("iam Rbac createDefaultGroup : ${group.value}")
         val actions = getGroupStrategy(group)
         if (actions.first.isNotEmpty()) {
             val authorizationScopes = buildCreateAuthorizationScopes(actions.first, projectCode)

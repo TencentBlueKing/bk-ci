@@ -389,7 +389,7 @@ class ProjectDao {
         }
     }
 
-    fun updateProjectByEnglish(
+    fun updateProjectByEnglishName(
         dslContext: DSLContext,
         subjectScopesStr: String,
         authSecrecy: Boolean,

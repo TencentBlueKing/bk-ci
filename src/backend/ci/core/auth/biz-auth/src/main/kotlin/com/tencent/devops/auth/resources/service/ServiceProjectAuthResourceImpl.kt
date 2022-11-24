@@ -28,8 +28,6 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
-import com.tencent.devops.auth.pojo.StrategyEntity
-import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
@@ -40,8 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceProjectAuthResourceImpl @Autowired constructor(
-    val permissionProjectService: PermissionProjectService,
-    val strategyService: StrategyService
+    val permissionProjectService: PermissionProjectService
 ) : ServiceProjectAuthResource {
     override fun getProjectUsers(
         token: String,
@@ -127,12 +124,6 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
                 projectCode = projectCode,
                 projectId = projectId
             )
-        )
-    }
-
-    override fun getGroupStrategy(strategyName: String): Result<StrategyEntity?> {
-        return Result(
-            strategyService.getStrategyByName(strategyName)
         )
     }
 }

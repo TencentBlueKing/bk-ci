@@ -28,7 +28,6 @@
 package com.tencent.devops.project.api.callback
 
 import com.tencent.devops.project.api.pojo.ItsmCallBackInfo
-import com.tencent.devops.project.pojo.CallbackRequestDTO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation

@@ -26,6 +26,7 @@
  *
  */
 package com.tencent.devops.project.service.iam
+
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.Action
@@ -60,6 +61,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
+
 class IamV3Service @Autowired constructor(
     val iamManagerService: ManagerService,
     val iamConfiguration: IamConfiguration,
@@ -135,6 +137,7 @@ class IamV3Service @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 5000)
         }
     }
+
     // 分级管理员操作的用户范围,只能添加用户所在bg组织. 此处直接从project本地拿,最真实数据在用户中心
     private fun createIamProject(userId: String, resourceRegisterInfo: ResourceRegisterInfo): String {
         val bgName = userDao.get(dslContext, userId)?.bgName!!
@@ -151,7 +154,8 @@ class IamV3Service @Autowired constructor(
         logger.info("user $userId bg: $bgId bgName: $bgName")
         val subjectScopes = ManagerScopes(
             ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT),
-            bgId.toString())
+            bgId.toString()
+        )
         val authorizationScopes = AuthorizationUtils.buildManagerResources(
             projectId = resourceRegisterInfo.resourceCode,
             projectName = resourceRegisterInfo.resourceName,
@@ -165,6 +169,7 @@ class IamV3Service @Autowired constructor(
             .subject_scopes(arrayListOf(subjectScopes)).build()
         return iamManagerService.createManager(createManagerDTO).toString()
     }
+
     private fun createRole(userId: String, iamProjectId: Int, projectCode: String): Int {
         val defaultGroup = ManagerRoleGroup(
             IamGroupUtils.buildIamGroup(projectCode, DefaultGroupType.MANAGER.displayName),
@@ -197,6 +202,7 @@ class IamV3Service @Autowired constructor(
         )
         return roleId
     }
+
     private fun createManagerPermission(projectId: String, projectName: String, roleId: Int) {
         val managerResources = mutableListOf<ManagerResources>()
         val managerPaths = mutableListOf<List<ManagerPath>>()
@@ -222,6 +228,7 @@ class IamV3Service @Autowired constructor(
             .build()
         iamManagerService.createRolePermission(roleId, permission)
     }
+
     companion object {
         private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
         private const val SYSTEM_DEFAULT_NAME = "蓝盾"

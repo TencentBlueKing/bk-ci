@@ -202,7 +202,7 @@ class ProjectCallBackSevice @Autowired constructor(
                     // 修改项目的权限保密字段
                     authSecrecy = !authSecrecy
                 }
-                projectDao.updateProjectByEnglish(
+                projectDao.updateProjectByEnglishName(
                     dslContext = dslContext,
                     subjectScopesStr = dbCallBackInfo.subjectScopes,
                     authSecrecy = authSecrecy,
