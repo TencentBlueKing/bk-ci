@@ -39,7 +39,7 @@ object V2NotifyTemplate {
         pipelineName: String,
         buildNum: String
     ): String {
-        val state =  when {
+        val state = when {
             status.isSuccess() -> "run successes"
             status.isCancel() -> "run cancel"
             else -> "run failed"
