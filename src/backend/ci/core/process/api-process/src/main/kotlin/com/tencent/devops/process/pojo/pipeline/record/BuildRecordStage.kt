@@ -24,24 +24,38 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.process.pojo.enums
 
-enum class BuildTimestampEnum(val value: String) {
-    STAGE_CHECK_IN_WAITING("stageCheckInWaiting"),
-    STAGE_CHECK_OUT_WAITING("stageCheckOutWaiting"),
-    JOB_MUTEX_WAITING("jobMutexWaiting"),
-    JOB_CONTAINER_STARTUP("jobContainerStartup"),
-    JOB_CONTAINER_SHUTDOWN("jobMutexShutdown"),
-    TASK_ATOM_LOADING("taskAtomLoading"),
-    TASK_REVIEW_WAITING("reviewWaiting"),
-    UNKNOWN("unknown");
+package com.tencent.devops.process.pojo.pipeline.record
 
-    companion object {
-        fun get(value: String): BuildTimestampEnum {
-            values().forEach {
-                if (value == it.value) return it
-            }
-            return UNKNOWN
-        }
-    }
-}
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.Stage
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("构建详情记录-插件任务")
+data class BuildRecordStage(
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("编排版本号", required = true)
+    val resourceVersion: Int,
+    @ApiModelProperty("步骤ID", required = true)
+    val stageId: Int,
+    @ApiModelProperty("作业容器ID", required = true)
+    val containerId: Int,
+    @ApiModelProperty("作业容器ID序号", required = true)
+    val stageSeq: Int,
+    @ApiModelProperty("执行次数", required = true)
+    val executeCount: Int,
+    @ApiModelProperty("执行变量", required = true)
+    val stageVar: Stage, // TODO 替换成只有变量的内容
+    @ApiModelProperty("开始时间", required = false)
+    val startTime: Long?,
+    @ApiModelProperty("结束时间", required = false)
+    val endTime: Long?,
+    @ApiModelProperty("业务时间戳集合", required = true)
+    val timestamps: List<BuildRecordTimeStamp>
+)
