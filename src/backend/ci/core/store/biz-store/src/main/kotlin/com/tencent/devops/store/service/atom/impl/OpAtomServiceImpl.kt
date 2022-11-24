@@ -36,9 +36,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -84,6 +86,7 @@ import org.springframework.util.FileSystemUtils
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
+import java.nio.file.Files
 import java.time.LocalDateTime
 import java.util.ArrayList
 
@@ -338,12 +341,17 @@ class OpAtomServiceImpl @Autowired constructor(
         disposition: FormDataContentDisposition
     ): Result<Boolean> {
         // 解压插件包到临时目录
-        val atomPath = AtomReleaseTxtAnalysisUtil.unzipFile(
-            userId = userId,
-            atomCode = atomCode,
-            inputStream = inputStream,
-            disposition = disposition
-        )
+        val fileName = disposition.fileName
+        val index = fileName.lastIndexOf(".")
+        val fileType = fileName.substring(index + 1)
+        val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
+        file.outputStream().use {
+            inputStream.copyTo(it)
+        }
+        val atomPath = AtomReleaseTxtAnalysisUtil.buildAtomArchivePath(userId, atomCode)
+        if (!File(atomPath).exists()) {
+            ZipUtil.unZipFile(file, atomPath, false)
+        }
         val taskJsonFile = File("$atomPath$fileSeparator$TASK_JSON_NAME")
         if (!taskJsonFile.exists()) {
             return MessageCodeUtil.generateResponseDataObject(
@@ -391,7 +399,7 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         val relativePath = logoUrlAnalysisResult.data
         val logoFile = File("$atomPath${File.separator}file" +
-                "${File.separator}${relativePath?.removePrefix(File.separator)}")
+                    "${File.separator}${relativePath?.removePrefix(File.separator)}")
         logger.info("uploadStoreLogo logoFilePath:${logoFile.path}")
         var uploadStoreLogoResult = Result(data = true, status = 0)
         if (logoFile.exists()) {
@@ -431,10 +439,8 @@ class OpAtomServiceImpl @Autowired constructor(
         fileOutputStream.use {
             it.write(taskJson.toByteArray(charset("utf-8")))
         }
-        // 归档插件包
-        val zipFile = File(AtomReleaseTxtAnalysisUtil.zipFiles(userId, atomCode, atomPath))
         try {
-            if (zipFile.exists()) {
+            if (file.exists()) {
                 val archiveAtomResult = AtomReleaseTxtAnalysisUtil.serviceArchiveAtomFile(
                     userId = userId,
                     projectCode = releaseInfo.projectId,
@@ -443,7 +449,7 @@ class OpAtomServiceImpl @Autowired constructor(
                     version = releaseInfo.versionInfo.version,
                     serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class),
                     releaseType = releaseInfo.versionInfo.releaseType.name,
-                    file = zipFile,
+                    file = file,
                     os = JsonUtil.toJson(releaseInfo.os)
                 )
                 if (archiveAtomResult.isNotOk()) {
@@ -461,7 +467,7 @@ class OpAtomServiceImpl @Autowired constructor(
                 message = ignored.message
             )
         } finally {
-            zipFile.delete()
+            file.delete()
             FileSystemUtils.deleteRecursively(File(atomPath).parentFile)
         }
         val labelIds = if (releaseInfo.labelCodes != null) {
