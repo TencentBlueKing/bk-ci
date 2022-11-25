@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.interceptor
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -487,7 +488,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
     }
 
     private fun getMarketBuildRepoConfig(input: Map<*, *>, variables: Map<String, String>): RepositoryConfig? {
-        val repositoryType = RepositoryType.parseType(input["repositoryType"] as String?)
+        val repositoryType = RepositoryTypeNew.parseType(input["repositoryType"] as String?)
         val repositoryId = when (repositoryType) {
             RepositoryType.ID -> EnvUtils.parseEnv(input["repositoryHashId"] as String?, variables)
             RepositoryType.NAME -> EnvUtils.parseEnv(input["repositoryName"] as String?, variables)
