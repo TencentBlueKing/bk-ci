@@ -40,10 +40,11 @@ import com.tencent.devops.remotedev.service.GitTransferService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
-class UserWorkspaceResourceImpl constructor(
+class UserWorkspaceResourceImpl @Autowired constructor(
     val gitTransferService: GitTransferService,
     val workspaceService: WorkspaceService
 ) : UserWorkspaceResource {

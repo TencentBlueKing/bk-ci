@@ -51,13 +51,14 @@ import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
 @Service
-class WorkspaceService constructor(
+class WorkspaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
