@@ -27,7 +27,10 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
@@ -37,10 +40,15 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceDetail
+import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
 
 @Service
 class WorkspaceService constructor(
@@ -64,19 +72,18 @@ class WorkspaceService constructor(
         logger.info("$userId create workspace ${JsonUtil.toJson(workspace)}")
 
         val workspaceId = workspaceDao.createWorkspace(
-            userId = userId,
-            workspace = workspace,
-            workspaceStatus = WorkspaceStatus.PREPARING,
-            dslContext = dslContext
+            userId = userId, workspace = workspace, workspaceStatus = WorkspaceStatus.PREPARING, dslContext = dslContext
         )
 
-        val workspaceName = client.get(ServiceRemoteDevResource::class).createWorkspace(userId, WorkspaceReq(
+        val workspaceName = client.get(ServiceRemoteDevResource::class).createWorkspace(
+            userId, WorkspaceReq(
             workspaceId = workspaceId,
             name = workspace.name,
             repositoryUrl = workspace.repositoryUrl,
             branch = workspace.branch,
             devFilePath = workspace.devFilePath
-        )).data
+        )
+        ).data
 
         workspaceName?.let {
             // 创建成功后，更新name
@@ -106,8 +113,6 @@ class WorkspaceService constructor(
         TODO("Not yet implemented")
     }
 
-
-
     fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Page<Workspace> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
@@ -116,9 +121,7 @@ class WorkspaceService constructor(
             dslContext = dslContext,
             userId = userId,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        )
-
-        val
+        ) ?: emptyList()
 
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = result.map {
             val status = WorkspaceStatus.values()[it.status]
@@ -129,7 +132,8 @@ class WorkspaceService constructor(
                 branch = it.branch,
                 devFilePath = it.yamlPath,
                 wsTemplateId = it.templateId,
-                status = status
+                status = status,
+                lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp()
             )
         })
     }
@@ -179,10 +183,7 @@ class WorkspaceService constructor(
     }
 
     fun getWorkspaceTimeline(
-        userId: String,
-        workspaceId: Long,
-        page: Int?,
-        pageSize: Int?
+        userId: String, workspaceId: Long, page: Int?, pageSize: Int?
     ): Page<WorkspaceOpHistory> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20

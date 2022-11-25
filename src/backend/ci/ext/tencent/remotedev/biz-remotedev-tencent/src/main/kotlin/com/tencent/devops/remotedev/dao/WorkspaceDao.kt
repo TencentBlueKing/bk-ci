@@ -99,12 +99,12 @@ class WorkspaceDao {
         limit: SQLLimit,
         userId: String? = null,
         workspaceId: Long? = null
-    ): Result<TWorkspaceRecord> {
+    ): Result<TWorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(userId, workspaceId)
 
             if (condition.isEmpty()) {
-                return
+                return null
             }
             return dslContext.selectFrom(this)
                 .where(condition).orderBy(CREATE_TIME.desc())

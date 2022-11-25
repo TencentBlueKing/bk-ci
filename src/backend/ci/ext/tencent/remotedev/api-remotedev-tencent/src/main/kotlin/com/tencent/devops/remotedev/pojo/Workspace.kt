@@ -46,8 +46,6 @@ data class Workspace(
     val wsTemplateId: Int?,
     @ApiModelProperty("工作空间状态")
     val status: WorkspaceStatus,
-    @ApiModelProperty("最近休眠时间，status为SLEEP有效")
-    val lastSleepTime: Long? = null,
-    @ApiModelProperty("最近启动时间，status为RUNNING生效")
-    val lastStartTime: Long? = null
+    @ApiModelProperty("状态最近时间")
+    val lastStatusUpdateTime: Long?
 )

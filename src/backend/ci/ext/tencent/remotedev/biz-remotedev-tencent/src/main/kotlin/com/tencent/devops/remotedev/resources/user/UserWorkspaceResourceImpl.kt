@@ -68,7 +68,7 @@ class UserWorkspaceResourceImpl constructor(
     }
 
     override fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Result<Page<Workspace>> {
-        TODO("Not yet implemented")
+        return Result(workspaceService.getWorkspaceList(userId, page, pageSize))
     }
 
     override fun getWorkspaceDetail(userId: String, workspaceId: Long): Result<WorkspaceDetail?> {
