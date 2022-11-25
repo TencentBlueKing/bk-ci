@@ -111,12 +111,29 @@ class PipelineResVersionDao {
         }
     }
 
+    fun deleteEarlyVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        currentVersion: Int,
+        maxPipelineResNum: Int
+    ): Int {
+        return with(T_PIPELINE_RESOURCE_VERSION) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(VERSION.le(currentVersion - maxPipelineResNum))
+                .and(REFER_FLAG.eq(false))
+                .execute()
+        }
+    }
+
     fun deleteByVer(dslContext: DSLContext, projectId: String, pipelineId: String, version: Int) {
         return with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
                 .and(PROJECT_ID.eq(projectId))
+                .and(REFER_FLAG.eq(false))
                 .execute()
         }
     }
@@ -130,7 +147,7 @@ class PipelineResVersionDao {
     ): List<PipelineVersionSimple> {
         val list = mutableListOf<PipelineVersionSimple>()
         with(T_PIPELINE_RESOURCE_VERSION) {
-            val result = dslContext.select(CREATE_TIME, CREATOR, VERSION_NAME, VERSION)
+            val result = dslContext.select(CREATE_TIME, CREATOR, VERSION_NAME, VERSION, REFER_FLAG, REFER_COUNT)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .orderBy(VERSION.desc())
@@ -143,7 +160,9 @@ class PipelineResVersionDao {
                     creator = it[CREATOR] ?: "unknown",
                     createTime = it.get(CREATE_TIME)?.timestampmilli() ?: 0,
                     version = it[VERSION] ?: 1,
-                    versionName = it[VERSION_NAME] ?: "init"
+                    versionName = it[VERSION_NAME] ?: "init",
+                    referFlag = it[REFER_FLAG],
+                    referCount = it[REFER_COUNT]
                 ))
             }
         }
@@ -164,6 +183,36 @@ class PipelineResVersionDao {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
+        }
+    }
+
+    fun getPipelineVersionSimple(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PipelineVersionSimple? {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.select(CREATE_TIME, CREATOR, VERSION_NAME, VERSION, REFER_FLAG, REFER_COUNT)
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version)))
+                .fetchOneInto(PipelineVersionSimple::class.java)
+        }
+    }
+
+    fun updatePipelineVersionReferInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        referCount: Int,
+        referFlag: Boolean? = null
+    ) {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            val baseStep = dslContext.update(this)
+                .set(REFER_COUNT, referCount)
+            referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
+            baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version))).execute()
         }
     }
 }
