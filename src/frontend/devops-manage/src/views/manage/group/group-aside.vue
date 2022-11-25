@@ -30,7 +30,7 @@
               :disabled="[1, 2].includes(group.id)"
               text
               @click="handleDeleteGroup(group)">
-              {{ $t('删除') }}
+              {{ t('删除') }}
             </bk-button>
           </template>
         </bk-popover>
@@ -41,24 +41,27 @@
         @click="handleCreateGroup">
         <span class="add-group-btn">
           <i class="manage-icon manage-icon-add-fill add-icon"></i>
-          {{ $t('新建用户组') }}
+          {{ t('新建用户组') }}
         </span>
       </div>
     </section>
     <div class="close-btn">
-      <bk-button @click="handleCloseManage">{{ $t('关闭权限管理') }}</bk-button>
+      <bk-button @click="handleCloseManage">{{ t('关闭权限管理') }}</bk-button>
     </div>
   </article>
 </template>
 
 <script lang="ts">
 import { InfoBox } from 'bkui-vue';
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'GroupAside',
   props: {
   },
   data() {
+    const { t } = useI18n();
+
     return {
       activeTab: '管理员',
       groupList: [
@@ -105,14 +108,16 @@ export default {
           id: 7,
         },
       ],
+      t,
     };
   },
   mounted() {
   },
   methods: {
     handleDeleteGroup(group: any) {
+      const { t } = this;
       InfoBox({
-        title: this.$t('是否删除用户组', [group.name]),
+        title: t('是否删除用户组', [group.name]),
         contentAlign: 'center',
         headerAlign: 'center',
         footerAlign: 'center',

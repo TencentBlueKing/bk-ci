@@ -110,7 +110,7 @@ onMounted(() => {
           class="filter-button"
           :disabled="filterList.length <= 0"
           @click="filterList = []"
-        >{{ $t('全部微扩展') }}（{{installList.length}}）
+        >{{ t('全部微扩展') }}（{{installList.length}}）
         </bk-button>
         <bk-checkbox-group v-model="filterList">
           <ul class="fliter-list">
@@ -136,28 +136,28 @@ onMounted(() => {
       </header>
       <main class="service-table">
         <bk-table
-          :empty-text="$t('暂时没有微扩展')"
+          :empty-text="t('暂时没有微扩展')"
           :data="filterInstallList"
         >
-          <bk-table-column :label="$t('微扩展名称')" prop="serviceName"></bk-table-column>
-          <bk-table-column :label="$t('发布者')" prop="publisher"></bk-table-column>
-          <bk-table-column :label="$t('版本')" prop="version"></bk-table-column>
-          <bk-table-column :label="$t('状态')" prop="serviceStatus">
+          <bk-table-column :label="t('微扩展名称')" prop="serviceName"></bk-table-column>
+          <bk-table-column :label="t('发布者')" prop="publisher"></bk-table-column>
+          <bk-table-column :label="t('版本')" prop="version"></bk-table-column>
+          <bk-table-column :label="t('状态')" prop="serviceStatus">
             <template #default="{ data }">
               {{ statusFormatter(data.serviceStatus) }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('操作人')" prop="publisher"></bk-table-column>
-          <bk-table-column :label="$t('操作时间')" prop="publishTime" width="180">
+          <bk-table-column :label="t('操作人')" prop="publisher"></bk-table-column>
+          <bk-table-column :label="t('操作时间')" prop="publishTime" width="180">
             <template #default="{ data }">
               {{ timeFormatter(data.publishTime || '') }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('操作')">
+          <bk-table-column :label="t('操作')">
             <template #default="{ data }">
               <span v-bk-tooltips="{ content: t('微扩展初始化项目，不能卸载'), disabled: data.isUninstall }">
                 <bk-button text theme="primary" @click="uninstall(data)" :disabled="!data.isUninstall">
-                  {{$t('卸载')}}
+                  {{t('卸载')}}
                 </bk-button>
               </span>
             </template>
