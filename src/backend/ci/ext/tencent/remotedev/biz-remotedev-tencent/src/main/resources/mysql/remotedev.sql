@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_OP_HIS` (
                                                     `ID` bigint(20) NOT NULL AUTO_INCREMENT,
                                                     `WORKSPACE_ID` bigint(20) NOT NULL DEFAULT 0 COMMENT '工作空间ID',
                                                     `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
-                                                    `ACTION` int(10) NOT NULL DEFAULT 0 COMMENT '操作行为: CREATE, START, STOP, DELETE, SHARE',
+                                                    `ACTION` int(10) NOT NULL DEFAULT 0 COMMENT '操作行为: CREATE, START, SLEEP, DELETE, SHARE',
                                                     `ACTION_MSG` varchar(256) NOT NULL DEFAULT '' COMMENT '操作行为描述',
                                                     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 

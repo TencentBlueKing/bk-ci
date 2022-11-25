@@ -1,7 +1,7 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.github.GithubAppUrl
+import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -25,5 +25,13 @@ interface GitTransferService {
         search: String?,
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
-    ): List<GithubAppUrl>
+    ): List<RemoteDevRepository>
+
+    fun getProjectBranches(
+        userId: String,
+        pathWithNamespace: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): List<String>?
 }

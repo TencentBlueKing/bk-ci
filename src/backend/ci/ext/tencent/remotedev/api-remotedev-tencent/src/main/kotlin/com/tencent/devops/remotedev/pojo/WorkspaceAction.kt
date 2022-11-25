@@ -30,7 +30,7 @@ package com.tencent.devops.remotedev.pojo
 enum class WorkspaceAction {
     CREATE, // 0
     START, // 1
-    STOP, // 2
+    SLEEP, // 2
     DELETE, // 3
     SHARE // 4
 }

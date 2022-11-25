@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.github.GithubAppUrl
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
+import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
@@ -47,28 +48,16 @@ class UserWorkspaceResourceImpl constructor(
     val workspaceService: WorkspaceService
 ) : UserWorkspaceResource {
 
-    override fun getAuthorizedGitRepository(
-        userId: String,
-        search: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<List<GithubAppUrl>> {
-        return Result(
-            workspaceService.getAuthorizedGitRepository(
-                userId = userId,
-                search = search,
-                page = page,
-                pageSize = pageSize
-            )
-        )
-    }
-
     override fun createWorkspace(userId: String, workspace: Workspace): Result<String> {
         return Result(workspaceService.createWorkspace(userId, workspace))
     }
 
     override fun startWorkspace(userId: String, workspaceId: Long): Result<Boolean> {
         return Result(workspaceService.startWorkspace(userId, workspaceId))
+    }
+
+    override fun stopWorkspace(userId: String, workspaceId: Long): Result<Boolean> {
+        return Result(workspaceService.stopWorkspace(userId, workspaceId))
     }
 
     override fun shareWorkspace(userId: String, workspaceId: Long, sharedUser: String): Result<Boolean> {
@@ -85,6 +74,40 @@ class UserWorkspaceResourceImpl constructor(
 
     override fun getWorkspaceDetail(userId: String, workspaceId: Long): Result<WorkspaceDetail?> {
         return Result(workspaceService.getWorkspaceDetail(userId, workspaceId))
+    }
+
+    override fun getAuthorizedGitRepository(
+        userId: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<RemoteDevRepository>> {
+        return Result(
+            workspaceService.getAuthorizedGitRepository(
+                userId = userId,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun getRepositoryBranch(
+        userId: String,
+        pathWithNamespace: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<String>> {
+        return Result(
+            workspaceService.getRepositoryBranch(
+                userId = userId,
+                pathWithNamespace = pathWithNamespace,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun getWorkspaceTimeline(

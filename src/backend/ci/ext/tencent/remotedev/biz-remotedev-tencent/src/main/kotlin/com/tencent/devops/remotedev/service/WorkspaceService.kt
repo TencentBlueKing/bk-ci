@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -35,29 +36,34 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
-import com.tencent.devops.process.pojo.github.GithubAppUrl
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
+import javax.ws.rs.core.Response
 
 @Service
 class WorkspaceService constructor(
-    private val workspaceDao: WorkspaceDao,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
+    private val workspaceDao: WorkspaceDao,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
+    private val workspaceSharedDao: WorkspaceSharedDao,
     private val gitTransferService: GitTransferService,
     private val client: Client
 ) {
@@ -66,8 +72,13 @@ class WorkspaceService constructor(
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
     }
 
-    fun getAuthorizedGitRepository(userId: String, search: String?, page: Int?, pageSize: Int?): List<GithubAppUrl> {
-        logger.info("$userId get user git repository")
+    fun getAuthorizedGitRepository(
+        userId: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?
+    ): List<RemoteDevRepository> {
+        logger.info("$userId get user git repository|$search|$page|$pageSize")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         return gitTransferService.getProjectList(
@@ -78,6 +89,25 @@ class WorkspaceService constructor(
             owned = false,
             minAccessLevel = GitAccessLevelEnum.DEVELOPER
         )
+    }
+
+    fun getRepositoryBranch(
+        userId: String,
+        pathWithNamespace: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?
+    ): List<String> {
+        logger.info("$userId get git repository branch list|$pathWithNamespace|$search|$page|$pageSize")
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        return gitTransferService.getProjectBranches(
+            userId = userId,
+            pathWithNamespace = pathWithNamespace,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            search = search
+        ) ?: emptyList()
     }
 
     fun createWorkspace(userId: String, workspace: Workspace): String {
@@ -99,8 +129,13 @@ class WorkspaceService constructor(
         ).data
 
         workspaceName?.let {
-            // 创建成功后，更新name
-            workspaceDao.updateWorkspaceName(workspaceId, it, WorkspaceStatus.RUNNING, dslContext)
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                // 创建成功后，更新name
+                workspaceDao.updateWorkspaceName(workspaceId, it, transactionContext)
+                workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.RUNNING, transactionContext)
+                // todo 创建成功就直接running？ 如果是：需要添加history 和 ophistory
+            }
             // 获取远程登录url
             val workspaceUrl = client.get(ServiceRemoteDevResource::class).getWorkspaceUrl(userId, workspaceName).data
 
@@ -111,15 +146,136 @@ class WorkspaceService constructor(
     }
 
     fun startWorkspace(userId: String, workspaceId: Long): Boolean {
-        TODO("Not yet implemented")
+        logger.info("$userId start workspace $workspaceId")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
+            ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
+        val res = kotlin.runCatching {
+            client.get(ServiceRemoteDevResource::class).startWorkspace(
+                userId,
+                workspace.name
+            ).data ?: false
+        }.getOrElse {
+            logger.error("start workspace error |${it.message}", it)
+            false
+        }
+
+        if (res) {
+            val history = workspaceHistoryDao.fetchHistory(dslContext, workspaceId).firstOrNull()
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.RUNNING, transactionContext)
+                workspaceHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceId = workspaceId,
+                    startUserId = userId,
+                    lastSleepTimeCost = if (history != null) {
+                        Duration.between(history.endTime, LocalDateTime.now()).seconds.toInt()
+                    } else 0
+                )
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceId = workspaceId,
+                    operator = userId,
+                    action = WorkspaceAction.START,
+                    // todo 内容待确定
+                    actionMessage = ""
+                )
+            }
+        }
+        return res
     }
 
-    fun shareWorkspace(userId: String, workspaceId: Long, sharedUser: String): Boolean {
-        TODO("Not yet implemented")
+    fun stopWorkspace(userId: String, workspaceId: Long): Boolean {
+        logger.info("$userId stop workspace $workspaceId")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
+            ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
+        val res = kotlin.runCatching {
+            TODO()
+        }.getOrElse {
+            logger.error("stop workspace error |${it.message}", it)
+            false
+        }
+
+        if (res) {
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.SLEEP, transactionContext)
+                workspaceHistoryDao.updateWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceId = workspaceId,
+                    stopUserId = userId
+                )
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceId = workspaceId,
+                    operator = userId,
+                    action = WorkspaceAction.SLEEP,
+                    // todo 内容待确定
+                    actionMessage = ""
+                )
+            }
+        }
+        return res
     }
 
     fun deleteWorkspace(userId: String, workspaceId: Long): Boolean {
-        TODO("Not yet implemented")
+        logger.info("$userId delete workspace $workspaceId")
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
+            ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
+        // 校验状态
+        if (WorkspaceStatus.values()[workspace.status].isDeleted()) {
+            logger.info("$workspace has been deleted, return error.")
+            throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been deleted")
+        }
+
+        val res = kotlin.runCatching {
+            client.get(ServiceRemoteDevResource::class).deleteWorkspace(
+                userId,
+                workspace.name
+            ).data ?: false
+        }.getOrElse {
+            logger.error("stop workspace error |${it.message}", it)
+            false
+        }
+
+        if (res) {
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.DELETED, transactionContext)
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceId = workspaceId,
+                    operator = userId,
+                    action = WorkspaceAction.DELETE,
+                    // todo 内容待确定
+                    actionMessage = ""
+                )
+            }
+        }
+        return res
+    }
+
+    fun shareWorkspace(userId: String, workspaceId: Long, sharedUser: String): Boolean {
+        logger.info("$userId share workspace $workspaceId|$sharedUser")
+        val shareInfo = WorkspaceShared(workspaceId, userId, sharedUser)
+        if (workspaceSharedDao.exsitWorkspaceSharedInfo(shareInfo, dslContext)) {
+            logger.info("$workspaceId has already shared to $sharedUser")
+            throw CustomException(Response.Status.BAD_REQUEST, "$workspaceId has already shared to $sharedUser")
+        }
+
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            workspaceSharedDao.createWorkspaceSharedInfo(userId, shareInfo, transactionContext)
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = transactionContext,
+                workspaceId = workspaceId,
+                operator = userId,
+                action = WorkspaceAction.SHARE,
+                // todo 内容待确定
+                actionMessage = ""
+            )
+        }
+        return true
     }
 
     fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Page<Workspace> {
@@ -166,14 +322,14 @@ class WorkspaceService constructor(
 
         val usageTime = history.sumOf { Duration.between(it.startTime, it.endTime).seconds }.run {
             this + if (workspaceStatus.isRunning()) {
-                // 如果正在运行，需要加上该次启动距离当前的时间
+                // 如果正在运行，需要加上目前距离该次启动的时间
                 Duration.between(last.startTime, LocalDateTime.now()).seconds
             } else 0
         }
 
         val sleepingTime = history.sumOf { it.lastSleepTimeCost }.run {
             this + if (workspaceStatus.isSleeping()) {
-                // 如果正在休眠，需要加上距离上次结束距离的时间
+                // 如果正在休眠，需要加上目前距离上次结束的时间
                 Duration.between(last.endTime, LocalDateTime.now()).seconds
             } else 0
         }

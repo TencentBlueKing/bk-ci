@@ -3,7 +3,9 @@ package com.tencent.devops.remotedev.dao
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
+@Repository
 class WorkspaceSharedDao {
 
     // 新增工作空间共享记录
@@ -24,6 +26,18 @@ class WorkspaceSharedDao {
                     userId,
                     workspaceShared.sharedUser
                 ).execute()
+        }
+    }
+
+    fun exsitWorkspaceSharedInfo(
+        workspaceShared: WorkspaceShared,
+        dslContext: DSLContext
+    ): Boolean {
+        return with(TWorkspaceShared.T_WORKSPACE_SHARED) {
+            dslContext.selectCount().from(this)
+                .where(WORKSPACE_ID.eq(workspaceShared.workspaceId))
+                .and(SHARED_USER.eq(workspaceShared.sharedUser))
+                .fetchOne(0, Int::class.java)!! > 0
         }
     }
 

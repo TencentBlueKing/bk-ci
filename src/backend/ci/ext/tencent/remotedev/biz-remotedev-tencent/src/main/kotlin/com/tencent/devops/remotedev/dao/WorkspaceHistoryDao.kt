@@ -40,20 +40,38 @@ class WorkspaceHistoryDao {
     fun createWorkspaceHistory(
         dslContext: DSLContext,
         workspaceId: Long,
-        startUserId: String
+        startUserId: String,
+        lastSleepTimeCost: Int
     ) {
         with(TWorkspaceHistory.T_WORKSPACE_HISTORY) {
             dslContext.insertInto(
                 this,
                 WORKSPACE_ID,
                 STARTER,
-                START_TIME
+                START_TIME,
+                LAST_SLEEP_TIME_COST
             )
                 .values(
                     workspaceId,
                     startUserId,
-                    LocalDateTime.now()
+                    LocalDateTime.now(),
+                    lastSleepTimeCost
                 ).execute()
+        }
+    }
+
+    fun updateWorkspaceHistory(
+        dslContext: DSLContext,
+        workspaceId: Long,
+        stopUserId: String
+    ): Int {
+        with(TWorkspaceHistory.T_WORKSPACE_HISTORY) {
+            return dslContext.update(this)
+                .set(STARTER, stopUserId)
+                .set(END_TIME, LocalDateTime.now())
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(WORKSPACE_ID.eq(workspaceId))
+                .execute()
         }
     }
 

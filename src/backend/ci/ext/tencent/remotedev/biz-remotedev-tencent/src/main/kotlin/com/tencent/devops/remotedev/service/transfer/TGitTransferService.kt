@@ -3,7 +3,7 @@ package com.tencent.devops.remotedev.service.transfer
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.pojo.github.GithubAppUrl
+import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.service.GitTransferService
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
@@ -14,6 +14,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import org.springframework.beans.factory.annotation.Autowired
+import java.net.URLEncoder
 
 class TGitTransferService @Autowired constructor(
     private val client: Client,
@@ -41,7 +42,7 @@ class TGitTransferService @Autowired constructor(
         search: String?,
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
-    ): List<GithubAppUrl> {
+    ): List<RemoteDevRepository> {
         return client.get(ServiceGitResource::class).getGitCodeProjectList(
             accessToken = getAndCheckOauthToken(userId).accessToken,
             page = page,
@@ -51,7 +52,24 @@ class TGitTransferService @Autowired constructor(
             sort = GitCodeBranchesSort.DESC,
             owned = owned,
             minAccessLevel = minAccessLevel
-        ).data?.map { GithubAppUrl(it.webUrl ?: "") } ?: emptyList()
+        ).data?.map { RemoteDevRepository(it.pathWithNamespace, it.httpsUrlToRepo) } ?: emptyList()
+    }
+
+    override fun getProjectBranches(
+        userId: String,
+        pathWithNamespace: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): List<String>? {
+        return client.get(ServiceGitResource::class).getBranch(
+            accessToken = getAndCheckOauthToken(userId).accessToken,
+            userId = userId,
+            repository = URLEncoder.encode(pathWithNamespace, "UTF-8"),
+            page = page,
+            pageSize = pageSize,
+            search = search
+        ).data?.map { it.name }
     }
 
     private fun getAndCheckOauthToken(

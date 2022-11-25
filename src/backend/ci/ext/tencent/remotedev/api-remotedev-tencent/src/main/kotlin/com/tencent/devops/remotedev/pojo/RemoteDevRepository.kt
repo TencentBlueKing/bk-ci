@@ -27,17 +27,13 @@
 
 package com.tencent.devops.remotedev.pojo
 
-enum class WorkspaceStatus {
-    PREPARING,
-    RUNNING,
-    STOPPED,
-    SLEEP,
-    DELETED,
-    EXCEPTION;
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun isRunning() = this == RUNNING
-
-    fun isDeleted() = this == DELETED
-
-    fun isSleeping() = this == SLEEP
-}
+@ApiModel("仓库信息")
+data class RemoteDevRepository(
+    @ApiModelProperty("git项目全路径")
+    val pathWithNamespace: String?,
+    @ApiModelProperty("仓库Url")
+    val url: String?
+)
