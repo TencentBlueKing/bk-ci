@@ -32,6 +32,7 @@ import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.GitRepo
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesWorkspace
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import org.apache.commons.lang3.RandomStringUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -40,16 +41,17 @@ class KubernetesRemoteDevService @Autowired constructor(
     private val kubernetesRemoteDevClient: KubernetesRemoteDevClient
 ) : RemoteDevInterface {
     override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
-        val workspaceId = ""
+        val workspaceId = getOnlyName(userId)
         val kubernetesWorkspace = KubernetesWorkspace(
              workspaceId = workspaceId,
              userId = userId,
              gitRepo = GitRepo(
-                 gitRepoName = "",
-                 gitRepoRef = ""
+                 gitRepoName = "go-test",
+                 gitRepoRef = "master"
              ),
              gitUserName = userId,
-             gitEmail = "",
+             gitEmail = "ruotiantang@tencent.com",
+             remotingYamlName = "",
              userFiles = emptyList()
         )
 
@@ -67,5 +69,15 @@ class KubernetesRemoteDevService @Autowired constructor(
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String? {
         return kubernetesRemoteDevClient.getWorkspaceUrl(userId, workspaceName)
+    }
+
+    private fun getOnlyName(userId: String): String {
+        val subUserId = if (userId.length > 14) {
+            userId.substring(0 until 14)
+        } else {
+            userId
+        }
+        return "${subUserId.replace("_", "-")}${System.currentTimeMillis()}-" +
+            RandomStringUtils.randomAlphabetic(8).toLowerCase()
     }
 }

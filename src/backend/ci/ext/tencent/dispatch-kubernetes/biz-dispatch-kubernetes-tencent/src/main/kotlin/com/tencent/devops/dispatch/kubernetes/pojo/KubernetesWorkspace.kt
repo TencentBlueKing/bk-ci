@@ -24,6 +24,7 @@ data class KubernetesWorkspace(
     private val gitRepo: GitRepo,
     private val gitUserName: String,
     private val gitEmail: String,
+    private val remotingYamlName: String,
     private val userFiles: List<UserFile>
 )
 
