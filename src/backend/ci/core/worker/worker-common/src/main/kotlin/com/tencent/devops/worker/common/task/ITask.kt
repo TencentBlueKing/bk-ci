@@ -35,6 +35,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.expression.SpecialFunctions
 import java.io.File
 
 @Suppress("NestedBlockDepth", "TooManyFunctions")
@@ -70,7 +71,9 @@ abstract class ITask {
                             val value = EnvReplacementParser.parse(
                                 value = it.value ?: "",
                                 contextMap = variablesBuild,
-                                onlyExpression = buildVariables.pipelineAsCodeSettings?.enable
+                                onlyExpression = buildVariables.pipelineAsCodeSettings?.enable,
+                                functions = SpecialFunctions.functions,
+                                output = SpecialFunctions.output
                             )
                             variablesBuild["envs.${it.key}"] = value
                             variables[it.key!!] = value

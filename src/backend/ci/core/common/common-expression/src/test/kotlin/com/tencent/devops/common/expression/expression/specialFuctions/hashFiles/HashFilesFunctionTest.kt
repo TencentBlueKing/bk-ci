@@ -25,11 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.expression.functions
+package com.tencent.devops.common.expression.expression.specialFuctions.hashFiles
 
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.ExpressionParser
-import com.tencent.devops.common.expression.FunctionFormatException
 import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
 import com.tencent.devops.common.expression.context.ArrayContextData
 import com.tencent.devops.common.expression.context.BooleanContextData
@@ -37,92 +36,109 @@ import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.NumberContextData
 import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.expression.FunctionInfo
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.core.io.ClassPathResource
 
-@Suppress("ComplexMethod", "LongMethod", "MaxLineLength")
-@DisplayName("测试format函数")
-internal class FormatTest {
+@Suppress("ALL")
+internal class HashFilesFunctionTest {
 
-    @DisplayName("format异常相关测试")
-    @Test
-    fun formatExpcetionTest() {
-        Assertions.assertThrows(FunctionFormatException::class.java) {
-            ExpressionParser.createTree(
-                "format('{0}-{1}:{3}', variables.str, variables.doub, variables.arry)",
-                null, nameValue, null
-            )!!.evaluate(null, ev, null, null)
+    @DisplayName("HashFiles相关异常测试")
+    @Nested
+    inner class ExceptionTest {
+        @DisplayName("不包含根路由测试")
+        @Test
+        fun noRootPath() {
+            val exp = "hashFiles('/data/a/a')"
+            Assertions.assertThrows(RuntimeException::class.java) {
+                ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+            }
+            val exp1 = "hashFiles('D: \\data\\.\\..')"
+            Assertions.assertThrows(RuntimeException::class.java) {
+                ExpressionParser.createTree(exp1, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+            }
         }
 
-        Assertions.assertThrows(FunctionFormatException::class.java) {
-            ExpressionParser.createTree(
-                "format('{0}-{1}:3}', variables.str, variables.doub, variables.arry)",
-                null, nameValue, null
-            )!!.evaluate(null, ev, null, null)
-        }
-
-        Assertions.assertThrows(FunctionFormatException::class.java) {
-            ExpressionParser.createTree(
-                "format('{0}-{1}:{3', variables.str, variables.doub, variables.arry)",
-                null, nameValue, null
-            )!!.evaluate(null, ev, null, null)
-        }
-
-        Assertions.assertThrows(FunctionFormatException::class.java) {
-            ExpressionParser.createTree(
-                "format('{0:yyyyMMdd}', variables.str, variables.doub, variables.arry)",
-                null, nameValue, null
-            )!!.evaluate(null, ev, null, null)
+        @DisplayName("不包含./..测试")
+        @Test
+        fun noIndexPath() {
+            val exp = "hashFiles('/data/./..')"
+            Assertions.assertThrows(RuntimeException::class.java) {
+                ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+            }
         }
     }
 
-    @DisplayName("evaluateCore相关测试")
     @ParameterizedTest
     @ValueSource(
         strings = [
-            "format('{{Hello {0} {1} {2}!}}', 'Mona', 'the', 'Octocat') => {Hello Mona the Octocat!}",
-            "format('{0}-{1}:{2}~{3}||', variables.str, variables.doub, variables.arry, variables.arry[2]) => 12138-12312.12:Array~||",
-            "format('{0}-{1}', variables.str, join(variables.arry)) => 12138-12138,111"
+            "hashFiles('testData/sha255Hash') => 2f11d1771e05dde5d1c004cea5211741d5bbd4ac82704d714005ccb90f94d0e0",
+            "hashFiles('**/sha**') => f7cd1e06c7fa507b32f2497beb0ab493c3fdf8a10f374209baf172035af4716a",
+            "hashFiles('test?ata/sha255H???') => 2f11d1771e05dde5d1c004cea5211741d5bbd4ac82704d714005ccb90f94d0e0"
         ]
     )
-    fun evaluateCoreTest(format: String) {
-        val (exp, expect) = format.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
-        Assertions.assertEquals(expect, res)
+    fun evaluateCore(evaluate: String) {
+        val (exp, expect) = evaluate.split(" => ")
+        Assertions.assertEquals(
+            expect,
+            ExpressionParser.createTree(
+                exp, null, nameValue,
+                listOf(
+                    FunctionInfo(
+                        HashFilesFunction.name,
+                        1,
+                        Byte.MAX_VALUE.toInt(),
+                        HashFilesFunction()
+                    )
+                )
+            )!!.evaluate(null, ev, null, null).value
+        )
     }
 
-    @DisplayName("subNameEvaluate相关测试")
     @ParameterizedTest
     @ValueSource(
         strings = [
-            "format('{{Hello {0} {1} {2}!}}', 'Mona', 'the', 'Octocat') => format('{{Hello {0} {1} {2}!}}', 'Mona', 'the', 'Octocat')",
-            "format('{0}-{1}||{2}', parameters.str, parameters.var, variables.xxx) => format('{0}-{1}||{2}', '12138', 'variables.xxx', variables.xxx)"
+            "hashFiles(parameters.str, variables.xxx, '**/sha**') => hashFiles('12138', variables.xxx, '**/sha**')"
         ]
     )
-    fun subNameEvaluateCoreTest(subNameFormat: String) {
-        val (exp, expect) = subNameFormat.split(" => ")
-        val res =
-            ExpressionParser
-                .createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, SubNameValueEvaluateInfo())!!
-                .subNameValueEvaluate(null, parametersEv, null, SubNameValueEvaluateInfo(), null).value
-        Assertions.assertEquals(expect, res)
+    fun subNameValueEvaluateCore(subEvaluate: String) {
+        val (exp, expect) = subEvaluate.split(" => ")
+        val subInfo = SubNameValueEvaluateInfo()
+        Assertions.assertEquals(
+            expect,
+            ExpressionParser.createSubNameValueEvaluateTree(
+                exp, null, parametersNameValue,
+                listOf(
+                    FunctionInfo(
+                        HashFilesFunction.name,
+                        1,
+                        Byte.MAX_VALUE.toInt(),
+                        HashFilesFunction()
+                    )
+                ),
+                subInfo
+            )!!.subNameValueEvaluate(null, parametersEv, null, subInfo, null).value
+        )
     }
 
     companion object {
-        val ev = ExecutionContext(DictionaryContextData())
-        val nameValue = mutableListOf<NamedValueInfo>()
-        val parametersNameValue = mutableListOf<NamedValueInfo>()
-        val parametersEv = ExecutionContext(DictionaryContextData())
+        private val ev = ExecutionContext(DictionaryContextData())
+        private val nameValue = mutableListOf<NamedValueInfo>()
+        private val parametersNameValue = mutableListOf<NamedValueInfo>()
+        private val parametersEv = ExecutionContext(DictionaryContextData())
 
         @BeforeAll
         @JvmStatic
         fun initData() {
             nameValue.add(NamedValueInfo("variables", ContextValueNode()))
+            val workSpace = ClassPathResource("specialFunctions/hashFiles").url.file
             val varData = DictionaryContextData().apply {
                 add("int", NumberContextData(123.0))
                 add("doub", NumberContextData(12312.12))
@@ -137,6 +153,15 @@ internal class FormatTest {
                 )
             }
             ev.expressionValues.add("variables", varData)
+            ev.expressionValues.add(
+                "ci",
+                DictionaryContextData().apply {
+                    add(
+                        "workspace",
+                        StringContextData(workSpace)
+                    )
+                }
+            )
 
             // 初始化部分参数替换测试数据
             parametersNameValue.add(NamedValueInfo("parameters", ContextValueNode()))
