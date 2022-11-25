@@ -20,7 +20,7 @@ const router = createRouter({
           component: ApplyPermission,
         },
         {
-          path: '/:projectId',
+          path: '/:projectCode',
           component: MyPermission,
         },
       ],

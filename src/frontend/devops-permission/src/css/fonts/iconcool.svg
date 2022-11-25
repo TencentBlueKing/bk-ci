@@ -1,0 +1,38 @@
+<?xml version="1.0" standalone="no"?>
+  <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" >
+  <svg>
+  <metadata>
+  Created by font-carrier
+  </metadata>
+  <defs>
+  <font id="iconfont" horiz-adv-x="1024" vert-adv-y="1024" >
+    <font-face
+      
+      font-family="iconfont"
+      
+      font-weight="400"
+      
+      font-stretch="normal"
+      
+      units-per-em="1024"
+      
+      ascent="812"
+      
+      descent="-212"
+      
+    />
+      <missing-glyph />
+
+      
+      <glyph glyph-name="x" unicode="&#x78;" horiz-adv-x="100"
+        d="M20 20 L50 20 L50 -20 Z" />
+      
+
+      
+      <glyph glyph-name="uniE101" unicode="&#xE101;" d="M128 714.72H448A32 32 0 0 0 480 682.72V362.72A32 32 0 0 0 448 330.72H128A32 32 0 0 0 96 362.72V682.72A32 32 0 0 0 128 714.72ZM575.04 714.72H895.04A32 32 0 0 0 927.04 682.72V362.72A32 32 0 0 0 895.04 330.72H575.04A32 32 0 0 0 543.04 362.72V682.72A32 32 0 0 0 575.04 714.72ZM575.04 268.16H895.04A32 32 0 0 0 927.04 236.16V-84A32 32 0 0 0 895.04-116H575.04A32 32 0 0 0 543.04-84V236A32 32 0 0 0 575.04 268ZM128 268H448A32 32 0 0 0 480 236V-84A32 32 0 0 0 448-116H128A32 32 0 0 0 96-84V236A32 32 0 0 0 128 268Z"  horiz-adv-x="1024" vert-adv-y="1024"  />
+
+      
+
+  </font>
+  </defs>
+</svg>

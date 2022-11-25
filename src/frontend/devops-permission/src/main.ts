@@ -12,8 +12,8 @@ import 'bkui-vue/dist/style.css';
 // i18n
 import { getCookies } from './common/util';
 import { createI18n } from 'vue-i18n';
-import ZhCN from '../../locale/permisson/zh-CN.json';
-import EnUS from '../../locale/permisson/en-US.json';
+import ZhCN from '../../locale/permission/zh-CN.json';
+import EnUS from '../../locale/permission/en-US.json';
 
 const cookiesObj = getCookies('blueking_language') || '';
 const i18n = createI18n({
