@@ -28,10 +28,12 @@
 package com.tencent.devops.remotedev.pojo
 
 enum class WorkspaceStatus {
+    PREPARING,
     RUNNING,
     STOPPED,
     SLEEP,
-    DELETED;
+    DELETED,
+    EXCEPTION;
 
     fun isRunning() = this == RUNNING
 

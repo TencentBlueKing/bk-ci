@@ -75,7 +75,7 @@ interface UserWorkspaceResource {
         userId: String,
         @ApiParam("工作空间描述", required = false)
         workspace: Workspace
-    ): Result<Boolean>
+    ): Result<String>
 
     @ApiOperation("开启工作空间")
     @POST

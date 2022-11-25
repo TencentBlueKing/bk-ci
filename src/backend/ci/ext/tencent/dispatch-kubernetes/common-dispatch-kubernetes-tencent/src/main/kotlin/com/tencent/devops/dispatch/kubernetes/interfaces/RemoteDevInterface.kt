@@ -25,10 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch-kubernetes:api-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
-    api(project(":ext:tencent:remotedev:model-remotedev-tencent"))
+package com.tencent.devops.dispatch.kubernetes.interfaces
 
-    testImplementation(project(":core:common:common-test"))
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+
+/**
+ * 用来获取不同类型的dispatchType的service来调用相关实现
+ * 远程开发相关接口
+ * 注：仅在接口层相关接口使用此类，构建层使用
+ */
+interface RemoteDevInterface {
+
+    /**
+     * 创建远程工作空间
+     */
+    fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String>
+
+    /**
+     * 启动远程工作空间
+     */
+    fun startWorkspace(userId: String, workspaceName: String): Boolean
+
+    /**
+     * 删除远程工作空间
+     */
+    fun deleteWorkspace(userId: String, workspaceName: String): Boolean
+
+    /**
+     * 获取工作空间web端链接
+     */
+    fun getWorkspaceUrl(userId: String, workspaceName: String): String?
 }

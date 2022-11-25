@@ -25,10 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:dispatch-kubernetes:api-dispatch-kubernetes-tencent"))
-    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
-    api(project(":ext:tencent:remotedev:model-remotedev-tencent"))
+package com.tencent.devops.dispatch.kubernetes.service.factory
 
-    testImplementation(project(":core:common:common-test"))
+import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class RemoteDevServiceFactory @Autowired constructor(
+    private val dockerRoutingSdkService: DockerRoutingSdkService
+) {
+    fun load(projectId: String): RemoteDevInterface {
+        val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(projectId)
+        return SpringContextUtil.getBean(
+            RemoteDevInterface::class.java,
+            dockerRoutingType.name.toLowerCase() + "RemoteDevService"
+        )
+    }
 }
