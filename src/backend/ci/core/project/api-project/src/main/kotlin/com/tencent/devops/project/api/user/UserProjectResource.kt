@@ -78,7 +78,7 @@ interface UserProjectResource {
         enabled: Boolean?,
         @ApiParam("是否拉取未审批通过的项目，若为false，会拉取审批[未通过+通过]的项目", required = false)
         @QueryParam("approved")
-        approved: Boolean? = true
+        approved: Boolean?
     ): Result<List<ProjectVO>>
 
     @GET
