@@ -5,7 +5,9 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceTemplateRecor
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.springframework.stereotype.Repository
 
+@Repository
 class WorkspaceTemplateDao {
 
     // 新增模板
