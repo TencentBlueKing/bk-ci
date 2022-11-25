@@ -48,7 +48,7 @@ class AtomReleaseTxtAnalysisUtilTest {
         }
         val filePathReplaceResult = AtomReleaseTxtAnalysisUtil.filePathReplace(result, input)
         Assertions.assertEquals(
-            "插件发布测试描述:![](www.tested.xxx)||插件发布测试描述:![](www.tested.xxx)",
+            "插件发布测试描述:![cat2.png](www.tested.xxx)||插件发布测试描述:![cat.png](www.tested.xxx)",
             filePathReplaceResult
         )
     }
