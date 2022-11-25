@@ -412,7 +412,7 @@ class OpAtomServiceImpl @Autowired constructor(
                     )
                 )
                 if (result.isOk()) {
-                    releaseInfo.logoUrl = result.data!!.logoUrl!!
+                    result.data?.logoUrl?.let { releaseInfo.logoUrl = it }
                 } else {
                     return Result(
                         data = false,
