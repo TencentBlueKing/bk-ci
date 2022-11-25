@@ -389,6 +389,7 @@ class OpAtomServiceImpl @Autowired constructor(
             return Result(data = false, message = addMarketAtomResult.message)
         }
         val atomId = addMarketAtomResult.data!!
+        // 远程logo资源不做处理
         if (!releaseInfo.logoUrl.startsWith("http")) {
             // 解析logoUrl
             val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
