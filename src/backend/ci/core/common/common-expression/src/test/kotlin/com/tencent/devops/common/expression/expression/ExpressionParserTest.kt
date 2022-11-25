@@ -126,7 +126,7 @@ class ExpressionParserTest {
         )
 
         literals.forEach { (exp, v) ->
-            val res = ExpressionParser.createTree(exp, null, null, null)!!.evaluate(null, null, null).value
+            val res = ExpressionParser.createTree(exp, null, null, null)!!.evaluate(null, null, null, null).value
             Assertions.assertEquals(v, res)
         }
     }
@@ -354,7 +354,7 @@ class ExpressionParserTest {
     )
     fun functionFromJsonTest(fromJson: String) {
         val (index, exp) = fromJson.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
         when (index.toInt()) {
             1 -> {
                 Assertions.assertTrue(res is DictionaryContextData)
@@ -395,7 +395,7 @@ class ExpressionParserTest {
     )
     fun functionJoinTest(join: String) {
         val (index, exp) = join.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
         when (index.toInt()) {
             1 -> {
                 Assertions.assertEquals("push|mr|tag", res)
@@ -442,7 +442,7 @@ class ExpressionParserTest {
         val result = items[1]
         val subInfo = SubNameValueEvaluateInfo()
         val tree = ExpressionParser.createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, subInfo)!!
-        var (res, isComplete, type) = tree.subNameValueEvaluate(null, parametersEv, null, subInfo)
+        var (res, isComplete, type) = tree.subNameValueEvaluate(null, parametersEv, null, subInfo, null)
         if (isComplete && (type == SubNameValueResultType.ARRAY || type == SubNameValueResultType.DICT)) {
             res = res.replace("\\\"", "\"")
         }
@@ -457,7 +457,7 @@ class ExpressionParserTest {
 
     private fun valuesTest(param: String) {
         val (exp, result) = param.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
         Assertions.assertEquals(
             when (result) {
                 "true", "false" -> {

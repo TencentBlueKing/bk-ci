@@ -25,36 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.expression.expression
+package com.tencent.devops.worker.common.expression
 
-import com.tencent.devops.common.expression.SubNameValueEvaluateInfo
-import com.tencent.devops.common.expression.SubNameValueEvaluateResult
+import com.tencent.devops.common.expression.expression.ExpressionOutput
+import com.tencent.devops.common.expression.expression.FunctionInfo
+import com.tencent.devops.common.expression.expression.specialFuctions.hashFiles.HashFilesFunction
+import com.tencent.devops.worker.common.logger.LoggerService
+import org.slf4j.LoggerFactory
 
-interface IExpressionNode {
-    fun evaluate(
-        trace: ITraceWriter?,
-        state: Any?,
-        options: EvaluationOptions?,
-        expressionOutput: ExpressionOutput?
-    ): EvaluationResult
+/**
+ * 针对只有worker使用的特殊函数的集成类
+ */
+object SpecialFunctions {
 
-    /**
-     * 只负责替换指定的nameValued和index
-     *
-     * 如果包含其他nameValued
-     * * 指定的nameValued计算后替换为 toJson 之后的字符串
-     * * 其他的nameValued涉及到与指定的nameValue进行计算时，为null，不涉及计算时打印原样保持不变
-     * * 运算符除index之外保持原样不变
-     * * 函数保持原样不变（只能保持为函数原命名）
-     *
-     * 如果不包含
-     * * 直接计算
-     */
-    fun subNameValueEvaluate(
-        trace: ITraceWriter?,
-        state: Any?,
-        options: EvaluationOptions?,
-        subInfo: SubNameValueEvaluateInfo,
-        expressionOutput: ExpressionOutput?
-    ): SubNameValueEvaluateResult
+    private val logger = LoggerFactory.getLogger(SpecialFunctions::class.java)
+
+    val functions: List<FunctionInfo> = listOf(
+        initHashFunction()
+    )
+
+    val output = object : ExpressionOutput {
+        override fun writeDebugLog(content: String) {
+            try {
+                LoggerService.addDebugLine(content)
+            } catch (e: Throwable) {
+                logger.warn("hashFunction out put log error", e)
+            }
+        }
+    }
+
+    private fun initHashFunction(): FunctionInfo {
+        return FunctionInfo(
+            HashFilesFunction.name,
+            1,
+            Byte.MAX_VALUE.toInt(),
+            HashFilesFunction()
+        )
+    }
 }
