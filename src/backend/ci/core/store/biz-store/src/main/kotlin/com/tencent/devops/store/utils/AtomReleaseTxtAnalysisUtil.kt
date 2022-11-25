@@ -219,5 +219,6 @@ object AtomReleaseTxtAnalysisUtil {
     }
 
     fun buildAtomArchivePath(userId: String, atomCode: String) =
-        "${getAtomBasePath()}$fileSeparator$BK_CI_ATOM_DIR$fileSeparator$userId$fileSeparator$atomCode"
+        "${getAtomBasePath()}$fileSeparator$BK_CI_ATOM_DIR$fileSeparator$userId$fileSeparator$atomCode" +
+                "$fileSeparator${UUIDUtil.generate()}"
 }
