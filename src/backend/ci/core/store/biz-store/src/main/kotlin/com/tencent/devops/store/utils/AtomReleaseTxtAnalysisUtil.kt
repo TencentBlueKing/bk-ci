@@ -210,7 +210,7 @@ object AtomReleaseTxtAnalysisUtil {
                 "?userId=$userId&projectCode=$projectCode&atomId=$atomId&atomCode=$atomCode" +
                 "&version=$version&releaseType=$releaseType&os=$os"
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
-            val responseContent = response.body()!!.string()
+            response.body()!!.string()
             if (!response.isSuccessful) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
@@ -219,6 +219,5 @@ object AtomReleaseTxtAnalysisUtil {
     }
 
     fun buildAtomArchivePath(userId: String, atomCode: String) =
-        "${getAtomBasePath()}$fileSeparator$BK_CI_ATOM_DIR$fileSeparator$userId$fileSeparator$atomCode" +
-                "$fileSeparator${UUIDUtil.generate()}"
+        "${getAtomBasePath()}$fileSeparator$BK_CI_ATOM_DIR$fileSeparator$userId$fileSeparator$atomCode"
 }

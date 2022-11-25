@@ -471,8 +471,8 @@ class OpAtomServiceImpl @Autowired constructor(
             FileSystemUtils.deleteRecursively(File(atomPath).parentFile)
         }
         val labelIds = if (releaseInfo.labelCodes != null) {
-            labelDao.getIdsByCodes(dslContext, releaseInfo.labelCodes!!, 0)
-        } else emptyList()
+            ArrayList(labelDao.getIdsByCodes(dslContext, releaseInfo.labelCodes!!, 0))
+        } else null
 
         // 升级插件
         val updateMarketAtomResult = atomReleaseService.updateMarketAtom(
@@ -490,7 +490,7 @@ class OpAtomServiceImpl @Autowired constructor(
                 releaseType = releaseInfo.versionInfo.releaseType,
                 versionContent = releaseInfo.versionInfo.versionContent,
                 publisher = releaseInfo.versionInfo.publisher,
-                labelIdList = ArrayList(labelIds),
+                labelIdList = labelIds,
                 frontendType = releaseInfo.configInfo.frontendType,
                 logoUrl = releaseInfo.logoUrl,
                 classifyCode = releaseInfo.classifyCode
