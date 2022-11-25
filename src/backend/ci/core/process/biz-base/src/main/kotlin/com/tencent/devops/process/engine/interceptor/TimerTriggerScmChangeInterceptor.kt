@@ -488,7 +488,8 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
     }
 
     private fun getMarketBuildRepoConfig(input: Map<*, *>, variables: Map<String, String>): RepositoryConfig? {
-        val repositoryType = RepositoryTypeNew.parseType(input["repositoryType"] as String?)
+        val repositoryTypeNew = RepositoryTypeNew.parseType(input["repositoryType"] as String?)
+        val repositoryType = RepositoryTypeNew.toRepositoryType(repositoryTypeNew)
         val repositoryId = when (repositoryType) {
             RepositoryType.ID -> EnvUtils.parseEnv(input["repositoryHashId"] as String?, variables)
             RepositoryType.NAME -> EnvUtils.parseEnv(input["repositoryName"] as String?, variables)

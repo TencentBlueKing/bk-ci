@@ -34,9 +34,17 @@ enum class RepositoryTypeNew {
     ;
 
     companion object {
-        fun parseType(type: String?): RepositoryType {
-            if (type.isNullOrBlank()) return RepositoryType.ID
-            return RepositoryType.valueOf(type)
+        fun parseType(type: String?): RepositoryTypeNew {
+            if (type.isNullOrBlank()) return ID
+            return valueOf(type)
+        }
+
+        fun toRepositoryType(type: RepositoryTypeNew): RepositoryType? {
+            return when (type) {
+                ID -> RepositoryType.ID
+                NAME -> RepositoryType.NAME
+                else -> null
+            }
         }
     }
 }
