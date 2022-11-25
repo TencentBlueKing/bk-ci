@@ -45,7 +45,6 @@ import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.api.common.ServiceStoreLogoResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_LOG_FILE_FAIL
 import com.tencent.devops.store.dao.atom.AtomDao
@@ -91,7 +90,6 @@ import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.time.LocalDateTime
-import java.util.ArrayList
 
 @Service
 @Suppress("LongParameterList", "LongMethod", "ReturnCount")
