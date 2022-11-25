@@ -30,19 +30,15 @@ package com.tencent.devops.remotedev.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.github.GithubAppUrl
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
-import com.tencent.devops.remotedev.pojo.Workspace
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -54,7 +50,7 @@ interface UserRemoteDevResource {
 
     @ApiOperation("获取远程开发环境配置")
     @GET
-    @Path("/settings/get")
+    @Path("/settings")
     fun getRemoteDevSettings(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -63,7 +59,7 @@ interface UserRemoteDevResource {
 
     @ApiOperation("更新远程开发环境配置")
     @POST
-    @Path("/settings/update")
+    @Path("/settings")
     fun updateRemoteDevSettings(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

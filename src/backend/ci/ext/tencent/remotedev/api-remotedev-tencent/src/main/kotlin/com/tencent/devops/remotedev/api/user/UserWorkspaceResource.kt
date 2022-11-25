@@ -46,29 +46,18 @@ import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间")
-@Path("/user/workspace")
+@Path("/user/workspaces")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserWorkspaceResource {
-
-    @ApiOperation("获取用户已授权代码库列表")
-    @GET
-    @Path("/repository/get")
-    fun getAuthorizedGitRepository(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<GithubAppUrl>
-
     @ApiOperation("创建新的工作空间")
     @POST
-    @Path("/create")
+    @Path("/")
     fun createWorkspace(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -77,47 +66,9 @@ interface UserWorkspaceResource {
         workspace: Workspace
     ): Result<String>
 
-    @ApiOperation("开启工作空间")
-    @POST
-    @Path("/start/workspaces/{workspaceId}")
-    fun startWorkspace(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("工作空间ID", required = false)
-        @PathParam("workspaceId")
-        workspaceId: Long
-    ): Result<Boolean>
-
-    @ApiOperation("分享工作空间")
-    @POST
-    @Path("/share/workspaces/{workspaceId}")
-    fun shareWorkspace(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("工作空间ID", required = false)
-        @PathParam("workspaceId")
-        workspaceId: Long,
-        @ApiParam("分享用户", required = false)
-        sharedUser: String
-    ): Result<Boolean>
-
-    @ApiOperation("删除工作空间")
-    @DELETE
-    @Path("/delete/workspaces/{workspaceId}")
-    fun deleteWorkspace(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("工作空间ID", required = false)
-        @PathParam("workspaceId")
-        workspaceId: Long
-    ): Result<Boolean>
-
     @ApiOperation("获取用户工作空间列表")
     @GET
-    @Path("/list")
+    @Path("/")
     fun getWorkspaceList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -130,29 +81,66 @@ interface UserWorkspaceResource {
         pageSize: Int?
     ): Result<Page<Workspace>>
 
+    @ApiOperation("删除工作空间")
+    @DELETE
+    @Path("/")
+    fun deleteWorkspace(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("工作空间ID", required = false)
+        @QueryParam("workspaceId")
+        workspaceId: Long
+    ): Result<Boolean>
+
+    @ApiOperation("开启工作空间")
+    @POST
+    @Path("/start")
+    fun startWorkspace(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("工作空间ID", required = false)
+        @QueryParam("workspaceId")
+        workspaceId: Long
+    ): Result<Boolean>
+
+    @ApiOperation("分享工作空间")
+    @POST
+    @Path("/share")
+    fun shareWorkspace(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("工作空间ID", required = false)
+        @QueryParam("workspaceId")
+        workspaceId: Long,
+        @ApiParam("分享用户", required = false)
+        sharedUser: String
+    ): Result<Boolean>
     //todo 获取运行日志的接口
 
     @ApiOperation("获取用户工作空间详情")
     @GET
-    @Path("/detail/workspaces/{workspaceId}")
+    @Path("/detail")
     fun getWorkspaceDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("工作空间ID", required = false)
-        @PathParam("workspaceId")
+        @QueryParam("workspaceId")
         workspaceId: Long
     ): Result<WorkspaceDetail?>
 
     @ApiOperation("获取用户工作空间详情")
     @GET
-    @Path("/detail/workspaces/{workspaceId}/timeline")
+    @Path("/detail_timeline")
     fun getWorkspaceTimeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("工作空间ID", required = false)
-        @PathParam("workspaceId")
+        @QueryParam("workspaceId")
         workspaceId: Long,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
@@ -161,6 +149,24 @@ interface UserWorkspaceResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<WorkspaceOpHistory>>
+
+    @ApiOperation("获取用户已授权代码库列表")
+    @GET
+    @Path("/repository")
+    fun getAuthorizedGitRepository(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("模糊搜索代码库", required = false)
+        @QueryParam("search")
+        search: String?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<GithubAppUrl>>
 
     @ApiOperation("根据用户ID判断用户是否已经oauth认证")
     @GET

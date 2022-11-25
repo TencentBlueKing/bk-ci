@@ -47,8 +47,20 @@ class UserWorkspaceResourceImpl constructor(
     val workspaceService: WorkspaceService
 ) : UserWorkspaceResource {
 
-    override fun getAuthorizedGitRepository(userId: String): Result<GithubAppUrl> {
-        return Result(workspaceService.getAuthorizedGitRepository(userId))
+    override fun getAuthorizedGitRepository(
+        userId: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<GithubAppUrl>> {
+        return Result(
+            workspaceService.getAuthorizedGitRepository(
+                userId = userId,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun createWorkspace(userId: String, workspace: Workspace): Result<String> {

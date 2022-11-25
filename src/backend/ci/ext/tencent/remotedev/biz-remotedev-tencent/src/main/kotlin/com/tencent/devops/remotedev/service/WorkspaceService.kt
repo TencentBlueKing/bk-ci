@@ -44,6 +44,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -57,6 +58,7 @@ class WorkspaceService constructor(
     private val redisOperation: RedisOperation,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
+    private val gitTransferService: GitTransferService,
     private val client: Client
 ) {
 
@@ -64,8 +66,18 @@ class WorkspaceService constructor(
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
     }
 
-    fun getAuthorizedGitRepository(userId: String): GithubAppUrl {
-        TODO("Not yet implemented")
+    fun getAuthorizedGitRepository(userId: String, search: String?, page: Int?, pageSize: Int?): List<GithubAppUrl> {
+        logger.info("$userId get user git repository")
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        return gitTransferService.getProjectList(
+            userId = userId,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            search = search,
+            owned = false,
+            minAccessLevel = GitAccessLevelEnum.DEVELOPER
+        )
     }
 
     fun createWorkspace(userId: String, workspace: Workspace): String {
@@ -111,6 +123,7 @@ class WorkspaceService constructor(
     }
 
     fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Page<Workspace> {
+        logger.info("$userId get user workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val count = workspaceDao.countWorkspace(dslContext, userId)
@@ -139,6 +152,7 @@ class WorkspaceService constructor(
     }
 
     fun getWorkspaceDetail(userId: String, workspaceId: Long): WorkspaceDetail? {
+        logger.info("$userId get workspace from id $workspaceId")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId) ?: return null
 
         val workspaceStatus = WorkspaceStatus.values()[workspace.status]
@@ -188,6 +202,7 @@ class WorkspaceService constructor(
         page: Int?,
         pageSize: Int?
     ): Page<WorkspaceOpHistory> {
+        logger.info("$userId get workspace time line from id $workspaceId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val count = workspaceOpHistoryDao.countOpHistory(dslContext, workspaceId)
