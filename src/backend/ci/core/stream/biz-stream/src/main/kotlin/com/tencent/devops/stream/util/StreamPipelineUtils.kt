@@ -56,7 +56,11 @@ object StreamPipelineUtils {
         return "$url/#$gitProjectId"
     }
 
-    fun genStreamV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
+    fun genStreamV2NotificationsUrl(
+        streamUrl: String,
+        gitProjectId: String,
+        messageId: String
+    ) = "$streamUrl/notifications?id=$messageId#$gitProjectId"
 
     fun createEmptyPipelineAndSetting(displayName: String) = PipelineModelAndSetting(
         model = Model(

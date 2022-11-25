@@ -29,16 +29,16 @@ package com.tencent.devops.stream.trigger.listener.notify
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.StreamNotifyTemplateEnum
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import java.util.Date
 
 object SendEmail {
     fun getEmailSendRequest(
-        state: StreamCommitCheckState,
+        status: BuildStatus,
         receivers: Set<String>,
         ccs: MutableSet<String>?,
         projectName: String,
@@ -52,12 +52,11 @@ object SendEmail {
         streamUrl: String,
         gitProjectId: String
     ): SendNotifyMessageTemplateRequest {
-        val isSuccess = state == StreamCommitCheckState.SUCCESS
         val titleParams = mapOf(
             "title" to (
                 if (title.isNullOrBlank()) {
                     V2NotifyTemplate.getEmailTitle(
-                        isSuccess = isSuccess,
+                        status = status,
                         projectName = projectName,
                         branchName = branchName,
                         pipelineName = pipelineName, buildNum = build.buildNum.toString()
@@ -71,7 +70,7 @@ object SendEmail {
             "content" to (
                 if (content.isNullOrBlank()) {
                     V2NotifyTemplate.getEmailContent(
-                        isSuccess = isSuccess,
+                        status = status,
                         projectName = projectName,
                         branchName = branchName,
                         pipelineName = pipelineName,

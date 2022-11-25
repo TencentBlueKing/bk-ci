@@ -119,33 +119,33 @@ func DoUpgradeOperation(agentChanged bool, workAgentChanged bool, jdkChanged boo
 			return errors.Wrap(err, "upgrade jdk copy new jdk file error")
 		}
 
-		// 解压缩为一个临时文件
+		// 解压缩为一个新文件取代旧文件路径
 		jdkTmpName := "jdk" + strconv.FormatInt(time.Now().Unix(), 10)
 		err = fileutil.Unzip(workDir+"/"+config.JdkClientFile, workDir+"/"+jdkTmpName)
 		if err != nil {
 			return errors.Wrap(err, "upgrade jdk unzip error")
 		}
 
-		// 删除老的jdk文件，以及之前解压缩或者改名失败残留的
-		files, err := ioutil.ReadDir(workDir)
-		if err != nil {
-			return errors.Wrap(err, "upgrade jdk remove old jdk file error")
-		}
-		for _, file := range files {
-			if (strings.HasPrefix(file.Name(), "jdk") || strings.HasPrefix(file.Name(), "jre")) &&
-				file.Name() != jdkTmpName {
-				err = os.RemoveAll(workDir + "/" + file.Name())
-				if err != nil {
-					return errors.Wrap(err, "upgrade jdk remove old jdk file error")
+		// 删除老的jdk文件，以及之前解压缩或者改名失败残留的，异步删除，删除失败也不影响主进程
+		go func() {
+			files, err := ioutil.ReadDir(workDir)
+			if err != nil {
+				logs.Error("upgrade jdk remove old jdk file error", err)
+				return
+			}
+			for _, file := range files {
+				if (strings.HasPrefix(file.Name(), "jdk") || strings.HasPrefix(file.Name(), "jre")) &&
+					file.Name() != jdkTmpName {
+					err = os.RemoveAll(workDir + "/" + file.Name())
+					if err != nil {
+						logs.Error("upgrade jdk remove old jdk file error", err)
+					}
 				}
 			}
-		}
+		}()
 
-		// 改名临时目录为jdk
-		err = os.Rename(workDir+"/"+jdkTmpName, workDir+"/jdk")
-		if err != nil {
-			return errors.Wrap(err, "upgrade jdk remove old jdk file error")
-		}
+		// 修改启动worker的jdk路径
+		config.SaveJdkDir(workDir + "/" + jdkTmpName)
 
 		logs.Info("[agentUpgrade]|replace jdk file done")
 	}

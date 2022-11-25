@@ -1,6 +1,7 @@
 package com.tencent.devops.stream.trigger.listener.notify
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.trigger.pojo.rtxCustom.MessageType
 import com.tencent.devops.stream.trigger.pojo.rtxCustom.ReceiverType
@@ -12,7 +13,7 @@ object TXSendRtx {
         receivers: Set<String>,
         receiverType: ReceiverType,
         rtxUrl: String,
-        isSuccess: Boolean,
+        status: BuildStatus,
         projectName: String,
         branchName: String,
         pipelineName: String,
@@ -30,7 +31,7 @@ object TXSendRtx {
     ) {
         val realContent = if (content.isNullOrBlank()) {
             getRtxCustomContent(
-                isSuccess = isSuccess,
+                status = status,
                 projectName = projectName,
                 branchName = branchName,
                 pipelineName = pipelineName,
@@ -46,7 +47,7 @@ object TXSendRtx {
             )
         } else {
             getRtxCustomUserContent(
-                isSuccess = isSuccess,
+                status = status,
                 gitProjectId = gitProjectId,
                 pipelineId = pipelineId,
                 build = build,
@@ -69,17 +70,17 @@ object TXSendRtx {
 
     // 为用户的内容增加链接
     private fun getRtxCustomUserContent(
-        isSuccess: Boolean,
+        status: BuildStatus,
         gitProjectId: Long,
         pipelineId: String,
         build: BuildHistory,
         content: String,
         v2GitUrl: String
     ): String {
-        val state = if (isSuccess) {
-            Triple("✔", "info", "success")
-        } else {
-            Triple("❌", "warning", "failed")
+        val state = when {
+            status.isSuccess() -> Triple("✔", "info", "success")
+            status.isCancel() -> Triple("❕", "warning", "cancel")
+            else -> Triple("❌", "warning", "failed")
         }
         val detailUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
             homePage = v2GitUrl,
@@ -91,7 +92,7 @@ object TXSendRtx {
     }
 
     private fun getRtxCustomContent(
-        isSuccess: Boolean,
+        status: BuildStatus,
         projectName: String,
         branchName: String,
         pipelineName: String,
@@ -105,10 +106,10 @@ object TXSendRtx {
         v2GitUrl: String,
         gitProjectId: Long
     ): String {
-        val state = if (isSuccess) {
-            Triple("✔", "info", "success")
-        } else {
-            Triple("❌", "warning", "failed")
+        val state = when {
+            status.isSuccess() -> Triple("✔", "info", "success")
+            status.isCancel() -> Triple("❕", "warning", "cancel")
+            else -> Triple("❌", "warning", "failed")
         }
         val request = if (isMr) {
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
