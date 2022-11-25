@@ -52,9 +52,9 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): String {
-        val (workspaceId, taskId) = remoteDevServiceFactory.load("").createWorkspace(userId, workspaceReq)
+        val (workspaceId, taskId) = remoteDevServiceFactory.load("test-sawyer2").createWorkspace(userId, workspaceReq)
 
-        val (taskStatus, failedMsg) = containerServiceFactory.load("")
+        val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
             .waitTaskFinish(userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
