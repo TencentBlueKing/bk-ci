@@ -176,6 +176,11 @@ func (nip *NodeInfoPool) RecoverNoReadyBlock(key string, noReady int) {
 	nip.nodeBlockMap[key].noReadyInstance += noReady
 }
 
+// GetNodeBlockMap get status message
+func (nip *NodeInfoPool) GetNodeBlockMap() map[string]*NodeInfoBlock {
+	return nip.nodeBlockMap
+}
+
 // GetStats get status message
 func (nip *NodeInfoPool) GetStats() string {
 	nip.Lock()

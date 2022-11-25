@@ -32,7 +32,7 @@ import (
 )
 
 //DefaultNamespace define default namespace for resourcemanager
-const DefaultNamespace = "disttask"
+//const DefaultNamespace = "disttask"
 
 // NewResourceManager get a new container resource manager.
 func NewResourceManager(
@@ -403,6 +403,11 @@ func (rm *resourceManager) recover() error {
 
 	rm.registeredResourceMap = make(map[string]*resource, 1000)
 	for _, r := range rl {
+		if rm.conf.Operator == config.CRMOperatorK8S && rm.nodeInfoPool.GetNodeBlockMap() != nil {
+			if _, ok := rm.nodeInfoPool.GetNodeBlockMap()[r.resourceBlockKey]; !ok {
+				continue
+			}
+		}
 		rm.registeredResourceMap[r.resourceID] = r
 
 		if r.noReadyInstance <= 0 {
@@ -418,13 +423,10 @@ func (rm *resourceManager) recover() error {
 }
 
 func (rm *resourceManager) sync() {
-	if rm.conf.BcsNamespace == "" {
-		rm.conf.BcsNamespace = DefaultNamespace
-	}
 
 	nodeInfoList, err := rm.operator.GetResource(rm.conf.BcsClusterID)
 	if err != nil {
-		blog.Errorf("crm: sync resource failed: %v", err)
+		blog.Errorf("crm: sync resource failed, clusterId(%s): %v", rm.conf.BcsClusterID, err)
 		return
 	}
 
@@ -670,8 +672,8 @@ func (rm *resourceManager) getServiceInfo(resourceID, user string) (*op.ServiceI
 	}
 	info, err := rm.operator.GetServerStatus(rm.conf.BcsClusterID, rm.handlerMap[user].GetNamespace(), targetID)
 	if err != nil {
-		blog.Errorf("crm: get service info for resource(%s) target(%s) user(%s) failed: %v",
-			resourceID, targetID, user, err)
+		blog.Errorf("crm: get service info for resource(%s) target(%s) user(%s) namespace(%s) failed: %v",
+			resourceID, targetID, user, rm.handlerMap[user].GetNamespace(), err)
 		return nil, err
 	}
 
@@ -1103,17 +1105,29 @@ func (hwu *handlerWithUser) Scale(resourceID string, function op.InstanceFilterF
 
 // GetServiceInfo
 func (hwu *handlerWithUser) GetServiceInfo(resourceID string) (*op.ServiceInfo, error) {
-	return hwu.mgr.getServiceInfo(hwu.resourceID(resourceID), hwu.user)
+	info, err := hwu.mgr.getServiceInfo(hwu.resourceID(resourceID), hwu.user)
+	if err == ErrorResourceNoExist {
+		return hwu.mgr.getServiceInfo(hwu.oldResourceID(resourceID), hwu.user)
+	}
+	return info, err
 }
 
 // IsServicePreparing
 func (hwu *handlerWithUser) IsServicePreparing(resourceID string) (bool, error) {
-	return hwu.mgr.isServicePreparing(hwu.resourceID(resourceID), hwu.user)
+	prepard, err := hwu.mgr.isServicePreparing(hwu.resourceID(resourceID), hwu.user)
+	if err == ErrorResourceNoExist {
+		return hwu.mgr.isServicePreparing(hwu.oldResourceID(resourceID), hwu.user)
+	}
+	return prepard, err
 }
 
 // Release
 func (hwu *handlerWithUser) Release(resourceID string) error {
-	return hwu.mgr.release(hwu.resourceID(resourceID), hwu.user)
+	err := hwu.mgr.release(hwu.resourceID(resourceID), hwu.user)
+	if err == ErrorResourceNoExist {
+		return hwu.mgr.release(hwu.oldResourceID(resourceID), hwu.user)
+	}
+	return err
 }
 
 // AddBroker add a broker settings into handler
@@ -1151,11 +1165,15 @@ func (hwu *handlerWithUser) GetNamespace() string {
 	if hwu.mgr.conf.BcsNamespace != "" {
 		return hwu.mgr.conf.BcsNamespace
 	}
-	return DefaultNamespace
+	return hwu.user
 }
 
 func (hwu *handlerWithUser) resourceID(id string) string {
 	return strings.ReplaceAll(strings.ToLower(id), "_", "-")
+}
+
+func (hwu *handlerWithUser) oldResourceID(id string) string {
+	return strings.ReplaceAll(strings.ToLower(fmt.Sprintf("%s-%s", hwu.user, id)), "_", "-")
 }
 
 type resource struct {
