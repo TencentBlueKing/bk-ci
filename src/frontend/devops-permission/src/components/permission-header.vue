@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { AngleRight } from 'bkui-vue/lib/icon';
+import { useI18n } from 'vue-i18n';
 
 defineProps<{
   navs: { name: string, url: string }[]
 }>();
 
+const { t } = useI18n();
 const goToUrl = (url) => {
   if (url) {
-    location = url
+    location = url;
   }
-}
+};
+
 </script>
 
 <template>
@@ -21,6 +24,7 @@ const goToUrl = (url) => {
       >
         <bk-breadcrumb-item
           v-for="(nav, index) in navs"
+          :key="index"
           :class="{
             'bk-breadcrumb-item-inner': nav.url
           }"
@@ -35,6 +39,7 @@ const goToUrl = (url) => {
           </template>
         </bk-breadcrumb-item>
       </bk-breadcrumb>
+      <bk-button text theme="primary">{{ t('返回旧版') }}</bk-button>
     </div>
   </section>
 </template>

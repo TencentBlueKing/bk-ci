@@ -5,8 +5,8 @@ const { t } = useI18n();
 </script>
 
 <template>
-<permission-header></permission-header>
-<section>ww</section>
+  <permission-header></permission-header>
+  <section>ww</section>
 </template>
 
 <style lang="postcss" scoped>
