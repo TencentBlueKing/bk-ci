@@ -29,9 +29,14 @@ package com.tencent.devops.remotedev.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.github.GithubAppUrl
 import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.pojo.WorkspaceDetail
+import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -43,6 +48,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间")
@@ -115,8 +121,14 @@ interface UserWorkspaceResource {
     fun getWorkspaceList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Workspace>
+        userId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<Workspace>>
 
     //todo 获取运行日志的接口
 
@@ -130,5 +142,44 @@ interface UserWorkspaceResource {
         @ApiParam("工作空间ID", required = false)
         @PathParam("workspaceId")
         workspaceId: Long
-    ): Result<Workspace>
+    ): Result<WorkspaceDetail?>
+
+    @ApiOperation("获取用户工作空间详情")
+    @GET
+    @Path("/detail/workspaces/{workspaceId}/timeline")
+    fun getWorkspaceTimeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("工作空间ID", required = false)
+        @PathParam("workspaceId")
+        workspaceId: Long,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<WorkspaceOpHistory>>
+
+    @ApiOperation("根据用户ID判断用户是否已经oauth认证")
+    @GET
+    @Path("/isOauth")
+    fun isOAuth(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("重定向url类型", required = false)
+        @QueryParam("redirectUrlType")
+        redirectUrlType: RedirectUrlTypeEnum?,
+        @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
+        @QueryParam("redirectUrl")
+        redirectUrl: String?,
+        @ApiParam(value = "stream 项目Id", required = false)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "是否刷新token", required = false)
+        @QueryParam("refreshToken")
+        refreshToken: Boolean? = true
+    ): Result<AuthorizeResult>
 }

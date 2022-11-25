@@ -23,7 +23,7 @@ class WorkspaceTemplateDao {
                 LOGO,
                 DESCRIPTION,
                 CREATOR
-            ) .values (
+            ).values(
                 workspaceTemplate.name,
                 workspaceTemplate.image,
                 workspaceTemplate.source,
@@ -52,7 +52,6 @@ class WorkspaceTemplateDao {
         }
     }
 
-
     // 删除模板
     fun deleteWorkspaceTemplate(
         wsTemplateId: Long,
@@ -72,12 +71,11 @@ class WorkspaceTemplateDao {
     ): Result<TWorkspaceTemplateRecord> {
         return with(TWorkspaceTemplate.T_WORKSPACE_TEMPLATE) {
             val dsl = dslContext.selectFrom(this)
-            if (wsTemplateId != null ) {
+            if (wsTemplateId != null) {
                 dsl.where(ID.eq(wsTemplateId))
             }
 
             dsl.fetch()
         }
     }
-
 }

@@ -25,29 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.remotedev.dao
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.model.remotedev.tables.TWorkspaceHistory
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceHistoryRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
-@ApiModel("工作空间信息")
-data class Workspace(
-    @ApiModelProperty("工作空间ID")
-    val workspaceId: Long,
-    @ApiModelProperty("工作空间名称")
-    val name: String,
-    @ApiModelProperty("远程开发仓库地址")
-    val repositoryUrl: String,
-    @ApiModelProperty("仓库分支")
-    val branch: String,
-    @ApiModelProperty("devfile配置路径")
-    val devFilePath: String?,
-    @ApiModelProperty("工作空间模板ID")
-    val wsTemplateId: Int?,
-    @ApiModelProperty("工作空间状态")
-    val status: WorkspaceStatus,
-    @ApiModelProperty("最近休眠时间，status为SLEEP有效")
-    val lastSleepTime: Long? = null,
-    @ApiModelProperty("最近启动时间，status为RUNNING生效")
-    val lastStartTime: Long? = null
-)
+@Repository
+class WorkspaceHistoryDao {
+
+    fun createWorkspaceHistory(
+        dslContext: DSLContext,
+        workspaceId: Long,
+        startUserId: String
+    ) {
+        with(TWorkspaceHistory.T_WORKSPACE_HISTORY) {
+            dslContext.insertInto(
+                this,
+                WORKSPACE_ID,
+                STARTER,
+                START_TIME
+            )
+                .values(
+                    workspaceId,
+                    startUserId,
+                    LocalDateTime.now()
+                ).execute()
+        }
+    }
+
+    fun fetchHistory(
+        dslContext: DSLContext,
+        workspaceId: Long
+    ): Result<TWorkspaceHistoryRecord> {
+        with(TWorkspaceHistory.T_WORKSPACE_HISTORY) {
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_ID.eq(workspaceId))
+                .orderBy(CREATED_TIME.desc()).fetch()
+        }
+    }
+}
