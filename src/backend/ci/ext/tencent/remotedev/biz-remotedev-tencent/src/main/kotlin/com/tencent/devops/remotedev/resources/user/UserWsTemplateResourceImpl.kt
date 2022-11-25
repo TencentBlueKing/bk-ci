@@ -32,10 +32,11 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWsTemplateResource
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.WorkspaceTemplateService
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
-class UserWsTemplateResourceImpl constructor(
+class UserWsTemplateResourceImpl @Autowired constructor(
     private val workspaceTemplateService: WorkspaceTemplateService
 
 ) : UserWsTemplateResource {

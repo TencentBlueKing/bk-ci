@@ -31,10 +31,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
-class UserRemoteDevResourceImpl constructor(
+class UserRemoteDevResourceImpl @Autowired constructor(
 
 ) : UserRemoteDevResource {
     override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
