@@ -135,7 +135,28 @@ class WorkspaceService @Autowired constructor(
                 // 创建成功后，更新name
                 workspaceDao.updateWorkspaceName(workspaceId, it, transactionContext)
                 workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.RUNNING, transactionContext)
-                // todo 创建成功就直接running？ 如果是：需要添加history 和 ophistory
+                workspaceHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceId = workspaceId,
+                    startUserId = userId,
+                    lastSleepTimeCost = 0
+                )
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceId = workspaceId,
+                    operator = userId,
+                    action = WorkspaceAction.CREATE,
+                    // todo 内容待确定
+                    actionMessage = ""
+                )
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceId = workspaceId,
+                    operator = userId,
+                    action = WorkspaceAction.START,
+                    // todo 内容待确定
+                    actionMessage = ""
+                )
             }
             // 获取远程登录url
             val workspaceUrl = client.get(ServiceRemoteDevResource::class).getWorkspaceUrl(userId, workspaceName).data
@@ -191,7 +212,10 @@ class WorkspaceService @Autowired constructor(
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
             ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
         val res = kotlin.runCatching {
-            TODO()
+            client.get(ServiceRemoteDevResource::class).stopWorkspace(
+                userId,
+                workspace.name
+            ).data ?: false
         }.getOrElse {
             logger.error("stop workspace error |${it.message}", it)
             false

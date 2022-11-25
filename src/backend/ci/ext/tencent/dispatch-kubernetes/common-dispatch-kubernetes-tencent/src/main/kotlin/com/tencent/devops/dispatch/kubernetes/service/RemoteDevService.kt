@@ -75,6 +75,10 @@ class RemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
+    fun stopWorkspace(userId: String, workspaceName: String): Boolean {
+        TODO("Not yet implemented")
+    }
+
     fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
         TODO("Not yet implemented")
     }

@@ -46,6 +46,10 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
         return Result(remoteDevService.startWorkspace(userId, workspaceName))
     }
 
+    override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(remoteDevService.stopWorkspace(userId, workspaceName))
+    }
+
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(remoteDevService.deleteWorkspace(userId, workspaceName))
     }
@@ -53,5 +57,4 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
     override fun getWorkspaceUrl(userId: String, workspaceName: String): Result<String?> {
         return Result(remoteDevService.getWorkspaceUrl(userId, workspaceName))
     }
-
 }

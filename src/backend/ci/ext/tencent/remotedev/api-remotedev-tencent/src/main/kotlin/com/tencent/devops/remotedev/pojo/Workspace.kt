@@ -32,8 +32,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("工作空间信息")
 data class Workspace(
-    @ApiModelProperty("工作空间ID")
-    val workspaceId: Long,
+    @ApiModelProperty("工作空间ID<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    val workspaceId: Long?,
     @ApiModelProperty("工作空间名称")
     val name: String,
     @ApiModelProperty("远程开发仓库地址")
@@ -44,8 +44,8 @@ data class Workspace(
     val devFilePath: String?,
     @ApiModelProperty("工作空间模板ID")
     val wsTemplateId: Int?,
-    @ApiModelProperty("工作空间状态")
+    @ApiModelProperty("工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     val status: WorkspaceStatus,
-    @ApiModelProperty("状态最近更新时间")
+    @ApiModelProperty("状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     val lastStatusUpdateTime: Long?
 )

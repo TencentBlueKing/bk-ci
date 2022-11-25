@@ -81,7 +81,7 @@ class WorkspaceOpHistoryDao {
         with(TWorkspaceOpHis.T_WORKSPACE_OP_HIS) {
             return dslContext.selectFrom(this)
                 .where(WORKSPACE_ID.eq(workspaceId))
-                .orderBy(CREATED_TIME.desc())
+                .orderBy(CREATED_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset).fetch()
         }
     }

@@ -109,7 +109,7 @@ class WorkspaceDao {
                 return null
             }
             return dslContext.selectFrom(this)
-                .where(condition).orderBy(CREATE_TIME.desc())
+                .where(condition).orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
         }

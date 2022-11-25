@@ -70,7 +70,19 @@ interface ServiceRemoteDevResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间ID", required = false)
+        @ApiParam("工作空间唯一name", required = false)
+        @PathParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @ApiOperation("关闭工作空间")
+    @POST
+    @Path("/workspaces/{workspaceName}/stop")
+    fun stopWorkspace(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("工作空间唯一name", required = false)
         @PathParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
@@ -82,7 +94,7 @@ interface ServiceRemoteDevResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间ID", required = false)
+        @ApiParam("工作空间唯一name", required = false)
         @PathParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
@@ -94,7 +106,7 @@ interface ServiceRemoteDevResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间ID", required = false)
+        @ApiParam("工作空间唯一name", required = false)
         @PathParam("workspaceName")
         workspaceName: String
     ): Result<String?>
