@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.pipeline.record
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
 @ApiModel("构建详情记录-插件任务")
 data class BuildRecordContainer(
@@ -41,23 +42,25 @@ data class BuildRecordContainer(
     @ApiModelProperty("编排版本号", required = true)
     val resourceVersion: Int,
     @ApiModelProperty("步骤ID", required = true)
-    val stageId: Int,
+    val stageId: String,
     @ApiModelProperty("作业容器ID", required = true)
-    val containerId: Int,
-    @ApiModelProperty("作业容器ID序号", required = true)
+    val containerId: String,
+    @ApiModelProperty("作业容器序号", required = true)
     val containerSeq: Int,
     @ApiModelProperty("执行次数", required = true)
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
     val containerVar: Map<String, Any>,
+    @ApiModelProperty("作业容器类型", required = true)
+    val containerType: String,
     @ApiModelProperty("是否为构建矩阵组", required = false)
     val matrixGroupFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵组", required = false)
     val matrixGroupId: String? = null,
     @ApiModelProperty("开始时间", required = false)
-    val startTime: Long?,
+    val startTime: LocalDateTime?,
     @ApiModelProperty("结束时间", required = false)
-    val endTime: Long?,
+    val endTime: LocalDateTime?,
     @ApiModelProperty("业务时间戳集合", required = true)
     val timestamps: List<BuildRecordTimeStamp>
 )

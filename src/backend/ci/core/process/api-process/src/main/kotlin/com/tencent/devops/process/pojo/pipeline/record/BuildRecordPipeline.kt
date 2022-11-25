@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.pipeline.record
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
 @ApiModel("构建详情记录-插件任务")
 data class BuildRecordPipeline(
@@ -53,9 +54,9 @@ data class BuildRecordPipeline(
     @ApiModelProperty("取消人", required = false)
     val cancelUser: String?,
     @ApiModelProperty("开始时间", required = false)
-    val startTime: Long?,
+    val startTime: LocalDateTime?,
     @ApiModelProperty("结束时间", required = false)
-    val endTime: Long?,
+    val endTime: LocalDateTime?,
     @ApiModelProperty("业务时间戳集合", required = true)
-    val timestamps: List<BuildRecordTimeStamp>
+    val timestamps: List<BuildRecordTimeStamp> = emptyList()
 )
