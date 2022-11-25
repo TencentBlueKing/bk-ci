@@ -423,7 +423,8 @@ class OpAtomServiceImpl @Autowired constructor(
                 }
             } else {
                 throw ErrorCodeException(
-                    errorCode = USER_UPLOAD_LOG_FILE_FAIL
+                    errorCode = USER_UPLOAD_LOG_FILE_FAIL,
+                    params = arrayOf(relativePath ?: "")
                 )
             }
         }
