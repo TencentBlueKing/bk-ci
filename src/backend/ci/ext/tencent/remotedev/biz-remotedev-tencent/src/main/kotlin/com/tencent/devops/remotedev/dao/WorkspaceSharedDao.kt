@@ -25,7 +25,6 @@ class WorkspaceSharedDao {
                     workspaceShared.sharedUser
                 ).execute()
         }
-
     }
 
     // 删除工作空间共享记录

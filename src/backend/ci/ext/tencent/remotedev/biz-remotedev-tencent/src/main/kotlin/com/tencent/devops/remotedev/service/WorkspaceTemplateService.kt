@@ -1,21 +1,18 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceTemplateDao
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
-import com.tencent.devops.repository.api.scm.ServiceGitResource
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class WorkspaceTemplateService  @Autowired constructor(
+class WorkspaceTemplateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val workspaceTemplateDao: WorkspaceTemplateDao
@@ -27,8 +24,10 @@ class WorkspaceTemplateService  @Autowired constructor(
 
     // 新增模板
     fun addWorkspaceTemplate(userId: String, workspaceTemplate: WorkspaceTemplate): Boolean {
-        logger.info("WorkspaceTemplateService|addWorkspaceTemplate|userId" +
-            "|${userId}|workspaceTemplate|${workspaceTemplate}")
+        logger.info(
+            "WorkspaceTemplateService|addWorkspaceTemplate|userId" +
+                "|${userId}|workspaceTemplate|${workspaceTemplate}"
+        )
         // 校验 user信息是否存在
         checkCommonUser(userId)
 
@@ -48,8 +47,10 @@ class WorkspaceTemplateService  @Autowired constructor(
         wsTemplateId: Long,
         workspaceTemplate: WorkspaceTemplate
     ): Boolean {
-        logger.info("WorkspaceTemplateService|updateWorkspaceTemplate|userId|${userId}|" +
-            "workspaceTemplateId|${wsTemplateId}|workspaceTemplate|${workspaceTemplate}")
+        logger.info(
+            "WorkspaceTemplateService|updateWorkspaceTemplate|userId|${userId}|" +
+                "workspaceTemplateId|${wsTemplateId}|workspaceTemplate|${workspaceTemplate}"
+        )
         // 校验 user信息是否存在
         checkCommonUser(userId)
 
@@ -87,21 +88,21 @@ class WorkspaceTemplateService  @Autowired constructor(
         logger.info("WorkspaceTemplateService|getWorkspaceTemplateList|userId|${userId}")
         checkCommonUser(userId)
         val result = mutableListOf<WorkspaceTemplate>()
-         workspaceTemplateDao.queryWorkspaceTemplate(
-             wsTemplateId = null,
-             dslContext = dslContext
+        workspaceTemplateDao.queryWorkspaceTemplate(
+            wsTemplateId = null,
+            dslContext = dslContext
         ).forEach {
-             result.add(
-                 WorkspaceTemplate(
-                     wsTemplateId = it.id.toInt(),
-                     image = it.image,
-                     name = it.name,
-                     source = it.source,
-                     logo = it.logo,
-                     description = it.description
-                 )
-             )
-         }
+            result.add(
+                WorkspaceTemplate(
+                    wsTemplateId = it.id.toInt(),
+                    image = it.image,
+                    name = it.name,
+                    source = it.source,
+                    logo = it.logo,
+                    description = it.description
+                )
+            )
+        }
         return result
     }
 
@@ -116,5 +117,4 @@ class WorkspaceTemplateService  @Autowired constructor(
             )
         }
     }
-
 }

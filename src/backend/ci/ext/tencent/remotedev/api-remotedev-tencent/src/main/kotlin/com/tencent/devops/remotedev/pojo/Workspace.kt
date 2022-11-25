@@ -46,6 +46,6 @@ data class Workspace(
     val wsTemplateId: Int?,
     @ApiModelProperty("工作空间状态")
     val status: WorkspaceStatus,
-    @ApiModelProperty("状态最近时间")
+    @ApiModelProperty("状态最近更新时间")
     val lastStatusUpdateTime: Long?
 )

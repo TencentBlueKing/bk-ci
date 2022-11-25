@@ -76,13 +76,14 @@ class WorkspaceService constructor(
         )
 
         val workspaceName = client.get(ServiceRemoteDevResource::class).createWorkspace(
-            userId, WorkspaceReq(
-            workspaceId = workspaceId,
-            name = workspace.name,
-            repositoryUrl = workspace.repositoryUrl,
-            branch = workspace.branch,
-            devFilePath = workspace.devFilePath
-        )
+            userId,
+            WorkspaceReq(
+                workspaceId = workspaceId,
+                name = workspace.name,
+                repositoryUrl = workspace.repositoryUrl,
+                branch = workspace.branch,
+                devFilePath = workspace.devFilePath
+            )
         ).data
 
         workspaceName?.let {
@@ -109,10 +110,6 @@ class WorkspaceService constructor(
         TODO("Not yet implemented")
     }
 
-    fun getWorkspaceList(userId: String): Workspace {
-        TODO("Not yet implemented")
-    }
-
     fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Page<Workspace> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
@@ -123,19 +120,22 @@ class WorkspaceService constructor(
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         ) ?: emptyList()
 
-        return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = result.map {
-            val status = WorkspaceStatus.values()[it.status]
-            Workspace(
-                workspaceId = it.id,
-                name = it.name,
-                repositoryUrl = it.url,
-                branch = it.branch,
-                devFilePath = it.yamlPath,
-                wsTemplateId = it.templateId,
-                status = status,
-                lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp()
-            )
-        })
+        return Page(
+            page = pageNotNull, pageSize = pageSizeNotNull, count = count,
+            records = result.map {
+                val status = WorkspaceStatus.values()[it.status]
+                Workspace(
+                    workspaceId = it.id,
+                    name = it.name,
+                    repositoryUrl = it.url,
+                    branch = it.branch,
+                    devFilePath = it.yamlPath,
+                    wsTemplateId = it.templateId,
+                    status = status,
+                    lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp()
+                )
+            }
+        )
     }
 
     fun getWorkspaceDetail(userId: String, workspaceId: Long): WorkspaceDetail? {
@@ -183,7 +183,10 @@ class WorkspaceService constructor(
     }
 
     fun getWorkspaceTimeline(
-        userId: String, workspaceId: Long, page: Int?, pageSize: Int?
+        userId: String,
+        workspaceId: Long,
+        page: Int?,
+        pageSize: Int?
     ): Page<WorkspaceOpHistory> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
@@ -194,13 +197,16 @@ class WorkspaceService constructor(
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         )
 
-        return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = result.map {
-            WorkspaceOpHistory(
-                createdTime = it.createdTime.timestamp(),
-                operator = it.operator,
-                action = WorkspaceAction.values()[it.action],
-                actionMessage = it.actionMsg
-            )
-        })
+        return Page(
+            page = pageNotNull, pageSize = pageSizeNotNull, count = count,
+            records = result.map {
+                WorkspaceOpHistory(
+                    createdTime = it.createdTime.timestamp(),
+                    operator = it.operator,
+                    action = WorkspaceAction.values()[it.action],
+                    actionMessage = it.actionMsg
+                )
+            }
+        )
     }
 }

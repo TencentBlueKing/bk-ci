@@ -29,7 +29,6 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TWorkspace
-import com.tencent.devops.model.remotedev.tables.TWorkspaceOpHis
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -37,6 +36,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class WorkspaceDao {
@@ -123,6 +123,7 @@ class WorkspaceDao {
             dslContext.update(this)
                 .set(STATUS, status.ordinal)
                 .set(NAME, name)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(workspaceId))
                 .execute()
         }
@@ -170,6 +171,8 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             dslContext.update(this)
                 .set(STATUS, status.ordinal)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(workspaceId))
                 .execute()
         }
