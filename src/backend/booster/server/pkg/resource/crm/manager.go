@@ -24,6 +24,7 @@ import (
 	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
 	"github.com/Tencent/bk-ci/src/booster/server/config"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/manager/normal"
 	rsc "github.com/Tencent/bk-ci/src/booster/server/pkg/resource"
 	op "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator/k8s"
@@ -1105,29 +1106,17 @@ func (hwu *handlerWithUser) Scale(resourceID string, function op.InstanceFilterF
 
 // GetServiceInfo
 func (hwu *handlerWithUser) GetServiceInfo(resourceID string) (*op.ServiceInfo, error) {
-	info, err := hwu.mgr.getServiceInfo(hwu.resourceID(resourceID), hwu.user)
-	if err == ErrorResourceNoExist {
-		return hwu.mgr.getServiceInfo(hwu.oldResourceID(resourceID), hwu.user)
-	}
-	return info, err
+	return hwu.mgr.getServiceInfo(hwu.resourceID(resourceID), hwu.user)
 }
 
 // IsServicePreparing
 func (hwu *handlerWithUser) IsServicePreparing(resourceID string) (bool, error) {
-	prepard, err := hwu.mgr.isServicePreparing(hwu.resourceID(resourceID), hwu.user)
-	if err == ErrorResourceNoExist {
-		return hwu.mgr.isServicePreparing(hwu.oldResourceID(resourceID), hwu.user)
-	}
-	return prepard, err
+	return hwu.mgr.isServicePreparing(hwu.resourceID(resourceID), hwu.user)
 }
 
 // Release
 func (hwu *handlerWithUser) Release(resourceID string) error {
-	err := hwu.mgr.release(hwu.resourceID(resourceID), hwu.user)
-	if err == ErrorResourceNoExist {
-		return hwu.mgr.release(hwu.oldResourceID(resourceID), hwu.user)
-	}
-	return err
+	return hwu.mgr.release(hwu.resourceID(resourceID), hwu.user)
 }
 
 // AddBroker add a broker settings into handler
@@ -1169,11 +1158,10 @@ func (hwu *handlerWithUser) GetNamespace() string {
 }
 
 func (hwu *handlerWithUser) resourceID(id string) string {
+	if normal.IsOldTaskType(id) { //old task Id
+		return strings.ReplaceAll(strings.ToLower(fmt.Sprintf("%s-%s", hwu.user, id)), "_", "-")
+	}
 	return strings.ReplaceAll(strings.ToLower(id), "_", "-")
-}
-
-func (hwu *handlerWithUser) oldResourceID(id string) string {
-	return strings.ReplaceAll(strings.ToLower(fmt.Sprintf("%s-%s", hwu.user, id)), "_", "-")
 }
 
 type resource struct {

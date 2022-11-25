@@ -632,6 +632,15 @@ func generateTaskID(egnName string, projectID string) string {
 		taskIDFormat, egnName, projectID, time.Now().Unix(), strings.ToLower(util.RandomString(taskIDRandomLength)))
 }
 
+//IsOldTaskType check if the task id type is old
+func IsOldTaskType(id string) bool {
+	idx := strings.LastIndex(id, "-")
+	if idx == len(id)-taskIDRandomLength-1 { //old task Id
+		return true
+	}
+	return false
+}
+
 func ip2long(ipStr string) (uint32, error) {
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
