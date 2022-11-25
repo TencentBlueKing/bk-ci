@@ -115,6 +115,10 @@ class ProcessDataClearService @Autowired constructor(
             processDataClearDao.deletePipelineBuildTemplateAcrossInfo(context, projectId, buildId)
             processDataClearDao.deleteBuildWebhookParameter(context, projectId, buildId)
             processDataClearDao.deleteBuildCommits(context, projectId, buildId)
+            processDataClearDao.deleteBuildRecordPipelineByBuildId(context, projectId, buildId)
+            processDataClearDao.deleteBuildRecordStageByBuildId(context, projectId, buildId)
+            processDataClearDao.deleteBuildRecordContainerByBuildId(context, projectId, buildId)
+            processDataClearDao.deleteBuildRecordTaskByBuildId(context, projectId, buildId)
             // 添加删除记录，插入要实现幂等
             processDao.addBuildHisDataClear(
                 dslContext = context,
