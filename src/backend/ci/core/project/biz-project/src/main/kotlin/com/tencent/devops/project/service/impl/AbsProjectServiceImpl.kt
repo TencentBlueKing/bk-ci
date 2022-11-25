@@ -27,14 +27,19 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -45,6 +50,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
@@ -53,6 +59,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -60,7 +67,10 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
@@ -93,7 +103,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService
+    private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
+    private val objectMapper: ObjectMapper
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -130,7 +141,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     logger.warn("Project English Name($name) is not match")
                     throw ErrorCodeException(
                         defaultMessage = MessageCodeUtil.getCodeLanMessage(
-                            ProjectMessageCode.EN_NAME_COMBINATION_ERROR),
+                            ProjectMessageCode.EN_NAME_COMBINATION_ERROR
+                        ),
                         errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR
                     )
                 }
@@ -160,46 +172,62 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
             validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
         }
-
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
+        val subjectScopes = projectCreateInfo.subjectScopes!!
+        val needApproval = createExtInfo.needApproval
+        logger.info("create project : subjectScopes = $subjectScopes")
         try {
             if (createExtInfo.needAuth!!) {
-                // 注册项目到权限中心
-                projectId = projectPermissionService.createResources(
+                val resourceCreateInfo = ResourceCreateInfo(
                     userId = userId,
                     accessToken = accessToken,
+                    userDeptDetail = userDeptDetail,
+                    iamSubjectScopes = subjectScopes,
+                    projectCreateInfo = projectCreateInfo,
+                    needApproval = needApproval
+                )
+                // 注册项目到权限中心
+                projectId = projectPermissionService.createResources(
                     resourceRegisterInfo = ResourceRegisterInfo(
                         resourceCode = projectCreateInfo.englishName,
                         resourceName = projectCreateInfo.projectName
                     ),
-                    userDeptDetail = userDeptDetail
+                    resourceCreateInfo = resourceCreateInfo
                 )
             }
         } catch (e: PermissionForbiddenException) {
             throw e
         } catch (e: Exception) {
-            logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
+            logger.warn("Failed to create project in permission center： $projectCreateInfo", e)
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
         }
         if (projectId.isNullOrEmpty()) {
             projectId = UUIDUtil.generate()
         }
-
         try {
             dslContext.transaction { configuration ->
-                val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
                 val context = DSL.using(configuration)
+                if (subjectScopes.isEmpty()) {
+                    subjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
+                }
+                val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
+                val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
+                // 上传logo
+                val logo = projectCreateInfo.logo
+                val logoAddress = getLogoAddress(userId, logo, projectCreateInfo.englishName)
                 projectDao.create(
                     dslContext = context,
                     userId = userId,
-                    logoAddress = "",
+                    logoAddress = logoAddress,
                     projectCreateInfo = projectInfo,
                     userDeptDetail = userDeptDetail,
                     projectId = projectId,
-                    channelCode = projectChannel
+                    channelCode = projectChannel,
+                    needApproval = needApproval,
+                    subjectScopesStr = subjectScopesStr,
+                    authSecrecy = projectCreateInfo.authSecrecy
                 )
-
                 try {
                     createExtProjectInfo(
                         userId = userId,
@@ -208,17 +236,27 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         projectCreateInfo = projectInfo,
                         createExtInfo = createExtInfo
                     )
+                    // 修改bcs的logo
+                    if (logo != null) {
+                        projectDispatcher.dispatch(
+                            ProjectUpdateLogoBroadCastEvent(
+                                userId = userId,
+                                projectId = projectId,
+                                logoAddr = logoAddress!!
+                            )
+                        )
+                    }
+                    // 为项目分配数据源
+                    shardingRoutingRuleAssignService.assignShardingRoutingRule(
+                        channelCode = projectChannel,
+                        routingName = projectCreateInfo.englishName,
+                        moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
+                    )
                 } catch (e: Exception) {
                     logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
                     projectDao.delete(dslContext, projectId)
                     throw e
                 }
-                // 为项目分配数据源
-                shardingRoutingRuleAssignService.assignShardingRoutingRule(
-                    channelCode = projectChannel,
-                    routingName = projectCreateInfo.englishName,
-                    moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
-                )
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
@@ -226,6 +264,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: DuplicateKeyException) {
             logger.warn("Duplicate project $projectCreateInfo", e)
             if (createExtInfo.needAuth) {
+                // todo 待确定，切换v3-RBAC后，是否需要做其他操作
                 deleteAuth(projectId, accessToken)
             }
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
@@ -290,7 +329,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userId: String,
         englishName: String,
         projectUpdateInfo: ProjectUpdateInfo,
-        accessToken: String?
+        accessToken: String?,
+        needApproval: Boolean?
     ): Boolean {
         validate(
             validateType = ProjectValidateType.project_name,
@@ -299,41 +339,99 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         val startEpoch = System.currentTimeMillis()
         var success = false
+        val subjectScopes = projectUpdateInfo.subjectScopes!!
         validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
+        logger.info(
+            "update project : $userId | $englishName | $projectUpdateInfo | " +
+                "$needApproval | $subjectScopes"
+        )
         try {
-            updateInfoReplace(projectUpdateInfo)
             try {
+                val projectInfo = projectDao.getByEnglishName(
+                    dslContext = dslContext,
+                    englishName = englishName
+                ) ?: throw NotFoundException("project - $englishName is not exist!")
+                val projectId = projectInfo.projectId
+                val logo = projectUpdateInfo.logo
+                val logoAddress = getLogoAddress(userId, logo, englishName)
+                val resourceUpdateInfo = ResourceUpdateInfo(
+                    userId = userId,
+                    projectUpdateInfo = projectUpdateInfo,
+                    needApproval = needApproval!!,
+                    iamSubjectScopes = subjectScopes
+                )
+                try {
+                    modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
+                } catch (e: Exception) {
+                    logger.warn(
+                        "Error modifying project information in permission center：" +
+                            "$resourceUpdateInfo", e
+                    )
+                    throw OperationException(
+                        MessageCodeUtil.getCodeLanMessage(
+                            messageCode = ProjectMessageCode.PEM_UPDATE_FAIL,
+                            defaultMessage = "Error modifying project information in permission center:$e"
+                        )
+                    )
+                }
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    val projectId = projectDao.getByEnglishName(
-                        dslContext = dslContext,
-                        englishName = englishName
-                    )?.projectId ?: throw NotFoundException("项目 -$englishName 不存在")
+                    // 修改时，若传递的可授权人员范围为空，则直接用全公司
+                    if (subjectScopes.isEmpty()) {
+                        subjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
+                    }
+                    val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
+                    logger.info("subjectScopesStr : $subjectScopesStr")
                     projectDao.update(
                         dslContext = context,
                         userId = userId,
                         projectId = projectId,
-                        projectUpdateInfo = projectUpdateInfo
+                        projectUpdateInfo = projectUpdateInfo,
+                        subjectScopesStr = subjectScopesStr,
+                        needApproval = needApproval,
+                        logoAddress = logoAddress,
+                        authSecrecy = projectUpdateInfo.authSecrecy
                     )
-                    modifyProjectAuthResource(
-                        projectUpdateInfo.englishName,
-                        projectUpdateInfo.projectName
+                    projectDispatcher.dispatch(
+                        ProjectUpdateBroadCastEvent(
+                            userId = userId,
+                            projectId = projectId,
+                            projectInfo = projectUpdateInfo
+                        )
                     )
-                    if (!projectUpdateInfo.secrecy) {
-                        redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
-                    } else {
-                        redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
+                    if (logo != null) {
+                        logger.info("logoAddress : $logoAddress")
+                        projectDispatcher.dispatch(
+                            ProjectUpdateLogoBroadCastEvent(
+                                userId = userId,
+                                projectId = projectId,
+                                logoAddr = logoAddress!!
+                            )
+                        )
                     }
-                    projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
-                        userId = userId,
-                        projectId = projectId,
-                        projectInfo = projectUpdateInfo
-                    ))
+                }
+                if (!projectUpdateInfo.secrecy) {
+                    redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
+                } else {
+                    redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
                 }
                 success = true
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+                throw OperationException(
+                    MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProjectMessageCode.PROJECT_NAME_EXIST,
+                        defaultMessage = "project name exist : $e "
+                    )
+                )
+            } catch (e: Exception) {
+                logger.warn("update project failed :$projectUpdateInfo", e)
+                throw OperationException(
+                    MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProjectMessageCode.PROJECT_UPDATE_FAIL,
+                        defaultMessage = "update project failed: $e "
+                    )
+                )
             }
         } finally {
             projectJmxApi.execute(ProjectJmxApi.PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
@@ -344,31 +442,80 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 获取所有项目信息
      */
-    override fun list(userId: String, accessToken: String?, enabled: Boolean?): List<ProjectVO> {
+    override fun list(
+        userId: String,
+        accessToken: String?,
+        enabled: Boolean?,
+        approved: Boolean?
+    ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-
             val projects = getProjectFromAuth(userId, accessToken)
-            if (projects.isEmpty()) {
+            if (projects.isEmpty() && approved!!) {
                 return emptyList()
             }
             val list = ArrayList<ProjectVO>()
-            projectDao.listByEnglishName(
-                dslContext = dslContext,
-                englishNameList = projects,
-                offset = null,
-                limit = null,
-                searchName = null,
-                enabled = enabled
-            ).map {
-                list.add(ProjectUtils.packagingBean(it))
+            if (projects.isNotEmpty()) {
+                projectDao.listByEnglishName(
+                    dslContext = dslContext,
+                    englishNameList = projects,
+                    offset = null,
+                    limit = null,
+                    searchName = null,
+                    enabled = enabled
+                ).map {
+                    list.add(ProjectUtils.packagingBean(it))
+                }
+            }
+            // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
+            if (!approved!!) {
+                projectDao.listUnapprovedByUserId(
+                    dslContext = dslContext,
+                    userId = userId
+                )?.map { list.add(ProjectUtils.packagingBean(it)) }
             }
             success = true
             return list
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
+    override fun listProjectsWithoutPermissions(
+        userId: String,
+        accessToken: String?,
+        projectName: String?,
+        page: Int,
+        pageSize: Int
+    ): Pagination<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val iamProjects = getProjectFromAuth(userId, accessToken)
+            val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+            val list = ArrayList<ProjectVO>()
+            projectDao.listProjectsWithoutPermissions(
+                dslContext = dslContext,
+                projectName = projectName,
+                projects = iamProjects,
+                offset = sqlLimit.offset,
+                limit = sqlLimit.limit
+            )?.map {
+                list.add(ProjectUtils.packagingBean(it))
+            } ?: emptyList()
+            if (list.isEmpty()) {
+                return Pagination(false, emptyList())
+            }
+            success = true
+            return Pagination(
+                hasNext = list.size == pageSize,
+                records = list
+            )
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects without permissions")
         }
     }
 
@@ -559,11 +706,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     projectDao.updateLogoAddress(context, userId, projectRecord.projectId, logoAddress)
-                    projectDispatcher.dispatch(ProjectUpdateLogoBroadCastEvent(
-                        userId = userId,
-                        projectId = projectRecord.projectId,
-                        logoAddr = logoAddress
-                    ))
+                    projectDispatcher.dispatch(
+                        ProjectUpdateLogoBroadCastEvent(
+                            userId = userId,
+                            projectId = projectRecord.projectId,
+                            logoAddr = logoAddress
+                        )
+                    )
                 }
                 return Result(ProjectLogo(logoAddress))
             } catch (e: Exception) {
@@ -691,13 +840,79 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun relationIamProject(projectCode: String, relationId: String): Boolean {
-        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw InvalidParamException("项目不存在")
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode)
+            ?: throw InvalidParamException("项目不存在")
         val currentRelationId = projectInfo.relationId
         if (!currentRelationId.isNullOrEmpty()) {
             throw InvalidParamException("$projectCode 已绑定IAM分级管理员")
         }
         val updateCount = projectDao.updateRelationByCode(dslContext, projectCode, relationId)
         return updateCount > 0
+    }
+
+    override fun cancelCreateProject(userId: String, projectId: String): Boolean {
+        var success = false
+        val projectInfo = projectDao.get(dslContext, projectId) ?: throw InvalidParamException("项目不存在")
+        val status = projectInfo.approvalStatus
+        if (status != ApproveStatus.CREATE_PENDING.status
+            || status != ApproveStatus.CREATE_REJECT.status) {
+            logger.warn(
+                "The project can't be cancel！ : ${projectInfo.englishName}"
+            )
+            throw OperationException(
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                    defaultMessage = "The project can be canceled only it under approval or " +
+                        "rejected during creation！| EnglishName=${projectInfo.englishName}"
+                )
+            )
+        }
+        try {
+            val isIamCancelSuccess = cancelCreateAuthProject(
+                status = projectInfo.approvalStatus,
+                projectCode = projectInfo.englishName
+            )
+            if (isIamCancelSuccess) {
+                projectDao.delete(
+                    dslContext = dslContext,
+                    projectId = projectId
+                )
+            }
+            success = true
+        } catch (e: Exception) {
+            logger.warn("The project cancel creation failed ： ${projectInfo.englishName}", e)
+            throw OperationException(
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                    defaultMessage = "The project cancel creation failed ： ${projectInfo.englishName}"
+                )
+            )
+        }
+        return success
+    }
+
+    override fun applyToJoinProject(userId: String, applicationInfo: ApplicationInfo): Boolean {
+        var success = false
+        val projectInfo = projectDao.get(dslContext, applicationInfo.projectId)
+            ?: throw InvalidParamException("project is not exist!|$applicationInfo.projectId")
+        val gradeManagerId = projectInfo.relationId
+        try {
+            createRoleGroupApplication(
+                userId = userId,
+                applicationInfo = applicationInfo,
+                gradeManagerId = gradeManagerId
+            )
+            success = true
+        } catch (e: Exception) {
+            logger.warn("Apply to join project failed ：${projectInfo.englishName}|$applicationInfo")
+            throw OperationException(
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.APPLY_TO_JOIN_PROJECT_FAIL,
+                    defaultMessage = "Apply to join project failed  ： ${projectInfo.englishName}|$applicationInfo"
+                )
+            )
+        }
+        return success
     }
 
     override fun getProjectByName(projectName: String): ProjectVO? {
@@ -738,11 +953,47 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userDeptDetail: UserDeptDetail
     ): ProjectCreateInfo
 
-    abstract fun modifyProjectAuthResource(projectCode: String, projectName: String)
+    abstract fun modifyProjectAuthResource(
+        projectInfo: TProjectRecord,
+        resourceUpdateInfo: ResourceUpdateInfo
+    )
+
+    abstract fun cancelCreateAuthProject(
+        status: Int,
+        projectCode: String
+    ): Boolean
+
+    abstract fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
+    ): Boolean
+
+    private fun getLogoAddress(
+        userId: String,
+        logo: InputStream?,
+        englishName: String
+    ): String? {
+        var logoFile: File? = null
+        var logoAddress: String? = null
+        if (logo != null) {
+            try {
+                logoFile = FileUtil.convertTempFile(logo)
+                logoAddress = saveLogoAddress(userId, englishName, logoFile)
+            } catch (e: Exception) {
+                logger.warn("fail update projectLogo", e)
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
+            } finally {
+                logoFile?.delete()
+            }
+        }
+        return logoAddress
+    }
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
+        private const val ALL_MEMBERS = "*"
     }
 }

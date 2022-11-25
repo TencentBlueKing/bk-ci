@@ -27,6 +27,8 @@
 
 package com.tencent.devops.project.util
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
@@ -94,7 +96,11 @@ object ProjectUtils {
             relationId = tProjectRecord.relationId,
             properties = tProjectRecord.properties?.let { self ->
                 JsonUtil.to(self, ProjectProperties::class.java)
-            }
+            },
+            subjectScopes = tProjectRecord.subjectscopes?.let {
+                JsonUtil.to(it, object : TypeReference<ArrayList<ManagerScopes>>() {})
+            },
+            authSecrecy = tProjectRecord.isAuthSecrecy
         )
     }
 }

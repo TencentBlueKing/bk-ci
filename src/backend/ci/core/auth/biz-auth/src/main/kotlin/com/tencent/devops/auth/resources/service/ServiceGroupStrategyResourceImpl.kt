@@ -23,19 +23,22 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
-package com.tencent.devops.project.listener
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
-@Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
-data class TxIamV3CreateEvent(
-    override val userId: String,
-    override val projectId: String,
-    override var retryCount: Int = 0,
-    override var delayMills: Int = 0,
-    val resourceRegisterInfo: ResourceRegisterInfo,
-    var iamProjectId: String?
-) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)
+
+package com.tencent.devops.auth.resources.service
+
+import com.tencent.devops.auth.api.service.ServiceGroupStrategyResource
+import com.tencent.devops.auth.pojo.StrategyEntity
+import com.tencent.devops.auth.service.LocalManagerService
+import com.tencent.devops.auth.service.StrategyService
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceGroupStrategyResourceImpl @Autowired constructor(
+    private val strategyService: StrategyService
+) : ServiceGroupStrategyResource {
+    override fun getGroupStrategy(): List<StrategyEntity> {
+        return strategyService.listStrategy()
+    }
+}

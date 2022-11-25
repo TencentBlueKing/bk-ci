@@ -36,9 +36,12 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.pojo.ApplicationInfo
+import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,13 +66,11 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
 
     // 创建项目
     override fun createResources(
-        userId: String,
-        accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        resourceCreateInfo: ResourceCreateInfo
     ): String {
         val validateCreatePermission = authPermissionApi.validateUserResourcePermission(
-            user = userId,
+            user = resourceCreateInfo.userId,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = "",
@@ -81,7 +82,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
             )
         }
         authResourceApi.createResource(
-            user = userId,
+            user = resourceCreateInfo.userId,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = resourceRegisterInfo.resourceCode,
@@ -95,7 +96,10 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         return
     }
 
-    override fun modifyResource(projectCode: String, projectName: String) {
+    override fun modifyResource(
+        projectInfo: TProjectRecord,
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
         return
     }
 
@@ -137,13 +141,25 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         permission: AuthPermission
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = projectAuthServiceCode,
-                resourceType = projectResourceType,
-                resourceCode = projectCode,
-                projectCode = projectCode,
-                permission = permission
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = projectResourceType,
+            resourceCode = projectCode,
+            projectCode = projectCode,
+            permission = permission
         )
+    }
+
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return true
+    }
+
+    override fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
+    ): Boolean {
+        return true
     }
 
     companion object {

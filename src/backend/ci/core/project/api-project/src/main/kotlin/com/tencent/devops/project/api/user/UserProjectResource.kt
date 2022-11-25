@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -73,8 +75,32 @@ interface UserProjectResource {
         accessToken: String?,
         @ApiParam("是否启用", required = false)
         @QueryParam("enabled")
-        enabled: Boolean?
+        enabled: Boolean?,
+        @ApiParam("是否拉取未审批通过的项目，若为false，会拉取审批[未通过+通过]的项目", required = false)
+        @QueryParam("approved")
+        approved: Boolean? = true
     ): Result<List<ProjectVO>>
+
+    @GET
+    @Path("/listProjectsWithoutPermissions/{english_name}")
+    @ApiOperation("查询无权限的项目")
+    fun listProjectsWithoutPermissions(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?,
+        @ApiParam("项目名", required = false)
+        @QueryParam("projectName")
+        projectName: String? = null,
+        @ApiParam("页目", required = false)
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("每页数目", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Pagination<ProjectVO>>
 
     @GET
     @Path("/{english_name}")
@@ -213,5 +239,28 @@ interface UserProjectResource {
         @ApiParam("权限action", required = true)
         @PathParam("permission")
         permission: AuthPermission
+    ): Result<Boolean>
+
+    @ApiOperation("取消创建项目")
+    @Path("/cancelCreateProject/{project_id}")
+    @PUT
+    fun cancelCreateProject(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("project_id")
+        projectId: String
+    ): Result<Boolean>
+
+    @ApiOperation("申请加入项目")
+    @Path("/applyToJoinProject/{project_id}")
+    @POST
+    fun applyToJoinProject(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("申请加入项目实体类", required = true)
+        applicationInfo: ApplicationInfo
     ): Result<Boolean>
 }

@@ -35,7 +35,10 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.GLOBAL_SCOPE_TYPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.ApplicationInfo
+import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -62,6 +65,18 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return true
+    }
+
+    override fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
+    ): Boolean {
+        return true
+    }
+
     override fun getUserProjects(userId: String): List<String> {
         return authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,
@@ -70,14 +85,17 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun modifyResource(projectCode: String, projectName: String) {
+    override fun modifyResource(
+        projectInfo: TProjectRecord,
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
         authResourceApi.modifyResource(
             scopeType = GLOBAL_SCOPE_TYPE,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = BK_DEVOPS_SCOPE,
-            resourceCode = projectCode,
-            resourceName = projectName
+            resourceCode = resourceUpdateInfo.projectUpdateInfo.englishName,
+            resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
         )
     }
 
@@ -92,10 +110,8 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun createResources(
-        userId: String,
-        accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        resourceCreateInfo: ResourceCreateInfo
     ): String {
         val projectList = mutableListOf<ResourceRegisterInfo>()
         projectList.add(resourceRegisterInfo)
@@ -105,7 +121,7 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
             systemId = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             resourceList = projectList,
-            principalId = userId
+            principalId = resourceCreateInfo.userId
         )
         return ""
     }

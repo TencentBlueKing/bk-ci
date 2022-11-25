@@ -23,19 +23,28 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
-package com.tencent.devops.project.listener
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
-@Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
-data class TxIamV3CreateEvent(
-    override val userId: String,
-    override val projectId: String,
-    override var retryCount: Int = 0,
-    override var delayMills: Int = 0,
-    val resourceRegisterInfo: ResourceRegisterInfo,
-    var iamProjectId: String?
-) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)
+
+package com.tencent.devops.auth.api.service
+
+import com.tencent.devops.auth.pojo.StrategyEntity
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["AUTH_GROUP_STRATEGY"], description = "权限-用户-策略")
+@Path("/service/auth/strategy")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceGroupStrategyResource {
+    @GET
+    @Path("/getGroupStrategy")
+    @ApiOperation("获取组策略")
+    fun getGroupStrategy(): List<StrategyEntity>
+}

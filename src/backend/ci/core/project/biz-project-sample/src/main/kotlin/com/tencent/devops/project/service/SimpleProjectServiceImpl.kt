@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
@@ -39,14 +40,17 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
 import org.jooq.DSLContext
@@ -57,7 +61,7 @@ import java.io.File
 
 @Suppress("ALL", "UNUSED")
 @Service
-class SimpleProjectServiceImpl @Autowired constructor(
+abstract class SimpleProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
     dslContext: DSLContext,
     projectDao: ProjectDao,
@@ -67,7 +71,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectDispatcher: ProjectDispatcher,
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
-    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService
+    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
+    objectMapper: ObjectMapper
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -78,7 +83,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectDispatcher = projectDispatcher,
     authPermissionApi = authPermissionApi,
     projectAuthServiceCode = projectAuthServiceCode,
-    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService
+    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
+    objectMapper = objectMapper
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -147,11 +153,26 @@ class SimpleProjectServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
+    override fun modifyProjectAuthResource(
+        projectInfo: TProjectRecord,
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
         projectPermissionService.modifyResource(
-            projectCode = projectCode,
-            projectName = projectName
+            projectInfo = projectInfo,
+            resourceUpdateInfo = resourceUpdateInfo
         )
+    }
+
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return projectPermissionService.cancelCreateAuthProject(status, projectCode)
+    }
+
+    override fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
+    ): Boolean {
+        return projectPermissionService.createRoleGroupApplication(userId, applicationInfo, gradeManagerId)
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {

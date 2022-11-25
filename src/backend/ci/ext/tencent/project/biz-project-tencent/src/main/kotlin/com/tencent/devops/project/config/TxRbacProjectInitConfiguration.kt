@@ -35,13 +35,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
-import com.tencent.devops.project.service.iam.IamV3Service
 import com.tencent.devops.project.service.impl.TxRbacProjectPermissionServiceImpl
-import com.tencent.devops.project.service.impl.V3ProjectExtPermissionServiceImpl
-import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -52,24 +48,9 @@ import org.springframework.core.Ordered
 
 @Configuration
 @ConditionalOnWebApplication
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class TxV3ProjectInitConfiguration {
-
-/*    @Bean
-    fun projectPermissionService(
-        objectMapper: ObjectMapper,
-        bkAuthProperties: BkAuthProperties,
-        projectDispatcher: ProjectDispatcher,
-        client: Client,
-        tokenService: ClientTokenService
-    ): ProjectPermissionService = TxV3ProjectPermissionServiceImpl(
-        objectMapper = objectMapper,
-        authProperties = bkAuthProperties,
-        projectDispatcher = projectDispatcher,
-        client = client,
-        tokenService = tokenService
-    )*/
+class TxRbacProjectInitConfiguration {
     @Bean
     fun projectPermissionService(
         objectMapper: ObjectMapper,
@@ -93,35 +74,5 @@ class TxV3ProjectInitConfiguration {
         projectApprovalCallbackDao = projectApprovalCallbackDao,
         dslContext = dslContext,
         projectDao = projectDao
-    )
-
-    @Bean
-    fun iamV3Service(
-        iamManagerService: com.tencent.bk.sdk.iam.service.ManagerService,
-        iamConfiguration: IamConfiguration,
-        projectDao: ProjectDao,
-        dslContext: DSLContext,
-        projectDispatcher: ProjectDispatcher,
-        client: Client,
-        userDao: UserDao
-    ) = IamV3Service(
-        iamManagerService = iamManagerService,
-        iamConfiguration = iamConfiguration,
-        projectDao = projectDao,
-        dslContext = dslContext,
-        projectDispatcher = projectDispatcher,
-        client = client,
-        userDao = userDao
-    )
-
-    @Bean
-    fun v3ProjectExtPermissionServiceImpl(
-        client: Client,
-        tokenService: ClientTokenService,
-        projectDao: ProjectDao,
-        dslContext: DSLContext,
-        tofService: TOFService
-    ) = V3ProjectExtPermissionServiceImpl(
-        client, tokenService, projectDao, dslContext, tofService
     )
 }

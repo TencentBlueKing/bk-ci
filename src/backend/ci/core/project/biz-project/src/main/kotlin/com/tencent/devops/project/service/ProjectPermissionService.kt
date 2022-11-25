@@ -29,7 +29,10 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.ApplicationInfo
+import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 
 interface ProjectPermissionService {
 
@@ -40,15 +43,16 @@ interface ProjectPermissionService {
     fun verifyUserProjectPermission(accessToken: String? = null, projectCode: String, userId: String): Boolean
 
     fun createResources(
-        userId: String,
-        accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        resourceCreateInfo: ResourceCreateInfo
     ): String
 
     fun deleteResource(projectCode: String)
 
-    fun modifyResource(projectCode: String, projectName: String)
+    fun modifyResource(
+        projectInfo: TProjectRecord,
+        resourceUpdateInfo: ResourceUpdateInfo
+    )
 
     fun getUserProjects(userId: String): List<String>
 
@@ -59,5 +63,16 @@ interface ProjectPermissionService {
         projectCode: String,
         userId: String,
         permission: AuthPermission
+    ): Boolean
+
+    fun cancelCreateAuthProject(
+        status: Int,
+        projectCode: String
+    ): Boolean
+
+    fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
     ): Boolean
 }

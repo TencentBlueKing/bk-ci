@@ -80,7 +80,10 @@ class ProjectDao {
 
     fun listProjectCodes(dslContext: DSLContext): List<String> {
         return with(TProject.T_PROJECT) {
-            dslContext.select(ENGLISH_NAME).from(this).fetch(ENGLISH_NAME, String::class.java)
+            dslContext.select(ENGLISH_NAME)
+                .from(this)
+                .where(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
+                .fetch(ENGLISH_NAME, String::class.java)
         }
     }
 
@@ -88,6 +91,7 @@ class ProjectDao {
         return with(TProject.T_PROJECT) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.`in`(projectIdList))
+            conditions.add(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
             if (enabled != null) {
                 conditions.add(ENABLED.eq(enabled))
             }
@@ -97,13 +101,19 @@ class ProjectDao {
 
     fun getAllProject(dslContext: DSLContext): Result<TProjectRecord> {
         return with(TProject.T_PROJECT) {
-            dslContext.selectFrom(this).fetch()
+            dslContext.selectFrom(this)
+                .where(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
+                .and(IS_AUTH_SECRECY.eq(false))
+                .fetch()
         }
     }
 
     fun list(dslContext: DSLContext, limit: Int, offset: Int): Result<TProjectRecord> {
         return with(TProject.T_PROJECT) {
-            dslContext.selectFrom(this).where(ENABLED.eq(true)).limit(limit).offset(offset).fetch()
+            dslContext.selectFrom(this)
+                .where(ENABLED.eq(true))
+                .and(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
+                .limit(limit).offset(offset).fetch()
         }
     }
 
@@ -114,14 +124,20 @@ class ProjectDao {
         channelCode: ProjectChannelCode
     ): Result<TProjectRecord> {
         return with(TProject.T_PROJECT) {
-            dslContext.selectFrom(this).where(ENABLED.eq(true).and(CHANNEL.eq(channelCode.name)))
+            dslContext.selectFrom(this)
+                .where(ENABLED.eq(true).and(CHANNEL.eq(channelCode.name)))
+                .and(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
+                .and(IS_AUTH_SECRECY.eq(false))
                 .limit(limit).offset(offset).fetch()
         }
     }
 
     fun getCount(dslContext: DSLContext): Long {
         return with(TProject.T_PROJECT) {
-            dslContext.selectCount().from(this).where(ENABLED.eq(true)).fetchOne(0, Long::class.java)!!
+            dslContext.selectCount().from(this).where(ENABLED.eq(true))
+                .and(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
+                .and(IS_AUTH_SECRECY.eq(false))
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -131,6 +147,7 @@ class ProjectDao {
     fun listByCodes(dslContext: DSLContext, projectCodeList: Set<String>, enabled: Boolean?): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this).where(ENGLISH_NAME.`in`(projectCodeList))
+                .and(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
                 .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
                 .limit(10000).fetch() // 硬限制10000保护
         }
@@ -157,16 +174,15 @@ class ProjectDao {
     ): Result<TProjectRecord>? {
         with(TProject.T_PROJECT) {
             val conditions = mutableListOf<Condition>()
-
             bgId?.let { conditions.add(BG_ID.eq(bgId)) }
             deptId?.let { conditions.add(DEPT_ID.eq(deptId)) }
             centerId?.let { conditions.add(CENTER_ID.eq(centerId)) }
-
             if (!bgName.isNullOrBlank()) conditions.add(BG_NAME.like("%${URLDecoder.decode(bgName, "UTF-8")}%"))
             if (!deptName.isNullOrBlank()) conditions.add(DEPT_NAME.like("%${URLDecoder.decode(deptName, "UTF-8")}%"))
             if (!centerName.isNullOrBlank()) {
                 conditions.add(CENTER_NAME.like("%${URLDecoder.decode(centerName, "UTF-8")}%"))
             }
+            conditions.add(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
             enabled?.let { conditions.add(ENABLED.eq(enabled)) }
             return dslContext.selectFrom(this).where(conditions).fetch()
         }
@@ -246,7 +262,7 @@ class ProjectDao {
                     paasProject.remark,
                     paasProject.updated_at?.time,
                     paasProject.use_bk,
-                    ApproveStatus.APPROVED.status,
+                    ApproveStatus.CREATE_APPROVED.status,
                     true
                 )
                 .execute()
@@ -262,11 +278,14 @@ class ProjectDao {
     fun create(
         dslContext: DSLContext,
         userId: String,
-        logoAddress: String,
+        logoAddress: String?,
         projectCreateInfo: ProjectCreateInfo,
         userDeptDetail: UserDeptDetail,
         projectId: String,
-        channelCode: ProjectChannelCode? = ProjectChannelCode.BS
+        channelCode: ProjectChannelCode? = ProjectChannelCode.BS,
+        needApproval: Boolean? = false,
+        subjectScopesStr: String,
+        authSecrecy: Boolean?
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
@@ -293,7 +312,9 @@ class ProjectDao {
                 CREATOR_CENTER_NAME,
                 CHANNEL,
                 ENABLED,
-                PROPERTIES
+                PROPERTIES,
+                SUBJECTSCOPES,
+                IS_AUTH_SECRECY
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -310,8 +331,8 @@ class ProjectDao {
                 userId,
                 LocalDateTime.now(),
                 projectCreateInfo.projectType,
-                ApproveStatus.APPROVED.status,
-                logoAddress,
+                ApproveStatus.CREATE_APPROVED.status,
+                logoAddress ?: "",
                 userDeptDetail.bgName,
                 userDeptDetail.deptName,
                 userDeptDetail.centerName,
@@ -319,12 +340,23 @@ class ProjectDao {
                 true,
                 projectCreateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
-                }
+                },
+                subjectScopesStr,
+                authSecrecy ?: false
             ).execute()
         }
     }
 
-    fun update(dslContext: DSLContext, userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Int {
+    fun update(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        projectUpdateInfo: ProjectUpdateInfo,
+        subjectScopesStr: String,
+        needApproval: Boolean,
+        logoAddress: String?,
+        authSecrecy: Boolean?
+    ): Int {
         with(TProject.T_PROJECT) {
             val update = dslContext.update(this)
                 .set(PROJECT_NAME, projectUpdateInfo.projectName)
@@ -338,6 +370,11 @@ class ProjectDao {
                 .set(ENGLISH_NAME, projectUpdateInfo.englishName)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
+            if (!needApproval) {
+                update.set(SUBJECTSCOPES, subjectScopesStr)
+                authSecrecy?.let { update.set(IS_AUTH_SECRECY, authSecrecy) }
+            }
+            logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
             return update.where(PROJECT_ID.eq(projectId)).execute()
         }
@@ -347,6 +384,23 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
                 .set(PROJECT_NAME, projectName)
+                .where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun updateProjectByEnglishName(
+        dslContext: DSLContext,
+        subjectScopesStr: String,
+        authSecrecy: Boolean,
+        projectCode: String,
+        statusEnum: ApproveStatus
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(SUBJECTSCOPES, subjectScopesStr)
+                .set(IS_AUTH_SECRECY, authSecrecy)
+                .set(APPROVAL_STATUS, statusEnum.status)
                 .where(ENGLISH_NAME.eq(projectCode))
                 .execute()
         }
@@ -447,12 +501,57 @@ class ProjectDao {
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
-                .where(APPROVAL_STATUS.eq(2))
+                .where(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
                 .and(ENGLISH_NAME.`in`(englishNameList))
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
                 .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
                 .let { if (null == offset || null == limit) it else it.limit(offset, limit) }
+                .fetch()
+        }
+    }
+
+    // 拉取用户未审核通过的项目，即未在iam注册的项目
+    fun listUnapprovedByUserId(
+        dslContext: DSLContext,
+        userId: String
+    ): Result<TProjectRecord>? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(
+                    APPROVAL_STATUS.`in`(
+                        listOf(
+                            ApproveStatus.CREATE_REJECT.status,
+                            ApproveStatus.CREATE_PENDING.status
+                        )
+                    )
+                ).and(CREATOR.eq(userId))
+                .fetch()
+        }
+    }
+
+    fun listProjectsWithoutPermissions(
+        dslContext: DSLContext,
+        projectName: String?,
+        projects: List<String>?,
+        offset: Int,
+        limit: Int
+    ): Result<TProjectRecord>? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(
+                    APPROVAL_STATUS.notIn(
+                        listOf(
+                            ApproveStatus.CREATE_REJECT.status,
+                            ApproveStatus.CREATE_PENDING.status
+                        )
+                    )
+                )
+                .and(IS_AUTH_SECRECY.eq(false))
+                .let { if (projects.isNullOrEmpty()) it else it.and(ENGLISH_NAME.notIn(projects)) }
+                .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%$projectName%")) }
+                .limit(limit)
+                .offset(offset)
                 .fetch()
         }
     }
@@ -531,7 +630,7 @@ class ProjectDao {
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
-                .where(APPROVAL_STATUS.eq(2))
+                .where(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
                 .and(ENGLISH_NAME.`in`(englishNameList))
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
@@ -541,13 +640,17 @@ class ProjectDao {
 
     fun getMinId(dslContext: DSLContext): Long {
         with(TProject.T_PROJECT) {
-            return dslContext.select(DSL.min(ID)).from(this).fetchOne(0, Long::class.java)!!
+            return dslContext.select(DSL.min(ID)).from(this)
+                .where(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
     fun getMaxId(dslContext: DSLContext): Long {
         with(TProject.T_PROJECT) {
-            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, Long::class.java)!!
+            return dslContext.select(DSL.max(ID)).from(this)
+                .where(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -560,6 +663,7 @@ class ProjectDao {
             return dslContext.select(ID.`as`("ID"), ENGLISH_NAME.`as`("ENGLISH_NAME"))
                 .from(this)
                 .where(ID.ge(minId).and(ID.le(maxId)))
+                .and(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
                 .fetch()
         }
     }
@@ -573,6 +677,8 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
+                .and(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
+                .and(IS_AUTH_SECRECY.eq(false))
                 .limit(limit).offset(offset).fetch()
         }
     }
@@ -581,6 +687,7 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
+                .and(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -589,6 +696,14 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
                 .set(RELATION_ID, relationId).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun updateSubjectScopesByCode(dslContext: DSLContext, projectCode: String, SubjectScopesStr: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(SUBJECTSCOPES, SubjectScopesStr).where(ENGLISH_NAME.eq(projectCode))
                 .execute()
         }
     }
@@ -607,13 +722,17 @@ class ProjectDao {
             return dslContext.select(ENGLISH_NAME)
                 .from(this)
                 .where(IS_SECRECY.eq(true))
+                .and(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
                 .fetch()
         }
     }
 
     fun getProjectByName(dslContext: DSLContext, projectName: String): ProjectVO? {
         with(TProject.T_PROJECT) {
-            val record = dslContext.selectFrom(this).where(PROJECT_NAME.eq(projectName)).fetchAny()
+            val record = dslContext.selectFrom(this)
+                .where(PROJECT_NAME.eq(projectName))
+                .and(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
+                .fetchAny()
                 ?: return null
             return ProjectUtils.packagingBean(record)
         }
@@ -624,7 +743,20 @@ class ProjectDao {
             return dslContext.select(ENGLISH_NAME)
                 .from(this)
                 .where(ROUTER_TAG.eq(routeTag))
+                .and(APPROVAL_STATUS.notIn(listOf(ApproveStatus.CREATE_PENDING.status, ApproveStatus.CREATE_REJECT.status)))
                 .fetch(ENGLISH_NAME, String::class.java)
+        }
+    }
+
+    fun updateProjectStatusByEnglishName(
+        dslContext: DSLContext,
+        projectCode: String,
+        statusEnum: ApproveStatus
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(APPROVAL_STATUS, statusEnum.status).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
         }
     }
 }

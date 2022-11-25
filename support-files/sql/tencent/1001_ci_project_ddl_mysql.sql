@@ -141,6 +141,8 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `CHANNEL` varchar(32) NOT NULL DEFAULT 'BS',
   `pipeline_limit` int(10) DEFAULT 500 COMMENT '流水线数量上限',
   `other_router_tags` varchar(128) DEFAULT NULL,
+  `subjectScopes` text DEFAULT NULL COMMENT '最大可授权人员范围',
+  `is_auth_secrecy` bit(1) DEFAULT b'0' COMMENT '是否权限私密，0-公开，1-保密',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
@@ -285,5 +287,25 @@ CREATE TABLE IF NOT EXISTS `T_NOTICE` (
   KEY `inx_tn_effect_date` (`EFFECT_DATE`) USING BTREE,
   KEY `inx_tn_invalid_date` (`INVALID_DATE`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `T_PROJECT_APPROVAL_CALLBACK`
+(
+    `ID`             int(11)           NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `APPLICANT`      varchar(32)       NOT NULL COMMENT '申请人',
+    `ENGLISH_NAME`   varchar(64)       NOT NULL COMMENT '项目英文名',
+    `CALLBACK_ID`    varchar(32)       NOT NULL COMMENT '权限中心审批单ID',
+    `SN`             varchar(64)       NOT NULL COMMENT 'ITSM申请单ID',
+    `SUBJECT_SCOPES` text              DEFAULT NULL COMMENT '最大可授权人员范围',
+    `LAST_APPROVER`  varchar(32)       DEFAULT NULL COMMENT '最后审批人',
+    `APPROVE_RESULT` bit(1)            DEFAULT NULL COMMENT '审批结果，0-审批拒绝，1-审批成功',
+    `APPROVE_TYPE`   int(10)           DEFAULT '0'  COMMENT '审批类型，0-创建审批，1-编辑审批（仅修改项目是否保密），2-编辑审批（仅修改项目最大可授权范围），3-编辑审批（两者均被修改）',
+    `UPDATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '修改时间',
+    `CREATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    INDEX `IDX_APPLICANT` (`APPLICANT`),
+    INDEX `IDX_ENGLISH_NAME` (`ENGLISH_NAME`),
+    INDEX `IDX_SN` (`SN`),
+    PRIMARY KEY (`ID`)
+    ) ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4 COMMENT '项目审批回调表';
 
 SET FOREIGN_KEY_CHECKS = 1;

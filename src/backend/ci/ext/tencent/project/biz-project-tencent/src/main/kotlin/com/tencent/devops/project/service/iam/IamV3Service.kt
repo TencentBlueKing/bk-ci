@@ -25,7 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package com.tencent.devops.project.service.iam
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
@@ -125,7 +124,6 @@ class IamV3Service @Autowired constructor(
             } else {
                 logger.warn("create iam projectFail, ${resourceRegisterInfo.resourceCode} not find")
             }
-
             // 修改V3项目对应的projectId
             if (relationIam && !event.iamProjectId.isNullOrEmpty()) {
                 projectDao.updateRelationByCode(
@@ -156,7 +154,8 @@ class IamV3Service @Autowired constructor(
         logger.info("user $userId bg: $bgId bgName: $bgName")
         val subjectScopes = ManagerScopes(
             ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT),
-            bgId.toString())
+            bgId.toString()
+        )
         val authorizationScopes = AuthorizationUtils.buildManagerResources(
             projectId = resourceRegisterInfo.resourceCode,
             projectName = resourceRegisterInfo.resourceName,
@@ -222,7 +221,6 @@ class IamV3Service @Autowired constructor(
             .paths(managerPaths)
             .build()
         managerResources.add(resources)
-
         val permission = AuthorizationScopes.builder()
             .actions(arrayListOf(Action("all_action")))
             .system(iamConfiguration.systemId)

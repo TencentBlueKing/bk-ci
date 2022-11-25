@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
@@ -50,10 +51,12 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectForList
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -62,6 +65,7 @@ import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
@@ -105,7 +109,8 @@ class TxProjectServiceImpl @Autowired constructor(
     private val bsAuthTokenApi: BSAuthTokenApi,
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    objectMapper: ObjectMapper
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -116,7 +121,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDispatcher = projectDispatcher,
     authPermissionApi = authPermissionApi,
     projectAuthServiceCode = projectAuthServiceCode,
-    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService
+    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
+    objectMapper = objectMapper
 ) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -124,6 +130,9 @@ class TxProjectServiceImpl @Autowired constructor(
 
     @Value("\${tag.v3:#{null}}")
     private var v3Tag: String = ""
+
+    @Value("\${tag.rbac:#{null}}")
+    private var rbacTag: String = ""
 
     @Value("\${tag.auto:#{null}}")
     private val autoTag: String? = null
@@ -164,17 +173,31 @@ class TxProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-    override fun list(userId: String, accessToken: String?, enabled: Boolean?): List<ProjectVO> {
+    override fun list(
+        userId: String,
+        accessToken: String?,
+        enabled: Boolean?,
+        approved: Boolean?
+    ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
-
             val englishNames = getProjectFromAuth(userId, accessToken).toSet()
-            if (englishNames.isEmpty()) {
+            if (englishNames.isEmpty() && approved!!) {
                 return emptyList()
             }
-            val list = ArrayList<ProjectVO>(englishNames.size)
-            projectDao.listByCodes(dslContext, englishNames, enabled = enabled).map {
-                list.add(ProjectUtils.packagingBean(it))
+            val list = ArrayList<ProjectVO>()
+            if (englishNames.isNotEmpty()) {
+                projectDao.listByCodes(dslContext, englishNames, enabled = enabled)
+                    .map {
+                        list.add(ProjectUtils.packagingBean(it))
+                    }
+            }
+            // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
+            if (!approved!!) {
+                projectDao.listUnapprovedByUserId(
+                    dslContext = dslContext,
+                    userId = userId
+                )?.map { list.add(ProjectUtils.packagingBean(it)) }
             }
             return list
         } finally {
@@ -224,7 +247,6 @@ class TxProjectServiceImpl @Autowired constructor(
                 projectCreateInfo = projectCreateInfo
             )
         }
-
         // 工蜂CI项目不会添加paas项目，但也需要广播
         projectDispatcher.dispatch(
             ProjectCreateBroadCastEvent(
@@ -304,7 +326,7 @@ class TxProjectServiceImpl @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.warn(
                     "Fail to request($request) with code ${response.code()}, " +
-                            "message ${response.message()} and response $responseContent"
+                        "message ${response.message()} and response $responseContent"
                 )
                 throw OperationException(errorMessage)
             }
@@ -320,8 +342,33 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
-        return
+    override fun modifyProjectAuthResource(
+        projectInfo: TProjectRecord,
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
+        projectPermissionService.modifyResource(
+            projectInfo = projectInfo,
+            resourceUpdateInfo = resourceUpdateInfo
+        )
+    }
+
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return projectPermissionService.cancelCreateAuthProject(
+            status = status,
+            projectCode = projectCode
+        )
+    }
+
+    override fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
+    ): Boolean {
+        return projectPermissionService.createRoleGroupApplication(
+            userId = userId,
+            applicationInfo = applicationInfo,
+            gradeManagerId = gradeManagerId
+        )
     }
 
     fun getInfoByEnglishName(englishName: String): ProjectVO? {
@@ -421,26 +468,31 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     private fun getV3UserProject(userId: String): List<String>? {
-        if (v3Tag.isBlank()) {
+        if (v3Tag.isBlank() && rbacTag.isBlank()) {
             return emptyList()
         }
-        logger.info("getV3userProject tag: $v3Tag")
-        try {
-            return bkTag.invokeByTag(v3Tag) {
-                try {
+        logger.info("getUserProject tag: v3Tag=$v3Tag|rbacTag=$rbacTag")
+        return try {
+            if (!v3Tag.isBlank()) {
+                bkTag.invokeByTag(v3Tag) {
                     // 请求V3的项目,流量必须指向到v3,需指定项目头
                     client.get(ServiceProjectAuthResource::class).getUserProjects(
                         userId = userId,
                         token = tokenService.getSystemToken(null)!!
                     ).data
-                } catch (e: Exception) {
-                    logger.warn("ServiceGitForAppResource is error", e)
-                    return@invokeByTag null
+                }
+            } else {
+                bkTag.invokeByTag(rbacTag) {
+                    // 请求rbac的项目,流量必须指向到rbac,需指定项目头
+                    client.get(ServiceProjectAuthResource::class).getUserProjects(
+                        userId = userId,
+                        token = tokenService.getSystemToken(null)!!
+                    ).data
                 }
             }
         } catch (e: Exception) {
             // 为防止V0,V3发布存在时间差,导致项目列表拉取异常
-            logger.warn("getV3Project fail $userId $e")
+            logger.warn("get iam Project fail $userId $e")
             return emptyList()
         }
     }

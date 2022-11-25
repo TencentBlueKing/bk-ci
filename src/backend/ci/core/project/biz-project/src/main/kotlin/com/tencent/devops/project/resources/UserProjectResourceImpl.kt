@@ -28,9 +28,11 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectResource
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
@@ -49,13 +51,38 @@ class UserProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService
 ) : UserProjectResource {
 
-    override fun list(userId: String, accessToken: String?, enabled: Boolean?): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId, accessToken, enabled))
+    override fun list(
+        userId: String,
+        accessToken: String?,
+        enabled: Boolean?,
+        approved: Boolean?
+    ): Result<List<ProjectVO>> {
+        return Result(projectService.list(userId, accessToken, enabled, approved))
+    }
+
+    override fun listProjectsWithoutPermissions(
+        userId: String,
+        accessToken: String?,
+        projectName: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Pagination<ProjectVO>> {
+        return Result(
+            projectService.listProjectsWithoutPermissions(
+                userId = userId,
+                accessToken = accessToken,
+                projectName = projectName,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
-        return Result(projectService.getByEnglishName(userId, projectId, accessToken)
-            ?: throw OperationException("项目不存在"))
+        return Result(
+            projectService.getByEnglishName(userId, projectId, accessToken)
+                ?: throw OperationException("项目不存在")
+        )
     }
 
     override fun getContainEmpty(userId: String, projectId: String, accessToken: String?): Result<ProjectVO?> {
@@ -68,7 +95,7 @@ class UserProjectResourceImpl @Autowired constructor(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
             accessToken = accessToken,
-            createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true),
+            createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true, needApproval = true),
             projectChannel = ProjectChannelCode.BS
         )
 
@@ -81,7 +108,15 @@ class UserProjectResourceImpl @Autowired constructor(
         projectUpdateInfo: ProjectUpdateInfo,
         accessToken: String?
     ): Result<Boolean> {
-        return Result(projectService.update(userId, englishName = projectId, projectUpdateInfo, accessToken))
+        return Result(
+            projectService.update(
+                userId = userId,
+                englishName = projectId,
+                projectUpdateInfo = projectUpdateInfo,
+                accessToken = accessToken,
+                needApproval = true
+            )
+        )
     }
 
     override fun enable(
@@ -118,11 +153,31 @@ class UserProjectResourceImpl @Autowired constructor(
     }
 
     override fun hasPermission(userId: String, projectId: String, permission: AuthPermission): Result<Boolean> {
-        return Result(projectService.verifyUserProjectPermission(
-            accessToken = null,
-            userId = userId,
-            projectId = projectId,
-            permission = permission
-        ))
+        return Result(
+            projectService.verifyUserProjectPermission(
+                accessToken = null,
+                userId = userId,
+                projectId = projectId,
+                permission = permission
+            )
+        )
+    }
+
+    override fun cancelCreateProject(userId: String, projectId: String): Result<Boolean> {
+        return Result(
+            projectService.cancelCreateProject(
+                userId = userId,
+                projectId = projectId
+            )
+        )
+    }
+
+    override fun applyToJoinProject(userId: String, applicationInfo: ApplicationInfo): Result<Boolean> {
+        return Result(
+            projectService.applyToJoinProject(
+                userId = userId,
+                applicationInfo = applicationInfo
+            )
+        )
     }
 }

@@ -28,7 +28,9 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -94,7 +96,8 @@ interface ProjectService {
         userId: String,
         englishName: String,
         projectUpdateInfo: ProjectUpdateInfo,
-        accessToken: String?
+        accessToken: String?,
+        needApproval: Boolean? = false
     ): Boolean
 
     /**
@@ -113,7 +116,20 @@ interface ProjectService {
     /**
      * 获取所有项目信息
      */
-    fun list(userId: String, accessToken: String?, enabled: Boolean? = null): List<ProjectVO>
+    fun list(
+        userId: String,
+        accessToken: String?,
+        enabled: Boolean? = null,
+        approved: Boolean? = true
+    ): List<ProjectVO>
+
+    fun listProjectsWithoutPermissions(
+        userId: String,
+        accessToken: String?,
+        projectName: String?,
+        page: Int,
+        pageSize: Int
+    ): Pagination<ProjectVO>
 
     fun list(userId: String): List<ProjectVO>
 
@@ -164,4 +180,8 @@ interface ProjectService {
     fun getProjectByName(projectName: String): ProjectVO?
 
     fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean
+
+    fun cancelCreateProject(userId: String, projectId: String): Boolean
+
+    fun applyToJoinProject(userId: String, applicationInfo: ApplicationInfo): Boolean
 }

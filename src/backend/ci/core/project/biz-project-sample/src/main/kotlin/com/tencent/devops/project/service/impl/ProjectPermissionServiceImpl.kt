@@ -34,8 +34,11 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.pojo.ApplicationInfo
+import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -81,13 +84,16 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun modifyResource(projectCode: String, projectName: String) {
+    override fun modifyResource(
+        projectInfo: TProjectRecord,
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
         authResourceApi.modifyResource(
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = BK_DEVOPS_SCOPE,
-            resourceCode = projectCode,
-            resourceName = projectName
+            resourceCode = resourceUpdateInfo.projectUpdateInfo.englishName,
+            resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
         )
     }
 
@@ -102,10 +108,8 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun createResources(
-        userId: String,
-        accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        resourceCreateInfo: ResourceCreateInfo
     ): String {
         val projectList = mutableListOf<ResourceRegisterInfo>()
         projectList.add(resourceRegisterInfo)
@@ -114,7 +118,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
             resourceType = AuthResourceType.PROJECT,
             resourceList = projectList,
             projectCode = BK_DEVOPS_SCOPE,
-            user = userId
+            user = resourceCreateInfo.userId
         )
         return ""
     }
@@ -124,6 +128,18 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         userId: String,
         permission: AuthPermission
+    ): Boolean {
+        return true
+    }
+
+    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
+        return true
+    }
+
+    override fun createRoleGroupApplication(
+        userId: String,
+        applicationInfo: ApplicationInfo,
+        gradeManagerId: String
     ): Boolean {
         return true
     }

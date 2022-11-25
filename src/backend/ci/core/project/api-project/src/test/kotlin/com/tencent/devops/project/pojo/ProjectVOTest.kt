@@ -28,6 +28,7 @@
 package com.tencent.devops.project.pojo
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -81,7 +82,9 @@ class ProjectVOTest {
             cc_app_name = "XXG",
             routerTag = "",
             relationId = "",
-            properties = ProjectProperties(PipelineAsCodeSettings())
+            properties = ProjectProperties(PipelineAsCodeSettings()),
+            subjectScopes = arrayListOf(ManagerScopes("*", "*")),
+            authSecrecy = false
         )
         val message = JsonUtil.toJson(p)
         println(message)
@@ -144,7 +147,9 @@ class ProjectVOTest {
             cc_app_name = null,
             routerTag = "",
             relationId = "",
-            properties = ProjectProperties(PipelineAsCodeSettings())
+            properties = ProjectProperties(PipelineAsCodeSettings()),
+            subjectScopes = arrayListOf(ManagerScopes("*", "*")),
+            authSecrecy = false
         )
         val message = JsonUtil.toJson(p)
         println(message)
