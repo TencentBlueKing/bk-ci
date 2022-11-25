@@ -175,24 +175,20 @@ object AtomReleaseTxtAnalysisUtil {
     }
 
     fun logoUrlAnalysis(logoUrl: String): Result<String> {
-        // 远程资源不做处理
-        if (!logoUrl.startsWith("http")) {
-            // 正则解析
-            val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
-            val matcher: Matcher = pattern.matcher(logoUrl)
-            val relativePath = if (matcher.find()) {
-                matcher.group(2).replace("\"", "")
-            } else null
-            return if (relativePath.isNullOrBlank()) {
-                MessageCodeUtil.generateResponseDataObject(
-                    StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                    arrayOf("releaseInfo.logoUrl")
-                )
-            } else {
-                Result(relativePath)
-            }
+        // 正则解析
+        val pattern: Pattern = Pattern.compile(BK_CI_PATH_REGEX)
+        val matcher: Matcher = pattern.matcher(logoUrl)
+        val relativePath = if (matcher.find()) {
+            matcher.group(2).replace("\"", "")
+        } else null
+        return if (relativePath.isNullOrBlank()) {
+            MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                arrayOf("releaseInfo.logoUrl")
+            )
+        } else {
+            Result(relativePath)
         }
-        return Result(logoUrl)
     }
 
     fun serviceArchiveAtomFile(

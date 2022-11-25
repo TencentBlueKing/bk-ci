@@ -32,6 +32,7 @@ import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -46,6 +47,7 @@ import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.api.common.ServiceStoreLogoResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_LOG_FILE_FAIL
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
@@ -74,6 +76,7 @@ import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.OpAtomService
 import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
+import com.tencent.devops.store.service.common.StoreLogoService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
 import com.tencent.devops.store.utils.StoreUtils
@@ -101,9 +104,9 @@ class OpAtomServiceImpl @Autowired constructor(
     private val marketAtomVersionLogDao: MarketAtomVersionLogDao,
     private val atomQualityService: AtomQualityService,
     private val atomNotifyService: AtomNotifyService,
-    private val serviceStoreLogoResource: ServiceStoreLogoResource,
     private val labelDao: LabelDao,
     private val atomReleaseService: AtomReleaseService,
+    private val storeLogoService: StoreLogoService,
     private val storeWebsocketService: StoreWebsocketService,
     private val redisOperation: RedisOperation,
     private val client: Client
@@ -388,43 +391,43 @@ class OpAtomServiceImpl @Autowired constructor(
             return Result(data = false, message = addMarketAtomResult.message)
         }
         val atomId = addMarketAtomResult.data!!
-        // 解析logoUrl
-        val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
-        if (logoUrlAnalysisResult.isNotOk()) {
-            return Result(
-                data = false,
-                status = logoUrlAnalysisResult.status,
-                message = logoUrlAnalysisResult.message
-            )
-        }
-        val relativePath = logoUrlAnalysisResult.data
-        val logoFile = File("$atomPath${File.separator}file" +
-                    "${File.separator}${relativePath?.removePrefix(File.separator)}")
-        logger.info("uploadStoreLogo logoFilePath:${logoFile.path}")
-        var uploadStoreLogoResult = Result(data = true, status = 0)
-        if (logoFile.exists()) {
-            val result = serviceStoreLogoResource.uploadStoreLogo(
-                userId = userId,
-                contentLength = logoFile.length(),
-                inputStream = logoFile.inputStream(),
-                disposition = FormDataContentDisposition(
-                    "form-data; name=\"logo\"; filename=\"${logoFile.name}\""
-                )
-            )
-            if (result.isOk()) {
-                releaseInfo.logoUrl = result.data!!.logoUrl!!
-            } else {
-                uploadStoreLogoResult = Result(
+        if (!releaseInfo.logoUrl.startsWith("http")) {
+            // 解析logoUrl
+            val logoUrlAnalysisResult = AtomReleaseTxtAnalysisUtil.logoUrlAnalysis(releaseInfo.logoUrl)
+            if (logoUrlAnalysisResult.isNotOk()) {
+                return Result(
                     data = false,
-                    status = uploadStoreLogoResult.status,
-                    message = uploadStoreLogoResult.message
+                    status = logoUrlAnalysisResult.status,
+                    message = logoUrlAnalysisResult.message
                 )
             }
-        } else {
-            logger.warn("uploadStoreLogo fail logoName:${logoFile.name}")
-            uploadStoreLogoResult = Result(data = false, message = "upload store logo fail")
+            val relativePath = logoUrlAnalysisResult.data
+            val logoFile = File("$atomPath${File.separator}file" +
+                    "${File.separator}${relativePath?.removePrefix(File.separator)}")
+            if (logoFile.exists()) {
+                val result = storeLogoService.uploadStoreLogo(
+                    userId = userId,
+                    contentLength = logoFile.length(),
+                    inputStream = logoFile.inputStream(),
+                    disposition = FormDataContentDisposition(
+                        "form-data; name=\"logo\"; filename=\"${logoFile.name}\""
+                    )
+                )
+                if (result.isOk()) {
+                    releaseInfo.logoUrl = result.data!!.logoUrl!!
+                } else {
+                    return Result(
+                        data = false,
+                        status = result.status,
+                        message = result.message
+                    )
+                }
+            } else {
+                throw ErrorCodeException(
+                    errorCode = USER_UPLOAD_LOG_FILE_FAIL
+                )
+            }
         }
-        if (uploadStoreLogoResult.isNotOk()) return uploadStoreLogoResult
         // 解析description
         releaseInfo.description = AtomReleaseTxtAnalysisUtil.descriptionAnalysis(
             description = releaseInfo.description,
