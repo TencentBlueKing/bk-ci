@@ -65,8 +65,9 @@ onMounted(() => {
 
 <style lang="postcss" scoped>
 .manage-tabs {
-  margin-right: 50%;
   font-size: 14px;
+  flex: 1;
+  text-align: center;
 }
 .manage-tab {
   display: inline-block;

@@ -46,6 +46,9 @@ defineProps<{
   justify-content: space-between;
   padding: 0 25px;
 }
+.manage-breadcrumb {
+  position: absolute;
+}
 .manage-icon {
   font-size: 18px;
   margin-right: 1px;
