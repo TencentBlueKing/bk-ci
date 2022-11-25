@@ -446,7 +446,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         enabled: Boolean?,
-        approved: Boolean?
+        approved: Boolean
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false

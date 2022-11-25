@@ -55,7 +55,7 @@ class UserProjectResourceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         enabled: Boolean?,
-        approved: Boolean?
+        approved: Boolean
     ): Result<List<ProjectVO>> {
         return Result(projectService.list(userId, accessToken, enabled, approved))
     }

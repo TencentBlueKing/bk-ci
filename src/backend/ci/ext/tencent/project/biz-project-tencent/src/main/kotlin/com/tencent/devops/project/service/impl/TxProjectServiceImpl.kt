@@ -177,7 +177,7 @@ class TxProjectServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         enabled: Boolean?,
-        approved: Boolean?
+        approved: Boolean
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
