@@ -27,22 +27,26 @@
 package com.tencent.devops.openapi.aspect
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.openapi.IgnoreProjectId
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.openapi.IgnoreProjectId
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import org.aspectj.lang.JoinPoint
+import org.aspectj.lang.ProceedingJoinPoint
+import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
-
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import javax.ws.rs.core.Response
+import kotlin.reflect.jvm.kotlinFunction
 
 @Aspect
 @Component
@@ -137,6 +141,44 @@ class ApiAspect(
                 bkTag.setGatewayTag(projectConsulTag)
             }
         }
+    }
+
+    @Around("execution(* com.tencent.devops.openapi.resources.apigw..*.*(..))")
+    fun aroundMethod(pdj: ProceedingJoinPoint): Any? {
+        val begin = System.currentTimeMillis()
+        val methodName = pdj.signature.name
+        val parameterValue = pdj.args
+        val parameterMap = ((pdj.signature as MethodSignature).parameterNames zip parameterValue).toMap()
+        val parameters = (pdj.signature as MethodSignature).method.kotlinFunction?.parameters
+
+        parameters?.forEach { kParameter ->
+            // 大多数调用失败都是参数缺失，所以进行null判断
+            if (kParameter.name != null &&
+                !kParameter.type.isMarkedNullable &&
+                parameterMap.containsKey(kParameter.name) &&
+                parameterMap[kParameter.name] == null
+            ) {
+                throw CustomException(Response.Status.BAD_REQUEST, "参数校验失败: 请求参数${kParameter.name} 不能为空")
+            }
+        }
+
+        /*执行目标方法*/
+        val res = try {
+            pdj.proceed()
+        } catch (error: RemoteServiceException) {
+            logger.error(
+                "openapi trigger remote service error,error code:${error.errorCode}| error info:${error.message}",
+                error
+            )
+            throw error
+        } catch (ignored: ParamBlankException) {
+            logger.info("openapi check parameters error| error info:${ignored.message}")
+            throw CustomException(Response.Status.BAD_REQUEST, "参数校验失败: ${ignored.message}")
+        } finally {
+            logger.info("$methodName 方法耗时${System.currentTimeMillis() - begin}毫秒")
+        }
+
+        return res
     }
 
     /**
