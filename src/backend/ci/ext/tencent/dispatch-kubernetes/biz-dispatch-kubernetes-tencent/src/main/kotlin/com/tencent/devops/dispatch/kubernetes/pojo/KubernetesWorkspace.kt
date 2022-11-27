@@ -19,21 +19,21 @@ package com.tencent.devops.dispatch.kubernetes.pojo
 }
  */
 data class KubernetesWorkspace(
-    private val workspaceId: String,
-    private val userId: String,
-    private val gitRepo: GitRepo,
-    private val gitUserName: String,
-    private val gitEmail: String,
-    private val remotingYamlName: String,
-    private val userFiles: List<UserFile>
+    val workspaceId: String,
+    val userId: String,
+    val gitRepo: GitRepo,
+    val gitUserName: String,
+    val gitEmail: String,
+    val remotingYamlName: String,
+    val userFiles: List<UserFile>
 )
 
 data class GitRepo(
-    private val gitRepoName: String,
-    private val gitRepoRef: String
+    val gitRepoName: String,
+    val gitRepoRef: String
 )
 
 data class UserFile(
-    private val from: String,
-    private val to: String
+    val from: String,
+    val to: String
 )

@@ -62,7 +62,9 @@ class WorkspaceDao {
                 MEMORY,
                 DISK,
                 STATUS,
-                LAST_STATUS_UPDATE_TIME
+                LAST_STATUS_UPDATE_TIME,
+                YAML,
+                DOCKERFILE
             )
                 .values(
                     userId,
@@ -77,7 +79,9 @@ class WorkspaceDao {
                     16,
                     100,
                     workspaceStatus.ordinal,
-                    LocalDateTime.now()
+                    LocalDateTime.now(),
+                    "",
+                    ""
                 )
                 .returning(ID)
                 .fetchOne()!!.id
