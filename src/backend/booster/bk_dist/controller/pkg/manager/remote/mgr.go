@@ -34,7 +34,7 @@ func NewMgr(pCtx context.Context, work *types.Work) types.RemoteMgr {
 	return &Mgr{
 		ctx:                   ctx,
 		work:                  work,
-		resource:              newResource(nil, nil),
+		resource:              newResource(nil),
 		remoteWorker:          client.NewCommonRemoteWorker(),
 		checkSendFileTick:     100 * time.Millisecond,
 		fileSendMap:           make(map[string]*fileSendMap),
@@ -173,8 +173,9 @@ func (fsm *fileSendMap) updateStatus(desc dcSDK.FileDesc, status types.FileSendS
 func (m *Mgr) Init() {
 	blog.Infof("remote: init for work:%s", m.work.ID())
 
-	settings := m.work.Basic().Settings()
-	m.resource = newResource(m.syncHostTimeNoWait(m.work.Resource().GetHosts()), settings.UsageLimit)
+	// settings := m.work.Basic().Settings()
+	// m.resource = newResource(m.syncHostTimeNoWait(m.work.Resource().GetHosts()), settings.UsageLimit)
+	m.resource = newResource(m.syncHostTimeNoWait(m.work.Resource().GetHosts()))
 
 	// if m.initCancel != nil {
 	// 	m.initCancel()
@@ -197,6 +198,10 @@ func (m *Mgr) Init() {
 		m.sendCorkChan = make(chan bool, 1000)
 		go m.sendFilesWithCorkTick(ctx)
 	}
+}
+
+func (m *Mgr) Start() {
+	blog.Infof("remote: start for work:%s", m.work.ID())
 }
 
 func (m *Mgr) callback4ResChanged() error {
@@ -311,6 +316,8 @@ func (m *Mgr) resourceCheck(ctx context.Context) {
 					m.cleanFileCache()
 					// notify resource release
 					m.work.Resource().Release(nil)
+					// send and reset stat data
+					m.work.Resource().SendAndResetStats(false, 0)
 
 					// 重置最近一次使用时间
 					m.setLastUsed(0)

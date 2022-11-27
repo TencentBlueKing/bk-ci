@@ -15,17 +15,19 @@ INIT=0
 VERSION=latest
 PUSH=0
 REGISTRY=docker.io
+NAMESPACE=bkce/codecc
+PERFIX=
 USERNAME=
 PASSWORD=
-BACKENDS=(task defect apiquery codeccjob openapi)
-DEFECT_BACKENDS=(defect report opensourcereport asyncreport)
+BACKENDS=(task defect apiquery codeccjob openapi quartz schedule)
+DEFECT_BACKENDS=(defect report asyncreport)
 
 cd $(dirname $0)
 WORKING_DIR=$(pwd)
-ROOT_DIR=${WORKING_DIR%/*/*/*}
+ROOT_DIR=${WORKING_DIR%/*/*/*/*}
 BACKEND_DIR=$ROOT_DIR/src/backend/codecc
-FRONTEND_DIR=$ROOT_DIR/src/frontend
-GATEWAY_DIR=$ROOT_DIR/support-files/kubernetes/images/gateway/conf
+FRONTEND_DIR=$ROOT_DIR/src/frontend/devops-codecc
+GATEWAY_DIR=$ROOT_DIR/support-files/codecc/kubernetes/images/gateway
 
 usage () {
     cat <<EOF
@@ -90,6 +92,14 @@ while (( $# > 0 )); do
             shift
             REGISTRY=$1
             ;;
+        -n | --namespace )
+            shift
+            NAMESPACE=$1
+            ;;
+        --perfix )
+            shift
+            PERFIX=$1
+            ;;
         --username )
             shift
             USERNAME=$1
@@ -132,14 +142,14 @@ if [[ $ALL -eq 1 || $GATEWAY -eq 1 ]] ; then
     cd $WORKING_DIR
     rm -rf tmp/*
     cp -rf $FRONTEND_DIR/dist tmp/frontend
-    cp -rf $GATEWAY_DIR tmp/gateway
-    cp -rf gateway/startup.sh tmp/
-    cp -rf $ROOT_DIR/scripts/render_tpl tmp/
-    cp -rf $ROOT_DIR/scripts/codecc.env tmp/
-    cp -rf $ROOT_DIR/support-files/templates tmp/
-    docker build -f gateway/gateway.Dockerfile -t $REGISTRY/bkce/codecc/gateway:$VERSION tmp --network=host
+    cp -rf $GATEWAY_DIR/conf tmp/gateway
+    cp -rf $GATEWAY_DIR/startup.sh tmp/
+    cp -rf $GATEWAY_DIR/scripts/render_tpl tmp/
+    cp -rf $GATEWAY_DIR/scripts/codecc.env tmp/
+    cp -rf $GATEWAY_DIR/templates tmp/
+    docker build -f gateway/gateway.Dockerfile -t $REGISTRY/$NAMESPACE/${PERFIX}gateway:$VERSION tmp --network=host
     if [[ $PUSH -eq 1 ]] ; then
-        docker push $REGISTRY/bkce/codecc/gateway:$VERSION
+        docker push $REGISTRY/$NAMESPACE/${PERFIX}gateway:$VERSION
     fi
 fi
 
@@ -156,18 +166,18 @@ if [[ $ALL -eq 1 || $BACKEND -eq 1 ]] ; then
                 rm -rf tmp/*
                 cp backend/startup.sh tmp/
                 cp $BACKEND_DIR/release/boot-$SERVICE.jar tmp/app.jar
-                docker build -f backend/backend.Dockerfile -t $REGISTRY/bkce/codecc/$SERVICE_NAME:$VERSION tmp --network=host
+                docker build -f backend/backend.Dockerfile -t $REGISTRY/$NAMESPACE/${PERFIX}$SERVICE_NAME:$VERSION tmp --network=host
                 if [[ $PUSH -eq 1 ]] ; then
-                    docker push $REGISTRY/bkce/codecc/$SERVICE_NAME:$VERSION
+                    docker push $REGISTRY/$NAMESPACE/${PERFIX}$SERVICE_NAME:$VERSION
                 fi
             done
         else
             rm -rf tmp/*
             cp backend/startup.sh tmp/
             cp $BACKEND_DIR/release/boot-$SERVICE.jar tmp/app.jar
-            docker build -f backend/backend.Dockerfile -t $REGISTRY/bkce/codecc/$SERVICE:$VERSION tmp --network=host
+            docker build -f backend/backend.Dockerfile -t $REGISTRY/$NAMESPACE/${PERFIX}$SERVICE:$VERSION tmp --network=host
             if [[ $PUSH -eq 1 ]] ; then
-                docker push $REGISTRY/bkce/codecc/$SERVICE:$VERSION
+                docker push $REGISTRY/$NAMESPACE/${PERFIX}$SERVICE:$VERSION
             fi            
         fi
     done
@@ -175,13 +185,30 @@ fi
 
 # 构建init镜像
 if [[ $ALL -eq 1 || $INIT -eq 1 ]] ; then
-    log "构建init镜像..."
+    log "构建mongo镜像..."
     rm -rf tmp/*
     cp -rf mongodb/init-mongodb.sh tmp/
     cp -rf mongodb/nosql tmp/
-    docker build -f mongodb/init.Dockerfile -t $REGISTRY/bkce/codecc/codecc-init:$VERSION tmp --no-cache --network=host
+    docker build -f mongodb/init.Dockerfile -t $REGISTRY/$NAMESPACE/${PERFIX}mongo-init:$VERSION tmp --no-cache --network=host
     if [[ $PUSH -eq 1 ]] ; then
-        docker push $REGISTRY/bkce/codecc/codecc-init:$VERSION
+        docker push $REGISTRY/$NAMESPACE/${PERFIX}mongo-init:$VERSION
     fi
+
+    log "构建storage镜像..."
+    rm -rf tmp/*
+    cp -rf storage/init-storage.sh tmp/
+    docker build -f storage/init.Dockerfile -t $REGISTRY/$NAMESPACE/${PERFIX}storage-init:$VERSION tmp --no-cache --network=host
+    if [[ $PUSH -eq 1 ]] ; then
+        docker push $REGISTRY/$NAMESPACE/${PERFIX}storage-init:$VERSION
+    fi
+
+    log "构建entrance镜像..."
+    rm -rf tmp/*
+    cp -rf entrance/init-entrance.sh tmp/
+    docker build -f entrance/init.Dockerfile -t $REGISTRY/$NAMESPACE/${PERFIX}entrance-init:$VERSION tmp --no-cache --network=host
+    if [[ $PUSH -eq 1 ]] ; then
+        docker push $REGISTRY/$NAMESPACE/${PERFIX}entrance-init:$VERSION
+    fi
+    
 fi
 echo "BUILD SUCCESSFUL!"

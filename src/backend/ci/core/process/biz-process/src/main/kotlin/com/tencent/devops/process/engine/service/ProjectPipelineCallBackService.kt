@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
@@ -48,11 +49,9 @@ import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.CreateCallBackResult
-import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -93,7 +92,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
     ): CreateCallBackResult {
         // 验证用户是否为管理员
         validProjectManager(userId, projectId)
-        if (!validUrl(projectId, url)) {
+        if (!OkhttpUtils.validUrl(url)) {
+            logger.warn("$projectId|callback url Invalid")
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
         }
         val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
@@ -136,16 +136,6 @@ class ProjectPipelineCallBackService @Autowired constructor(
             successEvents = successEvents,
             failureEvents = failureEvents
         )
-    }
-
-    private fun validUrl(projectId: String, url: String): Boolean {
-        return try {
-            HttpUrl.get(url)
-            true
-        } catch (e: IllegalArgumentException) {
-            logger.warn("$projectId|callback url Invalid: ${e.message}")
-            false
-        }
     }
 
     fun listProjectCallBack(projectId: String, events: String): List<ProjectPipelineCallBack> {
@@ -391,7 +381,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT
         )
-        if (!validUrl(projectId, callbackInfo.callbackUrl)) {
+        if (!OkhttpUtils.validUrl(callbackInfo.callbackUrl)) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
         }
         val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(

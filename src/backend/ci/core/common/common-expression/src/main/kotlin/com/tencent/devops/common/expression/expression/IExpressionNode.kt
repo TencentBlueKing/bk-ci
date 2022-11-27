@@ -34,7 +34,8 @@ interface IExpressionNode {
     fun evaluate(
         trace: ITraceWriter?,
         state: Any?,
-        options: EvaluationOptions?
+        options: EvaluationOptions?,
+        expressionOutput: ExpressionOutput?
     ): EvaluationResult
 
     /**
@@ -53,6 +54,7 @@ interface IExpressionNode {
         trace: ITraceWriter?,
         state: Any?,
         options: EvaluationOptions?,
-        subInfo: SubNameValueEvaluateInfo
+        subInfo: SubNameValueEvaluateInfo,
+        expressionOutput: ExpressionOutput?
     ): SubNameValueEvaluateResult
 }

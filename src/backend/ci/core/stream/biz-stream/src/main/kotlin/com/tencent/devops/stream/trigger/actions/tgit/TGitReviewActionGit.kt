@@ -38,7 +38,6 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -69,7 +68,6 @@ class TGitReviewActionGit(
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.REVIEW)
 
-    override lateinit var data: ActionData
     override fun event() = data.event as GitReviewEvent
 
     override val api: TGitApiService
@@ -122,7 +120,30 @@ class TGitReviewActionGit(
             },
             gitProjectName = GitUtils.getProjectName(event.repository.homepage)
         )
+        this.data.context.gitDefaultBranchLatestCommitInfo = defaultBranch to latestCommit?.toGitCommit()
         return this
+    }
+
+    override fun initCacheData() {
+        val event = event()
+        if (data.isSettingInitialized && event.reviewableId != null && event.reviewableType == "merge_request") {
+            try {
+                data.context.gitMrInfo = apiService.getMrInfo(
+                    cred = getGitCred(),
+                    gitProjectId = data.eventCommon.gitProjectId,
+                    mrId = event.reviewableId.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )?.baseInfo
+                data.context.gitMrReviewInfo = apiService.getMrReview(
+                    cred = getGitCred(),
+                    gitProjectId = data.eventCommon.gitProjectId,
+                    mrId = event.reviewableId.toString(),
+                    retry = ApiRequestRetryInfo(true)
+                )
+            } catch (ignore: Throwable) {
+                logger.warn("TGit review action cache mrInfo/mrReviewInfo error", ignore)
+            }
+        }
     }
 
     override fun isStreamDeleteAction() = event().isDeleteEvent()
@@ -172,10 +193,10 @@ class TGitReviewActionGit(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val (isTrigger, startParams) = GitActionCommon.matchAndStartParams(this, triggerOn)
+        val (isTrigger, _) = GitActionCommon.matchAndStartParams(this, triggerOn, onlyMatch = true)
         return TriggerResult(
             trigger = TriggerBody(isTrigger),
-            startParams = startParams,
+            triggerOn = triggerOn,
             timeTrigger = false,
             deleteTrigger = false
         )

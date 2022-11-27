@@ -4,15 +4,16 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.stream.pojo.ChangeYamlList
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamRepoTriggerAction
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
-import com.tencent.devops.stream.pojo.ChangeYamlList
 import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -38,6 +39,11 @@ interface BaseAction {
      * 因为可能存在需要上下文参数的情况，所以和load分开
      */
     fun init(): BaseAction?
+
+    /**
+     * 初始化一些用于缓存的数据，主要是为了减少接口调用
+     */
+    fun initCacheData() = Unit
 
     /**
      * 通过GIT项目唯一ID获取蓝盾项目ID
@@ -131,6 +137,11 @@ interface BaseAction {
     fun needSendCommitCheck(): Boolean
 
     /**
+     * 判断是否需要更新流水线最近修改人
+     */
+    fun needUpdateLastModifyUser(filePath: String): Boolean
+
+    /**
      * 发送commit check
      */
     fun sendCommitCheck(
@@ -174,4 +185,9 @@ interface BaseAction {
      *  fork 库触发审核时，提供yaml文件跳转链接
      */
     fun forkMrYamlList() = emptyList<ChangeYamlList>()
+
+    /**
+     * 判断是否是远程仓库触发
+     */
+    fun checkRepoHookTrigger() = this is StreamRepoTriggerAction || this.data.context.repoTrigger != null
 }

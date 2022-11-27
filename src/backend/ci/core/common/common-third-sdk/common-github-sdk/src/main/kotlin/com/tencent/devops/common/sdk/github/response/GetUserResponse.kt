@@ -78,7 +78,7 @@ data class GetUserResponse(
     @JsonProperty("type")
     val type: String,
     @JsonProperty("updated_at")
-    val updatedAt: String,
+    val updatedAt: String?,
     @JsonProperty("url")
     val url: String
 )

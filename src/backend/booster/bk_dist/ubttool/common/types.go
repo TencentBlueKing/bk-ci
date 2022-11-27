@@ -9,9 +9,16 @@
 
 package common
 
+import (
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+)
+
 // Flags to desc flag of this tool
 type Flags struct {
 	ActionChainFile string
+	ToolChainFile   string
 	MostDepentFirst bool
 }
 
@@ -97,4 +104,28 @@ func (a *UE4Action) GenFolloweIndex() error {
 	}
 
 	return nil
+}
+
+// SetLogLevel to set log level
+func SetLogLevel(level string) {
+	if level == "" {
+		level = env.GetEnv(env.KeyUserDefinedLogLevel)
+	}
+
+	switch level {
+	case dcUtil.PrintDebug.String():
+		blog.SetV(3)
+		blog.SetStderrLevel(blog.StderrLevelInfo)
+	case dcUtil.PrintInfo.String():
+		blog.SetStderrLevel(blog.StderrLevelInfo)
+	case dcUtil.PrintWarn.String():
+		blog.SetStderrLevel(blog.StderrLevelWarning)
+	case dcUtil.PrintError.String():
+		blog.SetStderrLevel(blog.StderrLevelError)
+	case dcUtil.PrintNothing.String():
+		blog.SetStderrLevel(blog.StderrLevelNothing)
+	default:
+		// default to be error printer.
+		blog.SetStderrLevel(blog.StderrLevelInfo)
+	}
 }
