@@ -14,4 +14,7 @@ class TencentCloudConfiguration {
 
     @Value("\${notify.tencentCloud.emailRegion:ap-hongkong}")
     val emailRegion: String = "ap-hongkong"
+
+    @Value("\${notify.tencentCloud.emailSender:tencent-ci@mail.ci.tencent.com}")
+    val emailSender: String = "tencent-ci@mail.ci.tencent.com"
 }

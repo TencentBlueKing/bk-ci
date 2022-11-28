@@ -231,7 +231,7 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
 
         return EmailBody(
             destination = emailNotifyMessage.getReceivers().toList(),
-            fromEmailAddress = emailNotifyMessage.sender,
+            fromEmailAddress = configuration.emailSender,
             subject = emailNotifyMessage.title,
             template = Template(
                 templateID = emailNotifyMessage.tencentCloudTemplateId,
