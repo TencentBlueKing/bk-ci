@@ -230,6 +230,7 @@
                             accept="application/zip"
                             @uploadSuccess="uploadPackageSuccess"
                             @uploadFail="uploadPackageErr"
+                            :key="atomForm.releaseType"
                         ></bk-file-upload>
                         <div v-if="formErrors.releasePackageError" class="error-tips"> {{ $t('store.发布包不能为空') }} </div>
                     </div>
@@ -382,7 +383,7 @@
                 return toolbars
             },
             releasePackageUrl () {
-                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/ids/${this.atomForm.atomId}/codes/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
+                return `/ms/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/ids/${this.atomForm.atomId}/codes/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
             },
             navList () {
                 const name = `${this.curTitle}（${this.atomForm.atomCode}）`
