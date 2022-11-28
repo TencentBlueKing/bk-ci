@@ -30,6 +30,8 @@ import {
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
 
+import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+
 export default {
     data () {
         return {
@@ -76,23 +78,28 @@ export default {
         async getPipelines (query = {}) {
             try {
                 const { viewId, ...restQuery } = query
+                const queryParams = {
+                    sortType: PIPELINE_SORT_FILED.createTime,
+                    collation: ORDER_ENUM.descending,
+                    ...this.$route.query,
+                    ...restQuery
+                }
                 if (viewId === DELETED_VIEW_ID) {
                     return this.requestRecyclePipelineList({
                         projectId: this.$route.params.projectId,
-                        ...query
+                        ...queryParams,
+                        viewId
                     })
                 } else {
                     this.$router.push({
                         ...this.$route,
-                        query: {
-                            ...this.$route.query,
-                            ...restQuery
-                        }
+                        query: queryParams
                     })
                     const { page, count, records } = await this.requestAllPipelinesListByFilter({
                         showDelete: true,
                         projectId: this.$route.params.projectId,
-                        ...query
+                        ...queryParams,
+                        viewId
                     })
                     const pipelineList = records.map((item, index) => Object.assign(item, {
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),

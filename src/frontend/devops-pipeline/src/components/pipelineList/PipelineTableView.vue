@@ -194,10 +194,6 @@
             filterParams: {
                 type: Object,
                 default: () => ({})
-            },
-            sortType: {
-                type: String,
-                default: PIPELINE_SORT_FILED.createTime
             }
         },
         data () {
@@ -210,11 +206,7 @@
                     limit: 20,
                     count: 0
                 },
-                visibleTagCountList: {},
-                sortField: {
-                    prop: this.sortType,
-                    order: this.$route.query.collation ?? ORDER_ENUM.descending
-                }
+                visibleTagCountList: {}
             }
         },
         computed: {
@@ -225,12 +217,9 @@
                 return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
             },
             maxheight () {
-                console.log(this.$refs?.pipelineTable?.$el?.parent)
                 return this.$refs?.pipelineTable?.$el?.parent?.clientHeight
             },
             isDeleteView () {
-                console.log(this.$route.params, 'this.$route.params', this.$route.params.viewId === DELETED_VIEW_ID)
-
                 return this.$route.params.viewId === DELETED_VIEW_ID
             },
             pipelineGroups () {
@@ -251,6 +240,13 @@
                     }
                 })
                 return res
+            },
+            sortField () {
+                const { sortType = PIPELINE_SORT_FILED.createTime, collation = ORDER_ENUM.descending } = this.$route.query
+                return {
+                    sortType,
+                    collation
+                }
             }
         },
 
@@ -261,11 +257,8 @@
                     page: 1
                 })
             },
-            sortType: function (newSort) {
-                this.sortField.prop = newSort
-                this.requestList({
-                    sortType: newSort
-                })
+            sortField: function () {
+                this.$nextTick(this.requestList)
             },
             filterParams: function (filterMap, oldFilterMap) {
                 if (!isShallowEqual(filterMap, oldFilterMap)) {
@@ -276,7 +269,7 @@
                 }
             }
         },
-        created () {
+        mounted () {
             this.requestList()
         },
         methods: {
@@ -316,11 +309,14 @@
                 this.$nextTick(this.requestList)
             },
             handleSort ({ prop, order }) {
-                Object.assign(this.sortField, {
-                    order: prop ? ORDER_ENUM[order] : ORDER_ENUM.descending,
-                    prop: PIPELINE_SORT_FILED[prop] ?? PIPELINE_SORT_FILED.createTime
+                this.$router.push({
+                    ...this.$route,
+                    query: {
+                        ...this.$route.query,
+                        sortType: PIPELINE_SORT_FILED[prop] ?? PIPELINE_SORT_FILED.createTime,
+                        collation: prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
+                    }
                 })
-                this.$nextTick(this.requestList)
             },
             async requestList (query = {}) {
                 this.isLoading = true
@@ -329,8 +325,6 @@
                     const { count, page, records } = await this.getPipelines({
                         page: this.pagination.current,
                         pageSize: this.pagination.limit,
-                        sortType: this.sortField.prop,
-                        collation: this.sortField.order,
                         viewId: this.$route.params.viewId,
                         ...this.filterParams,
                         ...query
@@ -362,6 +356,9 @@
                     this.refresh()
                 }
             },
+            clearSort () {
+                this.$refs?.pipelineTable?.clearSort?.()
+            },
             calcOverPos () {
                 const tagMargin = 6
 
@@ -377,7 +374,7 @@
 
                         this.$refs[`groupName_${index}`]?.every((groupName) => {
                             sumTagWidth += groupName.$el.offsetWidth + tagMargin
-                            console.log(groupNameBoxWidth, viewPortWidth, moreTagWidth, sumTagWidth, groupName.$el.offsetWidth)
+
                             const isOverSize = sumTagWidth > viewPortWidth
                             !isOverSize && tagVisbleCount++
                             return !isOverSize
@@ -387,7 +384,6 @@
                     }
                     return acc
                 }, {})
-                console.log(this.visibleTagCountList)
             }
         }
     }

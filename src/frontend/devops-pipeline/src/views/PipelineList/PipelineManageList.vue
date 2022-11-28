@@ -44,7 +44,12 @@
                             </bk-button>
                         </template>
                         <ul class="bk-dropdown-list" slot="dropdown-content">
-                            <li v-for="item in sortList" :key="item.id" @click="changeSortType(item.id)">
+                            <li
+                                v-for="item in sortList"
+                                :key="item.id"
+                                :active="item.active"
+                                @click="changeSortType(item.id)"
+                            >
                                 <a href="javascript:;">{{ item.name }}</a>
                             </li>
                         </ul>
@@ -76,13 +81,11 @@
             <pipeline-table-view
                 v-if="isTableLayout"
                 :filter-params="filters"
-                :sort-type="sortType"
                 ref="pipelineBox"
             />
             <pipelines-card-view
                 v-else-if="isCardLayout"
                 :filter-params="filters"
-                :sort-type="sortType"
                 ref="pipelineBox"
             />
 
@@ -174,7 +177,6 @@
             return {
                 layout: this.getLs('pipelineLayout') || TABLE_LAYOUT,
                 hasCreatePermission: false,
-                sortType: this.getLs('pipelineSortType') || 'CREATE_TIME',
                 filters: restQuery,
                 templatePopupShow: false,
                 importPipelinePopupShow: false,
@@ -236,16 +238,20 @@
                 return [
                     {
                         id: PIPELINE_SORT_FILED.pipelineName,
-                        name: this.$t('newlist.orderByAlpha')
+                        name: this.$t('newlist.orderByAlpha'),
+                        active: this.isActiveSort(PIPELINE_SORT_FILED.pipelineName)
                     }, {
                         id: PIPELINE_SORT_FILED.createTime,
-                        name: this.$t('newlist.orderByCreateTime')
+                        name: this.$t('newlist.orderByCreateTime'),
+                        active: this.isActiveSort(PIPELINE_SORT_FILED.createTime)
                     }, {
                         id: PIPELINE_SORT_FILED.updateTime,
-                        name: this.$t('newlist.orderByUpdateTime')
+                        name: this.$t('newlist.orderByUpdateTime'),
+                        active: this.isActiveSort(PIPELINE_SORT_FILED.updateTime)
                     }, {
                         id: PIPELINE_SORT_FILED.latestBuildStartDate,
-                        name: this.$t('newlist.orderByExecuteTime')
+                        name: this.$t('newlist.orderByExecuteTime'),
+                        active: this.isActiveSort(PIPELINE_SORT_FILED.latestBuildStartDate)
                     }
                 ]
             }
@@ -288,15 +294,20 @@
             ...mapActions('pipelines', [
                 'requestHasCreatePermission'
             ]),
+            isActiveSort (sortType) {
+                return this.$route.query.sortType === sortType
+            },
             goList () {
-                const viewId = getCacheViewId(this.$route.params.projectId)
-                this.$router.replace({
-                    name: 'PipelineManageList',
-                    params: {
-                        ...this.$route.params,
-                        viewId
-                    }
-                })
+                if (!this.$route.params.viewId) {
+                    const viewId = getCacheViewId(this.$route.params.projectId)
+                    this.$router.replace({
+                        name: 'PipelineManageList',
+                        params: {
+                            ...this.$route.params,
+                            viewId
+                        }
+                    })
+                }
             },
             goPatchManage () {
                 this.$router.push({
@@ -311,7 +322,14 @@
                 localStorage.setItem('pipelineLayout', layout)
             },
             changeSortType (sortType) {
-                this.sortType = sortType
+                this.$refs?.pipelineBox?.clearSort?.()
+                this.$router.push({
+                    ...this.$route,
+                    query: {
+                        ...this.$route.query,
+                        sortType
+                    }
+                })
             },
 
             async checkHasCreatePermission () {
@@ -364,6 +382,15 @@
     }
     .pipeline-sort-dropdown-menu {
         margin: 0 8px;
+        .bk-dropdown-list {
+            [active],
+            [active]:hover {
+                > a {
+                    background-color: $primaryColor;
+                    color: white;
+                 }
+            }
+        }
     }
     // TODO: hack
     .icon-button {
