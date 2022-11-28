@@ -46,7 +46,8 @@ import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_FAIL
+import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_FAIL
+import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
@@ -423,7 +424,7 @@ class OpAtomServiceImpl @Autowired constructor(
                 }
             } else {
                 throw ErrorCodeException(
-                    errorCode = USER_UPLOAD_FILE_PATH_FAIL,
+                    errorCode = USER_UPLOAD_FILE_PATH_ERROR,
                     params = arrayOf(relativePath ?: "")
                 )
             }
@@ -435,7 +436,7 @@ class OpAtomServiceImpl @Autowired constructor(
             client = client,
             userId = userId
         )
-        taskJsonMap["releaseInfo"] = releaseInfo.toJsonString()
+        taskJsonMap["releaseInfo"] = releaseInfo
         // 将替换好的文本写入task.json文件
         val taskJson = taskJsonMap.toJsonString()
         val fileOutputStream = taskJsonFile.outputStream()
@@ -465,9 +466,9 @@ class OpAtomServiceImpl @Autowired constructor(
             }
         } catch (ignored: Throwable) {
             logger.warn("BKSystemErrorMonitor|archive atom file fail|$atomCode|error=${ignored.message}")
-            return Result(
-                data = false,
-                message = ignored.message
+            throw ErrorCodeException(
+                errorCode = USER_UPLOAD_FILE_FAIL,
+                params = arrayOf("atomPackage")
             )
         } finally {
             file.delete()
