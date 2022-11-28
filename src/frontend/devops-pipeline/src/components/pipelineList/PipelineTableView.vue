@@ -27,7 +27,7 @@
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <span
-                    v-if="!props.row.hasPermission"
+                    v-if="!props.row.hasPermission && !isDeleteView"
                     class="pointer"
                     @click="applyPermission(props.row)"
                 >
