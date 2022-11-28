@@ -57,6 +57,7 @@
         display: flex;
         justify-content: space-between;
         background: #fff;
+        flex-shrink: 0;
         &-left {
             display: flex;
             flex: 1;
