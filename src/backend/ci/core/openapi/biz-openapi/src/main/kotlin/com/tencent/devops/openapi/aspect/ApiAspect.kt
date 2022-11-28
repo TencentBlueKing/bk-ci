@@ -71,7 +71,6 @@ class ApiAspect(
      * @param jp
      */
     // 所有controller包下面的所有方法的所有参数
-    @Before("execution(* com.tencent.devops.openapi.resources.apigw..*.*(..))")
     @Suppress("ComplexMethod")
     fun beforeMethod(jp: JoinPoint) {
         if (!apiGatewayUtil.isAuth()) {
@@ -149,6 +148,7 @@ class ApiAspect(
     fun aroundMethod(pdj: ProceedingJoinPoint): Any? {
         val begin = System.currentTimeMillis()
         val methodName = pdj.signature.name
+        beforeMethod(pdj)
 
         /*执行目标方法*/
         val res = try {
@@ -185,6 +185,7 @@ class ApiAspect(
             }
             throw error
         } finally {
+            afterMethod()
             logger.info("$methodName 方法耗时${System.currentTimeMillis() - begin}毫秒")
         }
 
@@ -196,7 +197,6 @@ class ApiAspect(
      *
      */
     // 所有controller包下面的所有方法的所有参数
-    @Before("execution(* com.tencent.devops.openapi.resources.apigw..*.*(..))")
     fun afterMethod() {
         // 删除线程ThreadLocal数据,防止线程池复用。导致流量指向被污染
         bkTag.removeGatewayTag()
