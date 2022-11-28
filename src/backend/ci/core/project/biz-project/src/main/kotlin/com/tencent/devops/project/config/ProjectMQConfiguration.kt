@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.project.listener.ProjectEventListener
 import org.springframework.amqp.core.Binding
@@ -55,6 +56,9 @@ class ProjectMQConfiguration {
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
     }
+
+    @Bean
+    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
     @Bean
     fun projectCreateQueue() = Queue(MQ.QUEUE_PROJECT_CREATE_EVENT)
