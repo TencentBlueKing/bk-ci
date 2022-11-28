@@ -34,6 +34,7 @@ import com.tencent.devops.process.pojo.github.GithubAppUrl
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.service.GitTransferService
@@ -49,7 +50,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     val workspaceService: WorkspaceService
 ) : UserWorkspaceResource {
 
-    override fun createWorkspace(userId: String, workspace: Workspace): Result<String> {
+    override fun createWorkspace(userId: String, workspace: WorkspaceCreate): Result<String> {
         return Result(workspaceService.createWorkspace(userId, workspace))
     }
 
@@ -123,6 +124,16 @@ class UserWorkspaceResourceImpl @Autowired constructor(
                 workspaceId = workspaceId,
                 page = page,
                 pageSize = pageSize
+            )
+        )
+    }
+
+    override fun checkDevfile(userId: String, pathWithNamespace: String, branch: String): Result<List<String>> {
+        return Result(
+            workspaceService.checkDevfile(
+                userId = userId,
+                pathWithNamespace = pathWithNamespace,
+                branch = branch
             )
         )
     }

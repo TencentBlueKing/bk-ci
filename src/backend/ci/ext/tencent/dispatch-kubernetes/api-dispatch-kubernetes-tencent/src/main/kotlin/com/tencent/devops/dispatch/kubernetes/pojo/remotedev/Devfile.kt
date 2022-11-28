@@ -1,4 +1,4 @@
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.dispatch.kubernetes.pojo.remotedev
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty

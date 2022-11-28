@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.repository.pojo.AuthorizeResult
@@ -63,7 +64,7 @@ interface UserWorkspaceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("工作空间描述", required = true)
-        workspace: Workspace
+        workspace: WorkspaceCreate
     ): Result<String>
 
     @ApiOperation("获取用户工作空间列表")
@@ -180,7 +181,7 @@ interface UserWorkspaceResource {
         pageSize: Int?
     ): Result<List<RemoteDevRepository>>
 
-    @ApiOperation("获取用户已授权代码库列表")
+    @ApiOperation("获取目标授权代码库分支")
     @GET
     @Path("/repository_branch")
     fun getRepositoryBranch(
@@ -199,6 +200,21 @@ interface UserWorkspaceResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
+    ): Result<List<String>>
+
+    @ApiOperation("返回目标代码库devfile路径")
+    @GET
+    @Path("/repository_devfile")
+    fun checkDevfile(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("代码库项目全路径", required = true)
+        @QueryParam("pathWithNamespace")
+        pathWithNamespace: String,
+        @ApiParam("分支", required = false)
+        @QueryParam("branch")
+        branch: String
     ): Result<List<String>>
 
     @ApiOperation("根据用户ID判断用户是否已经oauth认证")

@@ -825,7 +825,7 @@ class GitService @Autowired constructor(
 
     @BkTimed(extraTags = ["operation", "git_ci_file_tree"], value = "bk_tgit_api_time")
     fun getGitCIFileTree(
-        gitProjectId: Long,
+        gitProjectId: String,
         path: String,
         token: String,
         ref: String?,

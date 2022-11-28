@@ -1,5 +1,7 @@
 package com.tencent.devops.remotedev.pojo
 
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.DevfilePorts
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.DevfileVscode
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

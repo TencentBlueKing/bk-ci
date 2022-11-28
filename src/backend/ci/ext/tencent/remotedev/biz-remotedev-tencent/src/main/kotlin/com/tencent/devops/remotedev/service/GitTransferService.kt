@@ -34,4 +34,30 @@ interface GitTransferService {
         pageSize: Int?,
         search: String?
     ): List<String>?
+
+    /**
+     * 获取yaml文件的具体内容
+     * @param filePath 文件路径
+     */
+    fun getFileContent(
+        userId: String,
+        pathWithNamespace: String,
+        filePath: String,
+        ref: String
+    ): String
+
+    /**
+     * 获取Git仓库文件列表
+     * @param path 获取文件路径下的文件列表
+     * @param ref commit hash值、分支 或 tag
+     * @param recursive 是否支持递归目录结构
+     * TODO: 后续多源可以看是否放到具体Git平台的实现中
+     */
+    fun getFileNameTree(
+        userId: String,
+        pathWithNamespace: String,
+        path: String?,
+        ref: String?,
+        recursive: Boolean
+    ): List<String>
 }

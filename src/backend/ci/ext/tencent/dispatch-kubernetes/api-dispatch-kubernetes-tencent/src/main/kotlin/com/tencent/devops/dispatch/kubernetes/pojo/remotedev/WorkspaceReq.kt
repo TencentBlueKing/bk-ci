@@ -12,5 +12,7 @@ data class WorkspaceReq(
     @ApiModelProperty("仓库分支")
     val branch: String,
     @ApiModelProperty("devfile配置路径")
-    val devFilePath: String?
+    val devFilePath: String?,
+    @ApiModelProperty("devfile")
+    val devFile: Devfile
 )

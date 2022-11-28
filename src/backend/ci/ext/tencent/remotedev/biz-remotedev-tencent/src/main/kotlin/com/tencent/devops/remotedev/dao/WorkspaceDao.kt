@@ -80,7 +80,7 @@ class WorkspaceDao {
                     100,
                     workspaceStatus.ordinal,
                     LocalDateTime.now(),
-                    "",
+                    workspace.yaml,
                     ""
                 )
                 .returning(ID)
