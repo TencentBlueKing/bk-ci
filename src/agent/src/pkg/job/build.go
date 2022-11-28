@@ -232,7 +232,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 						"\nRestore %s failed, `run install.sh` or `unzip agent.zip` in %s.",
 					agentJarPath, workDir, agentJarPath, workDir)
 				logs.Error(errorMsg)
-				workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
+				workerBuildFinish(buildInfo.ToFinish(false, errorMsg, api.RecoverRunFileErrorEnum))
 			} else { // #5806 替换后修正版本号
 				if config.GAgentEnv.SlaveVersion != upgradeWorkerFileVersion {
 					config.GAgentEnv.SlaveVersion = upgradeWorkerFileVersion
@@ -244,7 +244,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 					"\nMissing %s, `run install.sh` or `unzip agent.zip` in %s.",
 				agentJarPath, workDir, agentJarPath, workDir)
 			logs.Error(errorMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errorMsg, api.LoseRunFileErrorEnum))
 		}
 	}
 
@@ -272,7 +272,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 	if tmpMkErr != nil {
 		errMsg := fmt.Sprintf("创建临时目录失败(create tmp directory failed): %s", tmpMkErr.Error())
 		logs.Error(errMsg)
-		workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+		workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.MakeTmpDirErrorEnum))
 		return tmpMkErr
 	}
 	if systemutil.IsWindows() {
@@ -292,7 +292,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		if err != nil {
 			errMsg := "start worker process failed: " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.BuildProcessStartErrorEnum))
 			return err
 		}
 		// 添加需要构建结束后删除的文件
@@ -306,7 +306,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		if err != nil {
 			errMsg := "准备构建脚本生成失败(create start script failed): " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.PrepareScriptCreateErrorEnum))
 			return err
 		}
 		pid, err := command.StartProcess(startScriptFile, []string{}, workDir, goEnv, runUser)

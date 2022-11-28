@@ -73,8 +73,11 @@ type DockerResourceOptions struct {
 
 type ThirdPartyBuildWithStatus struct {
 	ThirdPartyBuildInfo
-	Success bool   `json:"success"`
-	Message string `json:"message"`
+	Success      bool       `json:"success"`
+	Message      string     `json:"message"`
+	ErrorType    ErrorTypes `json:"errorType"`
+	ErrorMessage string     `json:"errorMessage"`
+	ErrorCode    ErrorCode  `json:"errorCode"`
 }
 
 type PipelineResponse struct {
