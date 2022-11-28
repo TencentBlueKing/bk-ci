@@ -15,7 +15,7 @@ import (
 
 const (
 	taskIDRandomLength = 5
-	taskIDFormat       = "%s-%s-%d-%s"
+	taskIDFormat       = "%s-%s-%d%s"
 
 	clientHeartBeatTickTime = 5 * time.Second
 

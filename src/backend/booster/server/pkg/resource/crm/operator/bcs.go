@@ -96,6 +96,9 @@ type NodeInfo struct {
 	DiskUsed   float64
 	MemUsed    float64
 	CPUUsed    float64
+	DiskLeft   float64
+	MemLeft    float64
+	CPULeft    float64
 	Attributes map[string]string
 
 	Disabled bool
@@ -105,10 +108,22 @@ func (ni *NodeInfo) figureAvailableInstanceFromFree(cpuPerInstance, memPerInstan
 	if cpuPerInstance == 0 || memPerInstance == 0 || diskPerInstance == 0 {
 		return 0
 	}
-
-	instanceByCPU := (ni.CPUTotal - ni.CPUUsed) / cpuPerInstance
-	instanceByMem := (ni.MemTotal - ni.MemUsed) / memPerInstance
-	instanceByDisk := (ni.DiskTotal - ni.DiskUsed) / diskPerInstance
+	var instanceByCPU, instanceByMem, instanceByDisk float64
+	if ni.CPULeft > 0.0 {
+		instanceByCPU = ni.CPULeft / cpuPerInstance
+	} else {
+		instanceByCPU = (ni.CPUTotal - ni.CPUUsed) / cpuPerInstance
+	}
+	if ni.MemLeft > 0.0 {
+		instanceByMem = ni.MemLeft / memPerInstance
+	} else {
+		instanceByMem = (ni.MemTotal - ni.MemUsed) / memPerInstance
+	}
+	if ni.DiskLeft > 0.0 {
+		instanceByDisk = ni.DiskLeft / diskPerInstance
+	} else {
+		instanceByDisk = (ni.DiskTotal - ni.DiskUsed) / diskPerInstance
+	}
 
 	return int(math.Min(math.Min(instanceByCPU, instanceByMem), instanceByDisk))
 }
@@ -168,18 +183,30 @@ func (nip *NodeInfoPool) GetStats() string {
 
 	message := ""
 	for city, block := range nip.nodeBlockMap {
+		var cpuLeftStr, memLeftStr string
+		if block.CPULeft > 0.0 {
+			cpuLeftStr = fmt.Sprintf("%.2f", block.CPULeft)
+		} else {
+			cpuLeftStr = fmt.Sprintf("%.2f/%.2f", block.CPUTotal-block.CPUUsed,
+				block.CPUTotal)
+		}
+		if block.MemLeft > 0.0 {
+			memLeftStr = fmt.Sprintf("%.2f", block.MemLeft)
+		} else {
+			memLeftStr = fmt.Sprintf("%.2f/%.2f", block.MemTotal-block.MemUsed,
+				block.MemTotal)
+		}
+
 		message += fmt.Sprintf(
 			"\nCity: %s[cpuPerInstance: %.2f, memPerInstance:%.2f], available-instance: %d, report-instance: %d, noready-instance: %d "+
-				"CPU-Left: %.2f/%.2f, MEM-Left: %.2f/%.2f",
+				"CPU-Left: %s, MEM-Left: %s",
 			city,
 			block.CPUPerInstance,
 			block.MemPerInstance,
 			block.AvailableInstance-block.noReadyInstance,
 			block.AvailableInstance, block.noReadyInstance,
-			block.CPUTotal-block.CPUUsed,
-			block.CPUTotal,
-			block.MemTotal-block.MemUsed,
-			block.MemTotal,
+			cpuLeftStr,
+			memLeftStr,
 		)
 	}
 	return message
@@ -263,6 +290,9 @@ func (nip *NodeInfoPool) UpdateResources(nodeInfoList []*NodeInfo) {
 		newBlock.DiskUsed += NodeInfo.DiskUsed
 		newBlock.MemUsed += NodeInfo.MemUsed
 		newBlock.CPUUsed += NodeInfo.CPUUsed
+		newBlock.DiskLeft += NodeInfo.DiskLeft
+		newBlock.MemLeft += NodeInfo.MemLeft
+		newBlock.CPULeft += NodeInfo.CPULeft
 		//inherit the instance model if exist
 		cpuPerInstance, memPerInstance := nip.getNodeInstance(key)
 		newBlock.AvailableInstance += NodeInfo.figureAvailableInstanceFromFree(
@@ -291,6 +321,9 @@ func (nip *NodeInfoPool) UpdateResources(nodeInfoList []*NodeInfo) {
 		nodeBlock.DiskUsed = newBlock.DiskUsed
 		nodeBlock.MemUsed = newBlock.MemUsed
 		nodeBlock.CPUUsed = newBlock.CPUUsed
+		nodeBlock.DiskLeft = newBlock.DiskLeft
+		nodeBlock.MemLeft = newBlock.MemLeft
+		nodeBlock.CPULeft = newBlock.CPULeft
 		nodeBlock.CPUPerInstance = newBlock.CPUPerInstance
 		nodeBlock.MemPerInstance = newBlock.MemPerInstance
 		nodeBlock.AvailableInstance = newBlock.AvailableInstance
@@ -356,6 +389,9 @@ type NodeInfoBlock struct {
 	DiskUsed       float64
 	MemUsed        float64
 	CPUUsed        float64
+	DiskLeft       float64
+	MemLeft        float64
+	CPULeft        float64
 	CPUPerInstance float64
 	MemPerInstance float64
 
@@ -429,17 +465,23 @@ func recordResource(node *NodeInfo) {
 	if node.Disabled {
 		selfMetric.ResourceStatusController.UpdateCPUTotal(metricLabels, 0)
 		selfMetric.ResourceStatusController.UpdateCPUUsed(metricLabels, 0)
+		selfMetric.ResourceStatusController.UpdateCPULeft(metricLabels, 0)
 		selfMetric.ResourceStatusController.UpdateMemTotal(metricLabels, 0)
 		selfMetric.ResourceStatusController.UpdateMemUsed(metricLabels, 0)
+		selfMetric.ResourceStatusController.UpdateMemLeft(metricLabels, 0)
 		selfMetric.ResourceStatusController.UpdateDiskTotal(metricLabels, 0)
 		selfMetric.ResourceStatusController.UpdateDiskUsed(metricLabels, 0)
+		selfMetric.ResourceStatusController.UpdateDiskLeft(metricLabels, 0)
 		return
 	}
 
 	selfMetric.ResourceStatusController.UpdateCPUTotal(metricLabels, node.CPUTotal)
 	selfMetric.ResourceStatusController.UpdateCPUUsed(metricLabels, node.CPUUsed)
+	selfMetric.ResourceStatusController.UpdateCPULeft(metricLabels, node.CPULeft)
 	selfMetric.ResourceStatusController.UpdateMemTotal(metricLabels, node.MemTotal)
 	selfMetric.ResourceStatusController.UpdateMemUsed(metricLabels, node.MemUsed)
+	selfMetric.ResourceStatusController.UpdateMemLeft(metricLabels, node.MemLeft)
 	selfMetric.ResourceStatusController.UpdateDiskTotal(metricLabels, node.DiskTotal)
 	selfMetric.ResourceStatusController.UpdateDiskUsed(metricLabels, node.DiskUsed)
+	selfMetric.ResourceStatusController.UpdateDiskLeft(metricLabels, node.DiskLeft)
 }

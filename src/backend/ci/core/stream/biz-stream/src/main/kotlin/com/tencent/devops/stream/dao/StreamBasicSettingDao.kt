@@ -501,32 +501,32 @@ class StreamBasicSettingDao {
                 .where(ID.`in`(idList)).execute()
         }
     }
-}
-fun getProjectByGitDomain(
-    dslContext: DSLContext,
-    gitDomain: String,
-    limit: Int
-): Result<Record1<Long>> {
-    with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
-        return dslContext.select(ID).from(this)
-            .where(HOME_PAGE.like("%$gitDomain%"))
-            .limit(limit)
-            .fetch()
+    fun getProjectByGitDomain(
+        dslContext: DSLContext,
+        gitDomain: String,
+        limit: Int
+    ): Result<Record1<Long>> {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.select(ID).from(this)
+                .where(HOME_PAGE.like("%$gitDomain%"))
+                .limit(limit)
+                .fetch()
+        }
     }
-}
 
-fun updateGitDomainByIds(
-    dslContext: DSLContext,
-    oldGitDomain: String,
-    newGitDomain: String,
-    idList: List<Long>
-): Int {
-    with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
-        return dslContext.update(this)
-            .set(URL, URL.replace(oldGitDomain, newGitDomain))
-            .set(HOME_PAGE, HOME_PAGE.replace(oldGitDomain, newGitDomain))
-            .set(GIT_HTTP_URL, GIT_HTTP_URL.replace(oldGitDomain, newGitDomain))
-            .set(GIT_SSH_URL, GIT_SSH_URL.replace(oldGitDomain, newGitDomain))
-            .where(ID.`in`(idList)).execute()
+    fun updateGitDomainByIds(
+        dslContext: DSLContext,
+        oldGitDomain: String,
+        newGitDomain: String,
+        idList: List<Long>
+    ): Int {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.update(this)
+                .set(URL, URL.replace(oldGitDomain, newGitDomain))
+                .set(HOME_PAGE, HOME_PAGE.replace(oldGitDomain, newGitDomain))
+                .set(GIT_HTTP_URL, GIT_HTTP_URL.replace(oldGitDomain, newGitDomain))
+                .set(GIT_SSH_URL, GIT_SSH_URL.replace(oldGitDomain, newGitDomain))
+                .where(ID.`in`(idList)).execute()
+        }
     }
 }
