@@ -167,7 +167,7 @@ class ApiAspect(
         } catch (ignored: ParamBlankException) {
             logger.info("openapi check parameters error| error info:${ignored.message}")
             throw CustomException(Response.Status.BAD_REQUEST, "参数校验失败: ${ignored.message}")
-        } catch (ignored: NullPointerException) {
+        } catch (error: NullPointerException) {
             // 如果在openapi层报NPE，一般是必填参数用户未传
             val parameterValue = pdj.args
             val parameterMap = ((pdj.signature as MethodSignature).parameterNames zip parameterValue).toMap()
@@ -183,6 +183,7 @@ class ApiAspect(
                     throw CustomException(Response.Status.BAD_REQUEST, "参数校验失败: 请求参数${kParameter.name} 不能为空")
                 }
             }
+            throw error
         } finally {
             logger.info("$methodName 方法耗时${System.currentTimeMillis() - begin}毫秒")
         }
