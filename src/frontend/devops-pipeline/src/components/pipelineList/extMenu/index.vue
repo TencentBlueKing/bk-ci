@@ -73,6 +73,9 @@
 
     .pipeline-ext-menu {
         display: flex;
+        .tippy-active .dot-menu-trigger {
+            background: #EAEBF0;
+        }
     }
 
     .ext-dot {
@@ -119,8 +122,8 @@
         text-align: center;
         font-size: 22px;
         cursor: pointer;
+        border-radius: 50%;
         &:hover {
-            border-radius: 50%;
             background: #EAEBF0;
             color: $primaryColor;
         }
@@ -140,8 +143,8 @@
             width: 100%;
             height: 32px;
             line-height: 32px;
-            text-align: center;
             font-size: 12px;
+            padding: 0 20px;
             color: $fontWeightColor;
             background-color: #fff;
             cursor: pointer;
