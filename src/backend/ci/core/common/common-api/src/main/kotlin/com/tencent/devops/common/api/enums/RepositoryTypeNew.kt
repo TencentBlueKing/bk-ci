@@ -38,13 +38,5 @@ enum class RepositoryTypeNew {
             if (type.isNullOrBlank()) return ID
             return valueOf(type)
         }
-
-        fun toRepositoryType(type: RepositoryTypeNew): RepositoryType? {
-            return when (type) {
-                ID -> RepositoryType.ID
-                NAME -> RepositoryType.NAME
-                else -> null
-            }
-        }
     }
 }
