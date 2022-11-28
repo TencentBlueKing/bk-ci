@@ -26,11 +26,17 @@
         <bk-table-column width="250" sortable="custom" :label="$t('pipelineName')" prop="pipelineName">
             <template slot-scope="props">
                 <!-- hack disabled event -->
+                <span
+                    v-if="!props.row.hasPermission"
+                    class="pointer"
+                    @click="applyPermission(props.row)"
+                >
+                    {{props.row.pipelineName}}
+                </span>
                 <router-link
-                    v-if="!isDeleteView && props.row.historyRoute"
+                    v-else-if="!isDeleteView && props.row.historyRoute"
                     class="pipeline-cell-link"
                     :disabled="!props.row.hasPermission"
-                    :event="props.row.hasPermission ? 'click' : ''"
                     :to="props.row.historyRoute">
                     {{props.row.pipelineName}}
                 </router-link>
