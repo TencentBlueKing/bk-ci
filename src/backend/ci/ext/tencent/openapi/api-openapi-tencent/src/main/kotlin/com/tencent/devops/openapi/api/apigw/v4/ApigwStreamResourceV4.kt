@@ -13,6 +13,7 @@ import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.OpenapiTriggerReq
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
@@ -119,6 +120,30 @@ interface ApigwStreamResourceV4 {
         @ApiParam("TriggerBuild请求", required = true)
         triggerBuildReq: OpenapiTriggerReq
     ): Result<TriggerBuildResult>
+
+    @ApiOperation(
+        "通过yaml文件的路径获取到流水线信息",
+        tags = ["v4_stream_app_name2pipelineInfo", "v4_stream_user_name2pipelineInfo"]
+    )
+    @GET
+    @Path("/gitProjects/{projectId}/name_to_pipelineInfo")
+    fun nameToPipelineId(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID(带前缀 如git_xxx)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "yaml文件地址", required = true)
+        @QueryParam("yamlPath")
+        yamlPath: String
+    ): Result<StreamGitProjectPipeline>
 
     @ApiOperation(
         "工蜂project转换为streamProject",

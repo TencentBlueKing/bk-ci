@@ -39,6 +39,7 @@ import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
 import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -51,6 +52,7 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+@AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
 class AuthAutoConfiguration {
 
     @Bean

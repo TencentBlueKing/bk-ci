@@ -27,12 +27,15 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.store.service.atom.TxMarketAtomService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -81,5 +84,28 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
             }
         }
         return Result(true)
+    }
+
+    override fun updateAtomFileContent(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        content: String,
+        filePath: String
+    ): Result<Boolean> {
+        val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+        return client.get(ServiceGitRepositoryResource::class)
+            .updateTGitFileContent(
+                userId = userId,
+                repoId = atomRecord.repositoryHashId,
+                repositoryType = RepositoryType.ID,
+                gitOperationFile = GitOperationFile(
+                    filePath = filePath,
+                    branch = MASTER,
+                    encoding = GitCodeFileEncoding.TEXT,
+                    content = content,
+                    commitMessage = "updateAtomRepositoryFile: $filePath"
+                )
+            )
     }
 }

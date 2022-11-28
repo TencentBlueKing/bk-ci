@@ -20,6 +20,7 @@ import com.tencent.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 import javax.ws.rs.core.Response
@@ -33,16 +34,25 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
         private const val LOCAL_SYNC_CODE_PLUGIN_ATOM_CODE = "syncLocalCode"
     }
 
+    @Value("\${prebuild.marketRun.enable:#{false}}")
+    private val marketRunTaskData: Boolean = false
+
+    @Value("\${prebuild.marketRun.atomCode:#{null}}")
+    private val runPlugInAtomCodeData: String? = null
+
+    @Value("\${prebuild.marketRun.atomVersion:#{null}}")
+    private val runPlugInVersionData: String? = null
+
     private val channelCode = ChannelCode.BS
 
     override val marketRunTask: Boolean
-        get() = false
+        get() = marketRunTaskData
 
     override val runPlugInAtomCode: String?
-        get() = null
+        get() = runPlugInAtomCodeData
 
     override val runPlugInVersion: String?
-        get() = null
+        get() = runPlugInVersionData
 
     override val defaultImage: String
         get() = "http://mirrors.tencent.com/ci/tlinux3_ci:1.5.0"

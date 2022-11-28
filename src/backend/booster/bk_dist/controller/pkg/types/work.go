@@ -53,6 +53,11 @@ func NewWork(id string, conf *config.ServerConfig, mgrSet MgrSet, rp *recorder.R
 	work.remote = mgrSet.Remote(ctx, work)
 	work.resource = mgrSet.Resource(ctx, work)
 	work.basic.Info().Init()
+
+	// TODO : work.local need Init also, but it depend basic.Setting
+	work.local.Init()
+	work.remote.Init()
+
 	return work
 }
 

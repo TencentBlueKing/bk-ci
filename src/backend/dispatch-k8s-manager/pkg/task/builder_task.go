@@ -168,7 +168,7 @@ func watchBuilderTaskPodCreateOrStart(event watch.Event, pod *corev1.Pod, taskId
 	}
 
 	podStatus := pod.Status
-	logs.Info(fmt.Sprintf("job|task|%s|pod|%s|statue|%s|type|%s", taskId, pod.Name, podStatus.Phase, event.Type))
+	logs.Info(fmt.Sprintf("builder|task|%s|pod|%s|statue|%s|type|%s", taskId, pod.Name, podStatus.Phase, event.Type))
 
 	builderName, _ := pod.Labels[config.Config.Dispatch.Label]
 

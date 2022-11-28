@@ -33,7 +33,8 @@ type usageWorkerSet struct {
 	occupied int
 }
 
-func newResource(hl []*dcProtocol.Host, usageLimit map[dcSDK.JobUsage]int) *resource {
+// func newResource(hl []*dcProtocol.Host, usageLimit map[dcSDK.JobUsage]int) *resource {
+func newResource(hl []*dcProtocol.Host) *resource {
 	wl := make([]*worker, 0, len(hl))
 	total := 0
 	for _, h := range hl {

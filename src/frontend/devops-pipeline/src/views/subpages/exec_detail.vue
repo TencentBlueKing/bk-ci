@@ -24,8 +24,8 @@
                         <i v-else :title="$t('history.stopBuild')" class="devops-icon icon-stop-shape" @click.stop="stopExecute(execDetail.id)"></i>
                     </div>
                     <div class="info-item">
-                        <span class="item-label">{{ $t('details.executor') }}：</span>
-                        <span class="trigger-mode">{{ execDetail.userId || '--' }}</span>
+                        <span class="item-label">{{ $t('details.trigger') }}：</span>
+                        <span class="trigger-mode">{{ execDetail.triggerUser || '--' }}</span>
                     </div>
                     <div class="info-item">
                         <span class="item-label">{{ $t('details.executionTime') }}：</span>
@@ -351,6 +351,7 @@
 
         watch: {
             execDetail (val) {
+                console.log(val, 'execDetailexecDetail')
                 this.isLoading = val === null
                 if (val?.model?.instanceFromTemplate && val?.model?.templateId) {
                     this.requestMatchTemplateRules(val.model.templateId)

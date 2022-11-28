@@ -1,4 +1,6 @@
 {
+  "$schema" : "http://json-schema.org/draft-07/schema",
+  "$comment" : "https://iwiki.woa.com/pages/viewpage.action?pageId=686380000",
   "additionalProperties" : false,
   "required" : [ "gates" ],
   "properties" : {
@@ -78,7 +80,7 @@
       "type" : "string"
     },
     "gates" : {
-      "description" : "质量红线模板定义。查看支持红线的插件与指标详情：补充文档/pages/viewpage.action?pageId=1049941592",
+      "description" : "质量红线模板定义。查看支持红线的插件与指标详情：https://iwiki.woa.com/pages/viewpage.action?pageId=1049941592",
       "type" : "array",
       "items" : {
         "type" : "object",
@@ -90,7 +92,7 @@
             "type" : "string"
           },
           "rule" : {
-            "description" : "红线规则，可以定义多个规则，每个规则支持如下格式：格式一 [插件code].[指标名][操作符][阈值] 例CodeccCheckAtomDebug.coverity_serious_defect <= 2，格式二 [STEP@step-name].[指标名][操作符][阈值] 例 STEP@CCK*.coverity_serious_defect <= 2 详见：补充文档/pages/viewpage.action?pageId=833350128#Stage%E5%87%86%E5%85%A5/%E5%87%86%E5%87%BA%EF%BC%9A%E4%BA%BA%E5%B7%A5%E5%AE%A1%E6%A0%B8%E5%92%8C%E8%B4%A8%E9%87%8F%E7%BA%A2%E7%BA%BF-%E8%B4%A8%E9%87%8F%E7%BA%A2%E7%BA%BFgates",
+            "description" : "红线规则，可以定义多个规则，每个规则支持如下格式：格式一 [插件code].[指标名][操作符][阈值] 例CodeccCheckAtomDebug.coverity_serious_defect <= 2，格式二 [STEP@step-name].[指标名][操作符][阈值] 例 STEP@CCK*.coverity_serious_defect <= 2 详见：https://iwiki.woa.com/pages/viewpage.action?pageId=833350128#Stage%E5%87%86%E5%85%A5/%E5%87%86%E5%87%BA%EF%BC%9A%E4%BA%BA%E5%B7%A5%E5%AE%A1%E6%A0%B8%E5%92%8C%E8%B4%A8%E9%87%8F%E7%BA%A2%E7%BA%BF-%E8%B4%A8%E9%87%8F%E7%BA%A2%E7%BA%BFgates",
             "type" : "array",
             "items" : {
               "type" : "string"
@@ -137,7 +139,5 @@
         }
       }
     }
-  },
-  "$schema" : "http://json-schema.org/draft-07/schema",
-  "$comment" : "补充文档/pages/viewpage.action?pageId=686380000"
+  }
 }

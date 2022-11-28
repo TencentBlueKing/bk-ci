@@ -154,6 +154,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -585,7 +586,9 @@ class PipelineRuntimeService @Autowired constructor(
         buildIds: Set<String>,
         startBeginTime: String? = null,
         endBeginTime: String? = null,
-        projectId: String? = null
+        projectId: String? = null,
+        buildStatus: Set<Int>? = null,
+        pipelineId: String? = null
     ): List<BuildHistory> {
         val records = pipelineBuildDao.listBuildInfoByBuildIds(
             dslContext = dslContext,
@@ -621,6 +624,12 @@ class PipelineRuntimeService @Autowired constructor(
         terminateFlag: Boolean = false
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
+        // 记录该构建取消人信息
+        pipelineBuildDetailService.updateBuildCancelUser(
+            projectId = projectId,
+            buildId = buildId,
+            cancelUserId = userId
+        )
         // 发送取消事件
         val actionType = if (terminateFlag) ActionType.TERMINATE else ActionType.END
         // 发送取消事件
@@ -1075,6 +1084,7 @@ class PipelineRuntimeService @Autowired constructor(
         } else if (triggerReviewers?.isNotEmpty() == true) {
             prepareTriggerReview(
                 userId = startParamMap[PIPELINE_START_USER_ID] ?: pipelineInfo.lastModifyUser,
+                triggerUser = startParamMap[PIPELINE_START_USER_NAME] ?: pipelineInfo.lastModifyUser,
                 buildId = buildId,
                 pipelineId = pipelineId,
                 projectId = projectId,
@@ -1226,6 +1236,7 @@ class PipelineRuntimeService @Autowired constructor(
 
     private fun prepareTriggerReview(
         userId: String,
+        triggerUser: String,
         buildId: String,
         pipelineId: String,
         projectId: String,
@@ -1255,10 +1266,10 @@ class PipelineRuntimeService @Autowired constructor(
                 source = "build waiting for REVIEW",
                 projectId = projectId, pipelineId = pipelineId,
                 userId = userId, buildId = buildId,
-                receivers = if (triggerReviewers.contains(userId)) {
+                receivers = if (triggerReviewers.contains(triggerUser)) {
                     triggerReviewers
                 } else {
-                    triggerReviewers.plus(userId)
+                    triggerReviewers.plus(triggerUser)
                 },
                 titleParams = mutableMapOf(
                     "projectName" to "need to add in notifyListener",
@@ -1270,7 +1281,7 @@ class PipelineRuntimeService @Autowired constructor(
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewers" to triggerReviewers.joinToString(),
-                    "triggerUser" to userId
+                    "triggerUser" to triggerUser
                 ),
                 position = null,
                 stageId = null
@@ -1624,6 +1635,19 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getPipelineBuildHistoryCount(projectId: String, pipelineId: String): Int {
         return pipelineBuildDao.count(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId)
+    }
+
+    fun getBuildsNoNeedPipelineId(
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?
+    ): List<String> {
+        return pipelineBuildDao.getBuildsNoNeedPipelineId(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildStatus = buildStatus
+        )
     }
 
     fun getPipelineBuildHistoryCount(

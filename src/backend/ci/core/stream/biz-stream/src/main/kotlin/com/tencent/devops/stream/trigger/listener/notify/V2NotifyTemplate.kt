@@ -27,20 +27,22 @@
 
 package com.tencent.devops.stream.trigger.listener.notify
 
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+
 // v2 Stream的默认通知模板
 object V2NotifyTemplate {
 
     fun getEmailTitle(
-        isSuccess: Boolean,
+        status: BuildStatus,
         projectName: String,
         branchName: String,
         pipelineName: String,
         buildNum: String
     ): String {
-        val state = if (isSuccess) {
-            "run successes"
-        } else {
-            "run failed"
+        val state = when {
+            status.isSuccess() -> "run successes"
+            status.isCancel() -> "run cancel"
+            else -> "run failed"
         }
         return """
             [$projectName][$branchName] $pipelineName #$buildNum $state
@@ -48,7 +50,7 @@ object V2NotifyTemplate {
     }
 
     fun getEmailContent(
-        isSuccess: Boolean,
+        status: BuildStatus,
         projectName: String,
         branchName: String,
         pipelineName: String,
@@ -59,10 +61,10 @@ object V2NotifyTemplate {
         commitId: String,
         webUrl: String
     ): String {
-        val state = if (isSuccess) {
-            "run successes"
-        } else {
-            "run failed"
+        val state = when {
+            status.isSuccess() -> "run successes"
+            status.isCancel() -> "run cancel"
+            else -> "run failed"
         }
         return """
             <!DOCTYPE html>
