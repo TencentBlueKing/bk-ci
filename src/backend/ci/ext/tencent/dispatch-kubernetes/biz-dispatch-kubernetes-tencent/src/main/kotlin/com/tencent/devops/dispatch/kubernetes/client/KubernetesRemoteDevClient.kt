@@ -161,7 +161,7 @@ class KubernetesRemoteDevClient @Autowired constructor(
         userId: String,
         workspaceName: String
     ): String? {
-        val url = "api/remoting/workspaces/${workspaceName}/urls"
+        val url = "/api/remoting/workspaces/${workspaceName}/urls"
         logger.info("$userId|$workspaceName Get workspaceUrl request url: $url")
 
         val request = clientCommon.baseRequest(userId, url).get().build()
