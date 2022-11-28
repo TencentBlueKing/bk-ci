@@ -318,7 +318,7 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 
 	// 默认绑定本机的java用来执行worker，因为仅支持linux容器所以仅限linux构建机绑定
 	if systemutil.IsLinux() {
-		javaDir := config.GetJavaDir()
+		javaDir := config.GAgentConfig.JdkDirPath
 		mounts = append(mounts, mount.Mount{
 			Type:     mount.TypeBind,
 			Source:   javaDir,

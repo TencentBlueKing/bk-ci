@@ -113,6 +113,7 @@ class AgentUpgradeService @Autowired constructor(
         return client.get(ServiceProjectTagResource::class).checkProjectRouter(projectId).data ?: false
     }
 
+    @Suppress("ComplexMethod")
     private fun checkCanUpgrade(
         goAgentCurrentVersion: String,
         workCurrentVersion: String,
