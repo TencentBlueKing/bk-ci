@@ -46,7 +46,7 @@ import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_LOG_FILE_FAIL
+import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_FAIL
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
@@ -423,7 +423,7 @@ class OpAtomServiceImpl @Autowired constructor(
                 }
             } else {
                 throw ErrorCodeException(
-                    errorCode = USER_UPLOAD_LOG_FILE_FAIL,
+                    errorCode = USER_UPLOAD_FILE_PATH_FAIL,
                     params = arrayOf(relativePath ?: "")
                 )
             }
