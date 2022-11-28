@@ -493,8 +493,7 @@ class TxProjectServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             // 为防止V0,V3发布存在时间差,导致项目列表拉取异常
             logger.warn("get iam Project fail $userId $e")
-            throw e
-            // return emptyList()
+            return emptyList()
         }
     }
 
