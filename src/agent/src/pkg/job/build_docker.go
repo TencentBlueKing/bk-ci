@@ -138,7 +138,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	// 本地没有镜像的需要拉取新的镜像
 	if !localExist {
 		postLog(false, "开始拉取镜像，镜像名称："+imageName, buildInfo)
-		postLog(false, "过大的镜像拉取时间过长，等待即可，镜像拉取完即可正常执行。也可以预先在本地拉取，构建机会直接启动已存在镜像。", buildInfo)
+		postLog(false, "[提示]镜像比较大时，首次拉取时间会比较长。可以在构建机本地预先拉取镜像来提高流水线启动速度。", buildInfo)
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
 			RegistryAuth: generateDockerAuth(dockerBuildInfo.Credential),
 		})
