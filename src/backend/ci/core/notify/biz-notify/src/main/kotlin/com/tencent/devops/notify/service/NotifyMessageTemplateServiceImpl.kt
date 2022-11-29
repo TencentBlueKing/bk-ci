@@ -73,7 +73,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     private val weworkService: WeworkService
 ) : NotifyMessageTemplateService {
 
-    private val logger = LoggerFactory.getLogger(NotifyMessageTemplateServiceImpl::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(NotifyMessageTemplateServiceImpl::class.java)
+        private const val MARKDOWN_TEMPLATE_TAIL = "__markdown"
+    }
 
     @Value("\${wework.domain}")
     private val userUseDomain: Boolean? = true
@@ -521,7 +524,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     }
 
     override fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
-        val templateCode = request.templateCode
+        val templateCode = if (request.markdownContent == true) {
+            // 对支持markdown的模板，单独建一条模板来记录。其 templateCode 将尾随后缀 __markdown
+            request.templateCode + MARKDOWN_TEMPLATE_TAIL
+        } else request.templateCode
         // 查出消息模板
         val commonNotifyMessageTemplateRecord =
             commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, templateCode)
@@ -788,6 +794,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         wechatNotifyMessage.priority = EnumNotifyPriority.parse(commonNotifyMessageTemplate.priority.toString())
         wechatNotifyMessage.source = EnumNotifySource.parse(commonNotifyMessageTemplate.source.toInt())
             ?: EnumNotifySource.BUSINESS_LOGIC
+        wechatNotifyMessage.markdownContent = sendNotifyMessageTemplateRequest.markdownContent ?: false
         weworkService.sendMqMsg(wechatNotifyMessage)
     }
 

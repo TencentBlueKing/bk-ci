@@ -53,7 +53,11 @@ data class ManualReviewUserTaskElement(
     @ApiModelProperty("发送的通知类型", required = false)
     var notifyType: MutableList<String>? = null,
     @ApiModelProperty("发送通知的标题", required = false)
-    var notifyTitle: String? = null
+    var notifyTitle: String? = null,
+    @ApiModelProperty("是否以markdown格式发送审核说明", required = false)
+    var markdownContent: Boolean? = false,
+    @ApiModelProperty("企业微信群id", required = false)
+    var notifyGroup: MutableList<String>? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "manualReviewUserTask"
