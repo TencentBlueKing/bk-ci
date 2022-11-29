@@ -225,7 +225,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         } else {
             val isAuthSecrecyChange = projectInfo.isAuthSecrecy != resourceUpdateInfo.projectUpdateInfo.authSecrecy
             val isSubjectScopesChange = (dbSubjectscopes.toSet() != iamSubjectScopes.toSet())
-            logger.info("Rbac modifyResource :$isAuthSecrecyChange|$isAuthSecrecyChange")
+            logger.info("Rbac modifyResource :$isAuthSecrecyChange|$isSubjectScopesChange")
             // 若可授权人员范围和私密字段未改变，直接结束
             if (!isAuthSecrecyChange && !isSubjectScopesChange) {
                 return

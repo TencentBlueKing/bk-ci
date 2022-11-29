@@ -861,8 +861,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         val projectInfo = projectDao.get(dslContext, projectId) ?: throw InvalidParamException("项目不存在")
         val status = projectInfo.approvalStatus
-        if (status != ApproveStatus.CREATE_PENDING.status
-            || status != ApproveStatus.CREATE_REJECT.status) {
+        if (!(status == ApproveStatus.CREATE_PENDING.status ||
+                status == ApproveStatus.CREATE_REJECT.status
+        )) {
             logger.warn(
                 "The project can't be cancel！ : ${projectInfo.englishName}"
             )
