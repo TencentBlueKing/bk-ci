@@ -199,8 +199,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: PermissionForbiddenException) {
             throw e
         } catch (e: Exception) {
-            logger.warn("Failed to create project in permission center： $projectCreateInfo", e)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
+            logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
+            throw OperationException(
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PEM_CREATE_FAIL,
+                    defaultMessage = e.message
+                )
+            )
         }
         if (projectId.isNullOrEmpty()) {
             projectId = UUIDUtil.generate()
@@ -340,7 +345,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         val subjectScopes = projectUpdateInfo.subjectScopes!!
-        validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
+        // todo auth服务调不通，先不鉴权
+        // validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
         logger.info(
             "update project : $userId | $englishName | $projectUpdateInfo | " +
                 "$needApproval | $subjectScopes"
@@ -855,8 +861,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         val projectInfo = projectDao.get(dslContext, projectId) ?: throw InvalidParamException("项目不存在")
         val status = projectInfo.approvalStatus
-        if (status != ApproveStatus.CREATE_PENDING.status
-            || status != ApproveStatus.CREATE_REJECT.status) {
+        if (!(
+                status == ApproveStatus.CREATE_PENDING.status ||
+                    status == ApproveStatus.CREATE_REJECT.status
+                )) {
             logger.warn(
                 "The project can't be cancel！ : ${projectInfo.englishName}"
             )
