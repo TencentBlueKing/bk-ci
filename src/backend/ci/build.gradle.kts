@@ -119,12 +119,15 @@ allprojects {
         it.exclude("com.zaxxer", "HikariCP-java7")
         it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
     }
-    // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656
     dependencies {
+        // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656
         components {
             withModule("org.dom4j:dom4j") {
                 allVariants { withDependencies { clear() } }
             }
         }
+        // 强制用1.5.32编译
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.32")
+        implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.32")
     }
 }
