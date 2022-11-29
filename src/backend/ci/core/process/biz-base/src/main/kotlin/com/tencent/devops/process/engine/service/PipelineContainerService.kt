@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -56,7 +57,9 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -86,6 +89,7 @@ class PipelineContainerService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val vmOperatorTaskGenerator: VmOperateTaskGenerator,
     private val containerBuildDetailService: ContainerBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineBuildContainerDao: PipelineBuildContainerDao
 ) {
     companion object {
@@ -191,9 +195,11 @@ class PipelineContainerService @Autowired constructor(
 
     fun updateMatrixGroupStatus(
         projectId: String,
+        pipelineId: String,
         buildId: String,
         stageId: String,
         matrixGroupId: String,
+        executeCount: Int,
         buildStatus: BuildStatus,
         modelContainer: Container?,
         controlOption: PipelineBuildContainerControlOption
@@ -212,6 +218,17 @@ class PipelineContainerService @Autowired constructor(
             buildId = buildId,
             stageId = stageId,
             matrixGroupId = matrixGroupId,
+            buildStatus = buildStatus,
+            matrixOption = controlOption.matrixControlOption!!,
+            modelContainer = modelContainer
+        )
+        containerBuildRecordService.updateMatrixGroupContainer(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            matrixGroupId = matrixGroupId,
+            executeCount = executeCount,
             buildStatus = buildStatus,
             matrixOption = controlOption.matrixControlOption!!,
             modelContainer = modelContainer
@@ -269,6 +286,8 @@ class PipelineContainerService @Autowired constructor(
         container: Container,
         context: MatrixBuildContext,
         buildTaskList: MutableList<PipelineBuildTask>,
+        recordTaskList: MutableList<BuildRecordTask>,
+        resourceVersion: Int?,
         matrixGroupId: String,
         jobControlOption: JobControlOption,
         postParentIdMap: Map<String, String>,
@@ -303,6 +322,29 @@ class PipelineContainerService @Autowired constructor(
                 executeCount = context.executeCount,
                 postParentIdMap = postParentIdMap
             )
+            resourceVersion?.let {
+                recordTaskList.add(
+                    BuildRecordTask(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        stageId = stage.id!!,
+                        containerId = container.id!!,
+                        taskSeq = taskSeq,
+                        taskId = atomElement.id!!,
+                        classType = MatrixStatusElement.classType,
+                        atomCode = atomElement.getAtomCode(),
+                        executeCount = context.executeCount,
+                        originClassType = atomElement.getClassType(),
+                        resourceVersion = resourceVersion,
+                        startTime = null,
+                        endTime = null,
+                        timestamps = emptyList(),
+                        timeCost = null,
+                        taskVar = emptyMap()
+                    )
+                )
+            }
         }
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
         supplyVMTask(

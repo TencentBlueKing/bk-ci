@@ -282,6 +282,7 @@ class MetricsServiceImpl constructor(
                 },
                 costTime = element.elapsed ?: 0L,
                 successFlag = BuildStatus.valueOf(elementStatus!!).isSuccess(),
+                // TODO 新构建详情中不带有错误信息，需要读取build表
                 errorType = element.errorType?.let { ErrorType.getErrorType(it)?.num },
                 errorCode = element.errorCode,
                 errorMsg = element.errorMsg

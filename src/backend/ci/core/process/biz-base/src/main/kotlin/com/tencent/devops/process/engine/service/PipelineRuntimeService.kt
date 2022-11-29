@@ -1017,6 +1017,7 @@ class PipelineRuntimeService @Autowired constructor(
                     } finally {
                         pipelineVersionLock.unlock()
                     }
+
                     // detail记录,未正式启动，先排队状态
                     buildDetailDao.create(
                         dslContext = transactionContext,

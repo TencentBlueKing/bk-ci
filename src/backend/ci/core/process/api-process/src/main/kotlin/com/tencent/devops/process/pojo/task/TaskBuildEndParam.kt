@@ -34,8 +34,12 @@ import io.swagger.annotations.ApiModelProperty
 data class TaskBuildEndParam(
     @ApiModelProperty("项目id", required = false)
     val projectId: String,
+    @ApiModelProperty("流水线id", required = false)
+    val pipelineId: String,
     @ApiModelProperty("构建id", required = false)
     val buildId: String,
+    @ApiModelProperty("容器作业id", required = false)
+    val containerId: String,
     @ApiModelProperty("任务id", required = false)
     val taskId: String,
     @ApiModelProperty("状态", required = false)

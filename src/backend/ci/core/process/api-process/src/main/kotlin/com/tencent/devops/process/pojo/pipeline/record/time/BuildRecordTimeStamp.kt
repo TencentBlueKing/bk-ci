@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline.record
+package com.tencent.devops.process.pojo.pipeline.record.time
 
 import com.tencent.devops.process.pojo.enums.BuildTimestampType
 import io.swagger.annotations.ApiModel

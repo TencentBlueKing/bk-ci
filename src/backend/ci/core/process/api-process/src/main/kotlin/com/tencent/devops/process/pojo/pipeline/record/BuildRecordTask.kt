@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
+import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
+import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
@@ -52,13 +54,19 @@ data class BuildRecordTask(
     @ApiModelProperty("执行次数", required = true)
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
-    val taskVar: Map<String, Any>,
+    var taskVar: Map<String, Any>,
+    @ApiModelProperty("插件类型标识", required = true)
+    val classType: String,
     @ApiModelProperty("市场插件标识", required = true)
     val atomCode: String,
+    @ApiModelProperty("分裂前原类型标识", required = false)
+    var originClassType: String?, // 如果为空则不再矩阵内，一个字段多个用处
     @ApiModelProperty("开始时间", required = false)
-    val startTime: LocalDateTime?,
+    var startTime: LocalDateTime?,
     @ApiModelProperty("结束时间", required = false)
-    val endTime: LocalDateTime?,
+    var endTime: LocalDateTime?,
     @ApiModelProperty("业务时间戳集合", required = true)
-    val timestamps: List<BuildRecordTimeStamp>
+    var timestamps: List<BuildRecordTimeStamp>,
+    @ApiModelProperty("各项耗时", required = true)
+    var timeCost: BuildRecordTimeCost?
 )

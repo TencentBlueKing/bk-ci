@@ -53,6 +53,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.PipelineContextService
@@ -68,6 +69,7 @@ class StartActionTaskContainerCmd(
     private val redisOperation: RedisOperation,
     private val pipelineTaskService: PipelineTaskService,
     private val taskBuildDetailService: TaskBuildDetailService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineContextService: PipelineContextService
@@ -357,14 +359,16 @@ class StartActionTaskContainerCmd(
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
                 // 更新任务状态
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
-                val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
-                    TaskBuildEndParam(
-                        projectId = projectId,
-                        buildId = buildId,
-                        taskId = taskId,
-                        buildStatus = taskStatus
-                    )
+                val endParam = TaskBuildEndParam(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    containerId = containerId,
+                    taskId = taskId,
+                    buildStatus = taskStatus
                 )
+                val updateTaskStatusInfos = taskBuildDetailService.taskEnd(endParam)
+                taskBuildRecordService.taskEnd(endParam)
                 refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
                 message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
             }
@@ -375,6 +379,17 @@ class StartActionTaskContainerCmd(
                     taskId = taskId,
                     taskStatus = BuildStatus.FAILED,
                     buildStatus = BuildStatus.RUNNING,
+                    operation = "taskConditionInvalid"
+                )
+                taskBuildRecordService.updateTaskStatus(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    taskId = taskId,
+                    executeCount = executeCount ?: 1,
+                    buildStatus = BuildStatus.FAILED,
                     operation = "taskConditionInvalid"
                 )
                 pipelineTaskService.updateTaskStatus(
@@ -538,6 +553,17 @@ class StartActionTaskContainerCmd(
                     taskId = currentTask.taskId,
                     taskStatus = taskStatus,
                     buildStatus = BuildStatus.RUNNING,
+                    operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
+                )
+                taskBuildRecordService.updateTaskStatus(
+                    projectId = currentTask.projectId,
+                    pipelineId = currentTask.pipelineId,
+                    buildId = currentTask.buildId,
+                    stageId = currentTask.stageId,
+                    containerId = currentTask.containerId,
+                    taskId = currentTask.taskId,
+                    executeCount = currentTask.executeCount ?: 1,
+                    buildStatus = taskStatus,
                     operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
                 )
             }

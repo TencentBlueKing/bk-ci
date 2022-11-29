@@ -25,38 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline.record
+package com.tencent.devops.process.engine.service.record
 
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.dao.BuildDetailDao
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.service.StageTagService
+import org.jooq.DSLContext
+import org.springframework.stereotype.Service
 
-@ApiModel("构建详情记录-插件任务")
-data class BuildRecordStage(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("项目ID", required = true)
-    val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("编排版本号", required = true)
-    val resourceVersion: Int,
-    @ApiModelProperty("步骤ID", required = true)
-    val stageId: String,
-    @ApiModelProperty("执行次数", required = true)
-    val executeCount: Int,
-    @ApiModelProperty("步骤序号", required = true)
-    val stageSeq: Int,
-    @ApiModelProperty("执行变量", required = true)
-    val stageVar: Map<String, Any>,
-    @ApiModelProperty("开始时间", required = false)
-    val startTime: LocalDateTime?,
-    @ApiModelProperty("结束时间", required = false)
-    val endTime: LocalDateTime?,
-    @ApiModelProperty("业务时间戳集合", required = true)
-    val timestamps: List<BuildRecordTimeStamp>,
-    @ApiModelProperty("各项耗时", required = true)
-    val timeCost: BuildRecordTimeCost?
+@Suppress("LongParameterList", "MagicNumber")
+@Service
+class StageBuildRecordService(
+    dslContext: DSLContext,
+    pipelineBuildDao: PipelineBuildDao,
+    buildDetailDao: BuildDetailDao,
+    stageTagService: StageTagService,
+    pipelineEventDispatcher: PipelineEventDispatcher,
+    redisOperation: RedisOperation
 )
