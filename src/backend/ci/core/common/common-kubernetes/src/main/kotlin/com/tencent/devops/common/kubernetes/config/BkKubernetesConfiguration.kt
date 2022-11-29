@@ -7,9 +7,6 @@ import io.kubernetes.client.informer.cache.Lister
 import io.kubernetes.client.openapi.models.V1Endpoints
 import io.kubernetes.client.openapi.models.V1Service
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.InitializingBean
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.kubernetes.client.discovery.ConditionalOnKubernetesDiscoveryEnabled
 import org.springframework.cloud.kubernetes.commons.KubernetesNamespaceProvider
