@@ -44,6 +44,8 @@ open class WechatNotifyMessage : BaseMessage() {
     var priority: EnumNotifyPriority = EnumNotifyPriority.HIGH
     @ApiModelProperty("通知来源", allowableValues = "0,1", dataType = "int")
     var source: EnumNotifySource = EnumNotifySource.BUSINESS_LOGIC
+    @ApiModelProperty("是否markdown")
+    var markdownContent: Boolean = false
 
     fun addReceiver(receiver: String) {
         receivers.add(receiver)

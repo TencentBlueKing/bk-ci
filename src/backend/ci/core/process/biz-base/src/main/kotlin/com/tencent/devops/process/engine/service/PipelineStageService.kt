@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
+import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
@@ -428,10 +429,14 @@ class PipelineStageService @Autowired constructor(
                         "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                         "reviewDesc" to (checkIn?.reviewDesc ?: ""),
                         "suggest" to (reviewRequest?.suggest ?: ""),
-                        "rejectUserId" to userId
+                        "rejectUserId" to userId,
+                        // 企业微信组
+                        NotifyUtils.WEWORK_GROUP_KEY to (checkIn?.notifyGroup?.joinToString(separator = ",") ?: "")
                     ),
                     position = ControlPointPosition.BEFORE_POSITION,
-                    stageId = stageId
+                    stageId = stageId,
+                    notifyType = NotifyUtils.checkNotifyType(checkIn?.notifyType) ?: mutableSetOf(),
+                    markdownContent = checkIn?.markdownContent
                 )
                 // #3400 FinishEvent会刷新HISTORY列表的Stage状态
             )
@@ -557,13 +562,18 @@ class PipelineStageService @Autowired constructor(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
-                    "reviewDesc" to (checkIn.reviewDesc ?: "")
+                    "reviewDesc" to (checkIn.reviewDesc ?: ""),
+                    // 企业微信组
+                    NotifyUtils.WEWORK_GROUP_KEY to (checkIn.notifyGroup?.joinToString(separator = ",") ?: "")
                 ),
                 position = ControlPointPosition.BEFORE_POSITION,
-                stageId = stage.stageId
+                stageId = stage.stageId,
+                notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType) ?: mutableSetOf(),
+                markdownContent = checkIn.markdownContent
             )
         )
-        if (triggerUserId !in group.reviewers) {
+        // #7971 无指定通知类型时、或者触发人是审核人时，不去通知触发人。
+        if (triggerUserId !in group.reviewers && !checkIn.notifyType.isNullOrEmpty()) {
             pipelineEventDispatcher.dispatch(
                 PipelineBuildNotifyEvent(
                     notifyTemplateEnum = PipelineNotifyTemplateEnum
@@ -585,7 +595,9 @@ class PipelineStageService @Autowired constructor(
                         "reviewers" to group.reviewers.joinToString()
                     ),
                     position = ControlPointPosition.BEFORE_POSITION,
-                    stageId = stage.stageId
+                    stageId = stage.stageId,
+                    markdownContent = checkIn.markdownContent,
+                    notifyType = null // 为null时，以模板配置的通知类型为准
                 )
             )
         }
