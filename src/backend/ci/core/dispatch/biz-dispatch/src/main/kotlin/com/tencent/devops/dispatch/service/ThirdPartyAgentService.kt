@@ -441,7 +441,11 @@ class ThirdPartyAgentService @Autowired constructor(
             buildId = buildInfo.buildId,
             vmSeqId = buildInfo.vmSeqId,
             nodeHashId = agentResult.data!!.nodeId,
-            simpleResult = SimpleResult(success = buildInfo.success, message = buildInfo.message)
+            simpleResult = SimpleResult(
+                success = buildInfo.success,
+                message = buildInfo.message,
+                error = buildInfo.error
+            )
         )
     }
 

@@ -313,7 +313,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		if err != nil {
 			errMsg := "启动构建进程失败(start worker process failed): " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.BuildProcessStartErrorEnum))
 			return err
 		}
 		GBuildManager.AddBuild(pid, buildInfo)

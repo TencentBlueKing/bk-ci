@@ -97,7 +97,7 @@ func (b *buildManager) waitProcessDone(processId int) {
 		errMsg := fmt.Sprintf("build process err, pid: %d, err: %s", processId, err.Error())
 		logs.Warn(errMsg)
 		b.instances.Delete(processId)
-		workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *info, Message: errMsg})
+		workerBuildFinish(info.ToFinish(false, errMsg, api.BuildProcessRunErrorEnum))
 		return
 	}
 
@@ -121,7 +121,11 @@ func (b *buildManager) waitProcessDone(processId int) {
 
 	buildInfo := info
 	b.instances.Delete(processId)
-	workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Success: success, Message: msg})
+	if success {
+		workerBuildFinish(buildInfo.ToFinish(success, msg, api.NoErrorEnum))
+	} else {
+		workerBuildFinish(buildInfo.ToFinish(success, msg, api.BuildProcessRunErrorEnum))
+	}
 }
 
 func (b *buildManager) GetPreInstancesCount() int {

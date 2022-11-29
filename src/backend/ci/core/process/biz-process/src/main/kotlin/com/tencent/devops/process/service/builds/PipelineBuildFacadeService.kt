@@ -1981,6 +1981,11 @@ class PipelineBuildFacadeService(
             msg = "$msg| ${MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)}"
         }
 
+        // 添加错误码日志
+        simpleResult.error?.errorType.let { msg = "$msg \nerrorType: ${simpleResult.error?.errorType}" }
+        simpleResult.error?.errorCode.let { msg = "$msg \nerrorCode: ${simpleResult.error?.errorCode}" }
+        simpleResult.error?.errorMessage.let { msg = "$msg \nerrorMsg: ${simpleResult.error?.errorMessage}" }
+
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectCode, buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
             logger.warn("[$buildId]|workerBuildFinish|The build status is ${buildInfo?.status}")
@@ -2013,7 +2018,9 @@ class PipelineBuildFacadeService(
                         containerHashId = container.containerHashId,
                         containerType = container.containerType,
                         actionType = ActionType.TERMINATE,
-                        reason = msg
+                        reason = msg,
+                        errorCode = simpleResult.error?.errorCode ?: 0,
+                        errorTypeName = simpleResult.error?.errorType
                     )
                 )
             }
