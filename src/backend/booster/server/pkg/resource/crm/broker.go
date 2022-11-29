@@ -182,7 +182,7 @@ type Broker struct {
 }
 
 const (
-	brokerIDRandomLength = 3
+	brokerIDRandomLength = 8
 
 	brokerTrackerTimeGap   = 1 * time.Second
 	brokerCoolingTime      = 10 * time.Minute
@@ -264,6 +264,9 @@ func (b *Broker) recover() error {
 	rl, err = b.mgr.listResources(resourceStatusDeleting)
 	if err == nil && rl != nil {
 		for _, r := range rl {
+			if r.brokerName != b.name {
+				continue
+			}
 			blog.Infof("crm broker: broker(%s) recover resource(%s): %s", b.name, r.status, r.resourceID)
 			b.addReleaseResource(r.resourceID)
 		}
@@ -280,12 +283,12 @@ func (b *Broker) CurrentNum() int {
 	return b.currentNum
 }
 
-// launch a new resource and put it into pool
+// Launch a new resource and put it into pool
 func (b *Broker) Launch() error {
 	return b.launch()
 }
 
-// release a free resource from pool
+// Release a free resource from pool
 func (b *Broker) Release() error {
 	return b.release()
 }
@@ -631,8 +634,8 @@ func (b *Broker) addReleaseResource(id string) {
 }
 
 func (b *Broker) generateID() string {
-	return strings.ReplaceAll(strings.ToLower(fmt.Sprintf("cb-%s-%s-%d-%s",
-		b.user, b.param.Param.BrokerName, time.Now().Unix()%1000, util.RandomString(brokerIDRandomLength),
+	return strings.ReplaceAll(strings.ToLower(fmt.Sprintf("b%s-%s",
+		b.param.Param.BrokerName, util.RandomString(brokerIDRandomLength),
 	)), "_", "-")
 }
 

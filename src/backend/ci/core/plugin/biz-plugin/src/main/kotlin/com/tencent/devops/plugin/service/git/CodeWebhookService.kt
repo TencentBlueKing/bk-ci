@@ -314,7 +314,7 @@ class CodeWebhookService @Autowired constructor(
                 )
             )
         } catch (ignore: Throwable) {
-            logger.error("[$buildId]|Code webhook fail", ignore)
+            logger.warn("[$buildId]|Code webhook fail", ignore)
         }
     }
 
@@ -331,13 +331,13 @@ class CodeWebhookService @Autowired constructor(
             event.retryTime--
             addGitCommitCheck(event)
         } catch (t: Throwable) {
-            logger.error("Consume git commit check fail. $event", t)
+            logger.warn("Consume git commit check fail. $event", t)
             when (event.retryTime) {
                 2 -> addGitCommitCheckEvent(event, 5)
                 1 -> addGitCommitCheckEvent(event, 10)
                 0 -> addGitCommitCheckEvent(event, 30)
                 else -> {
-                    logger.error("Consume git commit check retry fail")
+                    logger.warn("Consume git commit check retry fail")
                 }
             }
         }
@@ -489,13 +489,13 @@ class CodeWebhookService @Autowired constructor(
                 completedAt = completedAt
             )
         } catch (t: Throwable) {
-            logger.error("Consume github pr event fail. $event", t)
+            logger.warn("Consume github pr event fail. $event", t)
             when (event.retryTime) {
                 2 -> addGithubPrEvent(event, 5)
                 1 -> addGithubPrEvent(event, 10)
                 0 -> addGithubPrEvent(event, 30)
                 else -> {
-                    logger.error("Consume github pr event retry fail")
+                    logger.warn("Consume github pr event retry fail")
                 }
             }
         }

@@ -15,6 +15,7 @@ import (
 
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 func newResource(maxSlots int, usageLimit map[dcSDK.JobUsage]int) *resource {
@@ -45,6 +46,11 @@ func newResource(maxSlots int, usageLimit map[dcSDK.JobUsage]int) *resource {
 	for k := range waitingList {
 		usages = append(usages, k)
 	}
+
+	for _, v := range usageMap {
+		blog.Infof("local slot: usage map:%v after new resource", *v)
+	}
+	blog.Infof("local slot: total slots:%d after new resource", maxSlots)
 
 	return &resource{
 		totalSlots:    maxSlots,
@@ -104,6 +110,7 @@ func (lr *resource) Handle(ctx context.Context) {
 	}
 
 	lr.handling = true
+	blog.Infof("local slot: is handling now")
 
 	go lr.handleLock(ctx)
 }
@@ -116,6 +123,7 @@ func (lr *resource) GetStatus() (int, int) {
 // Lock get an usage lock, success with true, failed with false
 func (lr *resource) Lock(usage dcSDK.JobUsage, weight int32) bool {
 	if !lr.handling {
+		blog.Infof("local: failed to lock for resource not handling")
 		return false
 	}
 
@@ -157,6 +165,7 @@ func (lr *resource) handleLock(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			lr.handling = false
+			blog.Infof("local slot: stop handling now for ctx.Done")
 			return
 		case pairChan := <-lr.unlockChan:
 			lr.putSlot(pairChan)

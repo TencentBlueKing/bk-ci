@@ -32,6 +32,7 @@ import com.dd.plist.NSDictionary
 import com.dd.plist.NSString
 import com.dd.plist.PropertyListParser
 import com.tencent.devops.common.api.exception.ExecuteException
+import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
@@ -41,9 +42,9 @@ import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
+@SuppressWarnings("SwallowedException", "TooGenericExceptionCaught")
 object IosUtils {
-
-    private const val byteBufferSize = 4096
+    private val logger = LoggerFactory.getLogger(IosUtils::class.java)
 
     fun getIpaInfoMap(ipa: File): Map<String, String> {
 
@@ -76,15 +77,16 @@ object IosUtils {
         val scheme = try {
             val schemeArray = rootDict.objectForKey("CFBundleURLTypes") as NSArray
             schemeArray.array
-                .map { it as NSDictionary }
-                .map { it.objectForKey("CFBundleURLSchemes") }
+                .mapNotNull { it as NSDictionary }
+                .mapNotNull { it.objectForKey("CFBundleURLSchemes") }
                 .map { it as NSArray }
-                .map { it.array }
+                .mapNotNull { it.array }
                 .flatMap { it.toList() }
-                .map { it as NSString }
+                .mapNotNull { it as NSString }
                 .map { it.toString() }
-                .maxBy { it.length } ?: ""
+                .maxByOrNull { it.length } ?: ""
         } catch (e: Exception) {
+            logger.warn("get scheme failed", e)
             ""
         }
         map["scheme"] = scheme
@@ -97,6 +99,7 @@ object IosUtils {
             }
             nameDictionary.objectForKey("CFBundleDisplayName").toString()
         } catch (e: Exception) {
+            logger.warn("get app name failed", e)
             ""
         }
         map["appName"] = appName
@@ -110,7 +113,7 @@ object IosUtils {
             map["image"] = (cfBundleIconFiles.array[0] as NSString).toString()
             map["fullImage"] = (cfBundleIconFiles.array[size - 1] as NSString).toString()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.warn("get image failed", e)
         }
 
         return map

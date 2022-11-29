@@ -65,3 +65,27 @@ class ExpressionParseException(
 class InvalidOperationException(override val message: String) : ExpressionException()
 
 class ContextDataRuntimeException(override val message: String) : ExpressionException()
+
+class FunctionFormatException(override val message: String?) : ExpressionException() {
+    companion object {
+        fun invalidFormatArgIndex(arg0: Any) = FunctionFormatException(
+            "The following format string references more arguments than were supplied: $arg0"
+        )
+
+        fun invalidFormatSpecifiers(arg0: Any, arg1: Any) = FunctionFormatException(
+            "The format specifiers '$arg0' are not valid for objects of type '$arg1'"
+        )
+
+        fun invalidFormatString(arg0: Any) = FunctionFormatException(
+            "The following format string is invalid: $arg0"
+        )
+    }
+}
+
+class ContextNotFoundException(override val message: String?) : ExpressionException() {
+    companion object {
+        fun contextNameNotFound(arg0: String) = ContextNotFoundException(
+            "Expression context $arg0 not found."
+        )
+    }
+}

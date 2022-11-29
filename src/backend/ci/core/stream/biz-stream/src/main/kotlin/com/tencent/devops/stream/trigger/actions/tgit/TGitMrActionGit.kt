@@ -41,19 +41,21 @@ import com.tencent.devops.common.webhook.pojo.code.git.isMrMergeEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.pojo.ChangeYamlList
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.data.context.StreamMrInfo
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
@@ -62,15 +64,13 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitFileInfo
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitMrInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
-import com.tencent.devops.stream.pojo.ChangeYamlList
-import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitMrInfo
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.pojo.MrYamlInfo
@@ -100,7 +100,6 @@ class TGitMrActionGit(
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.MERGE_REQUEST)
 
-    override lateinit var data: ActionData
     override fun event() = data.event as GitMergeRequestEvent
 
     override val mrIId: String
@@ -126,7 +125,7 @@ class TGitMrActionGit(
                 search = this.data.eventCommon.userId
             ).find { it.userId == this.data.eventCommon.userId }?.accessLevel
 
-            accessLevel != null && accessLevel >= 30
+            accessLevel != null && accessLevel >= GitAccessLevelEnum.DEVELOPER.level
         } catch (error: ErrorCodeException) {
             false
         }
@@ -135,9 +134,11 @@ class TGitMrActionGit(
             this.data.setting.triggerReviewSetting.whitelist
         val checkProjectInWhiteList = this.data.eventCommon.gitProjectId in
             this.data.setting.triggerReviewSetting.whitelist
-        return ((checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
-            checkUserInWhiteList ||
-            checkProjectInWhiteList) && forkMrYamlList().isEmpty()
+        return (
+            (checkUserAccessLevel && this.data.setting.triggerReviewSetting.memberNoNeedApproving) ||
+                checkUserInWhiteList ||
+                checkProjectInWhiteList
+            ) && forkMrYamlList().isEmpty()
     }
 
     override fun getMrId() = event().object_attributes.id
@@ -245,6 +246,9 @@ class TGitMrActionGit(
         }
     }
 
+    override fun needUpdateLastModifyUser(filePath: String) =
+        super.needUpdateLastModifyUser(filePath) && !checkMrForkAction()
+
     override fun isStreamDeleteAction() = event().isDeleteEvent()
 
     override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
@@ -275,7 +279,7 @@ class TGitMrActionGit(
         if (event().object_attributes.action == TGitMergeActionKind.MERGE.value) {
             return true
         }
-        return mrConflictCheck.checkMrConflict(this, path2PipelineExists)
+        return true
     }
 
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {

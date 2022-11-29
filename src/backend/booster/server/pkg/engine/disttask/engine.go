@@ -96,12 +96,22 @@ type EngineConfig struct {
 	K8SCRMCPUPerInstance float64
 	K8SCRMMemPerInstance float64
 
+	// k8s cluster list info
+	K8SClusterList map[string]K8sClusterInfo
+
 	// dc_mac cluster info
 	VMCRMClusterID      string
 	VMCRMCPUPerInstance float64
 	VMCRMMemPerInstance float64
 
 	Brokers []config.EngineDisttaskBrokerConfig
+}
+
+//K8sClusterInfo define
+type K8sClusterInfo struct {
+	K8SCRMClusterID      string
+	K8SCRMCPUPerInstance float64
+	K8SCRMMemPerInstance float64
 }
 
 const distTaskRunningLongestTime = 6 * time.Hour
@@ -114,6 +124,7 @@ var preferences = engine.Preferences{
 func NewDisttaskEngine(
 	conf EngineConfig,
 	crmMgr, k8sCrmMgr, dcMacMgr crm.HandlerWithUser,
+	k8sListCrmMgr map[string]crm.HandlerWithUser,
 	directMgr direct.HandleWithUser) (engine.Engine, error) {
 	m, err := NewMySQL(conf.MySQLConf)
 	if err != nil {
@@ -129,11 +140,12 @@ func NewDisttaskEngine(
 			publicQueueK8SWindows: engine.NewStagingTaskQueue(),
 			publicQueueDirectMac:  engine.NewStagingTaskQueue(),
 		},
-		mysql:     m,
-		crmMgr:    crmMgr,
-		k8sCrmMgr: k8sCrmMgr,
-		dcMacMgr:  dcMacMgr,
-		directMgr: directMgr,
+		mysql:         m,
+		crmMgr:        crmMgr,
+		k8sCrmMgr:     k8sCrmMgr,
+		k8sListCrmMgr: k8sListCrmMgr,
+		dcMacMgr:      dcMacMgr,
+		directMgr:     directMgr,
 	}
 	if err = egn.initBrokers(); err != nil {
 		blog.Errorf("engine(%s) init brokers failed: %v", EngineName, err)
@@ -162,6 +174,9 @@ type disttaskEngine struct {
 
 	// k8s container resource manager
 	k8sCrmMgr crm.HandlerWithUser
+
+	// k8s resource manager list
+	k8sListCrmMgr map[string]crm.HandlerWithUser
 
 	// dc_mac container resource manager
 	dcMacMgr crm.HandlerWithUser
@@ -297,13 +312,14 @@ func (de *disttaskEngine) getClient(timeoutSecond int) *httpclient.HTTPClient {
 
 // cheack AllocateMap map ,make sure the key is the format of xx:xx:xx-xx:xx:xx and smaller time is ahead
 func (de *disttaskEngine) parseAllocateConf() bool {
-	time_fmt := regexp.MustCompile(`[0-9]+[0-9]+:+[0-9]+[0-9]+:+[0-9]+[0-9]`)
+	timeFmt := regexp.MustCompile(`[0-9]+[0-9]+:+[0-9]+[0-9]+:+[0-9]+[0-9]`)
 
 	for queue, allocater := range de.conf.QueueResourceAllocater {
 		for k, v := range allocater.AllocateByTimeMap {
 			mid := strings.Index(k, "-")
-			if mid == -1 || !time_fmt.MatchString(k[:mid]) || !time_fmt.MatchString(k[mid+1:]) || k[:mid] > k[:mid+1] {
-				blog.Errorf("wrong time format:(%s) in [%s] allocate config, expect format like 12:30:00-14:00:00,smaller time ahead", k, queue)
+			if mid == -1 || !timeFmt.MatchString(k[:mid]) || !timeFmt.MatchString(k[mid+1:]) || k[:mid] > k[:mid+1] {
+				blog.Errorf("wrong time format:(%s) in [%s] allocate config,expect format 12:30:00-14:00:00,smaller time ahead",
+					k, queue)
 				return false
 			}
 			allocater.TimeSlot = append(allocater.TimeSlot, config.TimeSlot{
@@ -392,13 +408,20 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 			task.InheritSetting.LeastCPU = task.InheritSetting.RequestCPU
 		}
 	}
+
+	crmMgr := de.getCrMgr(tb.Client.QueueName)
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try creating task(%s) failed: crmMgr is null", EngineName, task.ID)
+		return errors.New("crmMgr is null")
+	}
+
 	task.InheritSetting.WorkerVersion = worker.WorkerVersion
 	task.InheritSetting.Scene = project.Scene
 	task.InheritSetting.ExtraProjectSetting = project.Extra
 	task.InheritSetting.ExtraWorkerSetting = worker.Extra
 
 	task.Operator.AppName = task.ID
-	task.Operator.Namespace = EngineName
+	task.Operator.Namespace = crmMgr.GetNamespace()
 	task.Operator.Image = worker.Image
 	de.setTaskIstResource(task, tb.Client.QueueName)
 	task.Operator.RequestProcessPerUnit = ev.ProcessPerUnit
@@ -412,8 +435,9 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 }
 
 func (de *disttaskEngine) setTaskIstResource(task *distTask, queueName string) {
-	// resource manager
-	cpuPerInstance, memPerInstance := de.getResource(queueName)
+	ist := de.getCrMgr(queueName).GetInstanceType(getPlatform(queueName), getQueueNamePure(queueName))
+	cpuPerInstance := ist.CPUPerInstance
+	memPerInstance := ist.MemPerInstance
 	task.Operator.ClusterID = de.getClusterID(queueName)
 	// if ban resources, then request and least instance is 0
 	if !task.InheritSetting.BanAllBooster {
@@ -430,30 +454,18 @@ func (de *disttaskEngine) setTaskIstResource(task *distTask, queueName string) {
 func (de *disttaskEngine) getClusterID(queueName string) string {
 	switch getQueueNameHeader(queueName) {
 	case queueNameHeaderK8SDefault, queueNameHeaderK8SWin:
+		for qNames, cluster := range de.conf.K8SClusterList {
+			for _, qName := range strings.Split(qNames, ",") {
+				if queueName == strings.TrimSpace(qName) {
+					return cluster.K8SCRMClusterID
+				}
+			}
+		}
 		return de.conf.K8SCRMClusterID
 	case queueNameHeaderVMMac:
 		return de.conf.VMCRMClusterID
 	default:
 		return de.conf.CRMClusterID
-	}
-}
-
-func (de *disttaskEngine) getResource(queueName string) (float64, float64) {
-	istKey := config.InstanceType{
-		Platform: getPlatform(queueName),
-		Group:    getQueueNamePure(queueName),
-	}
-
-	switch getQueueNameHeader(queueName) {
-	case queueNameHeaderK8SDefault, queueNameHeaderK8SWin:
-		ist := de.k8sCrmMgr.GetInstanceType(istKey.Platform, istKey.Group)
-		return ist.CPUPerInstance, ist.MemPerInstance
-	case queueNameHeaderVMMac:
-		ist := de.dcMacMgr.GetInstanceType(istKey.Platform, istKey.Group)
-		return ist.CPUPerInstance, ist.MemPerInstance
-	default:
-		ist := de.crmMgr.GetInstanceType(istKey.Platform, istKey.Group)
-		return ist.CPUPerInstance, ist.MemPerInstance
 	}
 }
 
@@ -590,6 +602,10 @@ func (de *disttaskEngine) launchDirectTask(task *distTask, tb *engine.TaskBasic,
 
 func (de *disttaskEngine) launchCRMTask(task *distTask, tb *engine.TaskBasic, queueName string) error {
 	crmMgr := de.getCrMgr(task.InheritSetting.QueueName)
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try launching crm task(%s) failed: crmMgr is null", EngineName, tb.ID)
+		return errors.New("crmMgr is null")
+	}
 	var err error
 
 	envJobInt := int(task.Operator.RequestCPUPerUnit)
@@ -761,7 +777,10 @@ func (de *disttaskEngine) launchDirectDone(task *distTask) (bool, error) {
 
 func (de *disttaskEngine) launchCRMDone(task *distTask) (bool, error) {
 	crmMgr := de.getCrMgr(task.InheritSetting.QueueName)
-
+	if crmMgr == nil {
+		blog.Errorf("engine(%s) try launch crm task(%s) done failed: crmMgr is null", EngineName, task.ID)
+		return false, errors.New("crmMgr is null")
+	}
 	// if still preparing, then it's not need to get service info
 	isPreparing, err := crmMgr.IsServicePreparing(task.ID)
 	if err != nil {
@@ -956,8 +975,12 @@ func (de *disttaskEngine) initBrokers() error {
 				ContainerDir: v.ContainerDir,
 			}
 		}
-
-		if err = de.getCrMgr(broker.City).AddBroker(
+		crmMgr := de.getCrMgr(broker.City)
+		if crmMgr == nil {
+			blog.Errorf("engine(%s) init broker(%s) failed: crmMgr is null", EngineName, brokerName)
+			return errors.New("crmMgr is null")
+		}
+		if err = crmMgr.AddBroker(
 			brokerName, crm.StrategyConst, crm.NewConstBrokerStrategy(broker.ConstNum), crm.BrokerParam{
 				Param: crm.ResourceParam{
 					City:     getQueueNamePure(broker.City),
@@ -994,7 +1017,14 @@ func (de *disttaskEngine) initBrokers() error {
 func (de *disttaskEngine) getCrMgr(queueName string) crm.HandlerWithUser {
 	switch getQueueNameHeader(queueName) {
 	case queueNameHeaderK8SDefault, queueNameHeaderK8SWin:
-		return de.k8sCrmMgr
+		for qNames, mgr := range de.k8sListCrmMgr {
+			for _, qName := range strings.Split(qNames, ",") {
+				if queueName == strings.TrimSpace(qName) {
+					return mgr
+				}
+			}
+		}
+		return de.k8sCrmMgr //default k8s cluster
 	case queueNameHeaderVMMac:
 		return de.dcMacMgr
 	default:
@@ -1047,11 +1077,13 @@ type Message struct {
 	MessageRecordStats MessageRecordStats `json:"ccache_stats"`
 }
 
+//MessageType define
 type MessageType int
 
 const (
 	// MessageTypeTaskStats means this message is about record task stats from client.
 	MessageTypeTaskStats MessageType = iota
+	//MessageTypeRecordStats means
 	MessageTypeRecordStats
 )
 
@@ -1133,6 +1165,7 @@ func (de *disttaskEngine) sendProjectMessage(projectID string, extra []byte) ([]
 	}
 }
 
+//EmptyJobs define
 var EmptyJobs = compress.ToBase64String([]byte("[]"))
 
 func (de *disttaskEngine) sendMessageTaskStats(projectID string, stats MessageTaskStats) ([]byte, error) {
@@ -1304,6 +1337,18 @@ func getQueueNameHeader(queueName string) queueNameHeader {
 	default:
 		return ""
 	}
+}
+
+//GetK8sInstanceKey get instance type from queueName
+func GetK8sInstanceKey(queueName string) *config.InstanceType {
+	header := getQueueNameHeader(queueName)
+	if header == queueNameHeaderK8SDefault || header == queueNameHeaderK8SWin {
+		return &config.InstanceType{
+			Group:    getQueueNamePure(queueName),
+			Platform: getPlatform(queueName),
+		}
+	}
+	return nil
 }
 
 func resourceSelector(

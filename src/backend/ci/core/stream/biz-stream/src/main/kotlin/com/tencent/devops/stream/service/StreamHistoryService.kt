@@ -170,6 +170,21 @@ class StreamHistoryService @Autowired constructor(
         )
     }
 
+    fun getProjectLocalBranches(
+        projectId: Long,
+        branchName: String?,
+        page: Int,
+        pageSize: Int
+    ): List<String> {
+        return gitRequestEventBuildDao.getProjectLocalBranches(
+            dslContext = dslContext,
+            projectId = projectId,
+            branchName = branchName,
+            pageNotNull = page,
+            pageSizeNotNull = pageSize
+        )
+    }
+    @Suppress("LongMethod")
     fun getAllBuildBranchList(
         userId: String,
         gitProjectId: Long,

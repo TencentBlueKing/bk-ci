@@ -96,7 +96,15 @@ class YamlTemplateService @Autowired constructor(
                     action = extraParameters,
                     getProjectInfo = extraParameters.api::getGitProjectInfo,
                     cred = extraParameters.getGitCred()
-                )!!.defaultBranch!!
+                ).let {
+                    if (it == null) {
+                        throw YamlFormatException(
+                            "${extraParameters.data.setting.enableUser} access ${targetRepo!!.repository} error, " +
+                                "Check projectName or ci enable user permission"
+                        )
+                    }
+                    it
+                }.defaultBranch!!
                 val content = extraParameters.api.getFileContent(
                     cred = extraParameters.getGitCred(),
                     gitProjectId = extraParameters.getGitProjectIdOrName(targetRepo!!.repository),
@@ -212,18 +220,18 @@ class YamlTemplateService @Autowired constructor(
     private fun getCredentialKey(key: String): String {
         // 参考CredentialType
         return if (key.startsWith("settings.") && (
-            key.endsWith(".password") ||
-                key.endsWith(".access_token") ||
-                key.endsWith(".username") ||
-                key.endsWith(".secretKey") ||
-                key.endsWith(".appId") ||
-                key.endsWith(".privateKey") ||
-                key.endsWith(".passphrase") ||
-                key.endsWith(".token") ||
-                key.endsWith(".cosappId") ||
-                key.endsWith(".secretId") ||
-                key.endsWith(".region")
-            )
+                key.endsWith(".password") ||
+                    key.endsWith(".access_token") ||
+                    key.endsWith(".username") ||
+                    key.endsWith(".secretKey") ||
+                    key.endsWith(".appId") ||
+                    key.endsWith(".privateKey") ||
+                    key.endsWith(".passphrase") ||
+                    key.endsWith(".token") ||
+                    key.endsWith(".cosappId") ||
+                    key.endsWith(".secretId") ||
+                    key.endsWith(".region")
+                )
         ) {
             key.substringAfter("settings.").substringBeforeLast(".")
         } else {
