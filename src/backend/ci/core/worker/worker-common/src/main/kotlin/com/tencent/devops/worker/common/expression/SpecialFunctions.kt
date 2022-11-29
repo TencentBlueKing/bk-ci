@@ -1,5 +1,3 @@
-import com.tencent.devops.utils.findPropertyOrEmpty
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -26,17 +24,42 @@ import com.tencent.devops.utils.findPropertyOrEmpty
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-dependencies {
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-api"))
-    api("io.github.openfeign:feign-jaxrs")
-    api("io.github.openfeign:feign-okhttp")
-    api("io.github.openfeign:feign-jackson")
-    api("io.github.openfeign.form:feign-form")
-    api("io.github.openfeign.form:feign-form-spring")
-    api("io.github.openfeign:feign-spring4")
-    if (project.findPropertyOrEmpty("devops.assemblyMode") == "KUBERNETES") {
-        print("use common-kubernetes")
-        api(project(":core:common:common-kubernetes"))
+
+package com.tencent.devops.worker.common.expression
+
+import com.tencent.devops.common.expression.expression.ExpressionOutput
+import com.tencent.devops.common.expression.expression.FunctionInfo
+import com.tencent.devops.common.expression.expression.specialFuctions.hashFiles.HashFilesFunction
+import com.tencent.devops.worker.common.logger.LoggerService
+import org.slf4j.LoggerFactory
+
+/**
+ * 针对只有worker使用的特殊函数的集成类
+ */
+object SpecialFunctions {
+
+    private val logger = LoggerFactory.getLogger(SpecialFunctions::class.java)
+
+    val functions: List<FunctionInfo> = listOf(
+        initHashFunction()
+    )
+
+    val output = object : ExpressionOutput {
+        override fun writeDebugLog(content: String) {
+            try {
+                LoggerService.addDebugLine(content)
+            } catch (e: Throwable) {
+                logger.warn("hashFunction out put log error", e)
+            }
+        }
+    }
+
+    private fun initHashFunction(): FunctionInfo {
+        return FunctionInfo(
+            HashFilesFunction.name,
+            1,
+            Byte.MAX_VALUE.toInt(),
+            HashFilesFunction()
+        )
     }
 }

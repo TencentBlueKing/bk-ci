@@ -1,5 +1,3 @@
-import com.tencent.devops.utils.findPropertyOrEmpty
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -26,17 +24,7 @@ import com.tencent.devops.utils.findPropertyOrEmpty
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 dependencies {
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-api"))
-    api("io.github.openfeign:feign-jaxrs")
-    api("io.github.openfeign:feign-okhttp")
-    api("io.github.openfeign:feign-jackson")
-    api("io.github.openfeign.form:feign-form")
-    api("io.github.openfeign.form:feign-form-spring")
-    api("io.github.openfeign:feign-spring4")
-    if (project.findPropertyOrEmpty("devops.assemblyMode") == "KUBERNETES") {
-        print("use common-kubernetes")
-        api(project(":core:common:common-kubernetes"))
-    }
+    api("org.springframework.cloud:spring-cloud-starter-kubernetes-client")
 }
