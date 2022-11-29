@@ -52,7 +52,7 @@ data class BuildRecordTask(
     @ApiModelProperty("执行次数", required = true)
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
-    val taskVar: Map<String, Any>,
+    val taskVar: MutableMap<String, Any>,
     @ApiModelProperty("市场插件标识", required = true)
     val atomCode: String,
     @ApiModelProperty("开始时间", required = false)

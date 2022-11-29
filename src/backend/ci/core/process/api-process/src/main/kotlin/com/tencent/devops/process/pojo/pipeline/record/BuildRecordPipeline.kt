@@ -46,7 +46,7 @@ data class BuildRecordPipeline(
     @ApiModelProperty("执行次数", required = true)
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
-    val pipelineVar: Map<String, Any>,
+    val pipelineVar: MutableMap<String, Any>,
     @ApiModelProperty("触发人", required = true)
     val startUser: String,
     @ApiModelProperty("触发器", required = true)

@@ -90,7 +90,7 @@ class BuildRecordTaskDao {
         }
     }
 
-    fun getRecord(
+    fun getRecords(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -104,7 +104,7 @@ class BuildRecordTaskDao {
                         .and(PROJECT_ID.eq(projectId))
                         .and(PIPELINE_ID.eq(pipelineId))
                         .and(EXECUTE_COUNT.eq(executeCount))
-                ).fetch(mapper)
+                ).orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
 
@@ -120,7 +120,7 @@ class BuildRecordTaskDao {
                     stageId = stageId,
                     containerId = containerId,
                     taskId = taskId,
-                    taskVar = JsonUtil.getObjectMapper().readValue(taskVar) as Map<String, Any>,
+                    taskVar = JsonUtil.getObjectMapper().readValue(taskVar) as MutableMap<String, Any>,
                     taskSeq = taskSeq,
                     atomCode = atomCode,
                     startTime = startTime,
