@@ -9,6 +9,7 @@ import io.kubernetes.client.openapi.models.V1Service
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.kubernetes.client.KubernetesClientAutoConfiguration
 import org.springframework.cloud.kubernetes.client.discovery.ConditionalOnKubernetesDiscoveryEnabled
 import org.springframework.cloud.kubernetes.client.discovery.KubernetesDiscoveryClientAutoConfiguration
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Primary
 @ConditionalOnKubernetesDiscoveryEnabled
 @AutoConfigureBefore(KubernetesDiscoveryClientAutoConfiguration::class)
 @AutoConfigureAfter(KubernetesClientAutoConfiguration::class)
+@EnableConfigurationProperties(KubernetesDiscoveryProperties::class)
 class BkKubernetesConfiguration {
     @Bean
     @Primary
@@ -35,6 +37,7 @@ class BkKubernetesConfiguration {
         endpointsInformer: SharedInformer<V1Endpoints>,
         properties: KubernetesDiscoveryProperties
     ): BkKubernetesDiscoveryClient {
+        logger.debug("properties allNamespaces : ${properties.isAllNamespaces}")
         logger.info("kubernetesInformerDiscoveryClient init success")
         return BkKubernetesDiscoveryClient(
             kubernetesNamespaceProvider.namespace,
