@@ -79,6 +79,7 @@ object ShellUtil {
 
     private val specialKey = listOf(".", "-")
     private val specialCharToReplace = Regex("['\n]") // --bug=75509999 Agent环境变量中替换掉破坏性字符
+    private const val chineseRegex = "[\u4E00-\u9FA5|\\！|\\，|\\。|\\（|\\）|\\《|\\》|\\“|\\”|\\？|\\：|\\；|\\【|\\】]"
 
     fun execute(
         buildId: String,
@@ -143,11 +144,8 @@ object ShellUtil {
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
                 // --bug=75509999 Agent环境变量中替换掉破坏性字符
-                // 过滤掉中文汉字和中文字符
-                if (!isContainChinese(name)) {
-                    val clean = value.replace(specialCharToReplace, "")
-                    command.append("export $name='$clean'\n")
-                }
+                val clean = value.replace(specialCharToReplace, "")
+                command.append("export $name='$clean'\n")
             }
         }
         if (buildEnvs.isNotEmpty()) {
@@ -235,13 +233,11 @@ object ShellUtil {
     }
 
     private fun specialEnv(key: String): Boolean {
-        return specialKey.any { key.contains(it) }
+        return specialKey.any { key.contains(it) } || isContainChinese(key)
     }
 
     private fun isContainChinese(str: String): Boolean {
-        val pattern = Pattern.compile(
-            "[\u4E00-\u9FA5|\\！|\\，|\\。|\\（|\\）|\\《|\\》|\\“|\\”|\\？|\\：|\\；|\\【|\\】]"
-        )
+        val pattern = Pattern.compile(chineseRegex)
         val matcher = pattern.matcher(str)
         if (matcher.find()) {
             return true
