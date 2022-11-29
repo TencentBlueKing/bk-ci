@@ -7,8 +7,12 @@ import io.kubernetes.client.informer.cache.Lister
 import io.kubernetes.client.openapi.models.V1Endpoints
 import io.kubernetes.client.openapi.models.V1Service
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.AutoConfigureAfter
+import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.cloud.kubernetes.client.KubernetesClientAutoConfiguration
 import org.springframework.cloud.kubernetes.client.discovery.ConditionalOnKubernetesDiscoveryEnabled
+import org.springframework.cloud.kubernetes.client.discovery.KubernetesDiscoveryClientAutoConfiguration
 import org.springframework.cloud.kubernetes.commons.KubernetesNamespaceProvider
 import org.springframework.cloud.kubernetes.commons.discovery.KubernetesDiscoveryProperties
 import org.springframework.context.annotation.Bean
@@ -17,6 +21,8 @@ import org.springframework.context.annotation.Primary
 
 @Configuration
 @ConditionalOnKubernetesDiscoveryEnabled
+@AutoConfigureBefore(KubernetesDiscoveryClientAutoConfiguration::class)
+@AutoConfigureAfter(KubernetesClientAutoConfiguration::class)
 @EnableConfigurationProperties(KubernetesDiscoveryProperties::class)
 class BkKubernetesConfiguration {
     @Bean
@@ -29,18 +35,14 @@ class BkKubernetesConfiguration {
         endpointsLister: Lister<V1Endpoints>,
         serviceInformer: SharedInformer<V1Service>,
         endpointsInformer: SharedInformer<V1Endpoints>,
-        kubernetesDiscoveryProperties: KubernetesDiscoveryProperties
+        properties: KubernetesDiscoveryProperties
     ): BkKubernetesDiscoveryClient {
-        logger.debug("properties allNamespaces : ${kubernetesDiscoveryProperties.isAllNamespaces}")
-        logger.debug(
-            "properties cacheLoadingTimeoutSeconds : " +
-                    "${kubernetesDiscoveryProperties.cacheLoadingTimeoutSeconds}"
-        )
+        logger.debug("properties allNamespaces : ${properties.isAllNamespaces}")
         logger.info("kubernetesInformerDiscoveryClient init success")
         return BkKubernetesDiscoveryClient(
             kubernetesNamespaceProvider.namespace,
             sharedInformerFactory, serviceLister, endpointsLister, serviceInformer, endpointsInformer,
-            kubernetesDiscoveryProperties
+            properties
         )
     }
 
