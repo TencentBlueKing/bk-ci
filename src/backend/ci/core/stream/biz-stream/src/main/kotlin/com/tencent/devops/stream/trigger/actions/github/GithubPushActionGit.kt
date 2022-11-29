@@ -45,7 +45,6 @@ import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -56,7 +55,6 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
-import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
@@ -83,9 +81,8 @@ class GithubPushActionGit(
     private val streamDeleteEventService: DeleteEventService,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val pipelineDelete: PipelineDelete,
-    private val gitCheckService: GitCheckService,
-    private val streamTriggerCache: StreamTriggerCache
-) : GithubActionGit(apiService, gitCheckService, streamTriggerCache), GitBaseAction {
+    private val gitCheckService: GitCheckService
+) : GithubActionGit(apiService, gitCheckService), GitBaseAction {
 
     companion object {
         val logger = LoggerFactory.getLogger(GithubPushActionGit::class.java)
@@ -95,7 +92,6 @@ class GithubPushActionGit(
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.PUSH)
 
-    override lateinit var data: ActionData
     override fun event() = data.event as GithubPushEvent
 
     override val api: GithubApiService

@@ -613,7 +613,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         includeFolder: Boolean?,
         deep: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        modifiedTime: Boolean?
     ): Page<FileInfo> {
         TODO("Not yet implemented")
     }

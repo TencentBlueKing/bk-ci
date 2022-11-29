@@ -147,7 +147,7 @@
 
 <style lang="postcss" scoped>
     .agent-pool-card {
-        width: 368px;
+        width: 350px;
         height: 310px;
         background: #FFFFFF;
         border: 1px solid #dde4eb;

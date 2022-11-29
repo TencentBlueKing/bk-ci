@@ -1,0 +1,139 @@
+version: "v2.0"
+name: "BK-CI GITHUB PR CHECK"
+
+on:
+  mr:
+    target-branches:  [ "master" ]
+
+stages:
+- name: "PR检查"
+  label:
+    - "Build"
+  check-out:
+    gates:
+      - template: codecc_pr_check.yml
+      
+  jobs:
+    job_1:
+      name: "源代码规范性检查"
+      steps:
+        - checkout: self
+          name: "预合并 BK-CI代码"
+          with:
+            usernameConfig: mingshewhe
+            userEmailConfig: mingshewhe@tencent.com
+            enableGitLfs: false
+            enableVirtualMergeBranch: true
+          
+        - name: "kotlin代码规范检查"
+          run: |
+            cd src/backend/ci
+            wget https://github.com/pinterest/ktlint/releases/download/0.29.0/ktlint -O ktlint
+            java -jar ktlint "**/src/**/*.kt" --reporter=plain,output=report/ktlint-report.txt
+        
+        - uses: uploadReport@1.*
+          name: 归档报告
+          with:
+            fileDir: src/backend/ci/report
+            indexFile: ktlint-report.txt
+            indexFileCharset: UTF-8
+            reportName: ktlint-report
+            isParallel: false
+            isSendEmail: false
+
+        - name: "腾讯代码分析(最新)"
+          uses: "CodeCCCheckAtom@1.*"
+          with:
+            languages:
+            - "JAVA"
+            - "GOLANG"
+            - "KOTLIN"
+            checkerSetType: "normal"
+            asyncTask: false
+            asyncTaskId: ""
+            goPath: "src/agent/src"
+            pyVersion: "py3"
+            scriptType: "SHELL"
+            languageRuleSetMap:
+              JAVA_RULE:
+              - "bk_ci_java_sec"
+              KOTLIN_RULE:
+              - "bk_ci_kotlin"
+              JS_RULE:
+              - "js_eslint_sec"
+              RUBY_RULE: []
+              GOLANG_RULE:
+              - "bk_ci_go_sec"
+            C_CPP_RULE: []
+            rtxReceiverType: "4"
+            rtxReceiverList: []
+            botWebhookUrl: ""
+            botRemindRange: "1"
+            botRemindSeverity: "7"
+            botRemaindTools: []
+            emailReceiverType: "4"
+            emailReceiverList: []
+            emailCCReceiverList: []
+            instantReportStatus: "2"
+            reportDate: []
+            reportTime: ""
+            reportTools: []
+            toolScanType: "0"
+            mrCommentEnable: true
+            newDefectJudgeFromDate: "2021-03-01"
+            transferAuthorList: []
+            path:
+            - "src/backend/ci"
+            - "src/agent"
+            customPath:
+            - ".*/.*\\.svg"
+            scanTestSource: false
+            openScanPrj: false
+            JAVA_RULE:
+            - "codecc_default_java"
+            JAVA_TOOL:
+            - toolList:
+              - "CHECKSTYLE"
+              - "WOODPECKER_SENSITIVE"
+            KOTLIN_RULE:
+            - "codecc_default_kotlin"
+            KOTLIN_TOOL:
+            - toolList:
+              - "KTLINT"
+              - "SENSITIVE"
+              - "DUPC"
+              - "DETEKT"
+              - "WOODPECKER_SENSITIVE"
+              - "IP_CHECK"
+            JS_RULE: []
+            JS_TOOL:
+            - toolList:
+              - "CLOC"
+              - "SENSITIVE"
+              - "DUPC"
+              - "CCN"
+            - toolList:
+              - "ESLINT"
+              - "DUPC"
+              - "WOODPECKER_SENSITIVE"
+              - "CCN"
+            RUBY_RULE: []
+            RUBY_TOOL:
+            - toolList:
+              - "SENSITIVE"
+              - "HORUSPY"
+              - "COVERITY"
+              - "CCN"
+            GOLANG_RULE:
+            - "codecc_default_go"
+            GOLANG_TOOL:
+            - toolList:
+              - "DUPC"
+              - "GOML"
+              - "WOODPECKER_SENSITIVE"
+              - "CCN"
+            - toolList:
+              - "CLOC"
+              - "SENSITIVE"
+              - "DUPC"
+              - "CCN"

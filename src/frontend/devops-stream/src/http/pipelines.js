@@ -104,6 +104,10 @@ export default {
         return api.get(`${STREAM_PERFIX}/user/gitcode/projects/repository/branches`, { params })
     },
 
+    getPipelineBuildBranches (params) {
+        return api.get(`${STREAM_PERFIX}/user/gitcode/projects/repository/local_branches`, { params })
+    },
+
     getPipelineCommits (params) {
         return api.get(`${STREAM_PERFIX}/user/gitcode/projects/commits`, { params })
     },

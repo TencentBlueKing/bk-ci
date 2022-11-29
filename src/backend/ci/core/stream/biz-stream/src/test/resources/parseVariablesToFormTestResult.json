@@ -45,9 +45,7 @@
     "select类型": {
       "type": "string",
       "title": "select类型",
-      "default": [
-        "select类型-v"
-      ],
+      "default": "select类型-v",
       "ui:component": {
         "name": "selector",
         "props": {
