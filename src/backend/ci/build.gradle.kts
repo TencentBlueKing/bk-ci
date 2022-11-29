@@ -103,6 +103,7 @@ allprojects {
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
             }
+            dependency("org.springframework.cloud:spring-cloud-kubernetes-client-discovery:2.0.6")
         }
     }
 
