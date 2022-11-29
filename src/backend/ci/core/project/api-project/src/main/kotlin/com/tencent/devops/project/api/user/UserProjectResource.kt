@@ -82,7 +82,7 @@ interface UserProjectResource {
     ): Result<List<ProjectVO>>
 
     @GET
-    @Path("/listProjectsWithoutPermissions/{english_name}")
+    @Path("/listProjectsWithoutPermissions/{projectName}")
     @ApiOperation("查询无权限的项目")
     fun listProjectsWithoutPermissions(
         @ApiParam("userId", required = true)
