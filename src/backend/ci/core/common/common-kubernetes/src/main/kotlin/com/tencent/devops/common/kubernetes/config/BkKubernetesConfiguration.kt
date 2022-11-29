@@ -9,6 +9,7 @@ import io.kubernetes.client.openapi.models.V1Service
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.kubernetes.client.discovery.ConditionalOnKubernetesDiscoveryEnabled
 import org.springframework.cloud.kubernetes.commons.KubernetesNamespaceProvider
@@ -23,6 +24,9 @@ import org.springframework.context.annotation.Primary
 class BkKubernetesConfiguration : InitializingBean {
     @Autowired
     private lateinit var discoveryProperties: KubernetesDiscoveryProperties
+
+    @Value("\${spring.cloud.kubernetes.discovery.all-namespaces}")
+    private val allNamespaces: Boolean? = null
 
     @Bean
     @Primary
@@ -59,5 +63,6 @@ class BkKubernetesConfiguration : InitializingBean {
             "discoveryProperties cacheLoadingTimeoutSeconds : " +
                     "${discoveryProperties.cacheLoadingTimeoutSeconds}"
         )
+        logger.debug("spring.cloud.kubernetes.discovery.all-namespaces is $allNamespaces")
     }
 }
