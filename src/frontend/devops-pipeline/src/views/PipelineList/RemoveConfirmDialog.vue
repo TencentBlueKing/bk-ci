@@ -73,7 +73,7 @@
             <bk-button
                 theme="primary"
                 :loading="isBusy"
-                :disabled="noPermissionPipelineLength > 0 || hasPermissionPipelines.length === 0"
+                :disabled="deletable"
                 @click="handleSubmit">
                 {{confirmTxt}}
             </bk-button>
@@ -156,6 +156,9 @@
                         showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0)
                     }
                 })
+            },
+            deletable () {
+                return (!this.hideNoPermissionPipeline && this.noPermissionPipelineLength > 0) || this.hasPermissionPipelines.length === 0
             }
         },
         watch: {
@@ -257,6 +260,12 @@
     @import '@/scss/conf';
     .remove-pipeline-confirm-dialog {
         text-align: center;
+         .bk-dialog-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-height: calc(50vh - 50px);
+        }
         .delete-pipeline-warning-icon {
             display: inline-flex;
             align-items: center;
@@ -267,6 +276,7 @@
             height: 42px;
             font-size: 24px;
             border-radius: 50%;
+            flex-shrink: 0;
         }
         .danger-text {
             color: $dangerColor;
@@ -288,7 +298,10 @@
             border-radius: 2px;
             margin-top: 16px;
             overflow: auto;
+            flex: 1;
+            width: 100%;
             > li {
+                width: 100%;
                 height: 40px;
                 padding: 0 16px;
                 display: flex;

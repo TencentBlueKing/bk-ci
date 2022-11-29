@@ -18,6 +18,7 @@
  */
 
 import ajax from '@/utils/request'
+import Vue from 'vue'
 import {
     PROCESS_API_URL_PREFIX,
     MY_PIPELINE_VIEW_ID,
@@ -159,18 +160,20 @@ const mutations = {
         ]
     },
     [UPDATE_PIPELINE_GROUP]: (state, { id, body }) => {
-        console.log(id, body)
-        const group = state.allPipelineGroup.find(pipelineGroup => pipelineGroup.id === id)
+        const group = state.allPipelineGroup.find(group => group.id === id)
         if (group) {
-            Object.assign(group, body)
+            Vue.set(group, body)
         }
     }
 }
 
 const actions = {
-    async requestGroupPipelineCount (_, { projectId, viewId }) {
+    async requestGroupPipelineCount ({ commit, getters }, { projectId, viewId }) {
         try {
             const { data } = await ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}/pipelineCount`)
+            if (data && getters.groupMap[viewId]) {
+                Vue.set(getters.groupMap[viewId], 'pipelineCountDetail', data)
+            }
             return data
         } catch (error) {
             console.error(error)
@@ -183,18 +186,20 @@ const actions = {
     /**
      * 获取所有流水线分组
     */
-    async requestGetGroupLists ({ commit, dispatch }, { projectId }) {
+    async requestGetGroupLists ({ commit, state, dispatch }, { projectId, viewId }) {
         try {
             const [pipelineGroups, groupCounts] = await Promise.all([
                 ajax.get(`${prefix}/${projectId}/list`),
                 dispatch('requestPipelineCount', { projectId })
             ])
+            commit(SET_ALL_PIPELINE_GROUP, pipelineGroups.data)
+            if (viewId) {
+                await dispatch('requestGroupPipelineCount', { projectId, viewId })
+            }
 
             state.sumViews[0].pipelineCount = groupCounts.data.totalCount
-
             state.hardViews[0].pipelineCount = groupCounts.data.myFavoriteCount
             state.hardViews[1].pipelineCount = groupCounts.data.myPipelineCount
-            commit(SET_ALL_PIPELINE_GROUP, pipelineGroups.data)
         } catch (error) {
             console.error(error)
         }

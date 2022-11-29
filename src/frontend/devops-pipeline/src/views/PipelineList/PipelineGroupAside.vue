@@ -64,13 +64,13 @@
                                 {{item.name}}
                             </span>
                             <span
-                                v-if="$route.params.viewId === item.id && hasDeleteCount"
+                                v-if="$route.params.viewId === item.id && currentPipelineCountDetail.deleteCount > 0"
                                 class="pipeline-group-item-sum has-delete-count"
                             >
-                                <span class="normal-count">{{currentGroupPipelineCount.normalCount}}</span>
+                                <span class="normal-count">{{currentPipelineCountDetail.normalCount}}</span>
                                 <span class="delete-count">
                                     <logo name="delete" size="8" />
-                                    {{currentGroupPipelineCount.deleteCount}}
+                                    {{currentPipelineCountDetail.deleteCount}}
                                 </span>
                             </span>
                             <span v-else class="pipeline-group-item-sum">
@@ -162,12 +162,6 @@
                     personalViewList: true,
                     projectViewList: true
                 },
-                currentGroupPipelineCount: {
-                    loading: false,
-                    deleteCount: 0,
-                    normalCount: 0
-                },
-                hasDeleteCount: false,
                 isAdding: false,
                 isAddPipelineGroupDialogShow: false,
                 isValidGroupName: false,
@@ -241,6 +235,11 @@
                     content: this.$t('projectedGroupDisableTips'),
                     disabled: this.isManage
                 }
+            },
+            currentPipelineCountDetail () {
+                const viewId = this.$route.params.viewId
+                const currentGroup = this.groupMap[viewId]
+                return currentGroup?.pipelineCountDetail ?? currentGroup.pipelineCount
             }
         },
         watch: {
@@ -249,7 +248,7 @@
             }
         },
         created () {
-            this.updateGroupPipelineCount(this.$route.params.viewId)
+            // this.updateGroupPipelineCount(this.$route.params.viewId)
             this.refreshPipelineGroup()
         },
         methods: {
@@ -427,21 +426,11 @@
                 })
                 this.$refs.newPipelineGroupForm?.clearError?.()
             },
-            async updateGroupPipelineCount (viewId) {
-                this.currentGroupPipelineCount.loading = true
-                this.hasDeleteCount = false
-                const res = await this.requestGroupPipelineCount({
+            updateGroupPipelineCount (viewId) {
+                this.requestGroupPipelineCount({
                     projectId: this.$route.params.projectId,
                     viewId
                 })
-
-                if (res) {
-                    this.currentGroupPipelineCount = res
-                    this.hasDeleteCount = res.deleteCount > 0
-                } else {
-                    this.hasDeleteCount = false
-                    this.currentGroupPipelineCount.loading = false
-                }
             },
             switchViewId (viewId) {
                 if (viewId !== this.$route.params.viewId) {
