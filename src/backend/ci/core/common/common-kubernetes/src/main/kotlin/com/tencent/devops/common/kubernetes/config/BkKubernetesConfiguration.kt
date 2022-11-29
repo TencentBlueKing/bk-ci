@@ -21,13 +21,7 @@ import org.springframework.context.annotation.Primary
 @Configuration
 @ConditionalOnKubernetesDiscoveryEnabled
 @EnableConfigurationProperties(KubernetesDiscoveryProperties::class)
-class BkKubernetesConfiguration : InitializingBean {
-    @Autowired
-    private lateinit var discoveryProperties: KubernetesDiscoveryProperties
-
-    @Value("\${spring.cloud.kubernetes.discovery.all-namespaces}")
-    private val allNamespaces: Boolean? = null
-
+class BkKubernetesConfiguration {
     @Bean
     fun bkKubernetesPostProcessor(
         properties: KubernetesDiscoveryProperties
@@ -62,14 +56,5 @@ class BkKubernetesConfiguration : InitializingBean {
 
     companion object {
         private val logger = LoggerFactory.getLogger(BkKubernetesConfiguration::class.java)
-    }
-
-    override fun afterPropertiesSet() {
-        logger.debug("discoveryProperties allNamespaces : ${discoveryProperties.isAllNamespaces}")
-        logger.debug(
-            "discoveryProperties cacheLoadingTimeoutSeconds : " +
-                    "${discoveryProperties.cacheLoadingTimeoutSeconds}"
-        )
-        logger.debug("spring.cloud.kubernetes.discovery.all-namespaces is $allNamespaces")
     }
 }
