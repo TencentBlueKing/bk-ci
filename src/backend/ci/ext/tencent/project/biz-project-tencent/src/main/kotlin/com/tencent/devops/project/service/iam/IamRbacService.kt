@@ -104,7 +104,7 @@ class IamRbacService @Autowired constructor(
                     resourceRegisterInfo = resourceRegisterInfo,
                     subjectScopes = event.subjectScopes
                 )
-                logger.info("iamV5 project gradeManagerId: $gradeManagerId")
+                logger.info("iamRBAC project gradeManagerId: $gradeManagerId")
                 watcher.start("batchCreateDefaultGroups")
                 // 批量创建默认用户组
                 batchCreateDefaultGroups(
@@ -407,10 +407,12 @@ class IamRbacService @Autowired constructor(
         logger.info("iam Rbac createDefaultGroup : ${group.value}")
         val actions = getGroupStrategy(group)
         if (actions.first.isNotEmpty()) {
+            // 项目的权限
             val authorizationScopes = buildCreateAuthorizationScopes(actions.first, projectCode)
             iamManagerService.grantRoleGroupV2(roleId, authorizationScopes)
         }
         if (actions.second.isNotEmpty()) {
+            // 资源的权限
             actions.second.forEach { (resource, actions) ->
                 val groupAuthorizationScopes = buildOtherAuthorizationScopes(actions, projectCode, resource)
                 iamManagerService.grantRoleGroupV2(roleId, groupAuthorizationScopes)
