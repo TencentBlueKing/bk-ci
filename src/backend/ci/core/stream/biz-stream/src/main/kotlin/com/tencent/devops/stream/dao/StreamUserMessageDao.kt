@@ -33,7 +33,6 @@ import com.tencent.devops.model.stream.tables.records.TGitUserMessageRecord
 import com.tencent.devops.stream.pojo.message.UserMessageType
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 
 @Repository
