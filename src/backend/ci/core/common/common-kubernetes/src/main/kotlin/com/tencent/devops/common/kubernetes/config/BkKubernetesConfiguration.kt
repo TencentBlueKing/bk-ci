@@ -38,6 +38,7 @@ class BkKubernetesConfiguration {
         properties: KubernetesDiscoveryProperties
     ): BkKubernetesDiscoveryClient {
         logger.debug("properties allNamespaces : ${properties.isAllNamespaces}")
+        logger.debug("properties cacheLoadingTimeoutSeconds : ${properties.cacheLoadingTimeoutSeconds}")
         logger.info("kubernetesInformerDiscoveryClient init success")
         return BkKubernetesDiscoveryClient(
             kubernetesNamespaceProvider.namespace,
