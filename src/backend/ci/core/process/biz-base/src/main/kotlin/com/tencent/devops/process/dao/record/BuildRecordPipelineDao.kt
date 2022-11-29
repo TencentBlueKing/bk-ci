@@ -96,7 +96,7 @@ class BuildRecordPipelineDao {
         pipelineId: String,
         buildId: String,
         executeCount: Int
-    ): List<BuildRecordPipeline> {
+    ): BuildRecordPipeline {
         with(TPipelineBuildRecordPipeline.T_PIPELINE_BUILD_RECORD_PIPELINE) {
             return dslContext.selectFrom(this)
                 .where(
@@ -104,7 +104,7 @@ class BuildRecordPipelineDao {
                         .and(PROJECT_ID.eq(projectId))
                         .and(PIPELINE_ID.eq(pipelineId))
                         .and(EXECUTE_COUNT.eq(executeCount))
-                ).fetch(mapper)
+                ).fetchSingle(mapper)
         }
     }
 
@@ -118,7 +118,7 @@ class BuildRecordPipelineDao {
                     resourceVersion = resourceVersion,
                     executeCount = executeCount,
                     buildNum = buildNum,
-                    pipelineVar = JsonUtil.getObjectMapper().readValue(pipelineVar) as Map<String, Any>,
+                    pipelineVar = JsonUtil.getObjectMapper().readValue(pipelineVar) as MutableMap<String, Any>,
                     startUser = startUser,
                     trigger = trigger,
                     cancelUser = cancelUser,

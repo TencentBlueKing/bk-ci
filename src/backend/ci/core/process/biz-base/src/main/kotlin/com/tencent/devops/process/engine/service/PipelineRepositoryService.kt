@@ -161,6 +161,7 @@ class PipelineRepositoryService constructor(
         }
 
         return if (!create) {
+            val pipelineSetting = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
             update(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -171,6 +172,7 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 modelTasks = modelTasks,
                 channelCode = channelCode,
+                maxPipelineResNum = pipelineSetting?.maxPipelineResNum,
                 updateLastModifyUser = updateLastModifyUser
             )
         } else {
@@ -609,6 +611,7 @@ class PipelineRepositoryService constructor(
         buildNo: BuildNo?,
         modelTasks: Collection<PipelineModelTask>,
         channelCode: ChannelCode,
+        maxPipelineResNum: Int? = null,
         updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
@@ -704,6 +707,15 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     beforeVersion = version
                 )
+                if (maxPipelineResNum != null) {
+                    pipelineResVersionDao.deleteEarlyVersion(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        currentVersion = version,
+                        maxPipelineResNum = maxPipelineResNum
+                    )
+                }
                 pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
             }
         } finally {

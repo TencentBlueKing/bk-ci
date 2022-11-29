@@ -341,7 +341,7 @@ class PipelineContainerService @Autowired constructor(
                         endTime = null,
                         timestamps = emptyList(),
                         timeCost = null,
-                        taskVar = emptyMap()
+                        taskVar = mutableMapOf()
                     )
                 )
             }

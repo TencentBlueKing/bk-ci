@@ -109,7 +109,7 @@ class BuildRecordTaskDao {
                         .and(PIPELINE_ID.eq(pipelineId))
                         .and(CONTAINER_ID.eq(containerId))
                         .and(EXECUTE_COUNT.eq(executeCount))
-                ).fetch(mapper)
+                ).orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
 
@@ -167,7 +167,7 @@ class BuildRecordTaskDao {
                     stageId = stageId,
                     containerId = containerId,
                     taskId = taskId,
-                    taskVar = JsonUtil.getObjectMapper().readValue(taskVar) as Map<String, Any>,
+                    taskVar = JsonUtil.getObjectMapper().readValue(taskVar) as MutableMap<String, Any>,
                     taskSeq = taskSeq,
                     classType = classType,
                     atomCode = atomCode,

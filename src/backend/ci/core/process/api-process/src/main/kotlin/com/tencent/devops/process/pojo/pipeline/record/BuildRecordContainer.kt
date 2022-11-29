@@ -50,7 +50,7 @@ data class BuildRecordContainer(
     @ApiModelProperty("执行次数", required = true)
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
-    val containerVar: Map<String, Any>,
+    val containerVar: MutableMap<String, Any>,
     @ApiModelProperty("作业容器类型", required = true)
     val containerType: String,
     @ApiModelProperty("是否为构建矩阵组", required = false)

@@ -538,7 +538,7 @@ class InitializeMatrixGroupStageCmd(
                     executeCount = it.executeCount,
                     matrixGroupFlag = false,
                     matrixGroupId = matrixGroupId,
-                    containerVar = emptyMap(),
+                    containerVar = mutableMapOf(),
                     startTime = null,
                     endTime = null,
                     timestamps = emptyList(),

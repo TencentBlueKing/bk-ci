@@ -105,6 +105,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
@@ -189,6 +190,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineBuildDao: PipelineBuildDao,
+    private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineTriggerReviewDao: PipelineTriggerReviewDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineStageService: PipelineStageService,
@@ -699,6 +701,7 @@ class PipelineRuntimeService @Autowired constructor(
         // 2019-12-16 产品 rerun 需求
         val projectId = pipelineInfo.projectId
         val pipelineId = pipelineInfo.pipelineId
+        val version = pipelineInfo.version
         val startBuildStatus: BuildStatus = if (triggerReviewers.isNullOrEmpty()) {
             // 默认都是排队状态
             BuildStatus.QUEUE
@@ -805,16 +808,16 @@ class PipelineRuntimeService @Autowired constructor(
                     container.retryFreshMatrixOption()
                     pipelineContainerService.cleanContainersInMatrixGroup(
                         transactionContext = dslContext,
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineInfo.pipelineId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
                         buildId = buildId,
                         matrixGroupId = container.id!!
                     )
                 }
                 // --- 第3层循环：Element遍历处理 ---
                 pipelineContainerService.prepareBuildContainerTasks(
-                    projectId = pipelineInfo.projectId,
-                    pipelineId = pipelineInfo.pipelineId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
                     container = container,
                     startParamMap = startParamMap,
@@ -873,8 +876,8 @@ class PipelineRuntimeService @Autowired constructor(
                 stage.resetBuildOption(true)
                 buildStages.add(
                     PipelineBuildStage(
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineInfo.pipelineId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
                         buildId = buildId,
                         stageId = stage.id!!,
                         seq = index,
@@ -946,7 +949,7 @@ class PipelineRuntimeService @Autowired constructor(
                     // 重置状态和人
                     buildDetailDao.update(
                         dslContext = transactionContext,
-                        projectId = pipelineInfo.projectId,
+                        projectId = projectId,
                         buildId = buildId,
                         model = JsonUtil.toJson(fullModel, formatted = false),
                         buildStatus = startBuildStatus,
@@ -959,7 +962,7 @@ class PipelineRuntimeService @Autowired constructor(
                 } else { // 创建构建记录
                     val buildNumAlias = if (!buildNumRule.isNullOrBlank()) {
                         val parsedValue = pipelineRuleService.parsePipelineRule(
-                            projectId = pipelineInfo.projectId,
+                            projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
                             busCode = PipelineRuleBusCodeEnum.BUILD_NUM.name,
@@ -976,7 +979,7 @@ class PipelineRuntimeService @Autowired constructor(
                     // 构建号递增
                     val buildNum = pipelineBuildSummaryDao.updateBuildNum(
                         dslContext = transactionContext,
-                        projectId = pipelineInfo.projectId,
+                        projectId = projectId,
                         pipelineId = pipelineId,
                         buildNumAlias = buildNumAlias
                     )
@@ -988,13 +991,13 @@ class PipelineRuntimeService @Autowired constructor(
                     val concurrencyGroup = if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
                         setting.concurrencyGroup
                     } else null
-                    val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, pipelineInfo.version)
+                    val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
                     try {
                         pipelineVersionLock.lock()
                         pipelineBuildDao.create(
                             dslContext = transactionContext,
-                            projectId = pipelineInfo.projectId,
-                            pipelineId = pipelineInfo.pipelineId,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
                             buildId = buildId,
                             version = startParamMap[PIPELINE_VERSION].toString().toInt(),
                             buildNum = buildNum,
@@ -1013,6 +1016,35 @@ class PipelineRuntimeService @Autowired constructor(
                             buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG]),
                             buildNumAlias = buildNumAlias,
                             concurrencyGroup = concurrencyGroup
+                        )
+                        // 查询流水线版本记录
+                        val pipelineVersionInfo = pipelineResVersionDao.getPipelineVersionSimple(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            version = version
+                        )
+                        val referFlag = pipelineVersionInfo?.referFlag ?: true
+                        var referCount = pipelineVersionInfo?.referCount
+                        referCount = if (referCount == null) {
+                            // 兼容老数据缺少关联构建记录的情况，全量统计关联数据数量
+                            pipelineBuildDao.countBuildNumByVersion(
+                                dslContext = transactionContext,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                version = version
+                            )
+                        } else {
+                            referCount + 1
+                        }
+                        // 更新流水线版本关联构建记录信息
+                        pipelineResVersionDao.updatePipelineVersionReferInfo(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            version = version,
+                            referCount = referCount,
+                            referFlag = referFlag
                         )
                     } finally {
                         pipelineVersionLock.unlock()

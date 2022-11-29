@@ -25,42 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline.record
+package com.tencent.devops.misc.pojo.project
 
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
 
-@ApiModel("构建详情记录-插件任务")
-data class BuildRecordPipeline(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("项目ID", required = true)
-    val projectId: String,
+@ApiModel("流水线版本摘要")
+data class PipelineVersionSimple(
     @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("编排版本号", required = true)
-    val resourceVersion: Int,
-    @ApiModelProperty("构建号", required = true)
-    val buildNum: Int,
-    @ApiModelProperty("执行次数", required = true)
-    val executeCount: Int,
-    @ApiModelProperty("执行变量", required = true)
-    val pipelineVar: MutableMap<String, Any>,
-    @ApiModelProperty("触发人", required = true)
-    val startUser: String,
-    @ApiModelProperty("触发器", required = true)
-    val trigger: String,
-    @ApiModelProperty("取消人", required = false)
-    val cancelUser: String?,
-    @ApiModelProperty("开始时间", required = false)
-    val startTime: LocalDateTime?,
-    @ApiModelProperty("结束时间", required = false)
-    val endTime: LocalDateTime?,
-    @ApiModelProperty("业务时间戳集合", required = true)
-    val timestamps: List<BuildRecordTimeStamp> = emptyList(),
-    @ApiModelProperty("各项耗时", required = true)
-    val timeCost: BuildRecordTimeCost?
+    @ApiModelProperty("流水线创建人", required = true)
+    val creator: String,
+    @ApiModelProperty("创建时间戳", required = true)
+    val createTime: Long,
+    @ApiModelProperty("流水线版本号", required = true)
+    val version: Int,
+    @ApiModelProperty("流水线版本名称", required = true)
+    val versionName: String,
+    @ApiModelProperty("是否还有构建记录引用该版本标识", required = false)
+    val referFlag: Boolean? = null,
+    @ApiModelProperty("关联构建记录总数", required = false)
+    val referCount: Int? = null
 )

@@ -95,7 +95,7 @@ class BuildRecordContainerDao {
         }
     }
 
-    fun getRecord(
+    fun getRecords(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -148,7 +148,7 @@ class BuildRecordContainerDao {
                     executeCount = executeCount,
                     stageId = stageId,
                     containerId = containerId,
-                    containerVar = JsonUtil.getObjectMapper().readValue(containerVar) as Map<String, Any>,
+                    containerVar = JsonUtil.getObjectMapper().readValue(containerVar) as MutableMap<String, Any>,
                     containerType = containerType,
                     matrixGroupFlag = matrixGroupFlag,
                     matrixGroupId = matrixGroupId,
