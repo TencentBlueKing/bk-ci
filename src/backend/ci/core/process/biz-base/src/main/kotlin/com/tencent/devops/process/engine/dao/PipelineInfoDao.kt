@@ -339,10 +339,10 @@ class PipelineInfoDao {
                 .selectFrom(this)
                 .where(conditions)
                 .let {
-                    val st = if (sortType == PipelineSortType.CREATE_TIME) {
-                        CREATE_TIME
-                    } else {
-                        UPDATE_TIME
+                    val st = when (sortType) {
+                        PipelineSortType.UPDATE_TIME -> UPDATE_TIME
+                        PipelineSortType.NAME -> PIPELINE_NAME_PINYIN
+                        else -> CREATE_TIME
                     }
                     val c = if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.DESC) {
                         st.desc()
