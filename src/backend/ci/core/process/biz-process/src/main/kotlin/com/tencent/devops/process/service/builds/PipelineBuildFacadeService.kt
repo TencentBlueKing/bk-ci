@@ -1471,14 +1471,14 @@ class PipelineBuildFacadeService(
         return buildHistories
     }
 
-    fun getBuildsNoNeedPipelineId(
+    fun getBuilds(
         userId: String,
         projectId: String,
         pipelineId: String?,
         buildStatus: Set<BuildStatus>?,
         checkPermission: Boolean
     ): List<String> {
-        return pipelineRuntimeService.getBuildsNoNeedPipelineId(
+        return pipelineRuntimeService.getBuilds(
             projectId, pipelineId, buildStatus
         )
     }
