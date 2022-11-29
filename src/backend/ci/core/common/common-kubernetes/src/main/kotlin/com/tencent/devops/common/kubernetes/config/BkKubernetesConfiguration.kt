@@ -20,13 +20,6 @@ import org.springframework.context.annotation.Primary
 @EnableConfigurationProperties(KubernetesDiscoveryProperties::class)
 class BkKubernetesConfiguration {
     @Bean
-    fun bkKubernetesPostProcessor(
-        properties: KubernetesDiscoveryProperties
-    ): BkKubernetesPostProcessor {
-        return BkKubernetesPostProcessor(properties)
-    }
-
-    @Bean
     @Primary
     @SuppressWarnings("LongParameterList")
     fun kubernetesInformerDiscoveryClient(
@@ -52,6 +45,13 @@ class BkKubernetesConfiguration {
     }
 
     companion object {
+        @Bean
+        fun bkKubernetesPostProcessor(
+            properties: KubernetesDiscoveryProperties
+        ): BkKubernetesPostProcessor {
+            return BkKubernetesPostProcessor(properties)
+        }
+
         private val logger = LoggerFactory.getLogger(BkKubernetesConfiguration::class.java)
     }
 }
