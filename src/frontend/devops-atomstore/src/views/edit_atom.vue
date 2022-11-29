@@ -383,7 +383,7 @@
                 return toolbars
             },
             releasePackageUrl () {
-                return `/ms/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/ids/${this.atomForm.atomId}/codes/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
+                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/ids/${this.atomForm.atomId}/codes/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
             },
             navList () {
                 const name = `${this.curTitle}（${this.atomForm.atomCode}）`
