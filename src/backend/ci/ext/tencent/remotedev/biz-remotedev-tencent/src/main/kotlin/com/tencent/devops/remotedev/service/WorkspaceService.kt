@@ -158,52 +158,63 @@ class WorkspaceService @Autowired constructor(
 
         val devfile = DevfileUtil.parseDevfile(yaml)
 
-        val workspaceName = client.get(ServiceRemoteDevResource::class).createWorkspace(
-            userId,
-            WorkspaceReq(
-                workspaceId = workspaceId,
-                name = workspace.name,
-                repositoryUrl = workspace.repositoryUrl,
-                branch = workspace.branch,
-                devFilePath = workspace.devFilePath,
-                devFile = devfile
-            )
-        ).data
+        kotlin.runCatching {
+            client.get(ServiceRemoteDevResource::class).createWorkspace(
+                userId,
+                WorkspaceReq(
+                    workspaceId = workspaceId,
+                    name = workspace.name,
+                    repositoryUrl = workspace.repositoryUrl,
+                    branch = workspace.branch,
+                    devFilePath = workspace.devFilePath,
+                    devFile = devfile
+                )
+            ).data!!
+        }.fold(
+            {
+                dslContext.transaction { configuration ->
+                    val transactionContext = DSL.using(configuration)
+                    // 创建成功后，更新name
+                    workspaceDao.updateWorkspaceName(workspaceId, it, transactionContext)
+                    workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.RUNNING, transactionContext)
+                    workspaceHistoryDao.createWorkspaceHistory(
+                        dslContext = transactionContext,
+                        workspaceId = workspaceId,
+                        startUserId = userId,
+                        lastSleepTimeCost = 0
+                    )
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = transactionContext,
+                        workspaceId = workspaceId,
+                        operator = userId,
+                        action = WorkspaceAction.CREATE,
+                        // todo 内容待确定
+                        actionMessage = ""
+                    )
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = transactionContext,
+                        workspaceId = workspaceId,
+                        operator = userId,
+                        action = WorkspaceAction.START,
+                        // todo 内容待确定
+                        actionMessage = ""
+                    )
+                }
 
-        workspaceName?.let {
-            dslContext.transaction { configuration ->
-                val transactionContext = DSL.using(configuration)
-                // 创建成功后，更新name
-                workspaceDao.updateWorkspaceName(workspaceId, it, transactionContext)
-                workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.RUNNING, transactionContext)
-                workspaceHistoryDao.createWorkspaceHistory(
-                    dslContext = transactionContext,
-                    workspaceId = workspaceId,
-                    startUserId = userId,
-                    lastSleepTimeCost = 0
-                )
-                workspaceOpHistoryDao.createWorkspaceHistory(
-                    dslContext = transactionContext,
-                    workspaceId = workspaceId,
-                    operator = userId,
-                    action = WorkspaceAction.CREATE,
-                    // todo 内容待确定
-                    actionMessage = ""
-                )
-                workspaceOpHistoryDao.createWorkspaceHistory(
-                    dslContext = transactionContext,
-                    workspaceId = workspaceId,
-                    operator = userId,
-                    action = WorkspaceAction.START,
-                    // todo 内容待确定
-                    actionMessage = ""
-                )
+                // 获取远程登录url
+                val workspaceUrl = client.get(ServiceRemoteDevResource::class).getWorkspaceUrl(
+                    userId,
+                    it
+                ).data
+
+                return workspaceUrl!!
+            },
+            {
+                // 创建失败
+                logger.warn("create workspace $workspaceId failed|${it.message}", it)
             }
-            // 获取远程登录url
-            val workspaceUrl = client.get(ServiceRemoteDevResource::class).getWorkspaceUrl(userId, workspaceName).data
+        )
 
-            return workspaceUrl!!
-        }
         return ""
     }
 
