@@ -29,6 +29,13 @@ class BkKubernetesConfiguration : InitializingBean {
     private val allNamespaces: Boolean? = null
 
     @Bean
+    fun bkKubernetesPostProcessor(
+        properties: KubernetesDiscoveryProperties
+    ): BkKubernetesPostProcessor {
+        return BkKubernetesPostProcessor(properties)
+    }
+
+    @Bean
     @Primary
     @SuppressWarnings("LongParameterList")
     fun kubernetesInformerDiscoveryClient(
