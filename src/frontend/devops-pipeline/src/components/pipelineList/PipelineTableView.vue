@@ -79,7 +79,7 @@
             <bk-table-column key="lastModifyUser" :label="$t('restore.deleter')" prop="lastModifyUser"></bk-table-column>
         </template>
         <template v-else>
-            <bk-table-column :label="$t('latestExec')">
+            <bk-table-column width="300" :label="$t('latestExec')">
                 <span v-if="props.row.delete" slot-scope="props">
                     {{$t('deleteAlready')}}
                 </span>

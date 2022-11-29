@@ -98,6 +98,7 @@
             header-position="left"
             :title="$t('addPipelineGroup')"
             :loading="isAdding"
+            @cancel="closeAddPipelineGroupDialog"
         >
             <bk-form ref="newPipelineGroupForm" v-bkloading="{ isLoading: isAdding }" form-type="vertical" :model="newPipelineGroup">
                 <bk-form-item property="name" :rules="groupNameRules" :label="$t('pipelineGroupName')">
@@ -419,12 +420,12 @@
             },
             closeAddPipelineGroupDialog () {
                 this.isAddPipelineGroupDialogShow = false
-                this.isAddPipelineGroupDialogShow = false
+                this.isValidGroupName = false
                 Object.assign(this.newPipelineGroup, {
                     name: '',
                     projected: false
                 })
-                    this.$refs.newPipelineGroupForm?.clearError?.()
+                this.$refs.newPipelineGroupForm?.clearError?.()
             },
             async updateGroupPipelineCount (viewId) {
                 this.currentGroupPipelineCount.loading = true
@@ -632,8 +633,10 @@
             &.sticky-top {
                 background-color: #F5F7FA;
             }
+            &:hover {
+                background: #F5F7FA;
+            }
 
-            &:hover,
             &.active {
                 background: #E1ECFF;
                 .pipeline-group-item-icon,
