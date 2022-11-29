@@ -63,6 +63,7 @@ class StreamHistoryService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
+    @Suppress("ComplexMethod")
     fun getHistoryBuildList(
         userId: String,
         gitProjectId: Long,
