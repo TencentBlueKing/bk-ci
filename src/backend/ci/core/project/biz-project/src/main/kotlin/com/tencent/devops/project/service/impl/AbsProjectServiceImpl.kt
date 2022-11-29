@@ -199,8 +199,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: PermissionForbiddenException) {
             throw e
         } catch (e: Exception) {
-            logger.warn("Failed to create project in permission center： $projectCreateInfo", e)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
+            logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
+            throw OperationException(
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PEM_CREATE_FAIL,
+                    defaultMessage = e.message
+                )
+            )
         }
         if (projectId.isNullOrEmpty()) {
             projectId = UUIDUtil.generate()
@@ -453,7 +458,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
             // 是否需要toset
             val projects = getProjectFromAuth(userId, accessToken)
-            if (projects.isEmpty() && approved!!) {
+            if (projects.isEmpty() && approved) {
                 return emptyList()
             }
             val list = ArrayList<ProjectVO>()
@@ -470,7 +475,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
-            if (!approved!!) {
+            if (!approved) {
                 projectDao.listUnapprovedByUserId(
                     dslContext = dslContext,
                     userId = userId

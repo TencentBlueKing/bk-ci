@@ -70,7 +70,7 @@ class BluekingV3AuthAutoConfiguration {
     @Value("\${auth.url:}")
     val iamBaseUrl = ""
 
-    @Value("\${auth.appCode:}")
+    @Value("\${auth.iamSystem:}")
     val systemId = ""
 
     @Value("\${auth.appCode:}")
