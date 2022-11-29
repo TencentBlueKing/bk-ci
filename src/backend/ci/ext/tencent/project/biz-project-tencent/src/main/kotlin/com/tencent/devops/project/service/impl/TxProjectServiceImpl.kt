@@ -304,15 +304,16 @@ class TxProjectServiceImpl @Autowired constructor(
 //        val projectEnglishNames = projectPermissionService.getUserProjects(userId!!)
         val iamV0List = getV0UserProject(userId, accessToken)
         logger.info("$userId V0 project: $iamV0List")
-
-        // 请求V3的项目,流量必须指向到v3,需指定项目头
-        val iamV3List = getV3UserProject(userId!!)
-        logger.info("$userId V3 project: $iamV3List")
         val projectList = mutableSetOf<String>()
         projectList.addAll(iamV0List)
+        // 请求V3的项目,流量必须指向到v3,需指定项目头
+        // todo 暂时调不通auth服务
+        /*val iamV3List = getV3UserProject(userId!!)
+        logger.info("$userId V3 project: $iamV3List")
+
         if (!iamV3List.isNullOrEmpty()) {
             projectList.addAll(iamV3List)
-        }
+        }*/
         return projectList.toList()
     }
 
