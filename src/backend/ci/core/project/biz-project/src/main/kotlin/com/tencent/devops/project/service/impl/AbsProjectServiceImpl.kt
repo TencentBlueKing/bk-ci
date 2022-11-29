@@ -199,8 +199,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: PermissionForbiddenException) {
             throw e
         } catch (e: Exception) {
-            logger.warn("Failed to create project in permission center： $projectCreateInfo", e)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
+            logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
+            throw OperationException(
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PEM_CREATE_FAIL,
+                    defaultMessage = e.message
+                )
+            )
         }
         if (projectId.isNullOrEmpty()) {
             projectId = UUIDUtil.generate()
