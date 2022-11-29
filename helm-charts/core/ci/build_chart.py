@@ -51,6 +51,8 @@ default_value_dict = {
     'bkCiStreamGitUrl': 'www.github.com',
     'bkCiClusterTag': 'devops',
     'bkCiRepositoryGithubServer':'repository',
+    'bkCiDockerRoutingType':'VM',
+    'bkCiDockerJobQuotaEnable':'false',
 }
 
 if os.path.isfile(default_value_json):

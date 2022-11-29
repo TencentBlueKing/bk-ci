@@ -80,7 +80,7 @@ data:
         cfs:
           path: /data/cfs
       volumeMount:
-        dataPath: /data/landun/workspace
+        dataPath: /data/devops/workspace
         logPath: /data/devops/logs
         builderConfigMapPath: /data/landun/config
         cfs:
