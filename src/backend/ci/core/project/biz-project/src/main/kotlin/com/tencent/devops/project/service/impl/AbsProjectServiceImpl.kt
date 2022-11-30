@@ -345,8 +345,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         val subjectScopes = projectUpdateInfo.subjectScopes!!
-        // todo auth服务调不通，先不鉴权
-        // validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
+        validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
         logger.info(
             "update project : $userId | $englishName | $projectUpdateInfo | " +
                 "$needApproval | $subjectScopes"
