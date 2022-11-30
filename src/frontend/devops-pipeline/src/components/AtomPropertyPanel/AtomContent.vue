@@ -394,7 +394,6 @@
                     subPipelineCall: SubPipelineCall,
                     manualReviewUserTask: ManualReviewUserTask
                 }
-                console.log(atomMap[this.atomCode] || NormalAtom, this.atomCode, 'atomMap[this.atomCode] || NormalAtom')
                 return atomMap[this.atomCode] || NormalAtom
             }
         },

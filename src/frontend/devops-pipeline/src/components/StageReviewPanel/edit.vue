@@ -25,12 +25,12 @@
                 <atom-checkbox-list :list="notifyTypeList" :disabled="disabled" name="notifyType" :handle-change="handleUpdateNotifyType" :value="notifyType"></atom-checkbox-list>
             </form-field>
 
-            <form-field v-show="showNotifyGroup" :disabled="disabled" required label="企业微信群ID" class="mt14">
-                <vuex-input name="notifyGroup" placeholder="多个群以英文逗号隔开" required :handle-change="handleUpdateNotifyGroup" :value="notifyGroup"></vuex-input>
+            <form-field v-show="showNotifyGroup" :disabled="disabled" required :label="$t('weChatGroupID')" class="mt14">
+                <vuex-input name="notifyGroup" :placeholder="('notifyGroupDesc')" required :handle-change="handleUpdateNotifyGroup" :value="notifyGroup"></vuex-input>
             </form-field>
 
             <form-field :disabled="disabled" class="mt14">
-                <atom-checkbox name="markdownContent" text="企业微信消息以markdown格式发送" :handle-change="handleUpdateStageControl" :value="markdownContent"></atom-checkbox>
+                <atom-checkbox name="markdownContent" :text="$t('markdownContentLabel')" :handle-change="handleUpdateStageControl" :value="markdownContent"></atom-checkbox>
             </form-field>
 
             <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" class="mt14" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
