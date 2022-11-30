@@ -811,7 +811,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         var content1 = content
         params?.forEach { (paramName, paramValue) ->
             content1 = content1.replace("\${$paramName}", paramValue).replace("#{$paramName}", paramValue)
-                .replace("{{$paramName}}", paramValue).replace("\n","<br>")
+                .replace("{{$paramName}}", paramValue).replace("\n", "<br>")
         }
         return content1
     }
