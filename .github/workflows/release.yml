@@ -114,7 +114,7 @@ jobs:
   cloudNative:
     needs: [frontend, agent]
     name: Build image and helm chart
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:8.0
@@ -171,7 +171,7 @@ jobs:
       - name: Setup Python -- CLOUD NATIVE
         uses: actions/setup-python@v4
         with:
-          python-version: "3.7.6"
+          python-version: "3.7.15"
       - name: Generate Helm Chart -- CLOUD NATIVE
         working-directory: helm-charts/core/ci
         run: |
