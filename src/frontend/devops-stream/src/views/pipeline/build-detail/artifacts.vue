@@ -176,7 +176,11 @@
                 const properties = row.properties || []
                 const projectInfo = properties.find(property => property.key === 'projectId') || {}
                 const artifactoryType = row.artifactoryType === 'CUSTOM_DIR' ? 'custom' : 'pipeline'
-                if (projectInfo.value && artifactoryType) {
+                if (row.artifactoryType === 'IMAGE') {
+                    const repoName = properties.find(property => property.key === 'repoName')
+                    const [packageKey, version] = row.fullName.split(':')
+                    window.open(`https://${BKREPO_HOST}/ui/${projectInfo.value}/docker/package?repoName=${repoName.value}&packageKey=docker%3A%2F%2F${packageKey}&version=${version}`, '_blank')
+                } else if (projectInfo.value && artifactoryType) {
                     window.open(`https://${BKREPO_HOST}/ui/${projectInfo.value}/generic?repoName=${artifactoryType}&path=${window.encodeURIComponent(row.fullPath)}`, '_blank')
                 }
             }
