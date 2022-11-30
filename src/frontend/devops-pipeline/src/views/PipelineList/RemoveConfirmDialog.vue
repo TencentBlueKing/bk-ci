@@ -42,7 +42,7 @@
                 v-for="(pipeline, index) in removedPipelines"
                 :key="pipeline.pipelineId"
                 :class="{
-                    'no-permission-pipeline': !pipeline.hasPermission
+                    'no-permission-pipeline': isDeleteType && !pipeline.hasPermission
                 }"
             >
                 <span>{{ pipeline.name }}</span>
@@ -73,7 +73,7 @@
             <bk-button
                 theme="primary"
                 :loading="isBusy"
-                :disabled="deletable"
+                :disabled="disDeletable"
                 @click="handleSubmit">
                 {{confirmTxt}}
             </bk-button>
@@ -157,8 +157,8 @@
                     }
                 })
             },
-            deletable () {
-                return (!this.hideNoPermissionPipeline && this.noPermissionPipelineLength > 0) || this.hasPermissionPipelines.length === 0
+            disDeletable () {
+                return this.isDeleteType && ((!this.hideNoPermissionPipeline && this.noPermissionPipelineLength > 0) || this.hasPermissionPipelines.length === 0)
             }
         },
         watch: {

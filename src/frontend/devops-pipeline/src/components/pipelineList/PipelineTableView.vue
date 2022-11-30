@@ -144,7 +144,9 @@
                     text
                     theme="primary"
                     class="pipeline-exec-btn"
-                    @click="removeHandler(props.row)">
+                    :disabled="!isManage"
+                    @click="removeHandler(props.row)"
+                >
                     {{ $t('removeFromGroup') }}
                 </bk-button>
                 <bk-button
@@ -174,7 +176,7 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters, mapState } from 'vuex'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import Logo from '@/components/Logo'
     import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
@@ -218,6 +220,9 @@
         computed: {
             ...mapGetters('pipelines', [
                 'groupNamesMap'
+            ]),
+            ...mapState('pipelines', [
+                'isManage'
             ]),
             isAllPipelineView () {
                 return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
