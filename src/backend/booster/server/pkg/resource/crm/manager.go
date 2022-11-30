@@ -31,6 +31,9 @@ import (
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/types"
 )
 
+//DefaultNamespace define default namespace for resourcemanager
+const DefaultNamespace = "disttask"
+
 // NewResourceManager get a new container resource manager.
 func NewResourceManager(
 	c *config.ContainerResourceConfig,
@@ -109,6 +112,7 @@ type HandlerWithUser interface {
 	AddBroker(name string, strategyType StrategyType, strategy BrokerStrategy,
 		param BrokerParam) error
 	GetInstanceType(platform, group string) *config.InstanceType
+	GetNamespace() string
 }
 
 // ResourceParam describe the request parameters to container resource manager.
@@ -414,6 +418,10 @@ func (rm *resourceManager) recover() error {
 }
 
 func (rm *resourceManager) sync() {
+	if rm.conf.BcsNamespace == "" {
+		rm.conf.BcsNamespace = DefaultNamespace
+	}
+
 	nodeInfoList, err := rm.operator.GetResource(rm.conf.BcsClusterID)
 	if err != nil {
 		blog.Errorf("crm: sync resource failed: %v", err)
@@ -656,8 +664,11 @@ func (rm *resourceManager) getServiceInfo(resourceID, user string) (*op.ServiceI
 			resourceID, user, err)
 		return nil, err
 	}
-
-	info, err := rm.operator.GetServerStatus(rm.conf.BcsClusterID, user, targetID)
+	if _, ok := rm.handlerMap[user]; !ok {
+		blog.Errorf("crm: get service info for resource(%s) user(%s), get handlerMap nil", resourceID, user)
+		return nil, fmt.Errorf("handlerMap nil")
+	}
+	info, err := rm.operator.GetServerStatus(rm.conf.BcsClusterID, rm.handlerMap[user].GetNamespace(), targetID)
 	if err != nil {
 		blog.Errorf("crm: get service info for resource(%s) target(%s) user(%s) failed: %v",
 			resourceID, targetID, user, err)
@@ -801,6 +812,10 @@ func (rm *resourceManager) launch(
 				resourceID, user, err)
 			return err
 		}
+		if _, ok := rm.handlerMap[user]; !ok {
+			blog.Errorf("crm: try get free instances for resource(%s) user(%s), get handlerMap nil", resourceID, user)
+			return fmt.Errorf("handlerMap nil")
+		}
 
 		r.noReadyInstance = instance
 		r.resourceBlockKey = key
@@ -809,7 +824,7 @@ func (rm *resourceManager) launch(
 			resourceID, instance, user)
 		if err = rm.operator.LaunchServer(rm.conf.BcsClusterID, op.BcsLaunchParam{
 			Name:               resourceID,
-			Namespace:          user,
+			Namespace:          rm.handlerMap[user].GetNamespace(),
 			AttributeCondition: condition,
 			Env:                r.param.Env,
 			Ports:              r.param.Ports,
@@ -954,7 +969,11 @@ func (rm *resourceManager) release(resourceID, user string) error {
 			return err
 		}
 	} else {
-		if err = rm.operator.ReleaseServer(rm.conf.BcsClusterID, user, resourceID); err != nil {
+		if _, ok := rm.handlerMap[user]; !ok {
+			blog.Errorf("crm: release service with resource(%s) for user(%s), get handlerMap nil", resourceID, user)
+			return fmt.Errorf("handlerMap nil")
+		}
+		if err = rm.operator.ReleaseServer(rm.conf.BcsClusterID, rm.handlerMap[user].GetNamespace(), resourceID); err != nil {
 			blog.Errorf("crm: release service with resource(%s) for user(%s) failed: %v",
 				resourceID, user, err)
 			return err
@@ -1128,8 +1147,15 @@ func (hwu *handlerWithUser) GetInstanceType(platform string, group string) *conf
 	return &retIst
 }
 
+func (hwu *handlerWithUser) GetNamespace() string {
+	if hwu.mgr.conf.BcsNamespace != "" {
+		return hwu.mgr.conf.BcsNamespace
+	}
+	return DefaultNamespace
+}
+
 func (hwu *handlerWithUser) resourceID(id string) string {
-	return strings.ReplaceAll(strings.ToLower(fmt.Sprintf("%s-%s", hwu.user, id)), "_", "-")
+	return strings.ReplaceAll(strings.ToLower(id), "_", "-")
 }
 
 type resource struct {

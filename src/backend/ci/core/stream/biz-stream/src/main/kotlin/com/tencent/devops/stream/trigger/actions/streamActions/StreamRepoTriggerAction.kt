@@ -110,7 +110,9 @@ class StreamRepoTriggerAction(
         return baseAction.isMatch(triggerOn)
     }
 
-    override fun getUserVariables(yamlVariables: Map<String, Variable>?): Map<String, Variable>? = null
+    override fun getUserVariables(
+        yamlVariables: Map<String, Variable>?
+    ): Map<String, Variable>? = baseAction.getUserVariables(yamlVariables)
 
     override fun needSaveOrUpdateBranch() = false
 

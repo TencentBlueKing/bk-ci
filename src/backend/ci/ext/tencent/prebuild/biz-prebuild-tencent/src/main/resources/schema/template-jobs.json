@@ -1,4 +1,6 @@
 {
+  "$schema" : "http://json-schema.org/draft-07/schema",
+  "$comment" : "https://iwiki.woa.com/pages/viewpage.action?pageId=686380000",
   "additionalProperties" : false,
   "required" : [ "jobs" ],
   "properties" : {
@@ -87,7 +89,7 @@
       "additionalProperties" : false,
       "properties" : {
         "repositories" : {
-          "description" : "引用其他代码库下的模板：可以在单独的代码库里管理模板文件，然后在其他多个代码库下引用模板。详见：补充文档/pages/viewpage.action?pageId=686380021#Stream%E6%A8%A1%E6%9D%BF-%E5%BC%95%E7%94%A8%E5%85%B6%E4%BB%96%E4%BB%A3%E7%A0%81%E5%BA%93%E4%B8%8B%E7%9A%84%E6%A8%A1%E6%9D%BF",
+          "description" : "引用其他代码库下的模板：可以在单独的代码库里管理模板文件，然后在其他多个代码库下引用模板。详见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380021#Stream%E6%A8%A1%E6%9D%BF-%E5%BC%95%E7%94%A8%E5%85%B6%E4%BB%96%E4%BB%A3%E7%A0%81%E5%BA%93%E4%B8%8B%E7%9A%84%E6%A8%A1%E6%9D%BF",
           "type" : "array",
           "items" : {
             "type" : "object",
@@ -122,7 +124,7 @@
           }
         },
         "pools" : {
-          "description" : "引用第三方构建机池，详见：补充文档/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E8%B7%A8%E5%B7%A5%E7%A8%8B%E5%BC%95%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E6%9E%84%E5%BB%BA%E8%B5%84%E6%BA%90%E6%B1%A0",
+          "description" : "引用第三方构建机池，详见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E8%B7%A8%E5%B7%A5%E7%A8%8B%E5%BC%95%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E6%9E%84%E5%BB%BA%E8%B5%84%E6%BA%90%E6%B1%A0",
           "type" : "array",
           "items" : {
             "type" : "object",
@@ -130,7 +132,7 @@
             "additionalProperties" : false,
             "properties" : {
               "from" : {
-                "description" : "语法和使用方方式，详见：补充文档/pages/viewpage.action?pageId=914642753",
+                "description" : "语法和使用方方式，详见：https://iwiki.woa.com/pages/viewpage.action?pageId=914642753",
                 "type" : "string"
               },
               "name" : {
@@ -163,7 +165,7 @@
               "type" : "string"
             },
             "runs-on" : {
-              "description" : "配置当前 job 的构建环境 详情：补充文档/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-runs-on",
+              "description" : "配置当前 job 的构建环境 详情：https://iwiki.woa.com/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-runs-on",
               "anyOf" : [ {
                 "description" : "公共构建资源池 支持docker，windows-xxx，macos-xx，agentless",
                 "type" : "string"
@@ -189,7 +191,8 @@
                     "properties" : {
                       "image" : {
                         "description" : "镜像地址，缺省为mirrors.tencent.com/ci/tlinux3_ci:1.2.2",
-                        "type" : "string"
+                        "type" : "string",
+                        "pattern" : "\\S+:\\S+|\\$\\{\\{.*\\}\\}"
                       },
                       "credentials" : {
                         "description" : "拉取镜像的凭据：可以指定 凭据ID，或者指定 username + password",
@@ -228,6 +231,10 @@
                   },
                   "workspace" : {
                     "description" : "当self-hosted=true时生效，用于指定工作空间，系统指定的工作空间会带上流水线ID等信息，比较长，在 windows 下，有可能会报路径超长。",
+                    "type" : "string"
+                  },
+                  "xcode" : {
+                    "description" : "xcode 版本",
                     "type" : "string"
                   }
                 }
@@ -273,7 +280,7 @@
               "maximum" : 480
             },
             "env" : {
-              "description" : "环境变量，当前 job 下生效，由大写字母和下划线组成，CI_ 为系统内置变量前缀，不建议自定义此前缀开头的环境变量 详情：补充文档/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-env",
+              "description" : "环境变量，当前 job 下生效，由大写字母和下划线组成，CI_ 为系统内置变量前缀，不建议自定义此前缀开头的环境变量 详情：https://iwiki.woa.com/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-env",
               "$ref" : "#/definitions/env"
             },
             "continue-on-error" : {
@@ -287,21 +294,12 @@
               "required" : [ "matrix" ],
               "properties" : {
                 "matrix" : {
-                  "description" : "定义的每个选项都有键和值，键将作为 matrix 上下文中的属性，详见：补充文档/pages/viewpage.action?pageId=673540263",
+                  "description" : "定义的每个选项都有键和值，键将作为 matrix 上下文中的属性，详见：https://iwiki.woa.com/pages/viewpage.action?pageId=673540263",
                   "oneOf" : [ {
                     "type" : "object",
                     "additionalProperties" : {
                       "anyOf" : [ {
-                        "type" : "array",
-                        "items" : {
-                          "anyOf" : [ {
-                            "type" : "string"
-                          }, {
-                            "type" : "number"
-                          }, {
-                            "type" : "boolean"
-                          } ]
-                        }
+                        "type" : "array"
                       }, {
                         "type" : "string"
                       } ]
@@ -384,7 +382,8 @@
           "properties" : {
             "uses" : {
               "description" : "指定当前 step 使用的流水线插件标识和版本，值格式为：<atomCode>@<atomVersion>，<atomCode> 为插件标识，<atomVersion> 为插件对应的版本，支持设置始终使用指定大版本下的最新版本，如1.*，支持的插件有：从蓝盾研发商店上架的所有插件，不包括：蓝盾很早以前的旧版插件，这些插件目前已设置为不推荐使用人工审核：暂不支持",
-              "type" : "string"
+              "type" : "string",
+              "pattern" : "^.*@.*$"
             },
             "name" : {
               "description" : "step 的名称",
@@ -424,15 +423,19 @@
               "$ref" : "#/definitions/env"
             },
             "run" : {
-              "description" : "特殊属性，和 uses、checkout不共存，最常用的脚本插件，可以直接配置需要执行的单行或多行命令，当在类 linux 系统下时，使用 bash，当在 windows 系统下时，使用 cmd 或者 git 自带的命令行工具执行，预留自定义执行引擎的入口  shell 属性，后续可以支持 python、nodejs 等，如何设置输出参数见：补充文档/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E5%A6%82%E4%BD%95%E8%AE%BE%E7%BD%AE%E8%BE%93%E5%87%BA%E5%8F%82%E6%95%B0",
+              "description" : "特殊属性，和 uses、checkout不共存，最常用的脚本插件，可以直接配置需要执行的单行或多行命令，当在类 linux 系统下时，使用 bash，当在 windows 系统下时，使用 cmd 或者 git 自带的命令行工具执行，预留自定义执行引擎的入口  shell 属性，后续可以支持 python、nodejs 等，如何设置输出参数见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E5%A6%82%E4%BD%95%E8%AE%BE%E7%BD%AE%E8%BE%93%E5%87%BA%E5%8F%82%E6%95%B0",
               "type" : "string"
             },
             "checkout" : {
-              "description" : "特殊属性，和 uses、run 不共存，拉取 git 代码插件，可以拉取工蜂当前库的代码，或拉取工蜂其他库的代码，也可以拉取 gitlab、github的代码，默认使用 开启CI 的用户的OAUTH权限拉取代码，语法为：checkout: self | repo url 详见：补充文档/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-checkout",
+              "description" : "特殊属性，和 uses、run 不共存，拉取 git 代码插件，可以拉取工蜂当前库的代码，或拉取工蜂其他库的代码，也可以拉取 gitlab、github的代码，默认使用 开启CI 的用户的OAUTH权限拉取代码，语法为：checkout: self | repo url 详见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-checkout",
               "type" : "string"
             },
             "if-modify" : {
               "$ref" : "#/definitions/ifModify"
+            },
+            "shell" : {
+              "description" : "run 自定义引擎入口",
+              "type" : "string"
             }
           },
           "allOf" : [ {
@@ -509,7 +512,7 @@
     },
     "env" : {
       "type" : "object",
-      "maxProperties" : 20
+      "maxProperties" : 100
     },
     "template" : {
       "description" : "模板引用，支持传入 array[string]|string 引用模板对象",
@@ -558,10 +561,10 @@
       "additionalProperties" : false,
       "properties" : {
         "7zip" : {
-          "enum" : [ "21.07", 21.07, "p7zip_9.20.1" ]
+          "enum" : [ 21.07, "21.07", 22.01, "22.01", "p7zip_9.20.1" ]
         },
         "android-sdk-linux" : {
-          "enum" : [ "android-sdk", "android-sdk_new", "android-sdk_new_with_ndk" ]
+          "enum" : [ "android-sdk", "android-sdk_new", "android-sdk_new_with_ndk", "android-sdk_new_with_ndk_new" ]
         },
         "ant" : {
           "enum" : [ "1.9.3" ]
@@ -573,10 +576,10 @@
           "enum" : [ "2.8.0", "3.10.2", "3.14.6", "3.15.1", "3.2.0", "3.6.0", "3.7.0", "3.9.6" ]
         },
         "golang" : {
-          "enum" : [ "1.10", 1.1, "1.11.2", "1.12.4", "1.13.5", "1.14", 1.14, "1.15", 1.15, "1.15.2", "1.16", 1.16, "1.16.3", "1.16.7", "1.17", 1.17, "1.18", 1.18, "1.6.4", "1.7.6", "1.8.7" ]
+          "enum" : [ "1.10", "1.11.2", "1.12.4", "1.13.5", 1.14, "1.14", 1.15, "1.15", "1.15.2", 1.16, "1.16", "1.16.3", "1.16.7", 1.17, "1.17", 1.18, "1.18", "1.19.2", "1.6.4", "1.7.6", "1.8.7" ]
         },
         "gradle" : {
-          "enum" : [ "2.10", 2.1, "2.11", 2.11, "2.12", 2.12, "2.13", 2.13, "2.14", 2.14, "2.14.1", "2.2.1", "2.3", 2.3, "2.4", 2.4, "2.5", 2.5, "2.6", 2.6, "2.7", 2.7, "2.8", 2.8, "2.9", 2.9, "3.0", 3.0, "3.1", 3.1, "3.2", 3.2, "3.3", 3.3, "3.4", 3.4, "3.4.1", "3.5", 3.5, "4.0", 4.0, "4.1", 4.1, "4.10", "4.10.1", "4.10.3", "4.2", 4.2, "4.2.1", "4.3", 4.3, "4.3.1", "4.4", 4.4, "4.4.1", "4.5", 4.5, "4.5.1", "4.6", 4.6, "4.7", 4.7, "4.8", 4.8, "4.9", 4.9, "5.0", 5.0, "5.1", 5.1, "5.1.1", "5.2", 5.2, "5.3", 5.3, "5.3.1", "5.4", 5.4, "5.4.1", "5.5", 5.5, "5.6.4", "6.0", 6.0, "6.1", 6.1, "6.2", 6.2, "6.3", 6.3, "6.4", 6.4, "6.4.1", "6.5", 6.5, "6.5.1", "6.6", 6.6, "6.7", 6.7, "6.7.1", "6.9", 6.9, "7.0", 7.0, "7.1", 7.1, "7.2", 7.2, "7.3", 7.3 ]
+          "enum" : [ "2.10", 2.11, "2.11", 2.12, "2.12", 2.13, "2.13", 2.14, "2.14", "2.14.1", "2.2.1", 2.3, "2.3", 2.4, "2.4", 2.5, "2.5", 2.6, "2.6", 2.7, "2.7", 2.8, "2.8", 2.9, "2.9", 3.0, "3.0", 3.1, "3.1", 3.2, "3.2", 3.3, "3.3", 3.4, "3.4", "3.4.1", 3.5, "3.5", 4.0, "4.0", 4.1, "4.1", "4.10", "4.10.1", "4.10.3", 4.2, "4.2", "4.2.1", 4.3, "4.3", "4.3.1", 4.4, "4.4", "4.4.1", 4.5, "4.5", "4.5.1", 4.6, "4.6", 4.7, "4.7", 4.8, "4.8", 4.9, "4.9", 5.0, "5.0", 5.1, "5.1", "5.1.1", 5.2, "5.2", 5.3, "5.3", "5.3.1", 5.4, "5.4", "5.4.1", 5.5, "5.5", "5.6.4", 6.0, "6.0", 6.1, "6.1", 6.2, "6.2", 6.3, "6.3", 6.4, "6.4", "6.4.1", 6.5, "6.5", "6.5.1", 6.6, "6.6", 6.7, "6.7", "6.7.1", 6.9, "6.9", 7.0, "7.0", 7.1, "7.1", 7.2, "7.2", 7.3, "7.3" ]
         },
         "jdk" : {
           "enum" : [ "1.7.0_80", "1.8.0_161" ]
@@ -588,7 +591,7 @@
           "enum" : [ "3.2.1", "3.5.2", "3.5.4", "3.6.3", "3.8.1", "3.8.2", "3.8.3", "3.8.4" ]
         },
         "ndk" : {
-          "enum" : [ "android-ndk-r10", "android-ndk-r10b", "android-ndk-r10c", "android-ndk-r10e", "android-ndk-r11", "android-ndk-r11b", "android-ndk-r11c", "android-ndk-r12", "android-ndk-r12b", "android-ndk-r13b", "android-ndk-r14b", "android-ndk-r15c", "android-ndk-r16b", "android-ndk-r17c", "android-ndk-r18b", "android-ndk-r19c", "android-ndk-r20", "android-ndk-r21", "android-ndk-r21d", "android-ndk-r21e", "android-ndk-r22b", "android-ndk-r23b", "android-ndk-r9b", "android-ndk-r9d" ]
+          "enum" : [ "android-ndk-r10", "android-ndk-r10b", "android-ndk-r10c", "android-ndk-r10e", "android-ndk-r11", "android-ndk-r11b", "android-ndk-r11c", "android-ndk-r12", "android-ndk-r12b", "android-ndk-r13b", "android-ndk-r14b", "android-ndk-r15c", "android-ndk-r16b", "android-ndk-r17c", "android-ndk-r18b", "android-ndk-r19c", "android-ndk-r20", "android-ndk-r21", "android-ndk-r21d", "android-ndk-r21e", "android-ndk-r22b", "android-ndk-r23b", "android-ndk-r23c", "android-ndk-r24", "android-ndk-r9b", "android-ndk-r9d" ]
         },
         "ninja" : {
           "enum" : [ "v1.10.0", "v1.9.0" ]
@@ -606,10 +609,10 @@
           "enum" : [ "scala-2.10.4", "scala-2.10.7", "scala-2.11.12", "scala-2.12.10", "scala-2.13.1" ]
         },
         "TencentKona" : {
-          "enum" : [ "TencentKona-8.0.2-252", "TencentKona-8.0.6-292-fiber", "TencentKonaJDK11.0.7-ga+3" ]
+          "enum" : [ "TencentKona-11.0.15.b1_fiber", "TencentKona-8.0.2-252", "TencentKona-8.0.6-292-fiber", "TencentKonaJDK11.0.7-ga+3" ]
         },
         "turbo" : {
-          "enum" : [ "1.0", 1.0, "2.0", 2.0, "3.0", 3.0, "compatible" ]
+          "enum" : [ 1.0, "1.0", 2.0, "2.0", 3.0, "3.0", "compatible" ]
         },
         "typhoon-blade" : {
           "enum" : [ "1.1.0", "1.1.1", "1.1.2" ]
@@ -652,7 +655,5 @@
         }
       }
     }
-  },
-  "$schema" : "http://json-schema.org/draft-07/schema",
-  "$comment" : "补充文档/pages/viewpage.action?pageId=686380000"
+  }
 }

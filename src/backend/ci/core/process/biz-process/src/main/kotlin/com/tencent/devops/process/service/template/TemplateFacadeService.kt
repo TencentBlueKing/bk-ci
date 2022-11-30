@@ -915,7 +915,13 @@ class TemplateFacadeService @Autowired constructor(
         )
     }
 
-    fun getTemplate(projectId: String, userId: String, templateId: String, version: Long?): TemplateModelDetail {
+    fun getTemplate(
+        projectId: String,
+        userId: String,
+        templateId: String,
+        version: Long?,
+        versionName: String? = null
+    ): TemplateModelDetail {
         var latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         val isConstrainedFlag = latestTemplate.type == TemplateType.CONSTRAINT.name
 
@@ -939,10 +945,18 @@ class TemplateFacadeService @Autowired constructor(
                 defaultMessage = "模板设置不存在"
             )
         }
-        val template = if (version == null) {
+        val template = if (version == null && versionName.isNullOrBlank()) {
             latestTemplate
         } else {
-            templateDao.getTemplate(dslContext = dslContext, version = version)
+            if (version == null) {
+                templateDao.getTemplate(
+                    dslContext = dslContext,
+                    templateId = templateId,
+                    versionName = versionName
+                )
+            } else {
+                templateDao.getTemplate(dslContext = dslContext, version = version)
+            }
         }
         val currentVersion = TemplateVersion(
             template.version,

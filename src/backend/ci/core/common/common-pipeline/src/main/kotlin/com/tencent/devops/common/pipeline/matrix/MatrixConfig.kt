@@ -1,10 +1,12 @@
 package com.tencent.devops.common.pipeline.matrix
 
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("矩阵的分裂计算配置")
+@Suppress("ComplexMethod")
 data class MatrixConfig(
     @ApiModelProperty("分裂策略", required = true)
     val strategy: Map<String, List<String>>?,
@@ -57,8 +59,21 @@ data class MatrixConfig(
         // 计算strategy和include后，再进行组合排除
         exclude?.let { combinations.removeAll(exclude) } // 排除特定的参数组合
 
-        return combinations.map { list ->
-            list.map { map -> "${MATRIX_CONTEXT_KEY_PREFIX}${map.key}" to map.value }.toMap()
+        return combinations.map { contextCase ->
+            // 临时方案：支持解析value中的一级对象访问
+            val resultCase = mutableMapOf<String, String>()
+            contextCase.forEach { (key, value) ->
+                resultCase["${MATRIX_CONTEXT_KEY_PREFIX}$key"] = value
+                kotlin.runCatching {
+                    YamlUtil.to<Map<String, Any>>(value)
+                }.getOrNull()?.forEach { (pair, _) ->
+                    val split = pair.split('=')
+                    if (split.size == 2) {
+                        resultCase["${MATRIX_CONTEXT_KEY_PREFIX}$key.${split[0]}"] = split[1]
+                    }
+                }
+            }
+            resultCase
         }.toList().distinct()
     }
 

@@ -1,6 +1,7 @@
 .DS_Store
 .idea
 .vscode
+.fleet
 .gradle
 .settings
 bin/

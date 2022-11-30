@@ -225,7 +225,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             metadata = searchProps.props,
             page = page ?: 1,
             pageSize = pageSize ?: DEFAULT_PAGESIZE
-        )
+        ).records
         return Page(
             count = nodeList.size.toLong(),
             page = page ?: 1,
@@ -351,7 +351,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             metadata = mapOf(),
             page = 1,
             pageSize = DOWNLOAD_FILE_URL_LIMIT
-        ).map {
+        ).records.map {
             generateFileDownloadUrl(fileChannelType, "${artifactoryInfo.projectId}/$repoName/${it.fullPath}", fullUrl)
         }
         if (fileUrls.isEmpty()) {
@@ -377,7 +377,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             metadata = emptyMap(),
             page = 1,
             pageSize = ACROSS_PROJECT_COPY_LIMIT
-        )
+        ).records
 
         fileNodes.forEach {
             bkRepoClient.copy(
@@ -457,7 +457,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         includeFolder: Boolean?,
         deep: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        modifiedTimeDesc: Boolean?
     ): Page<FileInfo> {
         val data = bkRepoClient.listFilePage(
             userId = userId,
@@ -467,7 +468,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             includeFolders = includeFolder ?: true,
             deep = deep ?: false,
             page = page ?: 1,
-            pageSize = pageSize ?: 20
+            pageSize = pageSize ?: 20,
+            modifiedTimeDesc = modifiedTimeDesc ?: false
         )
         val fileInfoList = data.records.map { it.toFileInfo() }
         return Page(data.pageNumber, data.pageSize, data.totalRecords, fileInfoList)

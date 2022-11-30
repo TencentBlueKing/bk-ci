@@ -86,11 +86,13 @@ class V1GitRequestEventNotBuildDao {
 
     fun getRequestNoBuildsByEventId(
         dslContext: DSLContext,
-        eventId: Long
+        eventId: Long,
+        gitProjectId: Long
     ): List<TGitRequestEventNotBuildRecord> {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
             return dslContext.selectFrom(this)
                 .where(EVENT_ID.eq(eventId))
+                .and(GIT_PROJECT_ID.eq(gitProjectId))
                 .fetch()
         }
     }

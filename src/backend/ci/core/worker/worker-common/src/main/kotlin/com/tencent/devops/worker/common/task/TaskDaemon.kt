@@ -30,10 +30,13 @@ package com.tencent.devops.worker.common.task
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.util.concurrent.Callable
@@ -121,7 +124,12 @@ class TaskDaemon(
             elementVersion = buildTask.elementVersion,
             success = isSuccess,
             buildResult = buildResult,
-            message = errorMessage,
+            message = errorMessage?.let {
+                CommonUtils.interceptStringInLength(
+                    string = SensitiveValueService.fixSensitiveContent(it),
+                    length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+                )
+            },
             type = buildTask.type,
             errorType = errorType,
             errorCode = errorCode,

@@ -2905,7 +2905,7 @@
     "tool_name" : "WOODPECKER_SENSITIVE",
     "checker_key" : "dirty_check",
     "checker_name" : "dirty_check",
-    "checker_desc" : "包含不和谐言论(政治、色情、辱骂等，如fuck,shit,猪头，草泥马等)，修复建议：删除代码中包含的不和谐言论",
+    "checker_desc" : "包含不和谐言论(政治、色情、辱骂等)，修复建议：删除代码中包含的不和谐言论",
     "severity" : 2,
     "language" : 1073872895,
     "status" : 0,

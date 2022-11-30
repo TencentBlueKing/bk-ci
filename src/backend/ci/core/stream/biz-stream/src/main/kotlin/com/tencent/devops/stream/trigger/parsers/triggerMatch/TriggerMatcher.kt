@@ -342,6 +342,13 @@ class TriggerMatcher @Autowired constructor(
                 return TriggerBody().triggerFail("on.tag.users-ignore", "trigger user($userId) match")
             }
 
+            if (fromBranch == null && !tagRule.fromBranches.isNullOrEmpty()) {
+                return TriggerBody().triggerFail(
+                    "on.tag.from-branches",
+                    "client push tag not support from-branches"
+                )
+            }
+
             if (fromBranch != null && !BranchMatchUtils.isBranchMatch(tagRule.fromBranches, fromBranch)) {
                 return TriggerBody().triggerFail(
                     "on.tag.from-branches",
