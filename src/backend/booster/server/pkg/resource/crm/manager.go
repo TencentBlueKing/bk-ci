@@ -404,8 +404,14 @@ func (rm *resourceManager) recover() error {
 
 	rm.registeredResourceMap = make(map[string]*resource, 1000)
 	for _, r := range rl {
-		if rm.conf.Operator == config.CRMOperatorK8S && rm.nodeInfoPool.GetNodeBlockMap() != nil {
-			if _, ok := rm.nodeInfoPool.GetNodeBlockMap()[r.resourceBlockKey]; !ok {
+		if rm.conf.Operator == config.CRMOperatorK8S && rm.conf.InstanceType != nil {
+			isBelongToRm := false
+			for _, ist := range rm.conf.InstanceType {
+				if ist.Group == r.param.City && ist.Platform == r.param.Platform {
+					isBelongToRm = true
+				}
+			}
+			if !isBelongToRm {
 				continue
 			}
 		}
@@ -414,7 +420,6 @@ func (rm *resourceManager) recover() error {
 		if r.noReadyInstance <= 0 {
 			continue
 		}
-
 		// recover the no-ready records
 		rm.nodeInfoPool.RecoverNoReadyBlock(r.resourceBlockKey, r.noReadyInstance)
 		blog.Infof("crm: recover no-ready-instance(%d) from resource(%s)", r.noReadyInstance, r.resourceID)
