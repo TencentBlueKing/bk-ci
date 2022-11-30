@@ -79,6 +79,7 @@ const val BK_CI_BUILD_FAIL_TASKS = "BK_CI_BUILD_FAIL_TASKS"
 const val BK_CI_BUILD_FAIL_TASKNAMES = "BK_CI_BUILD_FAIL_TASKNAMES"
 
 const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
+const val PIPELINE_VIEW_MY_LIST_PIPELINES = "myListPipeline" // 兼容APP , 后面需要干掉
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"
 const val PIPELINE_VIEW_ALL_PIPELINES = "allPipeline"
 const val PIPELINE_VIEW_UNCLASSIFIED = "unclassified"

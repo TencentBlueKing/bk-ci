@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
+import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_LIST_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -252,6 +253,7 @@ class PipelineBuildSummaryDao {
         when (viewId) {
             PIPELINE_VIEW_FAVORITE_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(favorPipelines))
             PIPELINE_VIEW_MY_PIPELINES -> if (userId != null) conditions.add(T_PIPELINE_INFO.CREATOR.eq(userId))
+            PIPELINE_VIEW_MY_LIST_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(authPipelines))
             PIPELINE_VIEW_ALL_PIPELINES -> {
                 // 查询所有流水线
             }
