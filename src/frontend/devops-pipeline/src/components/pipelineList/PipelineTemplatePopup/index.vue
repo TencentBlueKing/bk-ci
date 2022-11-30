@@ -290,6 +290,7 @@
                 } else {
                     clearTimeout(this.timer)
                     window.removeEventListener('resize', this.computPopupHeight)
+                    this.reset()
                 }
             }
         },
@@ -373,13 +374,20 @@
             },
             toggleTemplatePopup (isShow) {
                 this.togglePopup(isShow)
-                this.selectTemp(0)
-                this.togglePreview(false)
-                this.newPipelineName = ''
-                this.setPipeline(null)
             },
             togglePreview (showPreview) {
                 this.showPreview = showPreview
+            },
+            reset () {
+                this.selectTemp(0)
+                this.togglePreview(false)
+                this.newPipelineName = ''
+                this.groupValue = {
+                    labels: [],
+                    staticViews: []
+                }
+                this.$refs.pipelineGroupSelector?.reset?.()
+                this.setPipeline(null)
             },
             requestMarkTemplates (isReload) {
                 this.isLoadingMore = true

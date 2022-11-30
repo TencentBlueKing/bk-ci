@@ -68,9 +68,7 @@
                 'requestTagList'
             ]),
             async init () {
-                if (this.isLoading) {
-                    this.isLoading = true
-                }
+                this.isLoading = true
                 await this.requestTagList(this.$route.params)
                 this.updateValue()
                 this.isLoading = false
@@ -83,8 +81,11 @@
             },
             handleChange (groupId, labelIds) {
                 this.labelIdMap[groupId] = labelIds
-                this.$emit('change', this.labelIdMap)
-                this.$emit('input', this.labelIdMap)
+                this.emitChange(this.labelIdMap)
+            },
+            emitChange (labelIdMap) {
+                this.$emit('change', labelIdMap)
+                this.$emit('input', labelIdMap)
             }
         }
     }

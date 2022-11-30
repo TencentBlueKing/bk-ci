@@ -268,6 +268,7 @@
                     }
                     this.checkHasCreatePermission()
                     this.handleCloseEditCount()
+                    this.templatePopupShow = false
                 })
             },
             '$route.params.viewId': function () {

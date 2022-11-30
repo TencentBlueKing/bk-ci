@@ -244,11 +244,11 @@
         },
         watch: {
             '$route.params.projectId': function () {
+                this.closeAddPipelineGroupDialog()
                 this.$nextTick(this.refreshPipelineGroup)
             }
         },
         created () {
-            // this.updateGroupPipelineCount(this.$route.params.viewId)
             this.refreshPipelineGroup()
         },
         methods: {

@@ -101,7 +101,7 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions, mapState, mapMutations } from 'vuex'
+    import { mapGetters, mapActions, mapState } from 'vuex'
     import BreadCrumb from '@/components/BreadCrumb'
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
     import innerHeader from '@/components/devops/inner_header'
@@ -157,7 +157,8 @@
                 'execDetail',
                 'editingElementPos',
                 'isPropertyPanelVisible',
-                'showReviewDialog']),
+                'showReviewDialog'
+            ]),
             ...mapGetters({
                 isEditing: 'atom/isEditing',
                 getAllElements: 'atom/getAllElements'
@@ -216,7 +217,7 @@
                         },
                         {
                             label: 'delete',
-                            handler: this.deletePipeline
+                            handler: () => this.deleteHandler(this.curPipeline)
                         }
                     ]
                 ]
@@ -235,9 +236,6 @@
             },
             curItemTab () {
                 return this.$route.params.type || 'executeDetail'
-            },
-            showRetryIcon () {
-                return this.execDetail && (this.execDetail.latestVersion === this.execDetail.curVersion) && ['RUNNING', 'QUEUE', 'SUCCEED'].indexOf(this.execDetail.status) < 0
             },
             breadCrumbs () {
                 return [{
@@ -280,9 +278,6 @@
             this.$store.commit('pipelines/updatePipelineList', [])
         },
         methods: {
-            ...mapMutations('pipelines', [
-                'updatePipelineActionState'
-            ]),
             ...mapActions('atom', [
                 'requestPipelineExecDetailByBuildNum',
                 'togglePropertyPanel',
@@ -422,9 +417,6 @@
                 if (res) {
                     this.updateCurPipelineByKeyValue('hasCollect', isCollect)
                 }
-            },
-            deletePipeline () {
-                this.deleteHandler(this.curPipeline)
             },
             toExecute (...args) {
                 const goDetail = ['pipelinesEdit', 'pipelinesDetail'].indexOf(this.$route.name) > -1

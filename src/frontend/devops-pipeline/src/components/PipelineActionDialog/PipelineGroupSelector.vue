@@ -135,6 +135,10 @@
             value (val) {
                 this.labels = val?.labels ?? []
                 this.staticViews = val?.staticViews ?? []
+            },
+            '$route.params.projectId': function () {
+                this.reset()
+                this.refreshLabel()
             }
         },
         created () {
@@ -151,6 +155,7 @@
                 this.$refs?.labelSelector.init?.()
             },
             async updateDynamicGroup (tags) {
+                if (this.isMatching || !this.pipelineName) return
                 this.isMatching = true
                 this.labels = Object.values(tags).flat()
                 try {
@@ -158,7 +163,6 @@
                         groupId: key,
                         labelIds: tags[key]
                     }))
-
                     const { data } = await this.matchDynamicView({
                         projectId: this.$route.params.projectId,
                         pipelineName: this.pipelineName,
@@ -178,6 +182,7 @@
                 this.isMatching = false
                 this.labels = []
                 this.staticViews = []
+                this.emitChange()
             },
             emitChange () {
                 this.$emit('input', {

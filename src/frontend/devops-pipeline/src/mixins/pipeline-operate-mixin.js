@@ -19,7 +19,6 @@
 
 import { mapActions, mapGetters, mapState } from 'vuex'
 import {
-    navConfirm,
     HttpError
 } from '@/utils/util'
 import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '../store/constants'
@@ -53,8 +52,6 @@ export default {
         ...mapActions('pipelines', {
             requestExecPipeline: 'requestExecPipeline',
             requestToggleCollect: 'requestToggleCollect',
-            removePipeline: 'deletePipeline',
-            copyPipelineAction: 'copyPipeline',
             updatePipelineSetting: 'updatePipelineSetting',
             requestTerminatePipeline: 'requestTerminatePipeline',
             requestRetryPipeline: 'requestRetryPipeline',
@@ -146,96 +143,6 @@ export default {
                 }])
             } finally {
                 feConfig.buttonAllow.terminatePipeline = true
-            }
-        },
-        /**
-         *  删除流水线
-         */
-        async delete ({ pipelineId, pipelineName }) {
-            let message, theme
-            const content = `${this.$t('newlist.deletePipeline')}: ${pipelineName}`
-            const { projectId } = this.$route.params
-            try {
-                await navConfirm({ type: 'warning', content })
-
-                this.isLoading = true
-                await this.removePipeline({
-                    projectId,
-                    pipelineId
-                })
-
-                this.$router.push({
-                    name: 'PipelineManageList'
-                })
-
-                message = this.$t('deleteSuc')
-                theme = 'success'
-            } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.delete,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }],
-                    projectId
-                }])
-            } finally {
-                message && this.$showTips({
-                    message,
-                    theme
-                })
-                this.isLoading = false
-            }
-        },
-        /**
-         *  复制流水线弹窗的确认回调函数
-         */
-        async copy (tempPipeline, pipelineId) {
-            const { copyPipelineAction, pipelineList } = this
-            const { projectId } = this.$route.params
-            let message = ''
-            let theme = ''
-            const prePipeline = pipelineList.find(item => item.pipelineId === pipelineId)
-
-            try {
-                if (!tempPipeline.name) {
-                    throw new Error(this.$t('subpage.nameNullTips'))
-                }
-                await copyPipelineAction({
-                    projectId,
-                    pipelineId,
-                    args: {
-                        ...tempPipeline,
-                        group: prePipeline.group,
-                        hasCollect: false
-                    }
-                })
-
-                message = this.$t('copySuc')
-                theme = 'success'
-            } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.create,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: prePipeline.pipelineId,
-                        name: prePipeline.pipelineName
-                    }]
-                }, {
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: prePipeline.pipelineId,
-                        name: prePipeline.pipelineName
-                    }],
-                    projectId
-                }])
-            } finally {
-                message && this.$showTips({
-                    message,
-                    theme
-                })
             }
         },
         async executePipeline (params, goDetail = false) {

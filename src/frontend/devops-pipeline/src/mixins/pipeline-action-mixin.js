@@ -58,11 +58,10 @@ export default {
         ...mapActions('pipelines', [
             'requestAllPipelinesListByFilter',
             'requestToggleCollect',
-            'deletePipeline',
             'requestTemplatePermission',
             'requestRecyclePipelineList',
             'requestToggleCollect',
-            'deleteHandler',
+            'deletePipeline',
             'copyPipeline',
             'restorePipeline'
         ]),
@@ -332,7 +331,7 @@ export default {
          */
         async delete ({ pipelineId, pipelineName, projectId }) {
             try {
-                await this.deleteHandler({
+                await this.deletePipeline({
                     projectId,
                     pipelineId
                 })
