@@ -1418,7 +1418,7 @@ class TemplateFacadeService @Autowired constructor(
             val validateRet = client.get(ServiceTemplateResource::class)
                 .validateUserTemplateComponentVisibleDept(
                     userId = userId,
-                    templateCode = templateId,
+                    templateCode = srcTemplateId,
                     projectCode = projectId
                 )
             if (validateRet.isNotOk()) {
