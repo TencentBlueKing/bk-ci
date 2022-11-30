@@ -520,7 +520,7 @@ func (m *Mgr) SendStats(brief bool) error {
 func (m *Mgr) SendAndResetStats(brief bool, resapplytimes []int64) error {
 
 	for _, t := range resapplytimes {
-		data, _ := m.getSendStatsData(false, t)
+		data, _ := m.getSendStatsData(brief, t)
 		go m.sendStatsData(data)
 
 		// reset stat
