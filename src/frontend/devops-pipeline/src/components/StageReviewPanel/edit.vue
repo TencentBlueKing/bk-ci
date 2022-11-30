@@ -21,6 +21,18 @@
                 <vuex-textarea :placeholder="$t('stageReviewInputDescTip')" name="reviewDesc" clearable :disabled="disabled" :handle-change="handleUpdateStageControl" :value="reviewDesc"></vuex-textarea>
             </form-field>
 
+            <form-field :disabled="disabled" :label="$t('stageReviewInputNotice')" class="mt14">
+                <atom-checkbox-list :list="notifyTypeList" :disabled="disabled" name="notifyType" :handle-change="handleUpdateNotifyType" :value="notifyType"></atom-checkbox-list>
+            </form-field>
+
+            <form-field v-show="showNotifyGroup" :disabled="disabled" required label="企业微信群ID" class="mt14">
+                <vuex-input name="notifyGroup" placeholder="多个群以英文逗号隔开" required :handle-change="handleUpdateNotifyGroup" :value="notifyGroup"></vuex-input>
+            </form-field>
+
+            <form-field :disabled="disabled" class="mt14">
+                <atom-checkbox name="markdownContent" text="企业微信消息以markdown格式发送" :handle-change="handleUpdateStageControl" :value="markdownContent"></atom-checkbox>
+            </form-field>
+
             <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" class="mt14" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
                 <bk-input type="number" :disabled="disabled" v-model="timeout" :min="1" :max="720">
                     <template slot="append">
@@ -43,16 +55,22 @@
 <script>
     import Vue from 'vue'
     import { mapActions } from 'vuex'
-    import FormField from '@/components/AtomPropertyPanel/FormField'
-    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import EditParams from './components/params/edit'
     import EditReviewFlow from './components/reviewFlow/edit'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import FormField from '@/components/AtomPropertyPanel/FormField'
+    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+    import AtomCheckboxList from '@/components/atomFormField/AtomCheckboxList'
 
     export default {
         name: 'stage-review-control',
         components: {
             FormField,
+            VuexInput,
             VuexTextarea,
+            AtomCheckbox,
+            AtomCheckboxList,
             EditParams,
             EditReviewFlow
         },
@@ -108,6 +126,24 @@
             },
             reviewParams () {
                 return this.stageControl && Array.isArray(this.stageControl.reviewParams) ? this.stageControl.reviewParams : []
+            },
+            notifyType () {
+                return this.stageControl && this.stageControl.notifyType
+            },
+            notifyGroup () {
+                return this.stageControl && this.stageControl.notifyGroup
+            },
+            markdownContent () {
+                return this.stageControl && this.stageControl.markdownContent
+            },
+            notifyTypeList () {
+                return [
+                    { id: 'RTX', name: '企业微信', disabled: false, desc: '通过企业微信通知' },
+                    { id: 'WEWORK_GROUP', name: '企业微信群消息', disabled: false, desc: '通过企业微信群消息通知' }
+                ]
+            },
+            showNotifyGroup () {
+                return this.notifyType.includes('WEWORK_GROUP')
             }
         },
         watch: {
@@ -163,6 +199,15 @@
             },
             validateStageControl () {
                 return !this.manualTrigger || (this.validTimeout && this.hasTriggerMember)
+            },
+            handleUpdateNotifyType (name, value) {
+                if (!value.includes('WEWORK_GROUP')) {
+                    this.stageControl.notifyGroup = []
+                }
+                this.handleUpdateStageControl(name, value)
+            },
+            handleUpdateNotifyGroup (name, value) {
+                this.handleUpdateStageControl(name, value.split(','))
             }
         }
     }

@@ -211,7 +211,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .check-atom-form {
         .choose-item {
             margin-right: 30px;
@@ -221,7 +221,10 @@
         }
     }
     .markdown-desc {
-        min-height: 200px !important;
-        height: 200px;
+        min-height: 50px !important;
+        max-height: 120px !important;
+    }
+    ::v-deep .bk-label-text {
+        font-weight: bold;
     }
 </style>
