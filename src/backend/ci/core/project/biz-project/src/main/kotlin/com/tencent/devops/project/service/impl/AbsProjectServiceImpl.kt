@@ -452,14 +452,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         enabled: Boolean?,
-        approved: Boolean
+        unApproved: Boolean
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
             //todo 修改拉取策略，只拉取拥有查看权限的项目  v3保留
             val projects = getProjectFromAuth(userId, accessToken)
-            if (projects.isEmpty() && approved) {
+            if (projects.isEmpty() && !unApproved) {
                 return emptyList()
             }
             val list = ArrayList<ProjectVO>()
@@ -476,7 +476,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
-            if (!approved) {
+            if (unApproved) {
                 projectDao.listUnapprovedByUserId(
                     dslContext = dslContext,
                     userId = userId
