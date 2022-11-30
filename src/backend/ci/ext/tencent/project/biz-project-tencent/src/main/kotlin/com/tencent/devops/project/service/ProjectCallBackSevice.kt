@@ -118,12 +118,7 @@ class ProjectCallBackSevice @Autowired constructor(
                 )
             } catch (e: Exception) {
                 logger.warn("Failed to create a grade manager in the permission center:$englishName|$sn|$callBackId", e)
-                throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
-                        messageCode = ProjectMessageCode.PEM_UPDATE_FAIL,
-                        defaultMessage = "Failed to create a grade manager in the permission center!"
-                    )
-                )
+                throw OperationException("Failed to create a grade manager in the permission center!")
             }
             try {
                 dslContext.transaction { configuration ->
@@ -140,25 +135,33 @@ class ProjectCallBackSevice @Autowired constructor(
                         projectCode = englishName,
                         statusEnum = ApproveStatus.CREATE_APPROVED
                     )
+                    projectApprovalCallbackDao.updateCallbackBySn(
+                        dslContext = context,
+                        sn = sn,
+                        lastApprover = itsmCallBackInfo.lastApprover,
+                        approveResult = approveResult
+                    )
                 }
             } catch (e: Exception) {
                 logger.warn("Failed to update project:$englishName", e)
-                throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
-                        messageCode = ProjectMessageCode.PROJECT_UPDATE_FAIL,
-                        defaultMessage = "Failed to update project!"
-                    )
+                throw OperationException("Failed to update project!")
+            }
+        } else {
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                // 修改状态
+                projectDao.updateProjectStatusByEnglishName(
+                    dslContext = dslContext,
+                    projectCode = englishName,
+                    statusEnum = ApproveStatus.CREATE_REJECT
+                )
+                projectApprovalCallbackDao.updateCallbackBySn(
+                    dslContext = context,
+                    sn = sn,
+                    lastApprover = itsmCallBackInfo.lastApprover,
+                    approveResult = approveResult
                 )
             }
-            // 发成功创建消息给用户
-        } else {
-            // 修改状态
-            projectDao.updateProjectStatusByEnglishName(
-                dslContext = dslContext,
-                projectCode = englishName,
-                statusEnum = ApproveStatus.CREATE_REJECT
-            )
-            // 发成功创建消息给用户
         }
     }
 
@@ -214,7 +217,6 @@ class ProjectCallBackSevice @Autowired constructor(
                     projectCode = englishName,
                     statusEnum = ApproveStatus.UPDATE_APPROVED
                 )
-                // 发成功创建消息给用户
             } else {
                 // 修改状态
                 projectDao.updateProjectStatusByEnglishName(
@@ -222,16 +224,16 @@ class ProjectCallBackSevice @Autowired constructor(
                     projectCode = englishName,
                     statusEnum = ApproveStatus.UPDATE_REJECT
                 )
-                // 发成功创建消息给用户
             }
+            projectApprovalCallbackDao.updateCallbackBySn(
+                dslContext = dslContext,
+                sn = sn,
+                lastApprover = itsmCallBackInfo.lastApprover,
+                approveResult = approveResult
+            )
         } catch (e: Exception) {
             logger.warn("Failed to update project:$englishName|$callBackId|$sn", e)
-            throw OperationException(
-                MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.PROJECT_UPDATE_FAIL,
-                    defaultMessage = "Failed to update project!"
-                )
-            )
+            throw OperationException("Failed to update project!")
         }
     }
 

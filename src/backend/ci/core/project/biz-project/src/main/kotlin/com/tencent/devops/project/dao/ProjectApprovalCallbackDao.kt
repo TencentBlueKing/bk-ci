@@ -42,7 +42,7 @@ class ProjectApprovalCallbackDao {
         dslContext: DSLContext,
         sn: String
     ): TProjectApprovalCallbackRecord? {
-        with(TProjectApprovalCallback.T_PROJECT_APPROVAL_CALLBACK){
+        with(TProjectApprovalCallback.T_PROJECT_APPROVAL_CALLBACK) {
             return dslContext.selectFrom(this).where(SN.eq(sn)).fetchAny()
         }
     }
@@ -53,6 +53,20 @@ class ProjectApprovalCallbackDao {
     ): TProjectApprovalCallbackRecord? {
         with(TProjectApprovalCallback.T_PROJECT_APPROVAL_CALLBACK) {
             return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(projectCode)).orderBy(CREATE_TIME.desc()).fetchAny()
+        }
+    }
+
+    fun updateCallbackBySn(
+        dslContext: DSLContext,
+        sn: String,
+        lastApprover: String,
+        approveResult: Boolean
+    ): Int {
+        return with(TProjectApprovalCallback.T_PROJECT_APPROVAL_CALLBACK) {
+            dslContext.update(this)
+                .set(LAST_APPROVER, lastApprover)
+                .set(APPROVE_RESULT, approveResult)
+                .where(SN.eq(sn)).execute()
         }
     }
 }
