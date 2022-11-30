@@ -900,9 +900,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return success
     }
 
-    override fun applyToJoinProject(userId: String, applicationInfo: ApplicationInfo): Boolean {
+    override fun applyToJoinProject(
+        userId: String,
+        projectId: String,
+        applicationInfo: ApplicationInfo
+    ): Boolean {
         var success = false
-        val projectInfo = projectDao.get(dslContext, applicationInfo.projectId)
+        val projectInfo = projectDao.get(dslContext, projectId)
             ?: throw InvalidParamException("project is not exist!|$applicationInfo.projectId")
         val gradeManagerId = projectInfo.relationId
         try {

@@ -82,7 +82,7 @@ interface UserProjectResource {
     ): Result<List<ProjectVO>>
 
     @GET
-    @Path("/listProjectsWithoutPermissions/{projectName}")
+    @Path("/listProjectsWithoutPermissions")
     @ApiOperation("查询无权限的项目")
     fun listProjectsWithoutPermissions(
         @ApiParam("userId", required = true)
@@ -242,7 +242,7 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @ApiOperation("取消创建项目")
-    @Path("/cancelCreateProject/{project_id}")
+    @Path("/{project_id}/cancelCreateProject")
     @PUT
     fun cancelCreateProject(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -254,12 +254,15 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @ApiOperation("申请加入项目")
-    @Path("/applyToJoinProject/{project_id}")
+    @Path("/{project_id}/applyToJoinProject/")
     @POST
     fun applyToJoinProject(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("申请加入项目实体类", required = true)
+        @PathParam("project_id")
+        projectId: String,
         @ApiParam("申请加入项目实体类", required = true)
         applicationInfo: ApplicationInfo
     ): Result<Boolean>
