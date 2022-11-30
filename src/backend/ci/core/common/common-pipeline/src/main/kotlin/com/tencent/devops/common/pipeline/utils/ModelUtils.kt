@@ -180,7 +180,7 @@ object ModelUtils {
     fun generateBuildModelDetail(
         baseModelMap: MutableMap<String, Any>,
         modelFieldRecordMap: Map<String, Any>
-    ): Map<String, Any> {
+    ): MutableMap<String, Any> {
         // 遍历变量字段map集合
         modelFieldRecordMap.forEach { (fieldRecordName, fieldRecordValue) ->
             if (!ReflectUtil.isCollectionType(fieldRecordValue)) {
