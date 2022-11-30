@@ -1,4 +1,3 @@
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -37,7 +36,8 @@ enum class DefaultGroupType(val value: String, val displayName: String) {
     MAINTAINER("maintainer", "运维人员"), // 运维人员
     TESTER("tester", "测试人员"), // 测试人员
     PM("pm", "产品人员"), // 产品人员
-    QC("qc", "质量管理员"); // 质量管理员
+    QC("qc", "质量管理员"), // 质量管理员
+    VIEWER("viewer", "查看项目权限组"); // 查看项目权限组
 
     companion object {
         fun get(value: String): DefaultGroupType {
