@@ -555,7 +555,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 // 替换标题里的动态参数
                 val title = replaceContentParams(request.titleParams, emailTplRecord.title)
                 // 替换内容里的动态参数
-                val body = replaceContentParams(request.bodyParams, emailTplRecord.body)
+                val body = replaceContentEmailParams(request.bodyParams, emailTplRecord.body)
                 sendEmailNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,
@@ -800,9 +800,18 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
     protected fun replaceContentParams(params: Map<String, String>?, content: String): String {
         var content1 = content
-        params?.forEach { paramName, paramValue ->
+        params?.forEach { (paramName, paramValue) ->
             content1 = content1.replace("\${$paramName}", paramValue).replace("#{$paramName}", paramValue)
                 .replace("{{$paramName}}", paramValue)
+        }
+        return content1
+    }
+
+    protected fun replaceContentEmailParams(params: Map<String, String>?, content: String): String {
+        var content1 = content
+        params?.forEach { (paramName, paramValue) ->
+            content1 = content1.replace("\${$paramName}", paramValue).replace("#{$paramName}", paramValue)
+                .replace("{{$paramName}}", paramValue).replace("\n","<br>")
         }
         return content1
     }
