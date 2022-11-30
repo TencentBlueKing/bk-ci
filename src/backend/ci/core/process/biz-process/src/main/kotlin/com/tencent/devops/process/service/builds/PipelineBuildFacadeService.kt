@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
@@ -498,7 +499,7 @@ class PipelineBuildFacadeService(
 
             logger.info(
                 "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                    "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
+                        "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
             )
 
             paramMap[PIPELINE_RETRY_COUNT] = BuildParameters(PIPELINE_RETRY_COUNT, retryCount)
@@ -1993,6 +1994,12 @@ class PipelineBuildFacadeService(
             msg = "$msg| ${MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)}"
         }
 
+        // 添加错误码日志
+        val realErrorType = ErrorType.getErrorType(simpleResult.error?.errorType)
+        simpleResult.error?.errorType.let { msg = "$msg \nerrorType: ${realErrorType?.typeName}" }
+        simpleResult.error?.errorCode.let { msg = "$msg \nerrorCode: ${simpleResult.error?.errorCode}" }
+        simpleResult.error?.errorMessage.let { msg = "$msg \nerrorMsg: ${simpleResult.error?.errorMessage}" }
+
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectCode, buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
             logger.warn("[$buildId]|workerBuildFinish|The build status is ${buildInfo?.status}")
@@ -2025,7 +2032,9 @@ class PipelineBuildFacadeService(
                         containerHashId = container.containerHashId,
                         containerType = container.containerType,
                         actionType = ActionType.TERMINATE,
-                        reason = msg
+                        reason = msg,
+                        errorCode = simpleResult.error?.errorCode ?: 0,
+                        errorTypeName = realErrorType?.typeName
                     )
                 )
             }

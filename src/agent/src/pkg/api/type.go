@@ -75,6 +75,13 @@ type ThirdPartyBuildWithStatus struct {
 	ThirdPartyBuildInfo
 	Success bool   `json:"success"`
 	Message string `json:"message"`
+	Error   *Error `json:"error"`
+}
+
+type Error struct {
+	ErrorType    ErrorTypes `json:"errorType"`
+	ErrorMessage string     `json:"errorMessage"`
+	ErrorCode    ErrorCode  `json:"errorCode"`
 }
 
 type PipelineResponse struct {
@@ -111,8 +118,9 @@ type ThirdPartyDockerTaskInfo struct {
 }
 
 type AgentPropsInfo struct {
-	Arch       string   `json:"arch"`
-	JdkVersion []string `json:"jdkVersion"`
+	Arch              string             `json:"arch"`
+	JdkVersion        []string           `json:"jdkVersion"`
+	DockerInitFileMd5 DockerInitFileInfo `json:"dockerInitFileMd5"`
 }
 
 type AgentHeartbeatResponse struct {

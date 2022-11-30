@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
+import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -13,12 +14,4 @@ data class ThirdPartyAgentUpgradeByVersionInfo(
     val jdkVersion: List<String>?,
     @ApiModelProperty("docker init 文件升级信息")
     val dockerInitFileInfo: DockerInitFileInfo?
-)
-
-@ApiModel("docker init 文件升级信息")
-data class DockerInitFileInfo(
-    @ApiModelProperty("文件md5值")
-    val fileMd5: String,
-    @ApiModelProperty("目前只支持linux机器，所以其他系统不需要检查")
-    val needUpgrade: Boolean
 )

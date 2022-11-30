@@ -53,7 +53,14 @@ func agentHeartbeat() error {
 	if version != nil {
 		jdkVersion = version.([]string)
 	}
-	result, err := api.Heartbeat(job.GBuildManager.GetInstances(), jdkVersion, job.GBuildDockerManager.GetInstances())
+	result, err := api.Heartbeat(
+		job.GBuildManager.GetInstances(),
+		jdkVersion,
+		job.GBuildDockerManager.GetInstances(),
+		api.DockerInitFileInfo{
+			FileMd5:     upgrade.DockerFileMd5.Md5,
+			NeedUpgrade: upgrade.DockerFileMd5.NeedUpgrade,
+		})
 	if err != nil {
 		logs.Error("agent heartbeat failed: ", err.Error())
 		return errors.New("agent heartbeat failed")

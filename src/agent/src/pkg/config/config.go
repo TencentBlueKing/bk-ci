@@ -65,29 +65,29 @@ const (
 	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
 	// 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
-	KeyJdkDirPath = "devops.agent.jdk.dir.path"
+	KeyJdkDirPath        = "devops.agent.jdk.dir.path"
 	KeyDockerTaskCount   = "devops.docker.parallel.task.count"
 	keyEnableDockerBuild = "devops.docker.enable"
 )
 
 // AgentConfig Agent 配置
 type AgentConfig struct {
-	Gateway           string
-	FileGateway       string
-	BuildType         string
-	ProjectId         string
-	AgentId           string
-	SecretKey         string
-	ParallelTaskCount int
-	EnvType           string
-	SlaveUser         string
-	CollectorOn       bool
-	TimeoutSec        int64
-	DetectShell       bool
-	IgnoreLocalIps    string
-	BatchInstallKey   string
-	LogsKeepHours     int
-	JdkDirPath        string
+	Gateway                 string
+	FileGateway             string
+	BuildType               string
+	ProjectId               string
+	AgentId                 string
+	SecretKey               string
+	ParallelTaskCount       int
+	EnvType                 string
+	SlaveUser               string
+	CollectorOn             bool
+	TimeoutSec              int64
+	DetectShell             bool
+	IgnoreLocalIps          string
+	BatchInstallKey         string
+	LogsKeepHours           int
+	JdkDirPath              string
 	DockerParallelTaskCount int
 	EnableDockerBuild       bool
 }

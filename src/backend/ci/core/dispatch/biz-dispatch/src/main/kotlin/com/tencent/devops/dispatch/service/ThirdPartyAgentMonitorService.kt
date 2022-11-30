@@ -50,6 +50,7 @@ import java.util.concurrent.TimeUnit
 /**
  * 三方构建机的业务监控拓展
  */
+@Suppress("ALL")
 @Service
 class ThirdPartyAgentMonitorService @Autowired constructor(
     private val client: Client,
@@ -59,7 +60,6 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
 ) {
 
-    @Suppress("LongMethod", "NestedBlockDepth", "ComplexMethod")
     fun monitor(event: AgentStartMonitor) {
 
         val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return
@@ -166,7 +166,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     }
 
     /**
-     * 3分钟如果Agent端发起了构建任务领取后还没启动，尝试回退到队列让其以便能重新领取到。
+     * 3分钟如果Agent端发起了构建任务领取后还没启动，尝试回退到队列让其以便能重新领取到。(docker 10min)
      * 用于解决Agent端几类极端问题场景：
      *  1、网络问题导致Agent侧领取中断，数据包丢失，没有收到领取任务，但任务已经被改成RUNNING，需要回退。
      *  2、Agent领取后未处理构建前，进程意外退出
@@ -179,8 +179,13 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         }
 
         record.updatedTime?.let { self ->
+            val outTime = if (record.dockerInfo != null) {
+                System.currentTimeMillis() - self.timestampmilli() > TimeUnit.MINUTES.toMillis(DOCKER_ROLLBACK_MIN)
+            } else {
+                System.currentTimeMillis() - self.timestampmilli() > TimeUnit.MINUTES.toMillis(ROLLBACK_MIN)
+            }
             // Agent发起领取超过x分钟没有启动，基本上存在问题需要重回队列以便被再次调度到
-            if (System.currentTimeMillis() - self.timestampmilli() > TimeUnit.MINUTES.toMillis(ROLLBACK_MIN)) {
+            if (outTime) {
                 thirdPartyAgentBuildDao.updateStatus(dslContext, record.id, PipelineTaskStatus.QUEUE)
                 sb.append("任务领取超过$ROLLBACK_MIN 分钟没有启动, 可能存在异常，开始重置")
                     .append("(Over $ROLLBACK_MIN minutes, try roll back to queue.)")
@@ -191,5 +196,6 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
     companion object {
         private const val ROLLBACK_MIN = 3L // 3分钟如果构建任务领取后没启动，尝试回退状态
+        private const val DOCKER_ROLLBACK_MIN = 10L // 针对docker构建场景增加拉镜像可能需要的时间
     }
 }

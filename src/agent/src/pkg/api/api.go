@@ -40,7 +40,12 @@ func buildUrl(url string) string {
 	return config.GetGateWay() + url
 }
 
-func Heartbeat(buildInfos []ThirdPartyBuildInfo, jdkVersion []string, dockerTaskList []ThirdPartyDockerTaskInfo) (*httputil.DevopsResult, error) {
+func Heartbeat(
+	buildInfos []ThirdPartyBuildInfo,
+	jdkVersion []string,
+	dockerTaskList []ThirdPartyDockerTaskInfo,
+	dockerInitFileMd5 DockerInitFileInfo,
+) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/newHeartbeat")
 
 	var taskList []ThirdPartyTaskInfo
@@ -62,8 +67,9 @@ func Heartbeat(buildInfos []ThirdPartyBuildInfo, jdkVersion []string, dockerTask
 		StartedUser:       systemutil.GetCurrentUser().Username,
 		TaskList:          taskList,
 		Props: AgentPropsInfo{
-			Arch:       runtime.GOARCH,
-			JdkVersion: jdkVersion,
+			Arch:              runtime.GOARCH,
+			JdkVersion:        jdkVersion,
+			DockerInitFileMd5: dockerInitFileMd5,
 		},
 		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
 		DockerTaskList:          dockerTaskList,

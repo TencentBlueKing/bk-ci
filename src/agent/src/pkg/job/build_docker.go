@@ -72,9 +72,7 @@ const (
 func runDockerBuild(buildInfo *api.ThirdPartyBuildInfo) {
 	if !systemutil.IsLinux() {
 		GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
-		dockerBuildFinish(&api.ThirdPartyBuildWithStatus{
-			ThirdPartyBuildInfo: *buildInfo, Message: "目前仅支持linux系统使用docker构建机",
-		})
+		dockerBuildFinish(buildInfo.ToFinish(false, "目前仅支持linux系统使用docker构建机", api.DockerOsErrorEnum))
 		return
 	}
 	// 第一次使用docker构建机后，则直接开启docker构建机相关逻辑
@@ -89,16 +87,12 @@ func runDockerBuild(buildInfo *api.ThirdPartyBuildInfo) {
 			_, err = download.DownloadDockerInitFile(systemutil.GetWorkDir())
 			if err != nil {
 				GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
-				dockerBuildFinish(&api.ThirdPartyBuildWithStatus{
-					ThirdPartyBuildInfo: *buildInfo, Message: "下载Docker构建机初始化脚本失败|" + err.Error(),
-				})
+				dockerBuildFinish(buildInfo.ToFinish(false, "下载Docker构建机初始化脚本失败|"+err.Error(), api.DockerRunShInitErrorEnum))
 				return
 			}
 		} else {
 			GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
-			dockerBuildFinish(&api.ThirdPartyBuildWithStatus{
-				ThirdPartyBuildInfo: *buildInfo, Message: "获取Docker构建机初始化脚本状态失败|" + err.Error(),
-			})
+			dockerBuildFinish(buildInfo.ToFinish(false, "获取Docker构建机初始化脚本状态失败|"+err.Error(), api.DockerRunShStatErrorEnum))
 			return
 		}
 	}
@@ -118,7 +112,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		logs.Error("DOCKER_JOB|create docker client error ", err)
-		dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: "创建docker客户端链接错误|" + err.Error()})
+		dockerBuildFinish(buildInfo.ToFinish(false, "获取docker客户端错误|"+err.Error(), api.DockerClientCreateErrorEnum))
 		return
 	}
 
@@ -128,7 +122,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	images, err := cli.ImageList(ctx, types.ImageListOptions{})
 	if err != nil {
 		logs.Error("DOCKER_JOB|list docker images error ", err)
-		dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: "获取docker镜像列表错误|" + err.Error()})
+		dockerBuildFinish(buildInfo.ToFinish(false, "获取docker镜像列表错误|"+err.Error(), api.DockerImagesFetchErrorEnum))
 		return
 	}
 	localExist := false
@@ -144,13 +138,13 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	// 本地没有镜像的需要拉取新的镜像
 	if !localExist {
 		postLog(false, "开始拉取镜像，镜像名称："+imageName, buildInfo)
-		postLog(false, "过大的镜像拉取时间过长（超过3分钟）可能会导致构建机重新领取任务，等待即可，镜像拉取完即可正常执行。也可以预先在本地拉取，构建机会直接启动已存在镜像。", buildInfo)
+		postLog(false, "[提示]镜像比较大时，首次拉取时间会比较长。可以在构建机本地预先拉取镜像来提高流水线启动速度。", buildInfo)
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
 			RegistryAuth: generateDockerAuth(dockerBuildInfo.Credential),
 		})
 		if err != nil {
 			logs.Error(fmt.Sprintf("DOCKER_JOB|pull new image %s error ", imageName), err)
-			dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: fmt.Sprintf("拉取镜像 %s 失败|", imageName) + err.Error()})
+			dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("拉取镜像 %s 失败|%s", imageName, err.Error()), api.DockerImagePullErrorEnum))
 			return
 		}
 		defer reader.Close()
@@ -173,7 +167,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	if err != nil {
 		errMsg := fmt.Sprintf("创建Docker构建临时目录失败(create tmp directory failed): %s", err.Error())
 		logs.Error("DOCKER_JOB|" + errMsg)
-		dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+		dockerBuildFinish(buildInfo.ToFinish(false, errMsg, api.DockerMakeTmpDirErrorEnum))
 		return
 	}
 
@@ -182,7 +176,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	mounts, err := parseContainerMounts(buildInfo)
 	if err != nil {
 		logs.Error("DOCKER_JOB| ", err)
-		dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: err.Error()})
+		dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerMountCreateErrorEnum))
 		return
 	}
 	var resources container.Resources
@@ -207,14 +201,14 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	}, hostConfig, nil, nil, containerName)
 	if err != nil {
 		logs.Error(fmt.Sprintf("DOCKER_JOB|create container %s error ", containerName), err)
-		dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: fmt.Sprintf("创建容器 %s 失败|", containerName) + err.Error()})
+		dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("创建容器 %s 失败|%s", containerName, err.Error()), api.DockerContainerCreateErrorEnum))
 		return
 	}
 
 	// 启动容器
 	if err := cli.ContainerStart(ctx, creatResp.ID, types.ContainerStartOptions{}); err != nil {
 		logs.Error(fmt.Sprintf("DOCKER_JOB|start container %s error ", creatResp.ID), err)
-		dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: fmt.Sprintf("启动容器 %s 失败|", containerName) + err.Error()})
+		dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("启动容器 %s 失败|%s", containerName, err.Error()), api.DockerContainerStartErrorEnum))
 		return
 	}
 
@@ -224,7 +218,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	case err := <-errCh:
 		if err != nil {
 			logs.Error(fmt.Sprintf("DOCKER_JOB|wait container %s over error ", creatResp.ID), err)
-			dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: fmt.Sprintf("等待容器 %s 结束错误|", containerName) + err.Error()})
+			dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("等待容器 %s 结束错误|%s", containerName, err.Error()), api.DockerContainerRunErrorEnum))
 			if err = cli.ContainerRemove(ctx, creatResp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
 				logs.Error(fmt.Sprintf("DOCKER_JOB|remove container %s error ", creatResp.ID), err)
 			}
@@ -233,7 +227,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	case <-statusCh:
 	}
 
-	dockerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Success: true, Message: ""})
+	dockerBuildFinish(buildInfo.ToFinish(true, "", api.NoErrorEnum))
 	if err = cli.ContainerRemove(ctx, creatResp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
 		logs.Error(fmt.Sprintf("DOCKER_JOB|remove container %s error ", creatResp.ID), err)
 	}
@@ -318,7 +312,7 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 
 	// 默认绑定本机的java用来执行worker，因为仅支持linux容器所以仅限linux构建机绑定
 	if systemutil.IsLinux() {
-		javaDir := config.GetJavaDir()
+		javaDir := config.GAgentConfig.JdkDirPath
 		mounts = append(mounts, mount.Mount{
 			Type:     mount.TypeBind,
 			Source:   javaDir,

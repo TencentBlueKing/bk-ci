@@ -76,7 +76,7 @@ data class NewHeartbeatInfo(
                 agentInstallPath = "",
                 startedUser = "",
                 taskList = listOf(),
-                props = AgentPropsInfo("", null),
+                props = AgentPropsInfo("", null, null),
                 agentId = agentId,
                 projectId = projectId,
                 heartbeatTime = System.currentTimeMillis(),
