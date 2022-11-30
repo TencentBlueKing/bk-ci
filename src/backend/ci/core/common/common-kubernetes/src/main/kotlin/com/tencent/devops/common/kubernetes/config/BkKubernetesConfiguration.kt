@@ -47,13 +47,6 @@ class BkKubernetesConfiguration {
     }
 
     companion object {
-        @Bean
-        fun bkKubernetesPostProcessor(
-            properties: KubernetesDiscoveryProperties
-        ): BkKubernetesPostProcessor {
-            return BkKubernetesPostProcessor(properties)
-        }
-
         private val logger = LoggerFactory.getLogger(BkKubernetesConfiguration::class.java)
     }
 }
