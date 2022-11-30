@@ -183,5 +183,9 @@ interface ProjectService {
 
     fun cancelCreateProject(userId: String, projectId: String): Boolean
 
-    fun applyToJoinProject(userId: String, applicationInfo: ApplicationInfo): Boolean
+    fun applyToJoinProject(
+        userId: String,
+        projectId: String,
+        applicationInfo: ApplicationInfo
+    ): Boolean
 }
