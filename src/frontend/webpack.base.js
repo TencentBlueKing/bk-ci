@@ -1,6 +1,7 @@
 const webpack = require('webpack')
 const path = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
@@ -110,7 +111,21 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         optimization: {
             chunkIds: isDev ? 'named' : 'deterministic',
             moduleIds: 'deterministic',
-            minimize: !isDev
+            minimize: !isDev,
+            minimizer: [
+                new CssMinimizerPlugin({
+                    minimizerOptions: {
+                        preset: [
+                            'default',
+                            {
+                                discardComments: { removeAll: true },
+                                discardDuplicates: true,
+                                normalizeCharset: true
+                            }
+                        ]
+                    }
+                })
+            ]
         },
         resolve: {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],

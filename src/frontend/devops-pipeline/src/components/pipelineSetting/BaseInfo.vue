@@ -121,7 +121,7 @@
              */
             async requestGrouptLists () {
                 try {
-                    const res = await this.$store.dispatch('pipelines/requestGetGroupLists', {
+                    const res = await this.$store.dispatch('pipelines/requestTagList', {
                         projectId: this.projectId
                     })
 

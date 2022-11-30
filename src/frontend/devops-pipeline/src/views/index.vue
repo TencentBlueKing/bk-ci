@@ -6,12 +6,12 @@
     import { mapActions } from 'vuex'
     export default {
         watch: {
-            '$route.params.projectId' (val) {
-                this.fetchData()
+            '$route.params.projectId': {
+                handler (val) {
+                    this.fetchData(val)
+                },
+                immediate: true
             }
-        },
-        mounted () {
-            this.fetchData()
         },
         methods: {
             ...mapActions('atom', [
@@ -20,14 +20,20 @@
                 'fetchStageTagList',
                 'fetchCommonSetting'
             ]),
-            fetchData () {
-                const projectCode = this.$route.params.projectId
+            ...mapActions('pipelines', [
+                'checkViewManageAuth'
+            ]),
+            fetchData (projectId) {
+                console.log('init', projectId)
                 this.fetchContainers({
-                    projectCode
+                    projectCode: projectId
                 })
                 this.fetchClassify()
                 this.fetchStageTagList()
                 this.fetchCommonSetting()
+                this.checkViewManageAuth({
+                    projectId
+                })
             }
         }
     }

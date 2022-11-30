@@ -73,6 +73,7 @@
     import { urlJoin, getServiceAliasByPath, isAbsoluteUrl } from '../../utils/util'
     import eventBus from '../../utils/eventBus'
     import { getProjectId } from '../../router'
+    import { ObjectMap } from '../../typings/type'
 
     @Component
     export default class NavBox extends Vue {

@@ -198,6 +198,7 @@
 <style lang="scss" scoped>
     @import '@/scss/conf';
     @import '@/scss/mixins/ellipsis';
+
     .component-row {
         display: flex;
         .metadata-box {

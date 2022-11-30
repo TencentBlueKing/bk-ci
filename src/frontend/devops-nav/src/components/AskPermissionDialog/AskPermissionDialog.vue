@@ -39,6 +39,7 @@
     import { State, Action } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
     import { isProjectResource, resourceTypeMap, resourceAliasMap, actionAliasMap } from '../../../../common-lib/permission-conf'
+    import { Permission } from '../../typings/type'
 
     @Component
     export default class AskPermissionDialog extends Vue {
