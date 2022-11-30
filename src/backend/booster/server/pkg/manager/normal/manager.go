@@ -158,7 +158,7 @@ func (m *manager) GetTaskRank(taskID string) (int, error) {
 
 	rank, err := qg.GetQueue(tb.Client.QueueName).Rank(taskID)
 	if err != nil {
-		blog.Errorf("manager: try getting task rank, get task(%s) rank from engine(%s) queue(%s) failed: %v",
+		blog.Warnf("manager: try getting task rank, get task(%s) rank from engine(%s) queue(%s) failed: %v",
 			taskID, tb.Client.EngineName, tb.Client.QueueName, err)
 		return -1, err
 	}

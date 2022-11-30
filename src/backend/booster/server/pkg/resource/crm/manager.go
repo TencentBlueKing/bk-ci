@@ -952,7 +952,7 @@ func (rm *resourceManager) release(resourceID, user string) error {
 
 	r, err := rm.getResources(resourceID)
 	if err != nil {
-		blog.Errorf("crm: try releasing service, get resource(%s) for user(%s) failed: %v",
+		blog.Warnf("crm: try releasing service, get resource(%s) for user(%s) failed: %v",
 			resourceID, user, err)
 		return err
 	}
