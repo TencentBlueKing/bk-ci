@@ -44,5 +44,8 @@ enum class ApproveStatus(val status: Int) {
     UPDATE_REJECT(5),
 
     // 修改审批通过
-    UPDATE_APPROVED(6)
+    UPDATE_APPROVED(6),
+
+    // 取消创建
+    CANCEL_CREATE(7)
 }

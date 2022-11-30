@@ -880,9 +880,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectCode = projectInfo.englishName
             )
             if (isIamCancelSuccess) {
-                projectDao.delete(
+                projectDao.updateProjectStatusByEnglishName(
                     dslContext = dslContext,
-                    projectId = projectId
+                    projectCode = projectInfo.englishName,
+                    statusEnum = ApproveStatus.CANCEL_CREATE
                 )
             }
             success = true
