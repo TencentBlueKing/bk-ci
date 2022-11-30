@@ -32,7 +32,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordPipeline
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordPipelineRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordPipeline
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTimeStamp
+import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
+import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
@@ -123,7 +124,12 @@ class BuildRecordPipelineDao {
                     cancelUser = cancelUser,
                     startTime = startTime,
                     endTime = endTime,
-                    timestamps = JsonUtil.getObjectMapper().readValue(timestamps) as List<BuildRecordTimeStamp>
+                    timestamps = timestamps?.let {
+                        JsonUtil.getObjectMapper().readValue(it) as List<BuildRecordTimeStamp>
+                    } ?: emptyList(),
+                    timeCost = timeCost?.let {
+                        JsonUtil.getObjectMapper().readValue(it, BuildRecordTimeCost::class.java)
+                    }
                 )
             }
         }

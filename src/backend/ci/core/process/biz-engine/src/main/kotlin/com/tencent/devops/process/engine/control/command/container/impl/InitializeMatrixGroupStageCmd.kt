@@ -60,6 +60,9 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_STAGE_CONTAINERS_COUNT_MAX
@@ -84,6 +87,7 @@ import kotlin.math.min
 class InitializeMatrixGroupStageCmd(
     private val dslContext: DSLContext,
     private val containerBuildDetailService: ContainerBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
@@ -175,10 +179,18 @@ class InitializeMatrixGroupStageCmd(
         ) ?: throw DependNotFoundException(
             "container(${parentContainer.containerId}) cannot be found in model"
         )
-
+        val recordContainer = containerBuildRecordService.getRecord(
+            transactionContext = null,
+            projectId = parentContainer.projectId,
+            pipelineId = parentContainer.pipelineId,
+            buildId = parentContainer.buildId,
+            containerId = parentContainer.containerId,
+            executeCount = parentContainer.executeCount
+        )
         // #4518 待生成的分裂后container表和task表记录
         val buildContainerList = mutableListOf<PipelineBuildContainer>()
         val buildTaskList = mutableListOf<PipelineBuildTask>()
+        val recordTaskList = mutableListOf<BuildRecordTask>()
 
         // #4518 根据当前上下文对每一个构建矩阵进行裂变
         val groupContainers = mutableListOf<PipelineBuildContainer>()
@@ -300,6 +312,8 @@ class InitializeMatrixGroupStageCmd(
                             stage = modelStage,
                             context = context,
                             buildTaskList = buildTaskList,
+                            recordTaskList = recordTaskList,
+                            resourceVersion = recordContainer?.resourceVersion,
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
@@ -381,6 +395,8 @@ class InitializeMatrixGroupStageCmd(
                             stage = modelStage,
                             context = context,
                             buildTaskList = buildTaskList,
+                            recordTaskList = recordTaskList,
+                            resourceVersion = recordContainer?.resourceVersion,
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
@@ -456,6 +472,9 @@ class InitializeMatrixGroupStageCmd(
                 val transactionContext = DSL.using(configuration)
                 pipelineContainerService.batchSave(transactionContext, buildContainerList)
                 pipelineTaskService.batchSave(transactionContext, buildTaskList)
+                recordContainer?.let {
+                    addBuildRecordToList(transactionContext, buildContainerList, recordContainer, matrixGroupId)
+                }
             }
         } finally {
             containerLockList.forEach { it.unlock() }
@@ -486,15 +505,47 @@ class InitializeMatrixGroupStageCmd(
         // 在详情中刷新所有分裂后的矩阵
         pipelineContainerService.updateMatrixGroupStatus(
             projectId = parentContainer.projectId,
+            pipelineId = parentContainer.pipelineId,
             buildId = parentContainer.buildId,
             stageId = parentContainer.stageId,
             matrixGroupId = matrixGroupId,
+            executeCount = parentContainer.executeCount,
             buildStatus = commandContext.buildStatus,
             controlOption = parentContainer.controlOption!!.copy(matrixControlOption = matrixOption),
             modelContainer = modelContainer
         )
 
         return buildContainerList.size
+    }
+
+    private fun addBuildRecordToList(
+        transactionContext: DSLContext,
+        buildContainerList: MutableList<PipelineBuildContainer>,
+        recordContainer: BuildRecordContainer,
+        matrixGroupId: String
+    ) {
+        containerBuildRecordService.batchSave(
+            transactionContext,
+            buildContainerList.map {
+                BuildRecordContainer(
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    resourceVersion = recordContainer.resourceVersion,
+                    buildId = it.buildId,
+                    stageId = it.stageId,
+                    containerId = it.containerId,
+                    containerType = it.containerType,
+                    executeCount = it.executeCount,
+                    matrixGroupFlag = false,
+                    matrixGroupId = matrixGroupId,
+                    containerVar = mutableMapOf(),
+                    startTime = null,
+                    endTime = null,
+                    timestamps = emptyList(),
+                    timeCost = null
+                )
+            }
+        )
     }
 
     private fun generateMatrixElements(

@@ -32,7 +32,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTimeStamp
+import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
+import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
@@ -41,24 +42,24 @@ import java.time.LocalDateTime
 @Repository
 class BuildRecordTaskDao {
 
-    fun createRecord(dslContext: DSLContext, record: BuildRecordTask) {
+    fun batchSave(dslContext: DSLContext, records: List<BuildRecordTask>) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
-            dslContext.insertInto(this)
-                .set(BUILD_ID, record.buildId)
-                .set(PROJECT_ID, record.projectId)
-                .set(PIPELINE_ID, record.buildId)
-                .set(RESOURCE_VERSION, record.resourceVersion)
-                .set(STAGE_ID, record.stageId)
-                .set(CONTAINER_ID, record.containerId)
-                .set(TASK_ID, record.taskId)
-                .set(EXECUTE_COUNT, record.executeCount)
-                .set(TASK_VAR, JsonUtil.toJson(record.taskVar, false))
-                .set(TASK_SEQ, record.taskSeq)
-                .set(ATOM_CODE, record.atomCode)
-                .set(START_TIME, record.startTime)
-                .set(END_TIME, record.endTime)
-                .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                .execute()
+            records.forEach { record ->
+                dslContext.insertInto(this)
+                    .set(BUILD_ID, record.buildId)
+                    .set(PROJECT_ID, record.projectId)
+                    .set(PIPELINE_ID, record.buildId)
+                    .set(RESOURCE_VERSION, record.resourceVersion)
+                    .set(STAGE_ID, record.stageId)
+                    .set(CONTAINER_ID, record.containerId)
+                    .set(TASK_ID, record.taskId)
+                    .set(EXECUTE_COUNT, record.executeCount)
+                    .set(TASK_VAR, JsonUtil.toJson(record.taskVar, false))
+                    .set(TASK_SEQ, record.taskSeq)
+                    .set(ATOM_CODE, record.atomCode)
+                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
+                    .execute()
+            }
         }
     }
 
@@ -72,7 +73,8 @@ class BuildRecordTaskDao {
         taskVar: Map<String, Any>,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
-        timestamps: List<BuildRecordTimeStamp>?
+        timestamps: List<BuildRecordTimeStamp>?,
+        timeCost: BuildRecordTimeCost?
     ) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val update = dslContext.update(this)
@@ -80,6 +82,7 @@ class BuildRecordTaskDao {
             startTime?.let { update.set(START_TIME, startTime) }
             endTime?.let { update.set(END_TIME, endTime) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
+            timeCost?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timeCost, false)) }
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
@@ -90,11 +93,12 @@ class BuildRecordTaskDao {
         }
     }
 
-    fun getRecords(
+    fun getRecordsByContainerId(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         buildId: String,
+        containerId: String,
         executeCount: Int
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
@@ -103,8 +107,51 @@ class BuildRecordTaskDao {
                     BUILD_ID.eq(buildId)
                         .and(PROJECT_ID.eq(projectId))
                         .and(PIPELINE_ID.eq(pipelineId))
+                        .and(CONTAINER_ID.eq(containerId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).orderBy(TASK_SEQ.asc()).fetch(mapper)
+        }
+    }
+
+    fun getRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int
+    ): BuildRecordTask? {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            return dslContext.selectFrom(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(TASK_ID.eq(taskId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).fetchOne(mapper)
+        }
+    }
+
+    fun getRecordTaskVar(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int
+    ): Map<String, Any>? {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            return dslContext.select(TASK_VAR)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(TASK_ID.eq(taskId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).fetchOne(0, String::class.java)?.let {
+                    JsonUtil.getObjectMapper().readValue(it) as Map<String, Any>
+                }
         }
     }
 
@@ -122,10 +169,17 @@ class BuildRecordTaskDao {
                     taskId = taskId,
                     taskVar = JsonUtil.getObjectMapper().readValue(taskVar) as MutableMap<String, Any>,
                     taskSeq = taskSeq,
+                    classType = classType,
                     atomCode = atomCode,
+                    originClassType = originClassType,
                     startTime = startTime,
                     endTime = endTime,
-                    timestamps = JsonUtil.getObjectMapper().readValue(timestamps) as List<BuildRecordTimeStamp>
+                    timestamps = timestamps?.let {
+                        JsonUtil.getObjectMapper().readValue(it) as List<BuildRecordTimeStamp>
+                    } ?: emptyList(),
+                    timeCost = timeCost?.let {
+                        JsonUtil.getObjectMapper().readValue(it, BuildRecordTimeCost::class.java)
+                    }
                 )
             }
         }

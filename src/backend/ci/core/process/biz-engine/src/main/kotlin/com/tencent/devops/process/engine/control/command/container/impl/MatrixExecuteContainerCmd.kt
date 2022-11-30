@@ -215,10 +215,12 @@ class MatrixExecuteContainerCmd(
         if (dataChange) {
             pipelineContainerService.updateMatrixGroupStatus(
                 projectId = parentContainer.projectId,
+                pipelineId = parentContainer.pipelineId,
                 buildId = parentContainer.buildId,
                 stageId = parentContainer.stageId,
                 buildStatus = commandContext.buildStatus,
                 matrixGroupId = parentContainer.containerId,
+                executeCount = parentContainer.executeCount,
                 controlOption = parentContainer.controlOption!!.copy(matrixControlOption = matrixOption),
                 modelContainer = null
             )

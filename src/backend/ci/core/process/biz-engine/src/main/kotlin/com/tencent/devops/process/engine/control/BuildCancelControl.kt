@@ -55,6 +55,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
@@ -76,6 +77,7 @@ class BuildCancelControl @Autowired constructor(
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val containerBuildDetailService: ContainerBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val buildVariableService: BuildVariableService,
     private val buildLogPrinter: BuildLogPrinter,
     @Autowired(required = false)
@@ -269,6 +271,7 @@ class BuildCancelControl @Autowired constructor(
         executeCount: Int
     ) {
         val projectId = event.projectId
+        val pipelineId = event.pipelineId
         val buildId = event.buildId
         val containerId = container.id ?: return
         val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
@@ -310,6 +313,15 @@ class BuildCancelControl @Autowired constructor(
                     containerId = containerId,
                     buildStatus = switchedStatus,
                     executeCount = executeCount
+                )
+                containerBuildRecordService.updateContainerStatus(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    containerId = containerId,
+                    buildStatus = switchedStatus,
+                    executeCount = executeCount,
+                    operation = "cancelContainerPendingTask#${container.containerId}"
                 )
                 // 释放互斥锁
                 unlockMutexGroup(
