@@ -29,6 +29,8 @@ package com.tencent.devops.process.dao.label
 
 import com.tencent.devops.model.process.tables.TPipelineView
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
+import com.tencent.devops.process.constant.PipelineViewType
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -161,13 +163,13 @@ class PipelineViewDao {
     ): Boolean {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.update(this)
-                .set(NAME, name)
-                .set(LOGIC, logic)
+                .let { if (StringUtils.isNotBlank(name)) it.set(NAME, name) else it }
+                .let { if (StringUtils.isNotBlank(logic)) it.set(LOGIC, logic) else it }
+                .let { if (filters.contains("@type")) it.set(FILTERS, filters) else it }
+                .let { if (viewType != PipelineViewType.UNCLASSIFIED) it.set(VIEW_TYPE, viewType) else it }
                 .set(IS_PROJECT, isProject)
                 .set(FILTER_BY_PIPEINE_NAME, "")
                 .set(FILTER_BY_CREATOR, "")
-                .set(FILTERS, filters)
-                .set(VIEW_TYPE, viewType)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(viewId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1

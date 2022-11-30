@@ -10,5 +10,7 @@ data class PipelineCount(
     @ApiModelProperty("我的收藏个数", required = true)
     var myFavoriteCount: Int,
     @ApiModelProperty("我的流水线的个数", required = true)
-    var myPipelineCount: Int
+    var myPipelineCount: Int,
+    @ApiModelProperty("回收站流水线的个数", required = true)
+    var recycleCount: Int
 )

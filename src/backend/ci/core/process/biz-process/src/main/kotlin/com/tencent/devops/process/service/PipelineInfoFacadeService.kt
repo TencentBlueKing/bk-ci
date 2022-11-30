@@ -382,6 +382,13 @@ class PipelineInfoFacadeService @Autowired constructor(
                 val bulkAdd = PipelineViewBulkAdd(pipelineIds = listOf(pipelineId), viewIds = model.staticViews)
                 pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd)
 
+                // 添加到动态分组
+                pipelineViewGroupService.updateGroupAfterPipelineCreate(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId
+                )
+
                 success = true
                 return pipelineId
             } catch (duplicateKeyException: DuplicateKeyException) {
@@ -523,7 +530,13 @@ class PipelineInfoFacadeService @Autowired constructor(
                 defaultMessage = "指定要复制的流水线-模型不存在"
             )
         try {
-            val copyMode = Model(pipelineCopy.name, pipelineCopy.desc ?: model.desc, model.stages)
+            val copyMode = Model(
+                name = pipelineCopy.name,
+                desc = pipelineCopy.desc ?: model.desc,
+                stages = model.stages,
+                staticViews = pipelineCopy.staticViews,
+                labels = pipelineCopy.labels
+            )
             modelCheckPlugin.clearUpModel(copyMode)
             val newPipelineId = createPipeline(userId, projectId, copyMode, channelCode)
             val settingInfo = pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
@@ -539,21 +552,10 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineSettingFacadeService.saveSetting(
                     userId = userId,
                     setting = newSetting,
-                    dispatchPipelineUpdateEvent = false
+                    dispatchPipelineUpdateEvent = false,
+                    updateLabels = false
                 )
             }
-            // 添加标签
-            pipelineGroupService.addPipelineLabel(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = newPipelineId,
-                labelIds = pipelineCopy.labels
-            )
-
-            // 添加到静态分组
-            val bulkAdd = PipelineViewBulkAdd(pipelineIds = listOf(newPipelineId), viewIds = pipelineCopy.staticViews)
-            pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd)
-
             return newPipelineId
         } catch (e: JsonParseException) {
             logger.error("Parse process($pipelineId) fail", e)

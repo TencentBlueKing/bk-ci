@@ -2,6 +2,7 @@ package com.tencent.devops.process.service.view
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW
@@ -22,6 +23,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import io.mockk.every
@@ -43,18 +45,19 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val pipelineViewGroupDao: PipelineViewGroupDao = mockk()
     private val pipelineViewTopDao: PipelineViewTopDao = mockk()
     private val pipelineInfoDao: PipelineInfoDao = mockk()
+    private val client: Client = mockk()
 
     private val self: PipelineViewGroupService = spyk(
         PipelineViewGroupService(
             pipelineViewService = pipelineViewService,
-            pipelinePermissionService = pipelinePermissionService,
             pipelineViewDao = pipelineViewDao,
             pipelineViewGroupDao = pipelineViewGroupDao,
             pipelineViewTopDao = pipelineViewTopDao,
             pipelineInfoDao = pipelineInfoDao,
             dslContext = dslContext,
             redisOperation = redisOperation,
-            objectMapper = objectMapper
+            objectMapper = objectMapper,
+            client = client
         ),
         recordPrivateCalls = true
     )
@@ -479,12 +482,12 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @Test
         @DisplayName("首次初始化")
         fun test_2() {
-            every { redisOperation.setIfAbsent(any(), any()) } returns true
+            every { redisOperation.setIfAbsent(any(), any(), any(), any()) } returns true
             every { self["allPipelineInfos"](any() as String, any() as Boolean) } returns listOf(pi)
             every { pipelineViewService.matchView(any(), any()) } returns true
             every { pipelineViewGroupDao.create(anyDslContext(), any(), any(), any(), any()) } returns Unit
             self.invokePrivate<List<String>>("initDynamicViewGroup", pv, "test", dslContext).let {
-                Assertions.assertTrue(it!!.size == 1)
+                Assertions.assertEquals(it!!.size, 1)
                 Assertions.assertEquals(it[0], "p-test")
             }
         }
@@ -664,7 +667,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("PipelineInfo有数据")
         fun test_1() {
             every {
-                pipelineInfoDao.listPipelineInfoByProject(anyDslContext(), any(), any(), any(), any())
+                pipelineInfoDao.listPipelineInfoByProject(anyDslContext(), any(), any(), any(), any(), any(), any())
             } returns dslContext.mockResult(T_PIPELINE_INFO, pi)
             self.invokePrivate<List<TPipelineInfoRecord>>("allPipelineInfos", "test", false).let {
                 Assertions.assertEquals(it!!.size, 1)
@@ -676,7 +679,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("PipelineInfo无数据")
         fun test_2() {
             every {
-                pipelineInfoDao.listPipelineInfoByProject(anyDslContext(), any(), any(), any(), any())
+                pipelineInfoDao.listPipelineInfoByProject(anyDslContext(), any(), any(), any(), any(), any(), any())
             } returns dslContext.mockResult(T_PIPELINE_INFO)
             self.invokePrivate<List<TPipelineInfoRecord>>("allPipelineInfos", "test", false).let {
                 Assertions.assertEquals(it!!.size, 0)
@@ -789,8 +792,14 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             pvCopy.isProject = false
             pvCopy.createUser = "other"
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
-            self.bulkRemove("true", "test", br).let {
-                Assertions.assertEquals(it, false)
+            try {
+                self.bulkRemove("true", "test", br)
+            } catch (e: Exception) {
+                Assertions.assertThrows(ErrorCodeException::class.java) { throw e }
+                Assertions.assertEquals(
+                    (e as ErrorCodeException).errorCode,
+                    ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION
+                )
             }
         }
 
@@ -802,8 +811,14 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             pvCopy.isProject = true
             pvCopy.createUser = "other"
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
-            self.bulkRemove("false", "test", br).let {
-                Assertions.assertEquals(it, false)
+            try {
+                self.bulkRemove("false", "test", br)
+            } catch (e: Exception) {
+                Assertions.assertThrows(ErrorCodeException::class.java) { throw e }
+                Assertions.assertEquals(
+                    (e as ErrorCodeException).errorCode,
+                    ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION
+                )
             }
         }
 
@@ -856,7 +871,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
                 )
             } returns mutableListOf<PipelineNewViewSummary>()
             every { self["getClassifiedPipelineIds"](any() as String) } returns emptyList<String>()
-            every { pipelineInfoDao.countExcludePipelineIds(anyDslContext(), any(), any()) } returns 0
+            every { pipelineInfoDao.countExcludePipelineIds(anyDslContext(), any(), any(), any()) } returns 0
             self.listView("test", "test", true, PipelineViewType.DYNAMIC).let {
                 Assertions.assertEquals(it.size, 1)
                 Assertions.assertEquals(it[0].id, PIPELINE_VIEW_UNCLASSIFIED)
@@ -886,6 +901,38 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             ).let {
                 Assertions.assertEquals(it!!.size, 2)
                 Assertions.assertEquals(it[0].name, pvCopy2.name)
+            }
+        }
+    }
+
+    @Nested
+    inner class PipelineCount {
+        @Test
+        @DisplayName("viewGroup为空")
+        fun test_1() {
+            every { pipelineViewGroupDao.listByViewId(anyDslContext(), any(), any()) } returns emptyList()
+            self.pipelineCount("test", "test", "test").let {
+                Assertions.assertEquals(it, PipelineViewPipelineCount.DEFAULT)
+            }
+        }
+
+        @Test
+        @DisplayName("viewGroup不为空")
+        fun test_2() {
+            every { pipelineViewGroupDao.listByViewId(anyDslContext(), any(), any()) } returns listOf(pvg)
+            every {
+                pipelineInfoDao.listInfoByPipelineIds(
+                    anyDslContext(),
+                    any(),
+                    any(),
+                    any()
+                )
+            } returns dslContext.mockResult(
+                T_PIPELINE_INFO, pi
+            )
+            self.pipelineCount("test", "test", "test").let {
+                Assertions.assertEquals(it.deleteCount, 0)
+                Assertions.assertEquals(it.normalCount, 1)
             }
         }
     }

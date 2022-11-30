@@ -33,6 +33,9 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -43,7 +46,6 @@ import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
@@ -51,10 +53,12 @@ import com.tencent.devops.process.pojo.classify.PipelineViewBulkRemove
 import com.tencent.devops.process.pojo.classify.PipelineViewDict
 import com.tencent.devops.process.pojo.classify.PipelineViewFilter
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -67,14 +71,14 @@ import java.time.LocalDateTime
 @SuppressWarnings("LoopWithTooManyJumpStatements", "LongParameterList", "TooManyFunctions", "ReturnCount")
 class PipelineViewGroupService @Autowired constructor(
     private val pipelineViewService: PipelineViewService,
-    private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineViewDao: PipelineViewDao,
     private val pipelineViewGroupDao: PipelineViewGroupDao,
     private val pipelineViewTopDao: PipelineViewTopDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val client: Client
 ) {
     fun getViewNameMap(
         projectId: String,
@@ -141,13 +145,18 @@ class PipelineViewGroupService @Autowired constructor(
                 defaultMessage = "view scope can`t change , user:$userId , view:$viewIdEncode , project:$projectId"
             )
         }
+        if (pipelineView.viewType == PipelineViewType.UNCLASSIFIED) {
+            pipelineView.viewType = oldView.viewType
+        }
         // 更新视图
         var result = false
         dslContext.transaction { t ->
             val context = DSL.using(t)
             result = pipelineViewService.updateView(userId, projectId, viewId, pipelineView, context)
             if (result) {
-                pipelineViewGroupDao.remove(context, projectId, viewId)
+                if (pipelineView.pipelineIds != null) {
+                    pipelineViewGroupDao.remove(context, projectId, viewId)
+                }
                 redisOperation.delete(firstInitMark(projectId, viewId))
                 initViewGroup(
                     context = context,
@@ -320,7 +329,7 @@ class PipelineViewGroupService @Autowired constructor(
             watcher.stop()
         } else {
             watcher.start("initStaticViewGroup")
-            pipelineView.pipelineIds.forEach {
+            pipelineView.pipelineIds?.forEach {
                 pipelineViewGroupDao.create(
                     dslContext = context,
                     projectId = projectId,
@@ -340,11 +349,11 @@ class PipelineViewGroupService @Autowired constructor(
         context: DSLContext? = null
     ): List<String> {
         val projectId = view.projectId
+        val firstInit = redisOperation.setIfAbsent(firstInitMark(projectId, view.id), "1", 30 * 24 * 3600, true)
+        if (!firstInit) {
+            return emptyList()
+        }
         return PipelineViewGroupLock(redisOperation, projectId).lockAround {
-            val firstInit = redisOperation.setIfAbsent(firstInitMark(projectId, view.id), "1")
-            if (!firstInit) {
-                return@lockAround emptyList()
-            }
             val pipelineIds = allPipelineInfos(projectId, false)
                 .filter { pipelineViewService.matchView(view, it) }
                 .map { it.pipelineId }
@@ -421,7 +430,7 @@ class PipelineViewGroupService @Autowired constructor(
                 .filter { pipelineViewService.matchView(previewCondition, it) }
                 .map { it.pipelineId }
         } else {
-            pipelineView.pipelineIds.filter { allPipelineInfoMap.containsKey(it) }
+            pipelineView.pipelineIds?.filter { allPipelineInfoMap.containsKey(it) } ?: emptyList()
         }
 
         // 新增流水线 = 新流水线 - 老流水线
@@ -448,6 +457,7 @@ class PipelineViewGroupService @Autowired constructor(
         return PipelineViewPreview(addedPipelineInfos, removedPipelineInfos, reservePipelineInfos)
     }
 
+    @SuppressWarnings("LongMethod", "ComplexMethod")
     fun dict(userId: String, projectId: String): PipelineViewDict {
         // 流水线信息
         val pipelineInfoMap = allPipelineInfos(projectId, true).associateBy { it.pipelineId }
@@ -531,7 +541,8 @@ class PipelineViewGroupService @Autowired constructor(
                 projectId = projectId,
                 offset = offset,
                 limit = step,
-                deleteFlag = if (includeDelete) null else false
+                deleteFlag = if (includeDelete) null else false,
+                channelCode = ChannelCode.BS
             ) ?: emptyList<TPipelineInfoRecord>()
             if (subPipelineInfos.isEmpty()) {
                 break
@@ -607,27 +618,36 @@ class PipelineViewGroupService @Autowired constructor(
         val isProjectManager = checkPermission(userId, projectId)
         if (isProjectManager && !view.isProject && view.createUser != userId) {
             logger.warn("bulkRemove , $userId is ProjectManager , but can`t remove other view")
-            return false
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION,
+                defaultMessage = "user:$userId has no permission to edit view group, project:$projectId"
+            )
         }
         if (!isProjectManager && (view.isProject || view.createUser != userId)) {
             logger.warn("bulkRemove , $userId isn`t ProjectManager , just can remove self view")
-            return false
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION,
+                defaultMessage = "user:$userId has no permission to edit view group, project:$projectId"
+            )
         }
         pipelineViewGroupDao.batchRemove(dslContext, projectId, viewId, bulkRemove.pipelineIds)
         return true
     }
 
     fun checkPermission(userId: String, projectId: String) =
-        pipelinePermissionService.checkProjectManager(userId, projectId)
+        client.get(ServiceProjectResource::class).hasPermission(userId, projectId, AuthPermission.MANAGE).data ?: false
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
         val countByViewId = pipelineViewGroupDao.countByViewId(dslContext, projectId, views.map { it.id })
+        // 确保数据都初始化一下
+        views.filter { it.viewType == PipelineViewType.DYNAMIC }
+            .forEach { initDynamicViewGroup(it, userId, dslContext) }
         val summaries = sortViews2Summary(projectId, userId, views, countByViewId)
         if (projected != false) {
             val classifiedPipelineIds = getClassifiedPipelineIds(projectId)
             val unclassifiedCount =
-                pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds)
+                pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds, ChannelCode.BS)
             summaries.add(
                 0, PipelineNewViewSummary(
                     id = PIPELINE_VIEW_UNCLASSIFIED,
@@ -637,7 +657,7 @@ class PipelineViewGroupService @Autowired constructor(
                     createTime = LocalDateTime.now().timestamp(),
                     updateTime = LocalDateTime.now().timestamp(),
                     creator = "admin",
-                    top = true,
+                    top = false,
                     viewType = PipelineViewType.UNCLASSIFIED,
                     pipelineCount = unclassifiedCount
                 )
@@ -696,6 +716,24 @@ class PipelineViewGroupService @Autowired constructor(
             pipelineId = record.pipelineId,
             pipelineName = record.pipelineName,
             delete = record.delete
+        )
+    }
+
+    fun pipelineCount(userId: String, projectId: String, viewId: String): PipelineViewPipelineCount {
+        val viewGroups = pipelineViewGroupDao.listByViewId(dslContext, projectId, HashUtil.decodeIdToLong(viewId))
+        if (viewGroups.isEmpty()) {
+            return PipelineViewPipelineCount.DEFAULT
+        }
+        val pipelineInfos = pipelineInfoDao.listInfoByPipelineIds(
+            dslContext,
+            projectId,
+            viewGroups.map { it.pipelineId }.toSet(),
+            false
+        )
+        val deleteCount = pipelineInfos.count { it.delete }
+        return PipelineViewPipelineCount(
+            normalCount = pipelineInfos.size - deleteCount,
+            deleteCount = deleteCount
         )
     }
 

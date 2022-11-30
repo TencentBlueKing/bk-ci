@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewHitFilters
 import com.tencent.devops.process.pojo.classify.PipelineViewId
 import com.tencent.devops.process.pojo.classify.PipelineViewMatchDynamic
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.PipelineViewTopForm
@@ -131,8 +132,8 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         return Result(pipelineViewGroupService.listView(userId, projectId, projected, viewType))
     }
 
-    override fun checkPermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(pipelineViewGroupService.checkPermission(userId, projectId))
+    override fun pipelineCount(userId: String, projectId: String, viewId: String): Result<PipelineViewPipelineCount> {
+        return Result(pipelineViewGroupService.pipelineCount(userId, projectId, viewId))
     }
 
     override fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Result<Boolean> {

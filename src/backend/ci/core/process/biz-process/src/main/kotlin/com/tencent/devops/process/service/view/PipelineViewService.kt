@@ -68,6 +68,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -317,6 +318,7 @@ class PipelineViewService @Autowired constructor(
         context: DSLContext? = null
     ): Long {
         try {
+            pipelineView.name = pipelineView.name.trim()
             checkForUpset(context, projectId, userId, pipelineView, true)
             val filters = if (pipelineView.viewType == PipelineViewType.DYNAMIC) {
                 objectMapper.writerFor(object :
@@ -388,6 +390,13 @@ class PipelineViewService @Autowired constructor(
         isCreate: Boolean,
         viewId: Long? = null
     ) {
+        if (pipelineView.name.isEmpty() || pipelineView.name.length > 16) {
+            logger.warn("pipeline view name is illegal , user:$userId , project:$projectId")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_VIEW_NAME_ILLEGAL,
+                defaultMessage = "pipeline group name is illegal , the length is limited to 1~16"
+            )
+        }
         if (isCreate) {
             val countForLimit = pipelineViewDao.countForLimit(
                 dslContext = context ?: dslContext,
@@ -397,7 +406,7 @@ class PipelineViewService @Autowired constructor(
             )
             val limit = if (pipelineView.projected) PROJECT_VIEW_LIMIT else PERSONAL_VIEW_LIMIT
 
-            if (countForLimit > limit) {
+            if (countForLimit + 1 >= limit) {
                 logger.warn("exceed the limit for create , project:$projectId , user:$userId , view:$pipelineView")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_VIEW_EXCEED_THE_LIMIT,
@@ -469,7 +478,7 @@ class PipelineViewService @Autowired constructor(
         )
         for (filter in filters) {
             val match = if (filter is PipelineViewFilterByName) {
-                pipelineInfo.pipelineName.contains(filter.pipelineName)
+                StringUtils.containsIgnoreCase(pipelineInfo.pipelineName, filter.pipelineName)
             } else if (filter is PipelineViewFilterByCreator) {
                 filter.userIds.contains(pipelineInfo.creator)
             } else if (filter is PipelineViewFilterByLabel) {
@@ -591,7 +600,7 @@ class PipelineViewService @Autowired constructor(
                         key = "流水线名称",
                         hits = mutableListOf(
                             PipelineViewHitFilters.FilterInfo.Hit(
-                                hit = pipelineInfo.pipelineName.contains(filter.pipelineName),
+                                hit = StringUtils.containsIgnoreCase(pipelineInfo.pipelineName, filter.pipelineName),
                                 value = filter.pipelineName
                             )
                         )
@@ -655,7 +664,7 @@ class PipelineViewService @Autowired constructor(
             var isMatch = view.logic == Logic.AND.name
             for (filter in filters) {
                 val match = if (filter is PipelineViewFilterByName) {
-                    pipelineViewMatchDynamic.pipelineName.contains(filter.pipelineName)
+                    StringUtils.containsIgnoreCase(pipelineViewMatchDynamic.pipelineName, filter.pipelineName)
                 } else if (filter is PipelineViewFilterByCreator) {
                     filter.userIds.contains(userId)
                 } else if (filter is PipelineViewFilterByLabel) {

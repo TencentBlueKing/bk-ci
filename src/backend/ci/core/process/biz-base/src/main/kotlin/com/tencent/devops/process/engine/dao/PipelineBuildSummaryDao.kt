@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
+import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_LIST_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -156,7 +157,8 @@ class PipelineBuildSummaryDao {
         authPipelines: List<String> = emptyList(),
         pipelineFilterParamList: List<PipelineFilterParam>? = null,
         permissionFlag: Boolean? = null,
-        includeDelete: Boolean? = false
+        includeDelete: Boolean? = false,
+        userId: String
     ): Long {
         val conditions = generatePipelineFilterCondition(
             projectId = projectId,
@@ -167,7 +169,8 @@ class PipelineBuildSummaryDao {
             authPipelines = authPipelines,
             pipelineFilterParamList = pipelineFilterParamList,
             permissionFlag = permissionFlag,
-            includeDelete = includeDelete
+            includeDelete = includeDelete,
+            userId = userId
         )
         return dslContext.selectCount().from(T_PIPELINE_INFO)
             .where(conditions)
@@ -189,7 +192,8 @@ class PipelineBuildSummaryDao {
         pageSize: Int? = null,
         pageOffsetNum: Int? = 0,
         includeDelete: Boolean? = false,
-        collation: PipelineCollation = PipelineCollation.DEFAULT
+        collation: PipelineCollation = PipelineCollation.DEFAULT,
+        userId: String?
     ): Result<TPipelineInfoRecord> {
         val conditions = generatePipelineFilterCondition(
             projectId = projectId,
@@ -200,7 +204,8 @@ class PipelineBuildSummaryDao {
             authPipelines = authPipelines,
             pipelineFilterParamList = pipelineFilterParamList,
             permissionFlag = permissionFlag,
-            includeDelete = includeDelete
+            includeDelete = includeDelete,
+            userId = userId
         )
         return listPipelineInfoBuildSummaryByConditions(
             dslContext = dslContext,
@@ -223,7 +228,8 @@ class PipelineBuildSummaryDao {
         authPipelines: List<String>,
         pipelineFilterParamList: List<PipelineFilterParam>?,
         permissionFlag: Boolean?,
-        includeDelete: Boolean? = false
+        includeDelete: Boolean? = false,
+        userId: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(T_PIPELINE_INFO.PROJECT_ID.eq(projectId))
@@ -246,7 +252,8 @@ class PipelineBuildSummaryDao {
         }
         when (viewId) {
             PIPELINE_VIEW_FAVORITE_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(favorPipelines))
-            PIPELINE_VIEW_MY_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(authPipelines))
+            PIPELINE_VIEW_MY_PIPELINES -> if (userId != null) conditions.add(T_PIPELINE_INFO.CREATOR.eq(userId))
+            PIPELINE_VIEW_MY_LIST_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(authPipelines))
             PIPELINE_VIEW_ALL_PIPELINES -> {
                 // 查询所有流水线
             }
