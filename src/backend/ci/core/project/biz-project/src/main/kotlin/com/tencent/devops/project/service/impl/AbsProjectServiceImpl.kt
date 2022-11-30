@@ -452,14 +452,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         enabled: Boolean?,
-        unApproved: Boolean?
+        unApproved: Boolean
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
             // 是否需要toset
             val projects = getProjectFromAuth(userId, accessToken)
-            if (projects.isEmpty() && !unApproved!!) {
+            if (projects.isEmpty() && !unApproved) {
                 return emptyList()
             }
             val list = ArrayList<ProjectVO>()

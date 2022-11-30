@@ -57,7 +57,7 @@ class UserProjectResourceImpl @Autowired constructor(
         enabled: Boolean?,
         unApproved: Boolean?
     ): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId, accessToken, enabled, unApproved))
+        return Result(projectService.list(userId, accessToken, enabled, unApproved ?: false))
     }
 
     override fun listProjectsWithoutPermissions(

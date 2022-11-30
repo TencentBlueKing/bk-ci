@@ -120,7 +120,7 @@ interface ProjectService {
         userId: String,
         accessToken: String?,
         enabled: Boolean? = null,
-        unApproved: Boolean? = false
+        unApproved: Boolean
     ): List<ProjectVO>
 
     fun listProjectsWithoutPermissions(

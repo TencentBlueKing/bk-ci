@@ -177,12 +177,12 @@ class TxProjectServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         enabled: Boolean?,
-        unApproved: Boolean?
+        unApproved: Boolean
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
             val englishNames = getProjectFromAuth(userId, accessToken).toSet()
-            if (englishNames.isEmpty() && !unApproved!!) {
+            if (englishNames.isEmpty() && !unApproved) {
                 return emptyList()
             }
             val list = ArrayList<ProjectVO>()
@@ -193,7 +193,7 @@ class TxProjectServiceImpl @Autowired constructor(
                     }
             }
             // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
-            if (unApproved!!) {
+            if (unApproved) {
                 projectDao.listUnapprovedByUserId(
                     dslContext = dslContext,
                     userId = userId
