@@ -319,6 +319,13 @@ interface IGitService {
         tokenType: TokenTypeEnum
     ): Result<List<Commit>>
 
+    fun enableCi(
+        projectName: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        enable: Boolean ? = true
+    ): Result<Boolean>
+
     fun gitCreateFile(
         gitProjectId: String,
         token: String,
