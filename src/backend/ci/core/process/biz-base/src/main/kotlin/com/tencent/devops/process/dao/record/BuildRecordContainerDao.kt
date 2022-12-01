@@ -84,7 +84,7 @@ class BuildRecordContainerDao {
             startTime?.let { update.set(START_TIME, startTime) }
             endTime?.let { update.set(END_TIME, endTime) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
-            timeCost?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timeCost, false)) }
+            timeCost?.let { update.set(TIME_COST, JsonUtil.toJson(timeCost, false)) }
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
@@ -95,7 +95,7 @@ class BuildRecordContainerDao {
         }
     }
 
-    fun getRecords(
+    fun getRecord(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -112,6 +112,24 @@ class BuildRecordContainerDao {
                         .and(CONTAINER_ID.eq(containerId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).fetchOne(mapper)
+        }
+    }
+
+    fun getRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ): List<BuildRecordContainer> {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            return dslContext.selectFrom(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(BUILD_ID.eq(buildId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).orderBy(CONTAINER_ID.asc()).fetch(mapper)
         }
     }
 

@@ -93,23 +93,24 @@ class BuildRecordTaskDao {
         }
     }
 
-    fun getRecordsByContainerId(
+    fun getRecords(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         buildId: String,
-        containerId: String,
+        containerId: String?,
         executeCount: Int
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
-            return dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(
                     BUILD_ID.eq(buildId)
                         .and(PROJECT_ID.eq(projectId))
                         .and(PIPELINE_ID.eq(pipelineId))
-                        .and(CONTAINER_ID.eq(containerId))
                         .and(EXECUTE_COUNT.eq(executeCount))
-                ).orderBy(TASK_SEQ.asc()).fetch(mapper)
+                )
+            containerId?.let { select.and(CONTAINER_ID.eq(containerId)) }
+            return select.orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
 

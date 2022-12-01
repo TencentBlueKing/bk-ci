@@ -47,6 +47,7 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
+import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -61,6 +62,7 @@ class UpdateStateForStageCmdFinally(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
     private val stageBuildDetailService: StageBuildDetailService,
+    private val stageBuildRecordService: StageBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchQueueControl: DispatchQueueControl
@@ -288,6 +290,11 @@ class UpdateStateForStageCmdFinally(
             }
             val allStageStatus = stageBuildDetailService.updateStageStatus(
                 projectId = event.projectId, buildId = event.buildId, stageId = event.stageId,
+                buildStatus = commandContext.buildStatus
+            )
+            stageBuildRecordService.updateStageStatus(
+                projectId = event.projectId, pipelineId = event.buildId, buildId = event.buildId,
+                stageId = event.stageId, executeCount = commandContext.executeCount,
                 buildStatus = commandContext.buildStatus
             )
             pipelineRuntimeService.updateBuildHistoryStageState(

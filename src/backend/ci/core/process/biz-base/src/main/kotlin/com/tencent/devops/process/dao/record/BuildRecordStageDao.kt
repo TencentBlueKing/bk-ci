@@ -70,7 +70,8 @@ class BuildRecordStageDao {
         stageVar: Map<String, Any>,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
-        timestamps: List<BuildRecordTimeStamp>?
+        timestamps: List<BuildRecordTimeStamp>?,
+        timeCost: BuildRecordTimeCost?
     ) {
         with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
             val update = dslContext.update(this)
@@ -78,6 +79,7 @@ class BuildRecordStageDao {
             startTime?.let { update.set(START_TIME, startTime) }
             endTime?.let { update.set(END_TIME, endTime) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
+            timeCost?.let { update.set(TIME_COST, JsonUtil.toJson(timeCost, false)) }
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
@@ -103,6 +105,28 @@ class BuildRecordStageDao {
                         .and(PIPELINE_ID.eq(pipelineId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).orderBy(SEQ.asc()).fetch(mapper)
+        }
+    }
+
+    fun getRecordContainerVar(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        executeCount: Int
+    ): Map<String, Any>? {
+        with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
+            return dslContext.select(STAGE_VAR)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(STAGE_VAR.eq(stageId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).fetchOne(0, String::class.java)?.let {
+                    JsonUtil.getObjectMapper().readValue(it) as Map<String, Any>
+                }
         }
     }
 

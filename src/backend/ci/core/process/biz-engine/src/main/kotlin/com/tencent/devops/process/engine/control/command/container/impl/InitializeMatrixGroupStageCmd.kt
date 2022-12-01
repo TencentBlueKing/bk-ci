@@ -473,7 +473,7 @@ class InitializeMatrixGroupStageCmd(
                 pipelineContainerService.batchSave(transactionContext, buildContainerList)
                 pipelineTaskService.batchSave(transactionContext, buildTaskList)
                 recordContainer?.let {
-                    addBuildRecordToList(transactionContext, buildContainerList, recordContainer, matrixGroupId)
+                    saveBuildRecord(transactionContext, buildContainerList, it, recordTaskList, matrixGroupId)
                 }
             }
         } finally {
@@ -518,10 +518,11 @@ class InitializeMatrixGroupStageCmd(
         return buildContainerList.size
     }
 
-    private fun addBuildRecordToList(
+    private fun saveBuildRecord(
         transactionContext: DSLContext,
         buildContainerList: MutableList<PipelineBuildContainer>,
         recordContainer: BuildRecordContainer,
+        recordTaskList: List<BuildRecordTask>,
         matrixGroupId: String
     ) {
         containerBuildRecordService.batchSave(
@@ -544,8 +545,10 @@ class InitializeMatrixGroupStageCmd(
                     timestamps = emptyList(),
                     timeCost = null
                 )
-            }
+            },
+            recordTaskList
         )
+
     }
 
     private fun generateMatrixElements(
