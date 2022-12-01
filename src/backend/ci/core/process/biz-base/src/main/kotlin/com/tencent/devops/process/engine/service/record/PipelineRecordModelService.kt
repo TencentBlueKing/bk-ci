@@ -27,13 +27,26 @@
 
 package com.tencent.devops.process.engine.service.record
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.ID
+import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordPipelineDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
+import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.utils.KEY_CONTAINERS
+import com.tencent.devops.process.utils.KEY_ELEMENTS
+import com.tencent.devops.process.utils.KEY_GROUP_CONTAINERS
+import com.tencent.devops.process.utils.KEY_MATRIX_CONTROL_OPTION
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
+import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import com.tencent.devops.process.utils.KEY_STAGES
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -44,6 +57,7 @@ class PipelineRecordModelService @Autowired constructor(
     private val buildRecordStageDao: BuildRecordStageDao,
     private val buildRecordContainerDao: BuildRecordContainerDao,
     private val buildRecordTaskDao: BuildRecordTaskDao,
+    private val pipelineResDao: PipelineResDao,
     private val dslContext: DSLContext
 ) {
 
@@ -96,6 +110,23 @@ class PipelineRecordModelService @Autowired constructor(
             executeCount = executeCount
         )
         val stages = mutableListOf<Map<String, Any>>()
+        var pipelineBaseMap: Map<String, Any>? = null
+        // 判断流水线是否具有矩阵特性
+        val matrixContainerFlag = buildRecordContainers.indexOfFirst { it.matrixGroupFlag == true } >= 0
+        if (matrixContainerFlag) {
+            // 查出该次构建对应的流水线基本模型
+            val version = buildRecordPipeline.resourceVersion
+            val modelStr = pipelineResDao.getVersionModelString(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            ) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("$KEY_PROJECT_ID:$projectId,$KEY_PIPELINE_ID:$pipelineId,$KEY_VERSION:$version")
+            )
+            pipelineBaseMap = JsonUtil.toMap(modelStr)
+        }
         buildRecordStages.forEach { buildRecordStage ->
             val stageVarMap = buildRecordStage.stageVar
             val stageId = buildRecordStage.stageId
@@ -104,7 +135,8 @@ class PipelineRecordModelService @Autowired constructor(
                 buildRecordContainers = buildRecordContainers,
                 stageId = stageId,
                 buildRecordTasks = buildRecordTasks,
-                stageVarMap = stageVarMap
+                stageVarMap = stageVarMap,
+                pipelineBaseMap = pipelineBaseMap
             )
             stages.add(stageVarMap)
         }
@@ -112,54 +144,76 @@ class PipelineRecordModelService @Autowired constructor(
         return recordModelMap
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun handleStageRecordContainer(
         buildRecordContainers: List<BuildRecordContainer>,
         stageId: String,
         buildRecordTasks: List<BuildRecordTask>,
-        stageVarMap: MutableMap<String, Any>
+        stageVarMap: MutableMap<String, Any>,
+        pipelineBaseMap: Map<String, Any>? = null
     ) {
         val stageRecordContainers = buildRecordContainers.filter { it.stageId == stageId }
         val stageRecordTasks = buildRecordTasks.filter { it.stageId == stageId }
         val containers = mutableListOf<Map<String, Any>>()
-        stageRecordContainers.filter { it.matrixGroupFlag != true }.forEach { stageRecordContainer ->
+        stageRecordContainers.forEach { stageRecordContainer ->
             val containerVarMap = stageRecordContainer.containerVar
             val containerId = stageRecordContainer.containerId
             containerVarMap[ID] = containerId
             handleContainerRecordTask(stageRecordTasks, containerId, containerVarMap)
             val matrixGroupFlag = stageRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
+                val stageBaseMap = (pipelineBaseMap!![KEY_STAGES] as List<Map<String, Any>>).first { it[ID] == stageId }
+                val containerBaseMap = (stageBaseMap[KEY_CONTAINERS] as List<Map<String, Any>>).first {
+                    it[ID] == containerId
+                }.toMutableMap()
                 // 过滤出矩阵分裂出的job数据
                 val matrixRecordContainers = stageRecordContainers.filter { it.matrixGroupId == containerId }
                 val groupContainers = mutableListOf<Map<String, Any>>()
                 matrixRecordContainers.forEach { matrixRecordContainer ->
-                    val matrixContainerVarMap = matrixRecordContainer.containerVar
+                    // 生成矩阵job的变量模型
+                    var matrixContainerVarMap = matrixRecordContainer.containerVar
                     val matrixContainerId = matrixRecordContainer.containerId
                     matrixContainerVarMap[ID] = matrixContainerId
-                    handleContainerRecordTask(stageRecordTasks, matrixContainerId, matrixContainerVarMap)
+                    handleContainerRecordTask(
+                        stageRecordTasks = stageRecordTasks,
+                        containerId = matrixContainerId,
+                        containerVarMap = matrixContainerVarMap,
+                        containerBaseMap = containerBaseMap
+                    )
+                    containerBaseMap.remove(KEY_MATRIX_CONTROL_OPTION)
+                    containerBaseMap.remove(KEY_GROUP_CONTAINERS)
+                    matrixContainerVarMap = ModelUtils.generateBuildModelDetail(containerBaseMap, matrixContainerVarMap)
                     groupContainers.add(matrixContainerVarMap)
                 }
-                containerVarMap["groupContainers"] = groupContainers
+                containerVarMap[KEY_GROUP_CONTAINERS] = groupContainers
             }
             containers.add(containerVarMap)
         }
-        stageVarMap["containers"] = containers
+        stageVarMap[KEY_CONTAINERS] = containers
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun handleContainerRecordTask(
         stageRecordTasks: List<BuildRecordTask>,
         containerId: String,
-        containerVarMap: MutableMap<String, Any>
+        containerVarMap: MutableMap<String, Any>,
+        containerBaseMap: Map<String, Any>? = null
     ) {
         // 过滤出job下的task变量数据
         val containerRecordTasks = stageRecordTasks.filter { it.containerId == containerId }
         val tasks = mutableListOf<Map<String, Any>>()
-        containerRecordTasks.forEach { containerRecordTask ->
-            val taskVarMap = containerRecordTask.taskVar
+        containerRecordTasks.forEachIndexed { index, containerRecordTask ->
+            var taskVarMap = containerRecordTask.taskVar
             val taskId = containerRecordTask.taskId
             taskVarMap[ID] = taskId
+            containerBaseMap?.let {
+                // 生成矩阵task的变量模型
+                val taskBaseMap = (it[KEY_ELEMENTS] as List<Map<String, Any>>)[index].toMutableMap()
+                taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap, taskVarMap)
+            }
             tasks.add(taskVarMap)
         }
         // 将转换后的job变量数据放入stage中
-        containerVarMap["elements"] = tasks
+        containerVarMap[KEY_ELEMENTS] = tasks
     }
 }
