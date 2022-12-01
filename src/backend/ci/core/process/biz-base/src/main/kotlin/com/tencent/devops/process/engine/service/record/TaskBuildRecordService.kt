@@ -61,10 +61,6 @@ class TaskBuildRecordService(
     private val containerBuildRecordService: ContainerBuildRecordService
 ) {
 
-    fun batchSave(transactionContext: DSLContext?, taskList: List<BuildRecordTask>) {
-        return buildRecordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
-    }
-
 //    fun batchUpdate(transactionContext: DSLContext?, taskList: List<BuildRecordTask>) {
 //        return buildRecordTaskDao.batchUpdate(transactionContext ?: dslContext, taskList)
 //    }

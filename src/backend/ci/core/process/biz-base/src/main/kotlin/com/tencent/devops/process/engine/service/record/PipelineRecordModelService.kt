@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service.record
+package com.tencent.devops.process.engine.service.record
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.ID
@@ -100,12 +100,13 @@ class PipelineRecordModelService @Autowired constructor(
             buildId = buildId,
             executeCount = executeCount
         )
-        // 获取task级别变量数据
+        // 获取所有task级别变量数据
         val buildRecordTasks = buildRecordTaskDao.getRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
+            containerId = null,
             executeCount = executeCount
         )
         val stages = mutableListOf<Map<String, Any>>()

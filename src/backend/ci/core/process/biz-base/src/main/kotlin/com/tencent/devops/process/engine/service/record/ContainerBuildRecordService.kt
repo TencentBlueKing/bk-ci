@@ -42,6 +42,7 @@ import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
 import com.tencent.devops.process.service.StageTagService
@@ -82,8 +83,13 @@ class ContainerBuildRecordService(
         )
     }
 
-    fun batchSave(transactionContext: DSLContext?, containerList: List<BuildRecordContainer>) {
-        return buildRecordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
+    fun batchSave(
+        transactionContext: DSLContext?,
+        containerList: List<BuildRecordContainer>,
+        taskList: List<BuildRecordTask>
+    ) {
+        buildRecordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
+        buildRecordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
     }
 
 //    fun batchUpdate(transactionContext: DSLContext?, containerList: List<BuildRecordContainer>) {

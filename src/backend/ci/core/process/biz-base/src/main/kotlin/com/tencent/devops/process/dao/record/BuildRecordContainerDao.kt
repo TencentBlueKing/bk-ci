@@ -84,7 +84,7 @@ class BuildRecordContainerDao {
             startTime?.let { update.set(START_TIME, startTime) }
             endTime?.let { update.set(END_TIME, endTime) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
-            timeCost?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timeCost, false)) }
+            timeCost?.let { update.set(TIME_COST, JsonUtil.toJson(timeCost, false)) }
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
