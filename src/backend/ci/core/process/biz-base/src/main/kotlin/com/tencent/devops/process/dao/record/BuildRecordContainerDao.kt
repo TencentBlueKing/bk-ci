@@ -129,7 +129,7 @@ class BuildRecordContainerDao {
                         .and(PROJECT_ID.eq(projectId))
                         .and(PIPELINE_ID.eq(pipelineId))
                         .and(EXECUTE_COUNT.eq(executeCount))
-                ).orderBy(SEQ.asc()).fetch(mapper)
+                ).orderBy(CONTAINER_ID.asc()).fetch(mapper)
         }
     }
 

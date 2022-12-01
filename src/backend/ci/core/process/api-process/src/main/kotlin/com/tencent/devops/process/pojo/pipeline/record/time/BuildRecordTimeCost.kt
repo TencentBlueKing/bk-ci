@@ -30,7 +30,7 @@ package com.tencent.devops.process.pojo.pipeline.record.time
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("构建详情记录-作业容器")
+@ApiModel("各项执行耗时")
 data class BuildRecordTimeCost(
     @ApiModelProperty("系统耗时", required = true)
     var systemCost: Long = 0,

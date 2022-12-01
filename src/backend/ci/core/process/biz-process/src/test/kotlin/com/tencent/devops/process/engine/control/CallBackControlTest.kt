@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -89,6 +90,7 @@ class CallBackControlTest : TestBase() {
             latestVersion = 1,
             lastModifyUser = "yongyiduan",
             executeTime = 100,
+            timeCost = BuildRecordTimeCost(),
             buildMsg = "xxx",
             material = null,
             remark = "111",

@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -70,6 +71,8 @@ data class ModelDetail(
     val lastModifyUser: String?,
     @ApiModelProperty("执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
     val executeTime: Long = 0,
+    @ApiModelProperty("各项耗时", required = true)
+    val timeCost: BuildRecordTimeCost,
     @ApiModelProperty("触发审核人列表", required = false)
     val triggerReviewers: List<String>? = null,
     @ApiModelProperty("查询的执行次数", required = false)

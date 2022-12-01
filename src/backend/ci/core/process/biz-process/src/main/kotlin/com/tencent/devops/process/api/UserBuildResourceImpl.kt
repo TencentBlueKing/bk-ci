@@ -266,7 +266,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getBuildDetailByExecuteCount(
+    override fun getBuildRecordByExecuteCount(
         userId: String,
         projectId: String,
         pipelineId: String,
