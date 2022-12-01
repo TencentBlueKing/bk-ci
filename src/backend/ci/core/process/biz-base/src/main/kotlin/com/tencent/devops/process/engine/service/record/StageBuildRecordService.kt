@@ -37,11 +37,13 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
@@ -59,8 +61,9 @@ import java.time.LocalDateTime
 class StageBuildRecordService(
     private val dslContext: DSLContext,
     private val buildRecordStageDao: BuildRecordStageDao,
-    private val buildDetailDao: BuildDetailDao,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val stageTagService: StageTagService,
+    private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation
 ) {
@@ -77,9 +80,231 @@ class StageBuildRecordService(
             "[$buildId]|update_stage_status|stageId=$stageId|" +
                 "status=$buildStatus|executeCount=$executeCount"
         )
+
+        val stageVar = mutableMapOf<String, Any>()
+        if (buildStatus.isRunning() && stageVar[Stage::startEpoch.name] == null) {
+            stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
+        } else if (buildStatus.isFinish() && stageVar[Stage::startEpoch.name] != null) {
+            stageVar[Stage::elapsed.name] =
+                System.currentTimeMillis() - stageVar[Stage::startEpoch.name].toString().toLong()
+        }
+        stageVar[Stage::status.name] = buildStatus.name
+
+        return updateContainerByMap(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            executeCount = executeCount,
+            stageVar = stageVar,
+            operation = "updateStageStatus#$stageId",
+            buildStatus = buildStatus
+        )
+    }
+
+    fun stageSkip(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        executeCount: Int
+    ): List<BuildStageStatus> {
+        logger.info("[$buildId]|stage_skip|stageId=$stageId")
+        // TODO 刷新所有container为SKIP
+        return updateContainerByMap(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            executeCount = executeCount,
+            stageVar = mapOf(
+                Stage::status.name to BuildStatus.RUNNING.name
+            ),
+            operation = "stageSkip#$stageId",
+            buildStatus = BuildStatus.RUNNING
+        )
+    }
+
+    fun stagePause(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        executeCount: Int,
+        controlOption: PipelineBuildStageControlOption,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ): List<BuildStageStatus> {
+        logger.info("[$buildId]|stage_pause|stageId=$stageId")
+
+        val stageVar = mutableMapOf<String, Any>()
+        stageVar[Stage::status.name] = BuildStatus.SKIP.name
+        stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
+        stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
+        stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
+        checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
+        checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
+
+        return updateContainerByMap(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            executeCount = executeCount,
+            stageVar = stageVar,
+            operation = "stagePause#$stageId",
+            buildStatus = BuildStatus.REVIEWING,
+            reviewers = checkIn?.groupToReview()?.reviewers
+        )
+    }
+
+    fun stageCancel(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        executeCount: Int,
+        controlOption: PipelineBuildStageControlOption,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ): List<BuildStageStatus> {
+        logger.info("[$buildId]|stage_cancel|stageId=$stageId")
+
+        val stageVar = mutableMapOf<String, Any>()
+        stageVar[Stage::status.name] = BuildStatus.SKIP.name
+        stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
+        stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
+        checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
+        checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
+
+        return updateContainerByMap(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            executeCount = executeCount,
+            stageVar = stageVar,
+            operation = "stageCancel#$stageId",
+            buildStatus = BuildStatus.RUNNING
+        )
+    }
+
+    fun stageCheckQuality(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        executeCount: Int,
+        controlOption: PipelineBuildStageControlOption,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ): List<BuildStageStatus> {
+        logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
+        val (oldBuildStatus, newBuildStatus) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
+            checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+            Pair(BuildStatus.RUNNING, BuildStatus.REVIEWING)
+        } else {
+            Pair(BuildStatus.REVIEWING, BuildStatus.RUNNING)
+        }
+        val stageVar = mutableMapOf<String, Any>()
+        stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
+        checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
+        checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
+
+        val allStageStatus = updateContainerByMap(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            executeCount = executeCount,
+            stageVar = stageVar,
+            operation = "stageCheckQuality#$stageId",
+            buildStatus = BuildStatus.RUNNING
+        )
+        pipelineBuildDao.updateStatus(dslContext, projectId, buildId, oldBuildStatus, newBuildStatus)
+        return allStageStatus
+    }
+
+    fun stageReview(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        executeCount: Int,
+        controlOption: PipelineBuildStageControlOption,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ): List<BuildStageStatus> {
+        logger.info("[$buildId]|stage_review|stageId=$stageId")
+
+        val stageVar = mutableMapOf<String, Any>()
+        stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
+        checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
+        checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
+
+        return updateContainerByMap(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            executeCount = executeCount,
+            stageVar = stageVar,
+            operation = "stageReview#$stageId",
+            buildStatus = BuildStatus.STAGE_SUCCESS
+        )
+    }
+
+    fun stageStart(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        executeCount: Int,
+        controlOption: PipelineBuildStageControlOption,
+        checkIn: StagePauseCheck?,
+        checkOut: StagePauseCheck?
+    ): List<BuildStageStatus> {
+        logger.info("[$buildId]|stage_start|stageId=$stageId")
+
+        val stageVar = mutableMapOf<String, Any>()
+        stageVar[Stage::status.name] = BuildStatus.QUEUE.name
+        stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
+        checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
+        checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
+
+        return updateContainerByMap(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            executeCount = executeCount,
+            stageVar = stageVar,
+            operation = "stageStart#$stageId",
+            buildStatus = BuildStatus.RUNNING
+        )
+    }
+
+    fun updateContainerByMap(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        executeCount: Int,
+        stageVar: Map<String, Any>,
+        buildStatus: BuildStatus,
+        operation: String,
+        reviewers: List<String>? = null,
+        errorMsg: String? = null,
+        startTime: LocalDateTime? = null,
+        endTime: LocalDateTime? = null,
+        timestamps: List<BuildRecordTimeStamp>? = null,
+        timeCost: BuildRecordTimeCost? = null
+    ): List<BuildStageStatus> {
+        val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         var allStageStatus: List<BuildStageStatus>? = null
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
+            watcher.start("getRecords")
             val recordStages = buildRecordStageDao.getRecords(
                 dslContext = context,
                 projectId = projectId,
@@ -93,15 +318,13 @@ class StageBuildRecordService(
                 )
                 return@transaction
             }
-            val stageVar = stage.stageVar
-            if (buildStatus.isRunning() && stageVar[Stage::startEpoch.name] == null) {
-                stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
-            } else if (buildStatus.isFinish() && stageVar[Stage::startEpoch.name] != null) {
-                stageVar[Stage::elapsed.name] =
-                    System.currentTimeMillis() - stageVar[Stage::startEpoch.name].toString().toLong()
-            }
-            stageVar[Stage::status.name] = buildStatus.name
-            allStageStatus = fetchHistoryStageStatus(recordStages, buildStatus)
+            stage.stageVar.putAll(stageVar)
+            allStageStatus = fetchHistoryStageStatus(
+                recordStages = recordStages,
+                buildStatus = buildStatus,
+                reviewers = reviewers
+            )
+            watcher.start("updateRecord")
             buildRecordStageDao.updateRecord(
                 dslContext = context,
                 projectId = projectId,
@@ -110,16 +333,18 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                startTime = null,
-                endTime = null,
-                timestamps = null,
-                timeCost = null
+                startTime = startTime,
+                endTime = endTime,
+                timestamps = timestamps,
+                timeCost = timeCost
             )
+            watcher.start("updated")
         }
+        watcher.stop()
         return allStageStatus ?: emptyList()
     }
 
-    fun fetchHistoryStageStatus(
+    private fun fetchHistoryStageStatus(
         recordStages: List<BuildRecordStage>,
         buildStatus: BuildStatus,
         reviewers: List<String>? = null,
