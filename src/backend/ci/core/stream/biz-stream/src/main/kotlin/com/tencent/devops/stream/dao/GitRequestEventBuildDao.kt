@@ -572,7 +572,7 @@ class GitRequestEventBuildDao {
             if (!pipelineIds.isNullOrEmpty()) {
                 dsl.and(PIPELINE_ID.`in`(pipelineIds))
             }
-            if (buildIds != null) {
+            if (!buildIds.isNullOrEmpty()) {
                 dsl.and(BUILD_ID.`in`(buildIds))
             }
             return dsl.fetchOne(0, Int::class.java)!!
@@ -630,7 +630,7 @@ class GitRequestEventBuildDao {
             if (!pipelineIds.isNullOrEmpty()) {
                 dsl.and(PIPELINE_ID.`in`(pipelineIds))
             }
-            if (buildIds != null) {
+            if (!buildIds.isNullOrEmpty()) {
                 dsl.and(BUILD_ID.`in`(buildIds))
             }
             return dsl
