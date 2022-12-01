@@ -103,7 +103,11 @@ allprojects {
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
             }
-            dependency("org.springframework.cloud:spring-cloud-kubernetes-client-discovery:2.0.6")
+            // TODO 等后面spring cloud版本升级上来就可以去掉
+            dependency(
+                "org.springframework.cloud:spring-cloud-kubernetes-client-discovery:" +
+                        "${Versions.KubernetesDiscovery}"
+            )
         }
     }
 
@@ -127,8 +131,5 @@ allprojects {
                 allVariants { withDependencies { clear() } }
             }
         }
-        // 强制用1.5.32编译
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.32")
-        implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.32")
     }
 }
