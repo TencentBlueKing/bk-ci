@@ -79,20 +79,6 @@ class MicroServiceTarget<T> constructor(
         return instances[RandomUtils.nextInt(0, instances.size)]
     }
 
-    /**
-     * 判断是否在集群中
-     */
-    private fun inNamespace(metadata: Map<String, String>, namespace: String): Boolean {
-        for (entry in metadata) {
-            if (entry.key.contains("namespace")) {
-                if (entry.value == namespace) {
-                    return true
-                }
-            }
-        }
-        return false
-    }
-
     override fun apply(input: RequestTemplate?): Request {
         if (input!!.url().indexOf("http") != 0) {
             input.target(url())
