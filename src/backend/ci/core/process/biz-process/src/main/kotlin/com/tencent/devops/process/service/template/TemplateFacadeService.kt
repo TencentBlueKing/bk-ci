@@ -1894,7 +1894,6 @@ class TemplateFacadeService @Autowired constructor(
         )
         logger.info("serviceCountTemplateInstances count: [$count]")
         return count
-        )
     }
 
     fun serviceCountTemplateInstancesDetail(projectId: String, templateIds: Collection<String>): Map<String, Int> {
