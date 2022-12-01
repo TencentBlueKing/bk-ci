@@ -1474,6 +1474,18 @@ class PipelineBuildFacadeService(
         return buildHistories
     }
 
+    fun getBuilds(
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?,
+        checkPermission: Boolean
+    ): List<String> {
+        return pipelineRuntimeService.getBuilds(
+            projectId, pipelineId, buildStatus
+        )
+    }
+
     fun getHistoryBuild(
         userId: String?,
         projectId: String,

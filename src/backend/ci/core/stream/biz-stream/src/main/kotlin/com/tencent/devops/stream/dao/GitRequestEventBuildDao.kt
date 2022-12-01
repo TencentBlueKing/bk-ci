@@ -45,7 +45,7 @@ import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-@Suppress("ComplexCondition")
+@Suppress("ComplexCondition", "ComplexMethod")
 @Repository
 class GitRequestEventBuildDao {
     fun save(
@@ -501,7 +501,8 @@ class GitRequestEventBuildDao {
         buildStatus: Set<String>?,
         limit: Int,
         offset: Int,
-        pipelineIds: Set<String>?
+        pipelineIds: Set<String>?,
+        buildIds: Set<String>?
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return getRequestEventBuildListMultiple(
@@ -514,7 +515,8 @@ class GitRequestEventBuildDao {
                 event = event,
                 commitMsg = commitMsg,
                 buildStatus = buildStatus,
-                pipelineIds = pipelineIds
+                pipelineIds = pipelineIds,
+                buildIds = buildIds
             ).orderBy(EVENT_ID.desc(), CREATE_TIME.desc()).limit(limit).offset(offset).fetch()
         }
     }
@@ -529,7 +531,8 @@ class GitRequestEventBuildDao {
         event: Set<String>?,
         commitMsg: String?,
         buildStatus: Set<String>?,
-        pipelineIds: Set<String>?
+        pipelineIds: Set<String>?,
+        buildIds: Set<String>?
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectCount().from(this)
@@ -569,6 +572,9 @@ class GitRequestEventBuildDao {
             if (!pipelineIds.isNullOrEmpty()) {
                 dsl.and(PIPELINE_ID.`in`(pipelineIds))
             }
+            if (!buildIds.isNullOrEmpty()) {
+                dsl.and(BUILD_ID.`in`(buildIds))
+            }
             return dsl.fetchOne(0, Int::class.java)!!
         }
     }
@@ -583,7 +589,8 @@ class GitRequestEventBuildDao {
         event: Set<String>?,
         commitMsg: String?,
         buildStatus: Set<String>?,
-        pipelineIds: Set<String>?
+        pipelineIds: Set<String>?,
+        buildIds: Set<String>?
     ): SelectConditionStep<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
@@ -622,6 +629,9 @@ class GitRequestEventBuildDao {
             }
             if (!pipelineIds.isNullOrEmpty()) {
                 dsl.and(PIPELINE_ID.`in`(pipelineIds))
+            }
+            if (!buildIds.isNullOrEmpty()) {
+                dsl.and(BUILD_ID.`in`(buildIds))
             }
             return dsl
         }
