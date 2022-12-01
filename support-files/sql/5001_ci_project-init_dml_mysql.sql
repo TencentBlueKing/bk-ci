@@ -181,7 +181,7 @@ REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESS
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('7d8f2d20b939448f91550967d5ff63b6', '2101905', '01', '流水线：暂停的流水线已开始运行', 'Pipeline:  Pipeline: puase pipeline running now');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('4e6d9a9c3c874c16b2fcff32b6a731fd', '2101906', '01', '流水线：{0} element大小越界', 'Pipeline:  Pipeline:  {0} element size too long');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('894102da867c431baf9fca6bfd6bc640', '2101907', '01', '流水线: job非完成态，不能进行重试', 'Pipeline:  job is running, forbid retry');
-
+REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('d0ecbe35f50f477e969b093b4a4bdcec', '2101911', '01', '流水线: stage非失败状态，不能进行重试', 'Pipeline:  stage is not failed, forbid retry');
 
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('a1d8bb8bc3e54b0daaf6d22daef17650', '2101908', '01', '流水线：质量红线(准入)配置有误：Fail to find quality gate intercept element', 'Pipeline: The quality red line (access) is incorrectly configured: Fail to find quality gate intercept element');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('d1c9fa258d1248e98d5f43251db9df45', '2101909', '01', '流水线：质量红线(准出)检测失败', 'Pipeline: quality red line (quasi-exit) detection failed');
