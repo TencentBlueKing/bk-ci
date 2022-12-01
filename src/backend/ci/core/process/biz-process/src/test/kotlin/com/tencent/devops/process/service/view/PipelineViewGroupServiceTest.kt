@@ -779,8 +779,16 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             val pvCopy = pv.copy()
             pvCopy.viewType = PipelineViewType.DYNAMIC
             every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
+            every { redisOperation.delete(any() as String) } returns Unit
+            every {
+                self["initDynamicViewGroup"](
+                    any() as TPipelineViewRecord,
+                    any() as String,
+                    anyDslContext()
+                )
+            } returns emptyList<String>()
             self.bulkRemove("test", "test", br).let {
-                Assertions.assertEquals(it, false)
+                Assertions.assertEquals(it, true)
             }
         }
 
