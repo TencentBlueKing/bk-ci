@@ -425,7 +425,7 @@ class PipelineViewGroupService @Autowired constructor(
                 .writerFor(object : TypeReference<List<PipelineViewFilter>>() {})
                 .writeValueAsString(pipelineView.filters)
             allPipelineInfoMap.values
-                .filter { pipelineViewService.matchView(previewCondition, it) }
+                .filter { it.delete == false && pipelineViewService.matchView(previewCondition, it) }
                 .map { it.pipelineId }
         } else {
             pipelineView.pipelineIds?.filter { allPipelineInfoMap.containsKey(it) } ?: emptyList()
