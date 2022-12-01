@@ -139,7 +139,7 @@ class PipelineRecordModelService @Autowired constructor(
             )
             stages.add(stageVarMap)
         }
-        recordModelMap["stages"] = stages
+        recordModelMap[KEY_STAGES] = stages
         return recordModelMap
     }
 
