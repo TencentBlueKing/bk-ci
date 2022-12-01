@@ -609,11 +609,6 @@ class PipelineViewGroupService @Autowired constructor(
             projectId = projectId,
             viewId = viewId
         ) ?: return false
-        if (view.viewType == PipelineViewType.DYNAMIC) {
-            redisOperation.delete(firstInitMark(projectId, viewId))
-            initDynamicViewGroup(view, userId, dslContext)
-            return true
-        }
         val isProjectManager = checkPermission(userId, projectId)
         if (isProjectManager && !view.isProject && view.createUser != userId) {
             logger.warn("bulkRemove , $userId is ProjectManager , but can`t remove other view")
