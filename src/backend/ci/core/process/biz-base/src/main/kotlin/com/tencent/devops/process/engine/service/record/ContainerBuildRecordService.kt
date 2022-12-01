@@ -251,7 +251,7 @@ class ContainerBuildRecordService(
             startTime = LocalDateTime.now(),
             operation = "containerSkip#$containerId"
         )
-        buildRecordTaskDao.getRecordsByContainerId(
+        buildRecordTaskDao.getRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,

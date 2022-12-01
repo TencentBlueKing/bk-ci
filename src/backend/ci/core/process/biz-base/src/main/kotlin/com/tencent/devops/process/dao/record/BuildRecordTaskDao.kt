@@ -34,6 +34,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskR
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
@@ -93,23 +94,23 @@ class BuildRecordTaskDao {
         }
     }
 
-    fun getRecordsByContainerId(
+    fun getRecords(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         buildId: String,
-        containerId: String,
-        executeCount: Int
+        executeCount: Int,
+        containerId: String? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(BUILD_ID.eq(buildId))
+            conditions.add(EXECUTE_COUNT.eq(executeCount))
+            containerId?.let { conditions.add(CONTAINER_ID.eq(containerId)) }
             return dslContext.selectFrom(this)
-                .where(
-                    BUILD_ID.eq(buildId)
-                        .and(PROJECT_ID.eq(projectId))
-                        .and(PIPELINE_ID.eq(pipelineId))
-                        .and(CONTAINER_ID.eq(containerId))
-                        .and(EXECUTE_COUNT.eq(executeCount))
-                ).orderBy(TASK_SEQ.asc()).fetch(mapper)
+                .where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
 

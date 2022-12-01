@@ -95,7 +95,7 @@ class BuildRecordContainerDao {
         }
     }
 
-    fun getRecords(
+    fun getRecord(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -112,6 +112,24 @@ class BuildRecordContainerDao {
                         .and(CONTAINER_ID.eq(containerId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).fetchOne(mapper)
+        }
+    }
+
+    fun getRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ): List<BuildRecordContainer> {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            return dslContext.selectFrom(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).orderBy(SEQ.asc()).fetch(mapper)
         }
     }
 
