@@ -174,6 +174,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         val projectName = resourceUpdateInfo.projectUpdateInfo.projectName
         val userId = resourceUpdateInfo.userId
         val approvalStatus = projectInfo.approvalStatus
+        val relationId = projectInfo.relationId
         val reason = resourceUpdateInfo.projectUpdateInfo.description
         // 数据库中的最大可授权人员范围
         val dbSubjectscopes = JsonUtil.to(
@@ -245,13 +246,16 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
                 if (approvalStatus != ApproveStatus.CREATE_APPROVED.status) {
                     throw OperationException("Modifications must be made through the bkci client！")
                 }
-                updateManager(
-                    projectCode = projectCode,
-                    projectName = projectName,
-                    userId = userId,
-                    iamSubjectScopes = iamSubjectScopes,
-                    relationId = projectInfo.relationId
-                )
+                // 若relationId为空，则表示并没有在Iam那边注册分级管理员，那么不需要去修改分级管理员
+                if (!relationId.isNullOrEmpty()) {
+                    updateManager(
+                        projectCode = projectCode,
+                        projectName = projectName,
+                        userId = userId,
+                        iamSubjectScopes = iamSubjectScopes,
+                        relationId = projectInfo.relationId
+                    )
+                }
             }
         }
     }
