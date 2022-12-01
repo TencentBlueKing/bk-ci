@@ -24,6 +24,7 @@ import (
 	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
 	"github.com/Tencent/bk-ci/src/booster/server/config"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/manager/normal"
 	rsc "github.com/Tencent/bk-ci/src/booster/server/pkg/resource"
 	op "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator/k8s"
@@ -32,7 +33,7 @@ import (
 )
 
 //DefaultNamespace define default namespace for resourcemanager
-const DefaultNamespace = "disttask"
+//const DefaultNamespace = "disttask"
 
 // NewResourceManager get a new container resource manager.
 func NewResourceManager(
@@ -403,12 +404,22 @@ func (rm *resourceManager) recover() error {
 
 	rm.registeredResourceMap = make(map[string]*resource, 1000)
 	for _, r := range rl {
+		if rm.conf.Operator == config.CRMOperatorK8S && rm.conf.InstanceType != nil {
+			isBelongToRm := false
+			for _, ist := range rm.conf.InstanceType {
+				if ist.Group == r.param.City && ist.Platform == r.param.Platform {
+					isBelongToRm = true
+				}
+			}
+			if !isBelongToRm {
+				continue
+			}
+		}
 		rm.registeredResourceMap[r.resourceID] = r
 
 		if r.noReadyInstance <= 0 {
 			continue
 		}
-
 		// recover the no-ready records
 		rm.nodeInfoPool.RecoverNoReadyBlock(r.resourceBlockKey, r.noReadyInstance)
 		blog.Infof("crm: recover no-ready-instance(%d) from resource(%s)", r.noReadyInstance, r.resourceID)
@@ -418,13 +429,10 @@ func (rm *resourceManager) recover() error {
 }
 
 func (rm *resourceManager) sync() {
-	if rm.conf.BcsNamespace == "" {
-		rm.conf.BcsNamespace = DefaultNamespace
-	}
 
 	nodeInfoList, err := rm.operator.GetResource(rm.conf.BcsClusterID)
 	if err != nil {
-		blog.Errorf("crm: sync resource failed: %v", err)
+		blog.Errorf("crm: sync resource failed, clusterId(%s): %v", rm.conf.BcsClusterID, err)
 		return
 	}
 
@@ -670,8 +678,8 @@ func (rm *resourceManager) getServiceInfo(resourceID, user string) (*op.ServiceI
 	}
 	info, err := rm.operator.GetServerStatus(rm.conf.BcsClusterID, rm.handlerMap[user].GetNamespace(), targetID)
 	if err != nil {
-		blog.Errorf("crm: get service info for resource(%s) target(%s) user(%s) failed: %v",
-			resourceID, targetID, user, err)
+		blog.Errorf("crm: get service info for resource(%s) target(%s) user(%s) namespace(%s) failed: %v",
+			resourceID, targetID, user, rm.handlerMap[user].GetNamespace(), err)
 		return nil, err
 	}
 
@@ -949,7 +957,7 @@ func (rm *resourceManager) release(resourceID, user string) error {
 
 	r, err := rm.getResources(resourceID)
 	if err != nil {
-		blog.Errorf("crm: try releasing service, get resource(%s) for user(%s) failed: %v",
+		blog.Warnf("crm: try releasing service, get resource(%s) for user(%s) failed: %v",
 			resourceID, user, err)
 		return err
 	}
@@ -1151,10 +1159,13 @@ func (hwu *handlerWithUser) GetNamespace() string {
 	if hwu.mgr.conf.BcsNamespace != "" {
 		return hwu.mgr.conf.BcsNamespace
 	}
-	return DefaultNamespace
+	return hwu.user
 }
 
 func (hwu *handlerWithUser) resourceID(id string) string {
+	if normal.IsOldTaskType(id) { //old task Id
+		return strings.ReplaceAll(strings.ToLower(fmt.Sprintf("%s-%s", hwu.user, id)), "_", "-")
+	}
 	return strings.ReplaceAll(strings.ToLower(id), "_", "-")
 }
 
