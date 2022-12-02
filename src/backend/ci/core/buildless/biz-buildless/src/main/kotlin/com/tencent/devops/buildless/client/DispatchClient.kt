@@ -127,7 +127,6 @@ class DispatchClient @Autowired constructor(
                 )
                 .build()
 
-
             logger.info("Start refresh buildLess status $url")
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
