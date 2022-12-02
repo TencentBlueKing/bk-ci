@@ -99,6 +99,6 @@ class BuildLessConfig {
     @Value("\${containerPool.baseImage:blueking/bk-ci}")
     var containerPoolBaseImage: String = "blueking/bk-ci" // 容器池默认镜像
 
-    @Value("\${gatewayHeaderTag}")
+    @Value("\${gatewayHeaderTag:#{null}}")
     var gatewayHeaderTag: String? = null
 }
