@@ -27,6 +27,7 @@
 
 package com.tencent.devops.buildless.client
 
+import com.tencent.devops.buildless.config.BuildLessConfig
 import com.tencent.devops.buildless.pojo.BuildLessTask
 import com.tencent.devops.buildless.utils.CommonUtils
 import com.tencent.devops.buildless.utils.SystemInfoUtil
@@ -36,7 +37,6 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
@@ -51,7 +51,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class DispatchClient @Autowired constructor(
-    private val client: Client,
+    private val buildLessConfig: BuildLessConfig,
     private val commonConfig: CommonConfig,
     private val bkTag: BkTag
 ) {
@@ -64,7 +64,7 @@ class DispatchClient @Autowired constructor(
             val request = Request
                 .Builder()
                 .url(url)
-                .headers(Headers.of(mapOf(AUTH_HEADER_GATEWAY_TAG to bkTag.getLocalTag())))
+                .headers(Headers.of(makeHeaders()))
                 .put(RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
                     "")
@@ -120,7 +120,7 @@ class DispatchClient @Autowired constructor(
             val request = Request
                 .Builder()
                 .url(url)
-                .headers(Headers.of(mapOf(AUTH_HEADER_GATEWAY_TAG to bkTag.getLocalTag())))
+                .headers(Headers.of(makeHeaders()))
                 .post(RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
                     JsonUtil.toJson(dockerIpInfoVO))
@@ -128,15 +128,15 @@ class DispatchClient @Autowired constructor(
                 .build()
 
 
-            logger.info("Start refresh buildLess status $path")
+            logger.info("Start refresh buildLess status $url")
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("Refresh buildLess status $path fail. $responseContent")
+                    logger.error("Refresh buildLess status $url fail. $responseContent")
                     throw TaskExecuteException(
                         errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                         errorType = ErrorType.SYSTEM,
-                        errorMsg = "Refresh buildLess status $path fail")
+                        errorMsg = "Refresh buildLess status $url fail")
                 }
                 logger.info("End refreshDockerIpStatus.")
             }
@@ -163,6 +163,15 @@ class DispatchClient @Autowired constructor(
         } else {
             "http://$server/${path.removePrefix("/")}"
         }
+    }
+
+    private fun makeHeaders(): Map<String, String?> {
+        val gatewayHeaderTag = if (buildLessConfig.gatewayHeaderTag == null) {
+            bkTag.getLocalTag()
+        } else {
+            buildLessConfig.gatewayHeaderTag
+        }
+        return mapOf(AUTH_HEADER_GATEWAY_TAG to gatewayHeaderTag)
     }
 
     companion object {
