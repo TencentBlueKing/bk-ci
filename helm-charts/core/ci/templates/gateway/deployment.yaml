@@ -88,7 +88,6 @@ spec:
                   - sh
                   - '-c'
                   - /usr/sbin/nginx -s quit && sleep 3
-          terminationgraceperiodseconds: 35
           livenessProbe:
             exec:
               command:
@@ -111,4 +110,5 @@ spec:
             - configMapRef:
                 name: {{ include "bkci.names.fullname" . }}-gateway
           workingDir: /usr/local/openresty/nginx/
+      terminationgraceperiodseconds: 35
 {{- end -}}
