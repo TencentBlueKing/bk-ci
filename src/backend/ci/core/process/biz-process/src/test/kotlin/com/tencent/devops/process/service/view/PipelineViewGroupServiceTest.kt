@@ -774,19 +774,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         }
 
         @Test
-        @DisplayName("view不为空, 但是为动态组")
-        fun test_2() {
-            val pvCopy = pv.copy()
-            pvCopy.viewType = PipelineViewType.DYNAMIC
-            every { pipelineViewDao.get(anyDslContext(), any(), any()) } returns pvCopy
-            self.bulkRemove("test", "test", br).let {
-                Assertions.assertEquals(it, false)
-            }
-        }
-
-        @Test
         @DisplayName("view不为空 ,静态组, 项目管理员 , 不是项目流水线组 , 创建者不是自己")
-        fun test_3() {
+        fun test_2() {
             val pvCopy = pv.copy()
             pvCopy.viewType = PipelineViewType.STATIC
             pvCopy.isProject = false
@@ -805,7 +794,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
 
         @Test
         @DisplayName("view不为空 ,静态组, 不是项目管理员 , 是项目流水线组")
-        fun test_4() {
+        fun test_3() {
             val pvCopy = pv.copy()
             pvCopy.viewType = PipelineViewType.STATIC
             pvCopy.isProject = true
@@ -824,7 +813,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
 
         @Test
         @DisplayName("view不为空 ,静态组, 是项目管理员 , 是项目流水线组")
-        fun test_5() {
+        fun test_4() {
             val pvCopy = pv.copy()
             pvCopy.viewType = PipelineViewType.STATIC
             pvCopy.isProject = true

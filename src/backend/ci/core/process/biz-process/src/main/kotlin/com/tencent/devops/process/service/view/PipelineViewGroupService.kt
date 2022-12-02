@@ -399,9 +399,7 @@ class PipelineViewGroupService @Autowired constructor(
         pipelineView: PipelineViewForm
     ): PipelineViewPreview {
         // 获取所有流水线信息
-        val allPipelineInfoMap = allPipelineInfos(
-            projectId, pipelineView.viewType == PipelineViewType.STATIC
-        ).associateBy { it.pipelineId }
+        val allPipelineInfoMap = allPipelineInfos(projectId, true).associateBy { it.pipelineId }
         if (allPipelineInfoMap.isEmpty()) {
             return PipelineViewPreview.EMPTY
         }
@@ -427,7 +425,7 @@ class PipelineViewGroupService @Autowired constructor(
                 .writerFor(object : TypeReference<List<PipelineViewFilter>>() {})
                 .writeValueAsString(pipelineView.filters)
             allPipelineInfoMap.values
-                .filter { pipelineViewService.matchView(previewCondition, it) }
+                .filter { it.delete == false && pipelineViewService.matchView(previewCondition, it) }
                 .map { it.pipelineId }
         } else {
             pipelineView.pipelineIds?.filter { allPipelineInfoMap.containsKey(it) } ?: emptyList()
@@ -611,10 +609,6 @@ class PipelineViewGroupService @Autowired constructor(
             projectId = projectId,
             viewId = viewId
         ) ?: return false
-        if (view.viewType == PipelineViewType.DYNAMIC) {
-            logger.warn("bulkRemove , view:$viewId")
-            return false
-        }
         val isProjectManager = checkPermission(userId, projectId)
         if (isProjectManager && !view.isProject && view.createUser != userId) {
             logger.warn("bulkRemove , $userId is ProjectManager , but can`t remove other view")
