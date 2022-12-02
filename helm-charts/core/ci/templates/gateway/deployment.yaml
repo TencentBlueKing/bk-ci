@@ -110,5 +110,5 @@ spec:
             - configMapRef:
                 name: {{ include "bkci.names.fullname" . }}-gateway
           workingDir: /usr/local/openresty/nginx/
-      terminationgraceperiodseconds: 35
+      terminationGracePeriodSeconds: 35
 {{- end -}}
