@@ -252,13 +252,34 @@ func getJdkVersion() ([]string, error) {
 	}
 	var jdkV []string
 	if jdkVersion != nil {
-		jdkV = strings.Split(strings.TrimSuffix(strings.TrimSpace(string(jdkVersion)), "\n"), "\n")
-		for i, j := range jdkV {
-			jdkV[i] = strings.TrimSpace(j)
-		}
+		versionOutputString := strings.TrimSpace(string(jdkVersion))
+		jdkV = trimJdkVersionList(versionOutputString)
 	}
 
 	return jdkV, nil
+}
+
+// parseJdkVersionList 清洗在解析一些版本信息的干扰信息,避免因tmp空间满等导致识别不准确造成重复不断的升级
+func trimJdkVersionList(versionOutputString string) []string {
+	/*
+		OpenJDK 64-Bit Server VM warning: Insufficient space for shared memory file:
+		   32490
+		Try using the -Djava.io.tmpdir= option to select an alternate temp location.
+
+		openjdk version "1.8.0_352"
+		OpenJDK Runtime Environment (Tencent Kona 8.0.12) (build 1.8.0_352-b1)
+		OpenJDK 64-Bit Server VM (Tencent Kona 8.0.12) (build 25.352-b1, mixed mode)
+	*/
+	// 一个JVM版本只需要识别最后3行。
+	var jdkV = make([]string, 3)
+	lines := strings.Split(strings.TrimSuffix(versionOutputString, "\n"), "\n")
+	size := len(lines)
+	if 3 == size {
+		jdkV = lines
+	} else if size > 3 {
+		jdkV = lines[size-3 : size]
+	}
+	return jdkV
 }
 
 // downloadUpgradeFiles 下载升级文件
