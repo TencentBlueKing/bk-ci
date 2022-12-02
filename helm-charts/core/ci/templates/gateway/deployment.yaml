@@ -88,6 +88,7 @@ spec:
                   - sh
                   - '-c'
                   - /usr/sbin/nginx -s quit && sleep 3
+          terminationgraceperiodseconds: 35
           livenessProbe:
             exec:
               command:
