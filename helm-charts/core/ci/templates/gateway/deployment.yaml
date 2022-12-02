@@ -100,7 +100,7 @@ spec:
             successThreshold: 1
           readinessProbe:
             httpGet:
-              path: /
+              path: /nginx_status
               port: 80
             initialDelaySeconds: 10
             periodSeconds: 10
