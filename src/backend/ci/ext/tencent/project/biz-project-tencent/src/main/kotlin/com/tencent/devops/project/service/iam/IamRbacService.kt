@@ -371,7 +371,8 @@ class IamRbacService @Autowired constructor(
         authSecrecy: Boolean,
         subjectScopes: List<ManagerScopes>
     ): ItsmContentDTO {
-        subjectScopes.forEach {
+        var itsmSubjectScopes = subjectScopes
+        itsmSubjectScopes.forEach {
             if (it.type == "*") {
                 it.type = ALL_COMPANY
                 it.id = ALL_MEMBER
@@ -400,7 +401,7 @@ class IamRbacService @Autowired constructor(
         value["desc"] = ItsmStyle.builder().value(desc).build()
         value["organization"] = ItsmStyle.builder().value(organization).build()
         value["authSecrecy"] = ItsmStyle.builder().value(if (authSecrecy) "私密项目" else "公开项目").build()
-        value["subjectScopes"] = ItsmStyle.builder().value(objectMapper.writeValueAsString(subjectScopes)).build()
+        value["subjectScopes"] = ItsmStyle.builder().value(objectMapper.writeValueAsString(itsmSubjectScopes)).build()
         val itsmValue = ItsmValue.builder().scheme("content_table").lable("项目创建审批").value(listOf(value)).build()
         return ItsmContentDTO.builder().formData(Arrays.asList(itsmValue)).schemes(scheme).build()
     }
