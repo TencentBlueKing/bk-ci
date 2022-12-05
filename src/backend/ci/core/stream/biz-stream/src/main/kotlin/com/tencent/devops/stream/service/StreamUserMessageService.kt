@@ -88,6 +88,8 @@ class StreamUserMessageService @Autowired constructor(
         userId: String,
         messageType: UserMessageType?,
         haveRead: Boolean?,
+        messageId: String?,
+        triggerUserId: String?,
         page: Int,
         pageSize: Int
     ): Page<UserMessageRecord> {
@@ -103,8 +105,9 @@ class StreamUserMessageService @Autowired constructor(
             streamUserMessageDao.getMessageCount(
                 dslContext = dslContext,
                 projectId = projectId,
-                userId = null,
+                userId = triggerUserId,
                 messageType = messageType,
+                messageId = messageId,
                 haveRead = haveRead
             )
         } else {
@@ -113,6 +116,7 @@ class StreamUserMessageService @Autowired constructor(
                 projectId = "",
                 userId = userId,
                 messageType = messageType,
+                messageId = messageId,
                 haveRead = haveRead
             )
         }
@@ -130,9 +134,10 @@ class StreamUserMessageService @Autowired constructor(
             streamUserMessageDao.getMessages(
                 dslContext = dslContext,
                 projectId = projectId,
-                userId = null,
+                userId = triggerUserId,
                 messageType = messageType,
                 haveRead = haveRead,
+                messageId = messageId,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset
             )!!
@@ -143,6 +148,7 @@ class StreamUserMessageService @Autowired constructor(
                 userId = userId,
                 messageType = messageType,
                 haveRead = haveRead,
+                messageId = messageId,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset
             )!!

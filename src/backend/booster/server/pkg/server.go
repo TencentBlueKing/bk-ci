@@ -421,7 +421,7 @@ func (s *Server) initK8sResourceManagers() (k8sRm crm.ResourceManager,
 	curQueueMap := make(map[string]bool)
 	k8sRmList = make(map[string]crm.ResourceManager)
 	k8sconfList := s.conf.K8sResourceConfigList
-	if k8sconfList.K8sClusterList != nil {
+	if k8sconfList.Enable && k8sconfList.K8sClusterList != nil {
 		for key, confItem := range k8sconfList.K8sClusterList {
 			if confItem.MySQLStorage == "" {
 				confItem.MySQLStorage = k8sconfList.MySQLStorage
@@ -452,13 +452,14 @@ func (s *Server) initK8sResourceManagers() (k8sRm crm.ResourceManager,
 	}
 
 	k8sConf := s.conf.K8sContainerResourceConfig
-	for queueName, istItem := range k8sQueueIstList {
-		if !curQueueMap[queueName] {
-			initInstanceType(&k8sConf, istItem)
+	if k8sConf.Enable {
+		for queueName, istItem := range k8sQueueIstList {
+			if !curQueueMap[queueName] {
+				initInstanceType(&k8sConf, istItem)
+			}
 		}
+		k8sRm, err = s.initContainerResourceManager(&k8sConf, s.rd)
 	}
-
-	k8sRm, err = s.initContainerResourceManager(&k8sConf, s.rd)
 	return
 }
 
