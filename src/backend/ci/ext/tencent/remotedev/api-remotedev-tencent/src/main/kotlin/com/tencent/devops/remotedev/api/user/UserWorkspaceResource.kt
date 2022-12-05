@@ -155,7 +155,7 @@ interface UserWorkspaceResource {
         userId: String
     ): Result<WorkspaceUserDetail?>
 
-    @ApiOperation("获取用户工作空间详情")
+    @ApiOperation("获取指定工作空间详情时间线")
     @GET
     @Path("/detail_timeline")
     fun getWorkspaceTimeline(
@@ -222,7 +222,7 @@ interface UserWorkspaceResource {
         @ApiParam("代码库项目全路径", required = true)
         @QueryParam("pathWithNamespace")
         pathWithNamespace: String,
-        @ApiParam("分支", required = false)
+        @ApiParam("分支", required = true)
         @QueryParam("branch")
         branch: String
     ): Result<List<String>>
