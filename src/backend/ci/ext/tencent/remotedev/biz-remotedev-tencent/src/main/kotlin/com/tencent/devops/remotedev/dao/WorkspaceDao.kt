@@ -154,7 +154,7 @@ class WorkspaceDao {
     fun fetchWorkspace(
         dslContext: DSLContext,
         userId: String? = null
-    ): Result<TWorkspaceRecord> {
+    ): Result<TWorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(userId)
 

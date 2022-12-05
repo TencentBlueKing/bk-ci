@@ -447,7 +447,7 @@ class WorkspaceService @Autowired constructor(
 
     fun getWorkspaceUserDetail(userId: String): WorkspaceUserDetail {
         logger.info("$userId get his all workspace ")
-        val workspaces = workspaceDao.fetchWorkspace(dslContext, userId)
+        val workspaces = workspaceDao.fetchWorkspace(dslContext, userId) ?: emptyList()
         val status = workspaces.map { WorkspaceStatus.values()[it.status] }
         val usageTime = workspaces.sumOf { it.usageTime }
 
