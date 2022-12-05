@@ -38,6 +38,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.iam.IamRbacService
 import com.tencent.devops.project.service.iam.IamV3Service
 import com.tencent.devops.project.service.impl.TxRbacProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.V3ProjectExtPermissionServiceImpl
@@ -56,20 +57,20 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class TxV3ProjectInitConfiguration {
 
-/*    @Bean
-    fun projectPermissionService(
-        objectMapper: ObjectMapper,
-        bkAuthProperties: BkAuthProperties,
-        projectDispatcher: ProjectDispatcher,
-        client: Client,
-        tokenService: ClientTokenService
-    ): ProjectPermissionService = TxV3ProjectPermissionServiceImpl(
-        objectMapper = objectMapper,
-        authProperties = bkAuthProperties,
-        projectDispatcher = projectDispatcher,
-        client = client,
-        tokenService = tokenService
-    )*/
+    /*    @Bean
+        fun projectPermissionService(
+            objectMapper: ObjectMapper,
+            bkAuthProperties: BkAuthProperties,
+            projectDispatcher: ProjectDispatcher,
+            client: Client,
+            tokenService: ClientTokenService
+        ): ProjectPermissionService = TxV3ProjectPermissionServiceImpl(
+            objectMapper = objectMapper,
+            authProperties = bkAuthProperties,
+            projectDispatcher = projectDispatcher,
+            client = client,
+            tokenService = tokenService
+        )*/
     @Bean
     fun projectPermissionService(
         objectMapper: ObjectMapper,
@@ -81,7 +82,8 @@ class TxV3ProjectInitConfiguration {
         iamManagerService: V2ManagerService,
         projectApprovalCallbackDao: ProjectApprovalCallbackDao,
         dslContext: DSLContext,
-        projectDao: ProjectDao
+        projectDao: ProjectDao,
+        iamRbacService: IamRbacService
     ): ProjectPermissionService = TxRbacProjectPermissionServiceImpl(
         objectMapper = objectMapper,
         authProperties = bkAuthProperties,
@@ -92,7 +94,8 @@ class TxV3ProjectInitConfiguration {
         iamConfiguration = iamConfiguration,
         projectApprovalCallbackDao = projectApprovalCallbackDao,
         dslContext = dslContext,
-        projectDao = projectDao
+        projectDao = projectDao,
+        iamRbacService = iamRbacService
     )
 
     @Bean

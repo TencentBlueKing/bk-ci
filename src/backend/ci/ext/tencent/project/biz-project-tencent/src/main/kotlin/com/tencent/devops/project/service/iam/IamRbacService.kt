@@ -32,6 +32,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
+import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmAttrs
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmColumn
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmContentDTO
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmScheme
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmStyle
+import com.tencent.bk.sdk.iam.dto.itsm.ItsmValue
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
@@ -42,6 +49,7 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.api.service.ServiceGroupStrategyResource
 import com.tencent.devops.auth.constant.AuthMessageCode
@@ -58,19 +66,25 @@ import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
-import com.tencent.devops.project.listener.TxIamRbacCreateEvent
 import com.tencent.devops.project.listener.TxIamRbacCreateApplicationEvent
+import com.tencent.devops.project.listener.TxIamRbacCreateEvent
 import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.pojo.enums.ApproveType
+import com.tencent.devops.project.service.impl.TxRbacProjectPermissionServiceImpl
+import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.Arrays
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -82,13 +96,109 @@ class IamRbacService @Autowired constructor(
     val projectDispatcher: ProjectDispatcher,
     val client: Client,
     val projectApprovalCallbackDao: ProjectApprovalCallbackDao,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    val tofService: TOFService
 ) {
+    @Value("\${itsm.callback.update.url:#{null}}")
+    private val itsmUpdateCallBackUrl: String = ""
+
     @Value("\${itsm.callback.create.url:#{null}}")
     private val itsmCreateCallBackUrl: String = ""
+    fun updateManager(
+        projectCode: String,
+        projectName: String,
+        userId: String,
+        iamSubjectScopes: List<ManagerScopes>,
+        relationId: String
+    ) {
+        val authorizationScopes = AuthorizationUtils.buildManagerResources(
+            projectId = projectCode,
+            projectName = projectName,
+            iamConfiguration = iamConfiguration
+        )
+        val gradeManagerDetail = iamManagerService.getGradeManagerDetail(relationId)
+        val updateManagerDTO: UpdateManagerDTO = UpdateManagerDTO.builder()
+            .name("$SYSTEM_DEFAULT_NAME-$projectName")
+            .description(gradeManagerDetail.description)
+            .authorizationScopes(authorizationScopes)
+            .subjectScopes(iamSubjectScopes)
+            .members(gradeManagerDetail.members)
+            .syncPerm(gradeManagerDetail.syncPerm)
+            .build()
+        TxRbacProjectPermissionServiceImpl.logger.info("updateManager : $updateManagerDTO")
+        iamManagerService.updateManagerV2(relationId, updateManagerDTO)
+    }
+
+    fun updateGradeManagerApplication(
+        projectCode: String,
+        projectName: String,
+        userId: String,
+        iamSubjectScopes: List<ManagerScopes>,
+        projectInfo: TProjectRecord,
+        isAuthSecrecyChange: Boolean,
+        isSubjectScopesChange: Boolean,
+        subjectScopesStr: String
+    ) {
+        val authorizationScopes = AuthorizationUtils.buildManagerResources(
+            projectId = projectCode,
+            projectName = projectName,
+            iamConfiguration = iamConfiguration
+        )
+        val callbackId = UUIDUtil.generate()
+        val itsmContentDTO = buildItsmContentDTO(
+            projectName = projectName,
+            projectId = projectCode,
+            desc = projectInfo.description,
+            organization = "${projectInfo.bgName}-${projectInfo.deptName}-${projectInfo.deptName}",
+            authSecrecy = projectInfo.isAuthSecrecy,
+            subjectScopes = iamSubjectScopes
+        )
+        val gradeManagerDetail = iamManagerService.getGradeManagerDetail(projectInfo.relationId)
+        val gradeManagerApplicationUpdateDTO = GradeManagerApplicationUpdateDTO.builder()
+            .name("$SYSTEM_DEFAULT_NAME-$projectName")
+            .description(gradeManagerDetail.description)
+            .authorizationScopes(authorizationScopes)
+            .subjectScopes(iamSubjectScopes)
+            .syncPerm(gradeManagerDetail.syncPerm)
+            .applicant(userId)
+            .members(gradeManagerDetail.members)
+            .reason(IamGroupUtils.buildItsmDefaultReason(projectCode, userId, false))
+            .callbackId(callbackId)
+            .callbackUrl(itsmUpdateCallBackUrl)
+            .content(itsmContentDTO)
+            .title("修改蓝盾项目申请")
+            .build()
+        logger.info("gradeManagerApplicationUpdateDTO : $gradeManagerApplicationUpdateDTO")
+        val updateGradeManagerApplication =
+            iamManagerService.updateGradeManagerApplication(projectInfo.relationId, gradeManagerApplicationUpdateDTO)
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val approveType = if (isAuthSecrecyChange && isSubjectScopesChange) ApproveType.ALL_CHANGE_APPROVE.type
+            else if (isSubjectScopesChange) ApproveType.SUBJECT_SCOPES_APPROVE.type
+            else ApproveType.AUTH_SECRECY_APPROVE.type
+            TxRbacProjectPermissionServiceImpl.logger.info("approveType : $approveType")
+            // 修改项目状态
+            projectDao.updateProjectStatusByEnglishName(
+                dslContext = context,
+                projectCode = projectInfo.englishName,
+                statusEnum = ApproveStatus.UPDATE_PENDING
+            )
+            // 存储审批单
+            projectApprovalCallbackDao.create(
+                dslContext = context,
+                applicant = userId,
+                englishName = projectCode,
+                callbackId = callbackId,
+                sn = updateGradeManagerApplication.sn,
+                subjectScopes = subjectScopesStr,
+                approveType = approveType
+            )
+        }
+    }
+
     fun createIamRbacProject(event: TxIamRbacCreateEvent) {
         val watcher = Watcher(id = "IAM|CreateProject|${event.projectId}|${event.userId}")
-        logger.info("start create iamV5 project: $event")
+        logger.info("start create iamRbac project: $event")
         try {
             val resourceRegisterInfo = event.resourceRegisterInfo
             val userId = event.userId
@@ -158,9 +268,10 @@ class IamRbacService @Autowired constructor(
             val resourceRegisterInfo = event.resourceRegisterInfo
             val projectCode = resourceRegisterInfo.resourceCode
             var isProjectCreateSuccess = false
+            var projectInfo: TProjectRecord? = null
             if (event.retryCount < 10) {
                 logger.info("start create Iam Application Project $event")
-                val projectInfo = projectDao.getByEnglishName(dslContext, projectCode)
+                projectInfo = projectDao.getByEnglishName(dslContext, projectCode)
                 if (projectInfo == null) {
                     event.retryCount = event.retryCount + 1
                     event.delayMills = 1000
@@ -174,16 +285,12 @@ class IamRbacService @Autowired constructor(
             }
             if (isProjectCreateSuccess) {
                 val userId = event.userId
-                val projectName = resourceRegisterInfo.resourceName
                 val iamSubjectScopes = event.subjectScopes
                 val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
                 createGradeManagerApplication(
-                    projectCode = projectCode,
-                    projectName = projectName,
+                    projectInfo = projectInfo!!,
                     userId = userId,
                     iamSubjectScopes = iamSubjectScopes,
-                    // todo 创建原因
-                    reason = event.reason,
                     subjectScopesStr = subjectScopesStr
                 )
             }
@@ -194,13 +301,13 @@ class IamRbacService @Autowired constructor(
     }
 
     private fun createGradeManagerApplication(
-        projectCode: String,
-        projectName: String,
+        projectInfo: TProjectRecord,
         userId: String,
         iamSubjectScopes: List<ManagerScopes>,
-        reason: String,
         subjectScopesStr: String
     ) {
+        val projectCode = projectInfo.englishName
+        val projectName = projectInfo.projectName
         if (itsmCreateCallBackUrl.isBlank()) {
             throw OperationException("Itsm call back url can not be empty！")
         }
@@ -210,21 +317,29 @@ class IamRbacService @Autowired constructor(
             iamConfiguration = iamConfiguration
         )
         val callbackId = UUIDUtil.generate()
+
+        val itsmContentDTO = buildItsmContentDTO(
+            projectName = projectName,
+            projectId = projectCode,
+            desc = projectInfo.description,
+            organization = "${projectInfo.bgName}-${projectInfo.deptName}-${projectInfo.deptName}",
+            authSecrecy = projectInfo.isAuthSecrecy,
+            subjectScopes = iamSubjectScopes
+        )
         val gradeManagerApplicationCreateDTO: GradeManagerApplicationCreateDTO = GradeManagerApplicationCreateDTO
             .builder()
-            .name("${SYSTEM_DEFAULT_NAME}-$projectName")
+            .name("$SYSTEM_DEFAULT_NAME-$projectName")
             .description(IamGroupUtils.buildManagerDescription(projectCode, userId))
             .members(arrayListOf(userId))
             .authorizationScopes(authorizationScopes)
             .subjectScopes(iamSubjectScopes)
             .syncPerm(true)
             .applicant(userId)
-            .reason(reason)
+            .reason(IamGroupUtils.buildItsmDefaultReason(projectName, projectCode, true))
             .callbackId(callbackId)
             .callbackUrl(itsmCreateCallBackUrl)
-            // todo 需补充
-            .content(mapOf("test" to "test"))
-            .title("蓝盾创建项目申请")
+            .content(itsmContentDTO)
+            .title("创建蓝盾项目申请")
             .build()
         logger.info("gradeManagerApplicationCreateDTO : $gradeManagerApplicationCreateDTO")
         val createGradeManagerApplication =
@@ -246,6 +361,48 @@ class IamRbacService @Autowired constructor(
                 statusEnum = ApproveStatus.CREATE_PENDING
             )
         }
+    }
+
+    private fun buildItsmContentDTO(
+        projectName: String,
+        projectId: String,
+        desc: String,
+        organization: String,
+        authSecrecy: Boolean,
+        subjectScopes: List<ManagerScopes>
+    ): ItsmContentDTO {
+        subjectScopes.forEach {
+            if (it.type == "*") {
+                it.type = ALL_COMPANY
+                it.id = ALL_MEMBER
+            } else if (it.type == DEPARTMENT) {
+                it.type = DEPARTMENT_CHINESE_NAME
+                it.id = tofService.getDeptInfo("", it.id.toInt()).name
+            } else {
+                it.type = USER_CHINESE_NAME
+            }
+        }
+        val itsmColumns = listOf(
+            ItsmColumn.builder().key("projectName").name("项目名称").type("text").build(),
+            ItsmColumn.builder().key("projectId").name("项目ID").type("text").build(),
+            ItsmColumn.builder().key("desc").name("项目描述").type("text").build(),
+            ItsmColumn.builder().key("organization").name("所属组织").type("text").build(),
+            ItsmColumn.builder().key("authSecrecy").name("项目性质").type("text").build(),
+            ItsmColumn.builder().key("subjectScopes").name("最大可授权人员范围").type("text").build()
+        )
+        val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
+        val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
+        val scheme = HashMap<String, ItsmScheme>()
+        scheme["content_table"] = itsmScheme
+        val value = HashMap<String, ItsmStyle>()
+        value["projectName"] = ItsmStyle.builder().value(projectName).build()
+        value["projectId"] = ItsmStyle.builder().value(projectId).build()
+        value["desc"] = ItsmStyle.builder().value(desc).build()
+        value["organization"] = ItsmStyle.builder().value(organization).build()
+        value["authSecrecy"] = ItsmStyle.builder().value(if (authSecrecy) "私密项目" else "公开项目").build()
+        value["subjectScopes"] = ItsmStyle.builder().value(objectMapper.writeValueAsString(subjectScopes)).build()
+        val itsmValue = ItsmValue.builder().scheme("content_table").lable("项目创建审批").value(listOf(value)).build()
+        return ItsmContentDTO.builder().formData(Arrays.asList(itsmValue)).schemes(scheme).build()
     }
 
     fun batchCreateDefaultGroups(
@@ -316,7 +473,6 @@ class IamRbacService @Autowired constructor(
             .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
             .subject_scopes(subjectScopes)
-            //todo 是否同步创建用户组
             .sync_perm(true)
             .build()
         return iamManagerService.createManagerV2(createManagerDTO).toString()
@@ -400,7 +556,8 @@ class IamRbacService @Autowired constructor(
             iamManagerService.deleteRoleGroupV2(roleId)
             logger.warn(
                 "create iam group permission fail : projectCode = $projectCode |" +
-                    " iamRoleId = $roleId | groupInfo = ${defaultGroupType.value}", e
+                    " iamRoleId = $roleId | groupInfo = ${defaultGroupType.value}",
+                e
             )
             throw e
         }
@@ -448,7 +605,7 @@ class IamRbacService @Autowired constructor(
         logger.info("getGroupStrategy ${strategyInfo!!.strategy}")
         val projectStrategyList = mutableListOf<String>()
         val resourceStrategyMap = mutableMapOf<String, List<String>>()
-        strategyInfo!!.strategy.forEach { resource, list ->
+        strategyInfo!!.strategy.forEach { (resource, list) ->
             val actionData = buildAction(resource, list)
             projectStrategyList.addAll(actionData.first)
             resourceStrategyMap.putAll(actionData.second)
@@ -570,9 +727,13 @@ class IamRbacService @Autowired constructor(
     }
 
     companion object {
+        val logger = LoggerFactory.getLogger(IamRbacService::class.java)
         private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
         private const val SYSTEM_DEFAULT_NAME = "蓝盾"
         private const val DEPARTMENT = "department"
-        val logger = LoggerFactory.getLogger(IamRbacService::class.java)
+        private const val ALL_COMPANY = "全公司"
+        private const val ALL_MEMBER = "全体人员"
+        private const val USER_CHINESE_NAME = "用户"
+        private const val DEPARTMENT_CHINESE_NAME = "部门"
     }
 }
