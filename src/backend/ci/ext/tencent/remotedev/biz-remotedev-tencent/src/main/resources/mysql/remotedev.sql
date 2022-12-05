@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
                                              `IMAGE_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '镜像地址',
                                              `CPU` int(11) NOT NULL DEFAULT 16 COMMENT 'CPU',
                                              `MEMORY` int(11) NOT NULL DEFAULT 32768 COMMENT '内存',
+                                             `USAGE_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '已使用时间（容器结束时更新）',
+                                             `SLEEPING_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '已休眠时间（容器启动时更新）',
                                              `DISK` int(11) NOT NULL DEFAULT 100 COMMENT '磁盘',
                                              `CREATOR` varchar(1024) NOT NULL DEFAULT '' COMMENT '创建人',
                                              `CREATOR_BG_NAME` varchar(128) NOT NULL DEFAULT ''  COMMENT '预留字段，CI开启人所在事业群，用作度量统计',

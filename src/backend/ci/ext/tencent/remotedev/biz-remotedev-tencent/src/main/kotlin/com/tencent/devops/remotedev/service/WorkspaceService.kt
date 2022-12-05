@@ -48,6 +48,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -247,6 +248,18 @@ class WorkspaceService @Autowired constructor(
                 dslContext.transaction { configuration ->
                     val transactionContext = DSL.using(configuration)
                     workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.RUNNING, transactionContext)
+
+                    val lastHistory = workspaceHistoryDao.fetchAnyHistory(
+                        dslContext = transactionContext,
+                        workspaceId = workspaceId
+                    )
+                    if (lastHistory != null) {
+                        workspaceDao.updateWorkspaceSleepingTime(
+                            workspaceId = workspaceId,
+                            sleepTime = Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt(),
+                            dslContext = transactionContext
+                        )
+                    }
                     workspaceHistoryDao.createWorkspaceHistory(
                         dslContext = transactionContext,
                         workspaceId = workspaceId,
@@ -298,11 +311,24 @@ class WorkspaceService @Autowired constructor(
                 dslContext.transaction { configuration ->
                     val transactionContext = DSL.using(configuration)
                     workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.SLEEP, transactionContext)
-                    workspaceHistoryDao.updateWorkspaceHistory(
+                    val lastHistory = workspaceHistoryDao.fetchAnyHistory(
                         dslContext = transactionContext,
-                        workspaceId = workspaceId,
-                        stopUserId = userId
+                        workspaceId = workspaceId
                     )
+                    if (lastHistory != null) {
+                        workspaceDao.updateWorkspaceUsageTime(
+                            workspaceId = workspaceId,
+                            usageTime = Duration.between(lastHistory.startTime, LocalDateTime.now()).seconds.toInt(),
+                            dslContext = transactionContext,
+                        )
+                        workspaceHistoryDao.updateWorkspaceHistory(
+                            dslContext = transactionContext,
+                            id = lastHistory.id,
+                            stopUserId = userId
+                        )
+                    } else {
+                        logger.error("$workspaceId get last history info null")
+                    }
                     workspaceOpHistoryDao.createWorkspaceHistory(
                         dslContext = transactionContext,
                         workspaceId = workspaceId,
@@ -392,7 +418,7 @@ class WorkspaceService @Autowired constructor(
     fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Page<Workspace> {
         logger.info("$userId get user workspace list")
         val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 20
+        val pageSizeNotNull = pageSize ?: 6666
         val count = workspaceDao.countWorkspace(dslContext, userId)
         val result = workspaceDao.limitFetchWorkspace(
             dslContext = dslContext,
@@ -419,32 +445,48 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
+    fun getWorkspaceUserDetail(userId: String): WorkspaceUserDetail {
+        logger.info("$userId get his all workspace ")
+        val workspaces = workspaceDao.fetchWorkspace(dslContext, userId)
+        val status = workspaces.map { WorkspaceStatus.values()[it.status] }
+        val usageTime = workspaces.sumOf { it.usageTime }
+
+        // TODO: 2022/11/24 优惠时间需后续配置
+        val discountTime = 0
+        return WorkspaceUserDetail(
+            runningCount = status.count { it.isRunning() },
+            sleepingCount = status.count { it.isSleeping() },
+            deleteCount = status.count { it.isDeleted() },
+            chargeableTime = usageTime - discountTime,
+            usageTime = usageTime,
+            sleepingTime = workspaces.sumOf { it.sleepingTime },
+            cpu = workspaces.sumOf { it.cpu },
+            memory = workspaces.sumOf { it.memory },
+            disk = workspaces.sumOf { it.disk },
+        )
+    }
+
     fun getWorkspaceDetail(userId: String, workspaceId: Long): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceId")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId) ?: return null
 
         val workspaceStatus = WorkspaceStatus.values()[workspace.status]
 
-        val history = workspaceHistoryDao.fetchHistory(dslContext, workspaceId)
-
-        val last = history.firstOrNull() ?: return null
+        val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceId) ?: return null
 
         // TODO: 2022/11/24 优惠时间需后续配置
         val discountTime = 0
 
-        val usageTime = history.sumOf { Duration.between(it.startTime, it.endTime).seconds }.run {
-            this + if (workspaceStatus.isRunning()) {
-                // 如果正在运行，需要加上目前距离该次启动的时间
-                Duration.between(last.startTime, LocalDateTime.now()).seconds
-            } else 0
-        }
+        val usageTime = workspace.usageTime + if (workspaceStatus.isRunning()) {
+            // 如果正在运行，需要加上目前距离该次启动的时间
+            Duration.between(lastHistory.startTime, LocalDateTime.now()).seconds
+        } else 0
 
-        val sleepingTime = history.sumOf { it.lastSleepTimeCost }.run {
-            this + if (workspaceStatus.isSleeping()) {
-                // 如果正在休眠，需要加上目前距离上次结束的时间
-                Duration.between(last.endTime, LocalDateTime.now()).seconds
-            } else 0
-        }
+        val sleepingTime = workspace.sleepingTime + if (workspaceStatus.isSleeping()) {
+            // 如果正在休眠，需要加上目前距离上次结束的时间
+            Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds
+        } else 0
+
         val chargeableTime = usageTime - discountTime
 
         return with(workspace) {
@@ -498,7 +540,7 @@ class WorkspaceService @Autowired constructor(
         return gitTransferService.getFileNameTree(
             userId = userId,
             pathWithNamespace = pathWithNamespace,
-            path = "", // 根目录
+            path = ".preci", // 根目录
             ref = branch,
             recursive = false // 不递归
         )

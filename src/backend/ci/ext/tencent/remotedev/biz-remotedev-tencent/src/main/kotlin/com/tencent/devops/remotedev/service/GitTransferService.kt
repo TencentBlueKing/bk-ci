@@ -14,7 +14,6 @@ interface GitTransferService {
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult>
 
@@ -51,7 +50,6 @@ interface GitTransferService {
      * @param path 获取文件路径下的文件列表
      * @param ref commit hash值、分支 或 tag
      * @param recursive 是否支持递归目录结构
-     * TODO: 后续多源可以看是否放到具体Git平台的实现中
      */
     fun getFileNameTree(
         userId: String,

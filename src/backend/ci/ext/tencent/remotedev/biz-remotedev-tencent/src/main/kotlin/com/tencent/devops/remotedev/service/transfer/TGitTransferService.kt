@@ -25,15 +25,14 @@ class TGitTransferService @Autowired constructor(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
         return client.get(ServiceOauthResource::class).isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
             redirectUrl = redirectUrl,
-            gitProjectId = gitProjectId,
-            refreshToken = false
+            gitProjectId = null,
+            refreshToken = refreshToken
         )
     }
 
@@ -98,7 +97,7 @@ class TGitTransferService @Autowired constructor(
             ref = ref,
             recursive = recursive,
             tokenType = TokenTypeEnum.OAUTH,
-        ).data?.filter { it.type == "blob" && it.name.endsWith("") }?.map { it.name } ?: emptyList()
+        ).data?.filter { it.type == "blob" && it.name.endsWith(".yaml") }?.map { it.name } ?: emptyList()
     }
 
     private fun getAndCheckOauthToken(

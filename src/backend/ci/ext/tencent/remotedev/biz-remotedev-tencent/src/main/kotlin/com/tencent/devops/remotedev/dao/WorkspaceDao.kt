@@ -151,6 +151,23 @@ class WorkspaceDao {
         }
     }
 
+    fun fetchWorkspace(
+        dslContext: DSLContext,
+        userId: String? = null
+    ): Result<TWorkspaceRecord> {
+        with(TWorkspace.T_WORKSPACE) {
+            val condition = mixCondition(userId)
+
+            if (condition.isEmpty()) {
+                return null
+            }
+
+            return dslContext.selectFrom(this)
+                .where(condition)
+                .fetch()
+        }
+    }
+
     fun mixCondition(
         userId: String? = null,
         workspaceId: Long? = null
@@ -177,6 +194,32 @@ class WorkspaceDao {
                 .set(STATUS, status.ordinal)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(workspaceId))
+                .execute()
+        }
+    }
+
+    fun updateWorkspaceUsageTime(
+        workspaceId: Long,
+        usageTime: Int,
+        dslContext: DSLContext
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(USAGE_TIME, USAGE_TIME + usageTime)
+                .where(ID.eq(workspaceId))
+                .execute()
+        }
+    }
+
+    fun updateWorkspaceSleepingTime(
+        workspaceId: Long,
+        sleepTime: Int,
+        dslContext: DSLContext
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(SLEEPING_TIME, SLEEPING_TIME + sleepTime)
                 .where(ID.eq(workspaceId))
                 .execute()
         }

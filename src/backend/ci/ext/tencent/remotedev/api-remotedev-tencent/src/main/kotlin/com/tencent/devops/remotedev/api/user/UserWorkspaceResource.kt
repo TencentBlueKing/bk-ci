@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
+import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import io.swagger.annotations.Api
@@ -77,7 +78,7 @@ interface UserWorkspaceResource {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页多少条", required = false, defaultValue = "6666")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<Workspace>>
@@ -133,9 +134,9 @@ interface UserWorkspaceResource {
     ): Result<Boolean>
     //todo 获取运行日志的接口
 
-    @ApiOperation("获取用户工作空间详情")
+    @ApiOperation("获取指定工作空间详情")
     @GET
-    @Path("/detail")
+    @Path("/workspace_detail")
     fun getWorkspaceDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -144,6 +145,15 @@ interface UserWorkspaceResource {
         @QueryParam("workspaceId")
         workspaceId: Long
     ): Result<WorkspaceDetail?>
+
+    @ApiOperation("获取用户工作空间详情")
+    @GET
+    @Path("/user_detail")
+    fun getWorkspaceUserDetail(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<WorkspaceUserDetail?>
 
     @ApiOperation("获取用户工作空间详情")
     @GET
@@ -230,9 +240,6 @@ interface UserWorkspaceResource {
         @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
         @QueryParam("redirectUrl")
         redirectUrl: String?,
-        @ApiParam(value = "stream 项目Id", required = false)
-        @QueryParam("gitProjectId")
-        gitProjectId: Long,
         @ApiParam(value = "是否刷新token", required = false)
         @QueryParam("refreshToken")
         refreshToken: Boolean? = true
