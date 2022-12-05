@@ -2132,9 +2132,14 @@ class GitService @Autowired constructor(
             .url(url.toString())
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
-            if (!it.isSuccessful) throw RuntimeException("fail to getGitCIAllMembers with: $url($data)")
+        OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body()!!.string()
+            if (!response.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "(${response.code()})${response.message()}"
+                )
+            }
             return Result(JsonUtil.to(data, object : TypeReference<List<GitMember>>() {}))
         }
     }
