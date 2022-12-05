@@ -25,18 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo.enums
+package com.tencent.devops.store.util
 
-enum class FileTypeEnum(val fileType: String) {
-    BK_ARCHIVE("bk-archive"), // 根据每次构建有独立的存储
-    BK_CUSTOM("bk-custom"), // 指定了自定义路径的归档类型，会覆盖
-    BK_REPORT("bk-report"), // 报告产出物
-    BK_PLUGIN_FE("bk-plugin-fe"); // 插件自定义UI前端文件
-    fun toArtifactoryType(): ArtifactoryType {
-        return when (this) {
-            BK_ARCHIVE -> ArtifactoryType.PIPELINE
-            BK_CUSTOM -> ArtifactoryType.CUSTOM_DIR
-            else -> ArtifactoryType.CUSTOM_DIR
+import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+
+class AtomReleaseTxtAnalysisUtilTest {
+
+    @Test
+    fun regexAnalysisTest() {
+        val input = "插件发布测试描述:\${{indexFile(\"cat2.png\")}}||插件发布测试描述:\${{indexFile(\"cat.png\")}}"
+        val pathList = mutableListOf<String>()
+        val result = mutableMapOf<String, String>()
+        AtomReleaseTxtAnalysisUtil.regexAnalysis(
+            input = input,
+            atomPath = "",
+            pathList = pathList
+        )
+        pathList.forEach {
+            result[it] = "www.tested.xxx"
         }
+        val filePathReplaceResult = AtomReleaseTxtAnalysisUtil.filePathReplace(result, input)
+        Assertions.assertEquals(
+            "插件发布测试描述:![cat2.png](www.tested.xxx)||插件发布测试描述:![cat.png](www.tested.xxx)",
+            filePathReplaceResult
+        )
     }
 }

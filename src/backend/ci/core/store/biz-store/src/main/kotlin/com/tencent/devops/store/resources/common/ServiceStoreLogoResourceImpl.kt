@@ -25,59 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom
+package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.ApproveReq
-import com.tencent.devops.store.pojo.atom.Atom
-import com.tencent.devops.store.pojo.atom.AtomResp
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
-import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.ServiceStoreLogoResource
+import com.tencent.devops.store.pojo.common.StoreLogoInfo
+import com.tencent.devops.store.service.common.StoreLogoService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
-interface OpAtomService {
+@RestResource
+class ServiceStoreLogoResourceImpl @Autowired constructor(
+    private val storeLogoService: StoreLogoService
+) : ServiceStoreLogoResource {
 
-    /**
-     * op系统获取插件信息
-     */
-    fun getOpPipelineAtoms(
-        atomName: String?,
-        atomType: AtomTypeEnum?,
-        serviceScope: String?,
-        os: String?,
-        category: String?,
-        classifyId: String?,
-        atomStatus: AtomStatusEnum?,
-        sortType: OpSortTypeEnum?,
-        desc: Boolean?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<AtomResp<Atom>?>
-
-    /**
-     * 根据id获取插件信息
-     */
-    fun getPipelineAtom(id: String): Result<Atom?>
-
-    /**
-     * 根据插件代码和版本号获取插件信息
-     */
-    fun getPipelineAtom(atomCode: String, version: String): Result<Atom?>
-
-    /**
-     * 审核插件
-     */
-    fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean>
-
-    /**
-     * 一键部署发布插件
-     */
-    fun releaseAtom(
+    override fun uploadStoreLogo(
         userId: String,
-        atomCode: String,
+        contentLength: Long,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<Boolean>
+    ): Result<StoreLogoInfo?> {
+        return storeLogoService.uploadStoreLogo(
+            userId = userId,
+            contentLength = contentLength,
+            inputStream = inputStream,
+            disposition = disposition
+        )
+    }
 }

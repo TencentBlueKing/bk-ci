@@ -25,18 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo.enums
+package com.tencent.devops.store.pojo.atom
 
-enum class FileTypeEnum(val fileType: String) {
-    BK_ARCHIVE("bk-archive"), // 根据每次构建有独立的存储
-    BK_CUSTOM("bk-custom"), // 指定了自定义路径的归档类型，会覆盖
-    BK_REPORT("bk-report"), // 报告产出物
-    BK_PLUGIN_FE("bk-plugin-fe"); // 插件自定义UI前端文件
-    fun toArtifactoryType(): ArtifactoryType {
-        return when (this) {
-            BK_ARCHIVE -> ArtifactoryType.PIPELINE
-            BK_CUSTOM -> ArtifactoryType.CUSTOM_DIR
-            else -> ArtifactoryType.CUSTOM_DIR
-        }
-    }
-}
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("版本信息")
+data class VersionInfo(
+    @ApiModelProperty("发布者", required = true)
+    val publisher: String,
+    @ApiModelProperty("发布类型", required = true)
+    val releaseType: ReleaseTypeEnum,
+    @ApiModelProperty("插件版本", required = true)
+    val version: String,
+    @ApiModelProperty("版本日志内容", required = true)
+    @field:BkField(maxLength = 65535)
+    val versionContent: String
+)
