@@ -103,6 +103,11 @@ allprojects {
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
             }
+            // TODO 等后面spring cloud版本升级上来就可以去掉
+            dependency(
+                "org.springframework.cloud:spring-cloud-kubernetes-client-discovery:" +
+                        "${Versions.KubernetesDiscovery}"
+            )
         }
     }
 

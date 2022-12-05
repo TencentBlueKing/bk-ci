@@ -43,15 +43,15 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PUBLISHER"], description = "service-publisher")
-@Path("/service/publisher/sync")
+@Api(tags = ["BUILD_PUBLISHER"], description = "build_publisher")
+@Path("/build/store/publisher/sync")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServicePublishersResource {
+interface BuildPublishersResource {
 
     @ApiOperation("同步新增发布者信息")
     @POST
-    @Path("/publisher/add")
+    @Path("/add")
     fun synAddPublisherData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
@@ -62,7 +62,7 @@ interface ServicePublishersResource {
 
     @ApiOperation("同步删除发布者信息")
     @DELETE
-    @Path("/publisher/delete")
+    @Path("/delete")
     fun synDeletePublisherData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
@@ -73,7 +73,7 @@ interface ServicePublishersResource {
 
     @ApiOperation("同步更新发布者信息")
     @POST
-    @Path("/publisher/update")
+    @Path("/update")
     fun synUpdatePublisherData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID", required = true)
