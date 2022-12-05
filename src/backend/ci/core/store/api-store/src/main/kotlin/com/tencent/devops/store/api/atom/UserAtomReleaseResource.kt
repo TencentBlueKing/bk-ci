@@ -64,7 +64,7 @@ interface UserAtomReleaseResource {
         @ApiParam("插件市场工作台-新增插件请求报文体", required = true)
         @Valid
         marketAtomCreateRequest: MarketAtomCreateRequest
-    ): Result<Boolean>
+    ): Result<String>
 
     @ApiOperation("插件工作台-升级插件")
     @PUT
