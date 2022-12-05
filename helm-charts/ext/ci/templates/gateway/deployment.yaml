@@ -88,7 +88,7 @@ spec:
                 command:
                   - sh
                   - '-c'
-                  - /usr/local/openresty/nginx/sbin/nginx -s quit
+                  - sleep 10s && /usr/local/openresty/nginx/sbin/nginx -s quit
           livenessProbe:
             exec:
               command:
@@ -107,5 +107,5 @@ spec:
             periodSeconds: 10
             failureThreshold: 3
             successThreshold: 1
-      terminationGracePeriodSeconds: 35
+      terminationGracePeriodSeconds: 40
 {{- end -}}
