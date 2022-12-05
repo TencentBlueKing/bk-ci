@@ -29,7 +29,6 @@ package com.tencent.bk.codecc.defect.service.impl;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CCNStatisticRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildStackRepository;
 import com.tencent.bk.codecc.defect.model.CCNStatisticEntity;
-import com.tencent.bk.codecc.defect.service.ClusterDefectService;
 import com.tencent.bk.codecc.defect.service.IQueryStatisticBizService;
 import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.CCNLastAnalysisResultVO;
@@ -38,7 +37,7 @@ import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
 import com.tencent.devops.common.api.clusterresult.CcnClusterResultVO;
 import com.tencent.devops.common.constant.ComConstants;
 import org.apache.commons.collections.CollectionUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -72,7 +71,7 @@ public class CCNQueryStatisticBizServiceImpl implements IQueryStatisticBizServic
 
         CCNStatisticEntity statisticEntity = isLast
                 ? ccnStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName)
-                : ccnStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+                : ccnStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
 
         CCNLastAnalysisResultVO lastAnalysisResultVO = new CCNLastAnalysisResultVO();
         if (statisticEntity != null) {

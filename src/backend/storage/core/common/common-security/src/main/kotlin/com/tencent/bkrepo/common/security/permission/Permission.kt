@@ -37,6 +37,9 @@ import java.lang.annotation.Inherited
 
 /**
  * 注解表示需要对资源鉴权
+ * @param type 资源类型
+ * @param action 权限动作
+ * @param anonymous 是否允许平台匿名请求
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
@@ -44,9 +47,10 @@ import java.lang.annotation.Inherited
 @MustBeDocumented
 annotation class Permission(
     val type: ResourceType,
-    val action: PermissionAction
+    val action: PermissionAction,
+    val anonymous: Boolean = false
 )
 
 fun Permission.string(): String {
-    return "type=$type, action=$action"
+    return "type=$type, action=$action, anonymous=$anonymous"
 }

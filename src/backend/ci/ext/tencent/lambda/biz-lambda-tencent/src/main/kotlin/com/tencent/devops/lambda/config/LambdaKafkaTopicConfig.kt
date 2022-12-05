@@ -36,6 +36,9 @@ class LambdaKafkaTopicConfig {
     @Value("\${spring.kafka.topics.buildHistoryTopic:#{null}}")
     val buildHistoryTopic: String? = null
 
+    @Value("\${spring.kafka.topics.invalidVarBuildHistoryTopic:#{null}}")
+    val invalidVarBuildHistoryTopic: String? = null
+
     @Value("\${spring.kafka.topics.buildDetailTopic:#{null}}")
     val buildDetailTopic: String? = null
 
@@ -56,4 +59,7 @@ class LambdaKafkaTopicConfig {
 
     @Value("\${spring.kafka.topics.gitTaskTopic:#{null}}")
     val gitTaskTopic: String? = null
+
+    @Value("\${spring.kafka.topics.buildCommitsTopic:#{null}}")
+    val buildCommitsTopic: String? = null
 }

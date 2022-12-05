@@ -2,12 +2,12 @@
 
 <configuration debug="false" scan="false">
     <springProperty scope="context" name="logging.path" source="logging.path" defaultValue="logs"/>
-    <springProperty scope="context" name="service.name" source="service.name" defaultValue="application"/>
+    <springProperty scope="context" name="spring.application.name" source="spring.application.name" defaultValue="application"/>
 
-    <property name="logging.app.file" value="${logging.path}/${service.name}.log"/>
-    <property name="logging.job.file" value="${logging.path}/${service.name}-job.log"/>
-    <property name="logging.error.file" value="${logging.path}/${service.name}-error.log"/>
-    <property name="logging.access.file" value="${logging.path}/${service.name}-access.log"/>
+    <property name="logging.app.file" value="${logging.path}/${spring.application.name}.log"/>
+    <property name="logging.job.file" value="${logging.path}/${spring.application.name}-job.log"/>
+    <property name="logging.error.file" value="${logging.path}/${spring.application.name}-error.log"/>
+    <property name="logging.access.file" value="${logging.path}/${spring.application.name}-access.log"/>
     <property name="logging.file.pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS}|%X{ip:--}|%F|%L|%level|%X{err_code:-0}|%tid||||[%t] %m%ex%n"/>
     <property name="logging.console.pattern" value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} [%clr(%tid)] %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
 
@@ -108,7 +108,7 @@
         <logger name="com.tencent.bkrepo" level="DEBUG" additivity="false">
             <appender-ref ref="console"/>
         </logger>
-        <logger name="com.tencent.bkrepo.common.service.feign.FeignFilterRequestMappingHandlerMapping" level="INFO" additivity="false">
+        <logger name="com.tencent.devops.service.feign.FeignFilterRequestMappingHandlerMapping" level="INFO" additivity="false">
             <appender-ref ref="console"/>
         </logger>
         <root level="INFO">

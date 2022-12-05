@@ -29,7 +29,6 @@ package com.tencent.devops.scm.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
-import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -39,6 +38,7 @@ import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import io.swagger.annotations.Api
@@ -46,6 +46,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -59,7 +60,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGitCiResource {
 
-    @ApiOperation("获取项目的token")
+    @ApiOperation("获取项目的超级token")
     @GET
     @Path("/getToken")
     fun getToken(
@@ -89,7 +90,7 @@ interface ServiceGitCiResource {
         useAccessToken: Boolean = true
     ): Result<Boolean>
 
-    @ApiOperation("销毁项目的token")
+    @ApiOperation("销毁项目的超级token")
     @DELETE
     @Path("/clearToken")
     fun clearToken(
@@ -326,7 +327,11 @@ interface ServiceGitCiResource {
         page: Int,
         @ApiParam(value = "每页大小")
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @ApiParam("是否使用accessToken", required = true)
+        @QueryParam("useAccessToken")
+        @DefaultValue("true")
+        useAccessToken: Boolean
     ): Result<List<ChangeFileInfo>>
 
     @ApiOperation("添加mr评论")

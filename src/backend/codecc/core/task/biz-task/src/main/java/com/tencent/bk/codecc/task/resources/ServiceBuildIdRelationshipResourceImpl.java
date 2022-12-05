@@ -9,7 +9,7 @@ import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @RestResource
@@ -24,7 +24,7 @@ public class ServiceBuildIdRelationshipResourceImpl implements ServiceBuildIdRel
             throw new CodeCCException(CommonMessageCode.ERROR_INVALID_PARAM_, new String[]{"commitId 不能为空"});
         }
 
-        BuildIdRelationshipEntity relationShipEntity =  relationshipRepository.findByBuildId(buildId);
+        BuildIdRelationshipEntity relationShipEntity =  relationshipRepository.findFirstByBuildId(buildId);
         if (relationShipEntity == null) {
             return new Result<>(null);
         }

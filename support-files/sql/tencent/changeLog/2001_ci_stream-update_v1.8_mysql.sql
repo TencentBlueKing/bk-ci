@@ -24,10 +24,26 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_GIT_BASIC_SETTING'
-                    AND COLUMN_NAME = 'GIT_PROJECT_DESC' AND COLUMN_NAME = 'GIT_PROJECT_AVATAR' AND COLUMN_NAME = 'LAST_CI_INFO') THEN
+                    AND COLUMN_NAME = 'GIT_PROJECT_DESC') THEN
         ALTER TABLE T_GIT_BASIC_SETTING 
-        ADD COLUMN `GIT_PROJECT_DESC` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'GIT项目的描述信息',
-        ADD COLUMN `GIT_PROJECT_AVATAR` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'GIT项目的头像信息',
+        ADD COLUMN `GIT_PROJECT_DESC` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'GIT项目的描述信息';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_GIT_BASIC_SETTING'
+                    AND COLUMN_NAME = 'GIT_PROJECT_AVATAR') THEN
+        ALTER TABLE T_GIT_BASIC_SETTING 
+        ADD COLUMN `GIT_PROJECT_AVATAR` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'GIT项目的头像信息';
+    END IF;
+
+        IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_GIT_BASIC_SETTING'
+                    AND COLUMN_NAME = 'LAST_CI_INFO') THEN
+        ALTER TABLE T_GIT_BASIC_SETTING 
         ADD COLUMN `LAST_CI_INFO` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '最后一次构建的CI信息' AFTER `GIT_PROJECT_AVATAR`;
     END IF;
 

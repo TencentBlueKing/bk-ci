@@ -49,4 +49,11 @@ class ProjectDao : SimpleMongoDao<TProject>() {
     fun findByName(name: String): TProject? {
         return this.findOne(Query(TProject::name.isEqualTo(name)))
     }
+
+    /**
+     * 根据名称[displayName]查找项目
+     */
+    fun findByDisplayName(displayName: String): TProject? {
+        return this.findOne(Query(TProject::displayName.isEqualTo(displayName)))
+    }
 }

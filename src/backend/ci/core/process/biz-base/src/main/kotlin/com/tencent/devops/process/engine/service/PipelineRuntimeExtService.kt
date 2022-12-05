@@ -103,6 +103,38 @@ class PipelineRuntimeExtService @Autowired constructor(
         }
     }
 
+    /**
+     *  获取同一个并发组内首个排队的BuildInfo
+     */
+    fun popNextConcurrencyGroupQueueCanPend2Start(
+        projectId: String,
+        concurrencyGroup: String,
+        pipelineId: String? = null,
+        buildId: String? = null,
+        buildStatus: BuildStatus = BuildStatus.QUEUE_CACHE
+    ): BuildInfo? {
+        val buildInfo = pipelineBuildDao.convert(
+            pipelineBuildDao.getOneConcurrencyQueueBuild(
+                dslContext = dslContext,
+                projectId = projectId,
+                concurrencyGroup = concurrencyGroup,
+                pipelineId = pipelineId
+            )
+        )
+        val updateBuildId = buildId ?: buildInfo?.buildId
+        if (buildInfo != null && updateBuildId == buildInfo.buildId) {
+            pipelineBuildDao.updateStatus(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildInfo.buildId,
+                oldBuildStatus = buildInfo.status,
+                newBuildStatus = buildStatus
+            )
+            return buildInfo
+        }
+        return null
+    }
+
     fun existQueue(projectId: String, pipelineId: String, buildId: String, buildStatus: BuildStatus): Boolean {
         val redisLock = RedisLock(redisOperation, "$nextBuildKey:$pipelineId:$buildId", expiredTimeInSeconds)
         try {

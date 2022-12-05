@@ -74,6 +74,9 @@ class TemplateInstanceCronService @Autowired constructor(
     @Value("\${template.instanceListUrl}")
     private val instanceListUrl: String = ""
 
+    @Value("\${template.maxErrorReasonLength:400}")
+    private val maxErrorReasonLength: Int = 400
+
     @Scheduled(cron = "0 0/1 * * * ?")
     fun templateInstance() {
         val lock = RedisLock(redisOperation, LOCK_KEY, 3000)
@@ -159,7 +162,11 @@ class TemplateInstanceCronService @Autowired constructor(
                             successPipelines.add(pipelineName)
                         } catch (ignored: Throwable) {
                             logger.warn("Fail to update the pipeline|$pipelineName|$projectId|$userId|$ignored")
-                            failurePipelines.add(pipelineName)
+                            val message =
+                                if (!ignored.message.isNullOrBlank() && ignored.message!!.length > maxErrorReasonLength)
+                                    ignored.message!!.substring(0, maxErrorReasonLength) + "......"
+                                else ignored.message
+                            failurePipelines.add("【$pipelineName】reason: $message")
                         }
                     }
                 }
@@ -178,8 +185,8 @@ class TemplateInstanceCronService @Autowired constructor(
                     failurePipelines = failurePipelines
                 )
             }
-        } catch (t: Throwable) {
-            logger.warn("templateInstance failed", t)
+        } catch (ignored: Throwable) {
+            logger.warn("templateInstance failed", ignored)
         } finally {
             lock.unlock()
         }

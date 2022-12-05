@@ -37,10 +37,13 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
@@ -151,10 +154,30 @@ interface ServiceBuildResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<BuildManualStartupInfo>
+
+    @ApiOperation("搜索流水线参数")
+    @POST
+    @Path("/{projectId}/{pipelineId}/manualSearchOptions")
+    fun manualSearchOptions(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("搜索参数", required = false)
+        @QueryParam("search")
+        search: String? = null,
+        @ApiParam("流水线参数", required = false)
+        buildFormProperty: BuildFormProperty
+    ): Result<List<BuildFormValue>>
 
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see ServiceBuildResource.manualStartupNew"))
     @ApiOperation("手动启动流水线")
@@ -173,7 +196,7 @@ interface ServiceBuildResource {
         pipelineId: String,
         @ApiParam("启动参数", required = true)
         values: Map<String, String>,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
         @ApiParam("手动指定构建版本参数", required = false)
@@ -206,7 +229,7 @@ interface ServiceBuildResource {
         @ApiParam("跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
         @QueryParam("skip")
         skipFailedTask: Boolean? = false,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
         @ApiParam("是否忽略人工触发", required = false)
@@ -231,7 +254,7 @@ interface ServiceBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -250,7 +273,7 @@ interface ServiceBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -277,7 +300,31 @@ interface ServiceBuildResource {
         elementId: String,
         @ApiParam("审核信息", required = true)
         params: ReviewParam,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<Boolean>
+
+    @ApiOperation("触发审核")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/review")
+    fun buildTriggerReview(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("是否通过审核", required = true)
+        @QueryParam("approve")
+        approve: Boolean,
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -299,7 +346,7 @@ interface ServiceBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<ModelDetail>
@@ -324,7 +371,7 @@ interface ServiceBuildResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
         @ApiParam(
@@ -332,7 +379,67 @@ interface ServiceBuildResource {
             required = false, defaultValue = "20"
         )
         @QueryParam("updateTimeDesc")
-        updateTimeDesc: Boolean? = null
+        updateTimeDesc: Boolean? = null,
+        @ApiParam("代码库别名", required = false)
+        @QueryParam("materialAlias")
+        materialAlias: List<String>? = null,
+        @ApiParam("代码库URL", required = false)
+        @QueryParam("materialUrl")
+        materialUrl: String? = null,
+        @ApiParam("分支", required = false)
+        @QueryParam("materialBranch")
+        materialBranch: List<String>? = null,
+        @ApiParam("commitId", required = false)
+        @QueryParam("materialCommitId")
+        materialCommitId: String? = null,
+        @ApiParam("commitMessage", required = false)
+        @QueryParam("materialCommitMessage")
+        materialCommitMessage: String? = null,
+        @ApiParam("状态", required = false)
+        @QueryParam("status")
+        status: List<BuildStatus>? = null,
+        @ApiParam("触发方式", required = false)
+        @QueryParam("trigger")
+        trigger: List<StartType>? = null,
+        @ApiParam("排队于-开始时间(时间戳形式)", required = false)
+        @QueryParam("queueTimeStartTime")
+        queueTimeStartTime: Long? = null,
+        @ApiParam("排队于-结束时间(时间戳形式)", required = false)
+        @QueryParam("queueTimeEndTime")
+        queueTimeEndTime: Long? = null,
+        @ApiParam("开始于-开始时间(时间戳形式)", required = false)
+        @QueryParam("startTimeStartTime")
+        startTimeStartTime: Long? = null,
+        @ApiParam("开始于-结束时间(时间戳形式)", required = false)
+        @QueryParam("startTimeEndTime")
+        startTimeEndTime: Long? = null,
+        @ApiParam("结束于-开始时间(时间戳形式)", required = false)
+        @QueryParam("endTimeStartTime")
+        endTimeStartTime: Long? = null,
+        @ApiParam("结束于-结束时间(时间戳形式)", required = false)
+        @QueryParam("endTimeEndTime")
+        endTimeEndTime: Long? = null,
+        @ApiParam("耗时最小值", required = false)
+        @QueryParam("totalTimeMin")
+        totalTimeMin: Long? = null,
+        @ApiParam("耗时最大值", required = false)
+        @QueryParam("totalTimeMax")
+        totalTimeMax: Long? = null,
+        @ApiParam("备注", required = false)
+        @QueryParam("remark")
+        remark: String? = null,
+        @ApiParam("构件号起始", required = false)
+        @QueryParam("buildNoStart")
+        buildNoStart: Int? = null,
+        @ApiParam("构件号结束", required = false)
+        @QueryParam("buildNoEnd")
+        buildNoEnd: Int? = null,
+        @ApiParam("构建信息", required = false)
+        @QueryParam("buildMsg")
+        buildMsg: String? = null,
+        @ApiParam("触发人", required = false)
+        @QueryParam("startUser")
+        startUser: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取构建详情")
@@ -416,7 +523,7 @@ interface ServiceBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<BuildHistoryVariables>
@@ -454,7 +561,7 @@ interface ServiceBuildResource {
         projectId: String,
         @ApiParam("构建ID", required = true)
         buildId: Set<String>,
-        @ApiParam("渠道号，默认为DS", required = true)
+        @ApiParam("渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS,
         @QueryParam("startBeginTime")
@@ -462,6 +569,26 @@ interface ServiceBuildResource {
         @QueryParam("endBeginTime")
         endBeginTime: String? = null
     ): Result<List<BuildHistory>>
+
+    @ApiOperation("获取流水线构建历史, 返回buildid")
+    @GET
+    @Path("/{projectId}/batch_get_builds")
+    fun getBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam("状态id", required = false)
+        @QueryParam("buildStatus")
+        buildStatus: Set<BuildStatus>? = null,
+        @QueryParam("channelCode")
+        channelCode: ChannelCode = ChannelCode.BS
+    ): Result<List<String>>
 
     @ApiOperation("根据流水线id获取最新执行信息")
     @POST
@@ -533,7 +660,7 @@ interface ServiceBuildResource {
         @ApiParam("流水线buildNum", required = true)
         @PathParam("buildNum")
         buildNum: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<BuildHistory?>
@@ -621,7 +748,7 @@ interface ServiceBuildResource {
         pipelineId: String,
         @ApiParam("启动参数", required = true)
         values: Map<String, String>,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
         @ApiParam("手动指定构建版本参数", required = false)
@@ -653,4 +780,28 @@ interface ServiceBuildResource {
         @BkField(required = true)
         buildId: String
     ): Result<String>
+
+    @ApiOperation("修改某次构建的备注")
+    @POST
+    @Path("projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/updateRemark")
+    fun updateRemark(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        @BkField(required = true)
+        buildId: String,
+        @ApiParam("备注信息", required = true)
+        remark: BuildHistoryRemark?
+    ): Result<Boolean>
 }

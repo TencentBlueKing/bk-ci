@@ -32,8 +32,14 @@
 package com.tencent.bkrepo.generic.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.NestedConfigurationProperty
 
 @ConfigurationProperties(prefix = "generic")
 data class GenericProperties(
-    var host: String = "localhost"
+    /**
+     * generic服务domain地址，用于生成临时url
+     */
+    var domain: String = "localhost",
+    @NestedConfigurationProperty
+    var delta: DeltaProperties = DeltaProperties()
 )

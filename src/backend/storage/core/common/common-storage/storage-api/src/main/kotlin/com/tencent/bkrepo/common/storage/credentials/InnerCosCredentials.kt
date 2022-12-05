@@ -45,6 +45,9 @@ data class InnerCosCredentials(
     var modId: Int? = null,
     var cmdId: Int? = null,
     var timeout: Float = 0.5F,
+    var public: Boolean = false,
+    var slowLogSpeed: Int = MB,
+    var slowLogTimeInMillis: Long = 30 * 1000,
     override var key: String? = null,
     override var cache: CacheProperties = CacheProperties(),
     override var upload: UploadProperties = UploadProperties()
@@ -52,5 +55,6 @@ data class InnerCosCredentials(
 
     companion object {
         const val type = "innercos"
+        const val MB = 1024 * 1024
     }
 }

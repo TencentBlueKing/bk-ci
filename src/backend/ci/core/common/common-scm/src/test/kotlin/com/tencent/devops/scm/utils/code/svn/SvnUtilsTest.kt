@@ -27,8 +27,8 @@
 
 package com.tencent.devops.scm.utils.code.svn
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class SvnUtilsTest {
 
@@ -40,14 +40,14 @@ class SvnUtilsTest {
             url = url,
             filePath = filePath
         )
-        Assert.assertEquals(expected, "/test.java")
+        Assertions.assertEquals(expected, "/test.java")
 
         filePath = "/trunk/bbb/test.java"
         expected = SvnUtils.getSvnFilePath(
             url = url,
             filePath = filePath
         )
-        Assert.assertEquals(expected, "trunk/bbb/test.java")
+        Assertions.assertEquals(expected, "trunk/bbb/test.java")
 
         url = "http://svn.example.com/demo/"
         filePath = "/trunk/aaa/test.java"
@@ -55,7 +55,7 @@ class SvnUtilsTest {
             url = url,
             filePath = filePath
         )
-        Assert.assertEquals(expected, "trunk/aaa/test.java")
+        Assertions.assertEquals(expected, "trunk/aaa/test.java")
 
         url = "http://svn.example.com/demo/trunk/aaa/bbb"
         filePath = "/trunk/aaa/test.java"
@@ -63,6 +63,6 @@ class SvnUtilsTest {
             url = url,
             filePath = filePath
         )
-        Assert.assertEquals(expected, "trunk/aaa/test.java")
+        Assertions.assertEquals(expected, "trunk/aaa/test.java")
     }
 }

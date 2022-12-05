@@ -56,7 +56,10 @@ interface ServiceVarResource {
         buildId: String,
         @ApiParam(value = "变量名称", required = false)
         @QueryParam("varName")
-        varName: String?
+        varName: String?,
+        @ApiParam(value = "流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
     ): Result<Map<String, String>>
 
     @ApiOperation("获取指定构建或指定构建下的上下文变量")
@@ -66,6 +69,9 @@ interface ServiceVarResource {
         @ApiParam(value = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
         @ApiParam(value = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,

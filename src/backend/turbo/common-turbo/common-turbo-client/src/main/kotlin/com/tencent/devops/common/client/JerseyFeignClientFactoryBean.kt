@@ -11,6 +11,7 @@ import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import org.springframework.beans.factory.FactoryBean
 import org.springframework.beans.factory.InitializingBean
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
@@ -31,6 +32,9 @@ class JerseyFeignClientFactoryBean(
         const val devopsPackagePath =
             """com.tencent.devops.([a-z]+).api.([a-zA-Z]+)"""
     }
+
+    @Value("\${service-suffix:#{null}}")
+    private val serviceSuffix: String? = null
 
     private var applicationContext: ApplicationContext? = null
 
@@ -74,7 +78,7 @@ class JerseyFeignClientFactoryBean(
     }
 
     private fun findServiceName(clz: KClass<*>): String {
-        return interfaces.getOrPut(clz) {
+        val serviceName = interfaces.getOrPut(clz) {
             val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
             if (serviceInterface != null) {
                 serviceInterface.value
@@ -83,9 +87,15 @@ class JerseyFeignClientFactoryBean(
                 val codeccRegex = Regex(codeccPackagePath)
                 val devopsRegex = Regex(devopsPackagePath)
                 val matches = codeccRegex.find(packageName) ?: devopsRegex.find(packageName)
-                ?: throw ClientException("无法根据接口[$packageName]分析所属的服务")
+                ?: throw ClientException("can not find service according to package [$packageName]")
                 matches.groupValues[1]
             }
+        }
+
+        return if (serviceSuffix.isNullOrBlank()) {
+            serviceName
+        } else {
+            "$serviceName$serviceSuffix"
         }
     }
 }

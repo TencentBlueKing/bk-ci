@@ -97,7 +97,7 @@ object DependOnUtils {
      * dependOn jobId与containerId映射
      * 前端通过jobId声明依赖关系,流水线真正运行是通过containerId
      */
-    fun initDependOn(stage: Stage, params: Map<String, Any>) {
+    fun initDependOn(stage: Stage, params: Map<String, String>) {
         val allJobId2JobMap = mutableMapOf<String, Container>()
         stage.containers.forEach container@{ c ->
             if (c.jobId.isNullOrBlank()) {
@@ -122,7 +122,7 @@ object DependOnUtils {
                     dependOnId = jobControlOption.dependOnId,
                     dependOnName = jobControlOption.dependOnName
                 ),
-                params = params.map { it.key to it.value.toString() }.toMap()
+                params = params
             )
             if (dependOnJobIds.isEmpty()) {
                 return@container

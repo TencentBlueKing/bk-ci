@@ -31,17 +31,18 @@
 
 package com.tencent.bkrepo.common.service.exception
 
-import com.netflix.client.ClientException
-import com.netflix.hystrix.exception.HystrixRuntimeException
 import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.service.condition.ConditionalOnMicroService
 import com.tencent.bkrepo.common.service.log.LoggerHolder.logException
 import com.tencent.bkrepo.common.service.util.LocaleMessageUtils
 import com.tencent.bkrepo.common.service.util.ResponseBuilder
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException
+import org.springframework.cloud.client.circuitbreaker.NoFallbackAvailableException
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -61,21 +62,23 @@ class ServiceExceptionHandler {
         return ResponseBuilder.fail(exception.errorCode, exception.errorMessage.orEmpty())
     }
 
-    @ExceptionHandler(HystrixRuntimeException::class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    fun handleException(exception: HystrixRuntimeException): Response<Void> {
-        var causeMessage = exception.cause?.message
-        var messageCode = CommonMessageCode.SERVICE_CALL_ERROR
-        if (exception.failureType == HystrixRuntimeException.FailureType.COMMAND_EXCEPTION) {
-            val throwable = exception.cause?.cause
-            if (throwable is ClientException) {
-                causeMessage = throwable.errorMessage
-            }
-        } else if (exception.failureType == HystrixRuntimeException.FailureType.SHORTCIRCUIT) {
-            messageCode = CommonMessageCode.SERVICE_CIRCUIT_BREAKER
+    @ExceptionHandler(NoFallbackAvailableException::class)
+    fun handleException(exception: NoFallbackAvailableException): ResponseEntity<Response<Void>> {
+        val cause = exception.cause
+        if (cause is RemoteErrorCodeException) {
+            return ResponseEntity(handleException(cause), HttpStatus.BAD_REQUEST)
         }
-        logException(exception, "[${exception.failureType}]${exception.message} Cause: $causeMessage", true)
+
+        val messageCode = if (cause is CallNotPermittedException) {
+            CommonMessageCode.SERVICE_CIRCUIT_BREAKER
+        } else {
+            CommonMessageCode.SERVICE_CALL_ERROR
+        }
+
+        logException(exception, "${exception.message} Cause: ${cause?.message}", true)
+
         val errorMessage = LocaleMessageUtils.getLocalizedMessage(messageCode, null)
-        return ResponseBuilder.fail(messageCode.getCode(), errorMessage)
+        val response = ResponseBuilder.fail(messageCode.getCode(), errorMessage)
+        return ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR)
     }
 }

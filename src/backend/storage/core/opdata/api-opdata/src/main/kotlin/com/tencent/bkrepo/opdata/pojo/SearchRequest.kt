@@ -38,7 +38,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("search信息")
 data class SearchRequest(
     @ApiModelProperty("查询类型")
-    val type: MetricsType,
+    val type: MetricsType?,
     @ApiModelProperty("查询目标")
     val target: String
 )

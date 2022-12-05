@@ -32,10 +32,19 @@
 package com.tencent.bkrepo.auth.util
 
 import java.util.UUID
+import kotlin.random.Random
 
 object IDUtil {
 
     fun genRandomId(): String {
         return UUID.randomUUID().toString().replace("-", "")
+    }
+
+    fun shortUUID(): String {
+        val stringBuilder = StringBuilder()
+        for (i in 1..5) {
+            stringBuilder.append(Random.nextInt(9))
+        }
+        return stringBuilder.toString()
     }
 }

@@ -29,8 +29,8 @@ package com.tencent.devops.process.pojo.code.svn
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class SvnCommitEventTest {
 
@@ -66,17 +66,17 @@ class SvnCommitEventTest {
         """
         println(json)
         val to = JsonUtil.to(json, SvnCommitEvent::class.java)
-        Assert.assertEquals(2, to.files.size)
-        Assert.assertEquals(2, to.paths.size)
-        Assert.assertTrue(to.files[0].fileFlag)
-        Assert.assertFalse(to.files[1].fileFlag)
+        Assertions.assertEquals(2, to.files.size)
+        Assertions.assertEquals(2, to.paths.size)
+        Assertions.assertTrue(to.files[0].fileFlag)
+        Assertions.assertFalse(to.files[1].fileFlag)
 
         val objectMapper = JsonUtil.getObjectMapper()
         val svnCommitEvent = objectMapper.readValue(json, SvnCommitEvent::class.java)
-        Assert.assertTrue(svnCommitEvent.files[0].fileFlag)
-        Assert.assertEquals(2, svnCommitEvent.files.size)
-        Assert.assertEquals(2, svnCommitEvent.paths.size)
-        Assert.assertTrue(svnCommitEvent.files[0].fileFlag)
-        Assert.assertFalse(svnCommitEvent.files[1].fileFlag)
+        Assertions.assertTrue(svnCommitEvent.files[0].fileFlag)
+        Assertions.assertEquals(2, svnCommitEvent.files.size)
+        Assertions.assertEquals(2, svnCommitEvent.paths.size)
+        Assertions.assertTrue(svnCommitEvent.files[0].fileFlag)
+        Assertions.assertFalse(svnCommitEvent.files[1].fileFlag)
     }
 }

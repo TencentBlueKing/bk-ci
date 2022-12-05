@@ -28,7 +28,7 @@
 package com.tencent.devops.repository.pojo
 
 import com.tencent.devops.common.api.util.JsonUtil
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class GithubRepositoryTest {
 

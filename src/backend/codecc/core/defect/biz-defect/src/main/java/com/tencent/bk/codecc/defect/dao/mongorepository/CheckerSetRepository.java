@@ -41,7 +41,7 @@ public interface CheckerSetRepository extends MongoRepository<CheckerSetEntity, 
      * @param version
      * @return
      */
-    CheckerSetEntity findByToolNameAndCheckerSetIdAndVersion(String toolName, String checkerSetId, int version);
+    CheckerSetEntity findFirstByToolNameAndCheckerSetIdAndVersion(String toolName, String checkerSetId, int version);
 
     /**
      * ---------已废弃--------通过工具名称、规则集ID查询
@@ -85,7 +85,7 @@ public interface CheckerSetRepository extends MongoRepository<CheckerSetEntity, 
      * @param version
      * @return
      */
-    CheckerSetEntity findByCheckerSetIdAndVersion(String checkerSetId, int version);
+    CheckerSetEntity findFirstByCheckerSetIdAndVersion(String checkerSetId, int version);
 
     /**
      * 通过规则集ID和版本号批量查询

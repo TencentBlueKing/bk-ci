@@ -82,7 +82,7 @@ class StandardClusterDefectServiceImpl(
         val standardClusterResultVO = StandardClusterResultVO()
         standardClusterResultVO.type = ComConstants.ToolType.STANDARD.name
         val standardClusterStatisticEntity =
-                standardClusterStatisticRepository.findByTaskIdAndBuildId(taskId, buildId)
+                standardClusterStatisticRepository.findFirstByTaskIdAndBuildId(taskId, buildId)
                         ?: return standardClusterResultVO
         BeanUtils.copyProperties(standardClusterResultVO, standardClusterStatisticEntity)
         standardClusterResultVO.type = ComConstants.ToolType.STANDARD.name

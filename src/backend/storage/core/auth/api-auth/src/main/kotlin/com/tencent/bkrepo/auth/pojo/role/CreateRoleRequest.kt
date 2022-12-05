@@ -38,15 +38,17 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("创建角色请求")
 data class CreateRoleRequest(
     @ApiModelProperty("角色id")
-    val roleId: String,
+    val roleId: String?,
     @ApiModelProperty("角色名称")
     val name: String,
     @ApiModelProperty("角色类型")
-    val type: RoleType,
+    val type: RoleType = RoleType.PROJECT,
     @ApiModelProperty("项目ID")
     val projectId: String,
     @ApiModelProperty("仓库名称")
     val repoName: String? = null,
     @ApiModelProperty("管理员")
-    val admin: Boolean = false
+    val admin: Boolean = false,
+    @ApiModelProperty("描述信息")
+    val description: String? = null
 )

@@ -33,11 +33,12 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryInfo
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import io.swagger.annotations.Api
@@ -217,6 +218,23 @@ interface ServiceGitRepositoryResource {
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<String>
+
+    @ApiOperation("更新代码仓库单个文件内容")
+    @PUT
+    @Path("/{repoId}/updateFileContent")
+    fun updateTGitFileContent(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "仓库id")
+        @PathParam("repoId")
+        repoId: String,
+        @ApiParam("代码库请求类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @ApiParam(value = "更新文件内容")
+        gitOperationFile: GitOperationFile
+    ): Result<Boolean>
 
     @ApiOperation("删除代码库")
     @DELETE

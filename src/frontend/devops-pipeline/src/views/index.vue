@@ -16,7 +16,7 @@
         methods: {
             ...mapActions('atom', [
                 'fetchContainers',
-                'fetchAtoms',
+                'fetchClassify',
                 'fetchStageTagList',
                 'fetchCommonSetting'
             ]),
@@ -25,9 +25,7 @@
                 this.fetchContainers({
                     projectCode
                 })
-                this.fetchAtoms({
-                    projectCode
-                })
+                this.fetchClassify()
                 this.fetchStageTagList()
                 this.fetchCommonSetting()
             }

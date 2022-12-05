@@ -100,7 +100,7 @@ import lombok.extern.slf4j.Slf4j
 import net.sf.json.JSONArray
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
-import org.springframework.beans.BeanUtils
+import com.tencent.devops.common.util.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
@@ -1195,7 +1195,13 @@ open class PipelineServiceImpl @Autowired constructor(
             logger.error("get repo list fail!")
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
-        return repoResult.data!!.map { (repositoryHashId, aliasName, url, type, _, _, _, authType) ->
+        val supportRepoType = listOf<String>(ScmType.CODE_GIT.name,
+            ScmType.CODE_GITLAB.name,
+            ScmType.CODE_SVN.name,
+            ScmType.GITHUB.name)
+        return repoResult.data!!.filter { repo ->
+            supportRepoType.contains(repo.type.name)
+        }.map { (repositoryHashId, aliasName, url, type, _, _, _, authType) ->
             val repoInfoVO = RepoInfoVO()
             repoInfoVO.repoHashId = repositoryHashId
             repoInfoVO.url = url
@@ -1560,7 +1566,7 @@ open class PipelineServiceImpl @Autowired constructor(
         taskId: Long,
         checkerSets: List<ToolCheckerSetVO>
     ): Boolean {
-        var taskEntity = taskRepository.findByTaskId(taskId)
+        var taskEntity = taskRepository.findFirstByTaskId(taskId)
         updateCodeCCModel(userName, taskEntity, null, null, checkerSets, null, null, null, null, null)
         return true
     }

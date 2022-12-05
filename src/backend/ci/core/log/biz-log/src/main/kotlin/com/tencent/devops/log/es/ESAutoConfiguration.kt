@@ -27,13 +27,13 @@
 
 package com.tencent.devops.log.es
 
-import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.client.impl.LogClientImpl
 import com.tencent.devops.log.jmx.CreateIndexBean
 import com.tencent.devops.log.jmx.LogStorageBean
+import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
@@ -136,7 +136,7 @@ class ESAutoConfiguration : DisposableBean {
         val tcpKeepAliveSeconds = 30000 // 探活连接时长
         val connectTimeOut = 1000 // 请求连接超时
         val connectionRequestTimeOut = 500 // 获取连接的超时时间
-        val maxConnectNum = 10 // 最大连接数
+        val maxConnectNum = 100 // 最大连接数
         val maxConnectPerRoute = 30 // 最大路由连接数
         val requestTimeout = if (socketTimeout > 0) { // ES响应超时，取主动超时的一半
             socketTimeout / 2
@@ -174,20 +174,20 @@ class ESAutoConfiguration : DisposableBean {
                 throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.truststore.password")
             }
 
-            val keystoreFile = File(keystoreFilePath!!)
+            val keystoreFile = File(keystoreFilePath)
             if (!keystoreFile.exists()) {
                 throw IllegalArgumentException("keystore file not found, please check: $keystoreFilePath")
             }
-            val truststoreFile = File(truststoreFilePath!!)
+            val truststoreFile = File(truststoreFilePath)
             if (!truststoreFile.exists()) {
                 throw IllegalArgumentException("truststore file not found, please check: $truststoreFilePath")
             }
 
             val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-            val keystorePasswordCharArray = keystorePassword!!.toCharArray()
+            val keystorePasswordCharArray = keystorePassword.toCharArray()
             keyStore.load(FileInputStream(keystoreFile), keystorePasswordCharArray)
             val truststore = KeyStore.getInstance(KeyStore.getDefaultType())
-            val truststorePasswordCharArray = truststorePassword!!.toCharArray()
+            val truststorePasswordCharArray = truststorePassword.toCharArray()
             truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
 
             sslContext = SSLContexts.custom()
@@ -196,21 +196,23 @@ class ESAutoConfiguration : DisposableBean {
                 .build()
         }
 
-        client = RestHighLevelClient(ESConfigUtils.getClientBuilder(
-            host = host!!,
-            port = httpPort,
-            https = boolConvert(https),
-            tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
-            connectTimeout = connectTimeOut,
-            socketTimeout = socketTimeout,
-            connectionRequestTimeout = connectionRequestTimeOut,
-            maxConnectNum = maxConnectNum,
-            maxConnectPerRoute = maxConnectPerRoute,
-            sslContext = sslContext,
-            credentialsProvider = credentialsProvider
-        ))
+        client = RestHighLevelClient(
+            ESConfigUtils.getClientBuilder(
+                host = host,
+                port = httpPort,
+                https = boolConvert(https),
+                tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
+                connectTimeout = connectTimeOut,
+                socketTimeout = socketTimeout,
+                connectionRequestTimeout = connectionRequestTimeOut,
+                maxConnectNum = maxConnectNum,
+                maxConnectPerRoute = maxConnectPerRoute,
+                sslContext = sslContext,
+                credentialsProvider = credentialsProvider
+            )
+        )
         return ESClient(
-            clusterName = name!!,
+            clusterName = name,
             restClient = client!!,
             shards = indexShards,
             replicas = indexReplicas,
@@ -254,7 +256,7 @@ class ESAutoConfiguration : DisposableBean {
 
     private fun boolConvert(value: String?): Boolean {
         return if (!value.isNullOrBlank()) {
-            value!!.toBoolean()
+            value.toBoolean()
         } else {
             false
         }

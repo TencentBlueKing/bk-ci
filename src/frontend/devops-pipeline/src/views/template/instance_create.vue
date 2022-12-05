@@ -38,7 +38,7 @@
                                     {{ $t('template.applyTemplateSetting') }}
                                 </bk-checkbox>
                                 <bk-popover placement="top">
-                                    <i class="bk-icon icon-info-circle"></i>
+                                    <i class="devops-icon icon-info-circle"></i>
                                     <div slot="content" style="white-space: pre-wrap; min-width: 200px">
                                         <div>{{ $t('template.applySettingTips') }}</div>
                                     </div>
@@ -51,7 +51,7 @@
                     <div class="instance-pipeline">
                         <label class="conf-title">{{ $t('template.newPipelineName') }}</label>
                         <div class="pipeline-name-box">
-                            <div :class="{ &quot;pipeline-item&quot;: true, &quot;active-item&quot;: entry.selected, &quot;unselect-hover&quot;: !entry.selected }"
+                            <div :class="{ 'pipeline-item': true, 'active-item': entry.selected, 'unselect-hover': !entry.selected }"
                                 v-for="(entry, index) in pipelineNameList" :key="index" @click="lastCilckPipeline(index)">{{ entry.pipelineName }}
                                 <i class="delete-btn" v-if="!hashVal" @click="deletePipelineName(index)"></i>
                             </div>
@@ -80,11 +80,11 @@
                                 </div>
                                 <div class="params-flex-col" ref="buildForm">
                                     <form-field :required="true" :label="$t('buildNum')">
-                                        <vuex-input :disabled="disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="&quot;required|numeric&quot;" :value="param.buildParams.buildNo" :handle-change="handleBuildNoChange" />
+                                        <vuex-input :disabled="disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="'required|numeric'" :value="param.buildParams.buildNo" :handle-change="handleBuildNoChange" />
                                         <p v-if="errors.has('buildNo')" :class="errors.has('buildNo') ? 'error-tips' : 'normal-tips'">{{ $t('template.buildNumErrTips') }}</p>
                                     </form-field>
-                                    <form-field class="flex-colspan-2" :required="true" :is-error="errors.has(&quot;buildNoType&quot;)" :error-msg="errors.first(&quot;buildNoType&quot;)">
-                                        <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="&quot;required|string&quot;" :value="param.buildParams.buildNoType" :handle-change="handleBuildNoChange" />
+                                    <form-field class="flex-colspan-2" :required="true" :is-error="errors.has('buildNoType')" :error-msg="errors.first('buildNoType')">
+                                        <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="'required|string'" :value="param.buildParams.buildNoType" :handle-change="handleBuildNoChange" />
                                     </form-field>
                                 </div>
                             </div>

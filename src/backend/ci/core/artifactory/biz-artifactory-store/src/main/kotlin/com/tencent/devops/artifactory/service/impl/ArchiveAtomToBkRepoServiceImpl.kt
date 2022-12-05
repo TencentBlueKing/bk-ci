@@ -1,6 +1,5 @@
 package com.tencent.devops.artifactory.service.impl
 
-import com.tencent.devops.artifactory.client.bkrepo.DefaultBkRepoClient
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
@@ -21,9 +20,7 @@ import javax.ws.rs.NotFoundException
 
 @Service
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
-class ArchiveAtomToBkRepoServiceImpl(
-    private val bkRepoClient: DefaultBkRepoClient
-) : ArchiveAtomServiceImpl() {
+class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
 
     override fun getAtomArchiveBasePath(): String {
         return System.getProperty("java.io.tmpdir")
@@ -88,6 +85,10 @@ class ArchiveAtomToBkRepoServiceImpl(
         } finally {
             tmpFile.delete()
         }
+    }
+
+    override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
+        bkRepoClient.delete(userId, BKREPO_STORE_PROJECT_ID, REPO_NAME_PLUGIN, "$projectCode/$atomCode")
     }
 
     override fun clearServerTmpFile(projectCode: String, atomCode: String, version: String) {

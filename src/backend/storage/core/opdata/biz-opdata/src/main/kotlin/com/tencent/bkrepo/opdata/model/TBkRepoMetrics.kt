@@ -32,10 +32,11 @@
 package com.tencent.bkrepo.opdata.model
 
 import org.springframework.data.mongodb.core.mapping.Document
+import java.time.LocalDate
 
 @Document("bkrepo_metrics")
 data class TBkRepoMetrics(
-    var date: String,
+    var date: LocalDate = LocalDate.now(),
     var projectNum: Long,
     var nodeNum: Long,
     var capSize: Long

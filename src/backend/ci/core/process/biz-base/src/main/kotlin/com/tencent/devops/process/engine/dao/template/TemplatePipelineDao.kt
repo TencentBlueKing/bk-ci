@@ -27,6 +27,9 @@
 
 package com.tencent.devops.process.engine.dao.template
 
+import com.tencent.devops.common.api.constant.KEY_UPDATED_TIME
+import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.constant.KEY_VERSION_NAME
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
@@ -36,10 +39,14 @@ import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
+import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record2
+import org.jooq.Record1
+import org.jooq.Record3
+import org.jooq.Record4
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -135,7 +142,7 @@ class TemplatePipelineDao {
         pipelineIds: Set<String>,
         instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type,
         projectId: String? = null
-    ): Result<TTemplatePipelineRecord> {
+    ): Result<Record1<String>> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PIPELINE_ID.`in`(pipelineIds))
@@ -144,7 +151,7 @@ class TemplatePipelineDao {
             if (projectId != null) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
-            return dslContext.selectFrom(this)
+            return dslContext.select(PIPELINE_ID).from(this)
                 .where(conditions)
                 .fetch()
         }
@@ -160,7 +167,7 @@ class TemplatePipelineDao {
         pipelineIds: Set<String>,
         instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type,
         projectId: String? = null
-    ): Result<Record2<String, String>> {
+    ): Result<Record4<String, String, Long, String>> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PIPELINE_ID.`in`(pipelineIds))
@@ -169,7 +176,7 @@ class TemplatePipelineDao {
             if (projectId != null) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
-            return dslContext.select(PIPELINE_ID, TEMPLATE_ID).from(this)
+            return dslContext.select(PIPELINE_ID, TEMPLATE_ID, VERSION, VERSION_NAME).from(this)
                 .where(conditions)
                 .fetch()
         }
@@ -181,7 +188,7 @@ class TemplatePipelineDao {
         instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type
     ): Result<out Record> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            return dslContext.select(PIPELINE_ID.`as`("pipelineId"), TEMPLATE_ID.`as`("templateId"))
+            return dslContext.select(PIPELINE_ID.`as`(KEY_PIPELINE_ID), TEMPLATE_ID.`as`(KEY_TEMPLATE_ID))
                 .from(this)
                 .where(PIPELINE_ID.`in`(pipelineIds))
                 .and(INSTANCE_TYPE.eq(instanceType))
@@ -196,10 +203,15 @@ class TemplatePipelineDao {
         instanceType: String,
         templateIds: Collection<String>,
         deleteFlag: Boolean? = null
-    ): Result<TTemplatePipelineRecord> {
+    ): Result<Record3<String, String, Long>> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             val conditions = getQueryTemplatePipelineCondition(projectId, templateIds, instanceType, deleteFlag)
-            return dslContext.selectFrom(this)
+            return dslContext.select(
+                PIPELINE_ID.`as`(KEY_PIPELINE_ID),
+                TEMPLATE_ID.`as`(KEY_TEMPLATE_ID),
+                VERSION.`as`(KEY_VERSION)
+            )
+                .from(this)
                 .where(conditions)
                 .fetch()
         }
@@ -241,26 +253,33 @@ class TemplatePipelineDao {
         projectId: String,
         templateId: String,
         instanceType: String,
-        page: Int? = null,
-        pageSize: Int? = null,
+        page: Int,
+        pageSize: Int,
         searchKey: String? = null,
         sortType: TemplateSortTypeEnum?,
         desc: Boolean?
-    ): SQLPage<TTemplatePipelineRecord> {
+    ): SQLPage<Record> {
         val nameLikedPipelineIds = if (!searchKey.isNullOrBlank()) {
             with(TPipelineSetting.T_PIPELINE_SETTING) {
-                dslContext.selectFrom(this)
+                dslContext.select(PIPELINE_ID)
+                    .from(this)
                     .where(PROJECT_ID.eq(projectId))
-                    .and(IS_TEMPLATE.eq(false))
                     .and(NAME.like("%$searchKey%"))
+                    .groupBy(PIPELINE_ID)
                     .fetch()
-                    .map { it.pipelineId }
-                    .toSet()
+                    .map { it.value1() }
             }
         } else null
 
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            val baseStep = dslContext.selectFrom(this)
+            val baseStep = dslContext.select(
+                PIPELINE_ID.`as`(KEY_PIPELINE_ID),
+                TEMPLATE_ID.`as`(KEY_TEMPLATE_ID),
+                VERSION.`as`(KEY_VERSION),
+                VERSION_NAME.`as`(KEY_VERSION_NAME),
+                UPDATED_TIME.`as`(KEY_UPDATED_TIME)
+            )
+                .from(this)
                 .where(TEMPLATE_ID.eq(templateId))
 
             if (!searchKey.isNullOrBlank()) {
@@ -271,20 +290,15 @@ class TemplatePipelineDao {
                 .and(PROJECT_ID.eq(projectId))
             when (sortType) {
                 TemplateSortTypeEnum.VERSION -> {
-                    baseStep.orderBy(if (desc == false) VERSION else VERSION.desc())
+                    baseStep.orderBy(if (desc == false) VERSION else VERSION.desc(), PIPELINE_ID)
                 }
                 TemplateSortTypeEnum.UPDATE_TIME -> {
-                    baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc())
+                    baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc(), PIPELINE_ID)
                 }
-                else -> baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc())
+                else -> baseStep.orderBy(if (desc == false) UPDATED_TIME else UPDATED_TIME.desc(), PIPELINE_ID)
             }
             val allCount = baseStep.count()
-            val records = if (null != page && null != pageSize) {
-                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-            } else {
-                baseStep.fetch()
-            }
-
+            val records = baseStep.limit((page - 1) * pageSize, pageSize).fetch()
             return SQLPage(allCount.toLong(), records)
         }
     }

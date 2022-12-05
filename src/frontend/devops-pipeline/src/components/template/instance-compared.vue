@@ -64,12 +64,13 @@
                     <div class="update-version-compared compared-pipeline-preview">
                         <div class="update-before previre-pipeline">
                             <div class="prevent-content">
-                                <stages :stages="curStages" :editable="false" v-if="curStages"></stages>
+                                <bk-pipeline :pipeline="{ stages: curStages }" :editable="false" v-if="curStages"></bk-pipeline>
                             </div>
                         </div>
                         <div class="update-after previre-pipeline">
                             <div class="prevent-content">
-                                <stages :stages="targetStages" :editable="false" v-if="targetStages"></stages>
+                                <bk-pipeline :pipeline="{ stages: targetStages }" :editable="false" v-if="targetStages">
+                                </bk-pipeline>
                             </div>
                         </div>
                     </div>
@@ -80,12 +81,10 @@
 </template>
 
 <script>
-    import Stages from '@/components/Stages'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
 
     export default {
         components: {
-            Stages,
             KeyValueNormal
         },
         props: {

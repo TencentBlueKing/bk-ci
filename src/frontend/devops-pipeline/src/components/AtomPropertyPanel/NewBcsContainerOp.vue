@@ -39,7 +39,7 @@
         async mounted () {
             try {
                 this.isLoading = true
-                const res = await this.$store.dispatch('soda/requestProjectDetail', {
+                const res = await this.$store.dispatch('common/requestProjectDetail', {
                     projectId: this.projectId
                 })
                 this.curProject = res

@@ -35,6 +35,8 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -42,6 +44,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
@@ -114,6 +117,24 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineBuildFacadeService.buildManualStartupInfo(
                 userId, projectId, pipelineId,
                 channelCode, ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
+    override fun manualSearchOptions(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        search: String?,
+        buildFormProperty: BuildFormProperty
+    ): Result<List<BuildFormValue>> {
+        return Result(
+            pipelineBuildFacadeService.buildManualSearchOptions(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                search = search,
+                property = buildFormProperty
             )
         )
     }
@@ -229,6 +250,32 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun buildTriggerReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        approve: Boolean,
+        channelCode: ChannelCode
+    ): Result<Boolean> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.buildTriggerReview(
+                userId = userId,
+                buildId = buildId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                approve = approve,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
     override fun getBuildDetail(
         userId: String,
         projectId: String,
@@ -256,7 +303,27 @@ class ServiceBuildResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         channelCode: ChannelCode,
-        updateTimeDesc: Boolean?
+        updateTimeDesc: Boolean?,
+        materialAlias: List<String>?,
+        materialUrl: String?,
+        materialBranch: List<String>?,
+        materialCommitId: String?,
+        materialCommitMessage: String?,
+        status: List<BuildStatus>?,
+        trigger: List<StartType>?,
+        queueTimeStartTime: Long?,
+        queueTimeEndTime: Long?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
+        totalTimeMin: Long?,
+        totalTimeMax: Long?,
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?,
+        buildMsg: String?,
+        startUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -266,8 +333,28 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             page = page,
             pageSize = pageSize,
-            channelCode = channelCode,
+            materialAlias = materialAlias?.filter { it.isNotBlank() },
+            materialUrl = materialUrl,
+            materialBranch = materialBranch?.filter { it.isNotBlank() },
+            materialCommitId = materialCommitId,
+            materialCommitMessage = materialCommitMessage,
+            // 可能出现[null] 的情况
+            status = status?.filterNotNull(),
+            trigger = trigger?.filterNotNull(),
+            queueTimeStartTime = queueTimeStartTime,
+            queueTimeEndTime = queueTimeEndTime,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            totalTimeMin = totalTimeMin,
+            totalTimeMax = totalTimeMax,
+            remark = remark,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd,
+            buildMsg = buildMsg,
             checkPermission = ChannelCode.isNeedAuth(channelCode),
+            startUser = startUser?.filter { it.isNotBlank() },
             updateTimeDesc = updateTimeDesc
         )
         return Result(result)
@@ -429,6 +516,24 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 channelCode = channelCode,
                 startBeginTime = startBeginTime,
                 endBeginTime = endBeginTime,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
+    override fun getBuilds(
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?,
+        channelCode: ChannelCode
+    ): Result<List<String>> {
+        return Result(
+            pipelineBuildFacadeService.getBuilds(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildStatus = buildStatus,
                 checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
@@ -605,6 +710,24 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 buildId = buildId
             )
         )
+    }
+
+    override fun updateRemark(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        remark: BuildHistoryRemark?
+    ): Result<Boolean> {
+        checkParam(projectId, pipelineId)
+        pipelineBuildFacadeService.updateRemark(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            remark = remark?.remark
+        )
+        return Result(true)
     }
 
     private fun checkParam(projectId: String, pipelineId: String) {

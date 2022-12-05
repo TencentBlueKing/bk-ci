@@ -12,12 +12,9 @@
  
 package com.tencent.bk.codecc.defect.dao;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 
 /**
@@ -28,16 +25,16 @@ import org.springframework.util.Assert;
  */
 public class AddFieldOperation implements AggregationOperation
 {
-    private final BasicDBObject basicDBObject;
+    private final Document document;
 
-    public AddFieldOperation(final BasicDBObject basicDBObject)
+    public AddFieldOperation(final Document document)
     {
-        Assert.notNull(basicDBObject, "Criteria must not be null!");
-        this.basicDBObject = basicDBObject;
+        Assert.notNull(document, "Criteria must not be null!");
+        this.document = document;
     }
 
     @Override
-    public DBObject toDBObject(AggregationOperationContext aggregationOperationContext) {
-        return new BasicDBObject("$addFields", basicDBObject);
+    public Document toDocument(AggregationOperationContext context) {
+        return new Document("$addFields", document);
     }
 }

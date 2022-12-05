@@ -43,10 +43,8 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import javax.annotation.PostConstruct
 
-@Component
 class BSAuthTokenApi @Autowired constructor(
     private val bkAuthProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper,
@@ -78,7 +76,7 @@ class BSAuthTokenApi @Autowired constructor(
 
             redisLock.use {
                 if (!redisLock.tryLock()) {
-                    logger.error("auth try lock $lockKey fail")
+                    logger.info("auth try lock $lockKey fail")
                     Thread.sleep(SleepMills)
                     return@use
                 }

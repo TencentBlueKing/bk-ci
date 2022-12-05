@@ -74,7 +74,6 @@
     export default {
         data () {
             return {
-                DOCS_URL_PREFIX,
                 permissions: {
                     pushImage: null,
                     syncImage: null

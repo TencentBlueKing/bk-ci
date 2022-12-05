@@ -1,4 +1,4 @@
-service.name: monitor
+spring.application.name: monitor
 server.port: 25905
 
 spring.boot.admin:

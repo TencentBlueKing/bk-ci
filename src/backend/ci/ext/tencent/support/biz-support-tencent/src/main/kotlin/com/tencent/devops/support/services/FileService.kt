@@ -27,7 +27,14 @@
 
 package com.tencent.devops.support.services
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.support.constant.SupportMessageCode
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -39,7 +46,7 @@ import java.io.InputStream
 import java.nio.file.Files
 
 @Service
-class FileService @Autowired constructor(private val awsClientService: AwsClientService) {
+class FileService @Autowired constructor(private val client: Client) {
 
     @Value("\${file.allowUploadFileTypes}")
     private lateinit var allowUploadFileTypes: String
@@ -47,33 +54,53 @@ class FileService @Autowired constructor(private val awsClientService: AwsClient
     @Value("\${file.maxUploadFileSize}")
     private lateinit var maxUploadFileSize: String
 
-    fun uploadFile(inputStream: InputStream, disposition: FormDataContentDisposition): Result<String?> {
-        logger.info("the upload file info is:$disposition")
+    fun uploadFile(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
         val fileName = disposition.fileName
+        logger.info("$userId upload file:$fileName")
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1)
         // 校验文件类型是否满足上传文件类型的要求
         val allowUploadFileTypeList = allowUploadFileTypes.split(",")
         if (!allowUploadFileTypeList.contains(fileType.toLowerCase())) {
-            return MessageCodeUtil.generateResponseDataObject(SupportMessageCode.UPLOAD_FILE_TYPE_IS_NOT_SUPPORT, arrayOf(fileType, allowUploadFileTypes))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = SupportMessageCode.UPLOAD_FILE_TYPE_IS_NOT_SUPPORT,
+                params = arrayOf(fileType, allowUploadFileTypes)
+            )
         }
-        val file = Files.createTempFile("random_" + System.currentTimeMillis(), ".$fileType").toFile()
+        val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
         file.outputStream().use {
             inputStream.copyTo(it)
         }
         // 校验上传文件大小是否超出限制
         val fileSize = file.length()
         val maxFileSize = maxUploadFileSize.toLong()
-        if (fileSize>maxFileSize) {
-            return MessageCodeUtil.generateResponseDataObject(SupportMessageCode.UPLOAD_FILE_IS_TOO_LARGE, arrayOf((maxFileSize / 1048576).toString() + "M"))
+        if (fileSize > maxFileSize) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = SupportMessageCode.UPLOAD_FILE_IS_TOO_LARGE,
+                params = arrayOf((maxFileSize / 1048576).toString() + "M")
+            )
         }
-        val result: Result<String?>
+        val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoResource::class)
+        // 组装文件上传目标路径
+        val destPath = "file/$fileType/${file.name}"
+        val serviceUrl =
+            "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
         try {
-            result = awsClientService.uploadFile(file)
+            OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
+                val responseContent = response.body()!!.string()
+                if (!response.isSuccessful) {
+                    logger.warn("$userId upload file:$fileName fail,responseContent:$responseContent")
+                    return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                }
+                return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
+            }
         } finally {
             file.delete()
         }
-        return result
     }
 
     companion object {

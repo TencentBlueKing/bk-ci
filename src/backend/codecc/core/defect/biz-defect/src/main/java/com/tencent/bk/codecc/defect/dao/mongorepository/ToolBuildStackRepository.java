@@ -22,7 +22,7 @@ public interface ToolBuildStackRepository extends MongoRepository<ToolBuildStack
      * @param toolName
      * @return
      */
-    ToolBuildStackEntity findByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
+    ToolBuildStackEntity findFirstByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
 
     /**
      * 根据任务ID和工具名称查询

@@ -28,6 +28,7 @@
 package com.tencent.devops.artifactory.service
 
 import com.tencent.devops.artifactory.dao.ShortUrlDao
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.hashids.Hashids
 import org.jooq.DSLContext
@@ -35,21 +36,29 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 class ShortUrlService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val shortUrlDao: ShortUrlDao
+    private val shortUrlDao: ShortUrlDao,
+    private val redisOperation: RedisOperation
 ) {
-    private val hashids = Hashids(HASH_SALT, 8, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+    private val hashids = Hashids(HASH_SALT, 8)
 
     fun createShortUrl(url: String, ttl: Int): String {
-        logger.info("createShortUrl, url: $url, ttl: $ttl")
-        val expireTime = LocalDateTime.now().plusSeconds(ttl.toLong())
-        val urlId = shortUrlDao.create(dslContext, url, "devops", expireTime)
-        val shortUrl = "${HomeHostUtil.shortUrlServerHost()}/${encodeLongId(urlId)}"
-        logger.info("shortUrl: $shortUrl")
-        return shortUrl
+        val shortUrlCache = redisOperation.get(url)
+        return if (shortUrlCache != null) {
+            logger.info("get short url from cache, url: $url, shortUrl: $shortUrlCache")
+            shortUrlCache
+        } else {
+            val expireTime = LocalDateTime.now().plusSeconds(ttl.toLong())
+            val urlId = shortUrlDao.create(dslContext, url, "devops", expireTime)
+            val shortUrl = "${HomeHostUtil.shortUrlServerHost()}/${encodeLongId(urlId)}"
+            logger.info("createShortUrl, url: $url, ttl: $ttl, shortUrl: $shortUrl")
+            redisOperation.set(url, shortUrl, TimeUnit.MINUTES.toSeconds(SHORT_URL_CACHE_EXPIRED_MINUTE))
+            shortUrl
+        }
     }
 
     fun getRedirectUrl(urlId: String): String {
@@ -79,5 +88,6 @@ class ShortUrlService @Autowired constructor(
     companion object {
         private const val HASH_SALT = "jHy^2(@So7"
         private val logger = LoggerFactory.getLogger(ShortUrlService::class.java)
+        private const val SHORT_URL_CACHE_EXPIRED_MINUTE = 1L
     }
 }

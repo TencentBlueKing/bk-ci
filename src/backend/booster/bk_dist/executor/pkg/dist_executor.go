@@ -47,7 +47,7 @@ func NewDistExecutor() *DistExecutor {
 }
 
 // Run main function entry
-func (d *DistExecutor) Run() (int, error) {
+func (d *DistExecutor) Run() (int, string, error) {
 	// detect the log level from settings
 	d.detectLogLevel()
 
@@ -67,28 +67,40 @@ func (d *DistExecutor) Run() (int, error) {
 	return d.runWork()
 }
 
-func runDirect() (int, error) {
+func runDirect() (int, string, error) {
 	if len(os.Args) < 2 {
-		return 0, nil
+		return 0, "", nil
 	}
 
 	sandbox := dcSyscall.Sandbox{}
-	return sandbox.ExecCommand(os.Args[1], os.Args[2:]...)
+	retcode, err := sandbox.ExecCommand(os.Args[1], os.Args[2:]...)
+	return retcode, "", err
 }
 
-func (d *DistExecutor) runWork() (int, error) {
+func (d *DistExecutor) runWork() (int, string, error) {
 	d.initStats()
 
 	if len(os.Args) < 2 {
 		blog.Errorf("executor: not enough args to execute")
-		return 0, fmt.Errorf("not enough args to execute")
+		return 0, "", fmt.Errorf("not enough args to execute")
 	}
 
 	// ignore argv[0], it's itself
-	r, err := d.work.Job(d.stats).ExecuteLocalTask(os.Args[1:], "")
-	if err != nil {
-		blog.Errorf("executor: execute failed, error: %v, exit code: -1", err)
-		return -1, err
+	// _, _, r, err := d.work.Job(d.stats).ExecuteLocalTask(os.Args[1:], "")
+	// if err != nil {
+	// 	blog.Errorf("executor: execute failed, error: %v, exit code: -1", err)
+	// 	return -1, err
+	// }
+
+	retcode, retmsg, r, err := d.work.Job(d.stats).ExecuteLocalTask(os.Args[1:], "")
+	if err != nil || retcode != 0 {
+		if r != nil {
+			blog.Errorf("executor: execute failed, error: %v, ret code: %d,retmsg:%s,outmsg:%s,errmsg:%s,cmd:%v",
+				err, retcode, retmsg, string(r.Stdout), string(r.Stderr), os.Args[1:])
+		} else {
+			blog.Errorf("executor: execute failed, ret code:%d, retmsg:%s, error: %v, cmd:%v", retcode, retmsg, err, os.Args[1:])
+		}
+		return retcode, retmsg, err
 	}
 
 	charcode := 0
@@ -132,10 +144,10 @@ func (d *DistExecutor) runWork() (int, error) {
 
 	if r.ExitCode != 0 {
 		blog.Errorf("executor: execute failed, error: %v, exit code: %d", err, r.ExitCode)
-		return r.ExitCode, err
+		return r.ExitCode, retmsg, err
 	}
 
-	return 0, nil
+	return 0, retmsg, nil
 }
 
 func (d *DistExecutor) initStats() {

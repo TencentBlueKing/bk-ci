@@ -31,15 +31,15 @@
 
 package com.tencent.bkrepo.repository.job
 
-import com.tencent.bkrepo.common.api.util.executeAndMeasureTime
 import com.tencent.bkrepo.common.service.log.LoggerHolder
 import com.tencent.bkrepo.repository.dao.ShareRecordDao
+import com.tencent.bkrepo.repository.job.base.CenterNodeJob
 import com.tencent.bkrepo.repository.model.TShareRecord
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.where
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.time.Duration
 import java.time.LocalDateTime
 
 /**
@@ -48,22 +48,21 @@ import java.time.LocalDateTime
 @Component
 class ShareRecordCleanupJob(
     private val shareRecordDao: ShareRecordDao
-) {
+) : CenterNodeJob() {
 
     @Scheduled(cron = "0 0 1 * * ?") // 每天凌晨1点执行
-    @SchedulerLock(name = "ShareTokenCleanupJob", lockAtMostFor = "PT1H")
-    fun cleanup() {
-        logger.info("Starting to clean up expired share record.")
-        executeAndMeasureTime {
-            val expireDate = LocalDateTime.now().minusDays(RESERVE_DAYS)
-            val query = Query.query(where(TShareRecord::expireDate).lt(expireDate))
-            shareRecordDao.remove(query)
-        }.apply {
-            logger.info(
-                "[${first.deletedCount}] expired share record has been clean up, elapse [${second.seconds}] s."
-            )
-        }
+    override fun start() {
+        super.start()
     }
+
+    override fun run() {
+        val expireDate = LocalDateTime.now().minusDays(RESERVE_DAYS)
+        val query = Query.query(where(TShareRecord::expireDate).lt(expireDate))
+        val result = shareRecordDao.remove(query)
+        logger.info("[${result.deletedCount}] expired share record has been clean up.")
+    }
+
+    override fun getLockAtMostFor(): Duration = Duration.ofHours(6)
 
     companion object {
         private val logger = LoggerHolder.jobLogger

@@ -158,7 +158,7 @@
         }
         .param-item-empty {
             text-align: center;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
         }
         .hover-click {
             cursor: pointer;

@@ -54,6 +54,16 @@ class ExperienceDao {
         }
     }
 
+    fun listOnline(dslContext: DSLContext, idSet: Collection<Long>): Result<TExperienceRecord> {
+        with(TExperience.T_EXPERIENCE) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(idSet))
+                .and(ONLINE.eq(true))
+                .and(END_DATE.gt(LocalDateTime.now()))
+                .fetch()
+        }
+    }
+
     fun list(
         dslContext: DSLContext,
         projectId: String,
@@ -494,6 +504,16 @@ class ExperienceDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
                 .fetch()
+        }
+    }
+
+    fun listIdsByCreator(dslContext: DSLContext, creator: String): List<Long> {
+        return with((TExperience.T_EXPERIENCE)) {
+            dslContext.select(ID).from(this)
+                .where(CREATOR.eq(creator))
+                .and(END_DATE.gt(LocalDateTime.now()))
+                .and(ONLINE.eq(true))
+                .fetch(ID)
         }
     }
 }

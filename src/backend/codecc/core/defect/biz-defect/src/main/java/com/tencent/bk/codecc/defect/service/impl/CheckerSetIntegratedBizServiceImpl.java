@@ -13,7 +13,7 @@ import com.tencent.devops.common.constant.ComConstants.ToolIntegratedStatus;
 import com.tencent.devops.common.util.GsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -64,11 +64,11 @@ public class CheckerSetIntegratedBizServiceImpl implements ICheckerSetIntegrated
 
             backup(toolName, toStatus, buildId, toCheckerSetList);
 
-            checkerSetRepository.delete(toCheckerSetList);
+            checkerSetRepository.deleteAll(toCheckerSetList);
 
             newCheckerSetList = getNewCheckerSetForGray(changedFromCheckerSetList, user);
 
-            checkerSetRepository.save(newCheckerSetList);
+            checkerSetRepository.saveAll(newCheckerSetList);
 
             // 把旧规则集toCheckerSetList换成新规则newCheckerSetList，需要设置强制全量及告警状态
             Map<String, CheckerSetEntity> oldCheckerSetMap = toCheckerSetList.stream()
@@ -81,7 +81,7 @@ public class CheckerSetIntegratedBizServiceImpl implements ICheckerSetIntegrated
 
             newCheckerSetList = getNewCheckerSetForProd(changedFromCheckerSetList, checkerSetMap, user);
 
-            checkerSetRepository.save(newCheckerSetList);
+            checkerSetRepository.saveAll(newCheckerSetList);
 
             // 把旧规则集checkerSetMap换成新规则newCheckerSetList，需要设置强制全量及告警状态
             updateTaskAfterChangeCheckerSet(newCheckerSetList, checkerSetMap, user);
@@ -175,7 +175,7 @@ public class CheckerSetIntegratedBizServiceImpl implements ICheckerSetIntegrated
         } else {
             checkerSetHisRepository.deleteByToolNameAndVersionNot(toolName, ToolIntegratedStatus.G.value());
         }
-        checkerSetHisRepository.save(bakCheckerSetList);
+        checkerSetHisRepository.saveAll(bakCheckerSetList);
     }
 
     private List<CheckerSetEntity> init(String toolName, ToolIntegratedStatus toStatus,
@@ -243,7 +243,7 @@ public class CheckerSetIntegratedBizServiceImpl implements ICheckerSetIntegrated
                     it.setEntityId(oldCheckerSet.getEntityId());
                 }
             });
-            checkerSetRepository.save(bakGrayCheckerSetList);
+            checkerSetRepository.saveAll(bakGrayCheckerSetList);
 
             // 把旧规则集换成新规则，需要设置强制全量及告警状态
             updateTaskAfterChangeCheckerSet(bakGrayCheckerSetList, oldCheckerSetMap, user);
@@ -267,7 +267,7 @@ public class CheckerSetIntegratedBizServiceImpl implements ICheckerSetIntegrated
                 }
             });
 
-            checkerSetRepository.save(newProdCheckerSetList);
+            checkerSetRepository.saveAll(newProdCheckerSetList);
 
             // 把旧规则集换成新规则，需要设置强制全量及告警状态
             updateTaskAfterChangeCheckerSet(newProdCheckerSetList, maxVersionMap, user);

@@ -49,6 +49,7 @@ class MarketAtomFeatureDao {
                 RECOMMEND_FLAG,
                 YAML_FLAG,
                 QUALITY_FLAG,
+                CERTIFICATION_FLAG,
                 CREATOR,
                 MODIFIER
             )
@@ -58,6 +59,7 @@ class MarketAtomFeatureDao {
                     atomFeatureRequest.recommendFlag,
                     atomFeatureRequest.yamlFlag,
                     atomFeatureRequest.qualityFlag,
+                    atomFeatureRequest.certificationFlag,
                     userId,
                     userId
                 ).execute()
@@ -100,6 +102,10 @@ class MarketAtomFeatureDao {
                 val qualityFlag = atomFeatureRequest.qualityFlag
                 if (null != qualityFlag) {
                     baseStep.set(QUALITY_FLAG, qualityFlag)
+                }
+                val certificationFlag = atomFeatureRequest.certificationFlag
+                if (null != certificationFlag) {
+                    baseStep.set(CERTIFICATION_FLAG, certificationFlag)
                 }
                 baseStep.set(MODIFIER, userId)
                     .set(UPDATE_TIME, LocalDateTime.now())

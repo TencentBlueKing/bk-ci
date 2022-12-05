@@ -95,8 +95,7 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
         containerOS: OS,
         buildType: BuildType
     ): Pair<ContainerResource, ContainerResourceValue> {
-        logger.info("getResource userId is :$userId,projectCode is :$projectCode,containerId is :$containerId")
-        logger.info("getResource containerOS is :$containerOS,buildType is :$buildType")
+        logger.info("getResource params:[$userId|$projectCode|$containerId|$containerOS|$buildType")
         val containerResourceValue: List<String>?
         val resource = when (buildType) {
             BuildType.THIRD_PARTY_DEVCLOUD -> {
@@ -131,9 +130,12 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 val numUnit = MessageCodeUtil.getCodeLanMessage(NUM_UNIT)
                 envNodeList?.map {
                     AgentResponse(
-                        it.envHashId,
-                        it.name,
-                        "（$normalName: ${it.normalNodeCount}$numUnit，$exceptionName: ${it.abnormalNodeCount}$numUnit）"
+                        id = it.envHashId,
+                        name = it.name,
+                        label = "（$normalName: ${it.normalNodeCount}$numUnit，$exceptionName:" +
+                            " ${it.abnormalNodeCount}$numUnit）",
+                        sharedProjectId = it.sharedProjectId,
+                        sharedUserId = it.sharedUserId
                     )
                 }?.toList()
             }

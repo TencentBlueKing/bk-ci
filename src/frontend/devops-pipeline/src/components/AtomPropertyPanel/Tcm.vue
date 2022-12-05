@@ -50,14 +50,14 @@
             async handleSelectTcmId (name, value) {
                 this.handleUpdateElement(name, value)
                 if (value && this.appId) {
-                    const res = await this.$store.dispatch('soda/getTcmTemplate', {
+                    const res = await this.$store.dispatch('common/getTcmTemplate', {
                         appId: this.appId,
                         tcmId: value
                     })
                     const list = []
                     if (res && res.length) {
                         for (let i = 0; i < res.length; i++) {
-                            list.push(Object.assign({}, { id: res[i]['templateId'], name: res[i]['templateName'] }))
+                            list.push(Object.assign({}, { id: res[i].templateId, name: res[i].templateName }))
                         }
                         this.newModel.templateId.list = list
                     }
@@ -66,7 +66,7 @@
             async handleSelectTemplate (name, value) {
                 this.handleUpdateElement(name, value)
                 if (value && this.appId && this.element.tcmAppId) {
-                    const res = await this.$store.dispatch('soda/getTcmTemplateParam', {
+                    const res = await this.$store.dispatch('common/getTcmTemplateParam', {
                         appId: this.appId,
                         tcmId: this.element.tcmAppId,
                         templateId: value
@@ -74,7 +74,7 @@
                     const list = []
                     if (res && res.length) {
                         for (let i = 0; i < res.length; i++) {
-                            list.push(Object.assign({}, { key: res[i]['paramName'], value: '', seq: res[i]['seq'] }))
+                            list.push(Object.assign({}, { key: res[i].paramName, value: '', seq: res[i].seq }))
                         }
                     }
                     this.handleUpdateElement('workJson', list)

@@ -36,6 +36,7 @@ import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.DispatchQueueControl
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
@@ -54,13 +55,15 @@ import java.time.LocalDateTime
  * 每一个Stage结束后续命令处理
  */
 @Service
+@Suppress("LongParameterList", "TooManyFunctions")
 class UpdateStateForStageCmdFinally(
     private val pipelineStageService: PipelineStageService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
     private val stageBuildDetailService: StageBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val dispatchQueueControl: DispatchQueueControl
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -79,7 +82,8 @@ class UpdateStateForStageCmdFinally(
         // #3138 stage cancel 不在此处理 更新状态&模型 @see PipelineStageService.cancelStage
         // #4732 stage 准入准出的质量红线失败时不需要刷新当前 stage 的状态
         if (event.source != BS_STAGE_CANCELED_END_SOURCE &&
-            commandContext.buildStatus != BuildStatus.QUALITY_CHECK_FAIL) {
+            commandContext.buildStatus != BuildStatus.QUALITY_CHECK_FAIL
+        ) {
             updateStageStatus(commandContext = commandContext)
         }
 
@@ -118,6 +122,9 @@ class UpdateStateForStageCmdFinally(
         needCheckQuality: Boolean
     ) {
 
+        // #6440 stage结束时清理构建机启动队列
+        dispatchQueueControl.flushDispatchQueue(stage.buildId, stage.stageId)
+
         // #5019 在结束阶段做stage准出判断，如果不需要红线检查则直接跳过
         if (needCheckQuality && qualityCheckOutAndBreak(stage, commandContext, event)) return
 
@@ -133,11 +140,14 @@ class UpdateStateForStageCmdFinally(
             nextStage = pipelineStageService.getLastStage(projectId = event.projectId, buildId = event.buildId)
             if (nextStage == null || nextStage.seq == stage.seq || nextStage.controlOption?.finally != true) {
 
-                LOG.info("ENGINE|${stage.buildId}|${event.source}|END_STAGE|${stage.stageId}|" +
-                    "${commandContext.buildStatus}|${commandContext.latestSummary}")
+                LOG.info(
+                    "ENGINE|${stage.buildId}|${event.source}|END_STAGE|${stage.stageId}|" +
+                        "${commandContext.buildStatus}|${commandContext.latestSummary}"
+                )
 
                 return finishBuild(commandContext = commandContext)
             }
+            event.actionType = ActionType.START // final 需要执行
         } else {
             nextStage = pipelineStageService.getNextStage(
                 projectId = event.projectId,
@@ -147,16 +157,20 @@ class UpdateStateForStageCmdFinally(
         }
 
         if (nextStage != null) {
-            LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|gotoFinal=$gotoFinal|" +
-                "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary=${commandContext.latestSummary}")
+            LOG.info(
+                "ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|gotoFinal=$gotoFinal|" +
+                    "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary=${commandContext.latestSummary}"
+            )
             event.sendNextStage(source = "From_s(${stage.stageId})", stageId = nextStage.stageId)
         } else {
 
             // 正常完成构建
             finishBuild(commandContext = commandContext)
 
-            LOG.info("ENGINE|${stage.buildId}|${event.source}|STAGE_FINALLY|${stage.stageId}|" +
-                "${commandContext.buildStatus}|${commandContext.latestSummary}")
+            LOG.info(
+                "ENGINE|${stage.buildId}|${event.source}|STAGE_FINALLY|${stage.stageId}|" +
+                    "${commandContext.buildStatus}|${commandContext.latestSummary}"
+            )
         }
     }
 
@@ -169,7 +183,8 @@ class UpdateStateForStageCmdFinally(
         // #5246 只在stage运行成功（不包括被跳过）并配置了红线规则时做准出判断
         if (stage.checkOut?.ruleIds?.isNotEmpty() != true ||
             !commandContext.buildStatus.isSuccess() ||
-            commandContext.buildStatus == BuildStatus.SKIP) {
+            commandContext.buildStatus == BuildStatus.SKIP
+        ) {
             return false
         }
 
@@ -209,8 +224,10 @@ class UpdateStateForStageCmdFinally(
     private fun qualityCheckOutNeedReview(
         commandContext: StageContext
     ) {
-        LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
-            "|STAGE_QUALITY_CHECK_OUT_REVIEWING|${commandContext.event.stageId}")
+        LOG.info(
+            "ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
+                "|STAGE_QUALITY_CHECK_OUT_REVIEWING|${commandContext.event.stageId}"
+        )
         commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_WAIT.name
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) need reviewing with QUALITY_CHECK_OUT"
         pipelineStageService.refreshCheckStageStatus(
@@ -230,8 +247,10 @@ class UpdateStateForStageCmdFinally(
     }
 
     private fun qualityCheckOutPass(commandContext: StageContext) {
-        LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
-            "|STAGE_QUALITY_CHECK_OUT_PASSED|${commandContext.event.stageId}")
+        LOG.info(
+            "ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
+                "|STAGE_QUALITY_CHECK_OUT_PASSED|${commandContext.event.stageId}"
+        )
         commandContext.stage.checkOut?.status = BuildStatus.QUALITY_CHECK_PASS.name
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) passed with QUALITY_CHECK_OUT"
         pipelineStageService.refreshCheckStageStatus(
@@ -317,17 +336,8 @@ class UpdateStateForStageCmdFinally(
      * 发送指定[stageId]的Stage启动事件
      */
     private fun PipelineBuildStageEvent.sendNextStage(source: String, stageId: String) {
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildStageEvent(
-                source = source,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                buildId = buildId,
-                stageId = stageId,
-                actionType = ActionType.START
-            )
-        )
+        // #5108 修正因为END被改写成START，导致取消变成继续往下执行。
+        pipelineEventDispatcher.dispatch(this.copy(source = source, stageId = stageId))
     }
 
     /**
@@ -342,7 +352,8 @@ class UpdateStateForStageCmdFinally(
                     // #3138 如果上游流水线STAGE成功，则继承
                     commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
                 } else if (commandContext.previousStageStatus?.isFailure() == true ||
-                    commandContext.previousStageStatus?.isCancel() == true) {
+                    commandContext.previousStageStatus?.isCancel() == true
+                ) {
                     // #3138 如果上游流水线失败/取消，则流水线最终状态为失败/取消， 否则为finallyStage的状态
                     commandContext.buildStatus = commandContext.previousStageStatus!!
                     commandContext.latestSummary += "|previousStageStatus=${commandContext.buildStatus}"

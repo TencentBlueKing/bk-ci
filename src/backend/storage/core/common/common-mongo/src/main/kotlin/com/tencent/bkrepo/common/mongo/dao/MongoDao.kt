@@ -66,6 +66,11 @@ interface MongoDao<E> {
     /**
      * 新增文档到数据库的集合中
      */
+    fun insert(entityCollection: Collection<E>): Collection<E>
+
+    /**
+     * 新增文档到数据库的集合中
+     */
     fun save(entity: E): E
 
     /**

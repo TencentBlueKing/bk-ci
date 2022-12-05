@@ -108,6 +108,11 @@ func (l *TaskLink) PreExecute(command []string) (*dcSDK.BKDistCommand, error) {
 	return l.preExecute(command)
 }
 
+// NeedRemoteResource check whether this command need remote resource
+func (l *TaskLink) NeedRemoteResource(command []string) bool {
+	return true
+}
+
 // RemoteRetryTimes will return the remote retry times
 func (l *TaskLink) RemoteRetryTimes() int {
 	return 0

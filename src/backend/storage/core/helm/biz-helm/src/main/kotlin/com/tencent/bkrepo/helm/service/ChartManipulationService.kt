@@ -32,9 +32,8 @@
 package com.tencent.bkrepo.helm.service
 
 import com.tencent.bkrepo.common.artifact.api.ArtifactFileMap
-import com.tencent.bkrepo.helm.artifact.HelmArtifactInfo
-import com.tencent.bkrepo.helm.pojo.chart.ChartDeleteRequest
-import com.tencent.bkrepo.helm.pojo.chart.ChartVersionDeleteRequest
+import com.tencent.bkrepo.helm.pojo.artifact.HelmArtifactInfo
+import com.tencent.bkrepo.helm.pojo.artifact.HelmDeleteArtifactInfo
 
 interface ChartManipulationService {
 
@@ -49,12 +48,12 @@ interface ChartManipulationService {
     fun uploadProv(artifactInfo: HelmArtifactInfo, artifactFileMap: ArtifactFileMap)
 
     /**
-     * 删除chart版本
+     * 删除chart包
      */
-    fun deleteVersion(chartVersionDeleteRequest: ChartVersionDeleteRequest)
+    fun deletePackage(userId: String, artifactInfo: HelmDeleteArtifactInfo)
 
     /**
-     * 删除chart
+     * 删除chart版本
      */
-    fun deletePackage(chartDeleteRequest: ChartDeleteRequest)
+    fun deleteVersion(userId: String, artifactInfo: HelmDeleteArtifactInfo)
 }

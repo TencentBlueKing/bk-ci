@@ -40,7 +40,10 @@ enum class PackageType {
     PYPI,
     NPM,
     HELM,
+    RDS,
     COMPOSER,
     RPM,
-    NUGET
+    NUGET,
+    GIT,
+    OCI
 }

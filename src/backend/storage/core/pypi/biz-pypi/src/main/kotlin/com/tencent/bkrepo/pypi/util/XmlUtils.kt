@@ -31,9 +31,9 @@
 
 package com.tencent.bkrepo.pypi.util
 
+import com.tencent.bkrepo.pypi.XML_RPC_OPERATION_OR
 import com.tencent.bkrepo.pypi.artifact.xml.XmlConvertUtil
-import com.tencent.bkrepo.pypi.exception.PypiSearchParamException
-import com.tencent.bkrepo.pypi.pojo.PypiSearchPojo
+import com.tencent.bkrepo.pypi.pojo.PypiSearchPojo2
 import java.io.BufferedReader
 
 object XmlUtils {
@@ -47,17 +47,23 @@ object XmlUtils {
         return stringBuilder.toString()
     }
 
-    fun getPypiSearchPojo(xmlString: String): PypiSearchPojo {
+    fun getPypiSearchPojo(xmlString: String): PypiSearchPojo2 {
         val methodCall = XmlConvertUtil.xml2MethodCall(xmlString)
         val action = methodCall.methodName
-        val name = methodCall.params.paramList[0]
-            .value.struct?.memberList?.get(0)?.value?.array?.data?.valueList?.get(0)?.string
-
-        val summary = methodCall.params.paramList[0]
-            .value.struct?.memberList?.get(1)?.value?.array?.data?.valueList?.get(0)?.string
-
-        val operation = methodCall.params.paramList[1]
-            .value.string ?: throw PypiSearchParamException("can not found `operation` param")
-        return PypiSearchPojo(action, name, summary, operation)
+        val paramMap = mutableMapOf<String, List<String>>()
+        var operation = XML_RPC_OPERATION_OR
+        methodCall.params?.paramList?.map { param ->
+            if (param.value.string != null && param.value.struct == null) operation = param.value.string
+            param.value.struct?.memberList?.map { member ->
+                val valueList = mutableListOf<String>()
+                member.value.array?.data?.valueList?.map { value ->
+                    value.string?.let {
+                        valueList.add(it)
+                    }
+                }
+                paramMap.put(member.name, valueList)
+            }
+        }
+        return PypiSearchPojo2(action, paramMap, operation)
     }
 }

@@ -121,6 +121,7 @@ interface ServiceRepositoryResource {
     @ApiOperation("代码库列表")
     @GET
     @Path("/{projectId}/hasPermissionList")
+    @SuppressWarnings("LongParameterList")
     fun hasPermissionList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -130,10 +131,19 @@ interface ServiceRepositoryResource {
         projectId: String,
         @ApiParam("仓库类型", required = false)
         @QueryParam("repositoryType")
-        repositoryType: ScmType?,
+        repositoryType: String?,
         @ApiParam("对应权限", required = true, defaultValue = "")
         @QueryParam("permission")
-        permission: Permission
+        permission: Permission,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int? = null,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int? = null,
+        @ApiParam("别名", required = false)
+        @QueryParam("aliasName")
+        aliasName: String? = null
     ): Result<Page<RepositoryInfo>>
 
     @ApiOperation("获取项目代码库列表")

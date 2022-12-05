@@ -48,7 +48,7 @@ import com.tencent.devops.common.util.CompressionUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -202,7 +202,7 @@ public class MetaServiceImpl implements MetaService
         ToolMetaDetailVO toolMetaDetailVO = toolMetaCache.getToolDetailFromCache(toolName);
         if (toolMetaDetailVO == null)
         {
-            ToolMetaEntity toolMetaEntity = toolMetaRepository.findByName(toolName);
+            ToolMetaEntity toolMetaEntity = toolMetaRepository.findFirstByName(toolName);
 
             // 解压图标和图文详情
             String logo = toolMetaEntity.getLogo();
@@ -279,7 +279,7 @@ public class MetaServiceImpl implements MetaService
         String taskId = request.getHeader(AUTH_HEADER_DEVOPS_TASK_ID);
         if (StringUtils.isNotEmpty(taskId))
         {
-            TaskInfoEntity taskInfoEntity = taskRepository.findCodeLangByTaskId(Long.valueOf(taskId));
+            TaskInfoEntity taskInfoEntity = taskRepository.findCodeLangFirstByTaskId(Long.valueOf(taskId));
             if (taskInfoEntity != null)
             {
                 Long codeLang = taskInfoEntity.getCodeLang();

@@ -31,7 +31,7 @@
 
 package com.tencent.bkrepo.rpm.util
 
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 
 object StrUtils {
     fun String.formatSeparator(oldSeparator: String, newSeparator: String): String {

@@ -42,14 +42,14 @@ public class PageableUtils
         Sort pageSort;
         if (StringUtils.isEmpty(sortField) || null == sortType)
         {
-            pageSort = new Sort(Sort.Direction.ASC, defaultSortField);
+            pageSort = Sort.by(Sort.Direction.ASC, defaultSortField);
         }
         else
         {
-            pageSort = new Sort(sortType, sortField);
+            pageSort = Sort.by(sortType, sortField);
         }
 
-        return new PageRequest(pageNum == null || pageNum - 1 < 0 ? 0 : pageNum - 1,
+        return PageRequest.of(pageNum == null || pageNum - 1 < 0 ? 0 : pageNum - 1,
                 pageSize == null || pageSize <= 0 ? 10 : pageSize, pageSort);
     }
 
@@ -63,7 +63,7 @@ public class PageableUtils
     public static Pageable getPageable(Integer pageNum, Integer pageSize)
     {
 
-        return new PageRequest(pageNum == null || pageNum - 1 < 0 ? 0 : pageNum - 1,
+        return PageRequest.of(pageNum == null || pageNum - 1 < 0 ? 0 : pageNum - 1,
             pageSize == null || pageSize <= 0 ? 10 : pageSize);
     }
 }

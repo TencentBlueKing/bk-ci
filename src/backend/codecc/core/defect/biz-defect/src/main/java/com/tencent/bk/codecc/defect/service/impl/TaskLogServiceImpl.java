@@ -68,7 +68,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -294,7 +294,7 @@ public class TaskLogServiceImpl implements TaskLogService {
         logger.info("begin getBuildTaskLog: {}, {}, {}", taskId, toolName, buildId);
         TaskLogVO taskLogVO = new TaskLogVO();
         List<TaskLogVO.TaskUnit> taskUnits = Lists.newArrayList();
-        TaskLogEntity taskLogEntity = taskLogRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        TaskLogEntity taskLogEntity = taskLogRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         if (taskLogEntity != null) {
             if (CollectionUtils.isNotEmpty(taskLogEntity.getStepArray())) {
                 for (TaskLogEntity.TaskUnit taskEntityUnit : taskLogEntity.getStepArray()) {

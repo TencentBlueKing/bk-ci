@@ -31,72 +31,65 @@
 
 package com.tencent.bkrepo.auth.config
 
-import com.tencent.bkrepo.auth.pojo.enums.BkAuthServiceCode
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
 class BkAuthConfig {
-    /**
-     * auth 环境名称
-     */
-    @Value("\${auth.devops.envName:}")
-    var authEnvName: String = ""
 
     /**
      * auth 服务器地址
      */
-    @Value("\${auth.devops.authServer:}")
-    private var authServer: String = ""
+    @Value("\${auth.devops.ciAuthServer:}")
+    private var ciAuthServer: String = ""
 
     /**
-     * 流水线资源 appSecret
+     * auth 服务器地址
      */
-    @Value("\${auth.devops.pipelineSecret:}")
-    var pipelineSecret: String = ""
+    @Value("\${auth.devops.ciAuthToken:}")
+    private var ciAuthToken: String = ""
 
     /**
-     * 版本仓库资源 appSecret
+     * 蓝盾平台appId集合
      */
-    @Value("\${auth.devops.artifactorySecret:}")
-    var artifactorySecret: String = ""
+    @Value("\${auth.devops.appIdSet:}")
+    var devopsAppIdSet: String = ""
 
     /**
-     * 蓝盾平台用户 appId
+     * 蓝盾CI平台appId
      */
     @Value("\${auth.devops.appId:}")
     var devopsAppId: String = ""
 
     /**
-     * 蓝盾平台用户 appId
+     * 蓝盾BCS平台appId
      */
-    @Value("\${auth.bkrepo.appId:}")
+    @Value("\${auth.devops.bcsAppId:}")
+    var bcsAppId: String = ""
+
+    /**
+     * bkrepo平台appId
+     */
+    @Value("\${auth.devops.bkrepoAppId:}")
     var bkrepoAppId: String = ""
 
-    /**
-     * 是否开启蓝盾用户权限认证开关
-     */
-    @Value("\${auth.devops.authEnabled:true}")
-    var devopsAuthEnabled: Boolean = true
-
-    /**
-     * 是否允许蓝盾匿名用户请求
-     */
-    @Value("\${auth.devops.allowAnonymous:true}")
-    var devopsAllowAnonymous: Boolean = true
-
-    fun getAppSecret(serviceCode: BkAuthServiceCode): String {
-        return when (serviceCode) {
-            BkAuthServiceCode.PIPELINE -> pipelineSecret
-            BkAuthServiceCode.ARTIFACTORY -> artifactorySecret
+    fun getBkciAuthServer(): String {
+        return if (ciAuthServer.startsWith("http://") || ciAuthServer.startsWith("https://")) {
+            ciAuthServer.removeSuffix("/")
+        } else {
+            "http://$ciAuthServer"
         }
     }
 
-    fun getBkAuthServer(): String {
-        return if (authServer.startsWith("http://") || authServer.startsWith("https://")) {
-            authServer.removeSuffix("/")
-        } else {
-            "http://$authServer"
-        }
+    fun setBkciAuthServer(authServer: String) {
+        ciAuthServer = authServer
+    }
+
+    fun setBkciAuthToken(authToken: String) {
+        ciAuthToken = authToken
+    }
+
+    fun getBkciAuthToken(): String {
+        return ciAuthToken
     }
 }

@@ -139,7 +139,8 @@ class ExperiencePublicDao {
     fun listLikeExperienceName(
         dslContext: DSLContext,
         experienceName: String,
-        platform: String?
+        platform: String?,
+        projectId: String?
     ): Result<TExperiencePublicRecord> {
         val now = LocalDateTime.now()
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -149,6 +150,9 @@ class ExperiencePublicDao {
                 .and(EXPERIENCE_NAME.like("%$experienceName%"))
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .let {
+                    if (projectId == null) it else it.and(PROJECT_ID.eq(projectId))
                 }
                 .orderBy(UPDATE_TIME.desc())
                 .limit(100)
@@ -241,14 +245,14 @@ class ExperiencePublicDao {
         recordId: Long,
         online: Boolean = true,
         expireTime: LocalDateTime? = null
-    ): Record1<Int>? {
+    ): Int {
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             dslContext.selectCount()
                 .from(this)
                 .where(RECORD_ID.eq(recordId))
                 .and(ONLINE.eq(online))
                 .let { if (expireTime == null) it else it.and(END_DATE.gt(expireTime)) }
-                .fetchOne()
+                .fetchOne()?.get(0, Int::class.java) ?: 0
         }
     }
 
@@ -400,12 +404,12 @@ class ExperiencePublicDao {
         }
     }
 
-    fun getNewestRecordId(
+    fun getNewestRecord(
         dslContext: DSLContext,
         projectId: String,
         bundleIdentifier: String,
         platform: String
-    ): Long? {
+    ): TExperiencePublicRecord? {
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -413,13 +417,14 @@ class ExperiencePublicDao {
                 .and(ONLINE.eq(true))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .and(PLATFORM.eq(platform))
-                .fetchOne()?.recordId
+                .fetchOne()
         }
     }
 
-    fun listSubcribeRecordIds(
+    fun listSubscribeRecordIds(
         dslContext: DSLContext,
         userId: String,
+        platform: String?,
         limit: Int
     ): List<Long> {
         val p = TExperiencePublic.T_EXPERIENCE_PUBLIC
@@ -432,8 +437,28 @@ class ExperiencePublicDao {
         return dslContext.select(p.RECORD_ID)
             .from(join)
             .where(s.USER_ID.eq(userId))
+            .let { if (platform == null) it else it.and(s.PLATFORM.eq(platform)) }
             .orderBy(p.UPDATE_TIME.desc())
             .limit(limit)
             .fetch(p.RECORD_ID)
+    }
+
+    fun listExperienceByProjectId(
+        dslContext: DSLContext,
+        platform: String?,
+        projectId: String
+    ): Result<TExperiencePublicRecord> {
+        val now = LocalDateTime.now()
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .and(PROJECT_ID.eq(projectId))
+                .let {
+                    if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .orderBy(DOWNLOAD_TIME.desc())
+                .fetch()
+        }
     }
 }

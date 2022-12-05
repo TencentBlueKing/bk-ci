@@ -68,7 +68,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return Result(data = null)
     }
 
-    override fun getAtomPackageSourceType(atomCode: String): AtomPackageSourceTypeEnum {
+    override fun getAtomPackageSourceType(): AtomPackageSourceTypeEnum {
         return AtomPackageSourceTypeEnum.UPLOAD
     }
 
@@ -86,7 +86,14 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return fileStr
     }
 
-    override fun asyncHandleUpdateAtom(context: DSLContext, atomId: String, userId: String, branch: String?) = Unit
+    override fun asyncHandleUpdateAtom(
+        context: DSLContext,
+        atomId: String,
+        userId: String,
+        branch: String?,
+        validOsNameFlag: Boolean?,
+        validOsArchFlag: Boolean?
+    ) = Unit
 
     override fun validateUpdateMarketAtomReq(
         userId: String,

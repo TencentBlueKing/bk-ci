@@ -42,7 +42,6 @@ object LocaleMessageUtils {
 
     private val logger = LoggerFactory.getLogger(LocaleMessageUtils::class.java)
     private val messageSource = SpringContextUtils.getBean(MessageSource::class.java)
-    private val locale = LocaleContextHolder.getLocale()
 
     /**
      * 获取本地化消息
@@ -50,6 +49,7 @@ object LocaleMessageUtils {
      * @param params 替换描述信息占位符的参数数组
      */
     fun getLocalizedMessage(messageCode: MessageCode, params: Array<out Any>? = null): String {
+        val locale = LocaleContextHolder.getLocale()
         return try {
             messageSource.getMessage(messageCode.getKey(), params, locale)
         } catch (exception: NoSuchMessageException) {

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.project.tables.records.TNoticeRecord
 import com.tencent.devops.project.dao.NoticeDao
@@ -69,7 +68,8 @@ class NoticeService @Autowired constructor(
                     updateDate = it.updateDate.timestampmilli(),
                     noticeContent = it.noticeContent,
                     redirectUrl = it.redirectUrl,
-                    noticeType = it.noticeType.toInt()
+                    noticeType = it.noticeType.toInt(),
+                    noticeService = if (it.serviceName.isNullOrBlank()) null else it.serviceName?.split(",")
                 )
             )
         }
@@ -84,7 +84,6 @@ class NoticeService @Autowired constructor(
 
     fun getNotice(id: Long): Notice? {
         val notice = noticeDao.getNotice(dslContext, id)
-        LOG.info("the notice is :{}", JsonUtil.getObjectMapper().writeValueAsString(notice))
         return if (notice == null) {
             null
         } else {
@@ -110,7 +109,9 @@ class NoticeService @Autowired constructor(
             updateDate = noticeRecord.updateDate.timestampmilli(),
             noticeContent = noticeRecord.noticeContent,
             redirectUrl = noticeRecord.redirectUrl,
-            noticeType = noticeRecord.noticeType.toInt()
+            noticeType = noticeRecord.noticeType.toInt(),
+            noticeService = if (noticeRecord.serviceName.isNullOrBlank()) null
+            else noticeRecord.serviceName?.split(",")
         )
     }
 }

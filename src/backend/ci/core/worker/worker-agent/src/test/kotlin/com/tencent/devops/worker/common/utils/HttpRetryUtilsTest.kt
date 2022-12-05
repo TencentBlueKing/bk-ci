@@ -28,8 +28,8 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.util.HttpRetryUtils
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import java.net.HttpRetryException
 import java.net.SocketTimeoutException
 
@@ -50,7 +50,7 @@ class HttpRetryUtilsTest {
                 }
             }
         } catch (re: SocketTimeoutException) {
-            Assert.assertEquals(expected, i)
+            Assertions.assertEquals(expected, i)
         }
 
         i = 0
@@ -63,7 +63,7 @@ class HttpRetryUtilsTest {
                 i
             }
         }
-        Assert.assertEquals(expected, i - 1)
+        Assertions.assertEquals(expected, i - 1)
 
         retryTime = 2
         expected = 3
@@ -77,7 +77,7 @@ class HttpRetryUtilsTest {
                 }
             }
         } catch (re: HttpRetryException) {
-            Assert.assertEquals(expected, i)
+            Assertions.assertEquals(expected, i)
         }
 
         i = 0
@@ -91,40 +91,42 @@ class HttpRetryUtilsTest {
             }
         }
 
-        Assert.assertEquals(expected, i - 1)
+        Assertions.assertEquals(expected, i - 1)
     }
 
-    @Test(expected = SocketTimeoutException::class)
+    @Test
     fun throwSocketTimeoutException() {
-
-        var i = 0
-        val retryTime = 5
-        val expected = 3
-        i = HttpRetryUtils.retryWhenHttpRetryException(retryTime = retryTime) {
-            if (i++ < expected) {
-                throw SocketTimeoutException("$i")
-            } else {
-                i
+        Assertions.assertThrows(SocketTimeoutException::class.java) {
+            var i = 0
+            val retryTime = 5
+            val expected = 3
+            i = HttpRetryUtils.retryWhenHttpRetryException(retryTime = retryTime) {
+                if (i++ < expected) {
+                    throw SocketTimeoutException("$i")
+                } else {
+                    i
+                }
             }
-        }
 
-        Assert.assertEquals(expected, i - 1)
+            Assertions.assertEquals(expected, i - 1)
+        }
     }
 
-    @Test(expected = HttpRetryException::class)
+    @Test
     fun throwHttpRetryException() {
-
-        var i = 0
-        val retryTime = 5
-        val expected = 3
-        i = HttpRetryUtils.retryWhenSocketTimeException(retryTime = retryTime) {
-            if (i++ < expected) {
-                throw HttpRetryException("$i", 999)
-            } else {
-                i
+        Assertions.assertThrows(HttpRetryException::class.java) {
+            var i = 0
+            val retryTime = 5
+            val expected = 3
+            i = HttpRetryUtils.retryWhenSocketTimeException(retryTime = retryTime) {
+                if (i++ < expected) {
+                    throw HttpRetryException("$i", 999)
+                } else {
+                    i
+                }
             }
-        }
 
-        Assert.assertEquals(expected, i - 1)
+            Assertions.assertEquals(expected, i - 1)
+        }
     }
 }

@@ -42,5 +42,7 @@ data class UserRepoUpdateRequest(
     @ApiModelProperty("简要描述", required = false)
     val description: String? = null,
     @ApiModelProperty("扩展信息", required = false)
-    val configuration: RepositoryConfiguration? = null
+    val configuration: RepositoryConfiguration? = null,
+    @ApiModelProperty("仓库配额", required = false)
+    val quota: Long? = null
 )

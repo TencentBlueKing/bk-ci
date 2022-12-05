@@ -35,6 +35,5 @@ dependencies {
     api(project(":core:worker:worker-common"))
     api(project(":ext:tencent:worker:worker-api-tencent"))
     api(project(":ext:tencent:worker:worker-plugin-tencent"))
-    api(project(":core:plugin:codecc-plugin:worker-plugin-codecc"))
     api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
 }

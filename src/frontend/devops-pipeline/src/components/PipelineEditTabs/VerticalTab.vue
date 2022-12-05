@@ -21,10 +21,13 @@
     import NotifySetting from '@/components/pipelineSetting/NotifySetting'
     import BaseInfo from '@/components/pipelineSetting/BaseInfo'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
+    import CleanPolicy from '@/components/pipelineSetting/CleanPolicy'
+    import AuthoritySetting from '../pipelineSetting/AuthoritySetting'
     import CodeRecordTable from '@/components/codeRecord/CodeRecordTable'
+    import codeCheck from '@/components/outputOption/code_check'
+    import wetestReport from '@/components/outputOption/wetest_report'
     import thirdPartyReport from '@/components/outputOption/thirdParty_report'
     import IframeReport from '@/components/outputOption/IframeReport'
-    import TrendTable from '@/components/trendData/TrendTable'
 
     export default {
         name: 'vertical-tab',
@@ -32,10 +35,13 @@
             NotifySetting,
             BaseInfo,
             RunningLock,
+            CleanPolicy,
+            AuthoritySetting,
             CodeRecordTable,
+            codeCheck,
+            wetestReport,
             thirdPartyReport,
-            IframeReport,
-            TrendTable
+            IframeReport
         },
         props: {
             tabs: {
@@ -107,20 +113,6 @@
             padding: 30px 25px;
             background-color: white;
             overflow: auto;
-
-            .bk-form-item{
-                margin: 0 0 30px 0;
-                .bk-label {
-                    width: 150px;
-                    text-align: right;
-                    float:left;
-                    padding-right: 20px;
-                }
-                .bk-form-content {
-                    display: block;
-                    margin-left: 150px;
-                }
-            }
         }
     }
 </style>

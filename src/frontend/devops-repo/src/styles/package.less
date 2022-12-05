@@ -1,0 +1,146 @@
+.bk-repo-package-info {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  font-size: 12px;
+  overflow: hidden;
+  background-color: @lightBgColor;
+  .bk-repo-package-info-main {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    flex: 1;
+    background-color: @lightBgColor;
+
+    .bk-repo-package-info-aside {
+      width: 250px;
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      .aside-title {
+        display: flex;
+        align-items: center;
+        padding: 0 30px;
+        height: 50px;
+        font-size: 14px;
+        border-bottom: 1px solid @borderColor;
+      }
+      .version-search {
+        margin: 20px 20px 10px;
+      }
+      .version-list {
+        display: flex;
+        flex-direction: column;
+        padding: 0 20px;
+        flex: 1;
+        overflow: hidden;
+        .version-sum {
+          color: @weightGray;
+          margin-bottom: 10px;
+        }
+        .version-item {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 42px;
+          border-radius: 2px;
+          background-color: #F5F9FF;
+          cursor: pointer;
+          margin-bottom: 6px;
+  
+          &.active {
+            background-color: @primaryColor;
+            color: white;
+          }
+  
+          .version-operation {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 30px;
+            right: 6px;
+          }
+        }
+      }
+    }
+    .bk-repo-package-info-content {
+      flex: 1;
+      margin-left: 10px;
+      background-color: white;
+  
+      .package-use-tip-container {
+        padding: 20px 20px 0;
+        border: 1px dashed @borderColor;
+        border-radius: 4px;
+        .use-tip-code-area {
+          margin: 10px 0 20px 0;
+        }
+      }
+      .package-detail-box {
+        height: 100%;
+        .package-operation {
+          display: flex;
+          align-items: center;
+          margin: 0 20px;
+        }
+        
+        .package-more-opration {
+          display: flex;
+          align-items: center;
+          margin-left: 10px;
+        }
+      }
+    }
+  }
+}
+
+
+.version-basic-info {
+  display: grid;
+  grid-template: auto / repeat(2, 1fr);
+  border: solid @borderColor;
+  border-width: 1px 0 0 1px;
+  .grid-item {
+
+      display: flex;
+      align-items: center;
+      height: 40px;
+      overflow: hidden;
+      border: solid @borderColor;
+      border-width: 0 1px 1px 0;
+      font-size: 12px;
+      > label {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-right: 1px solid @borderColor;
+          flex-basis: 80px;
+          align-self: stretch;
+          background-color: @lightBgColor;
+      }
+      > span {
+        padding: 0 10px;
+        color: @deepFontColor;
+      }
+      
+    &.package-name,
+    &.package-description {
+        grid-column: 1 / 3;
+    }
+  }
+}
+
+.upgrade-package-form {
+
+  .upgrade-enum-group {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+}

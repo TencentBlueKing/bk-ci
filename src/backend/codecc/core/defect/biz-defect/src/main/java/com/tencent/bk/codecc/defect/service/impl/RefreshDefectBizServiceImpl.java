@@ -1,6 +1,6 @@
 package com.tencent.bk.codecc.defect.service.impl;
 
-import com.mongodb.BulkWriteResult;
+import com.mongodb.bulk.BulkWriteResult;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.CLOCStatisticsDao;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.DefectDao;
 import com.tencent.bk.codecc.defect.model.CLOCDefectEntity;

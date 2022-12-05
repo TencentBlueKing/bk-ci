@@ -1,0 +1,121 @@
+{{- if .Values.quartz.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "common.names.fullname" . }}-quartz
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: quartz
+    app.kubernetes.io/component: microservice
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/name: quartz
+      app.kubernetes.io/component: microservice
+  replicas: {{ default 1 .Values.quartz.replicaCount }}
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/name: quartz
+        app.kubernetes.io/component: microservice
+        {{- if .Values.quartz.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.quartz.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ template "codecc.serviceAccountName" . }}
+      {{- include "codecc.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.quartz.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.quartz.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.quartz.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.quartz.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.quartz.podAffinityPreset "component" "quartz" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.quartz.podAntiAffinityPreset "component" "quartz" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.quartz.nodeAffinityPreset.type "key" .Values.quartz.nodeAffinityPreset.key "values" .Values.quartz.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.quartz.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.quartz.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.quartz.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.quartz.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.quartz.priorityClassName }}
+      priorityClassName: {{ .Values.quartz.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.quartz.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.quartz.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: quartz
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.quartz.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.quartz.image.pullPolicy }}
+          {{- if .Values.quartz.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.quartz.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.quartz.resources }}
+          resources: {{- toYaml .Values.quartz.resources | nindent 12 }}
+          {{- end }}
+          env:
+            - name: JVM_XMS
+              value: {{ .Values.quartz.env.JVM_XMS }}
+            - name: JVM_XMX
+              value: {{ .Values.quartz.env.JVM_XMX }}
+            - name: SERVICE_PREFIX
+              value: {{ include "common.names.fullname" . }}
+            - name: SERVER_FULLNAME
+              value: {{ include "common.names.fullname" . }}-quartz
+            - name: SERVER_COMMON_NAME
+              value: {{ include "common.names.fullname" . }}-common
+            - name: CODECC_PROFILE
+              value: {{ .Values.common.springProfile }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 120
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          volumeMounts:
+            - name: storage
+              mountPath: {{ .Values.common.mountPath }}
+            {{- if eq .Values.config.bkCodeccStorageType "nfs" }}
+            - name: nfs-data
+              mountPath: {{ .Values.config.bkCodeccFileDataPath }}
+            {{- end }}
+      volumes:
+        - name: storage
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "common.names.fullname" . }}-storage{{- end }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if eq .Values.config.bkCodeccStorageType "nfs" }}
+        - name: nfs-data
+          nfs:
+            server: {{ .Values.config.bkCodeccNfsServer }}
+            path: {{ .Values.config.bkCodeccNfsServerPath }}
+        {{- end }}
+{{- end }}

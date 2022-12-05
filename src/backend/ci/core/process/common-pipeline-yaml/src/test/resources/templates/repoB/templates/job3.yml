@@ -1,0 +1,17 @@
+parameters:
+  - name: username
+    type: string
+    default: world
+  - name: jobname
+    type: string
+    default: JOBNAME
+
+jobs:
+  res_repoB_job_id_3:
+    name: res_repoB_job_id_3
+    steps:
+      - run: |
+          echo "res_repoB_job_id_3 username ${{ parameters.username }}"
+#      - template: step6.yml
+#        parameters:
+#          username: RES_REPOB_JOB3_STEP6

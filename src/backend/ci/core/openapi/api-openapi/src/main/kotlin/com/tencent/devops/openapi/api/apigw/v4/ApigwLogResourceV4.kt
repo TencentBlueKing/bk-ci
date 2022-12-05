@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import io.swagger.annotations.Api
@@ -239,4 +240,22 @@ interface ApigwLogResourceV4 {
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogStatus>
+
+    @ApiOperation("获取当前构建的最大行号", tags = ["v4_app_log_line_num", "v4_user_log_line_num"])
+    @GET
+    @Path("/last_line_num")
+    fun getLogLastLineNum(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String
+    ): Result<QueryLogLineNum>
 }

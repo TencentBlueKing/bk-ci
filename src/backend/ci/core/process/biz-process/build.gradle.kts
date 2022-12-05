@@ -42,7 +42,6 @@ dependencies {
     api(project(":core:artifactory:api-artifactory"))
     api(project(":core:process:api-process"))
     api(project(":core:plugin:api-plugin"))
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":core:notify:api-notify"))
     api(project(":core:process:biz-base"))
     api(project(":core:log:api-log"))
@@ -53,5 +52,6 @@ dependencies {
     api("javax.websocket:javax.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
+    api("io.github.resilience4j:resilience4j-circuitbreaker")
     testImplementation(project(":core:common:common-test"))
 }

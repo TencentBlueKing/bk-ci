@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserNodeResource
 import com.tencent.devops.environment.pojo.DisplayName
@@ -38,6 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeService) : UserNodeResource {
+
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun listUsableServerNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
         return Result(NodeUtils.sortByUser(nodeService.listUsableServerNodes(userId, projectId), userId))
     }
@@ -51,6 +54,7 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
         return Result(true)
     }
 
+    @BkTimed(extraTags = ["operate", "getNode"])
     override fun list(userId: String, projectId: String): Result<List<NodeWithPermission>> {
         return Result(NodeUtils.sortByUser(nodeService.list(userId, projectId), userId))
     }

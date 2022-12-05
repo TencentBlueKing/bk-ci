@@ -50,7 +50,7 @@ data class MarketBuildAtomElement(
     val data: Map<String, Any> = mapOf(),
     @ApiModelProperty("附加参数", required = false)
     override var additionalOptions: ElementAdditionalOptions? = null
-) : Element(name, id, status) {
+) : Element(name, id, status, additionalOptions = additionalOptions) {
 
     companion object {
         const val classType = "marketBuild"

@@ -37,6 +37,7 @@ data class DataPlatTaskDetail(
     val itemId: String,
     val atomCode: String,
     val taskParams: JSONObject?,
+    val isSecrecy: Boolean?,
     val status: String,
     val errorType: Int?,
     val errorCode: Int?,
@@ -45,5 +46,14 @@ data class DataPlatTaskDetail(
     val endTime: String?,
     val costTime: Long,
     val starter: String?,
-    val washTime: String
+    val washTime: String,
+    val bgId: String,
+    val deptId: String,
+    val centerId: String,
+    val bgName: String,
+    val deptName: String,
+    val centerName: String,
+    val platformCode: String?,
+    val platformErrorCode: Int?,
+    val platformName: String?
 )

@@ -33,7 +33,7 @@ class DupcClusterDefectServiceImpl @Autowired constructor(
         val dupcClusterResultVO = DupcClusterResultVO()
         dupcClusterResultVO.type = ComConstants.ToolType.DUPC.name
         val dupcClusterStatisticEntity =
-                dupcStatisticRepository.findByTaskIdAndBuildId(taskId, buildId)
+                dupcStatisticRepository.findFirstByTaskIdAndBuildId(taskId, buildId)
                         ?: return dupcClusterResultVO
         dupcClusterResultVO.totalCount = dupcClusterStatisticEntity.defectCount
         dupcClusterResultVO.defectChange = dupcClusterStatisticEntity.defectChange

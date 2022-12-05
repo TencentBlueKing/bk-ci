@@ -28,10 +28,8 @@
 package com.tencent.devops.artifactory.resources.service
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
-import com.tencent.devops.artifactory.pojo.ArtifactoryCreateInfo
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
-import com.tencent.devops.artifactory.pojo.DockerUser
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
@@ -39,29 +37,29 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.ArtifactoryInfoService
-import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.archive.constant.REPO_CUSTOM
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 import javax.ws.rs.BadRequestException
+import kotlin.math.ceil
 
 @RestResource
 class ServiceArtifactoryResourceImpl @Autowired constructor(
-    private val artifactoryService: ArtifactoryService,
     private val bkRepoService: BkRepoService,
-    private val artifactorySearchService: ArtifactorySearchService,
     private val bkRepoSearchService: BkRepoSearchService,
     private val bkRepoDownloadService: BkRepoDownloadService,
-    private val artifactoryInfoService: ArtifactoryInfoService
+    private val bkRepoCustomDirService: BkRepoCustomDirService
 ) : ServiceArtifactoryResource {
     override fun check(
         userId: String,
@@ -111,9 +109,29 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         val isDirected = directed ?: false
-        return Result(bkRepoDownloadService.serviceGetExternalDownloadUrl(creatorId, userId,
-            projectId, artifactoryType, path,
-            ttl, isDirected))
+        return Result(
+            bkRepoDownloadService.serviceGetExternalDownloadUrl(
+                creatorId, userId,
+                projectId, artifactoryType, path,
+                ttl, isDirected
+            )
+        )
+    }
+
+    override fun appDownloadUrl(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        path: String
+    ): Result<Url> {
+        return Result(
+            bkRepoDownloadService.getExternalUrl(
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                argPath = path
+            )
+        )
     }
 
     override fun downloadUrlForOpenApi(
@@ -139,8 +157,12 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         val isDirected = directed ?: false
-        return Result(bkRepoDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl,
-            isDirected))
+        return Result(
+            bkRepoDownloadService.serviceGetInnerDownloadUrl(
+                userId, projectId, artifactoryType, path, ttl,
+                isDirected
+            )
+        )
     }
 
     override fun show(
@@ -164,75 +186,13 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10000
         val result = bkRepoSearchService.serviceSearch(userId, projectId, searchProps, pageNotNull, pageSizeNotNull)
-        return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
-    }
-
-    override fun searchFile(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        regexPath: String,
-        customized: Boolean,
-        page: Int?,
-        pageSize: Int?
-    ): Result<FileInfoPage<FileInfo>> {
-        checkParam(projectId)
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 10000
-        val result = bkRepoSearchService.serviceSearchFileByRegex(projectId, pipelineId, buildId, regexPath, customized)
-        return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
-    }
-
-    override fun searchFileAndPropertyByAnd(
-        userId: String,
-        projectId: String,
-        page: Int?,
-        pageSize: Int?,
-        searchProps: List<Property>
-    ): Result<FileInfoPage<FileInfo>> {
-        checkParam(projectId)
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
-        val result = bkRepoSearchService.serviceSearchFileAndProperty(userId, projectId, searchProps)
-        return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
-    }
-
-    override fun searchFileAndPropertyByOr(
-        userId: String,
-        projectId: String,
-        page: Int?,
-        pageSize: Int?,
-        searchProps: List<Property>
-    ): Result<FileInfoPage<FileInfo>> {
-        logger.info("searchFileAndPropertyByOr, projectId: $projectId, " +
-                "page: $page, pageSize: $pageSize, searchProps: $searchProps")
-        checkParam(projectId)
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
-        val result = bkRepoSearchService.serviceSearchFileAndPropertyByOr(userId, projectId, searchProps)
-        return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
-    }
-
-    override fun createDockerUser(projectId: String): Result<DockerUser> {
-        checkParam(projectId)
-        val result = artifactoryService.createDockerUser(projectId)
-        return Result(DockerUser(result.user, result.password))
-    }
-
-    override fun setProperties(
-        projectId: String,
-        imageName: String,
-        tag: String,
-        properties: Map<String, String>
-    ): Result<Boolean> {
-        if (imageName.isBlank()) {
-            throw ParamBlankException("Invalid path")
-        }
-        if (tag.isBlank()) {
-            throw ParamBlankException("Invalid path")
-        }
-        artifactoryService.setDockerProperties(projectId, imageName, tag, properties)
-        return Result(true)
+        return Result(FileInfoPage(
+            count = result.first,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            records = result.second,
+            timestamp = LocalDateTime.now().timestamp()
+        ))
     }
 
     override fun searchCustomFiles(
@@ -242,30 +202,6 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     ): Result<List<String>> {
         checkParam(projectId)
         return Result(bkRepoService.listCustomFiles(userId, projectId, condition))
-    }
-
-    override fun getJforgInfoByteewTime(
-        startTime: Long,
-        endTime: Long,
-        page: Int,
-        pageSize: Int
-    ): Result<List<FileInfo>> {
-        return Result(artifactorySearchService.getJforgInfoByteewTime(page, pageSize, startTime, endTime))
-    }
-
-    override fun createArtifactoryInfo(
-        buildId: String,
-        pipelineId: String,
-        projectId: String,
-        buildNum: Int,
-        fileInfo: FileInfo,
-        dataFrom: Int
-    ): Result<Long> {
-        return Result(0)
-    }
-
-    override fun batchCreateArtifactoryInfo(infoList: List<ArtifactoryCreateInfo>): Result<Int> {
-        return Result(0)
     }
 
     private fun checkInfoParam(buildId: String, pipelineId: String, fileInfo: FileInfo) {
@@ -324,10 +260,34 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
                 count = result.first,
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
-                totalPages = (result.first / pageSizeNotNull).toInt(),
+                totalPages = ceil(result.first / pageSizeNotNull.toDouble()).toInt(),
                 records = result.second
             )
         )
+    }
+
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        fullPath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?,
+        modifiedTimeDesc: Boolean?
+    ): Result<Page<FileInfo>> {
+        val data = bkRepoCustomDirService.listPage(
+            userId = userId,
+            projectId = projectId,
+            repoName = REPO_CUSTOM,
+            fullPath = fullPath,
+            includeFolder = includeFolder ?: true,
+            deep = deep ?: false,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
+            modifiedTimeDesc = modifiedTimeDesc ?: false
+        )
+        return Result(data)
     }
 
     companion object {

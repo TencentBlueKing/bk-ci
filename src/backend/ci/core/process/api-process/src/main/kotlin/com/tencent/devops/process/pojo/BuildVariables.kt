@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.store.pojo.app.BuildEnv
@@ -46,7 +47,7 @@ data class BuildVariables(
     val projectId: String,
     @ApiModelProperty("pipeline id", required = true)
     val pipelineId: String,
-    @ApiModelProperty("参数集合", required = true)
+    @ApiModelProperty("参数集合（已完成上下文转换）", required = true)
     val variables: Map<String, String>,
     @ApiModelProperty("系统环境变量", required = false)
     val buildEnvs: List<BuildEnv>,
@@ -56,10 +57,12 @@ data class BuildVariables(
     val containerHashId: String,
     @ApiModelProperty("container用户自定义ID", required = false)
     val jobId: String?,
-    @ApiModelProperty("参数类型集合", required = false)
+    @ApiModelProperty("参数类型集合（用于打印时区分敏感信息，建议不要作为传参使用）", required = false)
     val variablesWithType: List<BuildParameters>,
     @ApiModelProperty("Job超时时间（毫秒）", required = true)
     var timeoutMills: Long = TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong()),
     @ApiModelProperty("容器类型", required = false)
-    val containerType: String? = null
+    val containerType: String? = null,
+    @ApiModelProperty("YAML流水线特殊配置", required = false)
+    val pipelineAsCodeSettings: PipelineAsCodeSettings? = null
 )

@@ -39,10 +39,9 @@ import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.util.PathUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bson.BsonSerializationException;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -148,7 +147,7 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
         dupcDefectDao.batchFixDefect(taskId, fixDefectList);
 
         // 保存本次上报文件的告警数据统计数据
-        ToolBuildInfoEntity toolBuildInfoEntity = toolBuildInfoRepository.findByTaskIdAndToolName(taskId, ComConstants.Tool.DUPC.name());
+        ToolBuildInfoEntity toolBuildInfoEntity = toolBuildInfoRepository.findFirstByTaskIdAndToolName(taskId, ComConstants.Tool.DUPC.name());
         String baseBuildId = toolBuildInfoEntity != null && StringUtils.isNotEmpty(toolBuildInfoEntity.getDefectBaseBuildId())
                 ? toolBuildInfoEntity.getDefectBaseBuildId() : "";
 
@@ -348,7 +347,7 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
             dupRate = (float) dupLineCount * 100 / rawlineCount;
         }
 
-        DUPCStatisticEntity baseStatisticEntity = dupcStatisticRepository.findByTaskIdAndBuildId(taskId, baseBuildId);
+        DUPCStatisticEntity baseStatisticEntity = dupcStatisticRepository.findFirstByTaskIdAndBuildId(taskId, baseBuildId);
         DUPCStatisticEntity statisticEntity = new DUPCStatisticEntity();
         if (baseStatisticEntity != null)
         {

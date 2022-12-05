@@ -69,12 +69,12 @@ class ArtifactoryInfoService @Autowired constructor(
         startTime: Long,
         endTime: Long
     ): TrendInfoDto {
-        var trendInfoDto = TrendInfoDto(
+        val trendInfoDto = TrendInfoDto(
             trendData = mutableMapOf()
         )
         val infoList = artifactoryInfoDao.searchAritfactoryInfo(dslContext, pipelineId, startTime, endTime)
         // 根据BUNDLE_ID做聚合,BUNDLE_ID需提供给前端绘制曲线
-        var infoMap: MutableMap<String, MutableList<ArtifactoryInfo>> = mutableMapOf()
+        val infoMap: MutableMap<String, MutableList<ArtifactoryInfo>> = mutableMapOf()
         infoList?.forEach {
             run resultData@{
                 if (it.bundleId.isNullOrBlank()) {
@@ -82,13 +82,13 @@ class ArtifactoryInfoService @Autowired constructor(
                 }
                 val artifactoryInfo = buildArtifactoryInfo(it)
                 var artifactoryInfoList = mutableListOf<ArtifactoryInfo>()
-                if (infoMap.get(artifactoryInfo.bundleId) != null) {
-                    artifactoryInfoList = infoMap.get(artifactoryInfo.bundleId)!!
+                if (infoMap[artifactoryInfo.bundleId] != null) {
+                    artifactoryInfoList = infoMap[artifactoryInfo.bundleId]!!
                     artifactoryInfoList.add(artifactoryInfo)
-                    infoMap.put(artifactoryInfo.bundleId, artifactoryInfoList)
+                    infoMap[artifactoryInfo.bundleId] = artifactoryInfoList
                 } else {
                     artifactoryInfoList.add(artifactoryInfo)
-                    infoMap.put(artifactoryInfo.bundleId, artifactoryInfoList)
+                    infoMap[artifactoryInfo.bundleId] = artifactoryInfoList
                 }
             }
         }

@@ -31,84 +31,79 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
 import com.tencent.devops.common.api.exception.ClientException
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
+import org.apache.commons.lang3.RandomUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 class MicroServiceTarget<T> constructor(
     private val serviceName: String,
     private val type: Class<T>,
-    private val consulClient: ConsulDiscoveryClient,
-    private val tag: String?
+    private val compositeDiscoveryClient: CompositeDiscoveryClient,
+    private val bkTag: BkTag
 ) : FeignTarget<T> {
     private val msCache =
         CacheBuilder.newBuilder()
             .maximumSize(1000)
             .expireAfterWrite(1, TimeUnit.SECONDS)
             .build(object : CacheLoader<String, List<ServiceInstance>>() {
-                override fun load(s: String): List<ServiceInstance> {
-                    val instances = consulClient.getInstances(s)
-                        ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$s]服务提供者")
-                    if (instances.isEmpty()) {
-                        throw ClientException(errorInfo.message ?: "找不到任何有效的[$s]服务提供者")
-                    }
-                    return instances
+                override fun load(svrName: String): List<ServiceInstance> {
+                    return compositeDiscoveryClient.getInstances(svrName)
                 }
             })
 
     private val errorInfo =
         MessageCodeUtil.generateResponseDataObject<String>(ERROR_SERVICE_NO_FOUND, arrayOf(serviceName))
 
-    private val usedInstance = ConcurrentHashMap<String, ServiceInstance>()
-
     private fun choose(serviceName: String): ServiceInstance {
-        val instances = msCache.get(serviceName)
-        val matchTagInstances = ArrayList<ServiceInstance>()
+        val discoveryTag = bkTag.getFinalTag()
 
-        // 若前文中有指定过consul tag则用指定的，否则用本地的consul tag
-        val consulContentTag = ConsulContent.getConsulContent()
-        val useConsulTag = if (!consulContentTag.isNullOrEmpty()) {
-            if (consulContentTag != tag) {
-                logger.info("MicroService content:${ConsulContent.getConsulContent()} local:$tag")
+        val instances = if (KubernetesUtils.inContainer()) {
+            val namespace = discoveryTag.replace("kubernetes-", "")
+            val pods = msCache.get(KubernetesUtils.getSvrName(serviceName))
+            pods.filter { inNamespace(it.metadata, namespace) }.ifEmpty {
+                if (StringUtils.isNotBlank(KubernetesUtils.getDefaultNamespace())) {
+                    pods.filter { inNamespace(it.metadata, KubernetesUtils.getDefaultNamespace()) }
+                } else {
+                    emptyList()
+                }
             }
-            consulContentTag
-        } else tag
+        } else {
+            msCache.get(serviceName).filter { it is ConsulServiceInstance && it.tags.contains(discoveryTag) }
+        }
 
-        instances.forEach { serviceInstance ->
-            if (serviceInstance is ConsulServiceInstance && serviceInstance.tags.contains(useConsulTag)) {
-                // 已经用过的不选择
-                if (!usedInstance.contains(serviceInstance.url())) {
-                    matchTagInstances.add(serviceInstance)
+        if (instances.isEmpty()) {
+            throw ClientException(errorInfo.message ?: "找不到任何有效的$serviceName【$discoveryTag】服务提供者")
+        }
+        return instances[RandomUtils.nextInt(0, instances.size)]
+    }
+
+    /**
+     * 判断是否在集群中
+     */
+    private fun inNamespace(metadata: Map<String, String>, namespace: String): Boolean {
+        for (entry in metadata) {
+            if (entry.key.contains("namespace")) {
+                if (entry.value == namespace) {
+                    return true
                 }
             }
         }
-
-        // 如果为空，则将之前用过的实例重新加入选择
-        if (matchTagInstances.isEmpty() && usedInstance.isNotEmpty()) {
-            matchTagInstances.addAll(usedInstance.values)
-        }
-
-        if (matchTagInstances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]-[$useConsulTag]服务提供者")
-        } else if (matchTagInstances.size > 1) {
-            matchTagInstances.shuffle()
-        }
-
-        usedInstance[matchTagInstances[0].url()] = matchTagInstances[0]
-        return matchTagInstances[0]
+        return false
     }
 
     override fun apply(input: RequestTemplate?): Request {
         if (input!!.url().indexOf("http") != 0) {
-            input.insert(0, url())
+            input.target(url())
         }
         return input.request()
     }

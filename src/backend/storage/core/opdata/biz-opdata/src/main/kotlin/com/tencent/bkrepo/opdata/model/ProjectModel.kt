@@ -32,9 +32,13 @@
 package com.tencent.bkrepo.opdata.model
 
 import com.tencent.bkrepo.opdata.constant.OPDATA_PROJECT
+import com.tencent.bkrepo.opdata.pojo.enums.ProjectType
 import com.tencent.bkrepo.repository.pojo.project.ProjectInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.where
 import org.springframework.stereotype.Service
 
 @Service
@@ -42,9 +46,19 @@ class ProjectModel @Autowired constructor(
     private var mongoTemplate: MongoTemplate
 ) {
 
-    fun getProjectNum(): Long {
-        val results = mongoTemplate.findAll(MutableMap::class.java, OPDATA_PROJECT)
-        return results.size.toLong()
+    fun getProjectNum(projectType: ProjectType): Long {
+        val query = when (projectType) {
+            ProjectType.ALL -> Query()
+            ProjectType.BLUEKING -> Query(
+                Criteria().andOperator(
+                    where(ProjectInfo::name).not().regex(ProjectType.CODECC.prefix),
+                    where(ProjectInfo::name).not().regex(ProjectType.GIT.prefix)
+                )
+            )
+            ProjectType.CODECC -> Query(where(ProjectInfo::name).regex(ProjectType.CODECC.prefix))
+            ProjectType.GIT -> Query(where(ProjectInfo::name).regex(ProjectType.GIT.prefix))
+        }
+        return mongoTemplate.count(query, OPDATA_PROJECT)
     }
 
     fun getProjectList(): List<ProjectInfo> {

@@ -103,7 +103,7 @@ public class CCNDefectCommitConsumer extends AbstractDefectCommitConsumer {
         log.info("parseDefectJsonFile cost: {}, {}, {}, {}", System.currentTimeMillis() - beginTime, taskId, toolName,
                 buildId);
 
-        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId,
+        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId,
                 toolName, buildId);
 
         // 判断本次是增量还是全量扫描
@@ -217,7 +217,7 @@ public class CCNDefectCommitConsumer extends AbstractDefectCommitConsumer {
         });
 
         if (CollectionUtils.isNotEmpty(needUpdateDefectList)) {
-            ccnDefectRepository.save(needUpdateDefectList);
+            ccnDefectRepository.saveAll(needUpdateDefectList);
         }
     }
 
@@ -239,7 +239,7 @@ public class CCNDefectCommitConsumer extends AbstractDefectCommitConsumer {
                                             Map<String, ScmBlameVO> fileChangeRecordsMap,
                                             Map<String, RepoSubModuleVO> codeRepoIdMap) {
         // 获取作者转换关系
-        TransferAuthorEntity transferAuthorEntity = transferAuthorRepository.findByTaskId(commitDefectVO.getTaskId());
+        TransferAuthorEntity transferAuthorEntity = transferAuthorRepository.findFirstByTaskId(commitDefectVO.getTaskId());
         List<TransferAuthorEntity.TransferAuthorPair> transferAuthorList = null;
         if (transferAuthorEntity != null) {
             transferAuthorList = transferAuthorEntity.getTransferAuthorList();
@@ -317,6 +317,7 @@ public class CCNDefectCommitConsumer extends AbstractDefectCommitConsumer {
                 commitDefectVO,
                 buildEntity,
                 transferAuthorList,
+                "",
                 ""
         );
         return newCCNDefectTracingComponent.executeCluster(defectClusterDTO,

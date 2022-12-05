@@ -35,7 +35,6 @@ import com.tencent.devops.worker.common.task.market.MarketAtomTask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.task.script.shell.LinuxScriptTask
 import org.reflections.Reflections
-import org.springframework.core.annotation.AnnotationUtils
 import java.lang.reflect.Modifier
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -59,7 +58,7 @@ object TaskFactory {
         val candidateMap = HashMap<String, KClass<out ITask>>()
         taskClasses?.forEach { taskClazz ->
             if (!Modifier.isAbstract(taskClazz.modifiers)) {
-                val taskClassType = AnnotationUtils.findAnnotation(taskClazz, TaskClassType::class.java)
+                val taskClassType = taskClazz.getAnnotation(TaskClassType::class.java)
                 taskClassType?.classTypes?.forEach { classType ->
                     var find = false
                     var priority = candidatePriorityMap[classType]

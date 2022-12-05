@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface GongfengTriggerParamRepository extends MongoRepository<GongFengTriggerParamEntity, ObjectId> {
 
-    GongFengTriggerParamEntity findByGongfengId(Integer gongfengId);
+    GongFengTriggerParamEntity findFirstByGongfengId(Integer gongfengId);
 }

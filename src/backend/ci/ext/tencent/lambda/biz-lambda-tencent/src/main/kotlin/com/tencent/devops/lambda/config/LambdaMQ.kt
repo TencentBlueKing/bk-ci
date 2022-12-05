@@ -32,4 +32,6 @@ object LambdaMQ {
     const val QUEUE_PROJECT_UPDATE_LAMBDA_EVENT = "q.project.update.project.queue.lambda"
 
     const val QUEUE_PIPELINE_EXTENDS_MODEL_LAMBDA = "q.engine.pipeline.extends.model.lambda"
+
+    const val QUEUE_PIPELINE_BUILD_COMMIT_FINISH_LAMBDA = "q.engine.pipeline.build.commit.finish.lambda"
 }

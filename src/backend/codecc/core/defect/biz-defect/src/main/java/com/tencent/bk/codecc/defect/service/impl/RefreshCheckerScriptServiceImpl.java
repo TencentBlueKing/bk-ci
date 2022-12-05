@@ -86,7 +86,7 @@ public class RefreshCheckerScriptServiceImpl implements RefreshCheckerScriptServ
                     }
                     modifyCheckerDetailModels.add(checkerDetailModel);
                 });
-                checkerRepository.save(modifyCheckerDetailModels);
+                checkerRepository.saveAll(modifyCheckerDetailModels);
             }
             pageable = PageUtils.INSTANCE
                     .generaPageableUnlimitedPageSize(checkerDetailPage.getPage() + 1, pageSize, sortField, sortType);

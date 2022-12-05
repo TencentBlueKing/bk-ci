@@ -50,6 +50,8 @@ data class DataPlatBuildDetail(
     val pipelineId: String,
     @ApiModelProperty("构建号", required = false)
     val buildNum: Int?,
+    @ApiModelProperty("是否保密项目", required = false)
+    val isSecrecy: Boolean?,
     @ApiModelProperty("构建详情", required = true)
     val model: String,
     @ApiModelProperty("构建触发人", required = false)
@@ -61,5 +63,11 @@ data class DataPlatBuildDetail(
     @ApiModelProperty("结束时间", required = false)
     val endTime: String?,
     @ApiModelProperty("构建状态", required = false)
-    val status: String?
+    val status: String?,
+    @ApiModelProperty("事业群ID", required = false)
+    val bgId: String,
+    @ApiModelProperty("部门ID", required = false)
+    val deptId: String,
+    @ApiModelProperty("中心ID", required = false)
+    val centerId: String
 )

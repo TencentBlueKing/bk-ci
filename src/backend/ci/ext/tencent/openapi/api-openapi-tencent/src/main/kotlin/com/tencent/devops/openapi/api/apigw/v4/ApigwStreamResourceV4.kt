@@ -11,17 +11,21 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
-import com.tencent.devops.stream.pojo.GitCIBuildHistory
-import com.tencent.devops.stream.pojo.GitCIModelDetail
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
+import com.tencent.devops.stream.pojo.ManualTriggerInfo
+import com.tencent.devops.stream.pojo.OpenapiTriggerReq
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
+import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
-import com.tencent.devops.stream.pojo.enums.GitCIProjectType
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
-import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
-import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
-import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
+import com.tencent.devops.stream.pojo.openapi.GitCIProjectType
+import com.tencent.devops.stream.pojo.openapi.GitCIUpdateSetting
+import com.tencent.devops.stream.pojo.openapi.GitUserValidateRequest
+import com.tencent.devops.stream.pojo.openapi.GitUserValidateResult
+import com.tencent.devops.stream.pojo.openapi.ProjectCIInfo
+import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
+import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
+import com.tencent.devops.stream.v1.pojo.V1GitCIModelDetail
+import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -36,7 +40,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_STREAM"], description = "OPEN-API-构建资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/stream/gitProjects")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/stream")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwStreamResourceV4 {
@@ -46,7 +50,7 @@ interface ApigwStreamResourceV4 {
         tags = ["v4_stream_app_pipelines_startup", "v4_stream_user_pipelines_startup"]
     )
     @POST
-    @Path("/{gitProjectId}/pipeline_startup")
+    @Path("/gitProjects/{gitProjectId}/pipeline_startup")
     fun triggerStartup(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -57,7 +61,7 @@ interface ApigwStreamResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "工蜂项目ID", required = true)
+        @ApiParam(value = "git项目ID(纯数字)", required = true)
         @PathParam("gitProjectId")
         gitProjectId: String,
         @ApiParam(value = "流水线ID", required = true)
@@ -68,11 +72,85 @@ interface ApigwStreamResourceV4 {
     ): Result<TriggerBuildResult>
 
     @ApiOperation(
+        "人工TriggerBuild拿启动信息",
+        tags = ["v4_stream_app_pipelines_manualTriggerInfo", "v4_stream_user_pipelines_manualTriggerInfo"]
+    )
+    @GET
+    @Path("/gitProjects/{projectId}/manual")
+    fun getManualTriggerInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("分支名称", required = false)
+        @QueryParam("branchName")
+        branchName: String,
+        @ApiParam("COMMIT_ID", required = false)
+        @QueryParam("commitId")
+        commitId: String?
+    ): Result<ManualTriggerInfo>
+
+    @ApiOperation(
+        "openapi 触发",
+        tags = ["v4_stream_app_openapi_trigger", "v4_stream_user_openapi_trigger"]
+    )
+    @POST
+    @Path("/gitProjects/{projectId}/openapi_trigger")
+    fun openapiTrigger(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID(带前缀 如git_xxx)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("TriggerBuild请求", required = true)
+        triggerBuildReq: OpenapiTriggerReq
+    ): Result<TriggerBuildResult>
+
+    @ApiOperation(
+        "通过yaml文件的路径获取到流水线信息",
+        tags = ["v4_stream_app_name2pipelineInfo", "v4_stream_user_name2pipelineInfo"]
+    )
+    @GET
+    @Path("/gitProjects/{projectId}/name_to_pipelineInfo")
+    fun nameToPipelineId(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID(带前缀 如git_xxx)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "yaml文件地址", required = true)
+        @QueryParam("yamlPath")
+        yamlPath: String
+    ): Result<StreamGitProjectPipeline>
+
+    @ApiOperation(
         "工蜂project转换为streamProject",
         tags = ["v4_stream_app_tranfer_projectname", "v4_stream_user_tranfer_projectname"]
     )
     @GET
-    @Path("/{gitProjectId}/projectName_transfer")
+    @Path("/gitProjects/{gitProjectId}/projectName_transfer")
     fun getStreamProject(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -90,7 +168,7 @@ interface ApigwStreamResourceV4 {
 
     @ApiOperation("项目下所有Stream流水线概览", tags = ["v4_stream_app_pipelines_list", "v4_stream_user_pipelines_list"])
     @GET
-    @Path("/{gitProjectId}/pipeline_list")
+    @Path("/gitProjects/{gitProjectId}/pipeline_list")
     fun getPipelineList(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -113,11 +191,11 @@ interface ApigwStreamResourceV4 {
         @ApiParam("每页多少条（最大50）", required = false, defaultValue = "10", allowableValues = "range[1, 50]")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<GitProjectPipeline>>
+    ): Result<Page<V1GitProjectPipeline>>
 
     @ApiOperation("获取指定Stream流水线信息", tags = ["v4_stream_app_pipelines_info", "v4_stream_user_pipelines_info"])
     @GET
-    @Path("/{gitProjectId}/pipeline_info")
+    @Path("/gitProjects/{gitProjectId}/pipeline_info")
     fun getPipeline(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -137,11 +215,11 @@ interface ApigwStreamResourceV4 {
         @ApiParam(value = "是否带有最新一次构建历史", required = false)
         @QueryParam("withHistory")
         withHistory: Boolean? = false
-    ): Result<GitProjectPipeline?>
+    ): Result<V1GitProjectPipeline?>
 
     @ApiOperation("开启或关闭Stream流水线", tags = ["v4_stream_app_pipelines_enable", "v4_stream_user_pipelines_enable"])
     @POST
-    @Path("/{gitProjectId}/pipeline_enable")
+    @Path("/gitProjects/{gitProjectId}/pipeline_enable")
     fun enablePipeline(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -165,7 +243,7 @@ interface ApigwStreamResourceV4 {
 
     @ApiOperation("获取Stream流水线列表", tags = ["v4_stream_app_pipelines_listInfo", "v4_stream_user_pipelines_listInfo"])
     @GET
-    @Path("/{gitProjectId}/pipeline_listInfo")
+    @Path("/gitProjects/{gitProjectId}/pipeline_listInfo")
     fun listPipelineNames(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -179,11 +257,11 @@ interface ApigwStreamResourceV4 {
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long
-    ): Result<List<GitProjectPipeline>>
+    ): Result<List<V1GitProjectPipeline>>
 
     @ApiOperation("查看项目下的指定构建详情", tags = ["v4_stream_app_builds_detail", "v4_stream_user_builds_detail"])
     @GET
-    @Path("/{gitProjectId}/build_detail")
+    @Path("/gitProjects/{gitProjectId}/build_detail")
     fun getLatestBuildDetail(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -203,11 +281,11 @@ interface ApigwStreamResourceV4 {
         @ApiParam(value = "buildId", required = false)
         @QueryParam("buildId")
         buildId: String?
-    ): Result<GitCIModelDetail?>
+    ): Result<V1GitCIModelDetail?>
 
     @ApiOperation("可选条件检索Stream构建历史", tags = ["v4_stream_app_builds_history", "v4_stream_user_builds_history"])
     @GET
-    @Path("/{gitProjectId}/build_history")
+    @Path("/gitProjects/{gitProjectId}/build_history")
     fun getHistoryBuildList(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -245,11 +323,11 @@ interface ApigwStreamResourceV4 {
         @ApiParam("流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?
-    ): Result<Page<GitCIBuildHistory>>
+    ): Result<Page<V1GitCIBuildHistory>>
 
     @ApiOperation("开启，关闭，初始化呢工蜂CI", tags = ["v4_stream_app_ci_enable", "v4_stream_user_ci_enable"])
     @POST
-    @Path("/{gitProjectId}/ci_enable")
+    @Path("/gitProjects/{gitProjectId}/ci_enable")
     fun enableGitCI(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -269,7 +347,7 @@ interface ApigwStreamResourceV4 {
 
     @ApiOperation("查询工蜂CI项目配置", tags = ["v4_stream_app_ci_settings_get", "v4_stream_user_ci_settings_get"])
     @GET
-    @Path("/{gitProjectId}/setting_get")
+    @Path("/gitProjects/{gitProjectId}/setting_get")
     fun getGitCIConf(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -287,7 +365,7 @@ interface ApigwStreamResourceV4 {
 
     @ApiOperation("保存工蜂CI配置", tags = ["v4_stream_app_ci_update_setttings", "v4_stream_user_ci_update_setttings"])
     @POST
-    @Path("/{gitProjectId}/setting_save")
+    @Path("/gitProjects/{gitProjectId}/setting_save")
     fun saveGitCIConf(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -310,7 +388,7 @@ interface ApigwStreamResourceV4 {
         tags = ["v4_stream_app_project_validate", "v4_stream_user_project_validate"]
     )
     @POST
-    @Path("/project_validate")
+    @Path("/gitProjects/project_validate")
     fun validateGitProject(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -321,7 +399,7 @@ interface ApigwStreamResourceV4 {
 
     @ApiOperation("刷新项目启动人", tags = ["v4_stream_app_ci_reset_oauth", "v4_stream_user_ci_reset_oauth"])
     @POST
-    @Path("/{gitProjectId}/reset_oauth")
+    @Path("/gitProjects/{gitProjectId}/reset_oauth")
     fun updateEnableUser(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -336,7 +414,7 @@ interface ApigwStreamResourceV4 {
 
     @ApiOperation("获取工蜂项目与STREAM关联列表", tags = ["v4_stream_user_stream_list", "v4_stream_app_stream_list"])
     @GET
-    @Path("/stream_list")
+    @Path("/gitProjects/stream_list")
     fun getProjects(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -360,4 +438,18 @@ interface ApigwStreamResourceV4 {
         @QueryParam("sort")
         sort: GitCodeBranchesSort?
     ): Result<List<ProjectCIInfo>>
+
+    @ApiOperation("yaml schema check", tags = ["v4_stream_app_check_yaml", "v4_stream_user_check_yaml"])
+    @POST
+    @Path("/check_yaml")
+    fun checkYaml(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工蜂项目ID", required = false)
+        @QueryParam("gitProjectId")
+        gitProjectId: String?,
+        @ApiParam(value = "yaml检查模型", required = true)
+        yamlCheck: StreamYamlCheck
+    ): Result<String>
 }

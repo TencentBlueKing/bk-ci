@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.support.api.service.ServiceImageManageResource
+import com.tencent.devops.support.api.service.ServiceFileResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -44,14 +44,13 @@ class TxStoreLogoServiceImpl : StoreLogoServiceImpl() {
     private val logger = LoggerFactory.getLogger(TxStoreLogoServiceImpl::class.java)
 
     override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceImageManageResource::class)
+        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val serviceUrl =
-            "$serviceUrlPrefix/service/image/manage/upload?userId=$userId"
-        logger.info("uploadStoreLogo serviceUrl is:$serviceUrl")
+            "$serviceUrlPrefix/service/file/upload?userId=$userId"
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body()!!.string()
-            logger.info("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
+                logger.warn("$userId upload file:${file.name} fail,responseContent:$responseContent")
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
             return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})

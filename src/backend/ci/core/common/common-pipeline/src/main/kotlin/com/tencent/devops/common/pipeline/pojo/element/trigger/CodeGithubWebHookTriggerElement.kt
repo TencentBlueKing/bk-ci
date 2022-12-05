@@ -43,13 +43,13 @@ data class CodeGithubWebHookTriggerElement(
     override var status: String? = null,
     @ApiModelProperty("仓库ID", required = true)
     val repositoryHashId: String?,
-    @ApiModelProperty("branch", required = false)
+    @ApiModelProperty("分支名称", required = false)
     val branchName: String?,
-    @ApiModelProperty("excludeBranch", required = false)
+    @ApiModelProperty("用于排除的分支名称", required = false)
     val excludeBranchName: String?,
-    @ApiModelProperty("excludeUsers", required = false)
+    @ApiModelProperty("用于排除的user id", required = false)
     val excludeUsers: String?,
-    @ApiModelProperty("eventType", required = false)
+    @ApiModelProperty("事件类型", required = false)
     val eventType: CodeEventType?,
     @ApiModelProperty("新版的github原子的类型")
     val repositoryType: RepositoryType? = null,

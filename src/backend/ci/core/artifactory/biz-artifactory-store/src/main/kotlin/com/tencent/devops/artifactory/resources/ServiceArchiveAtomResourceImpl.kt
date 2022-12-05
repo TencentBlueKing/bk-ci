@@ -28,38 +28,40 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
-import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
-import com.tencent.devops.artifactory.constant.REALM_BK_REPO
-import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.service.ArchiveAtomService
-import com.tencent.devops.artifactory.service.ArchiveFileService
-import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STORE_PROJECT_ID
-import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_PLUGIN
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ServiceArchiveAtomResourceImpl @Autowired constructor(
-    private val archiveFileService: ArchiveFileService,
     private val archiveAtomService: ArchiveAtomService
 ) : ServiceArchiveAtomResource {
-
-    @Value("\${artifactory.realm:}")
-    private var artifactoryRealm: String = ""
 
     override fun getAtomFileContent(filePath: String): Result<String> {
         return Result(archiveAtomService.getAtomFileContent(filePath))
     }
 
     override fun deleteAtomFile(userId: String, projectCode: String, atomCode: String): Result<Boolean> {
-        val filePath = when (artifactoryRealm) {
-            REALM_LOCAL -> "$BK_CI_ATOM_DIR/$projectCode/$atomCode"
-            REALM_BK_REPO -> "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_PLUGIN/$projectCode/$atomCode"
-            else -> throw IllegalArgumentException("Unknown artifactory realm")
-        }
-        archiveFileService.deleteFile(userId, filePath)
+        archiveAtomService.deleteAtom(userId, projectCode, atomCode)
         return Result(true)
+    }
+
+    override fun updateArchiveFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        content: String
+    ): Result<Boolean> {
+        return Result(
+            archiveAtomService.updateArchiveFile(
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = version,
+                fileName = fileName,
+                content = content
+            )
+        )
     }
 }

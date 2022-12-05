@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,23 +10,19 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.bkrepo.common.artifact.repository.context
@@ -35,11 +31,12 @@ import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.common.artifact.api.ArtifactFileMap
+import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
 import com.tencent.bkrepo.common.artifact.constant.OCTET_STREAM
 import com.tencent.bkrepo.common.artifact.hash.HashAlgorithm
 import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
 import com.tencent.bkrepo.common.artifact.resolve.file.multipart.MultipartArtifactFile
-import com.tencent.bkrepo.common.artifact.resolve.file.stream.OctetStreamArtifactFile
+import com.tencent.bkrepo.common.artifact.resolve.file.stream.StreamArtifactFile
 import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
 
 /**
@@ -52,8 +49,9 @@ open class ArtifactUploadContext : ArtifactContext {
 
     constructor(
         repo: RepositoryDetail,
-        artifactFile: ArtifactFile
-    ) {
+        artifactFile: ArtifactFile,
+        artifactInfo: ArtifactInfo? = null
+    ) : super(repo, artifactInfo) {
         this.repositoryDetail = repo
         this.artifactFile = artifactFile
         this.artifactFileMap = ArtifactFileMap()
@@ -73,7 +71,7 @@ open class ArtifactUploadContext : ArtifactContext {
     /**
      * 根据[name]获取构件文件[ArtifactFile]
      *
-     * [name]为空则返回二进制流[OctetStreamArtifactFile]
+     * [name]为空则返回二进制流[StreamArtifactFile]
      * [name]不为空则返回字段为[name]的[MultipartArtifactFile]
      * 如果[name]对应的构件文件不存在，则抛出[NullPointerException]
      */
@@ -89,7 +87,7 @@ open class ArtifactUploadContext : ArtifactContext {
     /**
      * 根据[name]获取构件文件[ArtifactFile]
      *
-     * [name]为空则返回二进制流[OctetStreamArtifactFile]
+     * [name]为空则返回二进制流[StreamArtifactFile]
      * [name]不为空则返回字段为[name]的[MultipartArtifactFile]
      * 如果[name]对应的构件文件不存在，则返回null
      */
@@ -119,11 +117,11 @@ open class ArtifactUploadContext : ArtifactContext {
     }
 
     /**
-     * 获取[OctetStreamArtifactFile]，不存在则抛[NullPointerException]异常
+     * 获取[StreamArtifactFile]，不存在则抛[NullPointerException]异常
      */
     @Suppress("UNCHECKED_CAST")
-    fun getOctetStreamArtifactFile(): OctetStreamArtifactFile {
-        return artifactFile as OctetStreamArtifactFile
+    fun getStreamArtifactFile(): StreamArtifactFile {
+        return artifactFile as StreamArtifactFile
     }
 
     /**

@@ -118,6 +118,13 @@ func GetLogsDir() string {
 	return dir
 }
 
+// GetPumpCacheDir get the runtime pump cache dir
+func GetPumpCacheDir() string {
+	dir := path.Join(GetRuntimeDir(), "pump_cache")
+	_ = os.MkdirAll(dir, os.ModePerm)
+	return dir
+}
+
 // GetRecordDir get the record dir
 func GetRecordDir() string {
 	dir := filepath.Join(GetGlobalDir(), "record")
@@ -331,6 +338,28 @@ func ProcessExist(target string) bool {
 	return false
 }
 
+// ListProcess list process by process name
+func ListProcess(target string) ([]*process.Process, error) {
+	processes, err := process.Processes()
+	if err != nil {
+		return nil, err
+	}
+
+	procs := []*process.Process{}
+	for _, p := range processes {
+		name, err := p.Name()
+		if err != nil {
+			continue
+		}
+
+		if target == name {
+			procs = append(procs, p)
+		}
+	}
+
+	return procs, nil
+}
+
 // ProcessExistTimeoutAndKill check target process with name, and kill it after timeout
 func ProcessExistTimeoutAndKill(target string, timeout time.Duration) bool {
 	processes, err := process.Processes()
@@ -360,4 +389,35 @@ func ProcessExistTimeoutAndKill(target string, timeout time.Duration) bool {
 	}
 
 	return false
+}
+
+func hasSpace(s string) bool {
+	if s == "" {
+		return false
+	}
+
+	for _, v := range s {
+		if v == ' ' {
+			return true
+		}
+	}
+
+	return false
+}
+
+// QuoteSpacePath quote path if include space
+func QuoteSpacePath(s string) string {
+	if s == "" {
+		return ""
+	}
+
+	if !hasSpace(s) {
+		return s
+	}
+
+	if s[0] == '"' || s[0] == '\'' {
+		return s
+	}
+
+	return "\"" + s + "\""
 }

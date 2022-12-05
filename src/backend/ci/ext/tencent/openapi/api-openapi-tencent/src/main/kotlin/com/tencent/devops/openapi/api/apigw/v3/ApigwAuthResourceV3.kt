@@ -6,6 +6,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.openapi.api.apigw.pojo.BlackListInfo
+import com.tencent.devops.openapi.api.apigw.pojo.WesecResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -70,4 +72,29 @@ interface ApigwAuthResourceV3 {
         @ApiParam("资源编码", required = false)
         resourceType: String
     ): Result<Boolean>
+
+    @ApiOperation("黑名单操作")
+    @POST
+    @Path("/blackList/")
+    fun blackListUser(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        blackList: BlackListInfo
+    ): WesecResult
+
+    @ApiOperation("黑名单列表")
+    @GET
+    @Path("/blackList/")
+    fun blackListUser(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?
+    ): WesecResult
 }

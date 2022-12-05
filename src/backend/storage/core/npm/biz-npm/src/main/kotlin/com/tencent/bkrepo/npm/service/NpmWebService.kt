@@ -32,6 +32,7 @@
 package com.tencent.bkrepo.npm.service
 
 import com.tencent.bkrepo.npm.artifact.NpmArtifactInfo
+import com.tencent.bkrepo.npm.pojo.NpmDomainInfo
 import com.tencent.bkrepo.npm.pojo.user.request.PackageDeleteRequest
 import com.tencent.bkrepo.npm.pojo.user.request.PackageVersionDeleteRequest
 import com.tencent.bkrepo.npm.pojo.user.PackageVersionInfo
@@ -52,4 +53,9 @@ interface NpmWebService {
      * 删除包版本
      */
     fun deleteVersion(artifactInfo: NpmArtifactInfo, deleteRequest: PackageVersionDeleteRequest)
+
+    /**
+     * 获取npm域名信息
+     */
+    fun getRegistryDomain(): NpmDomainInfo
 }

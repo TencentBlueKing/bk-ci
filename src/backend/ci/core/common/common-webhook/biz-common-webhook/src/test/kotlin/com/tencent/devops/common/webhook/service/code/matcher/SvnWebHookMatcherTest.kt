@@ -37,9 +37,9 @@ import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.common.webhook.service.code.handler.svn.SvnCommitTriggerHandler
 import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.repository.pojo.CodeSvnRepository
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 import java.nio.charset.Charset
 
@@ -54,7 +54,7 @@ class SvnWebHookMatcherTest {
         repoHashId = "dfd"
     )
 
-    @Before
+    @BeforeEach
     fun setUp() {
         CodeWebhookHandlerRegistrar.register(SvnCommitTriggerHandler())
     }
@@ -71,7 +71,7 @@ class SvnWebHookMatcherTest {
 
         val matcher = SvnWebHookMatcher(event)
 
-        Assert.assertTrue(matcher.preMatch().isMatch)
+        Assertions.assertTrue(matcher.preMatch().isMatch)
         var webHookParams = WebHookParams(
             repositoryConfig = RepositoryConfig(
                 repositoryHashId = "eraf",
@@ -82,7 +82,7 @@ class SvnWebHookMatcherTest {
             relativePath = "trunk/,release/",
             excludePaths = ""
         )
-        Assert.assertTrue(
+        Assertions.assertTrue(
             matcher.isMatch(
                 projectId = "mht",
                 pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -100,7 +100,7 @@ class SvnWebHookMatcherTest {
             relativePath = "trunk/aa/aaa.txt",
             excludePaths = ""
         )
-        Assert.assertFalse(
+        Assertions.assertFalse(
             matcher.isMatch(
                 projectId = "mht",
                 pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -109,15 +109,15 @@ class SvnWebHookMatcherTest {
             ).isMatch
         )
 
-        Assert.assertEquals("mingshewhe", matcher.getUsername())
-        Assert.assertEquals("116", matcher.getRevision())
-        Assert.assertEquals("ddlin/ddlin_proj", matcher.getRepoName())
-        Assert.assertEquals("", matcher.getBranchName())
-        Assert.assertEquals(CodeEventType.POST_COMMIT, matcher.getEventType())
-        Assert.assertEquals(CodeType.SVN, matcher.getCodeType())
-        Assert.assertEquals(null, matcher.getHookSourceUrl())
-        Assert.assertEquals(null, matcher.getHookTargetUrl())
-        Assert.assertEquals(null, matcher.getMergeRequestId())
-        Assert.assertEquals("文件匹配", matcher.getMessage())
+        Assertions.assertEquals("mingshewhe", matcher.getUsername())
+        Assertions.assertEquals("116", matcher.getRevision())
+        Assertions.assertEquals("ddlin/ddlin_proj", matcher.getRepoName())
+        Assertions.assertEquals("", matcher.getBranchName())
+        Assertions.assertEquals(CodeEventType.POST_COMMIT, matcher.getEventType())
+        Assertions.assertEquals(CodeType.SVN, matcher.getCodeType())
+        Assertions.assertEquals(null, matcher.getHookSourceUrl())
+        Assertions.assertEquals(null, matcher.getHookTargetUrl())
+        Assertions.assertEquals(null, matcher.getMergeRequestId())
+        Assertions.assertEquals("文件匹配", matcher.getMessage())
     }
 }

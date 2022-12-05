@@ -12,7 +12,7 @@
 
 package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
-import com.mongodb.BulkWriteResult;
+import com.mongodb.bulk.BulkWriteResult;
 import com.tencent.bk.codecc.defect.model.CLOCStatisticEntity;
 import com.tencent.devops.common.constant.ComConstants.Tool;
 import com.tencent.devops.common.web.aop.annotation.ActiveStatistic;

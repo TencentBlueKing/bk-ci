@@ -31,6 +31,6 @@
 
 package com.tencent.bkrepo.helm.listener.event
 
-import com.tencent.bkrepo.helm.pojo.chart.ChartDeleteRequest
+import com.tencent.bkrepo.helm.pojo.chart.ChartPackageDeleteRequest
 
-data class ChartDeleteEvent(val request: ChartDeleteRequest)
+data class ChartDeleteEvent(val requestPackage: ChartPackageDeleteRequest)

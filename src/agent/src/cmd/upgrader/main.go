@@ -28,15 +28,16 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrader"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"github.com/astaxie/beego/logs"
 )
 
 const (
@@ -44,8 +45,16 @@ const (
 )
 
 func main() {
+	// 初始化日志
+	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsUpgrader.log")
+	err := logs.Init(logFilePath)
+	if err != nil {
+		fmt.Printf("init upgrader log error %v\n", err)
+		systemutil.ExitProcess(1)
+	}
+
 	runtime.GOMAXPROCS(4)
-	initLog()
+
 	defer func() {
 		if err := recover(); err != nil {
 			logs.Error("panic: ", err)
@@ -81,12 +90,4 @@ func main() {
 		systemutil.ExitProcess(1)
 	}
 	systemutil.ExitProcess(0)
-}
-
-func initLog() {
-	logConfig := make(map[string]string)
-	logConfig["filename"] = systemutil.GetWorkDir() + "/logs/devopsUpgrader.log"
-	logConfig["perm"] = "0666"
-	jsonConfig, _ := json.Marshal(logConfig)
-	logs.SetLogger(logs.AdapterFile, string(jsonConfig))
 }

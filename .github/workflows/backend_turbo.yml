@@ -38,4 +38,4 @@ jobs:
           ${{ runner.os }}-gradle-
     - name: Gradle Build
       working-directory: src/backend/turbo
-      run: ./gradlew clean test -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
+      run: ./gradlew clean test

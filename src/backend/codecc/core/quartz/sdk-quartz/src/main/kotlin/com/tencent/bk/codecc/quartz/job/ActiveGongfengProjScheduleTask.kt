@@ -51,7 +51,7 @@ class ActiveGongfengProjScheduleTask @Autowired constructor(
         val personalRegex = Regex("""personal_projects_([0-9]+).json""")
         val personalDate = projectFileList.filter { personalRegex.matches(it.name) }
             .map { personalRegex.find(it.name)!!.groupValues[1] }
-            .minBy { LocalDateTime.now().timestampmilli() - SimpleDateFormat("yyyyMMdd").parse(it).time }
+            .minByOrNull { LocalDateTime.now().timestampmilli() - SimpleDateFormat("yyyyMMdd").parse(it).time }
         val personalFileName = "personal_projects_$personalDate.json"
         val personalUrl =
             "$gitCodePath/api/v3/projects/$gitProjectId/repository/blobs/master?filepath=$personalFileName"
@@ -75,7 +75,7 @@ class ActiveGongfengProjScheduleTask @Autowired constructor(
         val teamRegex = Regex("""team_projects_([0-9]+).json""")
         val teamDate = projectFileList.filter { teamRegex.matches(it.name) }
             .map { teamRegex.find(it.name)!!.groupValues[1] }
-            .minBy { LocalDateTime.now().timestampmilli() - SimpleDateFormat("yyyyMMdd").parse(it).time }
+            .minByOrNull { LocalDateTime.now().timestampmilli() - SimpleDateFormat("yyyyMMdd").parse(it).time }
         val teamFileName = "team_projects_$teamDate.json"
         val teamUrl = "$gitCodePath/api/v3/projects/$gitProjectId/repository/blobs/master?filepath=$teamFileName"
         val teamRequest = Request.Builder()

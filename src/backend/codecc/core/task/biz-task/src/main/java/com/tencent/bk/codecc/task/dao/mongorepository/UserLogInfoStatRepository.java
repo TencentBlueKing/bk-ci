@@ -31,6 +31,6 @@ public interface UserLogInfoStatRepository extends MongoRepository<UserLogInfoSt
      * @param userName RTX
      * @return entity
      */
-    UserLogInfoStatEntity findByUserName(String userName);
+    UserLogInfoStatEntity findFirstByUserName(String userName);
 
 }

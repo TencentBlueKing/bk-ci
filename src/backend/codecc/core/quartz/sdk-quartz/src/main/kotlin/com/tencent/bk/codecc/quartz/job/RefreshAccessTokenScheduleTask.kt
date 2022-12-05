@@ -48,7 +48,7 @@ class RefreshAccessTokenScheduleTask @Autowired constructor(
         }
 
         if (!StringUtils.isEmpty(access_token)) {
-            redisTemplate.opsForValue().set(KEY_BACKEND_ACCESS_TOKEN, access_token)
+            redisTemplate.opsForValue().set(KEY_BACKEND_ACCESS_TOKEN, access_token!!)
             logger.info("refresh bs access token finished!")
         } else {
             logger.info("refresh bs access token failed!")

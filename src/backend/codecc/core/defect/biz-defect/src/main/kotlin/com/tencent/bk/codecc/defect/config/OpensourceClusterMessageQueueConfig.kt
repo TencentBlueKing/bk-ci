@@ -62,11 +62,11 @@ class OpensourceClusterMessageQueueConfig {
         container.setMaxConcurrentConsumers(20)
         container.setStartConsumerMinInterval(5)
         container.setConsecutiveActiveTrigger(5)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         //确保只有一个消费者消费，保证负载不超时
         val adapter = MessageListenerAdapter(defectClusterComponent, defectClusterComponent::executeClusterNew.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -85,7 +85,7 @@ class OpensourceClusterMessageQueueConfig {
         container.setMaxConcurrentConsumers(20)
         container.setStartConsumerMinInterval(2)
         container.setConsecutiveActiveTrigger(2)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         return container
     }
 

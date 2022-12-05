@@ -46,12 +46,14 @@ const val RESPONSE_LAST_MODIFIED = "LastModified"
 
 private const val ENCODED_STR_SIZE = 3
 
-fun String.encode(): String {
+fun String.urlEncode(toLower: Boolean): String {
     val encodedString = URLEncoder.encode(this, DEFAULT_ENCODING)
         .replace("+", "%20")
         .replace("*", "%2A")
         .replace("%7E", "~")
-
+    if (!toLower) {
+        return encodedString
+    }
     val builder = StringBuilder()
     val length = encodedString.length
     var index = 0

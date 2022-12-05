@@ -35,4 +35,4 @@ import com.tencent.bkrepo.common.artifact.repository.context.ArtifactUploadConte
 
 data class ArtifactUpdatedEvent(
     override val context: ArtifactUploadContext
-) : ArtifactEvent(context, ArtifactEventType.UPLOADED)
+) : ArtifactContextEvent(context, ArtifactEventType.UPLOADED)

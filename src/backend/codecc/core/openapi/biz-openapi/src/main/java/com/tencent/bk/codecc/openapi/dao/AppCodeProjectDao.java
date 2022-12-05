@@ -30,6 +30,6 @@ public interface AppCodeProjectDao extends MongoRepository<AppCodeProjectEntity,
      * @param appCode
      * @return
      */
-    AppCodeProjectEntity findByAppCode(String appCode);
+    AppCodeProjectEntity findFirstByAppCode(String appCode);
 
 }

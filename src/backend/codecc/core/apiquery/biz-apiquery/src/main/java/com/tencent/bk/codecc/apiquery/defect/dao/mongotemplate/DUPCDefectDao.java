@@ -12,12 +12,12 @@
 
 package com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.apiquery.defect.model.DUPCDefectModel;
 import com.tencent.bk.codecc.apiquery.defect.model.DUPCStatisticModel;
 import com.tencent.devops.common.constant.ComConstants;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
@@ -90,9 +90,9 @@ public class DUPCDefectDao {
      * @return list
      */
     public List<DUPCDefectModel> findByTaskIdAndAuthorAndRelPaths(long taskId, String author, Set<String> fileList) {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("block_list", false);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
         query.addCriteria(Criteria.where("task_id").is(taskId).and("status").is(ComConstants.DefectStatus.NEW.value()));
 
         //作者过滤
@@ -128,12 +128,12 @@ public class DUPCDefectDao {
      */
     public List<DUPCStatisticModel> batchFindByTaskIdAndBuildId(Collection<Long> taskIdSet,
             Collection<String> buildIds) {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("task_id", true);
         fieldsObj.put("build_id", true);
         fieldsObj.put("dup_rate", true);
         fieldsObj.put("defect_count", true);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
 
         query.addCriteria(Criteria.where("task_id").in(taskIdSet).and("build_id").in(buildIds));
 

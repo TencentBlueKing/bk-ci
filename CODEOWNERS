@@ -1,0 +1,17 @@
+# Where component owners are known, add them here.
+/.github @irwinsun
+/CODEOWNERS @irwinsun @zanyzhao
+/docs @zanyzhao @irwinsun
+/*.md @zanyzhao
+
+/scripts @fighter-liu @irwinsun
+/src/agent @hingbong @irwinsun @tangruotian
+/src/gateway @stubenhuang @irwinsun
+/src/app @lockiechen
+/src/frontend @lockiechen @zhanxu33
+/support-files @irwinsun 
+/src/backend/codecc @austingod @foxdd
+/src/backend/codecc_tools @austingod @foxdd
+/src/backend/ci @irwinsun @mingshewhe @hingbong @stubenhuang @carlyin0801 @fitzcao
+/src/backend/storage @irwinsun @owenlxu
+/src/backend/booster @tming

@@ -65,8 +65,13 @@ class UserGitResourceImpl @Autowired constructor(
         return Result(gitOauthService.deleteToken(userId))
     }
 
-    override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {
-        return Result(gitOauthService.getProject(userId, projectId, repoHashId))
+    override fun getProject(
+        userId: String,
+        projectId: String,
+        repoHashId: String?,
+        search: String?
+    ): Result<AuthorizeResult> {
+        return Result(gitOauthService.getProject(userId, projectId, repoHashId, search))
     }
 
     override fun getProjectList(userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {

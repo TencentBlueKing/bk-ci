@@ -34,7 +34,6 @@ import com.tencent.bk.codecc.defect.model.CLOCStatisticEntity;
 import com.tencent.bk.codecc.defect.model.CodeCommentEntity;
 import com.tencent.bk.codecc.defect.model.DefectEntity;
 import com.tencent.bk.codecc.defect.model.LintStatisticEntity;
-import com.tencent.bk.codecc.defect.model.StatisticEntity;
 import com.tencent.bk.codecc.defect.utils.ConvertUtil;
 import com.tencent.bk.codecc.defect.vo.*;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO;
@@ -73,7 +72,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
@@ -428,7 +427,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         defectVOs = defectVOs.subList(subListBeginIdx, subListEndIdx > total ? total : subListEndIdx);
 
         //封装分页类
-        Pageable pageable = new PageRequest(pageNum, pageSize, new Sort(sortType, sortField));
+        Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(sortType, sortField));
         return new PageImpl<>(defectVOs, pageable, total);
     }
 
@@ -721,9 +720,9 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 
             content = pipelineScmService.getFileContentOauth(oauthUserId, GitUtil.INSTANCE.getProjectName(url),
                 relPath, (revision != null ? revision : branch));
-        }
-        else
-        {
+        } else if (projectId != null && (projectId.startsWith("git_") || projectId.startsWith("github_"))) {
+            content = pipelineScmService.getStreamFileContent(projectId, userId, url, relPath, revision, branch);
+        }else {
             content = pipelineScmService.getFileContent(taskId, repoId, relPath, revision, branch, subModule, createFrom);
         }
 

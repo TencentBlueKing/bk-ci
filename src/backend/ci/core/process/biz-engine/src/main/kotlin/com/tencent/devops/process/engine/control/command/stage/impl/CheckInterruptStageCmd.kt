@@ -74,7 +74,7 @@ class CheckInterruptStageCmd : StageCmd {
     private fun parseFastKill(commandContext: StageContext): Boolean {
         if (commandContext.stage.controlOption?.fastKill == true) {
             commandContext.containers.forEach { container ->
-                if (ControlUtils.checkContainerFailure(container) || container.status.isCancel()) {
+                if (ControlUtils.checkContainerFailure(container)) {
                     commandContext.fastKill = true // 设置标志快速失败
                     return container.status.isFailure()
                 }

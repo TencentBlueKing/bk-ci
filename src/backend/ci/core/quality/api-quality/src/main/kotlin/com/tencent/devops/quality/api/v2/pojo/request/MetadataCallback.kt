@@ -31,8 +31,8 @@ import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 
 data class MetadataCallback(
     val elementType: String,
-    val taskId: String = "",
-    val taskName: String = "",
+    val taskId: String? = "",
+    val taskName: String? = "",
     val data: List<CallbackHisMetadata>
 ) {
 

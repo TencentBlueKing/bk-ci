@@ -39,9 +39,9 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("包列表选项")
 data class PackageListOption(
     @ApiModelProperty("当前页")
-    val pageNumber: Int = DEFAULT_PAGE_NUMBER,
+    var pageNumber: Int = DEFAULT_PAGE_NUMBER,
     @ApiModelProperty("分页大小")
-    val pageSize: Int = DEFAULT_PAGE_SIZE,
+    var pageSize: Int = DEFAULT_PAGE_SIZE,
     @ApiModelProperty("包名称, 根据该字段模糊搜索")
-    val packageName: String? = null
+    var packageName: String? = null
 )

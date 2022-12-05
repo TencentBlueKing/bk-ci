@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
+import com.tencent.devops.quality.dao.v2.QualityRuleReviewerDao
 import com.tencent.devops.quality.pojo.QualityRuleBuildHisOpt
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
 import com.tencent.devops.quality.util.QualityUrlUtils
@@ -69,7 +70,8 @@ class QualityHistoryService @Autowired constructor(
     private val qualityRuleBuildHisOperationService: QualityRuleBuildHisOperationService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val qualityUrlUtils: QualityUrlUtils
+    private val qualityUrlUtils: QualityUrlUtils,
+    private val qualityRuleReviewerDao: QualityRuleReviewerDao
 ) {
 
     private val logger = LoggerFactory.getLogger(QualityHistoryService::class.java)
@@ -417,6 +419,22 @@ class QualityHistoryService @Autowired constructor(
             val remark = sb.toString()
             val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)
             val pipeline = pipelineIdToNameMap[it.pipelineId]
+            val qualityReview = if (it.result == RuleInterceptResult.INTERCEPT_PASS.name ||
+                it.result == RuleInterceptResult.INTERCEPT.name) {
+                with(qualityRuleReviewerDao.get(
+                    dslContext = dslContext,
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    buildId = it.buildId,
+                    ruleId = it.ruleId
+                )) {
+                    QualityRuleBuildHisOpt(
+                        ruleHashId = hisRuleHashId,
+                        gateOptUser = this?.reviewer,
+                        gateOptTime = this?.reviewTime.toString()
+                    )
+                }
+            } else { null }
             RuleInterceptHistory(
                 hashId = HashUtil.encodeLongId(it.id),
                 num = it.projectNum,
@@ -430,7 +448,8 @@ class QualityHistoryService @Autowired constructor(
                 buildNo = buildIdToNameMap[it.buildId] ?: "",
                 checkTimes = it.checkTimes,
                 remark = remark,
-                pipelineIsDelete = pipeline?.isDelete ?: false
+                pipelineIsDelete = pipeline?.isDelete ?: false,
+                qualityRuleBuildHisOpt = qualityReview
             )
         }
         return Pair(count, list)

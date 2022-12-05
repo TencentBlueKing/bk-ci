@@ -23,36 +23,35 @@
                 return {
                     icon: 'experience',
                     title: '版本体验',
-                    // url: 'http://docs.devops.oa.com/所有服务/版本体验/summary.html',
                     menu: [{
                                id: 'experienceList',
                                name: '体验管理',
-                               icon: 'icon-release',
+                               icon: 'devops-icon icon-release',
                                showChildren: false,
                                children: [
                                    {
                                        id: 'experienceDetail',
                                        name: '发布详情',
-                                       icon: 'icon-release'
+                                       icon: 'devops-icon icon-release'
                                    },
                                    {
                                        id: 'editExperience',
                                        name: '编辑发布',
-                                       icon: 'icon-release'
+                                       icon: 'devops-icon icon-release'
                                    }
                                ]
                            },
                            {
                                id: 'createExperience',
                                name: '新增体验',
-                               icon: 'icon-experience',
+                               icon: 'devops-icon icon-experience',
                                showChildren: false,
                                children: []
                            },
                            {
                                id: 'setting',
                                name: '设置',
-                               icon: 'icon-cog',
+                               icon: 'devops-icon icon-cog',
                                showChildren: false,
                                children: []
                            }]

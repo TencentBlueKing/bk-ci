@@ -19,7 +19,7 @@ import (
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 )
 
-// ServerConfig
+// ServerConfig define
 type ServerConfig struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -28,6 +28,7 @@ type ServerConfig struct {
 	conf.ServerOnlyCertConfig
 	conf.LocalConfig
 	conf.MetricConfig
+	conf.CommonEngineConfig
 
 	EtcdEndpoints string `json:"etcd_endpoints" value:"" usage:"etcd endpoints for register and discover"`
 	EtcdRootPath  string `json:"etcd_root_path" value:"" usage:"etcd root path"`
@@ -43,8 +44,9 @@ type ServerConfig struct {
 	EngineApisJobConfig EngineApisJobConfig `json:"engine_apisjob"`
 
 	// engine distcc settings
-	DistCCQueueList    []string           `json:"distcc_queue_list" value:"[]" usage:"queue name list for engine distcc"`
-	EngineDistCCConfig EngineDistCCConfig `json:"engine_distcc"`
+	DistCCQueueList      []string                         `json:"distcc_queue_list" value:"[]" usage:"queue name list for engine distcc"`
+	DistccQueueShareType map[string]engine.QueueShareType `json:"distcc_queue_share_type" usage:"queue name map for share type, default is all allowed"`
+	EngineDistCCConfig   EngineDistCCConfig               `json:"engine_distcc"`
 
 	DisttaskQueueList      []string                         `json:"disttask_queue_list" value:"[]" usage:"queue name list for engine disttask"`
 	DisttaskQueueShareType map[string]engine.QueueShareType `json:"disttask_queue_share_type" usage:"queue name map for share type, default is all allowed"`
@@ -63,6 +65,8 @@ type ServerConfig struct {
 	ContainerResourceConfig ContainerResourceConfig `json:"container_resource"`
 
 	K8sContainerResourceConfig ContainerResourceConfig `json:"k8s_container_resource"`
+
+	K8sResourceConfigList K8sResourceConfig `json:"k8s_resource_list"`
 
 	DCMacContainerResourceConfig ContainerResourceConfig `json:"dc_mac_container_resource"`
 
@@ -88,28 +92,35 @@ type DirectResourceConfig struct {
 
 //InstanceType define type of an instance
 type InstanceType struct {
-	Platform              string  `json:"platform"`
-	Group                 string  `json:"group"`
-	CPUPerInstance        float64 `json:"cpu_per_instance"`
-	MemPerInstance        float64 `json:"mem_per_instance"`
-	CPURequestPerInstance float64 `json:"cpu_request_per_instance,omitempty"`
-	MemRequestPerInstance float64 `json:"mem_request_per_instance,omitempty"`
+	Platform            string  `json:"platform"`
+	Group               string  `json:"group"`
+	CPUPerInstance      float64 `json:"cpu_per_instance"`
+	MemPerInstance      float64 `json:"mem_per_instance"`
+	CPULimitPerInstance float64 `json:"cpu_limit_per_instance,omitempty"`
+	MemLimitPerInstance float64 `json:"mem_limit_per_instance,omitempty"`
 }
 
 // ContainerResourceConfig defines configs for resource from bcs.
 type ContainerResourceConfig struct {
-	Enable              bool           `json:"crm_enable"`
-	Operator            string         `json:"crm_operator"`
-	BcsAPIToken         string         `json:"crm_bcs_api_token"`
-	BcsAPIAddress       string         `json:"crm_bcs_api_address"`
-	BcsCPUPerInstance   float64        `json:"crm_bcs_cpu_per_instance"`
-	BcsMemPerInstance   float64        `json:"crm_bcs_mem_per_instance"`
-	InstanceType        []InstanceType `json:"instance_type"`
-	BcsClusterID        string         `json:"crm_bcs_cluster_id"`
-	BcsAppTemplate      string         `json:"crm_bcs_template_file"`
-	BcsGroupLabelKey    string         `json:"crm_bcs_group_label_key"`
-	BcsPlatformLabelKey string         `json:"crm_bcs_platform_label_key"`
-	BcsDisableWinHostNW bool           `json:"crm_bcs_disable_win_host_network"`
+	Enable                     bool           `json:"crm_enable"`
+	Operator                   string         `json:"crm_operator"`
+	BcsAPIToken                string         `json:"crm_bcs_api_token"`
+	BcsAPIAddress              string         `json:"crm_bcs_api_address"`
+	BcsNamespace               string         `json:"crm_bcs_namespace"`
+	EnableBCSApiGw             bool           `json:"crm_bcs_apigw_enable" value:"false"`
+	BcsCPUPerInstance          float64        `json:"crm_bcs_cpu_per_instance"`
+	BcsMemPerInstance          float64        `json:"crm_bcs_mem_per_instance"`
+	BcsStoragePerInstance      float64        `json:"crm_bcs_storage_per_instance,omitempty"`
+	BcsCPULimitPerInstance     float64        `json:"crm_bcs_cpu_limit_per_instance,omitempty"`
+	BcsMemLimitPerInstance     float64        `json:"crm_bcs_mem_limit_per_instance,omitempty"`
+	BcsStorageLimitPerInstance float64        `json:"crm_bcs_storage_limit_per_instance,omitempty"`
+	InstanceType               []InstanceType `json:"instance_type"`
+	BcsClusterID               string         `json:"crm_bcs_cluster_id"`
+	BcsClusterType             string         `json:"crm_bcs_cluster_type"`
+	BcsAppTemplate             string         `json:"crm_bcs_template_file"`
+	BcsGroupLabelKey           string         `json:"crm_bcs_group_label_key"`
+	BcsPlatformLabelKey        string         `json:"crm_bcs_platform_label_key"`
+	BcsDisableWinHostNW        bool           `json:"crm_bcs_disable_win_host_network"`
 
 	MySQLStorage     string `json:"crm_resource_mysql"`
 	MySQLDatabase    string `json:"crm_resource_mysql_db"`
@@ -122,9 +133,27 @@ type ContainerResourceConfig struct {
 	BcsAPIPool *net.ConnectPool
 }
 
+// K8sResourceConfig define new k8s with cluster list
+type K8sResourceConfig struct {
+	Enable         bool                                `json:"crm_enable"`
+	Operator       string                              `json:"crm_operator"`
+	K8sClusterList map[string]*ContainerResourceConfig `json:"k8s_cluster_list"`
+
+	MySQLStorage     string `json:"crm_resource_mysql"`
+	MySQLDatabase    string `json:"crm_resource_mysql_db"`
+	MySQLTable       string `json:"crm_resource_mysql_table"`
+	MySQLUser        string `json:"crm_resource_mysql_user"`
+	MySQLPwd         string `json:"crm_resource_mysql_pwd"`
+	MysqlTableOption string `json:"crm_resource_mysql_table_option"`
+	MysqlSkipEnsure  bool   `json:"crm_resource_mysql_skip_ensure"`
+}
+
 const (
+	//CRMOperatorMesos define
 	CRMOperatorMesos = "mesos"
-	CRMOperatorK8S   = "k8s"
+	//CRMOperatorK8S define
+	CRMOperatorK8S = "k8s"
+	//CRMOperatorDCMac define
 	CRMOperatorDCMac = "dc_mac"
 )
 
@@ -139,9 +168,10 @@ type EngineDistCCConfig struct {
 	MySQLDebug       bool   `json:"engine_distcc_mysql_debug" value:"false" usage:"if true, will output raw sql"`
 	MysqlTableOption string `json:"engine_distcc_mysql_table_option" value:"" usage:"mysql table option"`
 
-	LeastJobServer      int                        `json:"least_job_server" value:"144" usage:"least job server for remote compiles"`
-	JobServerTimesToCPU float64                    `json:"job_server_times_to_cpu" value:"1.5" usage:"job server times to cpu"`
-	BrokerConfig        []EngineDistCCBrokerConfig `json:"broker_config"`
+	QueueResourceAllocater map[string]ResourceAllocater `json:"queue_resource_allocater"`
+	LeastJobServer         int                          `json:"least_job_server" value:"144" usage:"least job server for remote compiles"`
+	JobServerTimesToCPU    float64                      `json:"job_server_times_to_cpu" value:"1.5" usage:"job server times to cpu"`
+	BrokerConfig           []EngineDistCCBrokerConfig   `json:"broker_config"`
 }
 
 // EngineDistCCBrokerConfig define the broker config used by engine distcc.
@@ -165,9 +195,16 @@ type EngineDisttaskConfig struct {
 	MySQLDebug       bool   `json:"engine_disttask_mysql_debug" value:"false" usage:"if true, will output raw sql"`
 	MysqlTableOption string `json:"engine_disttask_mysql_table_option" value:"" usage:"mysql table option"`
 
-	LeastJobServer      int                          `json:"disttask_least_job_server" value:"144" usage:"least job server for remote compiles"`
-	JobServerTimesToCPU float64                      `json:"disttask_job_server_times_to_cpu" value:"1.5" usage:"job server times to cpu"`
-	BrokerConfig        []EngineDisttaskBrokerConfig `json:"disttask_broker_config"`
+	QueueResourceAllocater map[string]ResourceAllocater `json:"queue_resource_allocater"`
+	LeastJobServer         int                          `json:"disttask_least_job_server" value:"144" usage:"least job server for remote compiles"`
+	JobServerTimesToCPU    float64                      `json:"disttask_job_server_times_to_cpu" value:"1.5" usage:"job server times to cpu"`
+	BrokerConfig           []EngineDisttaskBrokerConfig `json:"disttask_broker_config"`
+}
+
+// ResourceAllocater define
+type ResourceAllocater struct {
+	AllocateByTimeMap map[string]float64 `json:"allocate_by_time_map"`
+	TimeSlot          []TimeSlot         `json:"time_slot"`
 }
 
 // EngineDisttaskBrokerConfig define the broker config used by engine disttask.
@@ -190,7 +227,7 @@ type EngineDisttaskBrokerVolumes struct {
 	ContainerDir string `json:"container_dir"`
 }
 
-// EngineDisttaskQueueInstanceConfig define the specific config for some queue.
+// EngineDisttaskQueueConfig define the specific config for some queue.
 type EngineDisttaskQueueConfig struct {
 	QueueName      string  `json:"queue_name"`
 	CPUPerInstance float64 `json:"cpu_per_instance"`
@@ -232,6 +269,8 @@ type EngineFastBuildConfig struct {
 type EngineApisJobConfig struct {
 	Enable bool `json:"engine_apisjob_enable" value:"false" usage:"enable engine apisjob"`
 
+	QueueResourceAllocater map[string]ResourceAllocater `json:"queue_resource_allocater"`
+
 	MySQLStorage     string `json:"engine_apisjob_mysql" value:"" usage:"mysql address for storage"`
 	MySQLDatabase    string `json:"engine_apisjob_mysql_db" value:"" usage:"mysql database for connecting."`
 	MySQLUser        string `json:"engine_apisjob_mysql_user" value:"root" usage:"mysql username"`
@@ -247,6 +286,13 @@ type CertConfig struct {
 	KeyFile  string
 	CertPwd  string
 	IsSSL    bool
+}
+
+// TimeSlot define resource ratio Value from StartTime to EndTime
+type TimeSlot struct {
+	StartTime string
+	EndTime   string
+	Value     float64
 }
 
 // NewConfig get a default server configuration.
@@ -278,14 +324,25 @@ func (dsc *ServerConfig) Parse() {
 	if dsc.ContainerResourceConfig.Enable {
 		token, _ := encrypt.DesDecryptFromBase([]byte(dsc.ContainerResourceConfig.BcsAPIToken))
 		dsc.ContainerResourceConfig.BcsAPIToken = string(token)
-		dsc.ContainerResourceConfig.BcsAPIPool = net.NewConnectPool(strings.Split(dsc.ContainerResourceConfig.BcsAPIAddress, ","))
+		dsc.ContainerResourceConfig.BcsAPIPool = net.NewConnectPool(
+			strings.Split(dsc.ContainerResourceConfig.BcsAPIAddress, ","))
 		dsc.ContainerResourceConfig.BcsAPIPool.Start()
 	}
 
 	if dsc.K8sContainerResourceConfig.Enable {
 		tokenK8S, _ := encrypt.DesDecryptFromBase([]byte(dsc.K8sContainerResourceConfig.BcsAPIToken))
 		dsc.K8sContainerResourceConfig.BcsAPIToken = string(tokenK8S)
-		dsc.K8sContainerResourceConfig.BcsAPIPool = net.NewConnectPool(strings.Split(dsc.K8sContainerResourceConfig.BcsAPIAddress, ","))
+		dsc.K8sContainerResourceConfig.BcsAPIPool = net.NewConnectPool(
+			strings.Split(dsc.K8sContainerResourceConfig.BcsAPIAddress, ","))
 		dsc.K8sContainerResourceConfig.BcsAPIPool.Start()
+	}
+
+	if dsc.K8sResourceConfigList.Enable {
+		for _, cluster := range dsc.K8sResourceConfigList.K8sClusterList {
+			tokenK8S, _ := encrypt.DesDecryptFromBase([]byte(cluster.BcsAPIToken))
+			cluster.BcsAPIToken = string(tokenK8S)
+			cluster.BcsAPIPool = net.NewConnectPool(strings.Split(cluster.BcsAPIAddress, ","))
+			cluster.BcsAPIPool.Start()
+		}
 	}
 }

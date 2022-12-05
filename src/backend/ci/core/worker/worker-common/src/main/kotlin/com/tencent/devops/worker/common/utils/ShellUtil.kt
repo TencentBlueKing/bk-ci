@@ -86,7 +86,6 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
@@ -102,8 +101,7 @@ object ShellUtil {
                 workspace = workspace,
                 buildEnvs = buildEnvs,
                 runtimeVariables = runtimeVariables,
-                continueNoneZero = continueNoneZero,
-                systemEnvVariables = systemEnvVariables
+                continueNoneZero = continueNoneZero
             ).canonicalPath,
             sourceDir = dir,
             prefix = prefix,
@@ -116,18 +114,19 @@ object ShellUtil {
         )
     }
 
-    fun getCommandFile(
+    private fun getCommandFile(
         buildId: String,
         script: String,
         dir: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null,
         workspace: File = dir
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
+        val userScriptFile = Files.createTempFile("devops_script_user_", ".sh").toFile()
         file.deleteOnExit()
+        userScriptFile.deleteOnExit()
 
         val command = StringBuilder()
         val bashStr = script.split("\n")[0]
@@ -137,11 +136,6 @@ object ShellUtil {
 
         command.append("export $WORKSPACE_ENV=${workspace.absolutePath}\n")
             .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
-
-        // 设置系统环境变量
-        systemEnvVariables?.forEach { (name, value) ->
-            command.append("export $name=$value\n")
-        }
 
         val commonEnv = runtimeVariables.plus(CommonEnv.getCommonEnv())
             .filterNot { specialEnv(it.key) }
@@ -191,13 +185,14 @@ object ShellUtil {
         }
 
         command.append(setEnv.replace(oldValue = "##resultFile##",
-            newValue = File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
+            newValue = "\"${File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath}\""))
         command.append(setGateValue.replace(oldValue = "##gateValueFile##",
-            newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
-        command.append(script)
-
+            newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""))
+        command.append(". ${userScriptFile.absolutePath}")
+        userScriptFile.writeText(script)
         file.writeText(command.toString())
         executeUnixCommand(command = "chmod +x ${file.absolutePath}", sourceDir = dir)
+        executeUnixCommand(command = "chmod +x ${userScriptFile.absolutePath}", sourceDir = dir)
 
         return file
     }
@@ -226,7 +221,7 @@ object ShellUtil {
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"
-            LoggerService.addNormalLine("$errorInfo because of error(${ignored.message})")
+            LoggerService.addNormalLine("$errorInfo because exit code not equal 0")
             throw throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,

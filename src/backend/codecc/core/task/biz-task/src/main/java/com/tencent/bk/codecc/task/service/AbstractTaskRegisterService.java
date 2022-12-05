@@ -57,9 +57,8 @@ import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.*;
@@ -438,7 +437,7 @@ public abstract class AbstractTaskRegisterService implements TaskRegisterService
     private void upsertCore(TaskDetailVO taskDetailVO, TaskInfoEntity taskInfoEntity, String userName,
             List<String> forceFullScanTools) {
         // 旧工具列表
-        TaskInfoEntity refreshTaskInfo = taskRepository.findByTaskId(taskInfoEntity.getTaskId());
+        TaskInfoEntity refreshTaskInfo = taskRepository.findFirstByTaskId(taskInfoEntity.getTaskId());
         List<ToolConfigInfoEntity> oldToolList = refreshTaskInfo != null
                 ? refreshTaskInfo.getToolConfigInfoList()
                 : taskInfoEntity.getToolConfigInfoList();
@@ -538,7 +537,7 @@ public abstract class AbstractTaskRegisterService implements TaskRegisterService
             }
         }
 
-        toolConfigInfoEntityList = toolRepository.save(toolConfigInfoEntityList);
+        toolConfigInfoEntityList = toolRepository.saveAll(toolConfigInfoEntityList);
         taskInfoEntity.setToolConfigInfoList(toolConfigInfoEntityList);
         taskRepository.save(taskInfoEntity);
     }

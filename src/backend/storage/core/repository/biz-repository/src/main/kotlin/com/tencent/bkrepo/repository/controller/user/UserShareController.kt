@@ -101,8 +101,10 @@ class UserShareController(
     fun download(
         @RequestAttribute userId: String,
         @RequestParam token: String,
+        @RequestParam("userId") downloadUserId: String?,
         @ArtifactPathVariable artifactInfo: ArtifactInfo
     ) {
-        shareService.download(userId, token, artifactInfo)
+        val downloadUser = downloadUserId ?: userId
+        shareService.download(downloadUser, token, artifactInfo)
     }
 }

@@ -40,13 +40,13 @@ data class Stage(
     var id: String?,
     @ApiModelProperty("阶段名称", required = true)
     var name: String? = "",
-    @ApiModelProperty("阶段标签", required = false, hidden = true)
-    var tag: List<String?>? = null,
-    @ApiModelProperty("阶段状态", required = false, hidden = true)
+    @ApiModelProperty("阶段标签", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    var tag: List<String>? = null,
+    @ApiModelProperty("阶段状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var status: String? = null,
-    @ApiModelProperty("阶段启动时间", required = false, hidden = true)
+    @ApiModelProperty("阶段启动时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var startEpoch: Long? = null,
-    @ApiModelProperty("容器运行时间", required = false, hidden = true)
+    @ApiModelProperty("容器运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var elapsed: Long? = null,
     @ApiModelProperty("用户自定义环境变量", required = false)
     val customBuildEnv: Map<String, String>? = null,
@@ -58,9 +58,9 @@ data class Stage(
     var canRetry: Boolean? = null,
     @ApiModelProperty("流程控制选项", required = true)
     var stageControlOption: StageControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
-    @ApiModelProperty("当前Stage是否能重试", required = false)
+    @ApiModelProperty("stage准入配置", required = false)
     var checkIn: StagePauseCheck? = null, // stage准入配置
-    @ApiModelProperty("当前Stage是否能重试", required = false)
+    @ApiModelProperty("stage准出配置", required = false)
     var checkOut: StagePauseCheck? = null // stage准出配置
 ) {
     /**

@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class PathPrefixFilterTest {
     private val response = WebhookFilterResponse()
@@ -42,7 +42,7 @@ class PathPrefixFilterTest {
             includedPaths = emptyList(),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -50,7 +50,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa", "bb"),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -58,7 +58,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa", "bb"),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -66,7 +66,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa", "bb"),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -74,7 +74,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa", "bb"),
             excludedPaths = emptyList()
         )
-        Assert.assertFalse(pathPrefixFilter.doFilter(response))
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
 
         // 路径匹配
         pathPrefixFilter = PathPrefixFilter(
@@ -83,7 +83,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa/", "bb/"),
             excludedPaths = emptyList()
         )
-        Assert.assertFalse(pathPrefixFilter.doFilter(response))
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -91,7 +91,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa/", "bb/"),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -99,7 +99,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa/", "bb/"),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -107,7 +107,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa/", "bb/"),
             excludedPaths = emptyList()
         )
-        Assert.assertFalse(pathPrefixFilter.doFilter(response))
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
     }
 
     @Test
@@ -118,7 +118,7 @@ class PathPrefixFilterTest {
             includedPaths = emptyList(),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -126,7 +126,7 @@ class PathPrefixFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa", "bb")
         )
-        Assert.assertFalse(pathPrefixFilter.doFilter(response))
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -134,7 +134,7 @@ class PathPrefixFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa", "bb")
         )
-        Assert.assertFalse(pathPrefixFilter.doFilter(response))
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -142,7 +142,7 @@ class PathPrefixFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa", "bb")
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         // 路径匹配
         pathPrefixFilter = PathPrefixFilter(
@@ -151,7 +151,7 @@ class PathPrefixFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa/", "bb/")
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -159,7 +159,7 @@ class PathPrefixFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa/", "bb/")
         )
-        Assert.assertFalse(pathPrefixFilter.doFilter(response))
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -167,7 +167,7 @@ class PathPrefixFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa/", "bb/")
         )
-        Assert.assertFalse(pathPrefixFilter.doFilter(response))
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -175,7 +175,7 @@ class PathPrefixFilterTest {
             includedPaths = emptyList(),
             excludedPaths = listOf("aa/", "bb/")
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
     }
 
     @Test
@@ -187,7 +187,7 @@ class PathPrefixFilterTest {
             includedPaths = emptyList(),
             excludedPaths = emptyList()
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -195,7 +195,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa", "bb"),
             excludedPaths = listOf("cc")
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -203,7 +203,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa", "bb"),
             excludedPaths = listOf("cc")
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -211,7 +211,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa", "bb"),
             excludedPaths = listOf("cc")
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -219,7 +219,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa", "bb"),
             excludedPaths = listOf("cc")
         )
-        Assert.assertFalse(pathPrefixFilter.doFilter(response))
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
 
         // 路径匹配
         pathPrefixFilter = PathPrefixFilter(
@@ -228,7 +228,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa/", "bb/"),
             excludedPaths = listOf("cc/")
         )
-        Assert.assertFalse(pathPrefixFilter.doFilter(response))
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -236,7 +236,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa/", "bb/"),
             excludedPaths = listOf("cc/")
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -244,7 +244,7 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa/", "bb/"),
             excludedPaths = listOf("cc/")
         )
-        Assert.assertTrue(pathPrefixFilter.doFilter(response))
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
 
         pathPrefixFilter = PathPrefixFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -252,6 +252,23 @@ class PathPrefixFilterTest {
             includedPaths = listOf("aa/", "bb/"),
             excludedPaths = listOf("aa/", "bb/", "cc/")
         )
-        Assert.assertFalse(pathPrefixFilter.doFilter(response))
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
+
+        // 路径嵌套
+        pathPrefixFilter = PathPrefixFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnPath = listOf("src/main/ext/include.txt", "doc/b.md", "cc/other.txt"),
+            includedPaths = listOf("src/main"),
+            excludedPaths = listOf("src/main/ext/", "doc/b.md")
+        )
+        Assertions.assertFalse(pathPrefixFilter.doFilter(response))
+
+        pathPrefixFilter = PathPrefixFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnPath = listOf("src/main/ext/include.txt", "doc/b.md", "cc/other.txt"),
+            includedPaths = listOf("src/main", "cc/"),
+            excludedPaths = listOf("src/main/ext/", "doc/b.md")
+        )
+        Assertions.assertTrue(pathPrefixFilter.doFilter(response))
     }
 }

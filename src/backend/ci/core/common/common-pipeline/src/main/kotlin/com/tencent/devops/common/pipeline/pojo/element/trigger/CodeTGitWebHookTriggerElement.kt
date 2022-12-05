@@ -61,39 +61,40 @@ data class CodeTGitWebHookTriggerElement(
 }
 
 data class CodeTGitWebHookTriggerData(
+    @ApiModelProperty("TGit事件触发数据", required = false)
     val input: CodeTGitWebHookTriggerInput
 )
 
 data class CodeTGitWebHookTriggerInput(
     @ApiModelProperty("仓库ID", required = true)
     val repositoryHashId: String?,
-    @ApiModelProperty("branch", required = false)
+    @ApiModelProperty("分支名称", required = false)
     val branchName: String?,
-    @ApiModelProperty("excludeBranch", required = false)
+    @ApiModelProperty("用于排除的分支名", required = false)
     val excludeBranchName: String?,
     @ApiModelProperty("路径过滤类型", required = true)
     val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
-    @ApiModelProperty("includePaths", required = false)
+    @ApiModelProperty("用于包含的路径", required = false)
     val includePaths: String?,
-    @ApiModelProperty("excludePaths", required = false)
+    @ApiModelProperty("用于排除的路径", required = false)
     val excludePaths: String?,
-    @ApiModelProperty("excludeUsers", required = false)
+    @ApiModelProperty("用于排除的user id", required = false)
     val excludeUsers: List<String>?,
-    @ApiModelProperty("eventType", required = false)
+    @ApiModelProperty("事件类型", required = false)
     val eventType: CodeEventType?,
-    @ApiModelProperty("block", required = false)
+    @ApiModelProperty("是否为block", required = false)
     val block: Boolean?,
     @ApiModelProperty("新版的git原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的git代码库名")
     val repositoryName: String? = null,
-    @ApiModelProperty("tagName", required = false)
+    @ApiModelProperty("tag名称", required = false)
     val tagName: String? = null,
-    @ApiModelProperty("excludeTagName", required = false)
+    @ApiModelProperty("用于排除的tag名称", required = false)
     val excludeTagName: String? = null,
-    @ApiModelProperty("excludeSourceBranchName", required = false)
+    @ApiModelProperty("用于排除的源分支名称", required = false)
     val excludeSourceBranchName: String? = null,
-    @ApiModelProperty("includeSourceBranchName", required = false)
+    @ApiModelProperty("用于包含的源分支名称", required = false)
     val includeSourceBranchName: String? = null,
     @ApiModelProperty("code review 状态", required = false)
     val includeCrState: List<String>? = null

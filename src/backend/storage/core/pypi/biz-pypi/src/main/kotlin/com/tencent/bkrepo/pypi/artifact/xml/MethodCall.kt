@@ -39,5 +39,5 @@ data class MethodCall constructor(
     @JacksonXmlProperty(localName = "methodName")
     val methodName: String,
     @JacksonXmlProperty(localName = "params")
-    val params: Params
+    val params: Params?
 )

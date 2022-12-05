@@ -27,22 +27,22 @@
 
 package com.tencent.devops.store.util
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class ImageUtilTest {
 
     @Test
     fun testCompareVersion() {
-        Assert.assertEquals(ImageUtil.compareVersion("1.0.1", "1. ."), 1)
-        Assert.assertEquals(ImageUtil.compareVersion("1.0.1", "1.0"), 1)
-        Assert.assertEquals(ImageUtil.compareVersion("1.0.1", "1.0.2"), -1)
-        Assert.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.10"), -1)
-        Assert.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.100"), -1)
-        Assert.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.9"), 0)
-        Assert.assertEquals(ImageUtil.compareVersion("2.0.9", "1.0.9"), 1)
-        Assert.assertEquals(ImageUtil.compareVersion(null, "1.0.9"), -1)
-        Assert.assertEquals(ImageUtil.compareVersion(null, null), 0)
-        Assert.assertEquals(ImageUtil.compareVersion("1.", null), 1)
+        Assertions.assertEquals(ImageUtil.compareVersion("1.0.1", "1. ."), 1)
+        Assertions.assertEquals(ImageUtil.compareVersion("1.0.1", "1.0"), 1)
+        Assertions.assertEquals(ImageUtil.compareVersion("1.0.1", "1.0.2"), -1)
+        Assertions.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.10"), -1)
+        Assertions.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.100"), -1)
+        Assertions.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.9"), 0)
+        Assertions.assertEquals(ImageUtil.compareVersion("2.0.9", "1.0.9"), 1)
+        Assertions.assertEquals(ImageUtil.compareVersion(null, "1.0.9"), -1)
+        Assertions.assertEquals(ImageUtil.compareVersion(null, null), 0)
+        Assertions.assertEquals(ImageUtil.compareVersion("1.", null), 1)
     }
 }

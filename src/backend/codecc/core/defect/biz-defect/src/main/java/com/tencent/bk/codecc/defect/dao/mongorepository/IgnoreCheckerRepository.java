@@ -49,7 +49,7 @@ public interface IgnoreCheckerRepository extends MongoRepository<IgnoreCheckerEn
      * @param toolName
      * @return
      */
-    IgnoreCheckerEntity findByTaskIdAndToolName(Long taskId, String toolName);
+    IgnoreCheckerEntity findFirstByTaskIdAndToolName(Long taskId, String toolName);
 
 
     /**

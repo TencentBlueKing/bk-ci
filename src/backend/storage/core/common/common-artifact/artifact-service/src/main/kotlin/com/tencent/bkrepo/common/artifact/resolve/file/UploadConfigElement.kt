@@ -40,14 +40,14 @@ class UploadConfigElement(
 ) : MultipartConfigElement(storageProperties.defaultStorageCredentials().upload.location) {
 
     init {
-        if (storageProperties.maxFileSize.isNegative) {
-            storageProperties.maxFileSize = DataSize.ofBytes(-1)
+        if (storageProperties.receive.maxFileSize.isNegative) {
+            storageProperties.receive.maxFileSize = DataSize.ofBytes(-1)
         }
-        if (storageProperties.maxRequestSize.isNegative) {
-            storageProperties.maxRequestSize = DataSize.ofBytes(-1)
+        if (storageProperties.receive.maxRequestSize.isNegative) {
+            storageProperties.receive.maxRequestSize = DataSize.ofBytes(-1)
         }
-        if (storageProperties.fileSizeThreshold.isNegative) {
-            storageProperties.maxRequestSize = DataSize.ofBytes(-1)
+        if (storageProperties.receive.fileSizeThreshold.isNegative) {
+            storageProperties.receive.fileSizeThreshold = DataSize.ofBytes(-1)
         }
     }
 
@@ -56,14 +56,14 @@ class UploadConfigElement(
     }
 
     override fun getMaxFileSize(): Long {
-        return storageProperties.maxFileSize.toBytes()
+        return storageProperties.receive.maxFileSize.toBytes()
     }
 
     override fun getMaxRequestSize(): Long {
-        return storageProperties.maxRequestSize.toBytes()
+        return storageProperties.receive.maxRequestSize.toBytes()
     }
 
     override fun getFileSizeThreshold(): Int {
-        return storageProperties.fileSizeThreshold.toBytes().toInt()
+        return storageProperties.receive.fileSizeThreshold.toBytes().toInt()
     }
 }

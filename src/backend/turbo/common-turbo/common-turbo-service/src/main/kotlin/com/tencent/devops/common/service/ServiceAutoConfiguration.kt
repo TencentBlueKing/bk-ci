@@ -1,5 +1,8 @@
 package com.tencent.devops.common.service
 
+import com.tencent.devops.common.service.prometheus.BkTimedAspect
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient
@@ -18,4 +21,10 @@ class ServiceAutoConfiguration {
 
     @Bean
     fun gray() = Gray()
+
+    @Bean
+    fun meterRegistry() = SimpleMeterRegistry()
+
+    @Bean
+    fun bkTimedAspect(meterRegistry: MeterRegistry) = BkTimedAspect(meterRegistry)
 }

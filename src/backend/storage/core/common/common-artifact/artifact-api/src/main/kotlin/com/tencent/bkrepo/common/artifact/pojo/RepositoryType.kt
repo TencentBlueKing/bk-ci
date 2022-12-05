@@ -42,9 +42,12 @@ enum class RepositoryType {
     PYPI,
     NPM,
     HELM,
+    RDS,
     COMPOSER,
     RPM,
-    NUGET;
+    NUGET,
+    GIT,
+    OCI;
 
     companion object {
         fun ofValueOrDefault(type: String): RepositoryType {

@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.filter
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class UrlFilterTest {
     private val response = WebhookFilterResponse()
@@ -40,21 +40,21 @@ class UrlFilterTest {
             triggerOnUrl = "https://github.com/Tencent/bk-ci.git",
             repositoryUrl = "https://github.com/Tencent/bk-ci.git"
         )
-        Assert.assertTrue(urlFilter.doFilter(response))
+        Assertions.assertTrue(urlFilter.doFilter(response))
 
         urlFilter = GitUrlFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnUrl = "https://github.com/Tencent/bk-ci.git",
             repositoryUrl = "http://github.com/Tencent/bk-ci.git"
         )
-        Assert.assertTrue(urlFilter.doFilter(response))
+        Assertions.assertTrue(urlFilter.doFilter(response))
 
         urlFilter = GitUrlFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnUrl = "https://github.com/Tencent/bk-ci.git",
             repositoryUrl = "http://github.com/Tencent/bk-ci2.git"
         )
-        Assert.assertFalse(urlFilter.doFilter(response))
+        Assertions.assertFalse(urlFilter.doFilter(response))
     }
 
     @Test
@@ -65,7 +65,7 @@ class UrlFilterTest {
             repositoryUrl = "https://example2.com/Tencent/bk-ci.git",
             includeHost = "example.com,example2.com"
         )
-        Assert.assertTrue(urlFilter.doFilter(response))
+        Assertions.assertTrue(urlFilter.doFilter(response))
 
         urlFilter = GitUrlFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
@@ -73,6 +73,6 @@ class UrlFilterTest {
             repositoryUrl = "https://example3.com/Tencent/bk-ci.git",
             includeHost = "example.com,example2.com"
         )
-        Assert.assertFalse(urlFilter.doFilter(response))
+        Assertions.assertFalse(urlFilter.doFilter(response))
     }
 }

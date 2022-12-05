@@ -1,2 +1,2 @@
-service.name: replication
+spring.application.name: replication
 server.port: 25903

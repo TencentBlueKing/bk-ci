@@ -33,10 +33,11 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.service.CustomDirService
 import com.tencent.devops.artifactory.service.PipelineService
-import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.artifactory.util.BkRepoUtils.toFileInfo
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.archive.client.BkRepoClient
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
@@ -65,7 +66,7 @@ class BkRepoCustomDirService @Autowired constructor(
         ).map {
             RepoUtils.toFileInfo(it)
         }
-        return JFrogUtil.sort(fileList)
+        return PathUtils.sort(fileList)
     }
 
     override fun show(userId: String, projectId: String, argPath: String): FileDetail {
@@ -115,9 +116,8 @@ class BkRepoCustomDirService @Autowired constructor(
         }
 
         combinationPath.srcPaths.map { srcPath ->
-            val normalizedSrcPath = JFrogUtil.normalize(srcPath)
-            if (JFrogUtil.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
-                logger.error("Cannot copy in same path ($normalizedSrcPath, $normalizeDestPath)")
+            val normalizedSrcPath = PathUtils.normalize(srcPath)
+            if (PathUtils.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
                 throw BadRequestException("不能在拷贝到当前目录")
             }
 
@@ -138,15 +138,14 @@ class BkRepoCustomDirService @Autowired constructor(
         pipelineService.validatePermission(userId, projectId)
         val normalizedDestPath = PathUtils.checkAndNormalizeAbsPath(combinationPath.destPath)
         combinationPath.srcPaths.map { srcPath ->
-            val normalizedSrcPath = JFrogUtil.normalize(srcPath)
+            val normalizedSrcPath = PathUtils.normalize(srcPath)
 
-            if (normalizedSrcPath == normalizedDestPath || JFrogUtil.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
-                logger.error("Cannot move in same path ($normalizedSrcPath, $normalizedDestPath)")
+            if (normalizedSrcPath == normalizedDestPath ||
+                PathUtils.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
                 throw BadRequestException("不能移动到当前目录")
             }
 
             if (normalizedDestPath.startsWith(normalizedSrcPath)) {
-                logger.error("Cannot move parent path to sub path ($normalizedSrcPath, $normalizedDestPath)")
                 throw BadRequestException("不能将父目录移动到子目录")
             }
 
@@ -172,6 +171,32 @@ class BkRepoCustomDirService @Autowired constructor(
                 normalizedPath
             )
         }
+    }
+
+    fun listPage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        includeFolder: Boolean,
+        deep: Boolean,
+        page: Int,
+        pageSize: Int,
+        modifiedTimeDesc: Boolean
+    ): Page<FileInfo> {
+        val result = bkRepoClient.listFilePage(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            path = fullPath,
+            includeFolders = includeFolder,
+            deep = deep,
+            page = page,
+            pageSize = pageSize,
+            modifiedTimeDesc = modifiedTimeDesc
+        )
+        val fileInfoList = result.records.map { it.toFileInfo() }
+        return Page(result.pageNumber, result.pageSize, result.totalRecords, fileInfoList)
     }
 
     companion object {

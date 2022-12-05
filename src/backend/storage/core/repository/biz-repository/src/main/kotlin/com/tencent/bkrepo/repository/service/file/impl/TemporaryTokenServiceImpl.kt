@@ -32,10 +32,8 @@
 package com.tencent.bkrepo.repository.service.file.impl
 
 import com.tencent.bkrepo.common.api.constant.StringPool
-import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.api.util.Preconditions
-import com.tencent.bkrepo.common.artifact.api.DefaultArtifactInfo
-import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.bkrepo.common.artifact.repository.core.ArtifactService
 import com.tencent.bkrepo.common.security.util.SecurityUtils
 import com.tencent.bkrepo.repository.dao.TemporaryTokenDao
@@ -43,7 +41,6 @@ import com.tencent.bkrepo.repository.model.TTemporaryToken
 import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
 import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenInfo
 import com.tencent.bkrepo.repository.service.file.TemporaryTokenService
-import com.tencent.bkrepo.repository.service.node.NodeService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -55,8 +52,7 @@ import java.util.UUID
  */
 @Service
 class TemporaryTokenServiceImpl(
-    private val temporaryTokenDao: TemporaryTokenDao,
-    private val nodeService: NodeService
+    private val temporaryTokenDao: TemporaryTokenDao
 ) : TemporaryTokenService, ArtifactService() {
 
     override fun createToken(request: TemporaryTokenCreateRequest): List<TemporaryTokenInfo> {
@@ -100,18 +96,12 @@ class TemporaryTokenServiceImpl(
     }
 
     /**
-     * 验证数据格式，比格式化fullPath
+     * 验证数据格式， 格式化fullPath
      */
     private fun validateAndNormalize(request: TemporaryTokenCreateRequest): List<String> {
         with(request) {
             Preconditions.checkArgument(permits == null || permits!! > 0, "permits")
-            return fullPathSet.map {
-                val artifactInfo = DefaultArtifactInfo(projectId, repoName, it)
-                if (!nodeService.checkExist(artifactInfo)) {
-                    throw ErrorCodeException(ArtifactMessageCode.NODE_NOT_FOUND, artifactInfo.getArtifactFullPath())
-                }
-                artifactInfo.getArtifactFullPath()
-            }
+            return fullPathSet.map { PathUtils.normalizeFullPath(it) }
         }
     }
 
@@ -138,7 +128,8 @@ class TemporaryTokenServiceImpl(
                     authorizedIpList = it.authorizedIpList,
                     expireDate = it.expireDate?.format(DateTimeFormatter.ISO_DATE_TIME),
                     type = it.type,
-                    permits = it.permits
+                    permits = it.permits,
+                    createdBy = it.createdBy
                 )
             }
         }

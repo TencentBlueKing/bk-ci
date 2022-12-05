@@ -26,8 +26,8 @@
  */
 package com.tencent.devops.common.security.jwt
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class JwtManagerTest {
 
@@ -74,7 +74,7 @@ class JwtManagerTest {
         val jwtManager = JwtManager(privateKeyString, publicKeyString, enable)
         val jwtToken = jwtManager.getToken()
         val verifyResult = jwtManager.verifyJwt(jwtToken!!)
-        Assert.assertEquals(true, verifyResult)
+        Assertions.assertEquals(true, verifyResult)
     }
 
     @Test
@@ -82,7 +82,7 @@ class JwtManagerTest {
         // 判断是否需要验证
         val jwtManager = JwtManager(privateKeyString, publicKeyString, enable)
         val isAuthEnable = jwtManager.isAuthEnable()
-        Assert.assertEquals(true, isAuthEnable)
+        Assertions.assertEquals(true, isAuthEnable)
     }
 
     @Test
@@ -90,7 +90,7 @@ class JwtManagerTest {
         // 判断是否需要发送头部验证
         val jwtManager = JwtManager(privateKeyString, publicKeyString, enable)
         val isSendEnable = jwtManager.isSendEnable()
-        Assert.assertEquals(true, isSendEnable)
+        Assertions.assertEquals(true, isSendEnable)
     }
 
     @Test
@@ -99,11 +99,11 @@ class JwtManagerTest {
         val jwtManager = JwtManager(privateKeyString, publicKeyString, enable)
         val jwtToken = jwtManager.getToken()
         val verifyResult = jwtManager.verifyJwt(jwtToken!!)
-        Assert.assertEquals(true, verifyResult)
+        Assertions.assertEquals(true, verifyResult)
         jwtManager.refreshToken()
         // 刷新并验证新jwt token
         val refreshJwtToken = jwtManager.getToken()
         val refreshVerifyResult = jwtManager.verifyJwt(refreshJwtToken!!)
-        Assert.assertEquals(true, refreshVerifyResult)
+        Assertions.assertEquals(true, refreshVerifyResult)
     }
 }

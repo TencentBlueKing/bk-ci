@@ -48,6 +48,10 @@ data class NodeListOption(
     val includeMetadata: Boolean = false,
     @ApiModelProperty("是否深度查询文件")
     val deep: Boolean = false,
-    @ApiModelProperty("是否排序")
-    val sort: Boolean = false
+    @ApiModelProperty("是否排序，目录在前，文件在后，并按照文件名称排序")
+    val sort: Boolean = false,
+    @ApiModelProperty("排序字段")
+    val sortProperty: List<String> = emptyList(),
+    @ApiModelProperty("排序方向")
+    val direction: List<String> = emptyList()
 )

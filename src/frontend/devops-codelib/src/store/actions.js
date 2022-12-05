@@ -28,7 +28,8 @@ import {
     FETCH_ERROR,
     DIALOG_LOADING_MUTATION,
     SET_OAUTH_MUTATION,
-    SET_T_GIT_OAUTH_MUTATION
+    SET_T_GIT_OAUTH_MUTATION,
+    SET_TEMPLATE_CODELIB
 } from './constants'
 const vue = new Vue()
 
@@ -50,10 +51,12 @@ const actions = {
         projectId,
         aliasName = '',
         page = 1,
-        pageSize = 12
+        pageSize = 12,
+        sortType = '',
+        sortBy = ''
     }) {
         try {
-            const response = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/search?aliasName=${aliasName}&page=${page}&pageSize=${pageSize}`)
+            const response = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/search?aliasName=${aliasName}&page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortType=${sortType}`)
             commit(SET_CODELIBS_MUTATION, {
                 codelibs: response
             })
@@ -176,7 +179,8 @@ const actions = {
         permission,
         typeName,
         authType,
-        svnType
+        svnType,
+        codelib
     }) {
         try {
             commit(TOGGLE_CODE_LIB_DIALOG, {
@@ -196,6 +200,7 @@ const actions = {
                         permission
                     })
                 ])
+                commit(SET_TEMPLATE_CODELIB, codelib)
                 commit(DIALOG_LOADING_MUTATION, false)
             } else {
                 dispatch('setCodelib', {
@@ -244,15 +249,24 @@ const actions = {
     }, {
         projectId,
         repositoryHashId,
+        search = '',
         type = 'git'
     }) {
         try {
             const query = {
                 projectId,
-                repositoryHashId
+                repositoryHashId,
+                search
             }
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')
             const res = await vue.$ajax.get(`/repository/api/user/${type}/getProject?${queryStr}`)
+            const projectIndex = res?.project?.findIndex(project => project.httpUrl === state.templateCodeLib?.url)
+            if (projectIndex < 0 && state.templateCodeLib?.url) {
+                res.project.push({
+                    nameWithNameSpace: state.templateCodeLib?.aliasName,
+                    httpUrl: state.templateCodeLib?.url
+                })
+            }
             commit(SET_OAUTH_MUTATION, {
                 oAuth: res,
                 type
@@ -291,6 +305,12 @@ const actions = {
                 root: true
             })
         }
+    },
+
+    setTemplateCodelib ({
+        commit
+    }, codeLib) {
+        commit(SET_TEMPLATE_CODELIB, codeLib)
     }
 }
 

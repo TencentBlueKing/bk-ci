@@ -27,18 +27,28 @@
 
 package com.tencent.devops.process.sharding
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import com.tencent.devops.common.api.util.ShardingUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.DEFAULT_DATA_SOURCE_NAME
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.BkShardingRoutingCacheUtil
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue
 import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue
 import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm
+import java.util.Properties
 
 class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
 
+    /**
+     * 分片路由算法
+     * @param availableTargetNames 可用的数据源列表
+     * @param shardingValue 分片规则名称
+     * @return 分片规则值（数据源名称）
+     */
     override fun doSharding(
         availableTargetNames: MutableCollection<String>,
         shardingValue: PreciseShardingValue<String>
@@ -48,37 +58,28 @@ class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
             // 如果分片键为空则路由到默认数据源
             return DEFAULT_DATA_SOURCE_NAME
         }
+        // 获取路由规则在缓存中的key值
+        val key = ShardingUtil.getShardingRoutingRuleKey(
+            clusterName = CommonUtils.getDbClusterName(),
+            moduleCode = SystemModuleEnum.PROCESS.name,
+            ruleType = ShardingRuleTypeEnum.DB.name,
+            routingName = routingName
+        )
         // 从本地缓存获取路由规则
-        var routingRule = BkShardingRoutingCacheUtil.getIfPresent(routingName)
+        var routingRule = BkShardingRoutingCacheUtil.getIfPresent(key)
         if (routingRule.isNullOrBlank()) {
-            val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
-            // 获取没有配置规则时的操作开关 --临时代码，规则全切换后删除
-            val noShardingRuleSwitch = redisOperation.get("noShardingRuleSwitch")?.toBoolean() ?: false
-            if (noShardingRuleSwitch) {
-                // 先从redis去取规则
-                val cacheRoutingRuleValue = redisOperation.get("SHARDING_ROUTING_RULE:$routingName")
-                if (cacheRoutingRuleValue?.isBlank() == true) {
-                    // redis中的规则为空字符串则路由到默认数据源
-                    return DEFAULT_DATA_SOURCE_NAME
-                }
-            }
             // 本地缓存没有查到路由规则信息则调接口去db实时查
             val client = SpringContextUtil.getBean(Client::class.java)
             val ruleObj = client.get(ServiceShardingRoutingRuleResource::class)
-                .getShardingRoutingRuleByName(routingName).data
+                .getShardingRoutingRuleByName(
+                    routingName = routingName,
+                    moduleCode = SystemModuleEnum.PROCESS,
+                    ruleType = ShardingRuleTypeEnum.DB
+                ).data
             if (ruleObj != null) {
                 routingRule = ruleObj.routingRule
                 // 将路由规则信息放入本地缓存
-                BkShardingRoutingCacheUtil.put(routingName, routingRule)
-            } else {
-                if (noShardingRuleSwitch) {
-                    // 规则写入redis缓存，30分钟后失效 --临时代码，规则全切换后删除
-                    redisOperation.set(
-                        key = "SHARDING_ROUTING_RULE:$routingName",
-                        value = "",
-                        expiredInSecond = 1800
-                    )
-                }
+                BkShardingRoutingCacheUtil.put(key, routingRule)
             }
         }
         if (routingRule.isNullOrBlank() || !availableTargetNames.contains(routingRule)) {
@@ -99,5 +100,9 @@ class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
         return null
     }
 
-    override fun init() = Unit
+    override fun init(props: Properties?) = Unit
+
+    override fun getProps(): Properties? {
+        return null
+    }
 }

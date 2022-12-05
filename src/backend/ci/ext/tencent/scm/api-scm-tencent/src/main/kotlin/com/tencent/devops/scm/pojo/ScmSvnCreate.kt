@@ -31,6 +31,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("工程仓库模型-Svn-创建类型")
+@Suppress("MaxLineLength")
 class ScmSvnCreate(
     @ApiModelProperty("repo url", required = true)
     val url: String,

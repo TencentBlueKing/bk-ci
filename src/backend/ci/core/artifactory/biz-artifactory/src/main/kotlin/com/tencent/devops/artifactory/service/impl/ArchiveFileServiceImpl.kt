@@ -113,8 +113,9 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
     ): String {
-        val destPath = if (customFilePath?.endsWith(disposition.fileName) != true) {
-            (customFilePath ?: "") + fileSeparator + disposition.fileName
+        val fileName = URLDecoder.decode(disposition.fileName, "utf-8")
+        val destPath = if (customFilePath?.endsWith(fileName) != true) {
+            (customFilePath ?: "") + fileSeparator + fileName
         } else {
             customFilePath
         }

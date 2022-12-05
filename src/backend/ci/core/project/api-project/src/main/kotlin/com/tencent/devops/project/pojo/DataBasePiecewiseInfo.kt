@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.pojo
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -37,9 +38,11 @@ data class DataBasePiecewiseInfo(
     @ApiModelProperty("集群名称")
     val clusterName: String,
     @ApiModelProperty("微服务模块名称")
-    val moduleCode: String,
+    val moduleCode: SystemModuleEnum,
     @ApiModelProperty("数据源名称")
     val dataSourceName: String,
+    @ApiModelProperty("路由规则")
+    val routingRule: String,
     @ApiModelProperty("数据源URL")
-    val dsUrl: String?
+    val dsUrl: String? = null
 )

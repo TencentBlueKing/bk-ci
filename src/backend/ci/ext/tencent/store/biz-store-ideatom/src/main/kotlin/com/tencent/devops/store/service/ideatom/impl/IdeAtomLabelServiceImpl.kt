@@ -33,7 +33,6 @@ import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.service.common.LabelService
 import com.tencent.devops.store.service.ideatom.IdeAtomLabelService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,13 +43,10 @@ class IdeAtomLabelServiceImpl @Autowired constructor(
     private val labelService: LabelService
 ) : IdeAtomLabelService {
 
-    private val logger = LoggerFactory.getLogger(IdeAtomLabelServiceImpl::class.java)
-
     /**
      * 查找IDE插件标签
      */
     override fun getLabelsByAtomId(atomId: String): Result<List<Label>?> {
-        logger.info("getLabelsByAtomId atomId is :$atomId")
         val ideAtomLabelList = mutableListOf<Label>()
         val ideAtomLabelRecords = ideAtomLabelRelDao.getLabelsByAtomId(dslContext, atomId) // 查询IDE插件标签信息
         ideAtomLabelRecords?.forEach {

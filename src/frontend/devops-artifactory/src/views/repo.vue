@@ -83,6 +83,11 @@
                                     v-if="lastClickItem.fullPath && lastClickItem.folder === false">
                                     <i class="devops-icon icon-download"></i>下载
                                 </li>
+                                <li
+                                    v-if="isExtendTx && lastClickItem.fullPath && lastClickItem.folder === false && isWindows && isApkOrIpa() && isMof"
+                                    @click.stop="handlerDownload($event, 'MoF')">
+                                    <i class="devops-icon icon-download"></i>魔方有线安装
+                                </li>
                             </template>
                             <template
                                 v-else>
@@ -117,12 +122,14 @@
                             <div class="detail-info">
                                 <div class="detail-info-label"><span>Info</span></div>
                                 <ul>
-                                    <li v-for="(item, key) of sideSliderConfig.detailData.info"
-                                        v-if="!(lastClickItem.folder && item.key === 'size')"
-                                        :key="`detail${key}`">
-                                        <span class="bk-lable">{{ item.name }}：</span>
-                                        <span>{{ item.key === 'name' ? (sideSliderConfig.data[item.key] || lastClickItem.name) : convertInfoItem(item.key, sideSliderConfig.data[item.key]) }}</span>
-                                    </li>
+                                    <template v-for="(item, key) of sideSliderConfig.detailData.info">
+                                        <li
+                                            v-if="!(lastClickItem.folder && item.key === 'size')"
+                                            :key="`detail${key}`">
+                                            <span class="bk-lable">{{ item.name }}：</span>
+                                            <span>{{ item.key === 'name' ? (sideSliderConfig.data[item.key] || lastClickItem.name) : convertInfoItem(item.key, sideSliderConfig.data[item.key]) }}</span>
+                                        </li>
+                                    </template>
                                 </ul>
                             </div>
                             <div class="detail-info" v-if="!lastClickItem.folder">
@@ -373,6 +380,18 @@
             projectId () {
                 return this.$route.params.projectId
             },
+            isWindows () {
+                return /WINDOWS/.test(window.navigator.userAgent.toUpperCase())
+            },
+            isMof () {
+                const projectId = this.$route.params.projectId
+                return this.projectList.find(item => {
+                    return (item.deptName === '魔方工作室群' && item.projectCode === projectId)
+                })
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
             breadcrumbs () {
                 const breadcrumbs = []
                 const mapArr = this.curNodeOnTree.roadMap.toString().split(',').map(item => parseInt(item))
@@ -549,6 +568,17 @@
                 }
             },
             /**
+             * 检测devnet网关的连通性
+             */
+            async getDevnetGateway () {
+                try {
+                    const res = await this.$ajax.get('/artifactory/api/user/artifactories/checkDevnetGateway')
+                    return res
+                } catch (err) {
+                    return false
+                }
+            },
+            /**
              * 文件下载地址
              */
             async getDownloadUrl (item) {
@@ -557,12 +587,13 @@
                 } = this
                 const type = this.pipelineMap ? 'PIPELINE' : 'CUSTOM_DIR'
                 try {
+                    const isDevnet = await this.getDevnetGateway()
                     const res = await this.$store.dispatch('artifactory/requestDownloadUrl', {
                         projectId,
                         type: type,
                         path: `${item.fullPath}`
                     })
-                    const url = res.url2
+                    const url = isDevnet ? res.url : res.url2
                     return url
                 } catch (err) {
                     if (err.code === 403) { // 没有权限下载
@@ -572,8 +603,12 @@
                             path: item.fullPath
                         })
                         const pipelineId = res.pipelineId
-                        const resource = res.pipelineName ? `流水线:${res.pipelineName}` : '流水线'
-                        this.setPermissionConfig(resource, '下载构件', pipelineId)
+                        const instanceId = [{
+                            id: pipelineId,
+                            name: res.pipelineName || pipelineId
+                        }]
+                        // 下载构件
+                        this.setPermissionConfig(instanceId, pipelineId)
                     } else {
                         this.$bkMessage({
                             theme: 'error',
@@ -585,9 +620,9 @@
             /**
              * 下载
              */
-            async handlerDownload () {
+            async handlerDownload (event, type) {
                 const url = await this.getDownloadUrl(this.lastClickItem)
-                url && window.open(url, '_self')
+                url && window.open(type ? `${API_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url, '_self')
             },
             /**
              * 共享
@@ -624,8 +659,12 @@
                             path: lastClickItem.fullPath
                         })
                         const pipelineId = res.pipelineId
-                        const resource = res.pipelineName ? `流水线:${res.pipelineName}` : '流水线'
-                        this.setPermissionConfig(resource, '分享构件', pipelineId)
+                        const instanceId = [{
+                            id: pipelineId,
+                            name: res.pipelineName || pipelineId
+                        }]
+                        // 分享构件
+                        this.setPermissionConfig(instanceId, pipelineId)
                     } else {
                         theme = 'error'
                         message = err.message || err
@@ -699,15 +738,16 @@
                 }
                 return icon || 'file'
             },
-            setPermissionConfig (resource, option, pipelineId) {
-                const role = 'role_viewer'
-                const params = {
-                    noPermissionList: [
-                        { resource: resource, option: option }
-                    ],
-                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}`
-                }
-                this.$showAskPermissionDialog(params)
+            setPermissionConfig (instanceId, pipelineId) {
+                this.$showAskPermissionDialog({
+                    noPermissionList: [{
+                        actionId: this.$permissionActionMap.view,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId,
+                        projectId: this.projectId
+                    }],
+                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_viewer=pipeline:${pipelineId}`
+                })
             },
             cancelHandler () {
                 this.permissionConfig.isShow = false
@@ -994,6 +1034,10 @@
                         }
                     }
                 }
+            },
+            isApkOrIpa () {
+                const type = this.lastClickItem.name.toUpperCase().substring(this.lastClickItem.name.lastIndexOf('.') + 1)
+                return type === 'APK' || type === 'IPA'
             }
         }
     }
@@ -1269,7 +1313,7 @@
             text-align: left;
         }
         .tree-view {
-            border: 1px solid $fontLigtherColor;
+            border: 1px solid $fontLighterColor;
             padding: 20px 0;
             margin: 20px 0 0;
             max-height: 500px;

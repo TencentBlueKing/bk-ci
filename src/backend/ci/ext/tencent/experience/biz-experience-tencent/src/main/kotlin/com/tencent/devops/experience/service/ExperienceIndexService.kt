@@ -33,10 +33,10 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.experience.dao.ExperienceDao
+import com.tencent.devops.experience.dao.ExperienceExtendBannerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.HotCategoryParam
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
@@ -47,7 +47,9 @@ import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import javax.ws.rs.NotFoundException
 
 @Service
 class ExperienceIndexService @Autowired constructor(
@@ -55,8 +57,13 @@ class ExperienceIndexService @Autowired constructor(
     val experiencePublicDao: ExperiencePublicDao,
     val experienceDao: ExperienceDao,
     val dslContext: DSLContext,
-    val redisOperation: RedisOperation
+    val experienceExtendBannerDao: ExperienceExtendBannerDao
 ) {
+    @Value("\${minigame.projectid:#{null}}")
+    private var minigameProjectId: String? = null
+
+    @Value("\${minigame.picture:#{null}}")
+    private var minigamePicture: String? = null
     fun banners(userId: String, page: Int, pageSize: Int, platform: Int): Result<Pagination<IndexBannerVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
@@ -74,7 +81,6 @@ class ExperienceIndexService @Autowired constructor(
                 externalUrl = it.externalLink
             )
         }.toMutableList()
-
         val hasNext = if (banners.size < pageSize) {
             false
         } else {
@@ -84,22 +90,17 @@ class ExperienceIndexService @Autowired constructor(
                 withBanner = true
             ) > (offset + pageSize)
         }
-
         if (page == 1) {
-            val banner = redisOperation.get("bk:experience:banner")
-            if (null != banner) {
-                val bannerDatas = banner.split(",,,")
-                banners.add(
-                    0, IndexBannerVO(
-                        experienceHashId = "",
-                        bannerUrl = UrlUtil.toOuterPhotoAddr(bannerDatas[0]),
-                        type = ExperiencePublicType.BANNER_URL.id,
-                        externalUrl = bannerDatas[1]
-                    )
+            var index = 0
+            experienceExtendBannerDao.listWithExtendBanner(dslContext)?.map {
+                IndexBannerVO(
+                    experienceHashId = "",
+                    bannerUrl = UrlUtil.toOuterPhotoAddr(it.bannerUrl),
+                    type = it.type,
+                    externalUrl = it.link
                 )
-            }
+            }?.toMutableList()?.forEach { banners.add(index++, it) }
         }
-
         return Result(Pagination(hasNext, banners))
     }
 
@@ -264,6 +265,23 @@ class ExperienceIndexService @Autowired constructor(
         return Result(Pagination(hasNext, records))
     }
 
+    fun miniGameExperience(
+        userId: String,
+        platform: Int
+    ): Result<List<IndexAppInfoVO>> {
+        if (minigameProjectId == null) {
+            throw NotFoundException("MiniGame projectId not found")
+        }
+        val platformStr = PlatformEnum.of(platform)?.name
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
+        val records = experiencePublicDao.listExperienceByProjectId(
+            dslContext = dslContext,
+            platform = platformStr,
+            projectId = minigameProjectId!!
+        ).map { toIndexAppInfoVO(userId, it, lastDownloadMap) }.toList()
+        return Result(records)
+    }
+
     private fun toIndexAppInfoVO(
         userId: String,
         it: TExperiencePublicRecord,
@@ -271,9 +289,9 @@ class ExperienceIndexService @Autowired constructor(
     ): IndexAppInfoVO {
         val externalUrl = if (it.externalLink.isNotBlank()) {
             HomeHostUtil.outerApiServerHost() +
-                    "/experience/api/open/experiences/appstore/redirect?id=" +
-                    HashUtil.encodeLongId(it.id) +
-                    "&userId=" + userId
+                "/experience/api/open/experiences/appstore/redirect?id=" +
+                HashUtil.encodeLongId(it.id) +
+                "&userId=" + userId
         } else ""
 
         // 同步版本号
@@ -305,8 +323,17 @@ class ExperienceIndexService @Autowired constructor(
             lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                 ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
             type = it.type,
-            version = it.version
+            version = it.version,
+            downloadTime = it.downloadTime
         )
+    }
+
+    fun showMiniGamePicture(): Result<String> {
+        if (minigamePicture == null) {
+            throw NotFoundException("MiniGame Picture not found")
+        }
+        logger.info("Minigame picture :${UrlUtil.toOuterPhotoAddr(minigamePicture!!)}")
+        return Result(UrlUtil.toOuterPhotoAddr(minigamePicture!!))
     }
 
     companion object {

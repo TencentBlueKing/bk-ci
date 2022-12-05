@@ -63,10 +63,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -294,7 +292,7 @@ public class ConfigCheckerPkgBizServiceImpl implements IConfigCheckerPkgBizServi
 
         // 获取toolName工具屏蔽的所有规则
         configCheckersPkgReq.setTaskId(taskId);
-        IgnoreCheckerEntity ignoreChecker = ignoreCheckerRepository.findByTaskIdAndToolName(taskId, configCheckersPkgReq.getToolName());
+        IgnoreCheckerEntity ignoreChecker = ignoreCheckerRepository.findFirstByTaskIdAndToolName(taskId, configCheckersPkgReq.getToolName());
 
         // 按规则包ID分组规则明细
         Map<String, CheckerDetailVO> allCheckersMap = checkerService.queryAllChecker(configCheckersPkgReq.getToolName());

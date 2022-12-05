@@ -27,8 +27,8 @@
 
 package com.tencent.devops.worker.common.utils
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class WorkspaceUtilsTest {
 
@@ -37,9 +37,9 @@ class WorkspaceUtilsTest {
         val pipelineId = "p-abcdefghijklmnopqrstuvwxyz123456"
         val workspaceAsAssign = WorkspaceUtils.getPipelineWorkspace(pipelineId = pipelineId, workspace = "src")
         println(workspaceAsAssign.absolutePath)
-        Assert.assertTrue(workspaceAsAssign.exists() && workspaceAsAssign.isDirectory)
+        Assertions.assertTrue(workspaceAsAssign.exists() && workspaceAsAssign.isDirectory)
         val workspaceWithPipelineId = WorkspaceUtils.getPipelineWorkspace(pipelineId = pipelineId, workspace = "")
         println(workspaceWithPipelineId.absolutePath)
-        Assert.assertTrue(workspaceAsAssign.exists() && workspaceAsAssign.isDirectory)
+        Assertions.assertTrue(workspaceAsAssign.exists() && workspaceAsAssign.isDirectory)
     }
 }

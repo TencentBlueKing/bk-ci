@@ -32,21 +32,33 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import io.swagger.annotations.ApiModelProperty
 
 data class DockerDispatchType(
-    @JsonProperty("value") override var dockerBuildVersion: String?,
+    @JsonProperty("value")
+    @ApiModelProperty("docker构建版本", required = false)
+    override var dockerBuildVersion: String?,
+    @ApiModelProperty("镜像类型", required = false)
     override var imageType: ImageType? = ImageType.BKDEVOPS,
+    @ApiModelProperty("凭证id", required = false)
     override var credentialId: String? = "",
+    @ApiModelProperty("凭证项目id", required = false)
     override var credentialProject: String? = "",
+    @ApiModelProperty("商店镜像代码", required = false)
     // 商店镜像代码
     override var imageCode: String? = "",
+    @ApiModelProperty("商店镜像版本", required = false)
     // 商店镜像版本
     override var imageVersion: String? = "",
+    @ApiModelProperty("商店镜像名称", required = false)
     // 商店镜像名称
     override var imageName: String? = "",
+    @ApiModelProperty("docker资源配置ID", required = false)
     // docker资源配置ID
     var performanceConfigId: Int = 0,
+    @ApiModelProperty("镜像仓库用户名", required = false)
     var imageRepositoryUserName: String = "",
+    @ApiModelProperty("镜像仓库密码", required = false)
     var imageRepositoryPassword: String = ""
 ) : StoreDispatchType(dockerBuildVersion = if (dockerBuildVersion.isNullOrBlank()) {
     imageCode

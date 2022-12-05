@@ -39,7 +39,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_WEBHOOK
 
 object BuildMsgUtils {
 
-    fun getDefaultValue(startType: StartType, channelCode: ChannelCode?): String {
+    private fun getDefaultValue(startType: StartType, channelCode: ChannelCode?): String {
         return when (startType) {
             StartType.MANUAL ->
                 MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_MANUAL, defaultMessage = "手动触发")
@@ -68,7 +68,7 @@ object BuildMsgUtils {
         return if (buildMsg.isNullOrBlank()) {
             getDefaultValue(startType = startType, channelCode = channelCode)
         } else {
-            buildMsg!!
+            buildMsg
         }
     }
 }

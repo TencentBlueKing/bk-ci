@@ -74,7 +74,7 @@ interface ApigwCredentialResourceV3 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭证类型列表，用逗号分隔", required = false, defaultValue = "")
+        @ApiParam("凭证类型列表，用逗号分隔", required = true)
         @QueryParam("credentialTypes")
         credentialTypesString: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")

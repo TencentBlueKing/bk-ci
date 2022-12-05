@@ -29,8 +29,8 @@ package com.tencent.devops.openapi.service.apigw
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants
-import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
@@ -47,7 +47,8 @@ import org.springframework.stereotype.Service
 @Service
 class ApigwProjectService(
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val bkTag: BkTag
 ) {
 
     companion object {
@@ -62,8 +63,10 @@ class ApigwProjectService(
         centerName: String?,
         interfaceName: String? = "ApigwProjectService"
     ): List<ProjectVO>? {
-        logger.info("$interfaceName:getListByOrganizationId:Input(" +
-            "$userId,$organizationType,$organizationId,$deptName,$centerName)")
+        logger.info(
+            "$interfaceName:getListByOrganizationId:Input(" +
+                    "$userId,$organizationType,$organizationId,$deptName,$centerName)"
+        )
         return client.get(ServiceTxProjectResource::class).getProjectByName(
             userId = userId,
             organizationType = organizationType,
@@ -90,67 +93,28 @@ class ApigwProjectService(
         ).data
     }
 
-    fun createProjectUserByUser(
-        createUserId: String,
-        createInfo: ProjectCreateUserDTO
-    ): Boolean? {
-        logger.info("createProjectUserByUser:createUserId[$createUserId],createInfo[$createInfo]")
-        val info = ProjectCreateUserDTO(
-            userId = createInfo.userId,
-            roleId = createInfo.roleId,
-            roleName = createInfo.roleName,
-            projectId = createInfo.projectId,
-            userIds = arrayListOf(createInfo.userId!!)
-        )
-        return client.get(ServiceTxProjectResource::class).createProjectUser(createUserId, info).data
-    }
-
     fun createProjectUser(
         createUserId: String,
+        checkManager: Boolean,
         createInfo: ProjectCreateUserDTO
     ): Boolean? {
-        logger.info("createProjectUser:createUserId[$createUserId],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createProjectUser(createUserId, createInfo).data
-    }
-
-    fun createProjectUserByApp(
-        organizationType: String,
-        organizationId: Long,
-        createInfo: ProjectCreateUserDTO
-    ): Boolean? {
-        logger.info("createProjectUserByApp:organizationType[" +
-            "$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createProjectUserByApp(
-            organizationType = organizationType,
-            organizationId = organizationId,
+        logger.info("createProjectUser:$createUserId|$checkManager|$createInfo")
+        return client.get(ServiceTxProjectResource::class).createProjectUser(
+            createUser = createUserId,
+            checkManager = checkManager,
             createInfo = createInfo
         ).data
     }
 
-    fun createPipelinePermissionByUser(
-        createUserId: String,
-        accessToken: String,
+    fun createPipelinePermission(
+        createUserId: String?,
+        checkManager: Boolean,
         createInfo: PipelinePermissionInfo
     ): Boolean? {
-        logger.info("createPipelinePermission:createUserId[" +
-            "$createUserId],accessToken[$accessToken],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByUser(
-            accessToken = createUserId,
-            createUser = accessToken,
-            createInfo = createInfo
-        ).data
-    }
-
-    fun createPipelinePermissionByApp(
-        organizationType: String,
-        organizationId: Long,
-        createInfo: PipelinePermissionInfo
-    ): Boolean? {
-        logger.info("createPipelinePermission:organizationType[" +
-            "$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByApp(
-            organizationType = organizationType,
-            organizationId = organizationId,
+        logger.info("createPipelinePermission $createUserId|$checkManager|$createInfo")
+        return client.get(ServiceTxProjectResource::class).createPipelinePermission(
+            createUser = createUserId ?: "",
+            checkManager = checkManager,
             createInfo = createInfo
         ).data
     }
@@ -160,12 +124,12 @@ class ApigwProjectService(
         organizationId: Long,
         projectCode: String
     ): List<BKAuthProjectRolesResources>? {
-        logger.info("createPipelinePermission:organizationType[" +
-            "$organizationType],organizationId[$organizationId],projectCode[$projectCode]")
+        logger.info(
+            "createPipelinePermission:organizationType[" +
+                    "$organizationType],organizationId[$organizationId],projectCode[$projectCode]"
+        )
         return client.get(ServiceTxProjectResource::class).getProjectRoles(
-            projectCode = projectCode,
-            organizationType = organizationType,
-            organizationId = organizationId
+            projectCode = projectCode
         ).data
     }
 
@@ -174,7 +138,7 @@ class ApigwProjectService(
     ) {
         val projectRouteTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode)
         if (!projectRouteTag.isNullOrBlank()) {
-            ConsulContent.setConsulContent(projectRouteTag)
+            bkTag.setGatewayTag(projectRouteTag)
         }
     }
 }

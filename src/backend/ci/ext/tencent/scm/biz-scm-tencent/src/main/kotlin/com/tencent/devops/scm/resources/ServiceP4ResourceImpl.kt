@@ -63,4 +63,23 @@ class ServiceP4ResourceImpl : ServiceP4Resource {
         ).getShelvedFiles(change)
         return Result(shelvedFiles)
     }
+
+    override fun getFileContent(
+        p4Port: String,
+        filePath: String,
+        reversion: Int,
+        username: String,
+        password: String
+    ): Result<String> {
+        return Result(
+            P4Api(
+                p4port = p4Port,
+                username = username,
+                password = password
+            ).getFileContent(
+                filePath = filePath,
+                reversion = reversion
+            )
+        )
+    }
 }

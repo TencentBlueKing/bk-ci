@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
@@ -116,6 +118,35 @@ interface ApigwTemplateInstanceResourceV4 {
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
+    @ApiOperation("批量更新流水线模板实例", tags = ["v4_user_templateInstance_update", "v4_app_templateInstance_update"])
+    @PUT
+    @Path("/update")
+    fun updateTemplateInstances(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @QueryParam("templateId")
+        templateId: String,
+        @ApiParam("版本名", required = true)
+        @QueryParam("versionName")
+        versionName: String,
+        @ApiParam("是否应用模板设置")
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean,
+        @ApiParam("模板实例", required = true)
+        instances: List<TemplateInstanceUpdate>
+    ): TemplateOperationRet
+
     @ApiOperation("获取流水线模板的实例列表", tags = ["v4_app_templateInstance_get", "v4_user_templateInstance_get"])
     @GET
     @Path("/")
@@ -140,6 +171,7 @@ interface ApigwTemplateInstanceResourceV4 {
         page: Int? = 1,
         @ApiParam("每页多少条", required = false, defaultValue = "30")
         @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
         pageSize: Int? = 30,
         @ApiParam("名字搜索的关键字", required = false)
         @QueryParam("searchKey")

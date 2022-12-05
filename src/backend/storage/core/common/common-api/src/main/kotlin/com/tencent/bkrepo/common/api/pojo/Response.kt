@@ -37,7 +37,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("数据返回包装模型")
-data class Response<out T>(
+open class Response<out T>(
     @ApiModelProperty("返回码")
     val code: Int,
     @ApiModelProperty("错误信息")

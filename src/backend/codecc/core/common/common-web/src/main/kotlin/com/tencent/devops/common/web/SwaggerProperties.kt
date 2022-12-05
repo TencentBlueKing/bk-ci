@@ -34,7 +34,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  */
 @ConfigurationProperties(prefix = "spring.application")
 data class SwaggerProperties(
-        val packageName: String? = null,
-        val desc: String? = null,
-        val version: String? = null
+        var packageName: String? = null,
+        var desc: String? = null,
+        var version: String? = null
 )

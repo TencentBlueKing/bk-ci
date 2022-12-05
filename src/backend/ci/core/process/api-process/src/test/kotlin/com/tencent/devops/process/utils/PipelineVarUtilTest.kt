@@ -33,9 +33,9 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Test
 
 class PipelineVarUtilTest {
 
@@ -116,7 +116,6 @@ class PipelineVarUtilTest {
         assertEquals(PIPELINE_WEBHOOK_TARGET_BRANCH, PipelineVarUtil.oldVarToNewVar("hookTargetBranch"))
         assertEquals(GIT_MR_NUMBER, PipelineVarUtil.oldVarToNewVar("git_mr_number"))
         assertEquals(GITHUB_PR_NUMBER, PipelineVarUtil.oldVarToNewVar("github_pr_number"))
-        assertEquals(PROJECT_NAME, PipelineVarUtil.oldVarToNewVar("project.name"))
         assertEquals(PIPELINE_BUILD_ID, PipelineVarUtil.oldVarToNewVar("pipeline.build.id"))
         assertEquals(PIPELINE_VMSEQ_ID, PipelineVarUtil.oldVarToNewVar("pipeline.job.id"))
         assertEquals(PIPELINE_ELEMENT_ID, PipelineVarUtil.oldVarToNewVar("pipeline.task.id"))
@@ -152,7 +151,6 @@ class PipelineVarUtilTest {
         assertEquals("hookTargetBranch", PipelineVarUtil.newVarToOldVar(PIPELINE_WEBHOOK_TARGET_BRANCH))
         assertEquals("git_mr_number", PipelineVarUtil.newVarToOldVar(GIT_MR_NUMBER))
         assertEquals("github_pr_number", PipelineVarUtil.newVarToOldVar(GITHUB_PR_NUMBER))
-        assertEquals("project.name", PipelineVarUtil.newVarToOldVar(PROJECT_NAME))
         assertEquals("pipeline.build.id", PipelineVarUtil.newVarToOldVar(PIPELINE_BUILD_ID))
         assertEquals("pipeline.job.id", PipelineVarUtil.newVarToOldVar(PIPELINE_VMSEQ_ID))
         assertEquals("pipeline.task.id", PipelineVarUtil.newVarToOldVar(PIPELINE_ELEMENT_ID))

@@ -146,7 +146,7 @@ public class ToolDao
 
         update.set("updated_date", System.currentTimeMillis());
         update.set("updated_by", userName);
-        return mongoTemplate.updateMulti(query, update, ToolConfigInfoEntity.class).isUpdateOfExisting();
+        return mongoTemplate.updateMulti(query, update, ToolConfigInfoEntity.class).getModifiedCount() > 0;
     }
 
     /**

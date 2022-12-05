@@ -27,10 +27,13 @@
 
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TShardingRoutingRule
 import com.tencent.devops.model.project.tables.records.TShardingRoutingRuleRecord
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -43,6 +46,11 @@ class ShardingRoutingRuleDao {
             dslContext.insertInto(
                 this,
                 ID,
+                CLUSTER_NAME,
+                MODULE_CODE,
+                TYPE,
+                DATA_SOURCE_NAME,
+                TABLE_NAME,
                 ROUTING_NAME,
                 ROUTING_RULE,
                 CREATOR,
@@ -50,6 +58,11 @@ class ShardingRoutingRuleDao {
             )
                 .values(
                     UUIDUtil.generate(),
+                    shardingRoutingRule.clusterName,
+                    shardingRoutingRule.moduleCode.name,
+                    shardingRoutingRule.type.name,
+                    shardingRoutingRule.dataSourceName,
+                    shardingRoutingRule.tableName,
                     shardingRoutingRule.routingName,
                     shardingRoutingRule.routingRule,
                     userId,
@@ -59,10 +72,24 @@ class ShardingRoutingRuleDao {
         }
     }
 
-    fun countByName(dslContext: DSLContext, routingName: String): Int {
+    fun countByName(
+        dslContext: DSLContext,
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        type: ShardingRuleTypeEnum,
+        routingName: String,
+        tableName: String? = null
+    ): Int {
         with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
+            val conditions = getQueryShardingRoutingRuleCondition(
+                clusterName = clusterName,
+                moduleCode = moduleCode,
+                type = type,
+                routingName = routingName,
+                tableName = tableName
+            )
             return dslContext.selectCount().from(this)
-                .where(ROUTING_NAME.eq(routingName))
+                .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -72,6 +99,28 @@ class ShardingRoutingRuleDao {
             dslContext.deleteFrom(this)
                 .where(ID.eq(id))
                 .execute()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        type: ShardingRuleTypeEnum,
+        routingName: String,
+        tableName: String? = null
+    ): TShardingRoutingRuleRecord? {
+        with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
+            val conditions = getQueryShardingRoutingRuleCondition(
+                clusterName = clusterName,
+                moduleCode = moduleCode,
+                type = type,
+                routingName = routingName,
+                tableName = tableName
+            )
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetchOne()
         }
     }
 
@@ -87,6 +136,7 @@ class ShardingRoutingRuleDao {
         return with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
             dslContext.selectFrom(this)
                 .where(ROUTING_NAME.eq(routingName))
+                .limit(1)
                 .fetchOne()
         }
     }
@@ -94,11 +144,33 @@ class ShardingRoutingRuleDao {
     fun update(dslContext: DSLContext, id: String, shardingRoutingRule: ShardingRoutingRule) {
         with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
             dslContext.update(this)
+                .set(TYPE, shardingRoutingRule.type.name)
+                .set(CLUSTER_NAME, shardingRoutingRule.clusterName)
+                .set(MODULE_CODE, shardingRoutingRule.moduleCode.name)
+                .set(DATA_SOURCE_NAME, shardingRoutingRule.dataSourceName)
                 .set(ROUTING_NAME, shardingRoutingRule.routingName)
                 .set(ROUTING_RULE, shardingRoutingRule.routingRule)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()
         }
+    }
+
+    private fun TShardingRoutingRule.getQueryShardingRoutingRuleCondition(
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        type: ShardingRuleTypeEnum,
+        routingName: String,
+        tableName: String?
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(CLUSTER_NAME.eq(clusterName))
+        conditions.add(MODULE_CODE.eq(moduleCode.name))
+        conditions.add(TYPE.eq(type.name))
+        conditions.add(ROUTING_NAME.eq(routingName))
+        if (!tableName.isNullOrBlank()) {
+            conditions.add(TABLE_NAME.eq(tableName))
+        }
+        return conditions
     }
 }

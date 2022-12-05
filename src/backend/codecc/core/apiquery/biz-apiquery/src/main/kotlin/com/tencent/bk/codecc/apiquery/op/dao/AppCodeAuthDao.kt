@@ -18,14 +18,14 @@ class AppCodeAuthDao @Autowired constructor(
 
     fun findOrgInfoByAppCode(appCode: String): AppCodeOrgEntity? {
         val fieldsObj = BasicDBObject()
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(Criteria.where("app_code").`is`(appCode))
         return opMongoTemplate.findOne(query, AppCodeOrgEntity::class.java, "t_appcode_org")
     }
 
     fun findProjectInfoByAppCode(appCode: String): AppCodeProjectEntity? {
         val fieldsObj = BasicDBObject()
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(Criteria.where("app_code").`is`(appCode))
         return opMongoTemplate.findOne(query, AppCodeProjectEntity::class.java, "t_appcode_project")
     }
@@ -36,7 +36,7 @@ class AppCodeAuthDao @Autowired constructor(
 
     fun findToolInfoByAppCode(appCode: String): AppCodeToolEntity? {
         val fieldsObj = BasicDBObject()
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(Criteria.where("app_code").`is`(appCode))
         return opMongoTemplate.findOne(query, AppCodeToolEntity::class.java, "t_appcode_tool")
     }

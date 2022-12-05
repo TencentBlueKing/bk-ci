@@ -142,17 +142,20 @@
         },
         async created () {
             await this.init()
+            bus.$off('start-execute')
             bus.$on('start-execute', this.getExecuteParams)
         },
         beforeDestroy () {
+            bus.$off('start-execute')
             this.togglePropertyPanel({
                 isShow: false
             })
             this.$store.commit('pipelines/updateCurAtomPrams', null)
             this.setPipeline()
             this.setPipelineEditing(false)
-
-            bus.$off('start-execute', this.getExecuteParams)
+        },
+        destroyed () {
+            bus.$off('start-execute')
         },
         methods: {
             ...mapActions('atom', [
@@ -199,7 +202,7 @@
                             name: this.pipelineId
                         }],
                         projectId: this.projectId
-                    }])
+                    }], this.getPermUrlByRole(this.projectId, this.pipelineId, this.roleMap.executor))
                 } finally {
                     this.isLoading = false
                 }

@@ -43,11 +43,13 @@ import com.tencent.bkrepo.pypi.artifact.repository.PypiLocalRepository
 import com.tencent.bkrepo.pypi.artifact.repository.PypiRemoteRepository
 import com.tencent.bkrepo.pypi.artifact.repository.PypiVirtualRepository
 import com.tencent.bkrepo.pypi.pojo.PypiExceptionResponse
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Configuration
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse
-import org.springframework.stereotype.Component
 
-@Component
+@Configuration
+@EnableConfigurationProperties(PypiProperties::class)
 class PypiArtifactConfigurer : ArtifactConfigurerSupport() {
 
     override fun getRepositoryType() = RepositoryType.PYPI

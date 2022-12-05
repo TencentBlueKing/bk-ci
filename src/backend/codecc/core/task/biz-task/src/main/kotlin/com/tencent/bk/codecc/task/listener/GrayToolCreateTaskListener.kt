@@ -214,7 +214,7 @@ class GrayToolCreateTaskListener @Autowired constructor(
             }
             if (!codeccBuildId.isNullOrBlank() && !toolName.isNullOrBlank()) {
                 // 1. 计算lastReport值
-                val taskInfoEntity = taskRepository.findByPipelineId(pipelineId)
+                val taskInfoEntity = taskRepository.findFirstByPipelineId(pipelineId)
                 if (null != taskInfoEntity && 0L != taskInfoEntity.taskId) {
                     val statReportInfo = try {
                         if (!grayTaskCategoryEntity.lastBuildId.isNullOrBlank()) {
@@ -268,7 +268,7 @@ class GrayToolCreateTaskListener @Autowired constructor(
     }
 
     private fun stopTask(pipelineId: String, disableReason: String, userName: String) {
-        val taskInfo = taskRepository.findByPipelineId(pipelineId)
+        val taskInfo = taskRepository.findFirstByPipelineId(pipelineId)
         if (null == taskInfo) {
             logger.info("no task found with id $pipelineId")
             return

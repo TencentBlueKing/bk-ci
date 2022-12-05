@@ -1,4 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.bkrepo.common.plugin.PluginAutoConfiguration,\
-com.tencent.bkrepo.common.plugin.spring.PluginEndpointAutoConfiguration
-

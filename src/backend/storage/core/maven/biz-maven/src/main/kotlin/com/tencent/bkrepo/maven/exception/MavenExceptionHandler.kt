@@ -31,20 +31,92 @@
 
 package com.tencent.bkrepo.maven.exception
 
+import com.tencent.bkrepo.common.api.constant.ANONYMOUS_USER
+import com.tencent.bkrepo.common.api.constant.MediaTypes
+import com.tencent.bkrepo.common.api.constant.USER_KEY
+import com.tencent.bkrepo.common.api.util.JsonUtils
+import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.maven.pojo.MavenExceptionResponse
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpStatus
+import org.springframework.web.HttpMediaTypeNotAcceptableException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@RestControllerAdvice
+@RestControllerAdvice("com.tencent.bkrepo.maven")
 class MavenExceptionHandler {
     @ExceptionHandler(MavenPathParserException::class)
     @ResponseStatus(HttpStatus.PRECONDITION_FAILED)
-    fun handleException(exception: MavenPathParserException): MavenExceptionResponse {
-        return MavenExceptionResponse(HttpStatus.PRECONDITION_FAILED.toString(), exception.message)
+    fun handleException(exception: MavenPathParserException) {
+        val errorResponse = MavenExceptionResponse(HttpStatus.PRECONDITION_FAILED.toString(), exception.message)
+        mavenResponse(errorResponse, exception)
+    }
+
+    @ExceptionHandler(MavenBadRequestException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleException(exception: MavenBadRequestException) {
+        val errorResponse = MavenExceptionResponse(HttpStatus.BAD_REQUEST.toString(), exception.message)
+        mavenResponse(errorResponse, exception)
+    }
+
+    @ExceptionHandler(MavenRequestForbiddenException::class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    fun handleException(exception: MavenRequestForbiddenException) {
+        val errorResponse = MavenExceptionResponse(HttpStatus.FORBIDDEN.toString(), exception.message)
+        mavenResponse(errorResponse, exception)
+    }
+
+    @ExceptionHandler(MavenArtifactNotFoundException::class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    fun handleArtifactNotFoundException(exception: MavenArtifactNotFoundException) {
+        val errorResponse = MavenExceptionResponse(HttpStatus.NOT_FOUND.toString(), exception.message)
+        mavenResponse(errorResponse, exception)
+    }
+
+    @ExceptionHandler(MavenMetadataChecksumException::class)
+    @ResponseStatus(HttpStatus.OK)
+    fun handleException(exception: MavenMetadataChecksumException) {
+        val response = HttpContextHolder.getResponse()
+        response.status = HttpStatus.OK.value()
+        response.writer.flush()
+    }
+
+    @ExceptionHandler(MavenArtifactFormatException::class)
+    @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+    fun handleException(exception: MavenArtifactFormatException) {
+        val errorResponse = MavenExceptionResponse(HttpStatus.NOT_ACCEPTABLE.toString(), exception.message)
+        mavenResponse(errorResponse, exception)
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException::class)
+    @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+    fun handleException(exception: HttpMediaTypeNotAcceptableException) {
+        val errorResponse = MavenExceptionResponse(HttpStatus.NOT_ACCEPTABLE.toString(), exception.message)
+        mavenResponse(errorResponse, exception)
+    }
+
+    private fun mavenResponse(responseObject: MavenExceptionResponse, exception: Exception) {
+        logMavenException(exception)
+        val responseString = JsonUtils.objectMapper.writeValueAsString(responseObject)
+        val response = HttpContextHolder.getResponse()
+        response.contentType = MediaTypes.APPLICATION_JSON
+        response.writer.println(responseString)
+    }
+
+    private fun logMavenException(exception: Exception) {
+        val userId = HttpContextHolder.getRequest().getAttribute(USER_KEY) ?: ANONYMOUS_USER
+        val uri = HttpContextHolder.getRequest().requestURI
+        logger.warn(
+            "User[$userId] access maven resource[$uri] failed[${exception.javaClass.simpleName}]: ${exception.message}"
+        )
+    }
+
+    companion object {
+        val logger: Logger = LoggerFactory.getLogger(MavenExceptionHandler::class.java)
     }
 }

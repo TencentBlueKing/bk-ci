@@ -40,6 +40,8 @@ import java.time.LocalDateTime
  */
 @ApiModel("节点删除点")
 data class NodeDeletedPoint(
+    @ApiModelProperty("记录id")
+    val id: Long,
     @ApiModelProperty("完整路径")
     val fullPath: String,
     @ApiModelProperty("文件大小，单位byte")

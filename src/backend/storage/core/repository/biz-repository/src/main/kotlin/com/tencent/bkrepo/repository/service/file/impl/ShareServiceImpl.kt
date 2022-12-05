@@ -31,6 +31,7 @@
 
 package com.tencent.bkrepo.repository.service.file.impl
 
+import com.tencent.bkrepo.common.api.constant.ANONYMOUS_USER
 import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
@@ -92,12 +93,13 @@ class ShareServiceImpl(
             )
             mongoTemplate.save(shareRecord)
             val shareRecordInfo = convert(shareRecord)
-            logger.info("Create share record[$shareRecordInfo] success.")
+            logger.info("$userId create share record[$shareRecordInfo] success.")
             return shareRecordInfo
         }
     }
 
     override fun download(userId: String, token: String, artifactInfo: ArtifactInfo) {
+        logger.info("artifact[$artifactInfo] download user: $userId")
         with(artifactInfo) {
             val query = Query.query(
                 where(TShareRecord::projectId).isEqualTo(artifactInfo.projectId)
@@ -107,6 +109,7 @@ class ShareServiceImpl(
             )
             val shareRecord = mongoTemplate.findOne(query, TShareRecord::class.java)
                 ?: throw ErrorCodeException(ArtifactMessageCode.TEMPORARY_TOKEN_INVALID)
+            val downloadUser = if (userId == ANONYMOUS_USER) shareRecord.createdBy else userId
             if (shareRecord.authorizedUserList.isNotEmpty() && userId !in shareRecord.authorizedUserList) {
                 throw PermissionException("unauthorized")
             }
@@ -115,7 +118,7 @@ class ShareServiceImpl(
             }
             val repo = repositoryService.getRepoDetail(projectId, repoName)
                 ?: throw ErrorCodeException(ArtifactMessageCode.REPOSITORY_NOT_FOUND, repoName)
-            val context = ArtifactDownloadContext(repo)
+            val context = ArtifactDownloadContext(repo = repo, userId = downloadUser)
             val repository = ArtifactContextHolder.getRepository(context.repositoryDetail.category)
             repository.download(context)
         }

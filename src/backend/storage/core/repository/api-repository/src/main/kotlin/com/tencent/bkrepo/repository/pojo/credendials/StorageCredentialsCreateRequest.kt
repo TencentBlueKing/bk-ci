@@ -33,8 +33,15 @@ package com.tencent.bkrepo.repository.pojo.credendials
 
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
 import com.tencent.bkrepo.repository.pojo.UserRequest
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("存储凭据创建请求")
 data class StorageCredentialsCreateRequest(
+    @ApiModelProperty("存储凭据key")
     val key: String,
-    val credentials: StorageCredentials
+    @ApiModelProperty("凭据信息")
+    val credentials: StorageCredentials,
+    @ApiModelProperty("S3或COS类型存储凭据所在区域")
+    val region: String
 ) : UserRequest

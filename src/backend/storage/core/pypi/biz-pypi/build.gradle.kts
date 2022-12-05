@@ -35,8 +35,7 @@ dependencies {
     api(project(":common:common-job"))
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jsoup:jsoup:1.13.1")
-    implementation("org.apache.commons:commons-compress")
+    implementation("org.jsoup:jsoup:${Versions.Jsoup}")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("com.google.code.gson:gson")
 }

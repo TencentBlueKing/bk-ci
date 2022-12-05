@@ -9,7 +9,7 @@ import com.tencent.devops.common.web.mq.ConstantsKt;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +29,7 @@ public class TaskPersonalStatisticServiceImpl implements TaskPersonalStatisticSe
 
     @Override
     public TaskPersonalStatisticwVO getPersonalStatistic(Long taskId, String username) {
-        TaskPersonalStatisticEntity entity = taskPersonalStatisticRepository.findByTaskIdAndUsername(taskId, username);
+        TaskPersonalStatisticEntity entity = taskPersonalStatisticRepository.findFirstByTaskIdAndUsername(taskId, username);
 
         if (entity == null) {
             refresh(taskId, "from user resources");

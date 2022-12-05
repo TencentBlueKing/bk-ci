@@ -29,11 +29,13 @@ package com.tencent.devops.common.pipeline.init
 
 import com.tencent.devops.common.pipeline.DispatchSubTypeFetcher
 import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
+import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 
 class TencentDispatchSubTypeFetcher : DispatchSubTypeFetcher {
 
@@ -41,9 +43,11 @@ class TencentDispatchSubTypeFetcher : DispatchSubTypeFetcher {
         return mapOf(
             "THIRD_PARTY_PCG" to PCGDispatchType::class.java,
             "PUBLIC_DEVCLOUD" to PublicDevCloudDispathcType::class.java,
+            "PUBLIC_BCS" to PublicBcsDispatchType::class.java,
             "IDC" to IDCDispatchType::class.java,
             "GIT_CI" to GitCIDispatchType::class.java,
-            "MACOS" to MacOSDispatchType::class.java
+            "MACOS" to MacOSDispatchType::class.java,
+            "WINDOWS" to WindowsDispatchType::class.java
         )
     }
 }

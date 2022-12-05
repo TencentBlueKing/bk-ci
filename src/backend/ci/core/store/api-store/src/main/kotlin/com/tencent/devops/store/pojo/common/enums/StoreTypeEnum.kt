@@ -37,12 +37,12 @@ enum class StoreTypeEnum(val type: Int) {
     companion object {
         fun getStoreType(type: Int): String {
             return when (type) {
-                0 -> StoreTypeEnum.ATOM.name
-                1 -> StoreTypeEnum.TEMPLATE.name
-                2 -> StoreTypeEnum.IMAGE.name
-                3 -> StoreTypeEnum.IDE_ATOM.name
-                4 -> StoreTypeEnum.SERVICE.name
-                else -> StoreTypeEnum.ATOM.name
+                0 -> ATOM.name
+                1 -> TEMPLATE.name
+                2 -> IMAGE.name
+                3 -> IDE_ATOM.name
+                4 -> SERVICE.name
+                else -> ATOM.name
             }
         }
 

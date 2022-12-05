@@ -55,7 +55,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -130,7 +130,7 @@ public class PathFilterServiceImpl implements PathFilterService
     {
         filterPathInput.setUserName(userName);
         Long taskId = filterPathInput.getTaskId();
-        TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByTaskId(taskId);
         if (Objects.isNull(taskEntity))
         {
             log.error("taskInfo not exists! task id is: {}", taskId);
@@ -379,7 +379,7 @@ public class PathFilterServiceImpl implements PathFilterService
     @OperationHistory(funcId = FUNC_FILTER_PATH, operType = DISABLE_ACTION)
     public Boolean deleteFilterPath(String path, String pathType, Long taskId, String userName)
     {
-        TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskEntity = taskRepository.findFirstByTaskId(taskId);
         if (Objects.isNull(taskEntity))
         {
             log.error("taskInfo not exists! task id is: {}", taskId);
@@ -448,7 +448,7 @@ public class PathFilterServiceImpl implements PathFilterService
     @Override
     public FilterPathOutVO getFilterPath(Long taskId)
     {
-        TaskInfoEntity taskInfo = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfo = taskRepository.findFirstByTaskId(taskId);
         if (taskInfo == null)
         {
             log.error("task not exists! task id is: {}", taskId);
@@ -575,7 +575,7 @@ public class PathFilterServiceImpl implements PathFilterService
 
     @Override
     public CodeYmlFilterPathVO listCodeYmlFilterPath(Long taskId) {
-        TaskInfoEntity taskInfo = taskRepository.findByTaskId(taskId);
+        TaskInfoEntity taskInfo = taskRepository.findFirstByTaskId(taskId);
         if (taskInfo == null)
         {
             log.error("task not exists! task id is: {}", taskId);

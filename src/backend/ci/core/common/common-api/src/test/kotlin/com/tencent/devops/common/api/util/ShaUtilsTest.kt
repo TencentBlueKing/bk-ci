@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.api.util
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.util.concurrent.ThreadLocalRandom
 
@@ -50,7 +50,7 @@ class ShaUtilsTest {
         tempFile.inputStream().use {
             val sha1 = ShaUtils.sha1InputStream(it)
             println("sha1=$sha1")
-            Assert.assertEquals(sha11, sha1)
+            Assertions.assertEquals(sha11, sha1)
         }
     }
 
@@ -58,7 +58,7 @@ class ShaUtilsTest {
     fun sha1() {
         val sha1 = ShaUtils.sha1(byteArray)
         println("sha1=$sha1")
-        Assert.assertEquals(expectSha1, sha1)
+        Assertions.assertEquals(expectSha1, sha1)
     }
 
     @Test
@@ -73,8 +73,8 @@ class ShaUtilsTest {
     fun isEqual() {
         val key = ByteArray(20)
         ThreadLocalRandom.current().nextBytes(key)
-        Assert.assertFalse(ShaUtils.isEqual(key, byteArray))
+        Assertions.assertFalse(ShaUtils.isEqual(key, byteArray))
         val sha1 = ShaUtils.sha1(key)
-        Assert.assertFalse(ShaUtils.isEqual(expectSha1, sha1))
+        Assertions.assertFalse(ShaUtils.isEqual(expectSha1, sha1))
     }
 }

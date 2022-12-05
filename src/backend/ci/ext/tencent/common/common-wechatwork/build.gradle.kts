@@ -27,6 +27,6 @@
 
 dependencies {
     api(project(":core:common:common-web"))
-    api("dom4j:dom4j")
+    api("org.dom4j:dom4j")
     api("commons-codec:commons-codec")
 }

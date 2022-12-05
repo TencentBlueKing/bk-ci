@@ -30,6 +30,7 @@ package com.tencent.devops.scm.services
 import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.scm.ScmOauthFactory
 import com.tencent.devops.scm.config.GitConfig
@@ -40,6 +41,7 @@ import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -231,6 +233,8 @@ class ScmOauthService @Autowired constructor(
         }
     }
 
+    @BkTimed
+    @Suppress("NestedBlockDepth")
     fun addCommitCheck(
         request: CommitCheckRequest
     ) {
@@ -356,6 +360,29 @@ class ScmOauthService @Autowired constructor(
             event = null
         )
             .getMrReviewInfo(mrId = mrId)
+    }
+
+    fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): List<GitCommit> {
+        return ScmOauthFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null,
+            event = null
+        ).getMrCommitList(mrId = mrId, page = page, size = size)
     }
 
     companion object {

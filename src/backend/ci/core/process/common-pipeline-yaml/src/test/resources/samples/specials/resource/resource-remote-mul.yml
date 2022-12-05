@@ -1,0 +1,12 @@
+# 测试多远程模板，且重复时resource的获取情况
+
+version: v2.0
+
+resources:
+  repositories:
+    - repository: specials
+      name: specials
+
+
+extends:
+  template: resource/remote-mul.yml@specials

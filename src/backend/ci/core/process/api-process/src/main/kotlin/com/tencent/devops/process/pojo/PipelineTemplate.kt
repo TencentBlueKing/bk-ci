@@ -47,7 +47,7 @@ data class PipelineTemplate(
     val author: String,
     @ApiModelProperty("插件数量", required = true)
     val atomNum: Int,
-    @ApiModelProperty("源模版ID", required = true)
+    @ApiModelProperty("当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = true)
     val srcTemplateId: String?,
     @ApiModelProperty("是否为公共模版", required = true)
     val publicFlag: Boolean,

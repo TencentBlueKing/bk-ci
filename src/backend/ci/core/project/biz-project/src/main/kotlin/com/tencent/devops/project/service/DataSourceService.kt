@@ -27,6 +27,8 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
 
@@ -42,7 +44,9 @@ interface DataSourceService {
 
     fun getDataBasePiecewiseById(
         projectId: String,
-        moduleCode: String,
-        clusterName: String
+        moduleCode: SystemModuleEnum,
+        clusterName: String,
+        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB,
+        tableName: String? = null
     ): DataBasePiecewiseInfo?
 }

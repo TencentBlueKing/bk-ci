@@ -36,14 +36,14 @@ import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
 import com.tencent.bkrepo.common.artifact.path.PathUtils.normalizeFullPath
 import com.tencent.bkrepo.common.service.util.SpringContextUtils.Companion.publishEvent
 import com.tencent.bkrepo.repository.dao.NodeDao
-import com.tencent.bkrepo.repository.listener.event.metadata.MetadataDeletedEvent
-import com.tencent.bkrepo.repository.listener.event.metadata.MetadataSavedEvent
 import com.tencent.bkrepo.repository.model.TMetadata
 import com.tencent.bkrepo.repository.model.TNode
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataDeleteRequest
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataSaveRequest
 import com.tencent.bkrepo.repository.service.metadata.MetadataService
 import com.tencent.bkrepo.repository.util.MetadataUtils
+import com.tencent.bkrepo.repository.util.NodeEventFactory.buildMetadataDeletedEvent
+import com.tencent.bkrepo.repository.util.NodeEventFactory.buildMetadataSavedEvent
 import com.tencent.bkrepo.repository.util.NodeQueryHelper
 import org.slf4j.LoggerFactory
 import org.springframework.data.mongodb.core.query.Query
@@ -79,7 +79,7 @@ class MetadataServiceImpl(
             metadata!!.forEach { (key, value) -> originalMetadata[key] = value }
             node.metadata = MetadataUtils.fromMap(originalMetadata)
             nodeDao.save(node)
-            publishEvent(MetadataSavedEvent(request))
+            publishEvent(buildMetadataSavedEvent(request))
             logger.info("Save metadata[$metadata] on node[/$projectId/$repoName$fullPath] success.")
         }
     }
@@ -98,7 +98,7 @@ class MetadataServiceImpl(
                 Query.query(where(TMetadata::key).inValues(keyList))
             )
             nodeDao.updateMulti(query, update)
-            publishEvent(MetadataDeletedEvent(this))
+            publishEvent(buildMetadataDeletedEvent(this))
             logger.info("Delete metadata[$keyList] on node[/$projectId/$repoName$fullPath] success.")
         }
     }

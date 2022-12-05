@@ -27,6 +27,8 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -47,7 +49,6 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VAR_DESC
 import com.tencent.devops.store.pojo.common.KEY_VAR_NAME
 import com.tencent.devops.store.pojo.common.KEY_VAR_VALUE
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.StoreEnvChangeLogInfo
 import com.tencent.devops.store.pojo.common.StoreEnvVarInfo
 import com.tencent.devops.store.pojo.common.StoreEnvVarRequest
@@ -84,6 +85,20 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
+        if (storeEnvVarDao.queryEnvironmentVariable(
+                dslContext = dslContext,
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                scope = storeEnvVarRequest.scope,
+                varName = storeEnvVarRequest.varName
+        ) != null) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                params = arrayOf(storeEnvVarRequest.varName),
+                data = false
+            )
+        }
         val lockKey = "$storeCode:$storeType:${storeEnvVarRequest.varName}"
         val lock = RedisLock(redisOperation, lockKey, 60)
         try {
@@ -102,8 +117,104 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                     storeEnvVarRequest = storeEnvVarRequest
                 )
             }
-        } catch (t: Throwable) {
-            logger.error("storeEnvVar create failed", t)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|addEnvVar|$storeEnvVarRequest|error=${ignored.message}", ignored)
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+        } finally {
+            lock.unlock()
+        }
+        return Result(true)
+    }
+
+    override fun update(userId: String, variableId: String, storeEnvVarRequest: StoreEnvVarRequest): Result<Boolean> {
+        logger.info("storeEnvVar update userId:$userId,storeEnvVarRequest:$storeEnvVarRequest")
+        val storeCode = storeEnvVarRequest.storeCode
+        val storeType = StoreTypeEnum.valueOf(storeEnvVarRequest.storeType).type.toByte()
+        if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
+        // 查询该环境变量在数据库中最大的版本的一行记录
+        val envVarOne = storeEnvVarDao.getNewEnvVar(
+            dslContext = dslContext,
+            storeType = storeType,
+            storeCode = storeCode,
+            variableId = variableId
+        )
+        val maxVersionData = StoreEnvVarInfo(
+            id = envVarOne?.get(KEY_ID) as String,
+            storeCode = envVarOne[KEY_STORE_CODE] as String,
+            storeType = StoreTypeEnum.getStoreType((envVarOne[KEY_STORE_TYPE] as Byte).toInt()),
+            varName = envVarOne[KEY_VAR_NAME] as String,
+            varValue = envVarOne[KEY_VAR_VALUE] as String,
+            varDesc = envVarOne[KEY_VAR_DESC] as? String,
+            encryptFlag = envVarOne[KEY_ENCRYPT_FLAG] as Boolean,
+            scope = envVarOne[KEY_SCOPE] as String,
+            version = envVarOne[KEY_VERSION] as Int,
+            creator = envVarOne[KEY_CREATOR] as String,
+            modifier = envVarOne[KEY_MODIFIER] as String,
+            createTime = DateTimeUtil.toDateTime(envVarOne[KEY_CREATE_TIME] as LocalDateTime),
+            updateTime = DateTimeUtil.toDateTime(envVarOne[KEY_UPDATE_TIME] as LocalDateTime)
+        )
+        if (storeEnvVarRequest.scope != maxVersionData.scope && storeEnvVarDao.queryEnvironmentVariable(
+                dslContext = dslContext,
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                scope = storeEnvVarRequest.scope,
+                varName = storeEnvVarRequest.varName
+            ) != null
+        ) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                params = arrayOf(storeEnvVarRequest.varName),
+                data = false
+            )
+        }
+        val lockKey = "$storeCode:$storeType:${storeEnvVarRequest.varName}"
+        val lock = RedisLock(redisOperation, lockKey, 60)
+        try {
+            if (lock.tryLock()) {
+                // 判断是否修改变量环境或变量名
+                if (storeEnvVarRequest.scope != maxVersionData.scope || storeEnvVarRequest.varName != maxVersionData.varName) {
+                    storeEnvVarDao.updateVariableEnvironment(
+                            dslContext = dslContext,
+                            userId = userId,
+                            storeType = storeType,
+                            storeCode = storeCode,
+                            pastScope = maxVersionData.scope,
+                            scope = storeEnvVarRequest.scope,
+                            pastName = maxVersionData.varName,
+                            varName = storeEnvVarRequest.varName
+                        )
+                }
+                // 如变量值变更，则添加新记录
+                if (storeEnvVarRequest.varValue != maxVersionData.varValue && storeEnvVarRequest.varValue != "******") {
+                    storeEnvVarDao.create(
+                        dslContext = dslContext,
+                        userId = userId,
+                        version = maxVersionData.version + 1,
+                        storeEnvVarRequest = storeEnvVarRequest
+                    )
+                } else {
+                    // 判断变量值是否需要进行加密或解密
+                    val value = if (storeEnvVarRequest.encryptFlag != maxVersionData.encryptFlag) {
+                        if (storeEnvVarRequest.encryptFlag)
+                            AESUtil.encrypt(aesKey, maxVersionData.varValue)
+                        else AESUtil.decrypt(aesKey, maxVersionData.varValue)
+                    } else maxVersionData.varValue
+                    storeEnvVarDao.updateVariable(
+                        dslContext = dslContext,
+                        storeType = storeType,
+                        storeCode = storeCode,
+                        variableId = maxVersionData.id,
+                        varValue = value,
+                        varDesc = storeEnvVarRequest.varDesc ?: "",
+                        encryptFlag = storeEnvVarRequest.encryptFlag
+                    )
+                }
+            }
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|updateEnvVar|$storeEnvVarRequest|error=${ignored.message}", ignored)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         } finally {
             lock.unlock()
@@ -115,6 +226,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
+        scope: String,
         varNames: String
     ): Result<Boolean> {
         logger.info("storeEnvVar delete userId:$userId,storeType:$storeType,storeCode:$storeCode,varNames:$varNames")
@@ -132,6 +244,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             dslContext = dslContext,
             storeType = storeTypeObj.type.toByte(),
             storeCode = storeCode,
+            scope = scope,
             varNameList = varNames.split(",")
         )
         return Result(true)
@@ -148,6 +261,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
     ): Result<List<StoreEnvVarInfo>?> {
         logger.info("storeEnvVar getLatestEnvVarList userId:$userId,storeType:$storeType,storeCode:$storeCode")
         val storeTypeObj = StoreTypeEnum.valueOf(storeType)
+        val scopeList = if (scopes.isNullOrEmpty()) listOf("ALL", "PRD", "TEST") else scopes.split(",")
         if (checkPermissionFlag && !storeMemberDao.isStoreMember(
                 dslContext = dslContext,
                 userId = userId,
@@ -161,7 +275,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             dslContext = dslContext,
             storeType = storeTypeObj.type.toByte(),
             storeCode = storeCode,
-            scopeList = scopes?.split(","),
+            scopeList = scopeList,
             varName = varName
         )
         return if (latestEnvVarRecords != null) {
@@ -201,10 +315,10 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
+        scope: String,
         varName: String
     ): Result<List<StoreEnvChangeLogInfo>?> {
-        logger.info("storeEnvVar getEnvVarChangeLogList userId:$userId,storeType:$storeType,storeCode:$storeCode")
-        logger.info("storeEnvVar getEnvVarChangeLogList varName:$varName")
+        logger.info("storeEnvVar getEnvVarChangeLogList params:[$userId|$storeType|$storeCode|$varName]")
         val storeTypeObj = StoreTypeEnum.valueOf(storeType)
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeTypeObj.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
@@ -213,6 +327,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             dslContext = dslContext,
             storeType = storeTypeObj.type.toByte(),
             storeCode = storeCode,
+            scope = scope,
             varName = varName
         )
         return if (storeEnvVarRecords != null && storeEnvVarRecords.size > 1) {

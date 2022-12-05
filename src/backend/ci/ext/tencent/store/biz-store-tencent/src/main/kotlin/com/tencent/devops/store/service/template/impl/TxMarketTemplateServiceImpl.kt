@@ -35,7 +35,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.template.TemplateVisibleDeptService
 import com.tencent.devops.store.service.template.TxMarketTemplateService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -47,30 +46,6 @@ class TxMarketTemplateServiceImpl : TxMarketTemplateService, MarketTemplateServi
 
     @Autowired
     private lateinit var templateVisibleDeptService: TemplateVisibleDeptService
-
-    private val logger = LoggerFactory.getLogger(TxMarketTemplateServiceImpl::class.java)
-
-    override fun generateTemplateVisibleData(
-        storeCodeList: List<String?>,
-        storeType: StoreTypeEnum
-    ): Result<HashMap<String, MutableList<Int>>?> {
-        logger.info("generateTemplateVisibleData storeCodeList is:$storeCodeList,storeType is:$storeType")
-        return Result(storeVisibleDeptService.batchGetVisibleDept(storeCodeList, storeType).data)
-    }
-
-    override fun generateInstallFlag(
-        defaultFlag: Boolean,
-        members: MutableList<String>?,
-        userId: String,
-        visibleList: MutableList<Int>?,
-        userDeptList: List<Int>
-    ): Boolean {
-        return if (defaultFlag || (members != null && members.contains(userId))) {
-            true
-        } else {
-            visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList).count() > 0)
-        }
-    }
 
     override fun validateTemplateVisibleDept(
         templateCode: String,

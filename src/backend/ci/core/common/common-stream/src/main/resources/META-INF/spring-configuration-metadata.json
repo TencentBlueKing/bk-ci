@@ -1,0 +1,17 @@
+{
+  "groups": [
+    {
+      "name": "spring.cloud.stream.pulsar",
+      "type": "com.tencent.devops.common.stream.pulsar.properties.PulsarExtendedBindingProperties",
+      "sourceType": "com.tencent.devops.common.stream.pulsar.properties.PulsarExtendedBindingProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "spring.cloud.stream.pulsar.bindings",
+      "type": "java.util.Map<java.lang.String,com.tencent.devops.common.stream.pulsar.properties.PulsarBindingProperties>",
+      "sourceType": "com.tencent.devops.common.stream.pulsar.properties.PulsarBindingProperties"
+    }
+  ],
+  "hints": []
+}

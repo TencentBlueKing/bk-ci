@@ -41,5 +41,7 @@ data class AtomFeatureRequest(
     @ApiModelProperty("yaml可用标识 true：是，false：否")
     val yamlFlag: Boolean? = null,
     @ApiModelProperty("质量红线可用标识 true：是，false：否")
-    val qualityFlag: Boolean? = null
+    val qualityFlag: Boolean? = null,
+    @ApiModelProperty("是否认证标识 true：是，false：否")
+    val certificationFlag: Boolean? = null
 )

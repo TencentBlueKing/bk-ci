@@ -38,7 +38,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/astaxie/beego/logs"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 )
 
 func Exists(file string) bool {
@@ -158,15 +158,16 @@ func Unzip(archive, target string) error {
 	if err != nil {
 		return err
 	}
+	defer func() { _ = reader.Close() }()
 
-	if err := os.MkdirAll(target, 0755); err != nil {
+	if err := os.MkdirAll(target, os.ModePerm); err != nil {
 		return err
 	}
 
 	for _, file := range reader.File {
 		path := filepath.Join(target, file.Name)
 		if file.FileInfo().IsDir() {
-			os.MkdirAll(path, file.Mode())
+			os.MkdirAll(path, os.ModePerm)
 			continue
 		}
 
@@ -184,9 +185,9 @@ func unzipFile(file *zip.File, path string) error {
 	if err != nil {
 		return err
 	}
-	defer func() {_ = fileReader.Close() } ()
+	defer func() { _ = fileReader.Close() }()
 
-	targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+	targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		return err
 	}

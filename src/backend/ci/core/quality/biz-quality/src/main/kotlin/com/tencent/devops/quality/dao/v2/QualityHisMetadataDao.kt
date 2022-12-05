@@ -37,38 +37,6 @@ import org.springframework.stereotype.Repository
 
 @Repository@Suppress("ALL")
 class QualityHisMetadataDao {
-
-    // todo can be removed
-    fun saveHisOriginMetadata(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        buildNo: String,
-        callbackStr: String
-    ) {
-        with(TQualityHisOriginMetadata.T_QUALITY_HIS_ORIGIN_METADATA) {
-            dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                PIPELINE_ID,
-                BUILD_ID,
-                BUILD_NO,
-                RESULT_DATA,
-                CREATE_TIME
-            )
-                .values(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    buildNo,
-                    callbackStr,
-                    System.currentTimeMillis()
-                )
-                .execute()
-        }
-    }
-
     fun batchSaveHisDetailMetadata(
         dslContext: DSLContext,
         projectId: String,
@@ -176,6 +144,14 @@ class QualityHisMetadataDao {
             dslContext.deleteFrom(this)
                 .where(CREATE_TIME.lt(time).or(CREATE_TIME.isNull))
                 .limit(pageSize)
+                .execute()
+        }
+    }
+
+    fun deleteHisMetaByBuildId(dslContext: DSLContext, buildId: String): Int {
+        return with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
                 .execute()
         }
     }

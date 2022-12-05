@@ -1,0 +1,7 @@
+scanner:
+  spring:
+    data:
+      mongodb:
+        uri: __BK_REPO_SCANNER_MONGODB_URI__
+        transaction:
+          enabled: false

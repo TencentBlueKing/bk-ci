@@ -99,6 +99,15 @@ class NodeQueryBuilder : AbstractQueryBuilder<NodeQueryBuilder>() {
     }
 
     /**
+     * 添加sha256字段规则
+     *
+     * [value]为值，[operation]为查询操作类型，默认为EQ查询
+     */
+    fun sha256(value: String, operation: OperationType = OperationType.EQ): NodeQueryBuilder {
+        return this.rule(true, SHA256_FILED, value, operation)
+    }
+
+    /**
      * 排除目录
      */
     fun excludeFolder(): NodeQueryBuilder {
@@ -118,5 +127,6 @@ class NodeQueryBuilder : AbstractQueryBuilder<NodeQueryBuilder>() {
         private const val PATH_FILED = "path"
         private const val FULL_PATH_FILED = "fullPath"
         private const val FOLDER_FILED = "folder"
+        private const val SHA256_FILED = "sha256"
     }
 }

@@ -3,7 +3,7 @@
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
                 <a :href="urlParse(webUrl + itemTargetUrl, { projectId })" target="_blank">
-                    <i class="bk-icon icon-plus-circle" />
+                    <i class="devops-icon icon-plus-circle" />
                     {{ itemText }}
                 </a>
             </div>
@@ -30,7 +30,7 @@
             },
             itemTargetUrl: {
                 type: String,
-                default: `/codelib/{projectId}/`
+                default: '/codelib/{projectId}/'
             },
             searchable: {
                 type: Boolean,
@@ -68,7 +68,7 @@
             return {
                 isLoading: false,
                 list: [],
-                webUrl: WEB_URL_PIRFIX
+                webUrl: WEB_URL_PREFIX
             }
         },
         computed: {
@@ -88,20 +88,15 @@
                 const type = this.list[index].type || ''
                 const groupId = this.list[index].groupHashId || ''
                 if (hashId) {
-                    const href = `${WEB_URL_PIRFIX}/codelib/${this.projectId}/${hashId}/${type}`
+                    const href = `${WEB_URL_PREFIX}/codelib/${this.projectId}/${hashId}/${type}`
                     window.open(href, '_blank')
                 } else if (groupId) {
-                    const groupHref = `${WEB_URL_PIRFIX}/experience/${this.projectId}/setting/?groupId=${groupId}`
+                    const groupHref = `${WEB_URL_PREFIX}/experience/${this.projectId}/setting/?groupId=${groupId}`
                     window.open(groupHref, '_blank')
                 }
             },
             toggleVisible (open) {
                 open && this.freshList()
-            },
-            urlParse (originUrl, query) {
-                /* eslint-disable */
-                return new Function('ctx', `return '${originUrl.replace(/\{(.*?)\}/g, '\'\+ ctx.$1 \+\'')}'`)(query)
-                /* eslint-enable */
             },
             async freshList () {
                 try {
@@ -131,7 +126,7 @@
                     } else {
                         // 多选selector时处理******,现在的处理方式是，把多选的数组遍历，看里面的每一项是否在list，若不在则加一项***
                         this.value = this.value.length ? this.value : []
-                        this.value.map(value => {
+                        this.value.forEach(value => {
                             if (value !== '' && this.list.filter(item => item.id === value).length === 0) {
                                 this.list.splice(0, 0, {
                                     id: value,

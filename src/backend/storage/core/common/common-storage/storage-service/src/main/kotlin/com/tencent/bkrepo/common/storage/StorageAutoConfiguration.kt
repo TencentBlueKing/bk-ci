@@ -31,6 +31,8 @@
 
 package com.tencent.bkrepo.common.storage
 
+import com.tencent.bkrepo.common.api.exception.SystemErrorException
+import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.bkrepo.common.storage.core.FileStorage
 import com.tencent.bkrepo.common.storage.core.StorageProperties
 import com.tencent.bkrepo.common.storage.core.StorageService
@@ -40,10 +42,11 @@ import com.tencent.bkrepo.common.storage.core.locator.HashFileLocator
 import com.tencent.bkrepo.common.storage.core.simple.SimpleStorageService
 import com.tencent.bkrepo.common.storage.credentials.StorageType
 import com.tencent.bkrepo.common.storage.filesystem.FileSystemStorage
-import com.tencent.bkrepo.common.storage.hdfs.HDFSStorage
 import com.tencent.bkrepo.common.storage.innercos.InnerCosFileStorage
 import com.tencent.bkrepo.common.storage.monitor.StorageHealthMonitor
+import com.tencent.bkrepo.common.storage.monitor.StorageHealthMonitorHelper
 import com.tencent.bkrepo.common.storage.s3.S3Storage
+import com.tencent.bkrepo.common.storage.util.PolarisUtil
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -51,6 +54,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 存储自动配置
@@ -68,7 +72,7 @@ class StorageAutoConfiguration {
         val fileStorage = when (properties.type) {
             StorageType.FILESYSTEM -> FileSystemStorage()
             StorageType.INNERCOS -> InnerCosFileStorage()
-            StorageType.HDFS -> HDFSStorage()
+            StorageType.HDFS -> throw SystemErrorException(CommonMessageCode.SYSTEM_ERROR)
             StorageType.S3 -> S3Storage(executor)
             else -> FileSystemStorage()
         }
@@ -88,13 +92,23 @@ class StorageAutoConfiguration {
     }
 
     @Bean
-    fun storageHealthMonitor(storageProperties: StorageProperties): StorageHealthMonitor {
-        return StorageHealthMonitor(storageProperties)
+    fun storageHealthMonitorHelper(storageProperties: StorageProperties): StorageHealthMonitorHelper {
+        val map = ConcurrentHashMap<String, StorageHealthMonitor>()
+        val location = storageProperties
+            .defaultStorageCredentials().upload.location
+        map[location] = StorageHealthMonitor(
+            storageProperties,
+            location
+        )
+        return StorageHealthMonitorHelper(map)
     }
 
     @Bean
     @ConditionalOnMissingBean(FileLocator::class)
     fun fileLocator() = HashFileLocator()
+
+    @Bean
+    fun polarisUtil(storageProperties: StorageProperties) = PolarisUtil(storageProperties)
 
     companion object {
         private val logger = LoggerFactory.getLogger(StorageAutoConfiguration::class.java)

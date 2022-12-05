@@ -147,6 +147,15 @@ class ExtServiceFeatureDao {
         }
     }
 
+    fun deleteExtFeatureServiceData(
+        dslContext: DSLContext,
+        serviceCode: String
+    ) {
+        with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE) {
+            dslContext.deleteFrom(this).where(SERVICE_CODE.eq(serviceCode)).execute()
+        }
+    }
+
     fun getServiceByCode(dslContext: DSLContext, serviceCode: String): TExtensionServiceFeatureRecord? {
         return with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE) {
             dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode)).fetchOne()

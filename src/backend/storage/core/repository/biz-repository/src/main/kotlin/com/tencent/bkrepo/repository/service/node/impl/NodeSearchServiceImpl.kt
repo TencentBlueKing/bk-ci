@@ -32,13 +32,22 @@
 package com.tencent.bkrepo.repository.service.node.impl
 
 import com.tencent.bkrepo.common.api.pojo.Page
+import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.query.model.QueryModel
+import com.tencent.bkrepo.common.query.util.MongoEscapeUtils
+import com.tencent.bkrepo.common.security.http.core.HttpAuthProperties
 import com.tencent.bkrepo.repository.dao.NodeDao
 import com.tencent.bkrepo.repository.model.TNode
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
+import com.tencent.bkrepo.repository.pojo.repo.RepoListOption
+import com.tencent.bkrepo.repository.pojo.software.CountResult
+import com.tencent.bkrepo.repository.pojo.software.ProjectPackageOverview
 import com.tencent.bkrepo.repository.search.node.NodeQueryContext
 import com.tencent.bkrepo.repository.search.node.NodeQueryInterpreter
 import com.tencent.bkrepo.repository.service.node.NodeSearchService
+import com.tencent.bkrepo.repository.service.repo.RepositoryService
+import org.springframework.data.mongodb.core.aggregation.Aggregation
+import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -52,12 +61,76 @@ import java.util.Date
 @Service
 class NodeSearchServiceImpl(
     private val nodeDao: NodeDao,
-    private val nodeQueryInterpreter: NodeQueryInterpreter
+    private val nodeQueryInterpreter: NodeQueryInterpreter,
+    private val repositoryService: RepositoryService,
+    private val httpAuthProperties: HttpAuthProperties
 ) : NodeSearchService {
 
     override fun search(queryModel: QueryModel): Page<Map<String, Any?>> {
         val context = nodeQueryInterpreter.interpret(queryModel) as NodeQueryContext
         return doQuery(context)
+    }
+
+    override fun nodeOverview(
+        userId: String,
+        projectId: String,
+        name: String,
+        exRepo: String?
+    ): List<ProjectPackageOverview> {
+        val repos = if (httpAuthProperties.enabled) {
+            repositoryService.listPermissionRepo(
+                userId = userId,
+                projectId = projectId,
+                option = RepoListOption(
+                    type = RepositoryType.GENERIC.name
+                )
+            ).map { it.name }
+        } else {
+            repositoryService.listRepo(
+                projectId = projectId,
+                type = RepositoryType.GENERIC.name
+            ).map { it.name }
+        }
+        val genericRepos = if (exRepo != null && exRepo.isNotBlank()) {
+            repos.filter { it !in (exRepo.split(',')) }
+        } else repos
+
+        if (genericRepos.isEmpty()) return listOf()
+        val criteria = Criteria.where(TNode::repoName.name).`in`(genericRepos)
+        criteria.and(TNode::projectId.name).`is`(projectId)
+            .and(TNode::deleted.name).`is`(null)
+            .and(TNode::folder.name).`is`(false)
+
+        val escapedValue = MongoEscapeUtils.escapeRegexExceptWildcard(name)
+        val regexPattern = escapedValue.replace("*", ".*")
+        criteria.and(TNode::name.name).regex("^$regexPattern$", "i")
+        val aggregation = Aggregation.newAggregation(
+            TNode::class.java,
+            Aggregation.match(criteria),
+            Aggregation.group("\$${TNode::repoName.name}").count().`as`("count")
+        )
+        val result = nodeDao.aggregate(aggregation, CountResult::class.java).mappedResults
+        return transTree(projectId, result)
+    }
+
+    private fun transTree(projectId: String, list: List<CountResult>): List<ProjectPackageOverview> {
+        val projectSet = mutableSetOf<ProjectPackageOverview>()
+        projectSet.add(
+            ProjectPackageOverview(
+                projectId = projectId,
+                repos = mutableSetOf(),
+                sum = 0L
+            )
+        )
+        list.sortedByDescending { it.count }.map { pojo ->
+            val repoOverview = ProjectPackageOverview.RepoPackageOverview(
+                repoName = pojo.id,
+                packages = pojo.count
+            )
+            projectSet.first().repos.add(repoOverview)
+            projectSet.first().sum += pojo.count
+        }
+        return projectSet.toList()
     }
 
     private fun doQuery(context: NodeQueryContext): Page<Map<String, Any?>> {
@@ -71,6 +144,9 @@ class NodeSearchServiceImpl(
             }
             it[NodeInfo::lastModifiedDate.name]?.let { lastModifiedDate ->
                 it[TNode::lastModifiedDate.name] = convertDateTime(lastModifiedDate)
+            }
+            it[NodeInfo::deleted.name]?.let { deleted ->
+                it[TNode::deleted.name] = convertDateTime(deleted)
             }
             it[NodeInfo::metadata.name]?.let { metadata ->
                 it[NodeInfo::metadata.name] = convert(metadata as List<Map<String, Any>>)

@@ -44,6 +44,7 @@ data class Pool(
     val agentName: String? = null,
     val agentId: String? = null,
     val envName: String? = null,
+    val envProjectId: String? = null,
     val envId: String? = null,
     val os: VMBaseOS? = null,
     val workspace: String? = null,

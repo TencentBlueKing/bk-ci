@@ -170,21 +170,6 @@ BEGIN
     IF EXISTS(SELECT 1
               FROM information_schema.COLUMNS
               WHERE TABLE_SCHEMA = db
-                AND TABLE_NAME = 'T_DISPATCH_VM'
-                AND COLUMN_NAME = 'VM_ID') THEN
-        IF NOT EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                      WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_DISPATCH_VM'
-                        AND COLUMN_NAME = 'VM_ID'
-                        AND COLUMN_TYPE = 'bigint(20)') THEN
-            ALTER TABLE T_DISPATCH_VM MODIFY COLUMN VM_ID BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID';
-        END IF;
-    END IF;
-
-    IF EXISTS(SELECT 1
-              FROM information_schema.COLUMNS
-              WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_DISPATCH_PIPELINE_DOCKER_DEBUG'
                 AND COLUMN_NAME = 'ID') THEN
         IF NOT EXISTS(SELECT 1

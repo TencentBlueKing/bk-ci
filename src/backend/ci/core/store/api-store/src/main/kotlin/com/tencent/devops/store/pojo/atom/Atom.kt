@@ -98,6 +98,8 @@ data class Atom(
     val recommendFlag: Boolean?,
     @ApiModelProperty("yaml可用标识 true：是，false：否")
     val yamlFlag: Boolean?,
+    @ApiModelProperty("是否认证标识 true：是，false：否")
+    val certificationFlag: Boolean?,
     @ApiModelProperty("发布者")
     val publisher: String?,
     @ApiModelProperty("项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")

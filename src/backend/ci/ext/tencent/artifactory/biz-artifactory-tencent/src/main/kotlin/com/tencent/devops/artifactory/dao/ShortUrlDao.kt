@@ -64,4 +64,26 @@ class ShortUrlDao {
                 .fetchOne()
         }
     }
+
+    fun getFirst(dslContext: DSLContext): TShortUrlRecord? {
+        with(TShortUrl.T_SHORT_URL) {
+            return dslContext.selectFrom(this)
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun getByIdRange(dslContext: DSLContext, startId: Long, endId: Long): List<TShortUrlRecord> {
+        with(TShortUrl.T_SHORT_URL) {
+            return dslContext.selectFrom(this)
+                .where(ID.between(startId, endId))
+                .fetch()
+        }
+    }
+
+    fun delete(dslContext: DSLContext, idList: List<Long>): Int {
+        with(TShortUrl.T_SHORT_URL) {
+            return dslContext.deleteFrom(this).where(ID.`in`(idList)).execute()
+        }
+    }
 }

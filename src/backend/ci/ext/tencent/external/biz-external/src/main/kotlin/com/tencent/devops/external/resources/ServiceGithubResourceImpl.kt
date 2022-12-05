@@ -86,4 +86,12 @@ class ServiceGithubResourceImpl @Autowired constructor(
     override fun getFileContent(projectName: String, ref: String, filePath: String): Result<String> {
         return Result(githubService.getFileContent(projectName, ref, filePath))
     }
+
+    override fun listBranches(accessToken: String, projectName: String): Result<List<String>> {
+        return Result(githubService.listBranches(token = accessToken, projectName = projectName))
+    }
+
+    override fun listTags(accessToken: String, projectName: String): Result<List<String>> {
+        return Result(githubService.listTags(token = accessToken, projectName = projectName))
+    }
 }

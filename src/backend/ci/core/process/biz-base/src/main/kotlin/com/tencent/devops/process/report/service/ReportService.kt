@@ -72,6 +72,12 @@ class ReportService @Autowired constructor(
         reportType: ReportTypeEnum,
         reportEmail: ReportEmail? = null
     ) {
+        val taskInfo = reportDao.getAtomInfo(
+                dslContext = dslContext,
+                buildId = buildId,
+                taskId = taskId
+        )
+
         val indexFilePath = if (reportType == ReportTypeEnum.INTERNAL) {
             Paths.get(indexFile).normalize().toString()
         } else {
@@ -99,6 +105,8 @@ class ReportService @Autowired constructor(
                 indexFile = indexFilePath,
                 name = name,
                 type = reportType.name,
+                atomCode = taskInfo?.value1() ?: "",
+                taskName = taskInfo?.value2() ?: "",
                 id = client.get(ServiceAllocIdResource::class).generateSegmentId("REPORT").data
             )
 //        } else {
@@ -218,5 +226,25 @@ class ReportService @Autowired constructor(
         } else {
             Report(info.name, info.indexFile, info.type)
         }
+    }
+
+    fun listNoApiHost(userId: String, projectId: String, pipelineId: String, buildId: String): List<Report> {
+        val reportRecordList = reportDao.list(dslContext, projectId, pipelineId, buildId)
+
+        val reportList = mutableListOf<Report>()
+        reportRecordList.forEach {
+            if (it.type == ReportTypeEnum.INTERNAL.name) {
+                val indexFile = Paths.get(it.indexFile).normalize().toString()
+                val urlPrefix = getRootUrlNoApiHost(projectId, pipelineId, buildId, it.elementId)
+                reportList.add(Report(it.name, "$urlPrefix$indexFile", it.type))
+            } else {
+                reportList.add(Report(it.name, it.indexFile, it.type))
+            }
+        }
+        return reportList
+    }
+
+    private fun getRootUrlNoApiHost(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
+        return "/$projectId/report/$pipelineId/$buildId/$taskId/"
     }
 }

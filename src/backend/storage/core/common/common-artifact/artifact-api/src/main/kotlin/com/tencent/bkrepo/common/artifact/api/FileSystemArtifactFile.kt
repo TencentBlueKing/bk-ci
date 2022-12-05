@@ -40,7 +40,7 @@ import java.nio.file.Files
 /**
  * 用系统文件接口实现的ArtifactFile
  */
-class FileSystemArtifactFile(private val file: File) : ArtifactFile {
+class FileSystemArtifactFile(private val file: File, private val isInLocalDisk: Boolean = false) : ArtifactFile {
 
     private var md5: String? = null
     private var sha1: String? = null
@@ -57,6 +57,8 @@ class FileSystemArtifactFile(private val file: File) : ArtifactFile {
     override fun flushToFile() = file
 
     override fun isFallback() = false
+
+    override fun isInLocalDisk() = isInLocalDisk
 
     override fun getFileMd5(): String {
         return md5 ?: run { file.md5().apply { md5 = this } }
@@ -79,6 +81,6 @@ class FileSystemArtifactFile(private val file: File) : ArtifactFile {
     }
 }
 
-fun File.toArtifactFile(): ArtifactFile {
-    return FileSystemArtifactFile(this)
+fun File.toArtifactFile(isInLocalDisk: Boolean = false): ArtifactFile {
+    return FileSystemArtifactFile(this, isInLocalDisk)
 }

@@ -64,7 +64,7 @@ object CommonUtils {
         return hostIp!!
     }
 
-    fun getInnerIP(localIp: String? = ""): String {
+    private fun getInnerIP(localIp: String? = ""): String {
         if (localIp != null && localIp.isNotBlank()) {
             return localIp
         }

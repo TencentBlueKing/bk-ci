@@ -1,9 +1,0 @@
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-auth-api")
-    compile "org.springframework.boot:spring-boot-starter-amqp"
-    compile "org.springframework.boot:spring-boot-starter-aop"
-    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
-    compile "org.apache.xmlrpc:xmlrpc-client"
-}

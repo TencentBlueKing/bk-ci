@@ -173,7 +173,10 @@
                     try {
                         const res = await this.$store.dispatch('experience/requestPipelineList', {
                             projectId: this.projectId,
-                            params: { pageSize: -1 }
+                            params: {
+                                page: 1,
+                                pageSize: 1000
+                            }
                         })
 
                         this.pipelineList.splice(0, this.pipelineList.length, ...res.records)

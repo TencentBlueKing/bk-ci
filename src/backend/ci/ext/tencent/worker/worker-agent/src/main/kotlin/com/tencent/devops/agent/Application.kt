@@ -74,20 +74,16 @@ fun main(args: Array<String>) {
                     variables: Map<String, String>,
                     pipelineId: String
                 ): Pair<File, File> {
-                    val workspace = System.getProperty("devops_workspace")
-
-                    val workspaceDir = if (workspace.isNullOrBlank()) {
-                        File("/data/landun/workspace") // v1 内部版用的/data/landun/workspace 保持一致
-                    } else {
-                        File(workspace)
-                    }
-                    workspaceDir.mkdirs()
-
+                    val workspaceDir = WorkspaceUtils.getWorkspaceDir(
+                        buildType = BuildType.DOCKER,
+                        workspace = "/data/landun/workspace"
+                    )
                     val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     return Pair(workspaceDir, logPathDir)
                 }
             })
         }
+
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspaceAndLogDir(
@@ -107,6 +103,7 @@ fun main(args: Array<String>) {
                 }
             })
         }
+
         BuildType.MACOS.name -> {
             var startBuild = false
             val gateyway = AgentEnv.getGateway()
@@ -181,7 +178,7 @@ fun main(args: Array<String>) {
                     variables: Map<String, String>,
                     pipelineId: String
                 ): Pair<File, File> {
-                    val workspace = AgentEnv.getMacOSWorkspace()
+                    val workspace = MacAgentEnv.getMacOSWorkspace()
                     println("MacOS workspace: $workspace")
                     val workspaceDir = File(workspace)
                     workspaceDir.mkdirs()
@@ -191,9 +188,11 @@ fun main(args: Array<String>) {
                 }
             })
         }
+
         BuildType.AGENT.name -> {
             WorkRunner.execute(args)
         }
+
         else -> {
             if (buildType.isNullOrBlank()) {
                 throw RuntimeException("The build type is empty")

@@ -142,6 +142,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @Timed
     override fun create(
         userId: String,
         projectId: String,
@@ -425,17 +426,6 @@ class UserPipelineResourceImpl @Autowired constructor(
                 actionContent = "删除版本/Delete Ver.$version",
                 projectId = projectId
             )
-        )
-        return Result(true)
-    }
-
-    override fun trueDelete(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
-        checkParam(userId, projectId)
-        pipelineInfoFacadeService.deletePipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            delete = true
         )
         return Result(true)
     }

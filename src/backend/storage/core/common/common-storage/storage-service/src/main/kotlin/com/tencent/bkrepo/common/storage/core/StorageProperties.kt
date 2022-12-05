@@ -31,6 +31,8 @@
 
 package com.tencent.bkrepo.common.storage.core
 
+import com.tencent.bkrepo.common.storage.core.config.ReceiveProperties
+import com.tencent.bkrepo.common.storage.core.config.ResponseProperties
 import com.tencent.bkrepo.common.storage.credentials.FileSystemCredentials
 import com.tencent.bkrepo.common.storage.credentials.HDFSCredentials
 import com.tencent.bkrepo.common.storage.credentials.InnerCosCredentials
@@ -40,7 +42,6 @@ import com.tencent.bkrepo.common.storage.credentials.StorageType
 import com.tencent.bkrepo.common.storage.monitor.MonitorProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.NestedConfigurationProperty
-import org.springframework.util.unit.DataSize
 
 /**
  * 存储属性配置
@@ -48,29 +49,16 @@ import org.springframework.util.unit.DataSize
 @ConfigurationProperties("storage")
 data class StorageProperties(
     /**
-     * 最大文件大小
+     * 数据接收配置
      */
-    var maxFileSize: DataSize = DataSize.ofBytes(-1),
+    @NestedConfigurationProperty
+    var receive: ReceiveProperties = ReceiveProperties(),
 
     /**
-     * 最大请求大小
+     * 数据响应配置
      */
-    var maxRequestSize: DataSize = DataSize.ofBytes(-1),
-
-    /**
-     * 文件内存阈值
-     */
-    var fileSizeThreshold: DataSize = DataSize.ofBytes(-1),
-
-    /**
-     * 延迟解析文件
-     */
-    var isResolveLazily: Boolean = true,
-
-    /**
-     * 文件接收限速
-     */
-    var rateLimit: DataSize = DataSize.ofBytes(-1),
+    @NestedConfigurationProperty
+    var response: ResponseProperties = ResponseProperties(),
 
     /**
      * 存储类型
@@ -105,7 +93,13 @@ data class StorageProperties(
      * s3存储配置
      */
     @NestedConfigurationProperty
-    var s3: S3Credentials = S3Credentials()
+    var s3: S3Credentials = S3Credentials(),
+
+    /**
+     * polaris服务地址列表
+     */
+    var polarisAddresses: List<String> = emptyList()
+
 ) {
     fun defaultStorageCredentials(): StorageCredentials {
         return when (type) {

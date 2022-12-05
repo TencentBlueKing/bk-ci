@@ -13,6 +13,7 @@ import (
 	"bufio"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
@@ -112,6 +113,11 @@ func (cf *TaskCLFilter) PreExecute(command []string) (*dcSDK.BKDistCommand, erro
 	return cf.preExecute(command)
 }
 
+// NeedRemoteResource check whether this command need remote resource
+func (cf *TaskCLFilter) NeedRemoteResource(command []string) bool {
+	return true
+}
+
 // RemoteRetryTimes will return the remote retry times
 func (cf *TaskCLFilter) RemoteRetryTimes() int {
 	return 0
@@ -200,6 +206,7 @@ func (cf *TaskCLFilter) postExecute(r *dcSDK.BKDistResult) error {
 	}
 
 	r.Results[0].OutputMessage = []byte(output)
+	blog.Debugf("cf: after parse ouput [%s] for: %v", r.Results[0].OutputMessage, cf.originArgs)
 	return nil
 }
 
@@ -219,10 +226,22 @@ func (cf *TaskCLFilter) parseOutput(s string) (string, error) {
 		}
 
 		// Process the line here.
+		// Note: including file: Runtime\Core\Public\HAL/ThreadHeartBeat.h
+		// Note: including file:     C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.31.31103\INCLUDE\sal.h
 		columns := strings.Split(line, ":")
-		if len(columns) != 4 {
-			output = append(output, line)
-		} else {
+		if len(columns) == 3 {
+			includefile := strings.Trim(columns[2], " \r\n")
+			if !filepath.IsAbs(includefile) {
+				includefile, _ = filepath.Abs(filepath.Join(cf.sandbox.Dir, includefile))
+			}
+			existed, _, _, _ := dcFile.Stat(includefile).Batch()
+			if existed {
+				includes = append(includes, includefile)
+			} else {
+				blog.Infof("cf: includefile [%s] not existed", includefile)
+				output = append(output, line)
+			}
+		} else if len(columns) == 4 {
 			includefile := columns[2] + ":" + columns[3]
 			includefile = strings.Trim(includefile, " \r\n")
 			existed, _, _, _ := dcFile.Stat(includefile).Batch()
@@ -232,6 +251,8 @@ func (cf *TaskCLFilter) parseOutput(s string) (string, error) {
 				blog.Infof("cf: includefile [%s] not existed", includefile)
 				output = append(output, line)
 			}
+		} else {
+			output = append(output, line)
 		}
 
 		if err != nil {

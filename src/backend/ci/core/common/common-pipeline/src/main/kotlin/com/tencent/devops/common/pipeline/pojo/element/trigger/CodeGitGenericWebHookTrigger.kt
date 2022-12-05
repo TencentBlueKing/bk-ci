@@ -51,6 +51,7 @@ data class CodeGitGenericWebHookTriggerElement(
 }
 
 data class CodeGitGenericWebHookTriggerData(
+    @ApiModelProperty("Git通用事件触发数据", required = true)
     val input: CodeGitGenericWebHookTriggerInput
 )
 
@@ -73,28 +74,28 @@ data class CodeGitGenericWebHookTriggerInput(
     val eventType: String = CodeEventType.PUSH.name,
     @ApiModelProperty("hook地址,目前只对codecc开放", required = false)
     var hookUrl: String? = null,
-    @ApiModelProperty("branch", required = false)
+    @ApiModelProperty("分支", required = false)
     val branchName: String?,
-    @ApiModelProperty("excludeBranch", required = false)
+    @ApiModelProperty("用于排除的分支名", required = false)
     val excludeBranchName: String?,
-    @ApiModelProperty("includePaths", required = false)
+    @ApiModelProperty("用于包含的路径", required = false)
     val includePaths: String?,
     @ApiModelProperty("相对路径", required = true)
     val relativePath: String?,
-    @ApiModelProperty("excludePaths", required = false)
+    @ApiModelProperty("用于排除的路径", required = false)
     val excludePaths: String?,
-    @ApiModelProperty("excludeUsers", required = false)
+    @ApiModelProperty("用于排除的user id", required = false)
     val excludeUsers: List<String>?,
     @ApiModelProperty("用户白名单", required = false)
     val includeUsers: List<String>?,
-    @ApiModelProperty("block", required = false)
+    @ApiModelProperty("是否为block", required = false)
     val block: Boolean?,
-    @ApiModelProperty("tagName", required = false)
+    @ApiModelProperty("tag名称", required = false)
     val tagName: String? = null,
-    @ApiModelProperty("excludeTagName", required = false)
+    @ApiModelProperty("用于排除的tag名称", required = false)
     val excludeTagName: String? = null,
-    @ApiModelProperty("excludeSourceBranchName", required = false)
+    @ApiModelProperty("用于排除的源分支名称", required = false)
     val excludeSourceBranchName: String? = null,
-    @ApiModelProperty("includeSourceBranchName", required = false)
+    @ApiModelProperty("用于包含的源分支名称", required = false)
     val includeSourceBranchName: String? = null
 )

@@ -20,6 +20,7 @@ import (
 	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
 	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler/ue4/astc"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler/ue4/cc"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler/ue4/cl"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler/ue4/clfilter"
@@ -41,6 +42,8 @@ const (
 	defaultLibCompiler                = "lib.exe"
 	defaultLinkCompiler               = "link.exe"
 	defaultCLFilterCompiler           = "cl-filter.exe"
+	defaultAstcsse2Compiler           = "astcenc-sse2.exe"
+	defaultAstcCompiler               = "astcenc.exe"
 
 	hookConfigPathDefault  = "bk_default_rules.json"
 	hookConfigPathCCCommon = "bk_cl_rules.json"
@@ -210,6 +213,10 @@ func (u *UE4) initInnerHandle(command []string) {
 			strings.HasSuffix(command[0], defaultClangPlusPlusLinuxCompiler) {
 			u.innerhandler = cc.NewTaskCC()
 			blog.Debugf("ue4: innerhandle with cc for command[%s]", command[0])
+		} else if strings.HasSuffix(command[0], defaultAstcsse2Compiler) ||
+			strings.HasSuffix(command[0], defaultAstcCompiler) {
+			u.innerhandler = astc.NewTextureCompressor()
+			blog.Debugf("ue4: innerhandle with clfilter for command[%s]", command[0])
 		} else {
 			if env.GetEnv(env.KeyExecutorSupportLink) == "true" {
 				if strings.HasSuffix(command[0], defaultLibCompiler) {
@@ -222,6 +229,21 @@ func (u *UE4) initInnerHandle(command []string) {
 			}
 		}
 	}
+}
+
+// NeedRemoteResource check whether this command need remote resource
+func (u *UE4) NeedRemoteResource(command []string) bool {
+	if u.innerhandler != nil {
+		return u.innerhandler.NeedRemoteResource(command)
+	}
+
+	u.initInnerHandle(command)
+
+	if u.innerhandler != nil {
+		return u.innerhandler.NeedRemoteResource(command)
+	}
+
+	return false
 }
 
 // RemoteRetryTimes will return the remote retry times

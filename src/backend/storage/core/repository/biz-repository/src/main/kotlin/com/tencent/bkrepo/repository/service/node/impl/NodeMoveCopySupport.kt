@@ -43,16 +43,17 @@ import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.service.util.SpringContextUtils.Companion.publishEvent
 import com.tencent.bkrepo.common.storage.core.StorageService
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
+import com.tencent.bkrepo.repository.constant.DEFAULT_STORAGE_CREDENTIALS_KEY
 import com.tencent.bkrepo.repository.dao.NodeDao
 import com.tencent.bkrepo.repository.dao.RepositoryDao
-import com.tencent.bkrepo.repository.listener.event.node.NodeCopiedEvent
-import com.tencent.bkrepo.repository.listener.event.node.NodeMovedEvent
 import com.tencent.bkrepo.repository.model.TNode
 import com.tencent.bkrepo.repository.model.TRepository
 import com.tencent.bkrepo.repository.pojo.node.NodeListOption
 import com.tencent.bkrepo.repository.pojo.node.service.NodeMoveCopyRequest
 import com.tencent.bkrepo.repository.service.node.NodeMoveCopyOperation
+import com.tencent.bkrepo.repository.service.repo.QuotaService
 import com.tencent.bkrepo.repository.service.repo.StorageCredentialService
+import com.tencent.bkrepo.repository.util.NodeEventFactory
 import com.tencent.bkrepo.repository.util.NodeQueryHelper
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -68,17 +69,18 @@ open class NodeMoveCopySupport(
     private val nodeDao: NodeDao = nodeBaseService.nodeDao
     private val repositoryDao: RepositoryDao = nodeBaseService.repositoryDao
     private val storageCredentialService: StorageCredentialService = nodeBaseService.storageCredentialService
+    private val quotaService: QuotaService = nodeBaseService.quotaService
 
     override fun moveNode(moveRequest: NodeMoveCopyRequest) {
         moveCopy(moveRequest, true)
-        publishEvent(NodeMovedEvent(moveRequest))
-        logger.info("Move node success: [$this]")
+        publishEvent(NodeEventFactory.buildMovedEvent(moveRequest))
+        logger.info("Move node success: [$moveRequest]")
     }
 
     override fun copyNode(copyRequest: NodeMoveCopyRequest) {
         moveCopy(copyRequest, false)
-        publishEvent(NodeCopiedEvent(copyRequest))
-        logger.info("Copy node success: [$this]")
+        publishEvent(NodeEventFactory.buildCopiedEvent(copyRequest))
+        logger.info("Copy node success: [$copyRequest]")
     }
 
     /**
@@ -115,6 +117,64 @@ open class NodeMoveCopySupport(
             if (node.folder && existNode?.folder == true) return
             checkConflict(context, node, existNode)
             // copy目标节点
+            val dstNode = buildDstNode(this, node, dstPath, dstName, dstFullPath)
+            // 仓库配额检查
+            checkQuota(context, node, existNode)
+
+            // 文件 & 跨存储node
+            if (!node.folder && srcCredentials != dstCredentials) {
+                if (storageService.exist(node.sha256!!, srcCredentials)) {
+                    storageService.copy(node.sha256!!, srcCredentials, dstCredentials)
+                } else {
+                    // 默认存储为null,所以需要使用一个默认key，以区分该节点是拷贝节点
+                    dstNode.copyFromCredentialsKey = srcCredentials?.key ?: DEFAULT_STORAGE_CREDENTIALS_KEY
+                    dstNode.copyIntoCredentialsKey = dstCredentials?.key ?: DEFAULT_STORAGE_CREDENTIALS_KEY
+                }
+            }
+            // 创建dst节点
+            nodeBaseService.doCreate(dstNode, dstRepo)
+            // move操作，创建dst节点后，还需要删除src节点
+            // 因为分表所以不能直接更新src节点，必须创建新的并删除旧的
+            if (move) {
+                val query = NodeQueryHelper.nodeQuery(node.projectId, node.repoName, node.fullPath)
+                val update = NodeQueryHelper.nodeDeleteUpdate(operator)
+                if (!node.folder) {
+                    quotaService.decreaseUsedVolume(node.projectId, node.repoName, node.size)
+                }
+                nodeDao.updateFirst(query, update)
+            }
+        }
+    }
+
+    private fun checkQuota(context: MoveCopyContext, node: TNode, existNode: TNode?) {
+        // 目录不占仓库容量，不需要检查
+        if (node.folder) return
+
+        with(context) {
+            // 文件 -> 文件，目标文件不存在
+            if (existNode == null) {
+                // 同仓库的移动操作不需要检查仓库已使用容量
+                if (!(isSameRepo() && move)) {
+                    quotaService.checkRepoQuota(dstProjectId, dstRepoName, node.size)
+                }
+            }
+
+            // 文件 -> 文件 & 允许覆盖: 删除old
+            if (existNode?.folder == false && overwrite) {
+                quotaService.checkRepoQuota(existNode.projectId, existNode.repoName, node.size - existNode.size)
+                nodeBaseService.deleteByPath(existNode.projectId, existNode.repoName, existNode.fullPath, operator)
+            }
+        }
+    }
+
+    private fun buildDstNode(
+        context: MoveCopyContext,
+        node: TNode,
+        dstPath: String,
+        dstName: String,
+        dstFullPath: String
+    ): TNode {
+        with(context) {
             val dstNode = node.copy(
                 id = null,
                 projectId = dstProjectId,
@@ -130,25 +190,8 @@ open class NodeMoveCopySupport(
                 dstNode.createdBy = operator
                 dstNode.createdDate = LocalDateTime.now()
             }
-            // 文件 -> 文件 & 允许覆盖: 删除old
-            if (!node.folder && existNode?.folder == false && overwrite) {
-                val query = NodeQueryHelper.nodeQuery(existNode.projectId, existNode.repoName, existNode.fullPath)
-                val update = NodeQueryHelper.nodeDeleteUpdate(operator)
-                nodeDao.updateFirst(query, update)
-            }
-            // 文件 & 跨存储node
-            if (!node.folder && srcCredentials != dstCredentials) {
-                storageService.copy(node.sha256!!, srcCredentials, dstCredentials)
-            }
-            // 创建dst节点
-            nodeBaseService.doCreate(dstNode, dstRepo)
-            // move操作，创建dst节点后，还需要删除src节点
-            // 因为分表所以不能直接更新src节点，必须创建新的并删除旧的
-            if (move) {
-                val query = NodeQueryHelper.nodeQuery(node.projectId, node.repoName, node.fullPath)
-                val update = NodeQueryHelper.nodeDeleteUpdate(operator)
-                nodeDao.updateFirst(query, update)
-            }
+
+            return dstNode
         }
     }
 
@@ -259,7 +302,7 @@ open class NodeMoveCopySupport(
                 PathUtils.combinePath(path, name)
             }
             val srcRootNodePath = toPath(srcNode.fullPath)
-            val listOption = NodeListOption(includeFolder = true, includeMetadata = false, deep = true, sort = false)
+            val listOption = NodeListOption(includeFolder = true, includeMetadata = true, deep = true, sort = false)
             val query = NodeQueryHelper.nodeListQuery(srcNode.projectId, srcNode.repoName, srcRootNodePath, listOption)
             // 目录下的节点 -> 创建好的目录
             nodeDao.find(query).forEach {

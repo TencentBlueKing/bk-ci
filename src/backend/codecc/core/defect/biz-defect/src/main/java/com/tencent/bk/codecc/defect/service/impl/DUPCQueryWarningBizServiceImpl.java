@@ -28,7 +28,6 @@ package com.tencent.bk.codecc.defect.service.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.defect.dao.mongorepository.BuildDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.DUPCDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.DUPCDefectDao;
@@ -54,16 +53,18 @@ import com.tencent.bk.codecc.defect.vo.common.QueryWarningPageInitRspVO;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.util.PathUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -206,9 +207,14 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{"重复率的缺陷实体"}, null);
         }
 
+        //获取任务信息
+        Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        TaskDetailVO taskDetailVO = taskInfoResult.getData();
+
         // 1. 根据文件路径从分析集群获取文件内容
-        String content = getFileContent(taskId, null, userId, dupcDefectEntity.getUrl(), dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
-            dupcDefectEntity.getRevision(), dupcDefectEntity.getBranch(), dupcDefectEntity.getSubModule());
+        String content = getFileContent(taskId, taskDetailVO == null ? null : taskDetailVO.getProjectId(), userId,
+                dupcDefectEntity.getUrl(), dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
+                dupcDefectEntity.getRevision(), dupcDefectEntity.getBranch(), dupcDefectEntity.getSubModule());
 
         // 2. 根据告警的开始行和结束行截取文件片段
         CommonDefectDetailQueryRspVO dupcDefectQueryRspVO = new CommonDefectDetailQueryRspVO();
@@ -275,7 +281,7 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     private CommonDefectDetailQueryRspVO getSourceCodeBlockDetail(long taskId, String userId, CommonDefectDetailQueryReqVO defectQueryReqVO, DUPCDefectDetailQueryRspVO dupcDefectQueryRspVO)
     {
         //查询告警信息
-        DUPCDefectEntity dupcDefectEntity = dupcDefectRepository.findByEntityId(defectQueryReqVO.getEntityId());
+        DUPCDefectEntity dupcDefectEntity = dupcDefectRepository.findFirstByEntityId(defectQueryReqVO.getEntityId());
 
         if (dupcDefectEntity == null)
         {
@@ -286,13 +292,16 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
 
         // 校验传入的路径是否合法（路径是否是告警对应的文件）
         verifyFilePathIsValid(defectQueryReqVO.getFilePath(), dupcDefectEntity.getFilePath());
-
+        //获取任务信息
+        Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        TaskDetailVO taskDetailVO = taskInfoResult.getData();
         //根据文件路径从分析集群获取文件内容
         String content = "";
         if (StringUtils.isNotBlank(dupcDefectEntity.getRelPath()))
         {
-            content = getFileContent(taskId, null, userId, dupcDefectEntity.getUrl(), dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
-                dupcDefectEntity.getRevision(), dupcDefectEntity.getBranch(), dupcDefectEntity.getSubModule());
+            content = getFileContent(taskId, taskDetailVO == null ? null : taskDetailVO.getProjectId(), userId,
+                    dupcDefectEntity.getUrl(), dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
+                    dupcDefectEntity.getRevision(), dupcDefectEntity.getBranch(), dupcDefectEntity.getSubModule());
         }
 
         List<CodeBlockEntity> blockEntityList = dupcDefectEntity.getBlockList();
@@ -655,9 +664,9 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
      */
     private Query getPremiumQuery(long taskId, String author)
     {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("blockList", false);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
         query.addCriteria(Criteria.where("task_id").is(taskId).and("status").is(ComConstants.DefectStatus.NEW.value()));
 
         //作者过滤

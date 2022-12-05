@@ -125,6 +125,7 @@
                 if (pipelineId) {
                     try {
                         const changeUrl = this.urlParse(url, {
+                            bkPoolType: this?.container?.dispatchType?.buildType,
                             pipelineId,
                             projectId
                         })
@@ -173,7 +174,7 @@
         }
         .param-item-empty {
             text-align: center;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
         }
     }
 </style>

@@ -26,7 +26,7 @@ import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.RedisKeyConstants
 import com.tencent.devops.common.util.MD5Utils
 import org.slf4j.LoggerFactory
-import org.springframework.beans.BeanUtils
+import com.tencent.devops.common.util.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -74,7 +74,7 @@ class GrayTaskRegisterServiceImpl @Autowired constructor(
         // 手动添加cloc工具
         val originalToolName = taskDetailVO.toolNames
         // 1. 创建流水线
-        val gongfengPublicProjEntity = gongfengPublicProjRepository.findById(taskDetailVO.gongfengProjectId)
+        val gongfengPublicProjEntity = gongfengPublicProjRepository.findFirstById(taskDetailVO.gongfengProjectId)
         val batchRegisterVO = BatchRegisterVO()
         batchRegisterVO.repositoryUrl = gongfengPublicProjEntity.httpUrlToRepo
         batchRegisterVO.scmType = "GIT_URL_TYPE"
@@ -175,7 +175,7 @@ class GrayTaskRegisterServiceImpl @Autowired constructor(
         taskInfoEntity.projectBuildCommand = taskDetailVO.projectBuildCommand
 
         // 生成任务id
-        val taskId = redisTemplate.opsForValue().increment(RedisKeyConstants.CODECC_TASK_ID, 1L)
+        val taskId = redisTemplate.opsForValue().increment(RedisKeyConstants.CODECC_TASK_ID, 1L) ?: 0L
         taskInfoEntity.taskId = taskId
         taskDetailVO.taskId = taskId
 
@@ -237,7 +237,7 @@ class GrayTaskRegisterServiceImpl @Autowired constructor(
         }
         val codeccBuildId = buildIdRelationshipEntity.codeccBuildId
         // 2. 查询任务详情
-        val taskInfoEntity = taskRepository.findByTaskId(taskId)
+        val taskInfoEntity = taskRepository.findFirstByTaskId(taskId)
         if (null == taskInfoEntity || taskInfoEntity.taskId == 0L) {
             logger.info("task info is null")
             return

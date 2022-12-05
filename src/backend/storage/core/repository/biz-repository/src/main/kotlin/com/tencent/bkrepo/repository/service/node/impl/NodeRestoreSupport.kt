@@ -54,7 +54,9 @@ import com.tencent.bkrepo.repository.util.NodeQueryHelper.nodeQuery
 import com.tencent.bkrepo.repository.util.NodeQueryHelper.nodeRestoreUpdate
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DuplicateKeyException
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 /**
  * 节点统计接口实现
@@ -199,7 +201,7 @@ open class NodeRestoreSupport(
             projectId = artifact.projectId,
             repoName = artifact.repoName,
             rootFullPath = artifact.getArtifactFullPath(),
-            deletedTime = option.deletedTime,
+            deletedTime = Instant.ofEpochMilli(option.deletedId).atZone(ZoneId.systemDefault()).toLocalDateTime(),
             conflictStrategy = option.conflictStrategy,
             operator = SecurityUtils.getUserId()
         )
@@ -208,6 +210,7 @@ open class NodeRestoreSupport(
     private fun convert(node: TNode): NodeDeletedPoint {
         return node.let {
             NodeDeletedPoint(
+                id = it.deleted!!.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
                 fullPath = it.fullPath,
                 size = it.size,
                 sha256 = it.sha256,

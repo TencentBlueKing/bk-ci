@@ -31,8 +31,6 @@
 
 package com.tencent.bkrepo.auth.api
 
-import com.tencent.bkrepo.auth.constant.AUTH_API_PERMISSION_PREFIX
-import com.tencent.bkrepo.auth.constant.AUTH_PERMISSION_PREFIX
 import com.tencent.bkrepo.auth.constant.AUTH_SERVICE_PERMISSION_PREFIX
 import com.tencent.bkrepo.common.api.constant.AUTH_SERVICE_NAME
 import com.tencent.bkrepo.common.api.pojo.Response
@@ -48,7 +46,7 @@ import org.springframework.web.bind.annotation.RequestParam
 @Api(tags = ["SERVICE_PERMISSION"], description = "服务-权限接口")
 @Primary
 @FeignClient(AUTH_SERVICE_NAME, contextId = "ServicePipelineResource")
-@RequestMapping(AUTH_PERMISSION_PREFIX, AUTH_API_PERMISSION_PREFIX, AUTH_SERVICE_PERMISSION_PREFIX)
+@RequestMapping(AUTH_SERVICE_PERMISSION_PREFIX)
 interface ServicePipelineResource {
 
     @ApiOperation("获取有权限的流水线")

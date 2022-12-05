@@ -34,6 +34,7 @@ package com.tencent.bkrepo.repository.search.packages
 import com.tencent.bkrepo.common.query.builder.MongoQueryInterpreter
 import com.tencent.bkrepo.common.query.interceptor.QueryContext
 import com.tencent.bkrepo.common.query.model.QueryModel
+import com.tencent.bkrepo.repository.search.common.LocalDatetimeRuleInterceptor
 import com.tencent.bkrepo.repository.search.common.MetadataRuleInterceptor
 import com.tencent.bkrepo.repository.search.common.ModelValidateInterceptor
 import com.tencent.bkrepo.repository.search.common.RepoNameRuleInterceptor
@@ -46,7 +47,8 @@ import javax.annotation.PostConstruct
 @Component
 class PackageSearchInterpreter(
     private val repoNameRuleInterceptor: RepoNameRuleInterceptor,
-    private val repoTypeRuleInterceptor: RepoTypeRuleInterceptor
+    private val repoTypeRuleInterceptor: RepoTypeRuleInterceptor,
+    private val localDatetimeRuleInterceptor: LocalDatetimeRuleInterceptor
 ) : MongoQueryInterpreter() {
 
     @PostConstruct
@@ -56,6 +58,7 @@ class PackageSearchInterpreter(
         addRuleInterceptor(repoTypeRuleInterceptor)
         addRuleInterceptor(repoNameRuleInterceptor)
         addRuleInterceptor(MetadataRuleInterceptor())
+        addRuleInterceptor(localDatetimeRuleInterceptor)
     }
 
     override fun initContext(queryModel: QueryModel, mongoQuery: Query): QueryContext {

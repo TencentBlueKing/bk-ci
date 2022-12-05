@@ -29,9 +29,9 @@ package com.tencent.devops.support.mta
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.apache.commons.codec.digest.DigestUtils
+import org.junit.jupiter.api.Disabled
 import java.util.HashMap
 import java.util.concurrent.TimeUnit
 import java.security.NoSuchAlgorithmException
@@ -39,7 +39,7 @@ import java.security.MessageDigest
 
 class MtaTest {
 
-    @Ignore
+    @Disabled
     @Test
     fun test() {
         val parameters = mutableListOf<Pair<String, String>>()
@@ -83,7 +83,7 @@ class MtaTest {
         }
     }
 
-    @Ignore
+    @Disabled
     @Test
     fun test2() {
         var parameters = mutableListOf<Pair<String, String>>()

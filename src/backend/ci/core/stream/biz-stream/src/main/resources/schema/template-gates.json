@@ -1,0 +1,128 @@
+{
+  "additionalProperties" : false,
+  "required" : [ "gates" ],
+  "properties" : {
+    "parameters" : {
+      "type" : "array",
+      "items" : {
+        "anyOf" : [ {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "name", "type" ],
+          "properties" : {
+            "name" : {
+              "type" : "string"
+            },
+            "type" : {
+              "enum" : [ "string", "number", "boolean", "array" ]
+            },
+            "default" : {
+              "anyOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "number"
+              }, {
+                "type" : "boolean"
+              }, {
+                "type" : "array",
+                "items" : {
+                  "anyOf" : [ {
+                    "type" : "string"
+                  }, {
+                    "type" : "number"
+                  }, {
+                    "type" : "boolean"
+                  } ]
+                }
+              } ]
+            },
+            "values" : {
+              "type" : "array",
+              "items" : {
+                "anyOf" : [ {
+                  "type" : "string"
+                }, {
+                  "type" : "number"
+                }, {
+                  "type" : "boolean"
+                } ]
+              }
+            }
+          }
+        }, {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "template" ],
+          "properties" : {
+            "template" : {
+              "type" : "string"
+            }
+          }
+        } ]
+      }
+    },
+    "version" : {
+      "type" : "string",
+      "const" : "v2.0"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "gates" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "required" : [ "name", "rule" ],
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "rule" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "notify-on-fail" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "required" : [ "type" ],
+              "properties" : {
+                "type" : {
+                  "enum" : [ "email", "wework-message" ]
+                },
+                "receivers" : {
+                  "anyOf" : [ {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }, {
+                    "type" : "string"
+                  } ]
+                }
+              }
+            }
+          },
+          "continue-on-fail" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "required" : [ "gatekeepers" ],
+            "properties" : {
+              "gatekeepers" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-07/schema"
+}

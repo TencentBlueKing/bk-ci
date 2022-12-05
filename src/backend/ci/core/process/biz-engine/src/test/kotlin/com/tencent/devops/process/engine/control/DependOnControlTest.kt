@@ -35,9 +35,9 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.utils.TestTool
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class DependOnControlTest {
 
@@ -49,7 +49,7 @@ class DependOnControlTest {
         buildLogPrinter = buildLogPrinter
     )
 
-    @Before
+    @BeforeEach
     fun setUp() {
         whenever(
             buildLogPrinter.addLine(buildId = "", message = "", tag = "", jobId = "", executeCount = 1, subTag = "")
@@ -70,7 +70,7 @@ class DependOnControlTest {
         whenever(pipelineContainerService.listContainers(TestTool.projectId,
             TestTool.buildId,
             TestTool.stageId)).thenReturn(mockContainers)
-        Assert.assertEquals(BuildStatus.SUCCEED, dependOnControl.dependOnJobStatus(container = mockJob))
+        Assertions.assertEquals(BuildStatus.SUCCEED, dependOnControl.dependOnJobStatus(container = mockJob))
     }
 
     @Test
@@ -89,7 +89,7 @@ class DependOnControlTest {
         whenever(pipelineContainerService.listContainers(TestTool.projectId,
             TestTool.buildId,
             TestTool.stageId)).thenReturn(mockContainers)
-        Assert.assertEquals(status2, dependOnControl.dependOnJobStatus(container = mockJob))
+        Assertions.assertEquals(status2, dependOnControl.dependOnJobStatus(container = mockJob))
     }
 
     @Test
@@ -110,7 +110,7 @@ class DependOnControlTest {
             TestTool.buildId,
             TestTool.stageId)).thenReturn(mockContainers)
         val dependOnJobStatus = dependOnControl.dependOnJobStatus(container = mockJob)
-        Assert.assertEquals(status2, dependOnJobStatus)
+        Assertions.assertEquals(status2, dependOnJobStatus)
     }
 
     @Test
@@ -131,7 +131,7 @@ class DependOnControlTest {
                 TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.SUCCEED)
             )
         )
-        Assert.assertEquals(BuildStatus.RUNNING, dependOnControl.dependOnJobStatus(container = mockJob))
+        Assertions.assertEquals(BuildStatus.RUNNING, dependOnControl.dependOnJobStatus(container = mockJob))
 
         whenever(pipelineContainerService.listContainers(TestTool.projectId,
             TestTool.buildId,
@@ -141,7 +141,7 @@ class DependOnControlTest {
                 TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.SUCCEED)
             )
         )
-        Assert.assertEquals(BuildStatus.SUCCEED, dependOnControl.dependOnJobStatus(container = mockJob))
+        Assertions.assertEquals(BuildStatus.SUCCEED, dependOnControl.dependOnJobStatus(container = mockJob))
 
         // when fail
         whenever(pipelineContainerService.listContainers(TestTool.projectId,
@@ -152,6 +152,6 @@ class DependOnControlTest {
                 TestTool.genVmBuildContainer(vmSeqId = dependContainerId3).copy(status = BuildStatus.FAILED)
             )
         )
-        Assert.assertEquals(BuildStatus.FAILED, dependOnControl.dependOnJobStatus(container = mockJob))
+        Assertions.assertEquals(BuildStatus.FAILED, dependOnControl.dependOnJobStatus(container = mockJob))
     }
 }

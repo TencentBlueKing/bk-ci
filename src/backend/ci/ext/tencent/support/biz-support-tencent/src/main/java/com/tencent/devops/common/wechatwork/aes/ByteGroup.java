@@ -28,7 +28,8 @@
 package com.tencent.devops.common.wechatwork.aes;
 
 import java.util.ArrayList;
-
+@Deprecated
+// 请使用ByteGroupV2
 class ByteGroup {
 	ArrayList<Byte> byteContainer = new ArrayList<Byte>();
 

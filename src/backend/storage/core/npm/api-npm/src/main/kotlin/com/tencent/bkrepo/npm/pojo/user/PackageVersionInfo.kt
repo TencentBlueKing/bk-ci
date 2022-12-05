@@ -31,8 +31,6 @@
 
 package com.tencent.bkrepo.npm.pojo.user
 
-import com.tencent.bkrepo.common.api.pojo.Page
-import com.tencent.bkrepo.npm.pojo.module.des.ModuleDepsInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiModelProperty
 
@@ -83,5 +81,5 @@ data class VersionDependenciesInfo(
     @ApiModelProperty("包的开发依赖信息")
     val devDependencies: List<DependenciesInfo>,
     @ApiModelProperty("包的被依赖信息")
-    val dependents: Page<ModuleDepsInfo>
+    val dependents: Set<String>
 )

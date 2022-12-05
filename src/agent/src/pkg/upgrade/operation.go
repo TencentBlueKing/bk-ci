@@ -28,15 +28,21 @@
 package upgrade
 
 import (
-	"errors"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
+	"github.com/pkg/errors"
+	"io/ioutil"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"github.com/astaxie/beego/logs"
 )
+
 // UninstallAgent 卸载
 func UninstallAgent() {
 	logs.Info("start uninstall agent")
@@ -46,9 +52,10 @@ func UninstallAgent() {
 		logs.Error("start upgrader failed")
 		return
 	}
-	logs.Warning("agent process exiting")
+	logs.Warn("agent process exiting")
 	systemutil.ExitProcess(0)
 }
+
 // runUpgrader 执行升级器
 func runUpgrader(action string) error {
 	logs.Info("[agentUpgrade]|start upgrader process")
@@ -75,18 +82,72 @@ func runUpgrader(action string) error {
 	}
 	logs.Info("[agentUpgrade]|start process success, pid: ", pid)
 
-	logs.Warning("[agentUpgrade]|agent process exiting")
+	logs.Warn("[agentUpgrade]|agent process exiting")
 	systemutil.ExitProcess(0)
 	return nil
 }
-// DoUpgradeOperation 调用升级程序
-func DoUpgradeOperation(agentChanged bool, workAgentChanged bool) error {
-	logs.Info("[agentUpgrade]|start upgrade, agent changed: ", agentChanged, ", work agent changed: ", workAgentChanged)
-	config.GIsAgentUpgrading = true
 
-	if !agentChanged && !workAgentChanged {
+// DoUpgradeOperation 调用升级程序
+func DoUpgradeOperation(agentChanged bool, workAgentChanged bool, jdkChanged bool) error {
+	logs.Info("[agentUpgrade]|start upgrade, agent changed: ", agentChanged, ", work agent changed: ", workAgentChanged, ", jdk agent changed: ", jdkChanged)
+
+	if !agentChanged && !workAgentChanged && !jdkChanged {
 		logs.Info("[agentUpgrade]|no change to upgrade, skip")
 		return nil
+	}
+
+	// 进入升级逻辑时防止agent接构建任务，同时确保无任何构建任务在进行
+	job.GBuildManager.Lock.Lock()
+	defer func() {
+		job.GBuildManager.Lock.Unlock()
+	}()
+	if job.GBuildManager.GetPreInstancesCount() > 0 && job.GBuildManager.GetInstanceCount() > 0 {
+		return nil
+	}
+
+	if jdkChanged {
+		logs.Info("[agentUpgrade]|jdk changed, replace jdk file")
+
+		workDir := systemutil.GetWorkDir()
+		// 复制出来jdk.zip
+		_, err := fileutil.CopyFile(
+			systemutil.GetUpgradeDir()+"/"+config.JdkClientFile,
+			workDir+"/"+config.JdkClientFile,
+			true,
+		)
+		if err != nil {
+			return errors.Wrap(err, "upgrade jdk copy new jdk file error")
+		}
+
+		// 解压缩为一个新文件取代旧文件路径
+		jdkTmpName := "jdk" + strconv.FormatInt(time.Now().Unix(), 10)
+		err = fileutil.Unzip(workDir+"/"+config.JdkClientFile, workDir+"/"+jdkTmpName)
+		if err != nil {
+			return errors.Wrap(err, "upgrade jdk unzip error")
+		}
+
+		// 删除老的jdk文件，以及之前解压缩或者改名失败残留的，异步删除，删除失败也不影响主进程
+		go func() {
+			files, err := ioutil.ReadDir(workDir)
+			if err != nil {
+				logs.Error("upgrade jdk remove old jdk file error", err)
+				return
+			}
+			for _, file := range files {
+				if (strings.HasPrefix(file.Name(), "jdk") || strings.HasPrefix(file.Name(), "jre")) &&
+					file.Name() != jdkTmpName {
+					err = os.RemoveAll(workDir + "/" + file.Name())
+					if err != nil {
+						logs.Error("upgrade jdk remove old jdk file error", err)
+					}
+				}
+			}
+		}()
+
+		// 修改启动worker的jdk路径
+		config.SaveJdkDir(workDir + "/" + jdkTmpName)
+
+		logs.Info("[agentUpgrade]|replace jdk file done")
 	}
 
 	if workAgentChanged {
@@ -113,5 +174,6 @@ func DoUpgradeOperation(agentChanged bool, workAgentChanged bool) error {
 	} else {
 		logs.Info("[agentUpgrade]|agent not changed, skip agent upgrade")
 	}
+
 	return nil
 }

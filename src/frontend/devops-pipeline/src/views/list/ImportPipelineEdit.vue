@@ -78,7 +78,7 @@
             }),
             async savePipeline () {
                 const { data } = await this.save()
-                const pipelineId = data.data
+                const pipelineId = data[0].data
                 this.$router.push({
                     name: 'pipelinesEdit',
                     params: {
@@ -122,7 +122,7 @@
             height: 100%;
 
             .devops-icon {
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 padding-left: 16px;
                 cursor: pointer;
                 &:hover,

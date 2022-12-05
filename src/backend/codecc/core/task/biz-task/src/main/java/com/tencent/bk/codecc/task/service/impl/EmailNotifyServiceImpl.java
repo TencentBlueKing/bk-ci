@@ -197,7 +197,7 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
             String buildId = emailNotifyModel.getBuildId();
 
             //1. 查询任务信息及报告定制信息
-            TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+            TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
             if (null != taskInfoEntity.getStatus()
                     && ComConstants.Status.DISABLE.value() == taskInfoEntity.getStatus()) {
                 log.info("disabled task not send email! task id: {}", taskId);
@@ -341,7 +341,7 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
             exchange = @Exchange(value = EXCHANGE_CODECC_GENERAL_NOTIFY, durable = "true", delayed = "true", type = "topic")))
     public void sendRtx(RtxNotifyModel rtxNotifyModel) {
         try {
-            TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(rtxNotifyModel.getTaskId());
+            TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(rtxNotifyModel.getTaskId());
             //发送企业微信群机器人消息
             sendWeChatBotRemind(rtxNotifyModel, taskInfoEntity);
 
@@ -580,7 +580,7 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
                             type = "topic")))
     public void sendEmail(EmailMessageModel emailMessageModel) {
         EmailNotifyMessageTemplateEntity template =
-                emailNotifyMessageTemplateRepository.findByTemplateId(
+                emailNotifyMessageTemplateRepository.findFirstByTemplateId(
                         emailMessageModel.getTemplate().value());
 
         if (template == null) {
@@ -613,7 +613,7 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
                             delayed = "true")))
     public void sendWeChat(WeChatMessageModel weChatMessageModel) {
         WeChatNotifyMessageTemplateEntity template =
-                weChatNotifyMessageTemplateRepository.findByTemplateId(
+                weChatNotifyMessageTemplateRepository.findFirstByTemplateId(
                         weChatMessageModel.getTemplate().value());
 
         if (template == null) {
@@ -932,7 +932,7 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
 
         //bs_codecc创建的任务，不跑分析无法从分析日志拿git的地址；跑了从t_code_repo_from_analyzelog拿也有覆盖问题，改从蓝盾拿
         if (codeLibraryInfoVO != null && StringUtils.isEmpty(codeLibraryInfoVO.getUrl())) {
-            TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
+            TaskInfoEntity taskInfoEntity = taskRepository.findFirstByTaskId(taskId);
             if (!taskInfoEntity.getCreateFrom().equals(ComConstants.BsTaskCreateFrom.BS_CODECC.value())) {
                 return codeLibraryInfoVO;
             }
@@ -1111,8 +1111,8 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
      */
     private void setEmailReportRootUrl(DailyDataReportReqModel dailyDataReportReqModel, TaskInfoEntity taskInfoEntity) {
         String urlRoot = ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equals(taskInfoEntity.getCreateFrom())
-                ? String.format("http://%s/codecc/%s/", codeccHost, taskInfoEntity.getProjectId())
-                : String.format("http://%s/console/codecc/%s/", devopsHost, taskInfoEntity.getProjectId());
+                ? String.format("%s/codecc/%s/", codeccHost, taskInfoEntity.getProjectId())
+                : String.format("%s/console/codecc/%s/", devopsHost, taskInfoEntity.getProjectId());
 
         dailyDataReportReqModel.setUrlRoot(urlRoot);
     }

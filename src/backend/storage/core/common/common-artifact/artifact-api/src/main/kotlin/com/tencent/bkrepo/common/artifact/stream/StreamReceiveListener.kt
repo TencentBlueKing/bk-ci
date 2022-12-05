@@ -37,6 +37,11 @@ package com.tencent.bkrepo.common.artifact.stream
 interface StreamReceiveListener {
 
     /**
+     * 接受单个字节
+     * */
+    fun data(b: Int)
+
+    /**
      * 数据接收回调方法，从[offset]位置到共接收了[length]长度的数据，数据缓存在[buffer]中
      */
     fun data(buffer: ByteArray, offset: Int, length: Int)

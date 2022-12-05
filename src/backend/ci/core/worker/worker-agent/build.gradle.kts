@@ -34,6 +34,4 @@ application.mainClassName = "com.tencent.devops.agent.ApplicationKt"
 dependencies {
     api(project(":core:worker:worker-common"))
     api(project(":core:worker:worker-api-sdk"))
-
-    api(project(":core:plugin:codecc-plugin:worker-plugin-codecc"))
 }

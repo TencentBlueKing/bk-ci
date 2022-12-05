@@ -28,9 +28,10 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.GitMember
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -162,4 +163,34 @@ interface ExternalCodeccRepoResource {
         @QueryParam("userId")
         userId: String
     ): Result<List<GitMember>>
+
+    @ApiOperation("通过凭证Id获取文件内容")
+    @GET
+    @Path("/{projectId}/getFileContentByUrl")
+    fun getFileContentByUrl(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "代码库url")
+        @QueryParam("repoUrl")
+        repoUrl: String,
+        @ApiParam(value = "代码库类型")
+        @QueryParam("scmType")
+        scmType: ScmType,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "版本号（svn/p4）")
+        @QueryParam("reversion")
+        reversion: String?,
+        @ApiParam(value = "分支（git）")
+        @QueryParam("branch")
+        branch: String?,
+        @ApiParam(value = "子模块项目名称")
+        @QueryParam("subModule")
+        subModule: String? = null,
+        @ApiParam(value = "代码库ticketId")
+        @QueryParam("credentialId")
+        credentialId: String
+    ): Result<String>
 }

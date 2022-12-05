@@ -10,23 +10,19 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.bkrepo.repository.service.node.impl
@@ -37,14 +33,14 @@ import com.tencent.bkrepo.common.api.util.Preconditions
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
 import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
 import com.tencent.bkrepo.common.artifact.path.PathUtils
+import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.mongo.dao.util.Pages
+import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.common.service.util.SpringContextUtils.Companion.publishEvent
 import com.tencent.bkrepo.common.storage.core.StorageService
 import com.tencent.bkrepo.repository.config.RepositoryProperties
 import com.tencent.bkrepo.repository.dao.NodeDao
 import com.tencent.bkrepo.repository.dao.RepositoryDao
-import com.tencent.bkrepo.repository.listener.event.node.NodeCreatedEvent
-import com.tencent.bkrepo.repository.listener.event.node.NodeUpdatedEvent
 import com.tencent.bkrepo.repository.model.TNode
 import com.tencent.bkrepo.repository.model.TRepository
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
@@ -55,8 +51,10 @@ import com.tencent.bkrepo.repository.pojo.node.service.NodeUpdateRequest
 import com.tencent.bkrepo.repository.service.file.FileReferenceService
 import com.tencent.bkrepo.repository.service.node.NodeBaseOperation
 import com.tencent.bkrepo.repository.service.node.NodeService
+import com.tencent.bkrepo.repository.service.repo.QuotaService
 import com.tencent.bkrepo.repository.service.repo.StorageCredentialService
 import com.tencent.bkrepo.repository.util.MetadataUtils
+import com.tencent.bkrepo.repository.util.NodeEventFactory.buildCreatedEvent
 import com.tencent.bkrepo.repository.util.NodeQueryHelper
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DuplicateKeyException
@@ -73,6 +71,7 @@ abstract class NodeBaseService(
     open val fileReferenceService: FileReferenceService,
     open val storageCredentialService: StorageCredentialService,
     open val storageService: StorageService,
+    open val quotaService: QuotaService,
     open val repositoryProperties: RepositoryProperties
 ) : NodeService, NodeBaseOperation {
 
@@ -84,6 +83,7 @@ abstract class NodeBaseService(
     }
 
     override fun listNode(artifact: ArtifactInfo, option: NodeListOption): List<NodeInfo> {
+        checkNodeListOption(option)
         with(artifact) {
             val query = NodeQueryHelper.nodeListQuery(projectId, repoName, getArtifactFullPath(), option)
             if (nodeDao.count(query) > repositoryProperties.listCountLimit) {
@@ -94,6 +94,7 @@ abstract class NodeBaseService(
     }
 
     override fun listNodePage(artifact: ArtifactInfo, option: NodeListOption): Page<NodeInfo> {
+        checkNodeListOption(option)
         with(artifact) {
             val pageNumber = option.pageNumber
             val pageSize = option.pageSize
@@ -106,6 +107,15 @@ abstract class NodeBaseService(
 
             return Pages.ofResponse(pageRequest, totalRecords, records)
         }
+    }
+
+    override fun listNodePageBySha256(sha256: String, option: NodeListOption): Page<NodeInfo> {
+        val nodes = nodeDao.pageBySha256(sha256, option, true)
+        return Pages.ofResponse(
+            Pages.ofRequest(option.pageNumber, option.pageSize),
+            nodes.totalElements,
+            nodes.content.map { convert(it)!! }
+        )
     }
 
     override fun checkExist(artifact: ArtifactInfo): Boolean {
@@ -125,8 +135,10 @@ abstract class NodeBaseService(
             Preconditions.checkArgument(!PathUtils.isRoot(fullPath), this::fullPath.name)
             Preconditions.checkArgument(folder || !sha256.isNullOrBlank(), this::sha256.name)
             Preconditions.checkArgument(folder || !md5.isNullOrBlank(), this::md5.name)
+            // 仓库是否存在
+            val repo = checkRepo(projectId, repoName)
             // 路径唯一性校验
-            checkConflict(createRequest, fullPath)
+            checkConflictAndQuota(createRequest, fullPath)
             // 判断父目录是否存在，不存在先创建
             mkdirs(projectId, repoName, PathUtils.resolveParent(fullPath), operator)
             // 创建节点
@@ -148,11 +160,28 @@ abstract class NodeBaseService(
                 lastModifiedDate = lastModifiedDate ?: LocalDateTime.now()
             )
             doCreate(node)
-            publishEvent(NodeCreatedEvent(this))
+            if (isGenericRepo(repo)) {
+                publishEvent(buildCreatedEvent(node))
+            }
             logger.info("Create node[/$projectId/$repoName$fullPath], sha256[$sha256] success.")
 
             return convertToDetail(node)!!
         }
+    }
+
+    /**
+     * 判断仓库是否为generic类型仓库
+     */
+    private fun isGenericRepo(repo: TRepository): Boolean {
+        return repo.type == RepositoryType.GENERIC
+    }
+
+    /**
+     * 校验仓库是否存在
+     */
+    private fun checkRepo(projectId: String, repoName: String): TRepository {
+        return repositoryDao.findByNameAndType(projectId, repoName)
+            ?: throw ErrorCodeException(ArtifactMessageCode.REPOSITORY_NOT_FOUND, repoName)
     }
 
     @Transactional(rollbackFor = [Throwable::class])
@@ -164,7 +193,6 @@ abstract class NodeBaseService(
             val selfQuery = NodeQueryHelper.nodeQuery(projectId, repoName, node.fullPath)
             val selfUpdate = NodeQueryHelper.nodeExpireDateUpdate(parseExpireDate(expires), operator)
             nodeDao.updateFirst(selfQuery, selfUpdate)
-            publishEvent(NodeUpdatedEvent(this))
             logger.info("Update node [$this] success.")
         }
     }
@@ -174,6 +202,7 @@ abstract class NodeBaseService(
             nodeDao.insert(node)
             if (!node.folder) {
                 fileReferenceService.increment(node, repository)
+                quotaService.increaseUsedVolume(node.projectId, node.repoName, node.size)
             }
         } catch (exception: DuplicateKeyException) {
             logger.warn("Insert node[$node] error: [${exception.message}]")
@@ -188,7 +217,11 @@ abstract class NodeBaseService(
     fun mkdirs(projectId: String, repoName: String, path: String, createdBy: String) {
         // 格式化
         val fullPath = PathUtils.toFullPath(path)
-        if (!nodeDao.exists(projectId, repoName, fullPath)) {
+        val creatingNode = nodeDao.findNode(projectId, repoName, fullPath)
+        if (creatingNode != null && !creatingNode.folder) {
+            throw ErrorCodeException(ArtifactMessageCode.NODE_CONFLICT, fullPath)
+        }
+        if (creatingNode == null) {
             val parentPath = PathUtils.resolveParent(fullPath)
             val name = PathUtils.resolveName(fullPath)
             mkdirs(projectId, repoName, parentPath, createdBy)
@@ -211,18 +244,34 @@ abstract class NodeBaseService(
         }
     }
 
-    private fun checkConflict(createRequest: NodeCreateRequest, fullPath: String) {
+    private fun checkConflictAndQuota(createRequest: NodeCreateRequest, fullPath: String) {
         with(createRequest) {
-            nodeDao.findNode(projectId, repoName, fullPath)?.let {
+            val existNode = nodeDao.findNode(projectId, repoName, fullPath)
+            if (existNode != null) {
                 if (!overwrite) {
                     throw ErrorCodeException(ArtifactMessageCode.NODE_EXISTED, fullPath)
-                } else if (it.folder || this.folder) {
+                } else if (existNode.folder || this.folder) {
                     throw ErrorCodeException(ArtifactMessageCode.NODE_CONFLICT, fullPath)
                 } else {
+                    val changeSize = this.size?.minus(existNode.size) ?: -existNode.size
+                    quotaService.checkRepoQuota(projectId, repoName, changeSize)
                     deleteByPath(projectId, repoName, fullPath, operator)
                 }
+            } else {
+                quotaService.checkRepoQuota(projectId, repoName, this.size ?: 0)
             }
         }
+    }
+
+    private fun checkNodeListOption(option: NodeListOption) {
+        Preconditions.checkArgument(
+            option.sortProperty.none { !TNode::class.java.declaredFields.map { f -> f.name }.contains(it) },
+            "sortProperty"
+        )
+        Preconditions.checkArgument(
+            option.direction.none { it != Sort.Direction.DESC.name && it != Sort.Direction.ASC.name },
+            "direction"
+        )
     }
 
     companion object {
@@ -245,7 +294,10 @@ abstract class NodeBaseService(
                     size = it.size,
                     sha256 = it.sha256,
                     md5 = it.md5,
-                    metadata = metadata
+                    metadata = metadata,
+                    copyFromCredentialsKey = it.copyFromCredentialsKey,
+                    copyIntoCredentialsKey = it.copyIntoCredentialsKey,
+                    deleted = it.deleted?.format(DateTimeFormatter.ISO_DATE_TIME)
                 )
             }
         }

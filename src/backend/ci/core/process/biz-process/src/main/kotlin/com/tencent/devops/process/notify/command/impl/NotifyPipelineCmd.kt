@@ -12,7 +12,6 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
-import com.tencent.devops.process.utils.PIPELINE_TIME_END
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
@@ -41,25 +40,11 @@ abstract class NotifyPipelineCmd @Autowired constructor(
             pipelineId = pipelineId,
             vars = commandContextBuild.variables as MutableMap<String, String>)
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return
-        val endTime = System.currentTimeMillis()
-        val timeDuration = (endTime - buildInfo.startTime!!)
-        commandContextBuild.variables[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(timeDuration)
-
-        buildVariableService.setVariable(
-            projectId = commandContextBuild.projectId,
-            pipelineId = commandContextBuild.pipelineId,
-            buildId = commandContextBuild.buildId,
-            varName = PIPELINE_TIME_END,
-            varValue = endTime
-        )
-        // 设置总耗时
-        buildVariableService.setVariable(
-            projectId = commandContextBuild.projectId,
-            pipelineId = commandContextBuild.pipelineId,
-            buildId = commandContextBuild.buildId,
-            varName = PIPELINE_TIME_DURATION,
-            varValue = timeDuration.toString()
-        )
+        val timeDuration = commandContextBuild.variables[PIPELINE_TIME_DURATION]?.toLong() ?: 0L
+        if (timeDuration > 0) {
+            // 处理发送消息的耗时展示
+            commandContextBuild.variables[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(timeDuration * 1000)
+        }
 
         val trigger = executionVar.trigger
         val buildNum = buildInfo.buildNum

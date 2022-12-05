@@ -64,12 +64,4 @@ class ProjectController(
     override fun createProject(request: ProjectCreateRequest): Response<ProjectInfo> {
         return ResponseBuilder.success(projectService.createProject(request))
     }
-
-    override fun query(name: String): Response<ProjectInfo?> {
-        return getProjectInfo(name)
-    }
-
-    override fun create(request: ProjectCreateRequest): Response<ProjectInfo> {
-        return createProject(request)
-    }
 }

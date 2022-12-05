@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
@@ -68,8 +69,8 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         logger.info(
-            "getInitLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] " +
-                "elementId[$elementId] jobId[$jobId] executeCount[$executeCount] debug[$debug] jobId[$jobId]"
+            "OPENAPI_LOG_V4|$userId|get init logs|$projectId|$pipelineId|$buildId|$debug|$elementId|$jobId" +
+                "|$executeCount"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
@@ -100,8 +101,8 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         logger.info(
-            "getMoreLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] num[$num] jobId[$jobId] " +
-                "executeCount[$executeCount]fromStart[$fromStart]start[$start]end[$end]tag[$tag]jobId[$jobId]"
+            "OPENAPI_LOG_V4|$userId|get more logs|$projectId|$pipelineId|$buildId|$debug|$num|$fromStart" +
+                "|$start|$end|$tag|$jobId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getMoreLogs(
             userId = userId,
@@ -133,9 +134,8 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         logger.info(
-            "getAfterLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] debug[$debug] " +
-                "debug[$debug]jobId[$jobId]executeCount[$executeCount]" +
-                "start[$start]tag[$tag]jobId[$jobId]"
+            "OPENAPI_LOG_V4|$userId|get after logs|$projectId|$pipelineId|$buildId|$start|$debug|$tag" +
+                "|$jobId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getAfterLogs(
             userId = userId,
@@ -161,11 +161,8 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Response {
+        logger.info("OPENAPI_LOG_V4|$userId|download logs|$projectId|$pipelineId|$buildId|$tag|$jobId|$executeCount")
         checkPipelineId(projectId, pipelineId, buildId)
-        logger.info(
-            "downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]" +
-                "jobId[$jobId] executeCount[$executeCount] tag[$tag] jobId[$jobId]"
-        )
         val path = StringBuilder("$gatewayUrl/log/api/service/logs/")
         path.append(projectId)
         path.append("/$pipelineId/$buildId/download?executeCount=${executeCount ?: 1}")
@@ -194,10 +191,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         tag: String,
         executeCount: Int?
     ): Result<QueryLogStatus> {
-        logger.info(
-            "downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]" +
-                "executeCount[$executeCount] tag[$tag]"
-        )
+        logger.info("OPENAPI_LOG_V4|$userId|get log mode|$projectId|$pipelineId|$buildId|$tag|$executeCount")
         return client.get(ServiceLogResource::class).getLogMode(
             userId = userId,
             projectId = projectId,
@@ -205,6 +199,21 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             buildId = buildId,
             tag = tag,
             executeCount = executeCount
+        )
+    }
+
+    override fun getLogLastLineNum(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<QueryLogLineNum> {
+        logger.info("OPENAPI_LOG_V4|$userId|get log last line num|$projectId|$pipelineId|$buildId")
+        return client.get(ServiceLogResource::class).getLogLastLineNum(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
         )
     }
 

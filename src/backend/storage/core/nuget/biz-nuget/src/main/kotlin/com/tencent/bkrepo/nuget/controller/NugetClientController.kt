@@ -31,50 +31,61 @@
 
 package com.tencent.bkrepo.nuget.controller
 
+import com.tencent.bkrepo.auth.pojo.enums.PermissionAction
+import com.tencent.bkrepo.auth.pojo.enums.ResourceType
 import com.tencent.bkrepo.common.api.constant.MediaTypes.APPLICATION_JSON
-import com.tencent.bkrepo.common.artifact.api.ArtifactFileMap
 import com.tencent.bkrepo.common.artifact.api.ArtifactPathVariable
+import com.tencent.bkrepo.common.security.permission.Permission
 import com.tencent.bkrepo.nuget.artifact.NugetArtifactInfo
 import com.tencent.bkrepo.nuget.model.v2.search.NuGetSearchRequest
+import com.tencent.bkrepo.nuget.pojo.artifact.NugetDeleteArtifactInfo
+import com.tencent.bkrepo.nuget.pojo.artifact.NugetDownloadArtifactInfo
+import com.tencent.bkrepo.nuget.pojo.artifact.NugetPublishArtifactInfo
 import com.tencent.bkrepo.nuget.service.NugetClientService
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestAttribute
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
+@Suppress("MVCPathVariableInspection")
+@RequestMapping("/{projectId}/{repoName}")
 @RestController
 class NugetClientController(
     private val nugetClientService: NugetClientService
 ) {
-    @GetMapping("/{projectId}/{repoName}", produces = [APPLICATION_JSON])
+    @GetMapping(produces = [APPLICATION_JSON])
     fun getServiceDocument(
         @ArtifactPathVariable artifactInfo: NugetArtifactInfo
-    ): String {
-        return nugetClientService.getServiceDocument(artifactInfo)
+    ) {
+        nugetClientService.getServiceDocument(artifactInfo)
     }
 
-    @PutMapping("/{projectId}/{repoName}/**")
+    /**
+     * usage: NuGet push <程序包路径> [API 密钥] [ options ]
+     * Content-Type multipart/form-data
+     * A package with the provided ID and version already exists, status code 409
+     */
+    @PutMapping("/v2/package")
+    @Permission(ResourceType.REPO, PermissionAction.WRITE)
     fun publish(
         @RequestAttribute userId: String,
-        @ArtifactPathVariable artifactInfo: NugetArtifactInfo,
-        artifactFileMap: ArtifactFileMap
-    ): String {
-        return nugetClientService.publish(userId, artifactInfo, artifactFileMap)
+        publishInfo: NugetPublishArtifactInfo
+    ) {
+        nugetClientService.publish(userId, publishInfo)
     }
 
-    @GetMapping("/{projectId}/{repoName}/Download/{packageId}/{packageVersion}")
+    @GetMapping("/Download/{id}/{version}")
+    @Permission(ResourceType.REPO, PermissionAction.READ)
     fun download(
         @RequestAttribute userId: String,
-        @ArtifactPathVariable artifactInfo: NugetArtifactInfo,
-        @PathVariable packageId: String,
-        @PathVariable packageVersion: String
+        artifactInfo: NugetDownloadArtifactInfo
     ) {
-        nugetClientService.download(userId, artifactInfo, packageId, packageVersion)
+        nugetClientService.download(userId, artifactInfo)
     }
 
-    @GetMapping("/{projectId}/{repoName}/FindPackagesById()", produces = ["application/xml"])
+    @GetMapping("/FindPackagesById()", produces = ["application/xml"])
     fun findPackagesById(
         @ArtifactPathVariable artifactInfo: NugetArtifactInfo,
         searchRequest: NuGetSearchRequest
@@ -82,13 +93,15 @@ class NugetClientController(
         nugetClientService.findPackagesById(artifactInfo, searchRequest)
     }
 
-    @DeleteMapping("/{projectId}/{repoName}/{packageId}/{packageVersion}")
+    /**
+     * nuget delete <packageID> <packageVersion> [ options ]
+     */
+    @DeleteMapping("/v2/package/{id}/{version}")
+    @Permission(ResourceType.REPO, PermissionAction.DELETE)
     fun delete(
         @RequestAttribute userId: String,
-        @ArtifactPathVariable artifactInfo: NugetArtifactInfo,
-        @PathVariable packageId: String,
-        @PathVariable packageVersion: String
+        artifactInfo: NugetDeleteArtifactInfo
     ) {
-        nugetClientService.delete(userId, artifactInfo, packageId, packageVersion)
+        nugetClientService.delete(userId, artifactInfo)
     }
 }

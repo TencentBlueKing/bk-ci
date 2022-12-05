@@ -31,37 +31,21 @@
 
 package com.tencent.bkrepo.common.query.util
 
-object MongoEscapeUtils {
+import com.tencent.bkrepo.common.api.util.EscapeUtils
 
-    private val keywordList = listOf("\\", "$", "(", ")", "*", "+", ".", "[", "]", "?", "^", "{", "}", "|", "?", "&")
+object MongoEscapeUtils {
 
     /**
      * 正则特殊符号转义
      */
     fun escapeRegex(input: String): String {
-        var escapedString = input.trim()
-        if (escapedString.isNotBlank()) {
-            keywordList.forEach {
-                if (escapedString.contains(it)) {
-                    escapedString = escapedString.replace(it, "\\$it")
-                }
-            }
-        }
-        return escapedString
+        return EscapeUtils.escapeRegex(input)
     }
 
     /**
      * 正则特殊符号转义, 但不转义通配符
      */
     fun escapeRegexExceptWildcard(input: String): String {
-        var escapedString = input.trim()
-        if (escapedString.isNotBlank()) {
-            keywordList.filter { it != "*" }.forEach {
-                if (escapedString.contains(it)) {
-                    escapedString = escapedString.replace(it, "\\$it")
-                }
-            }
-        }
-        return escapedString
+        return EscapeUtils.escapeRegexExceptWildcard(input)
     }
 }

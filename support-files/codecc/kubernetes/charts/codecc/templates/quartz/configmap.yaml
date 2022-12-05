@@ -1,0 +1,34 @@
+{{- if .Values.quartz.enabled -}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "common.names.fullname" . }}-quartz
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: quartz
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    spring:
+      application:
+        name: quartz
+        desc: Quartz Service
+        packageName: com.tencent.bk.codecc.quartz
+      data:
+        mongodb:
+          uri: {{ include "codecc.quartz.mongodbUri" . }}
+    codecc:
+      gateway:
+        host: {{ .Values.config.bkCodeccPublicUrl }}
+    management:
+      metrics:
+        tags:
+          application: {{ include "common.names.fullname" . }}-quartz
+    {{- if keys $.Values.quartz.config }}
+      {{- toYaml .Values.quartz.config | nindent 4 }}
+    {{- end}}
+{{- end }}

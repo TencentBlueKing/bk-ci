@@ -81,12 +81,17 @@ type Mgr interface {
 
 	// get caches in pump mode
 	GetPumpCache(workID string) (*analyser.FileCache, *analyser.RootCache, error)
+
+	// Get first workid
+	GetFirstWorkID() (string, error)
 }
 
 // RemoteMgr describe a manager for handling all actions with remote workers for work
 type RemoteMgr interface {
 	// init handler
 	Init()
+
+	Start()
 
 	// run task in remote worker
 	ExecuteTask(req *RemoteTaskExecuteRequest) (*RemoteTaskExecuteResult, error)
@@ -96,12 +101,20 @@ type RemoteMgr interface {
 
 	// get total remote worker slots
 	TotalSlots() int
+
+	// inc remote jobs
+	IncRemoteJobs()
+
+	// dec remote jobs
+	DecRemoteJobs()
 }
 
 // LocalMgr describe a manager for handling all actions with local execution for work
 type LocalMgr interface {
 	// init handler
 	Init()
+
+	Start()
 
 	// lock local slot
 	LockSlots(usage dcSDK.JobUsage, weight int32) bool
@@ -121,6 +134,9 @@ type LocalMgr interface {
 	Slots() (int, int)
 }
 
+// CB4ResChanged call back function when remote resource changed
+type CB4ResChanged func() error
+
 // ResourceMgr describe a manager for handling all actions with resource and server for work
 type ResourceMgr interface {
 	// check if there are ready-to-work workers
@@ -135,6 +151,10 @@ type ResourceMgr interface {
 	// send stats, if brief true, then will not send the job stats
 	SendStats(brief bool) error
 
+	// send stats and reset after sent, if brief true, then will not send the job stats
+	// !! this will call m.work.Lock() , to avoid dead lock
+	SendAndResetStats(brief bool, resapplytimes []int64) error
+
 	// get resource status
 	GetStatus() *v2.RespTaskInfo
 
@@ -142,10 +162,16 @@ type ResourceMgr interface {
 	GetHosts() []*dcProtocol.Host
 
 	// apply resource
-	Apply(req *v2.ParamApply) (*v2.RespTaskInfo, error)
+	Apply(req *v2.ParamApply, force bool) (*v2.RespTaskInfo, error)
 
 	// release resource
 	Release(req *v2.ParamRelease) error
+
+	// register call back function
+	RegisterCallback(f CB4ResChanged) error
+
+	// check whether apply finished
+	IsApplyFinished() bool
 }
 
 // BasicMgr describe a manager for handling all actions with work basic issues
@@ -180,6 +206,9 @@ type BasicMgr interface {
 	// do register work
 	Register(config *WorkRegisterConfig) error
 
+	// do apply resource
+	ApplyResource(config *WorkRegisterConfig) error
+
 	// do unregister work
 	Unregister(config *WorkUnregisterConfig) error
 
@@ -197,6 +226,9 @@ type BasicMgr interface {
 
 	// get analysis status
 	AnalysisStatus() *WorkAnalysisStatus
+
+	// reset stat
+	ResetStat() error
 
 	// update toolchain
 	SetToolChain(toolchain *ToolChain) error

@@ -29,8 +29,8 @@ package com.tencent.devops.store.service.atom.action
 
 import com.tencent.devops.store.service.atom.action.impl.FirstAtomDataDecorateImpl
 import com.tencent.devops.store.service.atom.action.impl.FirstAtomPropsDecorateImpl
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import javax.annotation.Priority
 
 @Suppress("MagicNumber")
@@ -46,20 +46,20 @@ class AtomDecorateFactoryTest {
 
         val json = "{\"p\": 0, \"str\": \"hello\" }"
         val props = AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
-        Assert.assertNotEquals(beanOther, props)
-        Assert.assertEquals(bean4, props)
-        Assert.assertEquals(bean3, props?.getNext())
-        Assert.assertEquals(bean2, props?.getNext()?.getNext())
-        Assert.assertEquals(bean1, props?.getNext()?.getNext()?.getNext())
+        Assertions.assertNotEquals(beanOther, props)
+        Assertions.assertEquals(bean4, props)
+        Assertions.assertEquals(bean3, props?.getNext())
+        Assertions.assertEquals(bean2, props?.getNext()?.getNext())
+        Assertions.assertEquals(bean1, props?.getNext()?.getNext()?.getNext())
         val decorateMap = props?.decorate(json)
         @Suppress("UNCHECKED_CAST")
-        Assert.assertEquals(10, (decorateMap as Map<String, Any>)["p"].toString().toInt())
+        Assertions.assertEquals(10, (decorateMap as Map<String, Any>)["p"].toString().toInt())
 
         val data = AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
-        Assert.assertEquals(beanOther, data)
+        Assertions.assertEquals(beanOther, data)
         val decorate = data?.decorate(json)
         @Suppress("UNCHECKED_CAST")
-        Assert.assertEquals(5, (decorate as Map<String, Any>)["p"].toString().toInt())
+        Assertions.assertEquals(5, (decorate as Map<String, Any>)["p"].toString().toInt())
     }
 
     @Priority(1)

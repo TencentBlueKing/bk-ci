@@ -60,12 +60,4 @@ class MetadataController(
         metadataService.deleteMetadata(request)
         return ResponseBuilder.success()
     }
-
-    override fun save(request: MetadataSaveRequest): Response<Void> {
-        return saveMetadata(request)
-    }
-
-    override fun delete(request: MetadataDeleteRequest): Response<Void> {
-        return deleteMetadata(request)
-    }
 }

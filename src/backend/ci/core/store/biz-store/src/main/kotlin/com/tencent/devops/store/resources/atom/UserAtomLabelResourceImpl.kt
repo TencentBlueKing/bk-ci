@@ -48,6 +48,6 @@ class UserAtomLabelResourceImpl @Autowired constructor(
     }
 
     override fun getAtomLabelsByAtomId(atomId: String): Result<List<Label>?> {
-        return atomLabelService.getLabelsByAtomId(atomId)
+        return Result(atomLabelService.getLabelsByAtomId(atomId))
     }
 }

@@ -31,15 +31,13 @@
 
 package com.tencent.bkrepo.auth.pojo.permission
 
-import com.tencent.bkrepo.auth.pojo.enums.PermissionAction
-import com.tencent.bkrepo.auth.pojo.enums.ResourceType
 import io.swagger.annotations.ApiModel
 import java.time.LocalDateTime
 
 @ApiModel("权限")
 data class Permission(
     val id: String? = null,
-    val resourceType: ResourceType,
+    val resourceType: String,
     val projectId: String? = null,
     val permName: String,
     val repos: List<String> = emptyList(),
@@ -48,7 +46,7 @@ data class Permission(
     val users: List<String> = emptyList(),
     val roles: List<String> = emptyList(),
     val departments: List<String> = emptyList(),
-    val actions: List<PermissionAction> = emptyList(),
+    val actions: List<String> = emptyList(),
     val createBy: String,
     val updatedBy: String,
     val createAt: LocalDateTime,

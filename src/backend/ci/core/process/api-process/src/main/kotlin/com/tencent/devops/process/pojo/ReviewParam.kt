@@ -38,11 +38,11 @@ data class ReviewParam(
 //    @ApiModelProperty("主键ID", required = false)
 //    var id: Long,
     @ApiModelProperty("项目Id", required = true)
-    var projectId: String? = "",
+    var projectId: String = "",
     @ApiModelProperty("流水线Id", required = true)
-    var pipelineId: String? = "",
+    var pipelineId: String = "",
     @ApiModelProperty("构建Id", required = true)
-    var buildId: String? = "",
+    var buildId: String = "",
     @ApiModelProperty("审核人", required = true)
     var reviewUsers: MutableList<String> = mutableListOf(),
     @ApiModelProperty("审核结果", required = false)

@@ -70,7 +70,7 @@ public interface CheckerRepository extends MongoRepository<CheckerDetailEntity, 
      * @param checkerKey
      * @return
      */
-    CheckerDetailEntity findByToolNameAndCheckerKey(String toolName, String checkerKey);
+    CheckerDetailEntity findFirstByToolNameAndCheckerKey(String toolName, String checkerKey);
 
 
     /**

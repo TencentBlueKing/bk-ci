@@ -39,6 +39,7 @@ import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import okhttp3.Credentials
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -123,6 +124,33 @@ class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
         } finally {
             file.delete()
         }
+        return Result(true)
+    }
+
+    override fun deleteFile(repoName: String, fullPath: String, type: String): Result<Boolean> {
+        logger.info("deleteFile params:[$repoName")
+        var projectName: String
+        var userName: String
+        var password: String
+        when (type) {
+            StoreTypeEnum.SERVICE.name -> {
+                projectName = bkRepoStoreConfig.bkrepoExtServiceProjectName
+                userName = bkRepoStoreConfig.bkrepoExtServiceUserName
+                password = bkRepoStoreConfig.bkrepoExtServicePassword
+            }
+            else -> {
+                projectName = bkRepoStoreConfig.bkrepoStoreProjectName
+                userName = bkRepoStoreConfig.bkrepoStoreUserName
+                password = bkRepoStoreConfig.bkrepoStorePassword
+            }
+        }
+        bkRepoClient.deleteNode(
+            userName = userName,
+            projectId = projectName,
+            repoName = repoName,
+            path = fullPath,
+            authorization = Credentials.basic(userName, password)
+        )
         return Result(true)
     }
 }

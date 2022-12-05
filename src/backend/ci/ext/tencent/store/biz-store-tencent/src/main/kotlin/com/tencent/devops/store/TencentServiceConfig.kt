@@ -33,7 +33,8 @@ import com.tencent.devops.store.service.atom.impl.TxAtomNotifyServiceImpl
 import com.tencent.devops.store.service.atom.impl.TxAtomReleaseServiceImpl
 import com.tencent.devops.store.service.atom.impl.TxAtomServiceImpl
 import com.tencent.devops.store.service.atom.impl.TxMarketAtomServiceImpl
-import com.tencent.devops.store.service.common.TxStoreGitResitoryService
+import com.tencent.devops.store.service.common.TxStoreGitRepositoryService
+import com.tencent.devops.store.service.common.impl.TxStoreCommonServiceImpl
 import com.tencent.devops.store.service.common.impl.TxStoreLogoServiceImpl
 import com.tencent.devops.store.service.common.impl.TxStoreNotifyServiceImpl
 import com.tencent.devops.store.service.common.impl.TxStoreUserServiceImpl
@@ -65,8 +66,8 @@ class TencentServiceConfig @Autowired constructor() {
 
     @Bean
     fun atomMemberService(
-        gitResitoryService: TxStoreGitResitoryService
-    ) = TxAtomMemberServiceImpl(gitResitoryService)
+        gitRepositoryService: TxStoreGitRepositoryService
+    ) = TxAtomMemberServiceImpl(gitRepositoryService)
 
     @Bean
     fun atomReleaseService() = TxAtomReleaseServiceImpl()
@@ -88,4 +89,7 @@ class TencentServiceConfig @Autowired constructor() {
 
     @Bean
     fun storeLogoService() = TxStoreLogoServiceImpl()
+
+    @Bean
+    fun storeCommonService() = TxStoreCommonServiceImpl()
 }

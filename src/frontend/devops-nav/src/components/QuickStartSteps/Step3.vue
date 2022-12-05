@@ -1,6 +1,6 @@
 <template>
     <div class="step-wrapper">
-        <i class="bk-icon icon-check-circle quick-acess-success-icon" />
+        <i class="devops-icon icon-check-circle quick-acess-success-icon" />
         <p>
             {{ $t('quickStart.completeTips', { projectName: demo.projectName }) }}
         </p>

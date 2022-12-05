@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
@@ -48,6 +49,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : ServiceCredentialResource {
+
+    @BkTimed(extraTags = ["operate", "create"])
     override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -65,6 +68,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @BkTimed(extraTags = ["operate", "get"])
     override fun get(projectId: String, credentialId: String, publicKey: String): Result<CredentialInfo?> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -75,6 +79,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.serviceGet(projectId, credentialId, publicKey))
     }
 
+    @BkTimed(extraTags = ["operate", "get"])
     override fun list(projectId: String, page: Int?, pageSize: Int?): Result<Page<Credential>> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -120,6 +125,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         credentialService.serviceCheck(projectId, credentialId)
     }
 
+    @BkTimed(extraTags = ["operate", "get"])
     override fun hasPermissionList(
         userId: String,
         projectId: String,

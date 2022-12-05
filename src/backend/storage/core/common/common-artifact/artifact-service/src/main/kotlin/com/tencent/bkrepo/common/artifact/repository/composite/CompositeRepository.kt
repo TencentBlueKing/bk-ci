@@ -31,9 +31,8 @@
 
 package com.tencent.bkrepo.common.artifact.repository.composite
 
-import com.tencent.bkrepo.common.artifact.constant.PRIVATE_PROXY_REPO_NAME
-import com.tencent.bkrepo.common.artifact.constant.PUBLIC_PROXY_PROJECT
-import com.tencent.bkrepo.common.artifact.constant.PUBLIC_PROXY_REPO_NAME
+import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
+import com.tencent.bkrepo.common.artifact.pojo.configuration.RepositoryConfiguration
 import com.tencent.bkrepo.common.artifact.pojo.configuration.composite.ProxyChannelSetting
 import com.tencent.bkrepo.common.artifact.pojo.configuration.remote.RemoteConfiguration
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContext
@@ -50,6 +49,9 @@ import com.tencent.bkrepo.common.artifact.repository.remote.RemoteRepository
 import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactResource
 import com.tencent.bkrepo.common.storage.monitor.Throughput
 import com.tencent.bkrepo.repository.api.ProxyChannelClient
+import com.tencent.bkrepo.repository.pojo.proxy.ProxyChannelInfo
+import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
+import java.time.format.DateTimeFormatter
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -188,61 +190,54 @@ class CompositeRepository(
     /**
      * 根据原始上下文[context]以及代理源设置[setting]生成新的[ArtifactContext]
      */
-    private fun getContextFromProxyChannel(context: ArtifactContext, setting: ProxyChannelSetting): ArtifactContext {
-        return if (setting.public) {
-            getContextFromPublicProxyChannel(context, setting)
-        } else {
-            getContextFromPrivateProxyChannel(context, setting)
-        }
-    }
-
-    /**
-     * 根据原始上下文[context]以及公共代理源设置[setting]生成新的[ArtifactContext]
-     */
-    private fun getContextFromPublicProxyChannel(
+    private fun getContextFromProxyChannel(
         context: ArtifactContext,
         setting: ProxyChannelSetting
     ): ArtifactContext {
         // 查询公共源详情
-        val proxyChannel = proxyChannelClient.getById(setting.channelId!!).data!!
-        // 查询远程仓库
-        val repoType = proxyChannel.repoType.name
-        val projectId = PUBLIC_PROXY_PROJECT
-        val repoName = PUBLIC_PROXY_REPO_NAME.format(repoType, proxyChannel.name)
-        val remoteRepoDetail = repositoryClient.getRepoDetail(projectId, repoName, repoType).data!!
+        val proxyChannel = proxyChannelClient.getByUniqueId(
+            projectId = context.projectId,
+            repoName = context.repoName,
+            repoType = context.repositoryDetail.type.name,
+            name = setting.name
+        ).data!!
         // 构造proxyConfiguration
-        val remoteConfiguration = remoteRepoDetail.configuration
-        require(remoteConfiguration is RemoteConfiguration)
-        remoteConfiguration.url = proxyChannel.url
-        remoteConfiguration.credentials.username = proxyChannel.username
-        remoteConfiguration.credentials.password = proxyChannel.password
-
-        return context.copy(remoteRepoDetail)
-    }
-
-    /**
-     * 根据原始上下文[context]以及私有代理源设置[setting]生成新的[ArtifactContext]
-     */
-    private fun getContextFromPrivateProxyChannel(
-        context: ArtifactContext,
-        setting: ProxyChannelSetting
-    ): ArtifactContext {
-        // 查询远程仓库
-        val projectId = context.repositoryDetail.projectId
-        val repoType = context.repositoryDetail.type.name
-        val repoName = PRIVATE_PROXY_REPO_NAME.format(context.repositoryDetail.name, setting.name)
-        val remoteRepoDetail = repositoryClient.getRepoDetail(projectId, repoName, repoType).data!!
-        // 构造proxyConfiguration
-        val remoteConfiguration = remoteRepoDetail.configuration
-        require(remoteConfiguration is RemoteConfiguration)
-        remoteConfiguration.url = setting.url!!
-        remoteConfiguration.credentials.username = setting.username
-        remoteConfiguration.credentials.password = setting.password
-
+        val remoteConfiguration = convertConfig(proxyChannel)
+        val remoteRepoDetail = convert(remoteConfiguration, context.repositoryDetail)
         return context.copy(remoteRepoDetail)
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(CompositeRepository::class.java)
+        private fun convert(
+            repoConfiguration: RepositoryConfiguration,
+            repositoryDetail: RepositoryDetail
+        ): RepositoryDetail {
+            return RepositoryDetail(
+                name = repositoryDetail.name,
+                type = repositoryDetail.type,
+                category = RepositoryCategory.REMOTE,
+                public = false,
+                description = repositoryDetail.description,
+                configuration = repoConfiguration,
+                storageCredentials = repositoryDetail.storageCredentials,
+                projectId = repositoryDetail.projectId,
+                createdBy = repositoryDetail.createdBy,
+                createdDate = repositoryDetail.createdDate.format(DateTimeFormatter.ISO_DATE_TIME),
+                lastModifiedBy = repositoryDetail.lastModifiedBy,
+                lastModifiedDate = repositoryDetail.lastModifiedDate.format(DateTimeFormatter.ISO_DATE_TIME),
+                quota = repositoryDetail.quota,
+                used = repositoryDetail.used,
+                oldCredentialsKey = repositoryDetail.oldCredentialsKey
+            )
+        }
+
+        fun convertConfig(tProxyChannel: ProxyChannelInfo): RepositoryConfiguration {
+            val remoteConfiguration = RemoteConfiguration()
+            remoteConfiguration.url = tProxyChannel.url
+            remoteConfiguration.credentials.username = tProxyChannel.username
+            remoteConfiguration.credentials.password = tProxyChannel.password
+            return remoteConfiguration
+        }
     }
 }

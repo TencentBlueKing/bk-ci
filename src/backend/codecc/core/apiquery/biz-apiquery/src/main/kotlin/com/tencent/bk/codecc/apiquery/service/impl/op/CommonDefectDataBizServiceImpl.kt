@@ -31,7 +31,7 @@ import com.tencent.devops.common.constant.ComConstants.DefectStatus
 import com.tencent.devops.common.util.DateTimeUtils
 import org.apache.commons.lang.ObjectUtils
 import org.slf4j.LoggerFactory
-import org.springframework.beans.BeanUtils
+import com.tencent.devops.common.util.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service

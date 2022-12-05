@@ -159,6 +159,11 @@ func (c *Custom) LocalExecute(command []string) (int, error) {
 	return c.innerHandler.LocalExecute(command)
 }
 
+// NeedRemoteResource check whether this command need remote resource
+func (c *Custom) NeedRemoteResource(command []string) bool {
+	return true
+}
+
 // RemoteRetryTimes will return the remote retry times
 func (c *Custom) RemoteRetryTimes() int {
 	return 0

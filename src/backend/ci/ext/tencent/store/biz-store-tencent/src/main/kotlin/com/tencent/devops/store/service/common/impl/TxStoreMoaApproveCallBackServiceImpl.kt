@@ -52,11 +52,16 @@ class TxStoreMoaApproveCallBackServiceImpl @Autowired constructor() : TxStoreMoa
         verifier: String,
         result: Int,
         taskId: String,
-        message: String
+        message: String,
+        token: String
     ): Result<Boolean> {
-        logger.info("moaApproveCallBack verifier is :$verifier, result is :$result, taskId is :$taskId, message is :$message")
+        logger.info("moaApproveCallBack params:[$verifier|$result|$taskId|$message]")
         val approveStatus = if (result == 0) ApproveStatusEnum.REFUSE else ApproveStatusEnum.PASS
-        val approveStoreInfoResult = storeApproveService.approveStoreInfo(verifier, taskId, StoreApproveRequest(message, approveStatus))
+        val approveStoreInfoResult = storeApproveService.approveStoreInfo(
+            userId = verifier,
+            approveId = taskId,
+            storeApproveRequest = StoreApproveRequest(message, approveStatus, token)
+        )
         logger.info("approveStoreInfoResult is :$approveStoreInfoResult")
         if (approveStoreInfoResult.isNotOk()) {
             return approveStoreInfoResult

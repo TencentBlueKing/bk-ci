@@ -66,6 +66,14 @@ class RepositoryDao : SimpleMongoDao<TRepository>() {
     }
 
     /**
+     * 查询是否有使用指定存储凭证的仓库
+     */
+    fun existsByCredentialsKey(credentialsKey: String): Boolean {
+        val query = Query(TRepository::credentialsKey.isEqualTo(credentialsKey))
+        return this.exists(query)
+    }
+
+    /**
      * 构造单个仓库查询条件
      */
     private fun buildSingleQuery(projectId: String, repoName: String, repoType: String? = null): Query {

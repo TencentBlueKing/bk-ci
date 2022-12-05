@@ -72,4 +72,22 @@ class ServiceP4ResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getFileContent(
+        p4Port: String,
+        filePath: String,
+        reversion: Int,
+        username: String,
+        password: String
+    ): Result<String> {
+        return Result(
+            p4Service.getFileContent(
+                p4Port = p4Port,
+                filePath = filePath,
+                reversion = reversion,
+                username = username,
+                password = password
+            )
+        )
+    }
 }

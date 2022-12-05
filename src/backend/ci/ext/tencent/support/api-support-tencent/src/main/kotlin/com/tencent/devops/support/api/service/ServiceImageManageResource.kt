@@ -31,9 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.glassfish.jersey.media.multipart.FormDataParam
-import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -61,19 +58,4 @@ interface ServiceImageManageResource {
         @QueryParam("compressHeight")
         compressHeight: Int
     ): Result<String>
-
-    @ApiOperation("上传图片")
-    @POST
-    @Path("/upload")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun uploadImage(
-        @ApiParam("userId", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @ApiParam("文件", required = true)
-        @FormDataParam("file")
-        inputStream: InputStream,
-        @FormDataParam("file")
-        disposition: FormDataContentDisposition
-    ): Result<String?>
 }

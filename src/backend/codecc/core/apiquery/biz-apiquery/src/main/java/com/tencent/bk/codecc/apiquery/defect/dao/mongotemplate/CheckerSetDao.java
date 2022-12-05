@@ -129,7 +129,7 @@ public class CheckerSetDao {
     public CheckerSetModel findLatestVersionByCheckerSetId(String checkerSetId) {
         Query query = new Query();
         query.addCriteria(Criteria.where("checker_set_id").is(checkerSetId))
-                .with(new Sort(Sort.Direction.DESC,"version"));
+                .with(Sort.by(Sort.Direction.DESC,"version"));
 
         return mongoTemplate.findOne(query, CheckerSetModel.class, "t_checker_set");
     }

@@ -1,11 +1,10 @@
 package com.tencent.bk.codecc.apiquery.task.dao
 
-import com.mongodb.BasicDBObject
 import com.tencent.bk.codecc.apiquery.task.model.BaseDataModel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.mongodb.core.MongoTemplate
-import org.springframework.data.mongodb.core.query.BasicQuery
 import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -17,7 +16,7 @@ class BaseDataDao @Autowired constructor(
      * 根据参数类型查询基础数据
      */
     fun findByParamType(paramType: String): List<BaseDataModel> {
-        val query = BasicQuery(BasicDBObject())
+        val query = Query()
         query.addCriteria(
             Criteria.where("param_type").`is`(paramType)
         )
@@ -25,7 +24,7 @@ class BaseDataDao @Autowired constructor(
     }
 
     fun findAllByParamTypeAndParamCode(paramType: String, paramCode: String): List<BaseDataModel> {
-        val query = BasicQuery(BasicDBObject())
+        val query = Query()
         query.addCriteria(
                 Criteria.where("param_type").`is`(paramType).and("param_code").`is`(paramCode)
         )

@@ -63,7 +63,7 @@ public class CCNAuthorTransBizServiceImpl extends AbstractAuthorTransBizService
 
             if (CollectionUtils.isNotEmpty(needRefreshDefectList))
             {
-                ccnDefectRepository.save(needRefreshDefectList);
+                ccnDefectRepository.saveAll(needRefreshDefectList);
             }
         }
 

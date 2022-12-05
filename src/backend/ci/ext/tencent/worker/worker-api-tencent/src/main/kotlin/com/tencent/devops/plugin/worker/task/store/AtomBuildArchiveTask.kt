@@ -27,6 +27,10 @@
 
 package com.tencent.devops.plugin.worker.task.store
 
+import com.tencent.devops.common.api.constant.KEY_OS_ARCH
+import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_ARCH_FLAG
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_NAME_FLAG
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -43,11 +47,12 @@ import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.task.market.AtomRunConditionFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import java.io.File
 import java.nio.file.Paths
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "ComplexMethod")
 @TaskClassType(classTypes = [AtomBuildArchiveElement.classType])
 class AtomBuildArchiveTask : ITask() {
 
@@ -76,7 +81,12 @@ class AtomBuildArchiveTask : ITask() {
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
-        val preCmd = buildVariable["preCmd"]
+        val packageName = buildVariable["packageName"] ?: throw TaskExecuteException(
+            errorMsg = "need packageName param",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+        )
+        val preCmd = buildVariable["preCmd"] ?: ""
         val target = buildVariable["target"]
 
         val fileSha = archiveAtom(
@@ -110,8 +120,27 @@ class AtomBuildArchiveTask : ITask() {
                 )
             }
         }
-
-        val atomEnv = atomEnv(projectId = buildVariables.projectId, atomCode = atomCode, atomVersion = atomVersion)
+        val osName = taskParams[KEY_OS_NAME]
+        val osArch = taskParams[KEY_OS_ARCH]
+        val validOsNameFlag = buildVariable[KEY_VALID_OS_NAME_FLAG]?.toBoolean()
+        val validOsArchFlag = buildVariable[KEY_VALID_OS_ARCH_FLAG]?.toBoolean()
+        val finalOsName = if (validOsNameFlag == true) {
+            osName
+        } else {
+            null
+        }
+        val finalOsArch = if (validOsArchFlag == true) {
+            osArch
+        } else {
+            null
+        }
+        val atomEnv = atomEnv(
+            projectId = buildVariables.projectId,
+            atomCode = atomCode,
+            atomVersion = atomVersion,
+            osName = finalOsName,
+            osArch = finalOsArch
+        )
 
         val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID)
             ?: throw TaskExecuteException(
@@ -119,16 +148,25 @@ class AtomBuildArchiveTask : ITask() {
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
-
+        val language = atomEnv.language!!
+        val atomRunConditionHandleService = AtomRunConditionFactory.createAtomRunConditionHandleService(language)
         val request = AtomEnvRequest(
             userId = userId,
-            pkgPath = destPath,
-            language = atomEnv.language,
+            pkgName = packageName,
+            pkgRepoPath = destPath,
+            language = language,
             minVersion = atomEnv.minVersion,
             target = target ?: atomEnv.target,
             shaContent = fileSha,
-            preCmd = preCmd,
-            atomPostInfo = atomEnv.atomPostInfo
+            preCmd = atomRunConditionHandleService.handleAtomPreCmd(
+                preCmd = preCmd,
+                osName = osName ?: "",
+                pkgName = packageName,
+                runtimeVersion = atomEnv.runtimeVersion
+            ),
+            atomPostInfo = atomEnv.atomPostInfo,
+            osName = finalOsName,
+            osArch = finalOsArch
         )
         val result = atomApi.updateAtomEnv(buildVariables.projectId, atomCode, atomVersion, request)
         if (result.data != null && result.data == true) {
@@ -142,12 +180,21 @@ class AtomBuildArchiveTask : ITask() {
         }
     }
 
-    private fun atomEnv(projectId: String, atomCode: String, atomVersion: String): AtomEnv {
+    private fun atomEnv(
+        projectId: String,
+        atomCode: String,
+        atomVersion: String,
+        osName: String? = null,
+        osArch: String? = null
+    ): AtomEnv {
         val atomEnvResult = atomApi.getAtomEnv(
             projectCode = projectId,
             atomCode = atomCode,
             atomVersion = atomVersion,
-            atomStatus = AtomStatusEnum.BUILDING.status.toByte()
+            atomStatus = AtomStatusEnum.BUILDING.status.toByte(),
+            osName = osName,
+            osArch = osArch,
+            convertOsFlag = false
         )
         return atomEnvResult.data ?: throw TaskExecuteException(
             errorMsg = "can not found any $atomCode env",

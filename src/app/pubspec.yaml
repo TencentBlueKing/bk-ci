@@ -31,14 +31,14 @@ dependencies:
   flutter_swiper: ^1.1.6
   dio: ^4.0.0
   shared_preferences: ^2.0.5
-  provider: ^5.0.0
+  provider: ^6.0.2
   json_annotation: ^4.0.1
   intl: ^0.17.0
   package_info: ^2.0.0
   qr_flutter: ^4.0.0
 
   fluttertoast: ^8.0.3
-  permission_handler: ^6.1.3
+  permission_handler: ^9.2.0
   image_gallery_saver: ^1.6.5
   url_launcher: ^6.0.2
   path_provider: ^2.0.1
@@ -48,12 +48,12 @@ dependencies:
   device_apps: ^2.0.1
   minimize_app: ^0.1.1
   connectivity: ^3.0.3
-  webview_flutter: ^2.0.2
+  webview_flutter: ^3.0.2
   version: ^2.0.0
   badges: ^2.0.1
   quick_actions: ^0.6.0+3
 
-  qr_code_scanner: ^0.5.1
+  qr_code_scanner: ^0.7.0
   # qr_code_scanner:
   #   git:
   #     url: git://github.com/juliuscanute/qr_code_scanner.git
@@ -61,7 +61,7 @@ dependencies:
   bk_tencent_share: ^0.0.5
   # bk_tencent_share: 
   #   path: /Users/roychen/Desktop/bk_tencent_share
-  flutter_slidable: ^0.6.0
+  flutter_slidable: ^1.2.0
   cupertino_icons: ^1.0.0
   hashids2: ^2.0.0
   cached_network_image: ^3.0.0
@@ -70,7 +70,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner: ^2.0.6
-  json_serializable: ^4.1.0
+  json_serializable: ^6.2.0
   
 
 # For information on the generic Dart part of this file, see the

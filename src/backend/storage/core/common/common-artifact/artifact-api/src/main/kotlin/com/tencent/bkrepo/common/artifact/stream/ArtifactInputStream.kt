@@ -38,7 +38,7 @@ import java.io.InputStream
  * @param delegate 实际操作的输入流
  * @param range 输入流在文件中的范围
  */
-class ArtifactInputStream(
+open class ArtifactInputStream(
     delegate: InputStream,
     val range: Range
 ) : DelegateInputStream(delegate) {
@@ -58,7 +58,7 @@ class ArtifactInputStream(
     override fun read(byteArray: ByteArray): Int {
         return super.read(byteArray).apply {
             if (this >= 0) {
-                listenerList.forEach { it.data(byteArray, this) }
+                listenerList.forEach { it.data(byteArray, 0, this) }
             } else {
                 notifyFinish()
             }
@@ -68,7 +68,7 @@ class ArtifactInputStream(
     override fun read(byteArray: ByteArray, off: Int, len: Int): Int {
         return super.read(byteArray, off, len).apply {
             if (this >= 0) {
-                listenerList.forEach { it.data(byteArray, this) }
+                listenerList.forEach { it.data(byteArray, off, this) }
             } else {
                 notifyFinish()
             }

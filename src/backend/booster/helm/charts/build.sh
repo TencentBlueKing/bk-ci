@@ -94,6 +94,6 @@ done
 
 helm package bktbs --version $VERSION --app-version $APP_VERSION
 if [[ $PUSH -eq 1 ]] ; then
-    helm push bktbs-$VERSION.tgz $REGISTRY -f --username $USERNAME --password $PASSWORD
+    curl -F "chart=@bktbs-$VERSION.tgz" -u $USERNAME:$PASSWORD $REGISTRY
 fi
 log "BUILD SUCCESSFUL!"

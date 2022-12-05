@@ -29,8 +29,8 @@ package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class ParameterUtilsTest {
     @Test
@@ -45,7 +45,7 @@ class ParameterUtilsTest {
             version = "1.0",
             data = data1
         )
-        Assert.assertNotEquals(ParameterUtils.element2Str(element1), null)
+        Assertions.assertNotEquals(ParameterUtils.element2Str(element1), null)
 
         val sb = StringBuilder()
         while (sb.length < 65534) {
@@ -60,7 +60,7 @@ class ParameterUtilsTest {
             version = "1.0",
             data = data1
         )
-        Assert.assertEquals(ParameterUtils.element2Str(element2), null)
+        Assertions.assertEquals(ParameterUtils.element2Str(element2), null)
     }
 
     @Test
@@ -85,7 +85,7 @@ class ParameterUtilsTest {
         val inputKeys = inputMap.keys
         val input1 = ParameterUtils.getElementInput(element1)
         val checkValue = input1?.keys
-        Assert.assertEquals(inputKeys, checkValue)
+        Assertions.assertEquals(inputKeys, checkValue)
 
         val element2 = MarketBuildLessAtomElement(
             name = "test",
@@ -96,6 +96,6 @@ class ParameterUtilsTest {
             data = mapOf()
         )
         val input2 = ParameterUtils.getElementInput(element2)
-        Assert.assertEquals(input2, null)
+        Assertions.assertEquals(input2, null)
     }
 }

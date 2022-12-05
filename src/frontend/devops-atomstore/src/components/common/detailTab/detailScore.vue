@@ -1,7 +1,11 @@
 <template>
     <section v-bkloading="{ isLoading }" class="detail-score">
+        <main class="main-swiper" v-if="detail.mediaList && detail.mediaList.length">
+            <media-list :list="detail.mediaList" v-if="!isLoading"></media-list>
+        </main>
+
         <section class="summary-tab">
-            <p :class="{ 'overflow': !hasShowAll }" ref="edit">
+            <p ref="edit">
                 <mavon-editor
                     :editable="false"
                     default-open="preview"
@@ -15,7 +19,6 @@
                 >
                 </mavon-editor>
             </p>
-            <span class="summary-all" @click="hasShowAll = true" v-if="isOverDes && !hasShowAll"> {{ $t('展开全部') }} </span>
             <p class="g-empty summary-empty" v-if="!detail.description"> {{ $t('发布者很懒，什么都没留下！') }} </p>
         </section>
 
@@ -58,13 +61,15 @@
     import commentRate from '../comment-rate'
     import comment from '../comment'
     import commentDialog from '../comment/commentDialog.vue'
+    import mediaList from '../mediaList/index'
 
     export default {
         components: {
             comment,
             commentRate,
             commentDialog,
-            animatedInteger
+            animatedInteger,
+            mediaList
         },
 
         data () {
@@ -73,18 +78,20 @@
                 pageSize: 10,
                 pageIndex: 1,
                 isLoading: true,
-                isOverDes: false,
-                hasShowAll: false,
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
                         template: (postData) => this.requestTemplateComments(postData),
-                        image: (postData) => this.requestImageComments(postData)
+                        ide: (postData) => this.requestIDEComments(postData),
+                        image: (postData) => this.requestImageComments(postData),
+                        service: (postData) => this.requestServiceComments(postData)
                     },
                     scoreDetail: {
                         atom: () => this.requestAtomScoreDetail(this.detailCode),
                         template: () => this.requestTemplateScoreDetail(this.detailCode),
-                        image: () => this.requestImageScoreDetail(this.detailCode)
+                        ide: () => this.requestIDEScoreDetail(this.detailCode),
+                        image: () => this.requestImageScoreDetail(this.detailCode),
+                        service: () => this.requestServiceScoreDetail(this.detailCode)
                     }
                 }
             }
@@ -114,8 +121,12 @@
                 'requestAtomScoreDetail',
                 'requestTemplateComments',
                 'requestTemplateScoreDetail',
+                'requestIDEComments',
+                'requestIDEScoreDetail',
                 'requestImageComments',
-                'requestImageScoreDetail'
+                'requestImageScoreDetail',
+                'requestServiceComments',
+                'requestServiceScoreDetail'
             ]),
 
             getSummaryScore () {
@@ -124,9 +135,6 @@
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => {
                     this.isLoading = false
-                    this.$nextTick(() => {
-                        this.isOverDes = this.$refs.edit.scrollHeight > 65
-                    })
                 })
             },
 
@@ -211,7 +219,7 @@
     }
 
     .overflow {
-        max-height: 65px;
+        max-height: 120px;
         overflow: hidden;
     }
 

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,29 +10,25 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.bkrepo.replication
 
-import com.tencent.bkrepo.replication.constant.DEFAULT_GROUP_ID
-import com.tencent.bkrepo.replication.service.ScheduleService
+import com.tencent.bkrepo.replication.replica.schedule.ReplicaTaskScheduler
+import com.tencent.bkrepo.replication.replica.schedule.ReplicaTaskScheduler.Companion.REPLICA_JOB_GROUP
 import org.junit.jupiter.api.Test
 import org.quartz.InterruptableJob
 import org.quartz.JobBuilder
@@ -67,7 +63,7 @@ internal class QuartzJobReloadTest {
         repeat(1) {
             thread {
                 val scheduler = createScheduler("scheduler$it")
-                val scheduleService = ScheduleService(scheduler)
+                val scheduleService = ReplicaTaskScheduler(scheduler)
                 // 加载任务
                 while (true) {
                     logger.info("Start to reload task")
@@ -87,15 +83,17 @@ internal class QuartzJobReloadTest {
 
                     // 创建新job
                     taskIdList.forEach { id ->
-                        if (!scheduleService.checkExists(id)) {
+                        if (!scheduleService.exist(id)) {
                             val jobDetail = createJobDetail(id)
                             val trigger = createTrigger(id)
                             scheduleService.scheduleJob(jobDetail, trigger)
                             newTaskCount += 1
                         }
                     }
-                    logger.info("Success to reload replication task, " +
-                        "total: $totalCount, new: $newTaskCount, expired: $expiredTaskCount")
+                    logger.info(
+                        "Success to reload replication task, " +
+                            "total: $totalCount, new: $newTaskCount, expired: $expiredTaskCount"
+                    )
                     sleep(3)
                 }
             }
@@ -106,7 +104,7 @@ internal class QuartzJobReloadTest {
 
     private fun createJobDetail(id: String): JobDetail {
         return JobBuilder.newJob(HelloJob::class.java)
-            .withIdentity(id, DEFAULT_GROUP_ID)
+            .withIdentity(id, REPLICA_JOB_GROUP)
             .usingJobData("id", id)
             .requestRecovery()
             .build()
@@ -114,7 +112,7 @@ internal class QuartzJobReloadTest {
 
     private fun createTrigger(id: String): Trigger {
         return TriggerBuilder.newTrigger()
-            .withIdentity(id, DEFAULT_GROUP_ID)
+            .withIdentity(id, REPLICA_JOB_GROUP)
             .startNow()
             .build()
     }

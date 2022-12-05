@@ -65,7 +65,7 @@
                 // 保留select前的值
                 const preTask = this.element.globalVar || ''
                 // // 处理几个hidden的字段
-                Object.assign(newElement, { 'globalVar': {} })
+                Object.assign(newElement, { globalVar: {} })
                 // // 每次切换task则清除动态加入的element
                 this.deleteNewElement()
                 // // 页面渲染新加的动态参数
@@ -82,7 +82,7 @@
                         Object.assign(newElement, { [curParam.id]: curValue })
                         Object.assign(CurTaskParams, { [curParam.id]: curValue })
                     }
-                    Object.assign(newElement, { 'globalVar': CurTaskParams })
+                    Object.assign(newElement, { globalVar: CurTaskParams })
                 }
                 this.updateAtom({
                     element: this.element,
@@ -117,7 +117,7 @@
                         Object.assign(taskParams, { [itemValue]: this.element[itemValue] })
                     }
                 })
-                Object.assign(newElement, { 'globalVar': taskParams })
+                Object.assign(newElement, { globalVar: taskParams })
 
                 this.updateAtom({
                     element: this.element,
@@ -145,7 +145,7 @@
             },
             deleteNewElement () {
                 // 把动态增加的元素从element中移除
-                Object.keys(this.element).map(key => {
+                Object.keys(this.element).forEach(key => {
                     const notRemove = this.settingKeys.find(item => item === key)
                     if (!notRemove) {
                         this.deletePropKey({

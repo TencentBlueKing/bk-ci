@@ -35,5 +35,5 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 
 data class Array constructor(
     @JacksonXmlProperty(localName = "data")
-    val data: Data
+    val data: Data?
 )

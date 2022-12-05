@@ -35,7 +35,7 @@ import com.tencent.devops.common.web.aop.annotation.EndReport;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -225,7 +225,7 @@ public abstract class AbstractFastIncrementConsumer implements IConsumer<Analyze
         String buildId = analyzeConfigInfoVO.getBuildId();
 
         // 校验构建号对应的仓库信息是否已存在
-        CodeRepoInfoEntity codeRepoInfo = codeRepoRepository.findByTaskIdAndBuildId(taskId, buildId);
+        CodeRepoInfoEntity codeRepoInfo = codeRepoRepository.findFirstByTaskIdAndBuildId(taskId, buildId);
         if (codeRepoInfo == null)
         {
             // 更新仓库列表和构建ID

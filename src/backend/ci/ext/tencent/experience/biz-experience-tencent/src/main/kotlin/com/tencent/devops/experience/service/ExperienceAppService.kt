@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -54,6 +55,7 @@ import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
+import com.tencent.devops.experience.pojo.AppExperienceInstallPackage
 import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
@@ -63,6 +65,7 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.time.LocalDateTime
@@ -82,7 +85,8 @@ class ExperienceAppService(
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val experiencePushSubscribeDao: ExperiencePushSubscribeDao,
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val experienceService: ExperienceService
 ) {
 
     private val executorService = Executors.newFixedThreadPool(2)
@@ -111,22 +115,23 @@ class ExperienceAppService(
         experienceHashId: String,
         platform: Int,
         appVersion: String?,
-        organization: String?
+        organization: String?,
+        forceNew: Boolean
     ): AppExperienceDetail {
         var experienceId = HashUtil.decodeIdToLong(experienceHashId)
         var experience = experienceDao.get(dslContext, experienceId)
         val projectId = experience.projectId
         val bundleIdentifier = experience.bundleIdentifier
         val platform = experience.platform
-        val newestRecordId = experienceBaseService.getNewestRecordId(projectId, bundleIdentifier, platform)
+        val newestPublic = experienceBaseService.getNewestPublic(projectId, bundleIdentifier, platform)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
-        val isPublic = !isOuter && newestRecordId != null
+        val isPublic = !isOuter && experienceBaseService.isPublic(experienceId, false)
         // 移除红点
         removeRedPoint(userId, experienceId)
         // 当APP前端传递的experienceId和公开体验的app被覆盖后T_EXPERIENCE_PUBLIC表中的RecordId不一致时，则将experienceId置为更新后的RecordId
-        if (newestRecordId != null && newestRecordId != experienceId) {
-            experienceId = newestRecordId
+        if (forceNew && newestPublic != null && newestPublic.recordId != experienceId) {
+            experienceId = newestPublic.recordId
             experience = experienceDao.get(dslContext, experienceId)
         }
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
@@ -151,7 +156,7 @@ class ExperienceAppService(
         val versionTitle =
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
-        val isPrivate = experienceBaseService.isPrivate(experienceId, isOuter)
+        val isPrivate = experienceBaseService.isPrivate(experience, isOuter, userId)
         val experienceCondition = getExperienceCondition(isPublic, isPrivate, isInPrivate)
         val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
 
@@ -341,6 +346,8 @@ class ExperienceAppService(
 
     fun downloadUrl(userId: String, experienceHashId: String, organization: String?): DownloadUrl {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        // 移除红点
+        removeRedPoint(userId, experienceId)
         return experienceDownloadService.getExternalDownloadUrl(
             userId = userId,
             experienceId = experienceId,
@@ -402,19 +409,83 @@ class ExperienceAppService(
     }
 
     fun publicExperiences(userId: String, platform: Int, offset: Int, limit: Int): List<AppExperience> {
+        val platformStr = PlatformEnum.of(platform)?.name
         val recordIds = mutableListOf<Long>()
 
         // 订阅的需要置顶
-        val subcribeRecordIds = experiencePublicDao.listSubcribeRecordIds(dslContext, userId, 100)
-        recordIds.addAll(subcribeRecordIds)
+        val subscribeRecordIds = experiencePublicDao.listSubscribeRecordIds(dslContext, userId, platformStr, 100)
+        recordIds.addAll(subscribeRecordIds)
 
         // 普通的公开体验
         val normalRecords = experienceDownloadDetailDao.listIdsForPublic(
-            dslContext, PlatformEnum.of(platform)?.name, 100
-        ).map { it.value1() }.filterNot { subcribeRecordIds.contains(it) }
+            dslContext, userId, platformStr, 100
+        ).filterNot { recordIds.contains(it) }
         recordIds.addAll(normalRecords)
 
-        val records = experienceDao.list(dslContext, recordIds)
+        // 过滤内部体验ID
+        val privateRecordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE, false)
+        recordIds.removeAll(privateRecordIds)
+
+        // 找到结果
+        val recordMap = experienceDao.listOnline(dslContext, recordIds).map { it.id to it }.toMap()
+
+        // 排序
+        val records = mutableListOf<TExperienceRecord>()
+        for (recordId in recordIds) {
+            recordMap[recordId]?.let { records.add(it) }
+        }
+
         return experienceBaseService.toAppExperiences(userId, records)
+    }
+
+    fun installPackages(
+        userId: String,
+        platform: Int,
+        appVersion: String?,
+        organization: String?,
+        experienceHashId: String
+    ): Pagination<AppExperienceInstallPackage> {
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        if (!experienceBaseService.userCanExperience(userId, experienceId, organization == ORGANIZATION_OUTER)) {
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "没有查询该体验的权限。",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
+            )
+        }
+        val experience = experienceDao.get(dslContext, experienceId)
+        val projectId = experience.projectId
+        val artifactoryPath = experience.artifactoryPath
+        val artifactoryType =
+            com.tencent.devops.experience.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType)
+        val detailPermission = try {
+            experienceService.hasArtifactoryPermission(
+                userId = userId,
+                projectId = projectId,
+                path = artifactoryPath,
+                artifactoryType = artifactoryType,
+                permission = Permission.VIEW
+            )
+        } catch (e: Exception) {
+            logger.warn("get permission failed!", e)
+            false
+        }
+        return Pagination(
+            false,
+            listOf(
+                AppExperienceInstallPackage(
+                    name = experience.name,
+                    projectId = projectId,
+                    path = artifactoryPath,
+                    artifactoryType = artifactoryType.name,
+                    detailPermission = detailPermission,
+                    size = experience.size
+                )
+            )
+        )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceAppService::class.java)
     }
 }

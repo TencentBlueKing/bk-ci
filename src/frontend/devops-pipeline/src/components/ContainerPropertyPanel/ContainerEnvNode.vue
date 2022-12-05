@@ -5,7 +5,7 @@
             name="agentType"
             :list="agentTypeList"
             :disabled="disabled"
-            :handle-change="handleSelect"
+            :handle-change="handleChange"
             :value="agentType">
         </enum-input>
         <div :class="{ 'agent-name-select': true, 'abnormal-tip': abnormalSlave }" v-if="showAgentById">
@@ -17,28 +17,60 @@
                 :value="value"
                 :toggle-visible="toggleAgentList"
             >
+                
+                <template v-if="isAgentEnv" v-slot:option-item="optionProps">
+                    <div class="env-option-item">
+                        <span>{{optionProps.name}}</span>
+                        <span v-if="optionProps.isShared" class="env-info">{{ $t('editPage.shareEnvInfo', [optionProps.sharedProjectId, optionProps.sharedUserId]) }}</span>
+                        <bk-link target="_blank" class="env-link" :href="optionProps.envInfoHref" theme="primary">{{ $t('newlist.view') }}</bk-link>
+                    </div>
+                </template>
+                
                 <template>
-                    <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
+                    <div class="env-import-entry cursor-pointer" @click.stop.prevent="addThridSlave">
                         <i class="devops-icon icon-plus-circle"></i>
                         <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
                     </div>
                 </template>
             </selector>
         </div>
-        <div :class="{ 'alias-name-select': true, 'is-focus-selector': isFocus }" v-else>
-            <span v-if="!isFocus" :class="{ 'build-resource-label': true, 'disabled': disabled, 'abnormal-tip': abnormalSlave }">{{ buildResource }}</span>
-            <select-input
-                name="value"
-                :disabled="disabled"
-                :is-loading="isLoading"
-                :handle-change="handleSelect"
-                :options="nodeList"
-                :has-error="hasError"
-                @focus="handleFocus"
-                @blur="handleBlur"
-                :value="value"
-            >
-            </select-input>
+        <div class="alias-name-select" v-else>
+            <div class="env-alias-area">
+                <form-field
+                    :is-error="hasError"
+                    :required="required"
+                    class="env-alias-area-item"
+                    :label="isAgentEnv ? $t('editPage.environment') : ''"
+                >
+                    <devops-select
+                        name="value"
+                        :disabled="disabled"
+                        :is-loading="isLoading"
+                        :handle-change="handleChange"
+                        :options="nodeList"
+                        @focus="handleFocus"
+                        @blur="handleBlur"
+                        :value="value"
+                    />
+                </form-field>
+                <form-field
+                    v-if="isAgentEnv"
+                    :required="false"
+                    class="env-alias-area-item"
+                    :label="$t('editPage.envProjectId')"
+                    :desc="$t('editPage.envProjectTips')"
+                >
+                    <vuex-input
+                        input-type="string"
+                        name="envProjectId"
+                        :disabled="disabled"
+                        :placeholder="$t('editPage.envProjectPlaceholder')"
+                        :value="envProjectId"
+                        :handle-change="handleChange"
+                    />
+                </form-field>
+            </div>
+            
         </div>
     </div>
 </template>
@@ -46,15 +78,19 @@
 <script>
     import { mapActions } from 'vuex'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import VuexInput from '@/components/atomFormField/VuexInput'
     import Selector from '@/components/atomFormField/Selector'
-    import SelectInput from '@/components/AtomFormComponent/SelectInput'
+    import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
+    import FormField from '@/components/AtomPropertyPanel/FormField'
 
     export default {
         name: 'container-node-selector',
         components: {
             EnumInput,
+            FormField,
+            VuexInput,
             Selector,
-            SelectInput
+            DevopsSelect
         },
         props: {
             os: {
@@ -67,6 +103,10 @@
                 type: String
             },
             value: {
+                type: String,
+                default: ''
+            },
+            envProjectId: {
                 type: String,
                 default: ''
             },
@@ -99,12 +139,14 @@
             },
             hasError: {
                 type: Boolean
-            }
+            },
+            required: Boolean
         },
         data () {
             return {
                 isLoading: false,
                 isFocus: false,
+                
                 nodeList: []
             }
         },
@@ -128,6 +170,9 @@
             },
             showAgentById () {
                 return this.showAgentType && this.agentType === 'ID'
+            },
+            isAgentEnv () {
+                return this.buildResourceType === 'THIRD_PARTY_AGENT_ENV'
             },
             agentTypeList () {
                 return this.isAgentId
@@ -154,7 +199,9 @@
                 'fetchBuildResourceByType'
             ]),
             handleSelect (name, value) {
-                this.handleChange(name, value)
+                const node = this.nodeList.find(item => item.id === value)
+                const sharedId = node && node.sharedProjectId ? node.sharedProjectId : ''
+                this.handleChange(name, value, sharedId)
             },
             handleBlur () {
                 this.isFocus = false
@@ -183,10 +230,13 @@
                         this.nodeList = resources.map((resource, index) => ({
                             ...resource,
                             id: this.showAgentById ? resource.id : resource.name,
+                            isShared: !!resource.sharedProjectId && !!resource.sharedUserId,
                             name: resource.name + (resource.label ? resource.label : ''),
+                            envInfoHref: `${WEB_URL_PREFIX}/environment/${resource.sharedProjectId || this.projectId}/envDetail/${resource.id}/`,
                             disalbed: !resource.name
                         }))
                     }
+                    console.log(this.nodeList, this.showAgentById, resources)
 
                     // 第三方构建机（节点/环境）选择添加无权限查看项
                     if (this.showAgentById && this.value !== '' && this.nodeList.filter(item => item.id === this.value).length === 0) {
@@ -214,17 +264,7 @@
     .container-node-selector {
 
         .alias-name-select {
-            &:not(.is-focus-selector) {
-                input,
-                input[disabled] {
-                    color: transparent !important;
-                    background-color: transparent !important;
-                }
-                .build-resource-label.disabled {
-                    background-color: #fafafa;
-                    color: #aaaaaa;
-                }
-            }
+            
             .abnormal-tip {
                 color: $dangerColor;
             }
@@ -248,9 +288,39 @@
                 color: #aaaaaa;
             }
         }
-
-        .agent-type {
-            margin-bottom: 8px;
+    }
+    .env-option-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        span:first-child {
+            flex: 1;
+            @include ellipsis();
+            margin-right: 16px;
+        }
+        .env-info {
+            margin-right: 12px;
+            color: $fontWeightColor;
+        }
+        .env-link .bk-link-text {
+            font-size: 12px;
+        }
+    }
+    .env-import-entry {
+        display: flex;
+        align-items: center;
+        .text {
+            margin-left: 8px;
+        }
+    }
+    .env-alias-area {
+        display: flex;
+        .env-alias-area-item {
+            margin-top: 0px !important;
+            flex: 1;
+        }
+        .env-alias-area-item:first-child {
+            margin-right: 12px;
         }
     }
 </style>

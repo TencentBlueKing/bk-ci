@@ -36,8 +36,9 @@ object FuzzyCompare {
         val blockSize2: ULong = fuzzyHashInfoModel2.blockSize ?: return 0
 
         //如果分片长度不对，则直接返回0
-        if (blockSize1 != blockSize2 && (blockSize1 * 2UL != blockSize2 || blockSize1 > ULong.MAX_VALUE / 2UL) &&
-            (blockSize1 / 2UL != blockSize2 || blockSize1 or 1UL == 1UL)
+        if (blockSize1 != blockSize2 && (blockSize1 * 2L.toULong() != blockSize2
+                    || blockSize1 > ULong.MAX_VALUE / 2L.toULong()) &&
+            (blockSize1 / 2L.toULong() != blockSize2 || blockSize1 or 1L.toULong() == 1L.toULong())
         ) {
             return 0
         }
@@ -58,7 +59,7 @@ object FuzzyCompare {
         val score: Int
 
         //按照输入的两个特征值的blocksize不同的场景进行比较，算出相似度
-        if (blockSize1 < ULong.MAX_VALUE / 2UL) {
+        if (blockSize1 < ULong.MAX_VALUE / 2L.toULong()) {
             score = when {
                 blockSize1 == blockSize2 -> {
                     //缓存位并行运算的数组值，防止每次比较时都要对字符串进行处理（**优化点）
@@ -67,7 +68,7 @@ object FuzzyCompare {
                         s1b1ParArray = mutableMapOf()
                         s1b1.forEachIndexed { t, c ->
                             s1b1ParArray!!.compute(c) { _, v ->
-                                (v ?: 0UL) or (1UL shl t)
+                                (v ?: 0L.toULong()) or (1L.toULong() shl t)
                             }
                         }
                     }
@@ -78,7 +79,7 @@ object FuzzyCompare {
                         s1b2ParArray = mutableMapOf()
                         s1b2.forEachIndexed { t, c ->
                             s1b2ParArray.compute(c) { _, v ->
-                                (v ?: 0UL) or (1UL shl t)
+                                (v ?: 0L.toULong()) or (1L.toULong() shl t)
                             }
                         }
                     }
@@ -95,17 +96,17 @@ object FuzzyCompare {
                         s1b2ParArray,
                         s2b2,
                         s2b2Length,
-                        blockSize1 * 2UL
+                        blockSize1 * 2L.toULong()
                     )
                     max(score1, score2)
                 }
-                blockSize1 * 2UL == blockSize2 -> {
+                blockSize1 * 2L.toULong() == blockSize2 -> {
                     var s2b1ParArray = fuzzyHashInfoModel2.b1ParArray
                     if (s2b1ParArray.isNullOrEmpty()) {
                         s2b1ParArray = mutableMapOf()
                         s2b1.forEachIndexed { t, c ->
                             s2b1ParArray.compute(c) { _, v ->
-                                (v ?: 0UL) or (1UL shl t)
+                                (v ?: 0L.toULong()) or (1L.toULong() shl t)
                             }
                         }
                     }
@@ -124,7 +125,7 @@ object FuzzyCompare {
                         s1b1ParArray = mutableMapOf()
                         s1b1.forEachIndexed { t, c ->
                             s1b1ParArray!!.compute(c) { _, v ->
-                                (v ?: 0UL) or (1UL shl t)
+                                (v ?: 0L.toULong()) or (1L.toULong() shl t)
                             }
                         }
                     }
@@ -145,7 +146,7 @@ object FuzzyCompare {
                     s1b1ParArray = mutableMapOf()
                     s1b1.forEachIndexed { t, c ->
                         s1b1ParArray!!.compute(c) { _, v ->
-                            (v ?: 0UL) or (1UL shl t)
+                            (v ?: 0L.toULong()) or (1L.toULong() shl t)
                         }
                     }
                 }
@@ -157,13 +158,13 @@ object FuzzyCompare {
                     s2b1Length,
                     blockSize1
                 )
-            } else if (blockSize1 % 2UL == 0UL && blockSize1 / 2UL == blockSize2) {
+            } else if (blockSize1 % 2L.toULong() == 0L.toULong() && blockSize1 / 2L.toULong() == blockSize2) {
                 var s1b1ParArray = fuzzyHashInfoModel1.b1ParArray
                 if (s1b1ParArray.isNullOrEmpty()) {
                     s1b1ParArray = mutableMapOf()
                     s1b1.forEachIndexed { t, c ->
                         s1b1ParArray.compute(c) { _, v ->
-                            (v ?: 0UL) or (1UL shl t)
+                            (v ?: 0L.toULong()) or (1L.toULong() shl t)
                         }
                     }
                 }
@@ -198,29 +199,29 @@ object FuzzyCompare {
         s2Length: Int
     ): Int {
         var pv = ULong.MAX_VALUE
-        var nv: ULong = 0UL
+        var nv: ULong = 0L.toULong()
         var ph: ULong
         var nh: ULong
         var zd: ULong
         var mt: ULong
         var x: ULong
         var y: ULong
-        val msb: ULong = 1UL shl (s1Length - 1)
+        val msb: ULong = 1L.toULong() shl (s1Length - 1)
         var cur = s1Length
         for (i in 0 until s2Length) {
-            mt = pMap[s2[i]] ?: 0UL
+            mt = pMap[s2[i]] ?: 0L.toULong()
             zd = (((mt and pv) + pv) xor pv) or mt or nv
             nh = pv and zd
-            if ((nh and msb) != 0UL) {
+            if ((nh and msb) != 0L.toULong()) {
                 --cur
             }
-            x = nv or (pv or zd).inv() or (pv and mt.inv() and 1UL)
+            x = nv or (pv or zd).inv() or (pv and mt.inv() and 1L.toULong())
             y = (pv - nh) shr 1
             ph = (x + y) xor y
-            if ((ph and msb) != 0UL) {
+            if ((ph and msb) != 0L.toULong()) {
                 ++cur
             }
-            x = (ph shl 1) or 1UL
+            x = (ph shl 1) or 1L.toULong()
             nv = x and zd
             pv = (nh shl 1) or (x or zd).inv() or (x and (pv - nh))
         }
@@ -275,12 +276,12 @@ object FuzzyCompare {
             l = r - (ROLLING_WINDOW - 1)
             var originalPos = s2Length - 1 - r
             ch = s2[originalPos]
-            D = parArray[ch] ?: 0UL
-            while (D != 0UL) {
+            D = parArray[ch] ?: 0L.toULong()
+            while (D != 0L.toULong()) {
                 r--
                 originalPos++
-                D = (D shl 1) and (parArray[s2[originalPos]] ?: 0UL)
-                if (r == l && D != 0UL) {
+                D = (D shl 1) and (parArray[s2[originalPos]] ?: 0L.toULong())
+                if (r == l && D != 0L.toULong()) {
                     return true
                 }
             }

@@ -11,31 +11,32 @@ package winclangcl
 
 import (
 	"fmt"
-	"os"
 	"io/ioutil"
+	"os"
+
 	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
 	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
 	dcType "github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/handler/winclangcl/cmd"
-	"github.com/Tencent/bk-ci/src/booster/common/util"
-	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/util"
 )
 
 // WinClangCl 定义了windows clang-cl.exe编译
 type WinClangCl struct {
-	tag     string
-	sandbox *dcSyscall.Sandbox
+	tag              string
+	sandbox          *dcSyscall.Sandbox
 	sendFiles        []dcSDK.FileDesc
 	preprocessedFile string
 }
 
 func NewWinClangCl() (handler.Handler, error) {
 	return &WinClangCl{
-		tag:         util.RandomString(5),
-		sandbox:     &dcSyscall.Sandbox{},
+		tag:     util.RandomString(5),
+		sandbox: &dcSyscall.Sandbox{},
 	}, nil
 }
 
@@ -61,7 +62,8 @@ func (cc *WinClangCl) PreWork(config *dcType.BoosterConfig) error {
 func (cc *WinClangCl) PostWork(config *dcType.BoosterConfig) error {
 	return nil
 }
-	// RenderArgs return the actual executing args with the origin args and config
+
+// RenderArgs return the actual executing args with the origin args and config
 func (cc *WinClangCl) RenderArgs(config dcType.BoosterConfig, originArgs string) string {
 
 	return originArgs
@@ -82,8 +84,8 @@ func (cc *WinClangCl) PreLockWeight(command []string) int32 {
 
 // PreExecute 预处理
 func (cc *WinClangCl) PreExecute(command []string) (*dcSDK.BKDistCommand, error) {
-	commandline, err:= cmd.Parse(command)
-	if (err != nil) {
+	commandline, err := cmd.Parse(command)
+	if err != nil {
 		return nil, err
 	}
 	err = cc.preprocess(commandline)
@@ -100,8 +102,7 @@ func (cc *WinClangCl) PreExecute(command []string) (*dcSDK.BKDistCommand, error)
 				ExeName:     "clang",
 				Params:      serverSideArgs[1:],
 				Inputfiles:  cc.sendFiles,
-				ResultFiles: [
-				]string{commandline.Obj},
+				ResultFiles: []string{commandline.Obj},
 			},
 		},
 	}, nil
@@ -122,6 +123,11 @@ func (cc *WinClangCl) LocalExecute(command []string) (int, error) {
 	return 0, nil
 }
 
+// NeedRemoteResource check whether this command need remote resource
+func (cc *WinClangCl) NeedRemoteResource(command []string) bool {
+	return true
+}
+
 // RemoteRetryTimes will return the remote retry times
 func (cc *WinClangCl) RemoteRetryTimes() int {
 	return 0
@@ -134,7 +140,7 @@ func (cc *WinClangCl) PostLockWeight(result *dcSDK.BKDistResult) int32 {
 
 // PostExecute 后置处理, 判断远程执行的结果是否正确
 func (cc *WinClangCl) PostExecute(r *dcSDK.BKDistResult) error {
-		blog.Infof("cc: [%s] start post execute", cc.tag)
+	blog.Infof("cc: [%s] start post execute", cc.tag)
 	if r == nil || len(r.Results) == 0 {
 		return fmt.Errorf("cc: remote execute error")
 	}
@@ -169,16 +175,16 @@ func (cc *WinClangCl) GetFilterRules() ([]dcSDK.FilterRuleItem, error) {
 	}, nil
 }
 
-func (cc *WinClangCl)GetPreloadConfig(config dcType.BoosterConfig) (*dcSDK.PreloadConfig, error) {
+func (cc *WinClangCl) GetPreloadConfig(config dcType.BoosterConfig) (*dcSDK.PreloadConfig, error) {
 
 	return nil, nil
 }
 
 //编译过程的预处理
-func (cc *WinClangCl)preprocess(command cmd.Commandline) error {
+func (cc *WinClangCl) preprocess(command cmd.Commandline) error {
 	sandbox := cc.sandbox.Fork()
 	tmpfile, err := ioutil.TempFile("", "bk_boost_*."+command.FileType)
-	if err != nil{
+	if err != nil {
 		blog.Errorf("cc: [%s] %v", cc.tag, err)
 		return err
 	}
@@ -189,7 +195,7 @@ func (cc *WinClangCl)preprocess(command cmd.Commandline) error {
 		blog.Errorf("cc: [%s] %v, %v", cc.tag, err, sandbox)
 		return err
 	}
-	
+
 	existed, fileSize, modifyTime, fileMode := dcFile.Stat(tmpfile.Name()).Batch()
 	if !existed {
 		err := fmt.Errorf("preprocess result file %s not existed", tmpfile.Name())

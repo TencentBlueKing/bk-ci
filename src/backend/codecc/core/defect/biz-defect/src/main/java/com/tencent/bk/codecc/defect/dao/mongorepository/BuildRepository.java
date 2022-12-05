@@ -47,7 +47,7 @@ public interface BuildRepository extends MongoRepository<BuildEntity, String>
      * @param buildId
      * @return
      */
-    BuildEntity findByBuildId(String buildId);
+    BuildEntity findFirstByBuildId(String buildId);
 
     /**
      * 根据构建id列表进行查询

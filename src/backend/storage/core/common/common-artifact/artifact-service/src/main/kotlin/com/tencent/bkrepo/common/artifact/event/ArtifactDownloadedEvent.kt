@@ -35,4 +35,4 @@ import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadCon
 
 data class ArtifactDownloadedEvent(
     override val context: ArtifactDownloadContext
-) : ArtifactEvent(context, ArtifactEventType.DOWNLOADED)
+) : ArtifactContextEvent(context, ArtifactEventType.DOWNLOADED)

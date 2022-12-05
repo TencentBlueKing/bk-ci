@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.CharsetType
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
@@ -64,6 +65,7 @@ object CommandLineUtils {
     ): String {
 
         val result = StringBuilder()
+        val errorResult = StringBuilder()
 
         val cmdLine = CommandLine.parse(command)
         val executor = CommandLineExecutor()
@@ -109,6 +111,15 @@ object CommandLineUtils {
         }
 
         val errorStream = object : LogOutputStream() {
+
+            override fun processBuffer() {
+                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
+                privateStringField.isAccessible = true
+                val buffer = privateStringField.get(this) as ByteArrayOutputStream
+                processLine(buffer.toString(charset))
+                buffer.reset()
+            }
+
             override fun processLine(line: String?, level: Int) {
                 if (line == null) {
                     return
@@ -125,6 +136,7 @@ object CommandLineUtils {
                 } else {
                     result.append(tmpLine).append("\n")
                 }
+                errorResult.append(tmpLine).append("\n")
             }
         }
         executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
@@ -134,7 +146,9 @@ object CommandLineUtils {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorType = ErrorType.USER,
-                    errorMsg = "$prefix Script command execution failed with exit code($exitCode)"
+                    errorMsg = "$prefix Script command execution failed with exit code($exitCode) \n" +
+                        "Error message tracking:\n" +
+                        errorResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
                 )
             }
         } catch (ignored: Throwable) {
@@ -176,10 +190,10 @@ object CommandLineUtils {
         workspace: File?,
         resultLogFile: String
     ) {
-        val pattenVar = "::set-variable\\sname=.*"
+        val pattenVar = "[\"]?::set-variable\\sname=.*"
         val prefixVar = "::set-variable name="
         if (Pattern.matches(pattenVar, tmpLine)) {
-            val value = tmpLine.removePrefix(prefixVar)
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixVar)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(
@@ -196,10 +210,10 @@ object CommandLineUtils {
         jobId: String,
         stepId: String
     ) {
-        val pattenOutput = "::set-output\\sname=.*"
+        val pattenOutput = "[\"]?::set-output\\sname=.*"
         val prefixOutput = "::set-output name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
-            val value = tmpLine.removePrefix(prefixOutput)
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixOutput)
             val keyValue = value.split("::")
             val keyPrefix = "jobs.$jobId.steps.$stepId.outputs."
             if (keyValue.size >= 2) {
@@ -215,10 +229,10 @@ object CommandLineUtils {
         workspace: File?,
         resultLogFile: String
     ) {
-        val pattenOutput = "::set-gate-value\\sname=.*"
+        val pattenOutput = "[\"]?::set-gate-value\\sname=.*"
         val prefixOutput = "::set-gate-value name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
-            val value = tmpLine.removePrefix(prefixOutput)
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixOutput)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(

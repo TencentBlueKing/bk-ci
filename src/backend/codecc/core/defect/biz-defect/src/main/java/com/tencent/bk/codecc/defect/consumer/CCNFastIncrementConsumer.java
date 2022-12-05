@@ -14,16 +14,13 @@ package com.tencent.bk.codecc.defect.consumer;
 
 import com.tencent.bk.codecc.defect.dao.mongorepository.CCNDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CCNStatisticRepository;
-import com.tencent.bk.codecc.defect.dao.mongorepository.LintDefectV2Repository;
 import com.tencent.bk.codecc.defect.model.BuildEntity;
 import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
 import com.tencent.bk.codecc.defect.model.CCNStatisticEntity;
-import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildInfoEntity;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.service.BuildDefectService;
 import com.tencent.bk.codecc.defect.service.statistic.CCNDefectStatisticService;
-import com.tencent.bk.codecc.defect.service.statistic.LintDefectStatisticService;
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.constant.ComConstants;
@@ -64,20 +61,20 @@ public class CCNFastIncrementConsumer extends AbstractFastIncrementConsumer
         TaskDetailVO taskVO = thirdPartySystemCaller.getTaskInfo(streamName);
         BuildEntity buildEntity = buildDao.getAndSaveBuildInfo(buildId);
 
-        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
 
         // 因为代码没有变更，默认总平均圈复杂度不变，所以直接取上一个分析的平均圈复杂度
         String baseBuildId;
         if (toolBuildStackEntity == null)
         {
-            ToolBuildInfoEntity toolBuildINfoEntity = toolBuildInfoRepository.findByTaskIdAndToolName(taskId, toolName);
+            ToolBuildInfoEntity toolBuildINfoEntity = toolBuildInfoRepository.findFirstByTaskIdAndToolName(taskId, toolName);
             baseBuildId = toolBuildINfoEntity != null && StringUtils.isNotEmpty(toolBuildINfoEntity.getDefectBaseBuildId()) ? toolBuildINfoEntity.getDefectBaseBuildId() : "";
         }
         else
         {
             baseBuildId = StringUtils.isNotEmpty(toolBuildStackEntity.getBaseBuildId()) ? toolBuildStackEntity.getBaseBuildId() : "";
         }
-        CCNStatisticEntity baseBuildCcnStatistic = ccnStatisticRepository.findByTaskIdAndBuildId(taskVO.getTaskId(), baseBuildId);
+        CCNStatisticEntity baseBuildCcnStatistic = ccnStatisticRepository.findFirstByTaskIdAndBuildId(taskVO.getTaskId(), baseBuildId);
 
         float averageCCN = 0;
         if (baseBuildCcnStatistic != null)

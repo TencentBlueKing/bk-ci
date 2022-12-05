@@ -40,20 +40,8 @@ interface BuildParametersCompatibilityTransformer {
      * 解析前端手工启动传入的参数并与triggerContainer的BuildFormProperty替换
      * 前端传入的为正确的新变量
      */
-    fun parseManualStartParam(
+    fun parseTriggerParam(
         paramProperties: List<BuildFormProperty>,
         paramValues: Map<String, String>
-    ): MutableList<BuildParameters>
-
-    /**
-     * 转换旧变量为新变量
-     *
-     * 旧变量： 旧的命名(不规范）的系统变量
-     * 新变量： 新的命名的系统变量
-     * 同名： 旧变量转换为新变即与新变量同名
-     * 转换原则： 后出现的旧变量在转换为新变量命名后不允许覆盖前面已经存在的新变量
-     *
-     * @param paramLists 参数列表，注意顺序和转换原则，后出现的同名变量将被丢弃
-     */
-    fun transform(vararg paramLists: List<BuildParameters>): List<BuildParameters>
+    ): MutableMap<String, BuildParameters>
 }

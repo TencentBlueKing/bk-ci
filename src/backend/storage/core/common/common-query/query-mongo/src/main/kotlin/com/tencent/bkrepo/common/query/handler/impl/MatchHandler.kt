@@ -40,7 +40,7 @@ import org.springframework.data.mongodb.core.query.Criteria
 class MatchHandler : MongoQueryRuleHandler {
 
     override fun match(rule: Rule.QueryRule): Boolean {
-        return rule.operation == OperationType.PREFIX
+        return rule.operation == OperationType.MATCH
     }
 
     override fun handle(rule: Rule.QueryRule): Criteria {

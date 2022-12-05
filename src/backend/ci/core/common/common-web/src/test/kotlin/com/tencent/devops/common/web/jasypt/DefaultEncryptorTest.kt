@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.web.jasypt
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class DefaultEncryptorTest {
 
@@ -38,6 +38,6 @@ class DefaultEncryptorTest {
         val expect = "hello"
         val encrypt = defaultEncryptor.encrypt(expect)
         println(encrypt)
-        Assert.assertEquals(expect, defaultEncryptor.decrypt(encrypt))
+        Assertions.assertEquals(expect, defaultEncryptor.decrypt(encrypt))
     }
 }

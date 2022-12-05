@@ -93,6 +93,11 @@ func (m *mgr) RegisterWork(config *types.WorkRegisterConfig) (*types.WorkInfo, b
 				work.Basic().IncRegistered()
 				blog.Infof("mgr: success get a existing work(%s) with batch mode for project(%s) scene(%s)",
 					work.ID(), config.Apply.ProjectID, config.Apply.Scene)
+
+				// TOOD : apply resource if need
+				if !work.Resource().HasAvailableWorkers() {
+					work.Basic().ApplyResource(config)
+				}
 				return info, false, nil
 			}
 			work.Unlock()
@@ -554,10 +559,14 @@ func (m *mgr) checkWork(startseconds int64) {
 	// 释放心跳超时的work
 	m.worksPool.cleanHeartbeatTimeout()
 
+	// 屏蔽掉该逻辑，有两个理由：
+	// 		1. 重复Init导致内存泄漏
+	//		2. 该协程执行Init时，有可能globalWork在其它协程中正在被使用，导致未知错误（比如内存越界）
+	//		后续如果有脏数据的情况，需要定位跟进
 	// 每当work pool为空时, 重置一下globalWork, 避免一些脏数据残留
-	if m.worksPool.empty() {
-		m.globalWork.Local().Init()
-	}
+	// if m.worksPool.empty() {
+	// 	m.globalWork.Local().Init()
+	// }
 
 	// 如果works pool空闲超过一定时间, 主动退出controller进程
 	if m.conf.RemainTime >= 0 && m.worksPool.emptyTimeout(time.Duration(m.conf.RemainTime)*time.Second) {
@@ -604,14 +613,19 @@ func (m *mgr) checkNet() {
 }
 
 func (m *mgr) setCommonConfig(config *types.CommonConfig) error {
-	blog.Debugf("mgr: try to set common config: %+v", *config)
+	blog.Infof("mgr: try to set common config")
 
 	if err := m.saveCommonConfig(config); err != nil {
+		blog.Infof("mgr: failed to save common config with error: %v", err)
 		return err
 	}
+	blog.Infof("mgr: finished save common config")
 
 	// update workers with this config
-	_ = m.setWorkerConfig(config)
+	if err := m.setWorkerConfig(config); err != nil {
+		blog.Infof("mgr: failed to set worker config with error: %v", err)
+		return err
+	}
 
 	return nil
 }
@@ -716,7 +730,7 @@ func (m *mgr) getCommonSetting(projectID, scene string, batchMode bool) []*types
 }
 
 func (m *mgr) setWorkerConfig(config *types.CommonConfig) error {
-	blog.Debugf("mgr: ready set worker config with config:%+v", *config)
+	blog.Infof("mgr: ready set worker config")
 
 	works := []*types.Work{}
 	for _, work := range m.worksPool.all() {
@@ -725,20 +739,29 @@ func (m *mgr) setWorkerConfig(config *types.CommonConfig) error {
 			info.Scene() == config.WorkerKey.Scene &&
 			info.IsBatchMode() == config.WorkerKey.BatchMode {
 			works = append(works, work)
+			blog.Infof("mgr: ready set config to worker:%s", work.ID())
 		}
 	}
+	blog.Infof("mgr: got total %d workers", len(works))
 
 	if config.Configkey == dcSDK.CommonConfigKeyToolChain {
 		sdkToolChain, ok := config.Config.(dcSDK.OneToolChain)
 		if ok {
+			blog.Infof("mgr: got tool chain:%+v", sdkToolChain)
 			toolchain := sdkToolChain2Types(&sdkToolChain)
 			for _, work := range works {
 				work.Lock()
-				blog.Infof("mgr: ready set tool chain(%s) to worker(%s)", sdkToolChain.ToolKey, work.ID())
+				blog.Infof("mgr: ready set tool chain(%s) to worker(%s)", toolchain.ToolKey, work.ID())
 				_ = work.Basic().SetToolChain(toolchain)
 				work.Unlock()
 			}
+		} else {
+			blog.Warnf("mgr: failed cast to toolchain with config:%+v", *config)
+			return fmt.Errorf("failed cast to toolchain with config:%+v", *config)
 		}
+	} else {
+		blog.Warnf("mgr: got unknown common config key:%s", config.Configkey)
+		return fmt.Errorf("unknown common config key:%s", config.Configkey)
 	}
 
 	return nil
@@ -830,4 +853,14 @@ func (m *mgr) checkRunWithLocalResource(work *types.Work) bool {
 
 func (m *mgr) decLocalResourceTask() {
 	atomic.AddInt32(&m.localResourceTaskNum, -1)
+}
+
+// Get first workid
+func (m *mgr) GetFirstWorkID() (string, error) {
+	work, err := m.worksPool.getFirstWork()
+	if err == nil {
+		return work.ID(), nil
+	} else {
+		return "", err
+	}
 }

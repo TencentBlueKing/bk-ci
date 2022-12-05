@@ -42,7 +42,7 @@ import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ProjectService
 import org.slf4j.LoggerFactory
@@ -55,7 +55,8 @@ class AuthProjectService @Autowired constructor(
     val projectService: ProjectService,
     val authTokenApi: AuthTokenApi,
     val client: Client,
-    val tokenService: ClientTokenService
+    val tokenService: ClientTokenService,
+    val bkTag: BkTag
 ) {
 
     // 项目-管理员列表 缓存， 5分钟有效时间
@@ -142,7 +143,7 @@ class AuthProjectService @Autowired constructor(
         }
 
         val routerTag = projectService.getByEnglishName(projectCode)!!.routerTag
-        val managerUser = ConsulContent.invokeByTag(routerTag) {
+        val managerUser = bkTag.invokeByTag(routerTag) {
             client.get(ServiceProjectAuthResource::class).getProjectUsers(
                 token = tokenService.getSystemToken(null)!!,
                 projectCode = projectCode,

@@ -236,6 +236,30 @@ interface UserEnvironmentResource {
         projectId: String
     ): Result<List<EnvWithPermission>>
 
+    @ApiOperation("获取用户有权限且没添加进环境共享列表的ProjectId")
+    @GET
+    @Path("/{projectId}/{envHashId}/list_user_project")
+    fun listUserShareEnv(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam("关键字搜索", required = false)
+        @QueryParam("search")
+        search: String? = null,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int? = null,
+        @ApiParam("步长", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = null
+    ): Result<Page<SharedProjectInfo>>
+
     @ApiOperation("分页获取环境共享列表")
     @GET
     @Path("/{projectId}/{envHashId}/list")
@@ -252,12 +276,12 @@ interface UserEnvironmentResource {
         @ApiParam("项目名称", required = false)
         @QueryParam("name")
         name: String? = null,
-        @ApiParam("起始位置", required = false)
-        @QueryParam("offset")
-        offset: Int? = null,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int? = null,
         @ApiParam("步长", required = false)
-        @QueryParam("limit")
-        limit: Int? = null
+        @QueryParam("pageSize")
+        pageSize: Int? = null
     ): Result<Page<SharedProjectInfo>>
 
     @ApiOperation("设置环境共享")

@@ -42,7 +42,9 @@ import com.tencent.bkrepo.repository.pojo.packages.PackageListOption
 import com.tencent.bkrepo.repository.pojo.packages.PackageSummary
 import com.tencent.bkrepo.repository.pojo.packages.PackageVersion
 import com.tencent.bkrepo.repository.pojo.packages.VersionListOption
+import com.tencent.bkrepo.repository.pojo.software.ProjectPackageOverview
 import com.tencent.bkrepo.repository.service.packages.PackageService
+import com.tencent.bkrepo.repository.service.packages.PackageStatisticsService
 import io.swagger.annotations.ApiOperation
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -59,7 +61,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api")
 class UserPackageController(
-    private val packageService: PackageService
+    private val packageService: PackageService,
+    private val packageStatisticsService: PackageStatisticsService
 ) {
 
     @ApiOperation("分页查询包")
@@ -141,5 +144,15 @@ class UserPackageController(
         @RequestParam version: String
     ) {
         packageService.downloadVersion(projectId, repoName, packageKey, version)
+    }
+
+    @ApiOperation("仓库 包数量 总览")
+    @GetMapping("/package/search/overview")
+    fun packageOverview(
+        @RequestParam repoType: String,
+        @RequestParam projectId: String,
+        @RequestParam packageName: String?
+    ): Response<List<ProjectPackageOverview>> {
+        return ResponseBuilder.success(packageStatisticsService.packageOverview(repoType, projectId, packageName))
     }
 }

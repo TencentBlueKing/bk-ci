@@ -35,4 +35,6 @@ dependencies {
     api(project(":common:common-artifact:artifact-service"))
     api(project(":common:common-mongo"))
     implementation("org.influxdb:influxdb-java")
+    compileOnly("org.springframework.cloud:spring-cloud-starter-consul-discovery")
+    compileOnly("org.springframework.cloud:spring-cloud-starter-consul-config")
 }

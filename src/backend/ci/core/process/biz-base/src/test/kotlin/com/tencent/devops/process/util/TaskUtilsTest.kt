@@ -32,9 +32,9 @@ import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class TaskUtilsTest : TestBase() {
 
@@ -43,7 +43,7 @@ class TaskUtilsTest : TestBase() {
     private var vmBuildContainer: PipelineBuildContainer =
         genVmBuildContainer(id = firstContainerIdInt, status = BuildStatus.RUNNING)
 
-    @Before
+    @BeforeEach
     override fun setUp() {
         super.setUp()
         vmBuildContainer = genVmBuildContainer(id = firstContainerIdInt, status = BuildStatus.RUNNING)
@@ -62,7 +62,7 @@ class TaskUtilsTest : TestBase() {
     fun getPostTaskAndExecuteFlag() {
         val task = genTask(taskId = "e-12345678901234567890123456789012", vmContainer = vmBuildContainer,
             elementAdditionalOptions = elementAdditionalOptions().copy(elementPostInfo = nullObject))
-        Assert.assertFalse(
+        Assertions.assertFalse(
             TaskUtils.getPostExecuteFlag(
                 task = task, taskList = taskList, isContainerFailed = true, hasFailedTaskInInSuccessContainer = true
             )
@@ -72,14 +72,14 @@ class TaskUtilsTest : TestBase() {
     @Test
     fun isStartVMTask() {
         var taskId = "mockId"
-        Assert.assertFalse(
+        Assertions.assertFalse(
             TaskUtils.isStartVMTask(
                 genTask(taskId = taskId, vmContainer = genVmBuildContainer(id = firstContainerIdInt))
             )
         )
         // startVM-xxxx
         taskId = VMUtils.genStartVMTaskId(firstContainerId)
-        Assert.assertTrue(
+        Assertions.assertTrue(
             TaskUtils.isStartVMTask(
                 genTask(taskId = taskId, vmContainer = genVmBuildContainer(id = firstContainerIdInt))
             )

@@ -69,7 +69,6 @@ jobs:
           -Psigning.keyId=${{ secrets.SIGNING_KEY_ID }} \
           -Psigning.password='${{ secrets.SIGNING_PASSWORD }}' \
           -Psigning.secretKeyRingFile=${{ github.workspace }}/secretKeyRingFile.gpg \
-          -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/" \
           -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root
       - name: Clean Up
         if: ${{ always() }}

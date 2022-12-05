@@ -57,6 +57,18 @@ class PackageDependentsServiceImpl(
         }
     }
 
+    override fun reduceDependents(request: PackageDependentsRelation) {
+        with(request) {
+            var reduceCount = 0L
+            dependencies.forEach {
+                if (packageDao.findByKey(projectId, repoName, it) != null) {
+                    reduceCount += packageDependentsDao.reduceDependent(projectId, repoName, it, packageKey)
+                }
+            }
+            logger.info("Delete [$reduceCount] dependents for package [$projectId/$repoName/$packageKey]")
+        }
+    }
+
     override fun findByPackageKey(projectId: String, repoName: String, packageKey: String): Set<String> {
         return packageDependentsDao.findByPackageKey(projectId, repoName, packageKey)?.dependents.orEmpty()
     }

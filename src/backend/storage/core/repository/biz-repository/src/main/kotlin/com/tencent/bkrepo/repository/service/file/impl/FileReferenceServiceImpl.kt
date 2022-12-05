@@ -31,11 +31,14 @@
 
 package com.tencent.bkrepo.repository.service.file.impl
 
+import com.tencent.bkrepo.common.api.exception.NotFoundException
+import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
 import com.tencent.bkrepo.repository.dao.FileReferenceDao
 import com.tencent.bkrepo.repository.dao.RepositoryDao
 import com.tencent.bkrepo.repository.model.TFileReference
 import com.tencent.bkrepo.repository.model.TNode
 import com.tencent.bkrepo.repository.model.TRepository
+import com.tencent.bkrepo.repository.pojo.file.FileReference
 import com.tencent.bkrepo.repository.service.file.FileReferenceService
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DuplicateKeyException
@@ -112,6 +115,17 @@ class FileReferenceServiceImpl(
     override fun count(sha256: String, credentialsKey: String?): Long {
         val query = buildQuery(sha256, credentialsKey)
         return fileReferenceDao.findOne(query)?.count ?: 0
+    }
+
+    override fun get(credentialsKey: String?, sha256: String): FileReference {
+        val query = buildQuery(sha256, credentialsKey)
+        val tFileReference = fileReferenceDao.findOne(query)
+            ?: throw NotFoundException(ArtifactMessageCode.NODE_NOT_FOUND)
+        return convert(tFileReference)
+    }
+
+    private fun convert(tFileReference: TFileReference): FileReference {
+        return tFileReference.run { FileReference(sha256, credentialsKey, count) }
     }
 
     private fun findCredentialsKey(node: TNode, repository: TRepository?): String? {

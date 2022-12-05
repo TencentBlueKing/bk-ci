@@ -27,24 +27,34 @@
 
 package com.tencent.devops.auth
 
-import com.tencent.devops.auth.service.SimpleAuthPermissionProjectService
-import com.tencent.devops.auth.service.SimpleAuthPermissionService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
+import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
+import com.tencent.devops.auth.dao.AuthGroupDao
+import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
 import com.tencent.devops.auth.service.AuthGroupService
+import com.tencent.devops.auth.service.BkAuthGrantPermissionServiceImpl
+import com.tencent.devops.auth.service.BkIamPermissionRoleExtService
+import com.tencent.devops.auth.service.BkLocalManagerServiceImp
+import com.tencent.devops.auth.service.BkOrganizationService
+import com.tencent.devops.auth.service.BkPermissionExtServiceImpl
+import com.tencent.devops.auth.service.BkPermissionGraderServiceImpl
 import com.tencent.devops.auth.service.BkPermissionProjectService
+import com.tencent.devops.auth.service.BkPermissionRoleMemberImpl
 import com.tencent.devops.auth.service.BkPermissionService
+import com.tencent.devops.auth.service.BkPermissionUrlService
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.auth.service.iam.IamCacheService
-import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
-import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.stream.GithubStreamPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.GitlabStreamPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
@@ -54,6 +64,7 @@ import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -61,6 +72,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Suppress("ALL")
@@ -87,14 +99,6 @@ class AuthConfiguration {
     fun iamEsbService() = IamEsbService()
 
     @Bean
-    @ConditionalOnMissingBean(PermissionService::class)
-    fun permissionService() = SimpleAuthPermissionService()
-
-    @Bean
-    @ConditionalOnMissingBean(PermissionProjectService::class)
-    fun permissionProjectService() = SimpleAuthPermissionProjectService()
-
-    @Bean
     @ConditionalOnMissingBean
     fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
@@ -105,6 +109,7 @@ class AuthConfiguration {
     fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
     @Bean
+    @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
     fun deptService(
         redisOperation: RedisOperation,
@@ -112,6 +117,7 @@ class AuthConfiguration {
     ) = AuthDeptServiceImpl(redisOperation, objectMapper)
 
     @Bean
+    @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
     fun v3permissionService(
         authHelper: AuthHelper,
@@ -121,6 +127,7 @@ class AuthConfiguration {
     ) = BkPermissionService(authHelper, policyService, iamConfiguration, iamCacheService)
 
     @Bean
+    @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
     fun v3permissionProjectService(
         permissionRoleService: PermissionRoleService,
@@ -150,21 +157,106 @@ class AuthConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
-    fun githubStreamPermissionService() = GithubStreamPermissionServiceImpl()
+    @Primary
+    fun githubStreamPermissionService(client: Client) = GithubStreamPermissionServiceImpl(client)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    @Primary
     fun githubStreamProjectPermissionService(
         streamPermissionService: StreamPermissionServiceImpl
     ) = StreamPermissionProjectServiceImpl(streamPermissionService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    @Primary
     fun gitlabStreamPermissionService() = GitlabStreamPermissionServiceImpl()
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    @Primary
     fun gitlabStreamProjectPermissionService(
         streamPermissionService: StreamPermissionServiceImpl
     ) = StreamPermissionProjectServiceImpl(streamPermissionService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    @Primary
+    fun bkManagerService() = BkLocalManagerServiceImp()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    @Primary
+    fun bkAuthGrantPermissionServiceImpl(
+        grantServiceImpl: GrantServiceImpl,
+        iamConfiguration: IamConfiguration,
+        client: Client
+    ) = BkAuthGrantPermissionServiceImpl(grantServiceImpl, iamConfiguration, client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    @Primary
+    fun bkIamPermissionRoleExtService(
+        iamManagerService: ManagerService,
+        permissionGradeService: PermissionGradeService,
+        iamConfiguration: IamConfiguration,
+        groupService: AuthGroupService,
+        authGroupDao: AuthGroupDao,
+        dslContext: DSLContext,
+        client: Client,
+        strategyService: StrategyService
+    ) = BkIamPermissionRoleExtService(
+        iamManagerService = iamManagerService,
+        permissionGradeService = permissionGradeService,
+        iamConfiguration = iamConfiguration,
+        groupService = groupService,
+        authGroupDao = authGroupDao,
+        dslContext = dslContext,
+        client = client,
+        strategyService = strategyService
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    @Primary
+    fun bkOrganizationService() = BkOrganizationService()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    @Primary
+    fun bkPermissionExtServiceImpl(
+        iamEsbService: IamEsbService,
+        iamConfiguration: IamConfiguration,
+        iamCacheService: IamCacheService,
+        refreshDispatch: AuthRefreshDispatch
+    ) = BkPermissionExtServiceImpl(
+        iamEsbService, iamConfiguration, iamCacheService, refreshDispatch
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    @Primary
+    fun bkPermissionGraderServiceImpl(iamManagerService: ManagerService) = BkPermissionGraderServiceImpl(iamManagerService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    @Primary
+    fun bkPermissionRoleMemberImpl(
+        iamManagerService: ManagerService,
+        permissionGradeService: PermissionGradeService,
+        groupService: AuthGroupService
+    ) = BkPermissionRoleMemberImpl(iamManagerService, permissionGradeService, groupService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    @Primary
+    fun bkPermissionUrlService(
+        iamEsbService: IamEsbService,
+        iamConfiguration: IamConfiguration?,
+        bkPermissionProjectService: BkPermissionProjectService
+    ) = BkPermissionUrlService(iamEsbService, iamConfiguration, bkPermissionProjectService)
+
+    @Bean
+    @ConditionalOnMissingBean(GrantServiceImpl::class)
+    fun grantService() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 }

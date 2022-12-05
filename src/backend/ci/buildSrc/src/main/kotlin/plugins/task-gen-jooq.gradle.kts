@@ -34,11 +34,11 @@ val jooqGenerator by configurations
 val api by configurations
 
 dependencies {
-    jooqGenerator("mysql:mysql-connector-java:8.0.22")
+    jooqGenerator("mysql:mysql-connector-java:8.0.28")
     api("org.jooq:jooq")
 }
 
-val moduleNames = when (val moduleName = name.split("-")[1]) {
+var moduleNames = when (val moduleName = name.split("-")[1]) {
     "misc" -> {
         listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
     }
@@ -46,12 +46,16 @@ val moduleNames = when (val moduleName = name.split("-")[1]) {
         listOf("process", "project", "openapi")
     }
     "lambda" -> {
-        listOf("process", "project", "lambda")
+        listOf("process", "project", "lambda", "store")
     }
     "gitci" -> {
         listOf("stream")
     }
     else -> listOf(moduleName)
+}
+
+if (name == "model-dispatch-kubernetes") {
+    moduleNames = listOf("dispatch_kubernetes")
 }
 
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")

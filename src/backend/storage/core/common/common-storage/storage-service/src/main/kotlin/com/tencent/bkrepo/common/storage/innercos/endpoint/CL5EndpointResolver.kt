@@ -34,6 +34,9 @@ package com.tencent.bkrepo.common.storage.innercos.endpoint
 import com.tencent.bkrepo.common.storage.innercos.cl5.CL5Info
 import com.tencent.bkrepo.common.storage.innercos.cl5.CL5Utils
 
+/**
+ * 基于cl5的域名解析器
+ */
 class CL5EndpointResolver(private val cl5Info: CL5Info) : EndpointResolver {
 
     override fun resolveEndpoint(endpoint: String): String {

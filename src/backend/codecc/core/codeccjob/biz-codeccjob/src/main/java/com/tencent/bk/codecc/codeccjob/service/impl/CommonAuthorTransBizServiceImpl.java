@@ -85,7 +85,7 @@ public class CommonAuthorTransBizServiceImpl implements IBizService<AuthorTransf
 
             if (CollectionUtils.isNotEmpty(needRefreshDefectList))
             {
-                defectRepository.save(needRefreshDefectList);
+                defectRepository.saveAll(needRefreshDefectList);
             }
         }
 

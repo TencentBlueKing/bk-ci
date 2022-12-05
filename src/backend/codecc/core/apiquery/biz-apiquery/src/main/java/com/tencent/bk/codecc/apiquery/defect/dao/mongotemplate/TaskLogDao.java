@@ -12,11 +12,11 @@
 package com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate;
 
 import com.google.common.collect.Lists;
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.apiquery.defect.model.TaskLogModel;
 import com.tencent.devops.common.constant.ComConstants;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
@@ -190,7 +190,7 @@ public class TaskLogDao {
      * @return TaskLogModel
      */
     public TaskLogModel findByBuildId(Long taskId, String toolName, String buildId) {
-        Query query = new BasicQuery(new BasicDBObject());
+        Query query = new BasicQuery(new Document());
         query.addCriteria(
                 Criteria.where("task_id").is(taskId).and("tool_name").is(toolName).and("build_id").is(buildId)
         );

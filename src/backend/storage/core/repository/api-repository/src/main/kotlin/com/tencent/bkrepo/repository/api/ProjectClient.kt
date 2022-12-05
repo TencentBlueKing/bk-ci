@@ -69,14 +69,4 @@ interface ProjectClient {
     @ApiOperation("创建项目")
     @PostMapping("/create")
     fun createProject(@RequestBody request: ProjectCreateRequest): Response<ProjectInfo>
-
-    @Deprecated("replace with getProjectInfo")
-    @ApiOperation("查询项目")
-    @GetMapping("/query/{name}")
-    fun query(@ApiParam(value = "项目名") @PathVariable name: String): Response<ProjectInfo?>
-
-    @Deprecated("replace with createProject")
-    @ApiOperation("创建项目")
-    @PostMapping
-    fun create(@RequestBody request: ProjectCreateRequest): Response<ProjectInfo>
 }

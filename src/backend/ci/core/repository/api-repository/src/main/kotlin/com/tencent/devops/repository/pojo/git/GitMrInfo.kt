@@ -115,7 +115,13 @@ data class GitMrInfo(
     val description: String? = "",
     val assignee: GitMrInfoAssignee? = null,
     val milestone: GitMrInfoMilestone? = null,
-    val author: GitMrInfoAuthor = GitMrInfoAuthor()
+    val author: GitMrInfoAuthor = GitMrInfoAuthor(),
+    @JsonProperty("merge_status")
+    @ApiModelProperty(name = "merge_status")
+    val mergeStatus: String = "",
+    @JsonProperty("base_commit")
+    @ApiModelProperty(name = "base_commit")
+    val baseCommit: String?
 ) {
     data class GitMrInfoAssignee(
         @JsonProperty("id")

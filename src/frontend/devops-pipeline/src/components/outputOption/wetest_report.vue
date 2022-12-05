@@ -28,7 +28,7 @@
                                 <div class="rotate rotate7"></div>
                                 <div class="rotate rotate8"></div>
                             </div>
-                            <i class="bk-icon" :class="buildClass(report.status)" v-else></i>
+                            <i class="devops-icon" :class="buildClass(report.status)" v-else></i>
                             {{ buildStatus(report.status) }}
                         </div>
                     </td>
@@ -122,7 +122,7 @@
             },
             linkWetestDetail (report) {
                 if (report.testId) {
-                    window.open(`${WEB_URL_PIRFIX}/wetest/${this.projectId}/detail/${report.testId}/${report.startUserId}`, '_blank')
+                    window.open(`${WEB_URL_PREFIX}/wetest/${this.projectId}/detail/${report.testId}/${report.startUserId}`, '_blank')
                 }
             },
             wetestUrl (report) {
@@ -153,7 +153,7 @@
             overflow: hidden;
         }
         .report {
-            .bk-icon {
+            .devops-icon {
                 vertical-align: middle;
             }
             .icon-circle-2-1{

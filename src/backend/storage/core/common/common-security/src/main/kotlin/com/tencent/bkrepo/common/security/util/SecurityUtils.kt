@@ -32,8 +32,10 @@
 package com.tencent.bkrepo.common.security.util
 
 import com.tencent.bkrepo.common.api.constant.ANONYMOUS_USER
+import com.tencent.bkrepo.common.api.constant.AUTHORITIES_KEY
 import com.tencent.bkrepo.common.api.constant.MS_REQUEST_KEY
 import com.tencent.bkrepo.common.api.constant.PLATFORM_KEY
+import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.api.constant.USER_KEY
 import com.tencent.bkrepo.common.service.util.HttpContextHolder
 
@@ -61,6 +63,18 @@ object SecurityUtils {
      */
     fun getPrincipal(): String {
         return getPlatformId()?.let { "$it-${getUserId()}" } ?: getUserId()
+    }
+
+    /**
+     * 获取authorities
+     */
+    fun getAuthorities(): Set<String> {
+        val authorities = HttpContextHolder.getRequestOrNull()?.getAttribute(AUTHORITIES_KEY).toString()
+        return if (authorities == "null") {
+            emptySet()
+        } else {
+            authorities.split(StringPool.COMMA).toSet()
+        }
     }
 
     /**

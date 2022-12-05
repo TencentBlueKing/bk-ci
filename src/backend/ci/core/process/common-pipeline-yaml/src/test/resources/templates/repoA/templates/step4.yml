@@ -1,0 +1,13 @@
+parameters:
+  - name: username
+    type: string
+    default: world
+  - name: stepname
+    type: string
+    default: STEPNAME
+
+steps:
+  - run: |
+      echo "res_repoA_step_id_4 username ${{ parameters.username }}!"
+    if-modify:
+      - "asd/**"

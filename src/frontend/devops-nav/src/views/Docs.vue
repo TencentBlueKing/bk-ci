@@ -14,7 +14,7 @@
                     <div class="docs-search">
                         <div class="docs-search-main">
                             <i
-                                class="bk-icon icon-search"
+                                class="devops-icon icon-search"
                                 :class="{ 'hidden': searchContent }"
                             />
                             <input
@@ -43,7 +43,7 @@
                         class="docs-home-col"
                     >
                         <div class="col-icon">
-                            <i :class="['bk-icon',`icon-${col.icon || 'profile'}`]" />
+                            <i :class="['devops-icon',`icon-${col.icon || 'profile'}`]" />
                         </div>
                         <div class="col-list-wrapper">
                             <p class="col-list-title">
@@ -79,7 +79,7 @@
                                     >
                                         <span>{{ col.expanded ? '收起' : '更多' }}</span>
                                         <i
-                                            class="bk-icon icon-angle-down"
+                                            class="devops-icon icon-angle-down"
                                             :class="{ expanded: col.expanded }"
                                         />
                                     </a>
@@ -129,8 +129,8 @@
             }
         }
 
-        goDetail (link) {
-            const path = `${DOCS_URL_PREFIX}/${link.replace(/^\//, '')}`
+        goDetail (link: string) {
+            const path = `${IWIKI_DOCS_URL}/${link.replace(/^\//, '')}`
             window.open(path, '_self')
         }
 
@@ -242,7 +242,7 @@
                         &:last-child {
                             border-bottom: 1px solid $borderColor;
                         }
-                        .bk-icon {
+                        .devops-icon {
                             display: inline-block;
                             transition: transform linear .2s;
                             font-size: 12px;

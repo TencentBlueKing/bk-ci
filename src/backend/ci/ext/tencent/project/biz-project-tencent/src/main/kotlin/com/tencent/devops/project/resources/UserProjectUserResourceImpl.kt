@@ -39,6 +39,7 @@ import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.tof.TOFService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class UserProjectUserResourceImpl @Autowired constructor(
@@ -48,12 +49,15 @@ class UserProjectUserResourceImpl @Autowired constructor(
     private val projectService: ProjectService
 ) : UserProjectUserResource {
 
+    @Value("\${avatar.url:#{null}}")
+    private val avatarUrl: String? = null
+
     override fun get(userId: String, bkToken: String?): Result<ProjectUser> {
         val staff = tofService.getStaffInfo(userId, bkToken!!)
         return Result(
             ProjectUser(
                 chineseName = staff.ChineseName,
-                avatarUrl = "http://dayu.oa.com/avatars/$userId/profile.jpg",
+                avatarUrl = avatarUrl?.replace("##UserId##", userId) ?: "",
                 username = userId
             )
         )

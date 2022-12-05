@@ -28,8 +28,8 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.process.engine.utils.TestTool
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class VmOperateTaskGeneratorTest {
 
@@ -43,8 +43,8 @@ class VmOperateTaskGeneratorTest {
             vmContainer = container,
             elementAdditionalOptions = ops
         )
-        Assert.assertFalse(VmOperateTaskGenerator.isStartVM(genTask))
-        Assert.assertFalse(VmOperateTaskGenerator.isStopVM(genTask))
+        Assertions.assertFalse(VmOperateTaskGenerator.isStartVM(genTask))
+        Assertions.assertFalse(VmOperateTaskGenerator.isStopVM(genTask))
 
         genTask = TestTool.genTask(
             taskId = "",
@@ -52,8 +52,8 @@ class VmOperateTaskGeneratorTest {
             vmContainer = container,
             elementAdditionalOptions = ops
         )
-        Assert.assertTrue(VmOperateTaskGenerator.isStartVM(genTask))
-        Assert.assertTrue(VmOperateTaskGenerator.isVmAtom(genTask))
+        Assertions.assertTrue(VmOperateTaskGenerator.isStartVM(genTask))
+        Assertions.assertTrue(VmOperateTaskGenerator.isVmAtom(genTask))
 
         genTask = TestTool.genTask(
             taskId = "",
@@ -61,8 +61,8 @@ class VmOperateTaskGeneratorTest {
             vmContainer = container,
             elementAdditionalOptions = ops
         )
-        Assert.assertTrue(VmOperateTaskGenerator.isStartVM(genTask))
-        Assert.assertTrue(VmOperateTaskGenerator.isVmAtom(genTask))
+        Assertions.assertTrue(VmOperateTaskGenerator.isStartVM(genTask))
+        Assertions.assertTrue(VmOperateTaskGenerator.isVmAtom(genTask))
 
         genTask = TestTool.genTask(
             taskId = "",
@@ -70,8 +70,8 @@ class VmOperateTaskGeneratorTest {
             vmContainer = container,
             elementAdditionalOptions = ops
         )
-        Assert.assertTrue(VmOperateTaskGenerator.isStopVM(genTask))
-        Assert.assertTrue(VmOperateTaskGenerator.isVmAtom(genTask))
+        Assertions.assertTrue(VmOperateTaskGenerator.isStopVM(genTask))
+        Assertions.assertTrue(VmOperateTaskGenerator.isVmAtom(genTask))
 
         genTask = TestTool.genTask(
             taskId = "",
@@ -79,7 +79,7 @@ class VmOperateTaskGeneratorTest {
             vmContainer = container,
             elementAdditionalOptions = ops
         )
-        Assert.assertTrue(VmOperateTaskGenerator.isStopVM(genTask))
-        Assert.assertTrue(VmOperateTaskGenerator.isVmAtom(genTask))
+        Assertions.assertTrue(VmOperateTaskGenerator.isStopVM(genTask))
+        Assertions.assertTrue(VmOperateTaskGenerator.isVmAtom(genTask))
     }
 }

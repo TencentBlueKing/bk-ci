@@ -26,8 +26,8 @@
 
 package com.tencent.devops.common.web.handler
 
-import com.netflix.client.ClientException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.exception.ClientException
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.LoggerFactory

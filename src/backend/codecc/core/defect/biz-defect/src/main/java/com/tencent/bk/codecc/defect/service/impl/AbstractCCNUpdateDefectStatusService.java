@@ -44,7 +44,7 @@ public abstract class AbstractCCNUpdateDefectStatusService extends AbstractCCNBa
                 updateDefectStatus(defectEntity, batchDefectProcessReqVO);
             }
         }
-        ccnDefectRepository.save(defectEntities);
+        ccnDefectRepository.saveAll(defectEntities);
         refreshOverviewData(batchDefectProcessReqVO.getTaskId());
     }
 }

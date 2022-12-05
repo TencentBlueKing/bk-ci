@@ -9,7 +9,7 @@ import java.util.List;
 @Repository
 public interface TaskPersonalStatisticRepository extends MongoRepository<TaskPersonalStatisticEntity, String> {
 
-    TaskPersonalStatisticEntity findByTaskIdAndUsername(long taskId, String username);
+    TaskPersonalStatisticEntity findFirstByTaskIdAndUsername(long taskId, String username);
 
     List<TaskPersonalStatisticEntity> findByTaskId(long taskId);
 }

@@ -26,7 +26,7 @@
                         </bk-dropdown-menu>
                     </div>
                 </div>
-                <chart :options="cpuLine" ref="cpuLine1" auto-resize v-show="!isEmptyCpu"></chart>
+                <chart :option="cpuLine" ref="cpuLine1" autoresize :loading="cpuChartLoading" :loading-options="chartLoadingOption" v-show="!isEmptyCpu"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyCpu">
                     <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
                 </div>
@@ -56,7 +56,7 @@
                         </bk-dropdown-menu>
                     </div>
                 </div>
-                <chart :options="memoryLine" ref="memoryLine1" auto-resize v-show="!isEmptyMemory"></chart>
+                <chart :option="memoryLine" ref="memoryLine1" :loading="memChartLoading" :loading-options="chartLoadingOption" autoresize v-show="!isEmptyMemory"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyMemory">
                     <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
                 </div>
@@ -88,7 +88,7 @@
                         </bk-dropdown-menu>
                     </div>
                 </div>
-                <chart :options="networkLine" ref="networkLine1" auto-resize v-show="!isEmptyNetwork"></chart>
+                <chart :option="networkLine" ref="networkLine1" :loading="netChartLoading" :loading-options="chartLoadingOption" autoresize v-show="!isEmptyNetwork"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyNetwork">
                     <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
                 </div>
@@ -118,7 +118,7 @@
                         </bk-dropdown-menu>
                     </div>
                 </div>
-                <chart :options="storageLine" ref="storageLine1" auto-resize v-show="!isEmptyDiskio"></chart>
+                <chart :option="storageLine" ref="storageLine1" :loading="ioChartLoading" :loading-options="chartLoadingOption" autoresize v-show="!isEmptyDiskio"></chart>
                 <div class="paas-ci-empty" v-show="isEmptyDiskio">
                     <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
                 </div>
@@ -128,16 +128,29 @@
 </template>
 
 <script>
-    import ECharts from 'vue-echarts/components/ECharts.vue'
-    import 'echarts/lib/chart/line'
-    import 'echarts/lib/component/tooltip'
-    import 'echarts/lib/component/legend'
+    import { use } from 'echarts/core'
+    import VChart from 'vue-echarts'
+    import { CanvasRenderer } from 'echarts/renderers'
+    import { LineChart } from 'echarts/charts'
+    import {
+        GridComponent,
+        TooltipComponent,
+        LegendComponent
+    } from 'echarts/components'
     import { nodeOverview } from '@/utils/chart-option'
     import { bus } from '@/utils/bus'
 
+    use([
+        CanvasRenderer,
+        LineChart,
+        GridComponent,
+        TooltipComponent,
+        LegendComponent
+    ])
+
     export default {
         components: {
-            chart: ECharts
+            chart: VChart
         },
         data () {
             return {
@@ -153,7 +166,11 @@
                 memoryLine: nodeOverview.memory,
                 networkLine: nodeOverview.network,
                 storageLine: nodeOverview.storage,
-                calcSrc: require('@/images/no_data.png')
+                calcSrc: require('@/images/no_data.png'),
+                cpuChartLoading: false,
+                memChartLoading: false,
+                netChartLoading: false,
+                ioChartLoading: false
             }
         },
         computed: {
@@ -162,6 +179,13 @@
             },
             nodeHashId () {
                 return this.$route.params.nodeHashId
+            },
+            chartLoadingOption () {
+                return {
+                    text: this.$t('environment.loading'),
+                    color: '#30d878',
+                    maskColor: 'rgba(255, 255, 255, 0.8)'
+                }
             }
         },
         created () {
@@ -199,43 +223,33 @@
                     timeRange: range === '1' ? 'HOUR' : range === '2' ? 'DAY' : 'WEEK'
                 }
 
-                // 图表组件 ref
-                let ref
                 // 设置图表数据的方法名
                 let hookFuncName
                 if (idx === 'cpu_summary') {
-                    ref = this.$refs.cpuLine1
                     hookFuncName = 'setCpuData'
+                    this.cpuChartLoading = true
                 } else if (idx === 'mem') {
-                    ref = this.$refs.memoryLine1
                     hookFuncName = 'setMemData'
+                    this.memChartLoading = true
                 } else if (idx === 'io') {
-                    ref = this.$refs.storageLine1
                     hookFuncName = 'setStorageData'
+                    this.ioChartLoading = true
                 } else if (idx === 'net') {
-                    ref = this.$refs.networkLine1
                     hookFuncName = 'setNetworkData'
+                    this.netChartLoading = true
                 }
-
-                ref && ref.showLoading({
-                    text: this.$t('environment.loading'),
-                    color: '#30d878',
-                    maskColor: 'rgba(255, 255, 255, 0.8)'
-                })
 
                 if (hookFuncName) {
-                    this[hookFuncName](ref, params)
+                    this[hookFuncName](params)
                 }
             },
-            async setCpuData (ref, params) {
-                if (!ref) {
-                    return
-                }
+            async setCpuData (params) {
                 const chartData = []
                 const emptyData = []
 
                 try {
                     const res = await this.$store.dispatch('environment/getNodeCpuMetrics', { params })
+                    console.log(res)
                     if (res.usage_user.length) {
                         this.isEmptyCpu = false
                         res.usage_user.forEach(item => {
@@ -245,9 +259,10 @@
                             emptyData.push(0)
                         })
 
-                        this.cpuLine.series[0].data.splice(0, this.cpuLine.series[0].data.length, ...chartData)
-
-                        ref.hideLoading()
+                        this.$nextTick(() => {
+                            this.cpuLine.series[0].data.splice(0, this.cpuLine.series[0].data.length, ...chartData)
+                            this.cpuChartLoading = false
+                        })
                     } else {
                         this.isEmptyCpu = true
                     }
@@ -261,10 +276,7 @@
                     })
                 }
             },
-            async setMemData (ref, params) {
-                if (!ref) {
-                    return
-                }
+            async setMemData (params) {
                 const chartData = []
                 const emptyData = []
 
@@ -278,8 +290,10 @@
                             })
                             emptyData.push(0)
                         })
-                        this.memoryLine.series[0].data.splice(0, this.memoryLine.series[0].data.length, ...chartData)
-                        ref.hideLoading()
+                        this.$nextTick(() => {
+                            this.memoryLine.series[0].data.splice(0, this.memoryLine.series[0].data.length, ...chartData)
+                            this.memChartLoading = false
+                        })
                     } else {
                         this.isEmptyMemory = true
                     }
@@ -293,11 +307,7 @@
                     })
                 }
             },
-            async setNetworkData (ref, params) {
-                if (!ref) {
-                    return
-                }
-
+            async setNetworkData (params) {
                 try {
                     const res = await this.$store.dispatch('environment/getNodeNetworkMetrics', { params })
                     if (JSON.stringify(res) === '{}') {
@@ -328,8 +338,11 @@
                                 }
                             )
                         })
-                        this.networkLine.series.splice(0, this.networkLine.series.length, ...readChartData || [])
-                        this.$refs.networkLine1.hideLoading()
+
+                        this.$nextTick(() => {
+                            this.networkLine.series.splice(0, this.networkLine.series.length, ...readChartData || [])
+                            this.netChartLoading = false
+                        })
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -341,10 +354,7 @@
                     })
                 }
             },
-            async setStorageData (ref, params) {
-                if (!ref) {
-                    return
-                }
+            async setStorageData (params) {
                 try {
                     const res = await this.$store.dispatch('environment/getNodeDiskioMetrics', { params })
 
@@ -376,8 +386,10 @@
                                 }
                             )
                         })
-                        this.storageLine.series.splice(0, this.storageLine.series.length, ...readChartData || [])
-                        this.$refs.storageLine1.hideLoading()
+                        this.$nextTick(() => {
+                            this.storageLine.series.splice(0, this.storageLine.series.length, ...readChartData || [])
+                            this.ioChartLoading = false
+                        })
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err

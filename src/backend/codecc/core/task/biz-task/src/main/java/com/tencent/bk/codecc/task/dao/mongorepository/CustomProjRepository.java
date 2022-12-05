@@ -47,7 +47,7 @@ public interface CustomProjRepository extends MongoRepository<CustomProjEntity, 
      * @param customProjSource
      * @return
      */
-    CustomProjEntity findByCustomProjSourceAndUrlAndBranch(String customProjSource, String url, String branch);
+    CustomProjEntity findFirstByCustomProjSourceAndUrlAndBranch(String customProjSource, String url, String branch);
 
 
     /**
@@ -80,13 +80,13 @@ public interface CustomProjRepository extends MongoRepository<CustomProjEntity, 
      * @param customProjSource
      * @return
      */
-    CustomProjEntity findByGongfengProjectIdAndCustomProjSource(Integer id, String customProjSource);
+    CustomProjEntity findFirstByGongfengProjectIdAndCustomProjSource(Integer id, String customProjSource);
 
     /**
      * 通过工蜂ID查找
      *
      */
-    CustomProjEntity findByGongfengProjectId(Integer gongfengProjectId);
+    CustomProjEntity findFirstByGongfengProjectId(Integer gongfengProjectId);
 
     /**
      * 通过工蜂id查找

@@ -25,13 +25,23 @@
     },
     {
       "sourceType": "com.tencent.devops.log.configuration.StorageProperties",
-      "name": "log.storage.closeInDay",
+      "name": "log.storage.coldInDay",
       "type": "java.lang.String"
     },
     {
       "sourceType": "com.tencent.devops.log.configuration.StorageProperties",
       "name": "log.storage.deleteInDay",
       "type": "java.lang.Integer"
+    },
+    {
+      "sourceType": "com.tencent.devops.log.configuration.StorageProperties",
+      "name": "log.storage.makeColdKey",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.tencent.devops.log.configuration.StorageProperties",
+      "name": "log.storage.makeColdValue",
+      "type": "java.lang.String"
     },
     {
       "sourceType": "com.tencent.devops.log.es.ESProperties",

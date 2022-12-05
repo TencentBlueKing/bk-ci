@@ -42,19 +42,24 @@ import com.tencent.devops.common.pipeline.event.BuildEvent
 import com.tencent.devops.common.pipeline.event.CallBackData
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineEvent
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.pipeline.event.SimpleJob
 import com.tencent.devops.common.pipeline.event.SimpleModel
 import com.tencent.devops.common.pipeline.event.SimpleStage
 import com.tencent.devops.common.pipeline.event.SimpleTask
+import com.tencent.devops.common.pipeline.event.StreamEnabledEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.CallBackHeader
-import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -64,7 +69,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
@@ -81,7 +85,8 @@ class CallBackControl @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val projectPipelineCallBackService: ProjectPipelineCallBackService,
-    private val client: Client
+    private val client: Client,
+    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry
 ) {
 
     fun pipelineCreateEvent(projectId: String, pipelineId: String) {
@@ -94,6 +99,27 @@ class CallBackControl @Autowired constructor(
 
     fun pipelineUpdateEvent(projectId: String, pipelineId: String) {
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.UPDATE_PIPELINE)
+    }
+
+    fun pipelineRestoreEvent(projectId: String, pipelineId: String) {
+        callBackPipelineEvent(projectId, pipelineId, CallBackEvent.RESTORE_PIPELINE)
+    }
+
+    fun pipelineStreamEnabledEvent(event: PipelineStreamEnabledEvent) {
+        with(event) {
+            logger.info("$projectId|STREAM_ENABLED|callback stream enable event")
+            val list = projectPipelineCallBackService.listProjectCallBack(
+                projectId = projectId,
+                events = CallBackEvent.STREAM_ENABLED.name
+            )
+            val streamEnabledEvent = StreamEnabledEvent(
+                gitProjectId = gitProjectId,
+                gitProjectUrl = gitProjectUrl,
+                userId = userId,
+                enable = enable
+            )
+            sendToCallBack(CallBackData(event = CallBackEvent.STREAM_ENABLED, data = streamEnabledEvent), list)
+        }
     }
 
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {
@@ -182,6 +208,8 @@ class CallBackControl @Autowired constructor(
             pipelineId = modelDetail.pipelineId,
             pipelineName = modelDetail.pipelineName,
             userId = modelDetail.userId,
+            triggerUser = modelDetail.triggerUser,
+            cancelUserId = modelDetail.cancelUserId,
             status = modelDetail.status,
             startTime = modelDetail.startTime,
             endTime = modelDetail.endTime ?: 0,
@@ -191,7 +219,6 @@ class CallBackControl @Autowired constructor(
             stageId = event.stageId,
             taskId = event.taskId
         )
-
         sendToCallBack(CallBackData(event = callBackEvent, data = buildEvent), list)
     }
 
@@ -237,11 +264,35 @@ class CallBackControl @Autowired constructor(
 
         var errorMsg: String? = null
         var status = ProjectPipelineCallbackStatus.SUCCESS
+        // 熔断处理
+        val breaker = callbackCircuitBreakerRegistry.circuitBreaker(callBack.callBackUrl)
         try {
-            callbackClient.newCall(request).execute()
+            breaker.executeCallable {
+                HttpRetryUtils.retry(MAX_RETRY_COUNT) {
+                    callbackClient.newCall(request).execute()
+                }
+            }
+        } catch (e: CallNotPermittedException) {
+            logger.warn(
+                "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}|" +
+                    "failureRate=${breaker.metrics.failureRate}|${e.message}"
+            )
+            // 如果请求100%失败，则说明回调地址已经失效，禁用
+            if (breaker.metrics.failureRate == 100.0F) {
+                logger.warn(
+                    "Removing callbacks because of 100% failure rate|" +
+                        "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}"
+                )
+                projectPipelineCallBackService.disable(callBack.projectId, callBack.id!!)
+            }
+            errorMsg = e.message
+            status = ProjectPipelineCallbackStatus.FAILED
         } catch (e: Exception) {
-            logger.warn("BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
-                "url=${callBack.callBackUrl}|${callBack.events}", e)
+            logger.warn(
+                "BKSystemErrorMonitor|[${callBack.projectId}]|CALL_BACK|" +
+                    "url=${callBack.callBackUrl}|${callBack.events}",
+                e
+            )
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAILED
         } finally {
@@ -265,21 +316,23 @@ class CallBackControl @Autowired constructor(
         endTime: Long
     ) {
         try {
-            projectPipelineCallBackService.createHistory(ProjectPipelineCallBackHistory(
-                projectId = callBack.projectId,
-                callBackUrl = callBack.callBackUrl,
-                events = callBack.events,
-                status = status,
-                errorMsg = errorMsg,
-                requestHeaders = requestHeaders,
-                requestBody = "",
-                responseCode = 0,
-                responseBody = "",
-                startTime = startTime,
-                endTime = endTime,
-                id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("PROJECT_PIPELINE_CALLBACK_HISTORY").data
-            ))
+            projectPipelineCallBackService.createHistory(
+                ProjectPipelineCallBackHistory(
+                    projectId = callBack.projectId,
+                    callBackUrl = callBack.callBackUrl,
+                    events = callBack.events,
+                    status = status,
+                    errorMsg = errorMsg,
+                    requestHeaders = requestHeaders,
+                    requestBody = "",
+                    responseCode = 0,
+                    responseBody = "",
+                    startTime = startTime,
+                    endTime = endTime,
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("PROJECT_PIPELINE_CALLBACK_HISTORY").data
+                )
+            )
         } catch (e: Throwable) {
             logger.error("[${callBack.projectId}]|[${callBack.callBackUrl}]|[${callBack.events}]|save fail", e)
         }
@@ -385,11 +438,10 @@ class CallBackControl @Autowired constructor(
         return tasks
     }
 
-    private val executors = Executors.newFixedThreadPool(8)
-
     companion object {
         private val logger = LoggerFactory.getLogger(CallBackControl::class.java)
         private val JSON = MediaType.parse("application/json;charset=utf-8")
+        const val MAX_RETRY_COUNT = 3
 
         private fun anySslSocketFactory(): SSLSocketFactory {
             try {

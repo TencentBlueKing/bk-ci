@@ -32,13 +32,13 @@
 package com.tencent.bkrepo.npm.handler
 
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
+import com.tencent.bkrepo.common.artifact.util.PackageKeys
 import com.tencent.bkrepo.npm.model.metadata.NpmPackageMetaData
 import com.tencent.bkrepo.npm.model.metadata.NpmVersionMetadata
 import com.tencent.bkrepo.npm.pojo.enums.NpmOperationAction
-import com.tencent.bkrepo.npm.pojo.module.des.service.DepsCreateRequest
-import com.tencent.bkrepo.npm.pojo.module.des.service.DepsDeleteRequest
-import com.tencent.bkrepo.npm.service.ModuleDepsService
 import com.tencent.bkrepo.npm.utils.NpmUtils
+import com.tencent.bkrepo.repository.api.PackageDependentsClient
+import com.tencent.bkrepo.repository.pojo.dependent.PackageDependentsRelation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
@@ -48,7 +48,7 @@ import org.springframework.stereotype.Component
 class NpmDependentHandler {
 
     @Autowired
-    private lateinit var moduleDepsService: ModuleDepsService
+    private lateinit var packageDependentsClient: PackageDependentsClient
 
     @Async
     fun updatePackageDependents(
@@ -81,29 +81,16 @@ class NpmDependentHandler {
         artifactInfo: ArtifactInfo,
         versionMetaData: NpmVersionMetadata
     ) {
-        val name = versionMetaData.name!!
-
-        versionMetaData.dependencies?.let { it ->
-            val dependenciesSet = it.keys
-            val createList = mutableListOf<DepsCreateRequest>()
-            if (dependenciesSet.isNotEmpty()) {
-                dependenciesSet.forEach {
-                    createList.add(
-                        DepsCreateRequest(
-                            projectId = artifactInfo.projectId,
-                            repoName = artifactInfo.repoName,
-                            name = it,
-                            deps = name,
-                            overwrite = true,
-                            operator = userId
-                        )
-                    )
-                }
-            }
-            if (createList.isNotEmpty()) {
-                moduleDepsService.batchCreate(createList)
-            }
-            logger.info("publish dependent for package: [$name], size: [${createList.size}] success.")
+        val name = versionMetaData.name.orEmpty()
+        with(artifactInfo){
+            val relation = PackageDependentsRelation(
+                projectId = projectId,
+                repoName = repoName,
+                packageKey = name,
+                dependencies = versionMetaData.dependencies?.keys.orEmpty().map { PackageKeys.ofNpm(it) }.toSet()
+            )
+            packageDependentsClient.addDependents(relation)
+            logger.info("user [$userId] publish dependent for package: [$name] success.")
         }
     }
 
@@ -112,15 +99,18 @@ class NpmDependentHandler {
         artifactInfo: ArtifactInfo,
         versionMetaData: NpmVersionMetadata
     ) {
-        val name = versionMetaData.name!!
-        moduleDepsService.deleteAllByName(
-            DepsDeleteRequest(
-                projectId = artifactInfo.projectId,
-                repoName = artifactInfo.repoName,
-                deps = name,
-                operator = userId
+        val name = versionMetaData.name.orEmpty()
+
+        with(artifactInfo){
+            val relation = PackageDependentsRelation(
+                projectId = projectId,
+                repoName = repoName,
+                packageKey = name,
+                dependencies = versionMetaData.dependencies?.keys.orEmpty().map { PackageKeys.ofNpm(it) }.toSet()
             )
-        )
+            packageDependentsClient.reduceDependents(relation)
+            logger.info("user [$userId] delete dependent for package: [$name] success.")
+        }
     }
 
     companion object {

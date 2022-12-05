@@ -55,7 +55,7 @@ public class LintFastIncrementConsumer extends AbstractFastIncrementConsumer
         TaskDetailVO taskVO = thirdPartySystemCaller.getTaskInfo(streamName);
         BuildEntity buildEntity = buildDao.getAndSaveBuildInfo(buildId);
 
-        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
 
         // 查询所有告警
         List<LintDefectV2Entity> allNewDefectList = lintDefectV2Repository.findByTaskIdAndToolNameAndStatus(taskId, toolName, ComConstants.DefectStatus.NEW.value());

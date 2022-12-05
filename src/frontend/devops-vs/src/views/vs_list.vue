@@ -146,7 +146,7 @@
 
                     this.vsList.splice(0, this.vsList.length)
                     if (res.records) {
-                        res.records.map(item => {
+                        res.records.forEach(item => {
                             this.vsList.push(item)
                         })
                         this.pagination.count = res.count

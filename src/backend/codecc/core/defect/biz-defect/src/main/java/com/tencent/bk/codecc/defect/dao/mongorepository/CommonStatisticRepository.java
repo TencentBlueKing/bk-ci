@@ -61,5 +61,5 @@ public interface CommonStatisticRepository extends MongoRepository<CommonStatist
      */
     List<CommonStatisticEntity> findByTaskIdAndToolNameOrderByTimeDesc(long taskId, String toolName);
 
-    CommonStatisticEntity findByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
+    CommonStatisticEntity findFirstByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
 }

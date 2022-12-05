@@ -53,7 +53,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -363,7 +363,7 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService {
      * @param toolName
      */
     public void cacheToolBaseMeta(String toolName) {
-        ToolMetaEntity toolMetaEntity = toolMetaRepository.findByName(toolName);
+        ToolMetaEntity toolMetaEntity = toolMetaRepository.findFirstByName(toolName);
         if (toolMetaEntity != null) {
             ToolMetaBaseVO newToolMetaBaseVO = new ToolMetaBaseVO();
             BeanUtils.copyProperties(toolMetaEntity, newToolMetaBaseVO);

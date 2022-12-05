@@ -37,6 +37,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("代理源信息")
 data class ProxyChannelInfo(
+    @ApiModelProperty("所属项目id", required = true)
+    val projectId: String,
+    @ApiModelProperty("仓库名称", required = true)
+    val repoName: String,
     @ApiModelProperty("id")
     val id: String,
     @ApiModelProperty("是否为公有源")

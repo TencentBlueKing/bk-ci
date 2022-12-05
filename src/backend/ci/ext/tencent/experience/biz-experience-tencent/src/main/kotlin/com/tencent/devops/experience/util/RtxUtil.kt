@@ -35,14 +35,14 @@ object RtxUtil {
         projectName: String,
         name: String,
         version: String,
-        innerUrl: String,
-        outerUrl: String,
+        pcUrl: String,
+        appUrl: String,
         receivers: Set<String>
     ): RtxNotifyMessage {
         val message = RtxNotifyMessage()
         message.addAllReceivers(receivers)
         message.title = "【$projectName】最新体验版本分享"
-        message.body = "【$projectName】发布了最新体验版本，【$name-$version】诚邀您参与体验。\nPC体验地址：$innerUrl\n手机体验地址：$outerUrl"
+        message.body = "【$projectName】发布了最新体验版本，【$name-$version】诚邀您参与体验。\nPC体验地址：$pcUrl\n手机体验地址：$appUrl"
         return message
     }
 }

@@ -31,9 +31,11 @@ import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.atom.AtomUtils
+import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
@@ -41,6 +43,7 @@ import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
 import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.process.pojo.setting.JobCommonSetting
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -65,14 +68,17 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val stageCommonSettingConfig: StageCommonSettingConfig,
     private val jobCommonSettingConfig: JobCommonSettingConfig,
     private val taskCommonSettingConfig: TaskCommonSettingConfig,
-    private val client: Client
+    private val client: Client,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
     fun saveSetting(
         userId: String,
         setting: PipelineSetting,
         checkPermission: Boolean = true,
-        version: Int = 0
+        version: Int = 0,
+        updateLastModifyUser: Boolean? = true,
+        dispatchPipelineUpdateEvent: Boolean = true
     ): String {
         if (checkPermission) {
             checkEditPermission(
@@ -83,7 +89,12 @@ class PipelineSettingFacadeService @Autowired constructor(
             )
         }
 
-        pipelineRepositoryService.saveSetting(userId, setting, version)
+        pipelineRepositoryService.saveSetting(
+            userId = userId,
+            setting = setting,
+            version = version,
+            updateLastModifyUser = updateLastModifyUser
+        )
 
         if (checkPermission) {
             pipelinePermissionService.modifyResource(
@@ -99,6 +110,17 @@ class PipelineSettingFacadeService @Autowired constructor(
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
+        if (dispatchPipelineUpdateEvent) {
+            pipelineEventDispatcher.dispatch(
+                PipelineUpdateEvent(
+                    source = "update_pipeline",
+                    projectId = setting.projectId,
+                    pipelineId = setting.pipelineId,
+                    version = version,
+                    userId = userId
+                )
+            )
+        }
         return setting.pipelineId
     }
 
@@ -107,8 +129,20 @@ class PipelineSettingFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode = ChannelCode.BS,
-        version: Int = 0
+        version: Int = 0,
+        checkPermission: Boolean = false
     ): PipelineSetting {
+
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户($userId)无权限在工程($projectId)下获取流水线($pipelineId)"
+            )
+        }
+
         var settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
         val labels = ArrayList<String>()
@@ -129,7 +163,8 @@ class PipelineSettingFacadeService @Autowired constructor(
                 runLockType = PipelineRunLockType.MULTIPLE,
                 successSubscription = Subscription(),
                 failSubscription = Subscription(),
-                labels = labels
+                labels = labels,
+                pipelineAsCodeSettings = PipelineAsCodeSettings()
             )
         } else {
             settingInfo.labels = labels
@@ -237,7 +272,18 @@ class PipelineSettingFacadeService @Autowired constructor(
             hasPermission = oldSetting.hasPermission,
             labels = oldSetting.labels,
             runLockType = oldSetting.runLockType,
-            waitQueueTimeMinute = oldSetting.waitQueueTimeMinute
+            waitQueueTimeMinute = oldSetting.waitQueueTimeMinute,
+            pipelineAsCodeSettings = oldSetting.pipelineAsCodeSettings
+        )
+    }
+
+    fun updateMaxConRunningQueueSize(
+        pipelineId: String,
+        maxConRunningQueueSize: Int
+    ): Int {
+        return pipelineRepositoryService.updateMaxConRunningQueueSize(
+            pipelineId = pipelineId,
+            maxConRunningQueueSize = maxConRunningQueueSize
         )
     }
 }

@@ -21,7 +21,7 @@ public interface CheckerSetProjectRelationshipRepository extends MongoRepository
      * @param projectId
      * @return
      */
-    CheckerSetProjectRelationshipEntity findByCheckerSetIdAndProjectId(String checkerSetId, String projectId);
+    CheckerSetProjectRelationshipEntity findFirstByCheckerSetIdAndProjectId(String checkerSetId, String projectId);
 
     /**
      * 根据规则集ID，类型查询

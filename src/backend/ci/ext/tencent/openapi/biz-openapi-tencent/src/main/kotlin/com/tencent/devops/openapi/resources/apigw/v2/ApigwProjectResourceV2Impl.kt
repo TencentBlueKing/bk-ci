@@ -29,7 +29,7 @@ package com.tencent.devops.openapi.resources.apigw.v2
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v2.ApigwProjectResourceV2
 import com.tencent.devops.openapi.service.apigw.ApigwProjectService
@@ -46,7 +46,8 @@ import org.springframework.beans.factory.annotation.Value
 @RestResource
 class ApigwProjectResourceV2Impl @Autowired constructor(
     private val client: Client,
-    private val apigwProjectService: ApigwProjectService
+    private val apigwProjectService: ApigwProjectService,
+    private val bkTag: BkTag
 ) : ApigwProjectResourceV2 {
 
     @Value("\${project.route.tag:#{null}}")
@@ -81,14 +82,16 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
 
         // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
         if (!projectRouteTag.isNullOrEmpty()) {
-            ConsulContent.setConsulContent(projectRouteTag!!)
+            bkTag.setGatewayTag(projectRouteTag)
         }
-        return Result(client.get(ServiceTxProjectResource::class).create(
-            userId = userId,
-            accessToken = accessToken,
-            projectCreateInfo = projectCreateInfo,
-            routerTag = routerTag
-        ).data!!)
+        return Result(
+            client.get(ServiceTxProjectResource::class).create(
+                userId = userId,
+                accessToken = accessToken,
+                projectCreateInfo = projectCreateInfo,
+                routerTag = routerTag
+            ).data!!
+        )
     }
 
     override fun listProjectByOrganizationId(
@@ -140,7 +143,11 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     ): Result<Boolean?> {
         // 设置项目对应的consulTag
         apigwProjectService.setProjectRouteType(createInfo.projectId)
-        return Result(apigwProjectService.createProjectUserByUser(createUserId, createInfo))
+        return Result(apigwProjectService.createProjectUser(
+            createUserId = createUserId,
+            checkManager = true,
+            createInfo = createInfo
+        ))
     }
 
     override fun createProjectUser(
@@ -151,7 +158,11 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     ): Result<Boolean?> {
         // 设置项目对应的consulTag
         apigwProjectService.setProjectRouteType(createInfo.projectId)
-        return Result(apigwProjectService.createProjectUser(createUserId, createInfo))
+        return Result(apigwProjectService.createProjectUser(
+            createUserId = createUserId,
+            checkManager = true,
+            createInfo = createInfo
+        ))
     }
 
     override fun createProjectaUserByApp(
@@ -164,45 +175,27 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         // 设置项目对应的consulTag
         apigwProjectService.setProjectRouteType(createInfo.projectId)
         return Result(
-            apigwProjectService.createProjectUserByApp(
-                organizationType = organizationType,
-                organizationId = organizationId,
+            apigwProjectService.createProjectUser(
+                createUserId = "",
+                checkManager = false,
                 createInfo = createInfo
             )
         )
     }
 
-    override fun createUserPipelinePermissionByUser(
+    override fun createUserPipelinePermission(
         appCode: String?,
         apigwType: String?,
-        accessToken: String,
-        createUser: String,
+        createUserId: String?,
+        checkManager: Boolean?,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean?> {
         // 设置项目对应的consulTag
         apigwProjectService.setProjectRouteType(createInfo.projectId)
         return Result(
-            apigwProjectService.createPipelinePermissionByUser(
-                createUserId = createUser,
-                accessToken = accessToken,
-                createInfo = createInfo
-            )
-        )
-    }
-
-    override fun createUserPipelinePermissionByApp(
-        appCode: String?,
-        apigwType: String?,
-        organizationType: String,
-        organizationId: Long,
-        createInfo: PipelinePermissionInfo
-    ): Result<Boolean?> {
-        // 设置项目对应的consulTag
-        apigwProjectService.setProjectRouteType(createInfo.projectId)
-        return Result(
-            apigwProjectService.createPipelinePermissionByApp(
-                organizationType = organizationType,
-                organizationId = organizationId,
+            apigwProjectService.createPipelinePermission(
+                createUserId = createUserId,
+                checkManager = checkManager ?: true,
                 createInfo = createInfo
             )
         )

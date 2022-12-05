@@ -1,7 +1,7 @@
 <template>
     <div v-bkloading="{ isLoading: !pipelineSetting }" class="bkdevops-clean-policy-setting-tab">
         <p class="hint">
-            <i class="bk-icon icon-info-circle-shape"></i>
+            <i class="devops-icon icon-info-circle-shape"></i>
             {{ $t('settings.cleanTips') }}
         </p>
         <!-- <div v-if="pipelineSetting">
@@ -35,7 +35,7 @@
             padding: 0 15px;
             border-radius: 2px;
             margin-bottom: 20px;
-            .bk-icon {
+            .devops-icon {
                 color: #3C96FF;
                 margin-right: 10px;
             }

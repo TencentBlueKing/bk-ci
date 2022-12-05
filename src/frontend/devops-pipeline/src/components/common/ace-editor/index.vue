@@ -63,8 +63,8 @@
         data () {
             return {
                 editor: null,
-                monaco: null,
-                isLoading: false
+                isLoading: false,
+                monaco: null
             }
         },
         watch: {
@@ -94,8 +94,13 @@
         },
         async mounted () {
             this.isLoading = true
-            this.monaco = await import(/* webpackChunkName: "monaco-editor" */ 'monaco-editor')
-
+            this.monaco = await import(
+                /* webpackMode: "lazy" */
+                /* webpackPrefetch: true */
+                /* webpackPreload: true */
+                /* webpackChunkName: "monaco-editor" */
+                'monaco-editor'
+            )
             this.editor = this.monaco.editor.create(this.$el, {
                 value: this.value,
                 language: this.getLang(this.lang),
@@ -104,11 +109,12 @@
                 minimap: {
                     enabled: false
                 },
+                scrollbar: {
+                    alwaysConsumeMouseWheel: false
+                },
                 readOnly: this.readOnly
             })
             this.isLoading = false
-
-            // @event `change`
 
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()

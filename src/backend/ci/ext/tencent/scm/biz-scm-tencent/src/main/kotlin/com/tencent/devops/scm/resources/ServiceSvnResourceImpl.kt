@@ -62,7 +62,16 @@ class ServiceSvnResourceImpl @Autowired constructor(
         credential2: String,
         credential3: String?
     ): Result<List<SvnFileInfo>> {
-        return Result(svnService.getDirectories(url, userId, svnType, svnPath, revision, credential1, credential2, credential3))
+        return Result(svnService.getDirectories(
+            url = url,
+            userId = userId,
+            svnType = svnType,
+            svnPath = svnPath,
+            revision = revision,
+            credential1 = credential1,
+            credential2 = credential2,
+            credential3 = credential3
+        ))
     }
 
     override fun getSvnRevisionList(

@@ -21,7 +21,7 @@ import com.tencent.bk.codecc.defect.pojo.AggregateDefectInputModel;
 import com.tencent.bk.codecc.defect.pojo.AggregateDefectOutputModel;
 import com.tencent.bk.codecc.defect.vo.CommitDefectVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.devops.common.api.util.JsonUtil;
+import com.tencent.devops.common.api.codecc.util.JsonUtil;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.util.PathUtils;
 import java.util.HashSet;
@@ -212,7 +212,7 @@ public class NewCCNDefectTracingComponent extends AbstractDefectTracingComponent
 
             log.info("save defect trace result: taskId:{}, toolName:{}, buildId:{}, defectCount:{}", taskId, toolName,
                     buildEntity.getBuildId(), upsertDefectList.size());
-            ccnDefectRepository.save(upsertDefectList);
+            ccnDefectRepository.saveAll(upsertDefectList);
         }
         log.info("end saveDefectFile, cost:{}, taskId:{}, toolName:{}, buildId:{}",
                 System.currentTimeMillis() - beginTime, taskId, toolName, buildEntity.getBuildId());

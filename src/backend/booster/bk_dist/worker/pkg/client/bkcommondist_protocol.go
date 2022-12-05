@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
@@ -290,12 +291,18 @@ func encodeCommonDispatchReq(req *dcSDK.BKDistCommand) ([]protocol.Message, erro
 	// encode body and file to message
 	pbbody := protocol.PBBodyDispatchTaskReq{}
 	for _, v := range req.Commands {
+		envs := [][]byte{}
+		for _, v := range v.Env {
+			envs = append(envs, []byte(v))
+		}
+
 		pbcommand := protocol.PBCommand{
 			Workdir:     &v.WorkDir,
 			Exepath:     &v.ExePath,
 			Exename:     &v.ExeName,
 			Params:      v.Params,
 			Resultfiles: v.ResultFiles,
+			Env:         envs,
 		}
 		if len(v.Inputfiles) > 0 {
 			for _, f := range v.Inputfiles {
@@ -530,6 +537,12 @@ func saveResultFile(rf *protocol.PBFileDesc, data []byte, sandbox *syscall.Sandb
 	if !filepath.IsAbs(filePath) {
 		filePath = filepath.Join(sandbox.Dir, filePath)
 	}
+
+	if strings.HasSuffix(filePath, ".gcno") && rf.GetSize() == 0 {
+		blog.Debugf("empty gcno file:[%s] , not save", rf.GetFullpath())
+		return nil
+	}
+
 	_ = os.MkdirAll(filepath.Dir(filePath), os.ModePerm)
 
 	creatTime1 := time.Now().Local().UnixNano()

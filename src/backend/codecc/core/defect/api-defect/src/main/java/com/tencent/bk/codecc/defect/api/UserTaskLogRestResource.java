@@ -27,6 +27,7 @@
 package com.tencent.bk.codecc.defect.api;
 
 import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 import com.tencent.bk.codecc.defect.vo.QueryTaskLogVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogOverviewVO;
@@ -88,6 +89,9 @@ public interface UserTaskLogRestResource
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}")
     @GET
     Result<QueryLogRepVO> getAnalysisLogs(
+            @ApiParam(value = "用户ID")
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+                    String userId,
             @ApiParam(value = "项目ID", required = true)
             @PathParam("projectId")
                     String projectId,
@@ -108,7 +112,11 @@ public interface UserTaskLogRestResource
     @ApiOperation("获取更多日志")
     @GET
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}/more")
+    // NOCC:ParameterNumber(设计如此:)
     Result<QueryLogRepVO> getMoreLogs(
+            @ApiParam(value = "用户ID")
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+                    String userId,
             @ApiParam(value = "项目ID", required = true)
             @PathParam("projectId")
                     String projectId,
@@ -144,6 +152,9 @@ public interface UserTaskLogRestResource
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     void downloadLogs(
+            @ApiParam(value = "用户ID")
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+                    String userId,
             @ApiParam(value = "项目ID", required = true)
             @PathParam("projectId")
                     String projectId,
@@ -165,7 +176,11 @@ public interface UserTaskLogRestResource
     @ApiOperation("获取某行后的日志")
     @GET
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}/after")
+    // NOCC:ParameterNumber(设计如此:)
     Result<QueryLogRepVO> getAfterLogs(
+            @ApiParam(value = "用户ID")
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+                    String userId,
             @ApiParam(value = "项目ID", required = true)
             @PathParam("projectId")
                     String projectId,

@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth", "LongParameterList")
+@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth", "LongParameterList", "ReturnCount")
 @Service
 class PipelineContextService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService
@@ -56,6 +56,7 @@ class PipelineContextService @Autowired constructor(
 
     fun buildContext(
         projectId: String,
+        pipelineId: String,
         buildId: String,
         stageId: String?,
         containerId: String?,
@@ -68,11 +69,17 @@ class PipelineContextService @Autowired constructor(
         val failTaskNameList = mutableListOf<String>()
         try {
             modelDetail.model.stages.forEach { stage ->
+                if (stage.checkIn?.status == BuildStatus.REVIEW_ABORT.name) {
+                    previousStageStatus = BuildStatus.FAILED
+                }
                 if (stage.finally && stage.id?.let { it == stageId } == true) {
                     contextMap["ci.build_status"] = previousStageStatus.name
                     contextMap["ci.build_fail_tasknames"] = failTaskNameList.joinToString(",")
-                } else if (!stage.status.isNullOrBlank()) {
+                } else if (checkBuildStatus(stage.status)) {
                     previousStageStatus = BuildStatus.parse(stage.status)
+                }
+                if (stage.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name) {
+                    previousStageStatus = BuildStatus.FAILED
                 }
                 stage.containers.forEach nextContainer@{ container ->
                     // 如果有分裂Job则只处理分裂Job的上下文
@@ -119,9 +126,11 @@ class PipelineContextService @Autowired constructor(
         return contextMap
     }
 
-    fun buildContextToNotice(
+    fun buildFinishContext(
         projectId: String,
-        buildId: String
+        pipelineId: String,
+        buildId: String,
+        variables: Map<String, String>
     ): Map<String, String> {
         val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
         val contextMap = mutableMapOf<String, String>()
@@ -132,8 +141,14 @@ class PipelineContextService @Autowired constructor(
                 if (stage.finally) {
                     return@forEach
                 }
-                if (!stage.status.isNullOrBlank()) {
+                if (stage.checkIn?.status == BuildStatus.REVIEW_ABORT.name) {
+                    previousStageStatus = BuildStatus.FAILED
+                }
+                if (checkBuildStatus(stage.status)) {
                     previousStageStatus = BuildStatus.parse(stage.status)
+                }
+                if (stage.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name) {
+                    previousStageStatus = BuildStatus.FAILED
                 }
                 stage.containers.forEach nextContainer@{ container ->
                     // 如果有分裂Job则只处理分裂Job的上下文
@@ -152,6 +167,7 @@ class PipelineContextService @Autowired constructor(
             }
             contextMap["ci.build_status"] = previousStageStatus.name
             contextMap["ci.build_fail_tasknames"] = failTaskNameList.joinToString(",")
+            buildCiContext(contextMap, variables)
         } catch (ignore: Throwable) {
             logger.warn("BKSystemErrorMonitor|buildContextToNoticeFailed|", ignore)
         }
@@ -173,18 +189,21 @@ class PipelineContextService @Autowired constructor(
         return PipelineVarUtil.fetchVarName(contextName)
     }
 
+    private fun checkBuildStatus(status: String?): Boolean =
+        status == BuildStatus.SUCCEED.name || status == BuildStatus.CANCELED.name || status == BuildStatus.FAILED.name
+
     private fun buildCiContext(
-        varMap: MutableMap<String, String>,
-        buildVar: Map<String, String>
+        contextMap: MutableMap<String, String>,
+        variables: Map<String, String>
     ) {
         // 将流水线变量按预置映射关系做替换
-        PipelineVarUtil.fillContextVarMap(varMap, buildVar)
+        PipelineVarUtil.fillContextVarMap(contextMap, variables)
 
         // 特殊处理触发类型以免定时触发无法记录
-        if (buildVar[PIPELINE_START_TYPE] == StartType.TIME_TRIGGER.name) {
-            varMap["ci.event"] = PIPELINE_GIT_TIME_TRIGGER_KIND
-        } else if (!buildVar[PIPELINE_GIT_EVENT].isNullOrBlank()) {
-            varMap["ci.event"] = buildVar[PIPELINE_GIT_EVENT]!!
+        if (variables[PIPELINE_START_TYPE] == StartType.TIME_TRIGGER.name) {
+            contextMap["ci.event"] = PIPELINE_GIT_TIME_TRIGGER_KIND
+        } else if (!variables[PIPELINE_GIT_EVENT].isNullOrBlank()) {
+            contextMap["ci.event"] = variables[PIPELINE_GIT_EVENT]!!
         }
     }
 
@@ -224,6 +243,7 @@ class PipelineContextService @Autowired constructor(
         // all element
         buildStepContext(
             c = c,
+            containerId = containerId,
             taskId = taskId,
             variables = variables,
             contextMap = contextMap,
@@ -244,6 +264,7 @@ class PipelineContextService @Autowired constructor(
 
     private fun buildStepContext(
         c: Container,
+        containerId: String?,
         taskId: String?,
         variables: Map<String, String>,
         contextMap: MutableMap<String, String>,
@@ -262,10 +283,13 @@ class PipelineContextService @Autowired constructor(
                 contextMap["step.atom_code"] = e.getAtomCode()
             }
             val stepId = e.stepId ?: return@forEach
-            contextMap["steps.$stepId.name"] = e.name
-            contextMap["steps.$stepId.id"] = e.id ?: ""
-            contextMap["steps.$stepId.status"] = getStepStatus(e)
-            contextMap["steps.$stepId.outcome"] = e.status ?: ""
+            // current job
+            if (c.id?.let { it == containerId } == true) {
+                contextMap["steps.$stepId.name"] = e.name
+                contextMap["steps.$stepId.id"] = e.id ?: ""
+                contextMap["steps.$stepId.status"] = getStepStatus(e)
+                contextMap["steps.$stepId.outcome"] = e.status ?: ""
+            }
             val jobId = c.jobId ?: return@forEach
             contextMap["jobs.$jobId.steps.$stepId.name"] = e.name
             contextMap["jobs.$jobId.steps.$stepId.id"] = e.id ?: ""

@@ -4,8 +4,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 internal class MatrixYamlCheckUtilsTest {
 
@@ -27,10 +27,10 @@ internal class MatrixYamlCheckUtilsTest {
             strategy = "\${{fromJSON(asd)}}"
         )
         val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assert.assertTrue(result.include == null)
-        Assert.assertTrue(result.exclude == null)
+        Assertions.assertTrue(result.include == null)
+        Assertions.assertTrue(result.exclude == null)
         print(result.strategy)
-        Assert.assertTrue(result.strategy == null)
+        Assertions.assertTrue(result.strategy == null)
     }
 
     @Test
@@ -51,9 +51,9 @@ internal class MatrixYamlCheckUtilsTest {
             strategy = "\${{fromJSONasd(asd)}}"
         )
         val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assert.assertTrue(result.include == null)
-        Assert.assertTrue(result.exclude == null)
-        Assert.assertTrue(result.strategy != null)
+        Assertions.assertTrue(result.include == null)
+        Assertions.assertTrue(result.exclude == null)
+        Assertions.assertTrue(result.strategy != null)
     }
 
     @Test
@@ -78,9 +78,9 @@ internal class MatrixYamlCheckUtilsTest {
                 """
         )
         val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assert.assertTrue(result.include == null)
-        Assert.assertTrue(result.exclude == null)
-        Assert.assertTrue(result.strategy != null)
+        Assertions.assertTrue(result.include == null)
+        Assertions.assertTrue(result.exclude == null)
+        Assertions.assertTrue(result.strategy != null)
     }
 
     @Test
@@ -105,9 +105,9 @@ internal class MatrixYamlCheckUtilsTest {
                 """
         )
         val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assert.assertTrue(result.include == null)
-        Assert.assertTrue(result.exclude == null)
-        Assert.assertTrue(result.strategy != null)
+        Assertions.assertTrue(result.include == null)
+        Assertions.assertTrue(result.exclude == null)
+        Assertions.assertTrue(result.strategy != null)
     }
 
     @Test
@@ -122,7 +122,7 @@ internal class MatrixYamlCheckUtilsTest {
             true
         }
 
-        Assert.assertTrue(result)
+        Assertions.assertTrue(result)
     }
 
     @Test
@@ -146,9 +146,9 @@ internal class MatrixYamlCheckUtilsTest {
             strategy = null
         )
         val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assert.assertTrue(result.include == null)
-        Assert.assertTrue(result.exclude == null)
-        Assert.assertTrue(result.strategy == null)
+        Assertions.assertTrue(result.include == null)
+        Assertions.assertTrue(result.exclude == null)
+        Assertions.assertTrue(result.strategy == null)
     }
 
     @Test
@@ -161,8 +161,8 @@ internal class MatrixYamlCheckUtilsTest {
             strategy = null
         )
         val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assert.assertTrue(result.include == null)
-        Assert.assertTrue(result.exclude == null)
-        Assert.assertTrue(result.strategy == null)
+        Assertions.assertTrue(result.include == null)
+        Assertions.assertTrue(result.exclude == null)
+        Assertions.assertTrue(result.strategy == null)
     }
 }

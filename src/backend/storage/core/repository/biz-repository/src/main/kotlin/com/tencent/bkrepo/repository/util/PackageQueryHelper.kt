@@ -77,6 +77,14 @@ object PackageQueryHelper {
         return versionListQuery(packageId).limit(1)
     }
 
+    fun versionQuery(packageId: String, versionList: List<String>): Query {
+        val criteria = where(TPackageVersion::packageId).isEqualTo(packageId)
+        if (versionList.isNotEmpty()) {
+            criteria.and(TPackageVersion::name).inValues(versionList)
+        }
+        return Query(criteria)
+    }
+
     private fun packageListCriteria(projectId: String, repoName: String, packageName: String?): Criteria {
         return where(TPackage::projectId).isEqualTo(projectId)
             .and(TPackage::repoName).isEqualTo(repoName)

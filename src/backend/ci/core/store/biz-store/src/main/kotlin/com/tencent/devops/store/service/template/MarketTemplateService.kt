@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.template
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
@@ -107,6 +108,16 @@ interface MarketTemplateService {
         userId: String,
         templateCode: String,
         projectCodeList: ArrayList<String>
+    ): Result<Boolean>
+
+    /**
+     * 校验流水线模型组件的可见范围
+     */
+    fun verificationModelComponentVisibleDept(
+        userId: String,
+        model: Model,
+        projectCodeList: ArrayList<String>,
+        templateCode: String? = null
     ): Result<Boolean>
 
     /**

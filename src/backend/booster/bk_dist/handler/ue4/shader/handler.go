@@ -129,9 +129,10 @@ func (u *UE4Shader) PreExecute(command []string) (*dcSDK.BKDistCommand, error) {
 		}
 	}
 
-	existed, fileSize, modifyTime, fileMode := dcFile.Stat(inputFile).Batch()
+	info := dcFile.Stat(inputFile)
+	existed, fileSize, modifyTime, fileMode := info.Batch()
 	if !existed {
-		return nil, fmt.Errorf("shader: input file %s not exist", inputFile)
+		return nil, fmt.Errorf("shader: input file %s not exist with error:%v", inputFile, info.Error())
 	}
 
 	inputfiles := []dcSDK.FileDesc{{
@@ -177,6 +178,11 @@ func (u *UE4Shader) PreExecute(command []string) (*dcSDK.BKDistCommand, error) {
 		},
 		CustomSave: true,
 	}, nil
+}
+
+// NeedRemoteResource check whether this command need remote resource
+func (u *UE4Shader) NeedRemoteResource(command []string) bool {
+	return true
 }
 
 // RemoteRetryTimes will return the remote retry times

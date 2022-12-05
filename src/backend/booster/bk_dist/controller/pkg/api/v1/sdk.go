@@ -198,6 +198,7 @@ func (s *sdk) launchServer() error {
 	if err == nil {
 		ctrlPath = absPath
 	}
+	ctrlPath = dcUtil.QuoteSpacePath(ctrlPath)
 	blog.Infof("sdk: got exe file full path: %s", ctrlPath)
 
 	sudo := ""
@@ -215,9 +216,21 @@ func (s *sdk) launchServer() error {
 		disablefilelock = "--disable_file_lock"
 	}
 
+	autoResourceMgr := ""
+	if s.config.AutoResourceMgr {
+		autoResourceMgr = "--auto_resource_mgr"
+	}
+
+	sendcork := ""
+	if s.config.SendCork {
+		sendcork = "--send_cork"
+	}
+
 	return dcSyscall.RunServer(fmt.Sprintf("%s%s -a=%s -p=%d --log-dir=%s --v=%d --local_slots=%d "+
 		"--local_pre_slots=%d --local_exe_slots=%d --local_post_slots=%d --async_flush %s --remain_time=%d "+
-		"--use_local_cpu_percent=%d %s",
+		"--use_local_cpu_percent=%d %s"+
+		"%s --res_idle_secs_for_free=%d"+
+		" %s",
 		sudo,
 		ctrlPath,
 		s.config.IP,
@@ -232,6 +245,9 @@ func (s *sdk) launchServer() error {
 		s.config.RemainTime,
 		s.config.UseLocalCPUPercent,
 		disablefilelock,
+		autoResourceMgr,
+		s.config.ResIdleSecsForFree,
+		sendcork,
 	))
 }
 
@@ -705,7 +721,7 @@ func (wj *workJob) ExecuteRemoteTask(req *dcSDK.BKDistCommand) (*dcSDK.BKDistRes
 }
 
 // ExecuteLocalTask do the task in local controller
-func (wj *workJob) ExecuteLocalTask(commands []string, workdir string) (*dcSDK.LocalTaskResult, error) {
+func (wj *workJob) ExecuteLocalTask(commands []string, workdir string) (int, string, *dcSDK.LocalTaskResult, error) {
 	var data []byte
 
 	dir := ""
@@ -736,17 +752,20 @@ func (wj *workJob) ExecuteLocalTask(commands []string, workdir string) (*dcSDK.L
 		User:         *u,
 	}, &data)
 
+	servercode := int(api.ServerErrOK)
+	servermessage := ""
 	resp, err := wj.sdk.sdk.requestRaw("POST", fmt.Sprintf(localExecURI, wj.sdk.id), data, true)
 	if err != nil {
-		return nil, err
+		return servercode, servermessage, nil, err
 	}
 
 	r := &LocalTaskExecuteResp{}
-	if err = r.Read(resp.Reply); err != nil {
-		return nil, err
+	httpcode, httpmessage, err := r.Read(resp.Reply)
+	if err != nil {
+		return httpcode, httpmessage, nil, err
 	}
 
-	return &dcSDK.LocalTaskResult{
+	return httpcode, httpmessage, &dcSDK.LocalTaskResult{
 		ExitCode: r.Result.ExitCode,
 		Stdout:   r.Result.Stdout,
 		Stderr:   r.Result.Stderr,

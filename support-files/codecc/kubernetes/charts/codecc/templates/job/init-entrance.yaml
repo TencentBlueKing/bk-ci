@@ -1,0 +1,35 @@
+{{- if .Values.init.entrance.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "common.names.fullname" . }}-init-entrance
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: init-entrance
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+spec:
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: init-entrance
+    spec:
+      containers:
+        - name: init-entrance
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.init.entrance.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.init.entrance.image.pullPolicy }}
+          command: ['/bin/sh','-c','/data/workspace/init-entrance.sh']
+          env:
+            - name: BK_CODECC_URL
+              value: http://{{ .Values.config.bkCodeccPublicUrl }}/codecc
+            - name: BK_CI_PROJECT_INNER_URL
+              value: {{ .Values.config.bkCiProjectInnerUrl }}
+      restartPolicy: OnFailure
+{{- end }}

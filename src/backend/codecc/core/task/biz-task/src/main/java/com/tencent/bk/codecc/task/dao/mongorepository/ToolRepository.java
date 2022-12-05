@@ -58,7 +58,7 @@ public interface ToolRepository extends MongoRepository<ToolConfigInfoEntity, St
      * @param toolName
      * @return
      */
-    ToolConfigInfoEntity findByTaskIdAndToolName(long taskId, String toolName);
+    ToolConfigInfoEntity findFirstByTaskIdAndToolName(long taskId, String toolName);
 
     /**
      * 根据代码检查任务id和工具名查询对应工具信息
@@ -68,7 +68,7 @@ public interface ToolRepository extends MongoRepository<ToolConfigInfoEntity, St
      * @return
      */
     @Query(fields = "{'platform_ip':1}", value = "{'task_id': ?0, 'tool_name': ?1}")
-    ToolConfigInfoEntity findPlatformIpByTaskIdAndToolName(long taskId, String toolName);
+    ToolConfigInfoEntity findPlatformIpFirstByTaskIdAndToolName(long taskId, String toolName);
 
 
     /**

@@ -44,8 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -112,7 +112,7 @@ public class LintDefectDao
     private Query getFilePremiumQuery(long taskId, String toolName, Set<String> fileList, String checker, String author,
                                       Criteria andCriteria)
     {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("task_id", true);
         fieldsObj.put("file_path", true);
         fieldsObj.put("rel_path", true);
@@ -122,7 +122,7 @@ public class LintDefectDao
         fieldsObj.put("file_update_time", true);
         fieldsObj.put("checker_list", true);
         fieldsObj.put("defect_list", true);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
         query.addCriteria(Criteria.where("task_id").is(taskId).
                 and("tool_name").is(toolName));
         //1. 路径过滤
@@ -194,7 +194,7 @@ public class LintDefectDao
      */
     public List<LintFileEntity> findFileInfoList(Long taskId, String toolName)
     {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("task_id", true);
         fieldsObj.put("file_path", true);
         fieldsObj.put("url", true);
@@ -202,7 +202,7 @@ public class LintDefectDao
         fieldsObj.put("author_list", true);
         fieldsObj.put("checker_list", true);
         fieldsObj.put("status", true);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
         query.addCriteria(Criteria.where("task_id").is(taskId));
         if (StringUtils.isNotBlank(toolName))
         {
@@ -310,7 +310,7 @@ public class LintDefectDao
      */
     public List<LintFileEntity> findByTaskIdInAndToolNameIs(Collection<Long> taskIds, String toolName, Integer status)
     {
-        BasicDBObject fieldsObj = new BasicDBObject();
+        Document fieldsObj = new Document();
         fieldsObj.put("task_id", true);
         fieldsObj.put("file_path", true);
         fieldsObj.put("defect_count", true);
@@ -320,7 +320,7 @@ public class LintDefectDao
         fieldsObj.put("file_update_time", true);
         fieldsObj.put("createTime", true);
 
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Query query = new BasicQuery(new Document(), fieldsObj);
 
         if (!CollectionUtils.isEmpty(taskIds))
         {

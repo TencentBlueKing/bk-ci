@@ -69,7 +69,6 @@ object EngineService {
         // #5277 将Job上下文传入本次agent任务
         val jobContext = buildApi.getJobContext().toMutableMap()
         jobContext[JOB_OS_CONTEXT] = AgentEnv.getOS().name
-
         return ret.copy(variables = ret.variables.plus(jobContext))
     }
 

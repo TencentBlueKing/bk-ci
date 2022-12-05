@@ -47,6 +47,12 @@ class DigestCalculateListener : StreamReceiveListener {
     private var md5: String? = null
     private var sha256: String? = null
 
+    override fun data(b: Int) {
+        val v = b.toByte()
+        md5Digest.update(v)
+        sha256Digest.update(v)
+    }
+
     override fun data(buffer: ByteArray, offset: Int, length: Int) {
         md5Digest.update(buffer, offset, length)
         sha256Digest.update(buffer, offset, length)

@@ -49,6 +49,7 @@ import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -135,6 +136,24 @@ class ExtServiceDao {
         with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.update(this).set(DELETE_FLAG, true).set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(serviceId)).execute()
+        }
+    }
+
+    fun deleteExtServiceData(
+        dslContext: DSLContext,
+        serviceCode: String
+    ) {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            dslContext.deleteFrom(this).where(SERVICE_CODE.eq(serviceCode)).execute()
+        }
+    }
+
+    fun getExtServiceIds(dslContext: DSLContext, serviceCode: String): Result<Record2<String, Boolean>> {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            return dslContext.select(ID.`as`("id"), LATEST_FLAG.`as`("latestFlag")).from(this)
+                .where(SERVICE_CODE.eq(serviceCode))
+                .and(LATEST_FLAG.eq(true))
+                .fetch()
         }
     }
 

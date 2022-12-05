@@ -22,6 +22,7 @@ export default new Store<RootState>({
     getters,
     state: {
         isPermissionDialogShow: false,
+        hookMap: {},
         projectList,
         fetchError: null,
         moduleLoading: false,
@@ -41,6 +42,7 @@ export default new Store<RootState>({
             showProjectList: false,
             showNav: true
         },
+        showNotice: false,
         currentNotice: {}
     }
 })

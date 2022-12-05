@@ -50,10 +50,19 @@ func (dt *distTask) WorkerList() []string {
 		if dt.Operator.RequestProcessPerUnit > 0 {
 			jobs = float64(dt.Operator.RequestProcessPerUnit)
 		}
-		workers = append(workers, fmt.Sprintf("%s:%d/%d", v.IP, v.Port, int(jobs*1.3)))
+		workers = append(workers, fmt.Sprintf("%s:%d/%d", v.IP, v.Port, int(jobs*1.1)))
 	}
 
 	return workers
+}
+
+func (dt *distTask) GetRequestInstance() int {
+	return dt.Operator.RequestInstance
+}
+
+// GetWorkerCount get the worker count.
+func (dt *distTask) GetWorkerCount() int {
+	return dt.Stats.WorkerCount
 }
 
 // Dump do not support dump.

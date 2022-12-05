@@ -1,4 +1,4 @@
-package com.tencent.devops.openapi.resources.apigw.v3
+package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -8,23 +8,28 @@ import com.tencent.devops.openapi.api.apigw.v4.ApigwStreamResourceV4
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
-import com.tencent.devops.stream.api.GitCIDetailResource
-import com.tencent.devops.stream.api.GitCIHistoryResource
-import com.tencent.devops.stream.api.GitCIPipelineResource
+import com.tencent.devops.stream.api.service.v1.GitCIDetailResource
+import com.tencent.devops.stream.api.service.v1.GitCIHistoryResource
+import com.tencent.devops.stream.api.service.v1.GitCIPipelineResource
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
-import com.tencent.devops.stream.pojo.GitCIBuildHistory
-import com.tencent.devops.stream.pojo.GitCIModelDetail
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
+import com.tencent.devops.stream.pojo.ManualTriggerInfo
+import com.tencent.devops.stream.pojo.OpenapiTriggerReq
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
+import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
-import com.tencent.devops.stream.pojo.enums.GitCIProjectType
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
-import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
-import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
-import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
+import com.tencent.devops.stream.pojo.openapi.GitCIProjectType
+import com.tencent.devops.stream.pojo.openapi.GitCIUpdateSetting
+import com.tencent.devops.stream.pojo.openapi.GitUserValidateRequest
+import com.tencent.devops.stream.pojo.openapi.GitUserValidateResult
+import com.tencent.devops.stream.pojo.openapi.ProjectCIInfo
+import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
+import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
+import com.tencent.devops.stream.v1.pojo.V1GitCIModelDetail
+import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -33,6 +38,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
 ) : ApigwStreamResourceV4 {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(ApigwStreamResourceV4Impl::class.java)
         private const val MAX_PAGE_SIZE = 50
     }
 
@@ -49,6 +55,54 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
             projectId = "git_$gitProjectId",
             pipelineId = pipelineId,
             streamTriggerBuildReq = streamTriggerBuildReq
+        )
+    }
+
+    override fun getManualTriggerInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        commitId: String?
+    ): Result<ManualTriggerInfo> {
+        return client.get(ServiceStreamTriggerResource::class).getManualTriggerInfo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            branchName = branchName,
+            commitId = commitId
+        )
+    }
+
+    override fun openapiTrigger(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        triggerBuildReq: OpenapiTriggerReq
+    ): Result<TriggerBuildResult> {
+        logger.info("STREAM_V4|openapiTrigger|$userId|$projectId|$pipelineId|$triggerBuildReq")
+        return client.get(ServiceStreamTriggerResource::class).openapiTrigger(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            triggerBuildReq = triggerBuildReq
+        )
+    }
+
+    override fun nameToPipelineId(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        yamlPath: String
+    ): Result<StreamGitProjectPipeline> {
+        logger.info("STREAM_V4|nameToPipelineId|$userId|$projectId|$yamlPath")
+        return client.get(ServiceStreamTriggerResource::class).nameToPipelineId(
+            userId = userId,
+            projectId = projectId,
+            yamlPath = yamlPath
         )
     }
 
@@ -74,7 +128,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         keyword: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<GitProjectPipeline>> {
+    ): Result<Page<V1GitProjectPipeline>> {
         val realPageSize = if (pageSize != null && pageSize > MAX_PAGE_SIZE) {
             MAX_PAGE_SIZE
         } else {
@@ -96,7 +150,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         gitProjectId: Long,
         pipelineId: String,
         withHistory: Boolean?
-    ): Result<GitProjectPipeline?> {
+    ): Result<V1GitProjectPipeline?> {
         return client.get(GitCIPipelineResource::class).getPipeline(
             userId = userId,
             gitProjectId = gitProjectId,
@@ -126,7 +180,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         gitProjectId: Long
-    ): Result<List<GitProjectPipeline>> {
+    ): Result<List<V1GitProjectPipeline>> {
         return client.get(GitCIPipelineResource::class).listPipelineNames(
             userId = userId,
             gitProjectId = gitProjectId
@@ -140,7 +194,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         gitProjectId: Long,
         pipelineId: String?,
         buildId: String?
-    ): Result<GitCIModelDetail?> {
+    ): Result<V1GitCIModelDetail?> {
         return client.get(GitCIDetailResource::class).getLatestBuildDetail(
             userId = userId,
             gitProjectId = gitProjectId,
@@ -162,7 +216,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         sourceGitProjectId: Long?,
         triggerUser: String?,
         pipelineId: String?
-    ): Result<Page<GitCIBuildHistory>> {
+    ): Result<Page<V1GitCIBuildHistory>> {
         val realPageSize = if (pageSize != null && pageSize > MAX_PAGE_SIZE) {
             MAX_PAGE_SIZE
         } else {
@@ -264,5 +318,9 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
             orderBy = orderBy,
             sort = sort
         )
+    }
+
+    override fun checkYaml(userId: String, gitProjectId: String?, yamlCheck: StreamYamlCheck): Result<String> {
+        return client.get(ServiceStreamTriggerResource::class).checkYaml(userId, yamlCheck)
     }
 }

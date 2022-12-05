@@ -5,9 +5,8 @@
             <h3 class="title-with-img">
                 {{detail.name}}
                 <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }">
-                    <icon v-if="isPublic" class="detail-img" name="color-git-code" size="16" />
-                    <icon v-else class="detail-img" name="gray-git-code" size="16" style="fill:#9E9E9E" />
-                    <span> {{ $t('store.工蜂') }} </span>
+                    <icon class="detail-img" name="gray-git-code" size="14" />
+                    <span class="approve-msg">{{ isPublic ? $t('store.源码') : $t('store.未开源') }}</span>
                 </h5>
             </h3>
             <h5 class="detail-info">
@@ -42,7 +41,7 @@
                 <span> {{ $t('store.简介：') }} </span><span>{{detail.summary || '-'}}</span>
             </h5>
         </hgroup>
-        <button :class="[{ 'opicity-hidden': detail.categoryList.every(x => x.categoryCode !== 'VsCode') }, 'detail-install']" @click="installPlugin"> {{ $t('store.安装') }} </button>
+        <button :class="[{ 'opicity-hidden': (detail.categoryList || []).every(x => x.categoryCode !== 'VsCode') }, 'detail-install']" @click="installPlugin"> {{ $t('store.安装') }} </button>
         <bk-dialog v-model="showInstallTip"
             theme="primary"
             :close-icon="false"
@@ -56,9 +55,9 @@
         >
             <h3 class="mb10"> {{ $t('store.VSCode 插件安装指引：') }} </h3>
             1. {{ $t('store.首先安装') }} <span class="text-tip" v-bk-tooltips="{ placements: ['top'], content: $t('store.T-extensions 管理公司内部的所有VSCode插件') }">T-extensions</span> {{ $t('store.到 VSCode。若已安装，则跳过此步') }} <br>
-            <span class="ml10">1）<a class="down-link" href="http://bk.artifactory.oa.com/generic-public/ide-plugin/t-extension/0.0.3/t-extension-0.0.3.vsix"> {{ $t('store.点此下载') }} </a>  {{ $t('store.T-extensions 插件安装包') }} <br></span>
+            <span class="ml10">1）<a class="down-link" href="http://bk.artifactory.oa.com/generic-public/ide-plugin/t-extension/0.0.4/t-extension-0.0.4.vsix"> {{ $t('store.点此下载') }} </a>  {{ $t('store.T-extensions 插件安装包') }} <br></span>
             <span class="ml10">2）{{ $t('store.在 VSCode 扩展 =》更多功能 =》从VSIX安装，安装上一步下载的VSIX包，入口如下图所示：') }}</span>
-            <img src="http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15705911044808382165408406563094.png?v=1570591104">
+            <img :src="VSCODE_GUIDE_IMAGE_URL">
             <span class="mt10 inb">2. {{ $t('store.在 T-extensions 中安装目标插件，或在蓝盾研发商店中点击目标插件详情页面的安装按钮') }}</span>
         </bk-dialog>
     </section>
@@ -66,6 +65,7 @@
 
 <script>
     import commentRate from '../comment-rate'
+    import { DEFAULT_LOGO_URL, VSCODE_GUIDE_IMAGE_URL } from '@/utils/'
 
     export default {
         components: {
@@ -86,7 +86,8 @@
 
         data () {
             return {
-                defaultUrl: 'http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_15647373141529070794466428255950.png?v=1564737314',
+                defaultUrl: DEFAULT_LOGO_URL,
+                VSCODE_GUIDE_IMAGE_URL,
                 user: JSON.parse(localStorage.getItem('_cache_userInfo')).username,
                 isLoading: false,
                 showInstallTip: false
@@ -106,7 +107,7 @@
             },
 
             isPublicTitle () {
-                if (this.isPublic) return this.$t('store.查看源码')
+                if (this.isPublic) return this.$t('store.点击查看源码')
                 else return this.$t('store.未开源')
             }
         },
@@ -144,7 +145,7 @@
             cursor: pointer;
             color: $primaryColor;
         }
-        /deep/ .bk-dialog {
+        ::v-deep .bk-dialog {
             top: 100px;
         }
         img {
@@ -165,8 +166,11 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin: 47px auto 30px;
-        width: 1200px;
+        margin: 26px auto 0;
+        width: 95vw;
+        background: $white;
+        box-shadow: 1px 2px 3px 0px rgba(0,0,0,0.05);
+        padding: 32px;
         .detail-pic {
             width: 130px;
         }
@@ -174,15 +178,17 @@
             height: 160px;
             width: 160px;
         }
+        button {
+            border-radius: 4px;
+            width: 120px;
+            height: 40px;
+        }
         .detail-install {
-            width: 89px;
-            height: 36px;
             background: $primaryColor;
-            border-radius: 2px;
             border: none;
             font-size: 14px;
             color: $white;
-            line-height: 36px;
+            line-height: 40px;
             text-align: center;
             &.opicity-hidden {
                 opacity: 0;
@@ -198,9 +204,9 @@
     }
 
     .detail-info-group {
-        width: 829px;
-        margin: 0 76px;
-        
+        flex: 1;
+        margin: 0 32px;
+        max-width: calc(100% - 314px);
         h3 {
             font-size: 22px;
             line-height: 29px;
@@ -211,6 +217,7 @@
             align-items: center;
             .score-group {
                 position: relative;
+                margin-top: -2px;
                 .score-real {
                     position: absolute;
                     overflow: hidden;
@@ -224,7 +231,6 @@
                 }
             }
             .rate-num {
-                margin-top: 2px;
                 margin-left: 6px;
                 color: $fontWeightColor;
             }
@@ -236,7 +242,7 @@
             width: 33.33%;
             font-size: 14px;
             font-weight: normal;
-            line-height: 19px;
+            line-height: 20px;
             color: $fontBlack;
             span:nth-child(1) {
                 color: $fontWeightColor;
@@ -256,26 +262,42 @@
         .title-with-img {
             display: flex;
             align-items: center;
-            h5 {
+            >h5 {
+                margin-left: 12px;
+                line-height: 14px;
+                padding: 2px 5px;
                 cursor: pointer;
+                background: rgba(21, 146, 255, 0.08);
+                color: #1592ff;
+                .detail-img {
+                    fill: #1592ff;
+                }
+                span {
+                    font-weight: normal;
+                    font-size: 12px;
+                    line-height: 14px;
+                }
             }
-            span {
-                margin-left: -2px;
-                font-size: 14px;
+            >span {
+                font-size: 20px;
                 color: $fontLightGray;
-                line-height: 19px;
+                line-height: 20px;
                 font-weight: normal;
             }
             .detail-img {
-                margin-left: 12px;
                 vertical-align: middle;
             }
-            .not-public {
+            h5.not-public {
                 cursor: auto;
+                background: none;
+                color: #9e9e9e;
+                .detail-img {
+                    fill: #9e9e9e;
+                }
             }
         }
         .detail-info.detail-label {
-            width: 829px;
+            width: 100%;
             padding-left: 90px;
             display: inline-block;
             position: relative;

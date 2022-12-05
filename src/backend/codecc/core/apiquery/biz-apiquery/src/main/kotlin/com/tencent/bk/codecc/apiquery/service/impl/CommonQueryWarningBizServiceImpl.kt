@@ -28,7 +28,7 @@ import com.tencent.devops.common.util.PathUtils
 import org.apache.commons.collections.CollectionUtils
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
-import org.springframework.beans.BeanUtils
+import com.tencent.devops.common.util.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
@@ -315,13 +315,13 @@ class CommonQueryWarningBizServiceImpl @Autowired constructor(
             val projectId = taskInfoModel!!.projectId
             resultDefectList.forEach {
                 val defectVO = DefectDetailVO()
-                BeanUtils.copyProperties(it, defectVO, "filePathname")
+                BeanUtils.copyProperties(it, defectVO)
                 if (ComConstants.Tool.COVERITY.name == toolName) {
                     defectVO.cid = it.id.toLong()
                 }
                 defectVO.filePathName = it.filePathname
                 val url = String.format(
-                    "http://%s/codecc/%s/task/%d/defect/compile/%s/list?entityId=%s", codeccHost,
+                    "%s/codecc/%s/task/%d/defect/compile/%s/list?entityId=%s", codeccHost,
                     projectId, taskId, toolName, it.entityId
                 )
                 defectVO.defectDetailUrl = url

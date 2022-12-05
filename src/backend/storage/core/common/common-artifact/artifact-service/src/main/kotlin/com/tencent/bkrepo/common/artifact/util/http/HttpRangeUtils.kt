@@ -46,6 +46,7 @@ object HttpRangeUtils {
     /**
      * 从[request]中解析Range，[total]代表总长度
      */
+    @Throws(IllegalArgumentException::class)
     fun resolveRange(request: HttpServletRequest, total: Long): Range {
         val rangeHeader = request.getHeader(HttpHeaders.RANGE)?.trim()
         if (rangeHeader.isNullOrEmpty()) return Range.full(total)

@@ -31,7 +31,7 @@ import com.tencent.bk.codecc.defect.model.AnalysisVersionEntity;
 import com.tencent.bk.codecc.codeccjob.dao.mongorepository.AnalysisVersionRepository;
 import com.tencent.bk.codecc.codeccjob.service.AnalysisVersionService;
 import com.tencent.devops.common.constant.ComConstants;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

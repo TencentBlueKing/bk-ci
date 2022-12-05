@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
@@ -51,25 +53,36 @@ import com.tencent.devops.common.webhook.pojo.code.DELETE_EVENT
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
+import com.tencent.devops.common.webhook.service.code.filter.PushKindFilter
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import java.util.Date
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
 class TGitPushTriggerHandler(
-    private val gitScmService: GitScmService
+    private val eventCacheService: EventCacheService,
+    private val gitScmService: GitScmService,
+    // stream没有这个配置
+    @Autowired(required = false)
+    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry? = null
 ) : GitHookTriggerHandler<GitPushEvent> {
 
     companion object {
@@ -141,39 +154,63 @@ class TGitPushTriggerHandler(
                 triggerOnMessage = event.commits?.get(0)?.message ?: ""
             )
             val commits = event.commits
-            // 如果是强制提交,文件列表应该只获取强制提交变更的文件，而不是所有的
-            val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
-                gitScmService.getChangeFileList(
-                    projectId = projectId,
-                    repo = repository,
-                    from = event.after,
-                    to = event.before
-                )
-            } else {
-                val eventPaths = mutableSetOf<String>()
-                commits?.forEach { commit ->
-                    eventPaths.addAll(commit.added ?: listOf())
-                    eventPaths.addAll(commit.removed ?: listOf())
-                    eventPaths.addAll(commit.modified ?: listOf())
-                }
-                eventPaths
-            }
             val commitMessageFilter = CommitMessageFilter(
                 includeCommitMsg,
                 excludeCommitMsg,
                 commits?.first()?.message ?: "",
                 pipelineId
             )
-            val pathFilter = PathFilterFactory.newPathFilter(
-                PathFilterConfig(
-                    pathFilterType = pathFilterType,
-                    pipelineId = pipelineId,
-                    triggerOnPath = eventPaths.toList(),
-                    includedPaths = convert(includePaths),
-                    excludedPaths = convert(excludePaths)
-                )
+            var pushChangeFiles: Set<String>? = null
+            val pathFilter = object : WebhookFilter {
+                override fun doFilter(response: WebhookFilterResponse): Boolean {
+                    if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
+                        return true
+                    }
+                    val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+                        eventCacheService.getChangeFileList(
+                            projectId = projectId,
+                            repo = repository,
+                            from = event.after,
+                            to = event.before
+                        )
+                    } else {
+                        val changeFiles = mutableSetOf<String>()
+                        commits?.forEach { commit ->
+                            changeFiles.addAll(commit.added ?: listOf())
+                            changeFiles.addAll(commit.removed ?: listOf())
+                            changeFiles.addAll(commit.modified ?: listOf())
+                        }
+                        changeFiles
+                    }
+                    pushChangeFiles = eventPaths
+                    return PathFilterFactory.newPathFilter(
+                        PathFilterConfig(
+                            pathFilterType = pathFilterType,
+                            pipelineId = pipelineId,
+                            triggerOnPath = eventPaths.toList(),
+                            includedPaths = convert(includePaths),
+                            excludedPaths = convert(excludePaths)
+                        )
+                    ).doFilter(response)
+                }
+            }
+            val pushKindFilter = PushKindFilter(
+                pipelineId = pipelineId,
+                checkCreateAndUpdate = event.create_and_update,
+                actionList = convert(webHookParams.includePushAction)
             )
-            return listOf(skipCiFilter, pathFilter, commitMessageFilter)
+            val thirdFilter = ThirdFilter(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = event,
+                changeFiles = pushChangeFiles,
+                enableThirdFilter = enableThirdFilter,
+                thirdUrl = thirdUrl,
+                thirdSecretToken = thirdSecretToken,
+                gitScmService = gitScmService,
+                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
+            )
+            return listOf(skipCiFilter, pathFilter, commitMessageFilter, pushKindFilter, thirdFilter)
         }
     }
 
@@ -205,9 +242,39 @@ class TGitPushTriggerHandler(
             event.commits?.firstOrNull { it.id == event.after }?.author?.name ?: ""
         startParams[PIPELINE_GIT_BEFORE_SHA] = event.before
         startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = GitUtils.getShortSha(event.before)
-        startParams[PIPELINE_GIT_ACTION] =
-            if (event.isCreateBranch()) TGitPushActionType.NEW_BRANCH.value else TGitPushActionType.PUSH_FILE.value
+        startParams[PIPELINE_GIT_ACTION] = when (event.create_and_update) {
+            null -> TGitPushActionType.PUSH_FILE.value
+            false -> TGitPushActionType.NEW_BRANCH.value
+            true -> TGitPushActionType.NEW_BRANCH_AND_PUSH_FILE.value
+        }
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/commit/${event.commits?.firstOrNull()?.id}"
         return startParams
+    }
+
+    override fun getWebhookCommitList(
+        event: GitPushEvent,
+        projectId: String?,
+        repository: Repository?,
+        page: Int,
+        size: Int
+    ): List<WebhookCommit> {
+        if (page > 1) {
+            // push 请求事件会在第一次请求时将所有的commit记录全部返回，所以如果分页参数不为1，则直接返回空列表
+            return emptyList()
+        }
+        return event.commits!!.map {
+            val commitTime =
+                DateTimeUtil.convertDateToLocalDateTime(Date(DateTimeUtil.zoneDateToTimestamp(it.timestamp)))
+            WebhookCommit(
+                commitId = it.id,
+                authorName = it.author.name,
+                message = it.message,
+                repoType = ScmType.CODE_TGIT.name,
+                commitTime = commitTime,
+                eventType = CodeEventType.PUSH.name,
+                mrId = null,
+                action = event.action_kind
+            )
+        }
     }
 }

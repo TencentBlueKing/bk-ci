@@ -34,13 +34,14 @@ dependencies {
     implementation(project(":repository:biz-repository"))
     implementation(project(":generic:biz-generic"))
     implementation(project(":composer:biz-composer"))
-    implementation(project(":docker:biz-docker"))
     implementation(project(":helm:biz-helm"))
     implementation(project(":maven:biz-maven"))
     implementation(project(":npm:biz-npm"))
     implementation(project(":nuget:biz-nuget"))
     implementation(project(":pypi:biz-pypi"))
     implementation(project(":rpm:biz-rpm"))
+    implementation(project(":oci:biz-oci"))
+    implementation(project(":job:biz-job"))
 }
 
 configurations.all {

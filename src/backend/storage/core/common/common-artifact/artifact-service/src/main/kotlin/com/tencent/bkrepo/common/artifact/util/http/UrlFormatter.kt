@@ -45,10 +45,9 @@ object UrlFormatter {
      * 格式化url
      */
     fun format(host: String, uri: String? = null, query: String? = null): String {
-        val builder = StringBuilder()
-        builder.append(formatHost(host))
+        val builder = StringBuilder(formatHost(host))
         if (!uri.isNullOrBlank()) {
-            builder.append(uri.trim(SLASH))
+            builder.append(SLASH).append(uri.trim(SLASH))
         }
         if (!query.isNullOrBlank()) {
             builder.append(QUESTION).append(query.trim(SLASH))
@@ -57,11 +56,16 @@ object UrlFormatter {
     }
 
     /**
-     * 格式化[host]
-     * http://xxx.com/// -> http://xxx.com/
+     * 格式化host
+     * http://xxx.com/// -> http://xxx.com
+     * xxx.com -> http://xxx.com
      */
-    fun formatHost(host: String): String {
-        return host.trim().trimEnd(SLASH).plus(SLASH)
+    fun formatHost(value: String): String {
+        var host = value.trim().trimEnd(SLASH)
+        if (!host.startsWith(HTTP) && !host.startsWith(HTTPS)) {
+            host = HTTP + host
+        }
+        return host
     }
 
     /**

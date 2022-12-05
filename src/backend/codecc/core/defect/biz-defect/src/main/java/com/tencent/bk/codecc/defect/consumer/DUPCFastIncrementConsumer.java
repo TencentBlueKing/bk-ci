@@ -27,7 +27,7 @@ import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -61,7 +61,7 @@ public class DUPCFastIncrementConsumer extends AbstractFastIncrementConsumer
 
         TaskDetailVO taskVO = thirdPartySystemCaller.getTaskInfo(streamName);
 
-        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
 
         // 统计本次扫描的告警
         statistic(taskId, toolName, buildId, toolBuildStackEntity);
@@ -79,14 +79,14 @@ public class DUPCFastIncrementConsumer extends AbstractFastIncrementConsumer
         String baseBuildId;
         if (toolBuildStackEntity == null)
         {
-            ToolBuildInfoEntity toolBuildINfoEntity = toolBuildInfoRepository.findByTaskIdAndToolName(taskId, toolName);
+            ToolBuildInfoEntity toolBuildINfoEntity = toolBuildInfoRepository.findFirstByTaskIdAndToolName(taskId, toolName);
             baseBuildId = toolBuildINfoEntity != null && StringUtils.isNotEmpty(toolBuildINfoEntity.getDefectBaseBuildId()) ? toolBuildINfoEntity.getDefectBaseBuildId() : "";
         }
         else
         {
             baseBuildId = StringUtils.isNotEmpty(toolBuildStackEntity.getBaseBuildId()) ? toolBuildStackEntity.getBaseBuildId() : "";
         }
-        DUPCStatisticEntity statisticEntity = dupcStatisticRepository.findByTaskIdAndBuildId(taskId, baseBuildId);
+        DUPCStatisticEntity statisticEntity = dupcStatisticRepository.findFirstByTaskIdAndBuildId(taskId, baseBuildId);
         if (statisticEntity != null) {
             statisticEntity.setEntityId(null);
             statisticEntity.setBuildId(buildId);

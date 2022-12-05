@@ -30,5 +30,5 @@ public interface GongfengActiveProjRepository extends MongoRepository<GongfengAc
      * @param id
      * @return
      */
-    GongfengActiveProjEntity findById(Integer id);
+    GongfengActiveProjEntity findFirstById(Integer id);
 }

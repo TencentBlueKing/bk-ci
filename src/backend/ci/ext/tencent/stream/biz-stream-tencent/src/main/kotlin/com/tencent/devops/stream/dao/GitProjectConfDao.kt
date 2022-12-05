@@ -28,9 +28,9 @@
 package com.tencent.devops.stream.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.stream.pojo.GitProjectConf
 import com.tencent.devops.model.stream.tables.TGitProjectConf
 import com.tencent.devops.model.stream.tables.records.TGitProjectConfRecord
+import com.tencent.devops.stream.pojo.GitProjectConf
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -49,7 +49,8 @@ class GitProjectConfDao {
         enable: Boolean
     ) {
         with(TGitProjectConf.T_GIT_PROJECT_CONF) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 NAME,
                 URL,
@@ -57,12 +58,12 @@ class GitProjectConfDao {
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
-                    gitProjectId,
-                    name,
-                    url,
-                    enable,
-                    LocalDateTime.now(),
-                    LocalDateTime.now()
+                gitProjectId,
+                name,
+                url,
+                enable,
+                LocalDateTime.now(),
+                LocalDateTime.now()
             ).execute()
         }
     }
@@ -93,18 +94,18 @@ class GitProjectConfDao {
     fun get(dslContext: DSLContext, gitProjectId: Long): GitProjectConf? {
         with(TGitProjectConf.T_GIT_PROJECT_CONF) {
             val record = dslContext.selectFrom(this)
-                    .where(ID.eq(gitProjectId))
-                    .fetchOne()
+                .where(ID.eq(gitProjectId))
+                .fetchOne()
             return if (record == null) {
                 null
             } else {
                 GitProjectConf(
-                        record.id,
-                        record.name,
-                        record.url,
-                        record.enable,
-                        record.createTime.timestampmilli(),
-                        record.updateTime.timestampmilli()
+                    record.id,
+                    record.name,
+                    record.url,
+                    record.enable,
+                    record.createTime.timestampmilli(),
+                    record.updateTime.timestampmilli()
                 )
             }
         }
@@ -116,8 +117,8 @@ class GitProjectConfDao {
     ) {
         with(TGitProjectConf.T_GIT_PROJECT_CONF) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(gitProjectId))
-                    .execute()
+                .where(ID.eq(gitProjectId))
+                .execute()
         }
     }
 
@@ -134,29 +135,29 @@ class GitProjectConfDao {
             }
             if (!name.isNullOrBlank()) {
                 conditions.add(
-                        NAME.like(
-                                "%" + URLDecoder.decode(
-                                        name,
-                                        "UTF-8"
-                                ) + "%"
-                        )
+                    NAME.like(
+                        "%" + URLDecoder.decode(
+                            name,
+                            "UTF-8"
+                        ) + "%"
+                    )
                 )
             }
             if (!url.isNullOrBlank()) {
                 conditions.add(
-                        URL.like(
-                                "%" + URLDecoder.decode(
-                                        url,
-                                        "UTF-8"
-                                ) + "%"
-                        )
+                    URL.like(
+                        "%" + URLDecoder.decode(
+                            url,
+                            "UTF-8"
+                        ) + "%"
+                    )
                 )
             }
 
             return dslContext.selectCount()
-                    .from(this)
-                    .where(conditions)
-                    .fetchOne(0, Int::class.java)!!
+                .from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -175,27 +176,27 @@ class GitProjectConfDao {
             }
             if (!name.isNullOrBlank()) {
                 conditions.add(
-                        NAME.like(
-                                "%" + URLDecoder.decode(
-                                        name,
-                                        "UTF-8"
-                                ) + "%"
-                        )
+                    NAME.like(
+                        "%" + URLDecoder.decode(
+                            name,
+                            "UTF-8"
+                        ) + "%"
+                    )
                 )
             }
             if (!url.isNullOrBlank()) {
                 conditions.add(
-                        URL.like(
-                                "%" + URLDecoder.decode(
-                                        url,
-                                        "UTF-8"
-                                ) + "%"
-                        )
+                    URL.like(
+                        "%" + URLDecoder.decode(
+                            url,
+                            "UTF-8"
+                        ) + "%"
+                    )
                 )
             }
             return dslContext.selectFrom(this).where(conditions)
-                    .limit(pageSize).offset((page - 1) * pageSize)
-                    .fetch()
+                .limit(pageSize).offset((page - 1) * pageSize)
+                .fetch()
         }
     }
 }

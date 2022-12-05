@@ -10,27 +10,25 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.bkrepo.repository.service.repo.impl
 
+import com.tencent.bkrepo.auth.api.ServicePermissionResource
+import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.bkrepo.common.api.pojo.Page
@@ -38,11 +36,11 @@ import com.tencent.bkrepo.common.api.util.Preconditions
 import com.tencent.bkrepo.common.api.util.readJsonString
 import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.bkrepo.common.artifact.api.DefaultArtifactInfo
-import com.tencent.bkrepo.common.artifact.constant.PRIVATE_PROXY_REPO_NAME
 import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
 import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode.REPOSITORY_NOT_FOUND
 import com.tencent.bkrepo.common.artifact.path.PathUtils.ROOT
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
+import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.artifact.pojo.configuration.RepositoryConfiguration
 import com.tencent.bkrepo.common.artifact.pojo.configuration.composite.CompositeConfiguration
 import com.tencent.bkrepo.common.artifact.pojo.configuration.composite.ProxyChannelSetting
@@ -50,18 +48,21 @@ import com.tencent.bkrepo.common.artifact.pojo.configuration.local.LocalConfigur
 import com.tencent.bkrepo.common.artifact.pojo.configuration.remote.RemoteConfiguration
 import com.tencent.bkrepo.common.artifact.pojo.configuration.virtual.VirtualConfiguration
 import com.tencent.bkrepo.common.mongo.dao.util.Pages
+import com.tencent.bkrepo.common.security.util.RsaUtils
+import com.tencent.bkrepo.common.security.util.SecurityUtils
 import com.tencent.bkrepo.common.service.util.SpringContextUtils.Companion.publishEvent
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
+import com.tencent.bkrepo.common.stream.event.supplier.EventSupplier
 import com.tencent.bkrepo.repository.config.RepositoryProperties
-import com.tencent.bkrepo.repository.constant.SYSTEM_USER
 import com.tencent.bkrepo.repository.dao.RepositoryDao
-import com.tencent.bkrepo.repository.listener.event.repo.RepoCreatedEvent
-import com.tencent.bkrepo.repository.listener.event.repo.RepoDeletedEvent
-import com.tencent.bkrepo.repository.listener.event.repo.RepoUpdatedEvent
 import com.tencent.bkrepo.repository.model.TRepository
 import com.tencent.bkrepo.repository.pojo.project.RepoRangeQueryRequest
+import com.tencent.bkrepo.repository.pojo.proxy.ProxyChannelCreateRequest
+import com.tencent.bkrepo.repository.pojo.proxy.ProxyChannelDeleteRequest
+import com.tencent.bkrepo.repository.pojo.proxy.ProxyChannelUpdateRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepoCreateRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepoDeleteRequest
+import com.tencent.bkrepo.repository.pojo.repo.RepoListOption
 import com.tencent.bkrepo.repository.pojo.repo.RepoUpdateRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
 import com.tencent.bkrepo.repository.pojo.repo.RepositoryInfo
@@ -70,10 +71,16 @@ import com.tencent.bkrepo.repository.service.repo.ProjectService
 import com.tencent.bkrepo.repository.service.repo.ProxyChannelService
 import com.tencent.bkrepo.repository.service.repo.RepositoryService
 import com.tencent.bkrepo.repository.service.repo.StorageCredentialService
+import com.tencent.bkrepo.repository.util.RepoEventFactory.buildCreatedEvent
+import com.tencent.bkrepo.repository.util.RepoEventFactory.buildDeletedEvent
+import com.tencent.bkrepo.repository.util.RepoEventFactory.buildUpdatedEvent
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.and
 import org.springframework.data.mongodb.core.query.inValues
@@ -81,8 +88,6 @@ import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.data.mongodb.core.query.where
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 /**
  * 仓库服务实现类
@@ -94,7 +99,9 @@ class RepositoryServiceImpl(
     private val projectService: ProjectService,
     private val storageCredentialService: StorageCredentialService,
     private val proxyChannelService: ProxyChannelService,
-    private val repositoryProperties: RepositoryProperties
+    private val repositoryProperties: RepositoryProperties,
+    private val eventSupplier: EventSupplier,
+    private val servicePermissionResource: ServicePermissionResource
 ) : RepositoryService {
 
     override fun getRepoInfo(projectId: String, name: String, type: String?): RepositoryInfo? {
@@ -110,6 +117,7 @@ class RepositoryServiceImpl(
 
     override fun updateStorageCredentialsKey(projectId: String, repoName: String, storageCredentialsKey: String) {
         repositoryDao.findByNameAndType(projectId, repoName, null)?.run {
+            oldCredentialsKey = credentialsKey
             credentialsKey = storageCredentialsKey
             repositoryDao.save(this)
         }
@@ -132,6 +140,38 @@ class RepositoryServiceImpl(
         val totalRecords = repositoryDao.count(query)
         val records = repositoryDao.find(query.with(pageRequest)).map { convertToInfo(it)!! }
         return Pages.ofResponse(pageRequest, totalRecords, records)
+    }
+
+    override fun listPermissionRepo(
+        userId: String,
+        projectId: String,
+        option: RepoListOption
+    ): List<RepositoryInfo> {
+        var names = servicePermissionResource.listPermissionRepo(
+            projectId = projectId,
+            userId = userId,
+            appId = SecurityUtils.getPlatformId()
+        ).data.orEmpty()
+        if (!option.name.isNullOrBlank()) {
+            names = names.filter { it.startsWith(option.name.orEmpty(), true) }
+        }
+        val criteria = where(TRepository::projectId).isEqualTo(projectId)
+            .and(TRepository::display).ne(false)
+            .and(TRepository::name).inValues(names)
+        option.type?.takeIf { it.isNotBlank() }?.apply { criteria.and(TRepository::type).isEqualTo(this.toUpperCase()) }
+        val query = Query(criteria).with(Sort.by(Sort.Direction.DESC, TRepository::createdDate.name))
+        return repositoryDao.find(query).map { convertToInfo(it)!! }
+    }
+
+    override fun listPermissionRepoPage(
+        userId: String,
+        projectId: String,
+        pageNumber: Int,
+        pageSize: Int,
+        option: RepoListOption
+    ): Page<RepositoryInfo> {
+        val allRepos = listPermissionRepo(userId, projectId, option)
+        return Pages.buildPage(allRepos, pageNumber, pageSize)
     }
 
     override fun rangeQuery(request: RepoRangeQueryRequest): Page<RepositoryInfo?> {
@@ -158,7 +198,8 @@ class RepositoryServiceImpl(
     override fun createRepo(repoCreateRequest: RepoCreateRequest): RepositoryDetail {
         with(repoCreateRequest) {
             Preconditions.matchPattern(name, REPO_NAME_PATTERN, this::name.name)
-            Preconditions.checkArgument(description?.length ?: 0 <= REPO_DESCRIPTION_MAX_LENGTH, this::description.name)
+            Preconditions.checkArgument((description?.length ?: 0) <= REPO_DESC_MAX_LENGTH, this::description.name)
+            Preconditions.checkArgument(checkInterceptorConfig(configuration), this::description.name)
             // 确保项目一定存在
             if (!projectService.checkExist(projectId)) {
                 throw ErrorCodeException(ArtifactMessageCode.PROJECT_NOT_FOUND, name)
@@ -167,8 +208,9 @@ class RepositoryServiceImpl(
             if (checkExist(projectId, name)) {
                 throw ErrorCodeException(ArtifactMessageCode.REPOSITORY_EXISTED, name)
             }
+            // 解析存储凭证
+            val credentialsKey = determineStorageKey(this)
             // 确保存储凭证Key一定存在
-            val credentialsKey = storageCredentialsKey ?: repositoryProperties.defaultStorageCredentialsKey
             val storageCredential = credentialsKey?.takeIf { it.isNotBlank() }?.let {
                 storageCredentialService.findByKey(it) ?: throw ErrorCodeException(
                     CommonMessageCode.RESOURCE_NOT_FOUND,
@@ -190,14 +232,23 @@ class RepositoryServiceImpl(
                 createdBy = operator,
                 createdDate = LocalDateTime.now(),
                 lastModifiedBy = operator,
-                lastModifiedDate = LocalDateTime.now()
+                lastModifiedDate = LocalDateTime.now(),
+                quota = quota,
+                used = 0
             )
             return try {
                 if (repoConfiguration is CompositeConfiguration) {
                     updateCompositeConfiguration(repoConfiguration, null, repository, operator)
                 }
+                repository.configuration = cryptoConfigurationPwd(repoConfiguration, false).toJsonString()
                 repositoryDao.insert(repository)
-                publishEvent(RepoCreatedEvent(repoCreateRequest))
+                val event = buildCreatedEvent(repoCreateRequest)
+                publishEvent(event)
+                eventSupplier.delegateToSupplier(
+                    event = event,
+                    topic = event.topic,
+                    key = event.getFullResourceKey()
+                )
                 logger.info("Create repository [$repoCreateRequest] success.")
                 convertToDetail(repository, storageCredential)!!
             } catch (exception: DuplicateKeyException) {
@@ -210,20 +261,31 @@ class RepositoryServiceImpl(
     @Transactional(rollbackFor = [Throwable::class])
     override fun updateRepo(repoUpdateRequest: RepoUpdateRequest) {
         repoUpdateRequest.apply {
-            Preconditions.checkArgument(description?.length ?: 0 < REPO_DESCRIPTION_MAX_LENGTH, this::description.name)
+            Preconditions.checkArgument((description?.length ?: 0) < REPO_DESC_MAX_LENGTH, this::description.name)
+            Preconditions.checkArgument(checkInterceptorConfig(configuration), this::description.name)
             val repository = checkRepository(projectId, name)
+            quota?.let {
+                Preconditions.checkArgument(it >= (repository.used ?: 0), this::quota.name)
+                repository.quota = it
+            }
             val oldConfiguration = repository.configuration.readJsonString<RepositoryConfiguration>()
             repository.public = public ?: repository.public
             repository.description = description ?: repository.description
             repository.lastModifiedBy = operator
             repository.lastModifiedDate = LocalDateTime.now()
             configuration?.let {
-                updateRepoConfiguration(it, oldConfiguration, repository, operator)
-                repository.configuration = it.toJsonString()
+                updateRepoConfiguration(it, cryptoConfigurationPwd(oldConfiguration), repository, operator)
+                repository.configuration = cryptoConfigurationPwd(it, false).toJsonString()
             }
             repositoryDao.save(repository)
         }
-        publishEvent(RepoUpdatedEvent(repoUpdateRequest))
+        val event = buildUpdatedEvent(repoUpdateRequest)
+        publishEvent(event)
+        eventSupplier.delegateToSupplier(
+            event = event,
+            topic = event.topic,
+            key = event.getFullResourceKey()
+        )
         logger.info("Update repository[$repoUpdateRequest] success.")
     }
 
@@ -244,13 +306,22 @@ class RepositoryServiceImpl(
             // 删除关联的库
             if (repository.category == RepositoryCategory.COMPOSITE) {
                 val configuration = repository.configuration.readJsonString<CompositeConfiguration>()
-                configuration.proxy.channelList.filter { !it.public }.forEach {
-                    deleteProxyRepo(repository.projectId, repository.name, it.name!!)
+                configuration.proxy.channelList.forEach {
+                    deleteProxyRepo(repository, it)
                 }
             }
         }
-        publishEvent(RepoDeletedEvent(repoDeleteRequest))
+        publishEvent(buildDeletedEvent(repoDeleteRequest))
         logger.info("Delete repository [$repoDeleteRequest] success.")
+    }
+
+    override fun allRepos(projectId: String?, repoName: String?, repoType: RepositoryType?): List<RepositoryInfo?> {
+        val criteria = Criteria()
+        projectId?.let { criteria.and(TRepository::projectId.name).`is`(projectId) }
+        repoName?.let { criteria.and(TRepository::name.name).`is`(repoName) }
+        repoType?.let { criteria.and(TRepository::type.name).`is`(repoType) }
+        val result = repositoryDao.find(Query(criteria))
+        return result.map { convertToInfo(it) }
     }
 
     /**
@@ -305,8 +376,6 @@ class RepositoryServiceImpl(
 
     /**
      * 更新Composite类型仓库配置
-     *
-     * 创建private代理仓库
      */
     private fun updateCompositeConfiguration(
         new: CompositeConfiguration,
@@ -316,103 +385,169 @@ class RepositoryServiceImpl(
     ) {
         // 校验
         new.proxy.channelList.forEach {
-            if (it.public) {
-                Preconditions.checkArgument(
-                    proxyChannelService.checkExistById(it.channelId!!, repository.type),
-                    "channelId"
-                )
-            } else {
-                Preconditions.checkNotBlank(it.name, "name")
-                Preconditions.checkNotBlank(it.url, "url")
-            }
+            Preconditions.checkNotBlank(it.name, "name")
+            Preconditions.checkNotBlank(it.url, "url")
         }
-        val newPrivateProxyRepos = new.proxy.channelList.filter { !it.public }
-        val existPrivateProxyRepos = old?.proxy?.channelList?.filter { !it.public }.orEmpty()
+        val newProxyProxyRepos = new.proxy.channelList
+        val existProxyProxyRepos = old?.proxy?.channelList ?: emptyList()
 
-        val newPrivateProxyRepoMap = newPrivateProxyRepos.map { it.name!! to it }.toMap()
-        val existPrivateProxyRepoMap = existPrivateProxyRepos.map { it.name!! to it }.toMap()
-        Preconditions.checkArgument(newPrivateProxyRepoMap.size == newPrivateProxyRepos.size, "channelList")
+        val newProxyRepoMap = newProxyProxyRepos.associateBy { it.name }
+        val existProxyRepoMap = existProxyProxyRepos.associateBy { it.name }
+        Preconditions.checkArgument(newProxyRepoMap.size == newProxyProxyRepos.size, "channelList")
 
         val toCreateList = mutableListOf<ProxyChannelSetting>()
         val toDeleteList = mutableListOf<ProxyChannelSetting>()
+        val toUpdateList = mutableListOf<ProxyChannelSetting>()
 
         // 查找要添加的代理库
-        newPrivateProxyRepoMap.forEach { (name, channel) ->
-            existPrivateProxyRepoMap[name]?.let {
-                // 确保用户未修改name和url，以及添加同名channel
-                if (channel.url != it.url) {
-                    throw ErrorCodeException(CommonMessageCode.RESOURCE_EXISTED, channel.name.orEmpty())
+        newProxyRepoMap.forEach { (name, channel) ->
+            existProxyRepoMap[name]?.let {
+                // 查找要更新的代理库
+                if (channel != it) {
+                    toUpdateList.add(channel)
                 }
             } ?: run { toCreateList.add(channel) }
         }
         // 查找要删除的代理库
-        existPrivateProxyRepoMap.forEach { (name, channel) ->
-            if (!newPrivateProxyRepoMap.containsKey(name)) {
+        existProxyRepoMap.forEach { (name, channel) ->
+            if (!newProxyRepoMap.containsKey(name)) {
                 toDeleteList.add(channel)
             }
         }
         // 创建新的代理库
         toCreateList.forEach {
-            val proxyRepoName = PRIVATE_PROXY_REPO_NAME.format(repository.name, it.name)
-            if (checkExist(repository.projectId, proxyRepoName, null)) {
-                logger.error("[$proxyRepoName] exist in project[${repository.projectId}], skip creating proxy repo.")
+            try {
+                createProxyRepo(repository, it, operator)
+            } catch (e: DuplicateKeyException) {
+                logger.warn("[${it.name}] exist in project[${repository.projectId}], skip creating proxy repo.")
             }
-            createProxyRepo(repository, proxyRepoName, operator)
         }
         // 删除旧的代理库
         toDeleteList.forEach {
-            deleteProxyRepo(repository.projectId, repository.name, it.name!!)
+            deleteProxyRepo(repository, it)
+        }
+        // 更新旧的代理库
+        toUpdateList.forEach {
+            updateProxyRepo(repository, it, operator)
         }
     }
 
     /**
      * 删除关联的代理仓库
      */
-    private fun deleteProxyRepo(projectId: String, repoName: String, channelName: String) {
-        val proxyRepoName = PRIVATE_PROXY_REPO_NAME.format(repoName, channelName)
-        val proxyRepo = repositoryDao.findByNameAndType(projectId, proxyRepoName, null)
-        proxyRepo?.let { repo ->
-            // 删除仓库
-            nodeService.deleteByPath(repo.projectId, repo.name, ROOT, SYSTEM_USER)
-            repositoryDao.deleteById(repo.id)
-            logger.info("Success to delete private proxy repository[$proxyRepo]")
-        }
+    private fun deleteProxyRepo(repository: TRepository, proxy: ProxyChannelSetting) {
+        val proxyRepository = ProxyChannelDeleteRequest(
+            repoType = repository.type,
+            projectId = repository.projectId,
+            repoName = repository.name,
+            name = proxy.name
+        )
+        proxyChannelService.deleteProxy(proxyRepository)
+        logger.info(
+            "Success to delete private proxy channel [${proxy.name}]" +
+                " in repo[${repository.projectId}|${repository.name}]"
+        )
     }
 
-    private fun createProxyRepo(repository: TRepository, proxyRepoName: String, operator: String) {
-        // 创建仓库
-        val proxyRepository = TRepository(
-            name = proxyRepoName,
-            type = repository.type,
-            category = RepositoryCategory.REMOTE,
-            public = false,
-            description = null,
-            configuration = RemoteConfiguration().toJsonString(),
-            credentialsKey = repository.credentialsKey,
-            display = false,
+    private fun createProxyRepo(repository: TRepository, proxy: ProxyChannelSetting, operator: String) {
+        // 创建代理仓库
+        val proxyRepository = ProxyChannelCreateRequest(
+            repoType = repository.type,
             projectId = repository.projectId,
-            createdBy = operator,
-            createdDate = LocalDateTime.now(),
-            lastModifiedBy = operator,
-            lastModifiedDate = LocalDateTime.now()
+            repoName = repository.name,
+            url = proxy.url,
+            name = proxy.name,
+            username = proxy.username,
+            password = proxy.password,
+            public = proxy.public,
+            credentialKey = proxy.credentialKey
         )
-        repositoryDao.insert(proxyRepository)
+        proxyChannelService.createProxy(operator, proxyRepository)
         logger.info("Success to create private proxy repository[$proxyRepository]")
+    }
+
+    private fun updateProxyRepo(repository: TRepository, proxy: ProxyChannelSetting, operator: String) {
+        // 更新代理仓库
+        val proxyRepository = ProxyChannelUpdateRequest(
+            repoType = repository.type,
+            projectId = repository.projectId,
+            repoName = repository.name,
+            url = proxy.url,
+            name = proxy.name,
+            username = proxy.username,
+            password = proxy.password,
+            public = proxy.public,
+            credentialKey = proxy.credentialKey
+        )
+        proxyChannelService.updateProxy(operator, proxyRepository)
+        logger.info("Success to update private proxy repository[$proxyRepository]")
     }
 
     override fun listRepoPageByType(type: String, pageNumber: Int, pageSize: Int): Page<RepositoryDetail> {
         val query = Query(TRepository::type.isEqualTo(type)).with(Sort.by(TRepository::name.name))
         val count = repositoryDao.count(query)
         val pageQuery = query.with(PageRequest.of(pageNumber, pageSize))
-        val data = repositoryDao.find(pageQuery).map { convertToDetail(it)!! }
+        val data = repositoryDao.find(pageQuery).map {
+            val storageCredentials = it.credentialsKey?.let { key -> storageCredentialService.findByKey(key) }
+            convertToDetail(it, storageCredentials)!!
+        }
 
         return Page(pageNumber, pageSize, count, data)
     }
 
+    /**
+     * 解析存储凭证key
+     * 规则：
+     * 1. 如果请求指定了storageCredentialsKey，则使用指定的
+     * 2. 如果没有指定，则根据仓库名称进行匹配storageCredentialsKey
+     * 3. 如果配有匹配到，则根据仓库类型进行匹配storageCredentialsKey
+     * 3. 如果以上都没匹配，则使用全局默认storageCredentialsKey
+     */
+    private fun determineStorageKey(request: RepoCreateRequest): String? {
+        with(repositoryProperties) {
+            return if (!request.storageCredentialsKey.isNullOrBlank()) {
+                request.storageCredentialsKey
+            } else if (repoStorageMapping.names.containsKey(request.name)) {
+                repoStorageMapping.names[request.name]
+            } else if (repoStorageMapping.types.containsKey(request.type)) {
+                repoStorageMapping.types[request.type]
+            } else {
+                defaultStorageCredentialsKey
+            }
+        }
+    }
+
+    /**
+     * 检查下载拦截器配置
+     * 规则：
+     *  filename不为空字符串
+     *  metadata是键值对形式
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun checkInterceptorConfig(configuration: RepositoryConfiguration?): Boolean {
+        val config = configuration?.getSetting<List<Map<String, Any>>>(INTERCEPTORS)
+        config?.forEach {
+            val rules = it[RULES] as Map<String, String>
+            val filename = rules[FILENAME]
+            if (filename != null && filename.isBlank()) {
+                return false
+            }
+            val metadata = rules[METADATA]
+            if (metadata != null && metadata.split(StringPool.COLON).size != 2) {
+                return false
+            }
+        }
+        return true
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryServiceImpl::class.java)
-        private const val REPO_NAME_PATTERN = "[a-zA-Z_][a-zA-Z0-9\\-_]{1,31}"
-        private const val REPO_DESCRIPTION_MAX_LENGTH = 200
+        private const val REPO_NAME_PATTERN = "[a-zA-Z_][a-zA-Z0-9\\.\\-_]{1,63}"
+        private const val REPO_DESC_MAX_LENGTH = 200
+        private const val INTERCEPTORS = "interceptors"
+        private const val RULES = "rules"
+        private const val FILENAME = "filename"
+        private const val METADATA = "metadata"
 
         private fun convertToDetail(
             tRepository: TRepository?,
@@ -425,13 +560,16 @@ class RepositoryServiceImpl(
                     category = it.category,
                     public = it.public,
                     description = it.description,
-                    configuration = it.configuration.readJsonString(),
+                    configuration = cryptoConfigurationPwd(it.configuration.readJsonString()),
                     storageCredentials = storageCredentials,
                     projectId = it.projectId,
                     createdBy = it.createdBy,
                     createdDate = it.createdDate.format(DateTimeFormatter.ISO_DATE_TIME),
                     lastModifiedBy = it.lastModifiedBy,
-                    lastModifiedDate = it.lastModifiedDate.format(DateTimeFormatter.ISO_DATE_TIME)
+                    lastModifiedDate = it.lastModifiedDate.format(DateTimeFormatter.ISO_DATE_TIME),
+                    quota = it.quota,
+                    used = it.used,
+                    oldCredentialsKey = it.oldCredentialsKey
                 )
             }
         }
@@ -444,14 +582,50 @@ class RepositoryServiceImpl(
                     category = it.category,
                     public = it.public,
                     description = it.description,
-                    configuration = it.configuration.readJsonString(),
+                    configuration = cryptoConfigurationPwd(it.configuration.readJsonString()),
                     storageCredentialsKey = it.credentialsKey,
                     projectId = it.projectId,
                     createdBy = it.createdBy,
                     createdDate = it.createdDate.format(DateTimeFormatter.ISO_DATE_TIME),
                     lastModifiedBy = it.lastModifiedBy,
-                    lastModifiedDate = it.lastModifiedDate.format(DateTimeFormatter.ISO_DATE_TIME)
+                    lastModifiedDate = it.lastModifiedDate.format(DateTimeFormatter.ISO_DATE_TIME),
+                    quota = it.quota,
+                    used = it.used
                 )
+            }
+        }
+
+        /**
+         * 加/解密密码
+         */
+        fun cryptoConfigurationPwd(
+            repoConfiguration: RepositoryConfiguration,
+            decrypt: Boolean = true
+        ): RepositoryConfiguration {
+            if (repoConfiguration is CompositeConfiguration) {
+                repoConfiguration.proxy.channelList.forEach {
+                    it.password?.let { pw ->
+                        it.password = crypto(pw, decrypt)
+                    }
+                }
+            }
+            if (repoConfiguration is RemoteConfiguration) {
+                repoConfiguration.credentials.password?.let {
+                    repoConfiguration.credentials.password = crypto(it, decrypt)
+                }
+            }
+            return repoConfiguration
+        }
+
+        private fun crypto(pw: String, decrypt: Boolean): String {
+            return if (!decrypt) {
+                RsaUtils.encrypt(pw)
+            } else {
+                try {
+                    RsaUtils.decrypt(pw)
+                } catch (e: Exception) {
+                    pw
+                }
             }
         }
     }

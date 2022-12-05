@@ -36,11 +36,11 @@ import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.storage.credentials.InnerCosCredentials
 import com.tencent.bkrepo.common.storage.innercos.PATH_DELIMITER
 import com.tencent.bkrepo.common.storage.innercos.client.ClientConfig
-import com.tencent.bkrepo.common.storage.innercos.encode
 import com.tencent.bkrepo.common.storage.innercos.http.Headers.Companion.AUTHORIZATION
 import com.tencent.bkrepo.common.storage.innercos.http.Headers.Companion.HOST
 import com.tencent.bkrepo.common.storage.innercos.http.HttpMethod
 import com.tencent.bkrepo.common.storage.innercos.sign.CosSigner
+import com.tencent.bkrepo.common.storage.innercos.urlEncode
 import okhttp3.RequestBody
 import java.util.TreeMap
 
@@ -52,15 +52,27 @@ abstract class CosRequest(
     val parameters = TreeMap<String, String?>()
     var url: String = StringPool.EMPTY
 
+    /**
+     * 参数url encode编码时，时候将编码后的内容转为小写，如%2F -> %2f
+     */
+    private var encodeToLower: Boolean = true
+
+    /**
+     * 请求uri，如/test
+     */
     private val requestUri: String = StringBuilder().append(PATH_DELIMITER).append(uri.trim(PATH_DELIMITER)).toString()
 
+    /**
+     * 构造请求体
+     */
     abstract fun buildRequestBody(): RequestBody?
 
     open fun sign(credentials: InnerCosCredentials, config: ClientConfig): String {
         return headers[AUTHORIZATION] ?: run {
+            encodeToLower = !credentials.public
             val endpoint = config.endpointBuilder.buildEndpoint(credentials.region, credentials.bucket)
-            headers[HOST] = endpoint
             val resolvedHost = config.endpointResolver.resolveEndpoint(endpoint)
+            headers[HOST] = endpoint
             url = config.httpProtocol.getScheme() + resolvedHost + requestUri
             if (parameters.isNotEmpty()) {
                 url += "?" + getFormatParameters()
@@ -69,19 +81,57 @@ abstract class CosRequest(
         }
     }
 
+    /**
+     * 返回请求方法，小写格式，如get
+     */
     fun getFormatMethod(): String = method.name.toLowerCase()
 
+    /**
+     * 返工格式化后的请求uri，如/test
+     */
     fun getFormatUri(): String = requestUri
 
+    /**
+     * 返回格式化之后的参数key列表
+     * 格式: key1;key2;key3 字典升序排序
+     * 规则: URLEncode编码，并转换为小写形式
+     * 差异: inner: URLEncode编码为小写%2f  public: URLEncode编码为大写%2F
+     */
+    fun getFormatParameterKeys(): String {
+        return parameters.keys.joinToString(";") { it.toLowerCase().urlEncode(encodeToLower) }
+    }
+
+    /**
+     * 返回格式化之后的参数列表
+     * 格式: key1=value1&key2=value2&key3=value3 字典升序排序
+     * 规则: key: URLEncode编码，并转换为小写形式  value: URLEncode编码
+     * 差异: inner: URLEncode编码为小写%2f  public: URLEncode编码为大写%2F
+     */
     fun getFormatParameters(): String {
         return parameters.map {
-            "${it.key.encode()}=${it.value?.encode().orEmpty()}"
+            "${it.key.urlEncode(encodeToLower)}=${it.value?.urlEncode(encodeToLower).orEmpty()}"
         }.joinToString("&")
     }
 
+    /**
+     * 返回格式化之后的header key列表
+     * 格式: key1;key2;key3 字典升序排序
+     * 规则: URLEncode编码，并转换为小写形式
+     * 差异: inner: URLEncode编码为小写%2f  public: URLEncode编码为大写%2F
+     */
+    fun getFormatHeaderKeys(): String {
+        return headers.keys.joinToString(";") { it.toLowerCase().urlEncode(encodeToLower) }
+    }
+
+    /**
+     * 返回格式化之后的header列表
+     * 格式: key1=value1&key2=value2&key3=value3 字典升序排序
+     * 规则: key: URLEncode编码，并转换为小写形式  value: URLEncode编码
+     * 差异: inner: URLEncode编码为小写%2f  public: URLEncode编码为大写%2F
+     */
     fun getFormatHeaders(): String {
         return headers.map {
-            "${it.key.toLowerCase().encode()}=${it.value.encode()}"
+            "${it.key.toLowerCase().urlEncode(encodeToLower)}=${it.value.urlEncode(encodeToLower)}"
         }.joinToString("&")
     }
 

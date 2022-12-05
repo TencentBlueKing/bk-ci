@@ -38,26 +38,31 @@ import java.time.Duration
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
+/**
+ * Cos 签名工具类
+ */
 object CosSigner {
     private const val ALGORITHM = "sha1"
     private const val HMAC_SHA1_ALGORITHM = "HmacSHA1"
     private const val SHA1_ALGORITHM = "SHA-1"
+    private const val MILLIS_PER_SECOND = 1000
+
     private fun ByteArray.toHexString() = joinToString("") { String.format("%02x", it) }
 
     fun sign(request: CosRequest, credentials: InnerCosCredentials, expiredTime: Duration): String {
-        val currentTimestamp = System.currentTimeMillis() / 1000
+        val currentTimestamp = System.currentTimeMillis() / MILLIS_PER_SECOND
         val signTime = "$currentTimestamp;${currentTimestamp + expiredTime.seconds}"
         val signKey = hmacSha1(signTime, credentials.secretKey)
         val formatString = buildFormatString(request)
         val stringToSign = buildStringToSign(signTime, formatString)
         val signature = hmacSha1(stringToSign, signKey)
-        val signedHeaderList = buildSignedMember(request.headers.keys)
-        val signedParameterList = buildSignedMember(request.parameters.keys)
-        return buildAuthorization(credentials.secretId, signTime, signedHeaderList, signedParameterList, signature)
-    }
-
-    private fun buildSignedMember(keys: MutableSet<String>): String {
-        return keys.joinToString(";") { it.toLowerCase() }
+        return buildAuthorization(
+            secretId = credentials.secretId,
+            signTime = signTime,
+            signedHeaderList = request.getFormatHeaderKeys(),
+            signedParameterList = request.getFormatParameterKeys(),
+            signature = signature
+        )
     }
 
     private fun buildFormatString(request: CosRequest): String {

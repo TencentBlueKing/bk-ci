@@ -2,8 +2,6 @@ package com.tencent.devops.prebuild.component
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
-import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientErrorDecoder
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -11,12 +9,15 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.prebuild.ServiceBaseTest
 import com.tencent.devops.prebuild.pojo.CreateStagesRequest
 import com.tencent.devops.prebuild.v2.component.PipelineLayout
 import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidator
+import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -31,7 +32,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 
 @ExtendWith(MockitoExtension::class)
 class PipelineLayoutTest : ServiceBaseTest() {
@@ -42,14 +43,15 @@ class PipelineLayoutTest : ServiceBaseTest() {
     lateinit var serviceMarketAtomResource: ServiceMarketAtomResource
 
     fun setup(
-        @Mock consulClient: ConsulDiscoveryClient,
+        @Mock consulClient: CompositeDiscoveryClient,
         @Mock clientErrorDecoder: ClientErrorDecoder,
         @Mock commonConfig: CommonConfig,
-        @Mock objectMapper: ObjectMapper
+        @Mock objectMapper: ObjectMapper,
+        @Mock bkTag: BkTag
     ) {
         val theMock = Mockito.mockStatic(SpringContextUtil::class.java)
         theMock.`when`<Client> { SpringContextUtil.getBean(any(Client::class.java.javaClass)) }
-            .thenReturn(Client(consulClient, clientErrorDecoder, commonConfig, objectMapper))
+            .thenReturn(Client(consulClient, clientErrorDecoder, commonConfig, bkTag, objectMapper))
     }
 
     @Test

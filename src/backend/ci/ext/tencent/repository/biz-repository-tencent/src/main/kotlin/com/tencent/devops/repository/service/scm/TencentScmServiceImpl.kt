@@ -110,7 +110,9 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?
+        search: String?,
+        page: Int,
+        pageSize: Int
     ): List<String> {
 
         return client.getScm(ServiceScmResource::class).listBranches(
@@ -122,7 +124,9 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             token = token,
             region = region,
             userName = userName,
-            search = search
+            search = search,
+            page = page,
+            pageSize = pageSize
         ).data!!
     }
 
@@ -309,5 +313,25 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             token = token,
             mrId = mrId
         ).data
+    }
+
+    override fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): List<GitCommit> {
+        return client.getScm(ServiceScmResource::class).getMrCommitList(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            mrId = mrId,
+            page = page,
+            size = size
+        ).data ?: emptyList()
     }
 }

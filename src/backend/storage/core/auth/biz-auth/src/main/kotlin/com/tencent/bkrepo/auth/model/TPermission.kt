@@ -31,8 +31,6 @@
 
 package com.tencent.bkrepo.auth.model
 
-import com.tencent.bkrepo.auth.pojo.enums.PermissionAction
-import com.tencent.bkrepo.auth.pojo.enums.ResourceType
 import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.index.CompoundIndexes
 import org.springframework.data.mongodb.core.mapping.Document
@@ -56,7 +54,7 @@ import java.time.LocalDateTime
 
 data class TPermission(
     val id: String? = null,
-    var resourceType: ResourceType,
+    var resourceType: String,
     var projectId: String? = null,
     var permName: String,
     var repos: List<String> = emptyList(),
@@ -69,5 +67,5 @@ data class TPermission(
     var users: List<String> = emptyList(),
     var roles: List<String> = emptyList(),
     var departments: List<String> = emptyList(),
-    var actions: List<PermissionAction> = emptyList()
+    var actions: List<String> = emptyList()
 )

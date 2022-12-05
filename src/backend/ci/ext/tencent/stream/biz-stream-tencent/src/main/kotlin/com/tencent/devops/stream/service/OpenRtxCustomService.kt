@@ -29,7 +29,6 @@ package com.tencent.devops.stream.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.api.util.OkhttpUtils
-import org.springframework.stereotype.Service
 import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
 import com.tencent.devops.common.wechatwork.model.CallbackElement
 import com.tencent.devops.common.wechatwork.model.enums.FromType
@@ -41,7 +40,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextM
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.stream.config.RtxCustomConfig
-import com.tencent.devops.stream.listener.notify.RtxCustomApi
+import com.tencent.devops.stream.trigger.listener.notify.RtxCustomApi
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -49,6 +48,7 @@ import org.dom4j.Document
 import org.dom4j.DocumentHelper
 import org.dom4j.Element
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
 @Service
 class OpenRtxCustomService constructor(
@@ -136,10 +136,12 @@ class OpenRtxCustomService constructor(
                 }
                 logger.info("content = $content")
                 // 返回群会话ID关键词
-                if (receiverType == ReceiverType.group && (content.contains("会话ID", true) || content.contains(
-                        "群ID",
-                        true
-                    ))
+                if (receiverType == ReceiverType.group && (
+                    content.contains("会话ID", true) || content.contains(
+                            "群ID",
+                            true
+                        )
+                    )
                 ) {
                     logger.info("chatId = $chatId")
                     val receiver = Receiver(receiverType, chatId)
@@ -238,8 +240,10 @@ class OpenRtxCustomService constructor(
             //        httpClient.newCall(sendRequest).execute().use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                throw RuntimeException("RtxCustomApi sendRichText error code: ${response.code()} " +
-                        "messge: ${response.message()}")
+                throw RuntimeException(
+                    "RtxCustomApi sendRichText error code: ${response.code()} " +
+                        "messge: ${response.message()}"
+                )
             }
         }
         return true

@@ -30,4 +30,5 @@ dependencies {
     api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
     api(project(":ext:tencent:common:common-digest-tencent"))
+    api(project(":core:repository:plugin-tapd"))
 }

@@ -30,8 +30,8 @@ package com.tencent.devops.process.engine.control.command.container.impl
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -40,9 +40,11 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption.Companion.MATRIX_CASE_MAX_COUNT
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -51,13 +53,16 @@ import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
+import com.tencent.devops.process.engine.control.lock.ContainerIdLock
+import com.tencent.devops.process.engine.control.lock.StageMatrixLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_STAGE_CONTAINERS_COUNT_MAX
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -84,7 +89,8 @@ class InitializeMatrixGroupStageCmd(
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val dispatchTypeParser: DispatchTypeParser,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val redisOperation: RedisOperation
 ) : ContainerCmd {
 
     companion object {
@@ -94,9 +100,10 @@ class InitializeMatrixGroupStageCmd(
     override fun canExecute(commandContext: ContainerContext): Boolean {
         // 仅在初次准备并发执行Stage下Container是执行
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            commandContext.container.matrixGroupFlag == true &&
-            (commandContext.container.status.isReadyToRun() ||
-                commandContext.container.status == BuildStatus.DEPENDENT_WAITING)
+            commandContext.container.matrixGroupFlag == true && (
+            commandContext.container.status.isReadyToRun() ||
+                commandContext.container.status == BuildStatus.DEPENDENT_WAITING
+            )
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -112,11 +119,19 @@ class InitializeMatrixGroupStageCmd(
                 executeCount = commandContext.executeCount
             )
             commandContext.buildStatus = BuildStatus.RUNNING
-            generateMatrixGroup(commandContext, parentContainer)
+            val stageLock = StageMatrixLock(redisOperation, parentContainer.buildId, parentContainer.stageId)
+            stageLock.use {
+                // #6440 只有一个stage下出现多个时需要进行并发锁
+                if (commandContext.stageMatrixCount > 1) it.lock()
+                generateMatrixGroup(commandContext, parentContainer)
+            }
         } catch (ignore: Throwable) {
-            LOG.error("ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_INIT_FAILED|" +
-                "matrix(${parentContainer.containerId})|" +
-                "parentContainer=$parentContainer", ignore)
+            LOG.error(
+                "ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_INIT_FAILED|" +
+                    "matrix(${parentContainer.containerId})|" +
+                    "parentContainer=$parentContainer",
+                ignore
+            )
             buildLogPrinter.addRedLine(
                 buildId = parentContainer.buildId,
                 message = "Abnormal matrix calculation: ${ignore.message}",
@@ -127,8 +142,10 @@ class InitializeMatrixGroupStageCmd(
             0
         }
 
-        LOG.info("ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_INIT|" +
-            "matrix(${parentContainer.containerId})|newContainerCount=$count")
+        LOG.info(
+            "ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_INIT|" +
+                "matrix(${parentContainer.containerId})|newContainerCount=$count"
+        )
 
         if (count > 0) {
             commandContext.latestSummary = "Matrix(${parentContainer.containerId}) generateNew($count)"
@@ -146,6 +163,7 @@ class InitializeMatrixGroupStageCmd(
 
         val event = commandContext.event
         val variables = commandContext.variables
+        val asCodeEnabled = commandContext.pipelineAsCodeEnabled ?: false
         val modelStage = containerBuildDetailService.getBuildModel(
             projectId = parentContainer.projectId,
             buildId = parentContainer.buildId
@@ -172,9 +190,11 @@ class InitializeMatrixGroupStageCmd(
             containerSeq = VMUtils.genMatrixContainerSeq(matrixGroupId.toInt(), 1)
         )
 
-        LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
-            "matrixGroupId=$matrixGroupId|containerHashId=${modelContainer.containerHashId}" +
-            "|context=$context")
+        LOG.info(
+            "ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER|${event.stageId}|" +
+                "matrixGroupId=$matrixGroupId|containerHashId=${modelContainer.containerHashId}" +
+                "|context=$context|asCodeEnabled=$asCodeEnabled"
+        )
 
         val matrixOption: MatrixControlOption
         val matrixConfig: MatrixConfig
@@ -192,16 +212,20 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                matrixConfig = matrixOption.convertMatrixConfig(variables, asCodeEnabled)
                 contextCaseList = matrixConfig.getAllCombinations()
 
                 if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
-                    throw ExecuteException("Matrix case(${contextCaseList.size}) exceeds " +
-                        "the limit($MATRIX_CASE_MAX_COUNT)")
+                    throw ExecuteException(
+                        "Matrix case(${contextCaseList.size}) exceeds " +
+                            "the limit($MATRIX_CASE_MAX_COUNT)"
+                    )
                 }
 
                 contextCaseList.forEach { contextCase ->
-
+                    val contextPair = if (asCodeEnabled) {
+                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                    } else null
                     // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                     val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
 
@@ -219,7 +243,14 @@ class InitializeMatrixGroupStageCmd(
                     val customDispatchType = parsedInfo?.dispatchType
                     val customBaseOS = parsedInfo?.baseOS
                     val customBuildEnv = parsedInfo?.buildEnv
-
+                    val mutexGroup = modelContainer.mutexGroup?.let { self ->
+                        self.copy(
+                            mutexGroupName = EnvReplacementParser.parse(
+                                self.mutexGroupName, allContext, asCodeEnabled, contextPair
+                            ),
+                            linkTip = EnvReplacementParser.parse(self.linkTip, allContext, asCodeEnabled, contextPair)
+                        )
+                    }
                     val newSeq = context.containerSeq++
                     val innerSeq = context.innerSeq++
 
@@ -229,7 +260,7 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.elements, context.executeCount, postParentIdMap
                     )
                     val newContainer = VMBuildContainer(
-                        name = EnvUtils.parseEnv(modelContainer.name, allContext),
+                        name = EnvReplacementParser.parse(modelContainer.name, allContext, asCodeEnabled, contextPair),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),
@@ -240,7 +271,7 @@ class InitializeMatrixGroupStageCmd(
                         canRetry = modelContainer.canRetry,
                         enableExternal = modelContainer.enableExternal,
                         jobControlOption = jobControlOption,
-                        mutexGroup = modelContainer.mutexGroup,
+                        mutexGroup = mutexGroup,
                         executeCount = context.executeCount,
                         containPostTaskFlag = modelContainer.containPostTaskFlag,
                         customBuildEnv = allContext,
@@ -249,34 +280,42 @@ class InitializeMatrixGroupStageCmd(
                         dockerBuildVersion = modelContainer.dockerBuildVersion,
                         dispatchType = customDispatchType ?: modelContainer.dispatchType,
                         buildEnv = customBuildEnv ?: modelContainer.buildEnv,
-                        thirdPartyAgentId = modelContainer.thirdPartyAgentId,
-                        thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId,
-                        thirdPartyWorkspace = modelContainer.thirdPartyWorkspace
+                        thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
+                        },
+                        thirdPartyAgentEnvId = modelContainer.thirdPartyAgentEnvId?.let { self ->
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
+                        },
+                        thirdPartyWorkspace = modelContainer.thirdPartyWorkspace?.let { self ->
+                            EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
+                        }
                     )
 
-                    groupContainers.add(pipelineContainerService.prepareMatrixBuildContainer(
-                        projectId = event.projectId,
-                        pipelineId = event.pipelineId,
-                        buildId = event.buildId,
-                        container = newContainer,
-                        stage = modelStage,
-                        context = context,
-                        buildTaskList = buildTaskList,
-                        jobControlOption = jobControlOption,
-                        matrixGroupId = matrixGroupId,
-                        postParentIdMap = postParentIdMap,
-                        mutexGroup = modelContainer.mutexGroup
-                    ))
+                    groupContainers.add(
+                        pipelineContainerService.prepareMatrixBuildContainer(
+                            projectId = event.projectId,
+                            pipelineId = event.pipelineId,
+                            buildId = event.buildId,
+                            container = newContainer,
+                            stage = modelStage,
+                            context = context,
+                            buildTaskList = buildTaskList,
+                            jobControlOption = jobControlOption,
+                            matrixGroupId = matrixGroupId,
+                            postParentIdMap = postParentIdMap,
+                            mutexGroup = mutexGroup
+                        )
+                    )
 
                     // 如为空就初始化，如有元素就直接追加
                     if (modelContainer.groupContainers.isNullOrEmpty()) {
-                        modelContainer.groupContainers = mutableListOf(newContainer.copy(
-                            elements = statusElements
-                        ))
+                        modelContainer.groupContainers = mutableListOf(
+                            newContainer.copy(elements = statusElements)
+                        )
                     } else {
-                        modelContainer.groupContainers!!.add(newContainer.copy(
-                            elements = statusElements
-                        ))
+                        modelContainer.groupContainers!!.add(
+                            newContainer.copy(elements = statusElements)
+                        )
                     }
                 }
             }
@@ -289,7 +328,7 @@ class InitializeMatrixGroupStageCmd(
                     dependOnContainerId2JobIds = null
                 )
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
-                matrixConfig = matrixOption.convertMatrixConfig(variables)
+                matrixConfig = matrixOption.convertMatrixConfig(variables, asCodeEnabled)
                 contextCaseList = matrixConfig.getAllCombinations()
 
                 contextCaseList.forEach { contextCase ->
@@ -303,8 +342,22 @@ class InitializeMatrixGroupStageCmd(
                     val statusElements = generateMatrixElements(
                         modelContainer.elements, context.executeCount, postParentIdMap
                     )
+                    val replacement = if (asCodeEnabled) {
+                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                    } else null
+                    val mutexGroup = modelContainer.mutexGroup?.let { self ->
+                        self.copy(
+                            mutexGroupName = EnvReplacementParser.parse(
+                                value = self.mutexGroupName,
+                                contextMap = contextCase,
+                                onlyExpression = asCodeEnabled,
+                                contextPair = replacement
+                            ),
+                            linkTip = EnvReplacementParser.parse(self.linkTip, contextCase, asCodeEnabled, replacement)
+                        )
+                    }
                     val newContainer = NormalContainer(
-                        name = EnvUtils.parseEnv(modelContainer.name, contextCase),
+                        name = EnvReplacementParser.parse(modelContainer.name, contextCase, asCodeEnabled, replacement),
                         id = newSeq.toString(),
                         containerId = newSeq.toString(),
                         containerHashId = modelContainerIdGenerator.getNextId(),
@@ -314,40 +367,44 @@ class InitializeMatrixGroupStageCmd(
                         elements = modelContainer.elements,
                         canRetry = modelContainer.canRetry,
                         jobControlOption = jobControlOption,
-                        mutexGroup = modelContainer.mutexGroup,
+                        mutexGroup = mutexGroup,
                         executeCount = context.executeCount,
                         containPostTaskFlag = modelContainer.containPostTaskFlag
                     )
 
-                    groupContainers.add(pipelineContainerService.prepareMatrixBuildContainer(
-                        projectId = event.projectId,
-                        pipelineId = event.pipelineId,
-                        buildId = event.buildId,
-                        container = newContainer,
-                        stage = modelStage,
-                        context = context,
-                        buildTaskList = buildTaskList,
-                        jobControlOption = jobControlOption,
-                        matrixGroupId = matrixGroupId,
-                        postParentIdMap = postParentIdMap,
-                        mutexGroup = modelContainer.mutexGroup
-                    ))
+                    groupContainers.add(
+                        pipelineContainerService.prepareMatrixBuildContainer(
+                            projectId = event.projectId,
+                            pipelineId = event.pipelineId,
+                            buildId = event.buildId,
+                            container = newContainer,
+                            stage = modelStage,
+                            context = context,
+                            buildTaskList = buildTaskList,
+                            jobControlOption = jobControlOption,
+                            matrixGroupId = matrixGroupId,
+                            postParentIdMap = postParentIdMap,
+                            mutexGroup = mutexGroup
+                        )
+                    )
 
                     // 如为空就初始化，如有元素就直接追加
                     if (modelContainer.groupContainers.isNullOrEmpty()) {
-                        modelContainer.groupContainers = mutableListOf(newContainer.copy(
-                            elements = statusElements
-                        ))
+                        modelContainer.groupContainers = mutableListOf(
+                            newContainer.copy(elements = statusElements)
+                        )
                     } else {
-                        modelContainer.groupContainers!!.add(newContainer.copy(
-                            elements = statusElements
-                        ))
+                        modelContainer.groupContainers!!.add(
+                            newContainer.copy(elements = statusElements)
+                        )
                     }
                 }
             }
             else -> {
-                throw InvalidParamException("matrix(${parentContainer.containerId}) with " +
-                    "type(${modelContainer.getClassType()}) is invalid")
+                throw InvalidParamException(
+                    "matrix(${parentContainer.containerId}) with " +
+                        "type(${modelContainer.getClassType()}) is invalid"
+                )
             }
         }
 
@@ -359,19 +416,49 @@ class InitializeMatrixGroupStageCmd(
         matrixOption.totalCount = groupContainers.size
         matrixOption.maxConcurrency = min(
             matrixOption.maxConcurrency ?: PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT,
-            PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+            PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
         )
 
-        LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER" +
-            "|${event.stageId}|${modelContainer.id}|containerHashId=" +
-            "${modelContainer.containerHashId}|context=$context|" +
-            "groupJobSize=${groupContainers.size}|taskSize=${buildTaskList.size}")
-
-        // 在表中增加所有分裂的矩阵和插件
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            pipelineContainerService.batchSave(transactionContext, buildContainerList)
-            pipelineTaskService.batchSave(transactionContext, buildTaskList)
+        LOG.info(
+            "ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER" +
+                "|${event.stageId}|${modelContainer.id}|containerHashId=" +
+                "${modelContainer.containerHashId}|context=$context|" +
+                "groupJobSize=${groupContainers.size}|taskSize=${buildTaskList.size}"
+        )
+        // #6440 进行已有总容器数量判断，如果大于单个stage下的job数量则分裂出错
+        val stageContainers = pipelineContainerService.listContainers(
+            projectId = parentContainer.projectId,
+            buildId = parentContainer.buildId,
+            stageId = parentContainer.stageId
+        )
+        val count = stageContainers.size + groupContainers.size - commandContext.stageMatrixCount
+        LOG.info(
+            "ENGINE|${event.buildId}|${event.source}|CHECK_CONTAINER_COUNT" +
+                "|${event.stageId}|${modelContainer.id}|containerHashId=" +
+                "${modelContainer.containerHashId}|currentCount=${stageContainers.size}|" +
+                "countResult=$count"
+        )
+        if (count > PIPELINE_STAGE_CONTAINERS_COUNT_MAX) {
+            throw InvalidParamException(
+                "The number of containers($count) in stage(${parentContainer.stageId})" +
+                    " exceeds the limit[$PIPELINE_STAGE_CONTAINERS_COUNT_MAX]"
+            )
+        }
+        // #7168 在表中增加所有分裂的Job和Task，此时需要避免同时有update操作，因此先获取所有Job的id锁
+        val containerLockList = stageContainers.filter { c ->
+            c.matrixGroupFlag != true && !c.status.isFinish()
+        }.map { c ->
+            ContainerIdLock(redisOperation, c.buildId, c.containerId)
+        }
+        try {
+            containerLockList.forEach { it.lock() }
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                pipelineContainerService.batchSave(transactionContext, buildContainerList)
+                pipelineTaskService.batchSave(transactionContext, buildTaskList)
+            }
+        } finally {
+            containerLockList.forEach { it.unlock() }
         }
 
         buildLogPrinter.addLine(
@@ -431,15 +518,18 @@ class InitializeMatrixGroupStageCmd(
             // 刷新ID为新的唯一值，强制设为无法重试
             e.id = newTaskId
             e.canRetry = false
-            val (interceptTask, interceptTaskName) = when (e) {
+            val (interceptTask, interceptTaskName, reviewUsers) = when (e) {
                 is QualityGateInElement -> {
-                    Pair(e.interceptTask, e.interceptTaskName)
+                    Triple(e.interceptTask, e.interceptTaskName, e.reviewUsers)
                 }
                 is QualityGateOutElement -> {
-                    Pair(e.interceptTask, e.interceptTaskName)
+                    Triple(e.interceptTask, e.interceptTaskName, e.reviewUsers)
+                }
+                is ManualReviewUserTaskElement -> {
+                    Triple(null, null, e.reviewUsers)
                 }
                 else -> {
-                    Pair(null, null)
+                    Triple(null, null, null)
                 }
             }
             MatrixStatusElement(
@@ -448,8 +538,11 @@ class InitializeMatrixGroupStageCmd(
                 stepId = e.stepId,
                 executeCount = executeCount,
                 originClassType = e.getClassType(),
+                originAtomCode = e.getAtomCode(),
+                originTaskAtom = e.getTaskAtom(),
                 interceptTask = interceptTask,
-                interceptTaskName = interceptTaskName
+                interceptTaskName = interceptTaskName,
+                reviewUsers = reviewUsers?.toMutableList()
             )
         }
     }
@@ -524,9 +617,8 @@ class InitializeMatrixGroupStageCmd(
 
         // 打印最终结果
         buildLogPrinter.addFoldStartLine(
-            buildId = buildId, groupName = "[MATRIX] After calculated, " +
-            "${contextCaseList.size} jobs are generated:",
-            tag = taskId, jobId = containerHashId, executeCount = executeCount
+            groupName = "[MATRIX] After calculated, ${contextCaseList.size} jobs are generated:",
+            buildId = buildId, tag = taskId, jobId = containerHashId, executeCount = executeCount
         )
         buildLogPrinter.addLine(
             buildId = buildId, message = "",
@@ -574,9 +666,11 @@ class InitializeMatrixGroupStageCmd(
 
     private fun checkAndFetchOption(option: MatrixControlOption?): MatrixControlOption {
         if (option == null) throw DependNotFoundException("matrix option not found")
-        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX) {
-            throw InvalidParamException("matrix maxConcurrency(${option.maxConcurrency}) " +
-                "is larger than $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX")
+        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
+            throw InvalidParamException(
+                "matrix maxConcurrency(${option.maxConcurrency}) " +
+                    "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
+            )
         }
         return option
     }

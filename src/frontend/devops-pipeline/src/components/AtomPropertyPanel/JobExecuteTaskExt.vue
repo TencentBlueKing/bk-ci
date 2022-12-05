@@ -93,16 +93,16 @@
                 if (preTaskArr) {
                     for (let i = 0; i < preTaskArr.length; i++) {
                         let value = ''
-                        if (preTaskArr[i]['ipList'] !== undefined) {
-                            value = preTaskArr[i]['ipList']
+                        if (preTaskArr[i].ipList !== undefined) {
+                            value = preTaskArr[i].ipList
                         } else {
-                            value = preTaskArr[i]['value']
+                            value = preTaskArr[i].value
                         }
                         Object.assign(preTaskObj, { [preTaskArr[i].id]: value })
                     }
                 }
                 // 处理几个hidden的字段
-                Object.assign(newElement, { 'globalVar': '' })
+                Object.assign(newElement, { globalVar: '' })
                 // 每次切换task则清楚动态加入的element
                 this.deleteNewElement()
                 // 页面渲染新加的动态参数
@@ -119,10 +119,10 @@
                             curValue = preTaskObj[curParam.id]
                         }
                         Object.assign(newElement, { [curParam.id]: curValue })
-                        Object.assign(CurTaskParams, { 'id': curParam.id }, { [valueName]: curValue })
+                        Object.assign(CurTaskParams, { id: curParam.id }, { [valueName]: curValue })
                         globalVarArr.push(CurTaskParams)
                     }
-                    Object.assign(newElement, { 'globalVar': JSON.stringify(globalVarArr) })
+                    Object.assign(newElement, { globalVar: JSON.stringify(globalVarArr) })
                 }
                 this.updateAtom({
                     element: this.element,
@@ -141,13 +141,13 @@
                     const taskParams = {}
                     valueName = this.getValueType(itemValue)
                     if (+itemValue === +name) {
-                        Object.assign(taskParams, { 'id': name }, { [valueName]: value })
+                        Object.assign(taskParams, { id: name }, { [valueName]: value })
                     } else {
-                        Object.assign(taskParams, { 'id': itemValue }, { [valueName]: this.element[itemValue] })
+                        Object.assign(taskParams, { id: itemValue }, { [valueName]: this.element[itemValue] })
                     }
                     globalVarArr.push(taskParams)
                 })
-                Object.assign(newElement, { 'globalVar': JSON.stringify(globalVarArr) })
+                Object.assign(newElement, { globalVar: JSON.stringify(globalVarArr) })
                 this.updateAtom({
                     element: this.element,
                     newParam: Object.assign(newElement, { [name]: value })
@@ -155,7 +155,7 @@
             },
             deleteNewElement () {
                 // 把动态增加的元素从element中移除
-                Object.keys(this.element).map(key => {
+                Object.keys(this.element).forEach(key => {
                     const notRemove = this.settingKeys.find(item => item === key)
                     if (!notRemove) {
                         this.deletePropKey({
@@ -189,7 +189,7 @@
             async getCurrentTask (taskId) {
                 this.isLoading = true
                 try {
-                    const res = await this.$store.dispatch('soda/requestJobTaskParam', {
+                    const res = await this.$store.dispatch('common/requestJobTaskParam', {
                         projectId: this.projectId,
                         taskId
                     })

@@ -29,12 +29,17 @@ package com.tencent.devops.artifactory.mq
 
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.service.PipelineBuildArtifactoryService
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineRuntimeResource
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -58,10 +63,59 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
         val buildId = event.buildId
         val pipelineId = event.pipelineId
 
+        updateArtifactList(userId, projectId, pipelineId, buildId)
+
+        val (parentProjectId, parentPipelineId, parentBuildId) = getParentPipelineVars(
+            userId, projectId, pipelineId, buildId
+        )
+        if (parentProjectId.isNotBlank() && parentPipelineId.isNotBlank() && parentBuildId.isNotBlank()) {
+            updateArtifactList(userId, parentProjectId, parentPipelineId, parentBuildId)
+        }
+    }
+
+    private fun getParentPipelineVars(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Triple<String, String, String> {
+        val parentPipelineVars = try {
+            client.get(ServiceBuildResource::class).getBuildVariableValue(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variableNames = listOf(
+                    PIPELINE_START_PARENT_PROJECT_ID,
+                    PIPELINE_START_PARENT_PIPELINE_ID,
+                    PIPELINE_START_PARENT_BUILD_ID
+                )
+            ).data!!
+        } catch (ignore: RemoteServiceException) {
+            if (ignore.httpStatus >= 500) {
+                logger.error("BKSystemErrorMonitor|getBuildVariableValue|$pipelineId-$buildId|${ignore.errorMessage}")
+            } else {
+                logger.info("getBuildVariableValue|$pipelineId-$buildId|${ignore.errorMessage}")
+            }
+            return Triple("", "", "")
+        }
+        logger.info("[$pipelineId|$buildId] get parent pipeline vars: $parentPipelineVars")
+        val parentProjectId = parentPipelineVars[PIPELINE_START_PARENT_PROJECT_ID].toString()
+        val parentPipelineId = parentPipelineVars[PIPELINE_START_PARENT_PIPELINE_ID].toString()
+        val parentBuildId = parentPipelineVars[PIPELINE_START_PARENT_BUILD_ID].toString()
+        return Triple(parentProjectId, parentPipelineId, parentBuildId)
+    }
+
+    private fun updateArtifactList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) {
         val artifactList: List<FileInfo> = try {
             pipelineBuildArtifactoryService.getArtifactList(userId, projectId, pipelineId, buildId)
         } catch (ignored: Throwable) {
-            logger.error("[$pipelineId]|getArtifactList-$buildId exception:", ignored)
+            logger.error("BKSystemErrorMonitor|getArtifactList|$pipelineId-$buildId|error=${ignored.message}", ignored)
             emptyList()
         }
         logger.info("[$pipelineId]|getArtifactList-$buildId artifact: ${JsonUtil.toJson(artifactList)}")
@@ -81,7 +135,7 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
 
             logger.info("[$buildId]|update artifact result: ${result.status} ${result.message}")
         } catch (e: Exception) {
-            logger.error("[$buildId| update artifact list fail: ${e.localizedMessage}", e)
+            logger.error("BKSystemErrorMonitor|updateArtifactList|$buildId|error=${e.localizedMessage}", e)
             // rollback
             client.get(ServicePipelineRuntimeResource::class).updateArtifactList(
                 userId = userId,

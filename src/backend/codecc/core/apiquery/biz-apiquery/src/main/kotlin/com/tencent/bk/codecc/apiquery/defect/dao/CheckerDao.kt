@@ -11,7 +11,6 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
-import org.springframework.data.mongodb.core.query.BasicQuery
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Repository
@@ -28,12 +27,9 @@ class CheckerDao @Autowired constructor(
         toolNameList: List<String>,
         checkerKeyList: List<String>
     ): List<CheckerDetailModel> {
-        val query = BasicQuery(BasicDBObject())
-        query.addCriteria(
+        val query = Query.query(
             Criteria.where("tool_name").`in`(toolNameList)
-                .and("checker_key").`in`(checkerKeyList)
-        )
-
+                .and("checker_key").`in`(checkerKeyList))
         return defectMongoTemplate.find(query, CheckerDetailModel::class.java, "t_checker_detail")
     }
 
@@ -43,7 +39,7 @@ class CheckerDao @Autowired constructor(
         toolName: String?,
         checkerKey: Set<String>?
     ): List<CheckerDetailModel> {
-        val query = BasicQuery(BasicDBObject())
+        val query = Query()
 
         if (StringUtils.isNotBlank(toolName)) {
             query.addCriteria(
@@ -60,7 +56,7 @@ class CheckerDao @Autowired constructor(
         val queryPageNum = pageNum ?: 1
         val queryPageSize = (pageSize ?: 100).coerceAtMost(1000)
 
-        query.with(PageRequest(queryPageNum - 1, queryPageSize))
+        query.with(PageRequest.of(queryPageNum - 1, queryPageSize))
 
         return defectMongoTemplate.find(query, CheckerDetailModel::class.java, "t_checker_detail")
     }
@@ -74,7 +70,7 @@ class CheckerDao @Autowired constructor(
         query["tool_name"] = BasicDBObject("\$in", toolAndCheckerMap.keys)
         query["checker_key"] = BasicDBObject("\$in", toolAndCheckerMap.flatMap { it.value })
 
-        val cursor = defectMongoTemplate.getCollection("t_checker_detail").find(query)
+        val cursor = defectMongoTemplate.getCollection("t_checker_detail").find(query).cursor()
         while (cursor.hasNext()) {
             val checkerObj = cursor.next()
             val checkerKeyList = toolAndCheckerMap[checkerObj["tool_name"]]
@@ -89,7 +85,7 @@ class CheckerDao @Autowired constructor(
      * 通过工具名查询规则详细信息
      */
     fun findByToolName(toolName: String): List<CheckerDetailModel> {
-        val query = BasicQuery(BasicDBObject())
+        val query = Query()
         query.addCriteria(Criteria.where("tool_name").`is`(toolName))
         return defectMongoTemplate.find(query, CheckerDetailModel::class.java, "t_checker_detail")
     }

@@ -30,7 +30,6 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreUserService
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -40,8 +39,6 @@ import org.springframework.stereotype.Service
  */
 @Service
 class SampleStoreUserServiceImpl : StoreUserService {
-
-    private val logger = LoggerFactory.getLogger(SampleStoreUserServiceImpl::class.java)
 
     /**
      * 获取用户机构ID信息

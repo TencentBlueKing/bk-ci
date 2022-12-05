@@ -32,12 +32,22 @@
 package com.tencent.bkrepo.repository.model
 
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
+import java.time.LocalDateTime
+import org.springframework.data.mongodb.core.index.CompoundIndex
+import org.springframework.data.mongodb.core.index.CompoundIndexes
 import org.springframework.data.mongodb.core.mapping.Document
 
 /**
  * 代理源模型
  */
 @Document("proxy_channel")
+@CompoundIndexes(
+    CompoundIndex(
+        name = "proxy_idx",
+        def = "{'projectId': 1, 'repoName': 1, 'repoType': 1, 'name': 1}",
+        unique = true
+    )
+)
 data class TProxyChannel(
     /**
      * id
@@ -70,5 +80,12 @@ data class TProxyChannel(
     /**
      * 代理源认证密码
      */
-    var password: String? = null
+    var password: String? = null,
+    var projectId: String,
+    var repoName: String,
+
+    var createdBy: String,
+    var createdDate: LocalDateTime,
+    var lastModifiedBy: String,
+    var lastModifiedDate: LocalDateTime
 )

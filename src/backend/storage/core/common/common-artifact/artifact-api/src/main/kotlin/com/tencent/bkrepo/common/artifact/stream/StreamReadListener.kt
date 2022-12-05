@@ -42,9 +42,9 @@ interface StreamReadListener {
     fun data(i: Int)
 
     /**
-     * 数据读取回调方法，共接收了[length]长度的数据，数据缓存在[buffer]中
+     * 数据读取回调方法，从偏移量[off]开始，共接收了[length]长度的数据，数据缓存在[buffer]中
      */
-    fun data(buffer: ByteArray, length: Int)
+    fun data(buffer: ByteArray, off: Int, length: Int)
 
     /**
      * 数据接收完成通知

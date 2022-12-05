@@ -1,0 +1,10 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    kubernetes:
+      config:
+        enabled: true
+        sources:
+          - name: ${server.fullname:task}
+          - name: ${server.common.name:common}

@@ -39,6 +39,9 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import kotlin.system.measureTimeMillis
 
+/**
+ * 此拦截器用于请求结束后清理创建的临时文件
+ */
 class ArtifactFileCleanInterceptor : HandlerInterceptor {
 
     @Suppress("UNCHECKED_CAST")

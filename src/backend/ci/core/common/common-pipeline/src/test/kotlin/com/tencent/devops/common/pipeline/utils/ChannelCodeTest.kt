@@ -28,8 +28,8 @@
 package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 class ChannelCodeTest {
 
@@ -37,17 +37,17 @@ class ChannelCodeTest {
     fun channelCodeTest() {
         val bs = "BS"
         val channelCode = ChannelCode.getChannel(bs)
-        Assert.assertEquals(channelCode, ChannelCode.BS)
+        Assertions.assertEquals(channelCode, ChannelCode.BS)
     }
 
     @Test
     fun webTest() {
         val bs = "BS"
         val bsChannelCode = ChannelCode.getChannel(bs)
-        Assert.assertEquals(true, ChannelCode.webChannel(bsChannelCode!!))
+        Assertions.assertEquals(true, ChannelCode.webChannel(bsChannelCode!!))
 
         val codecc = "CODECC_EE"
         val codeccChannelCode = ChannelCode.getChannel(codecc)
-        Assert.assertEquals(false, ChannelCode.webChannel(codeccChannelCode!!))
+        Assertions.assertEquals(false, ChannelCode.webChannel(codeccChannelCode!!))
     }
 }

@@ -8,8 +8,13 @@
             <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span>
             <span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
         </span>
+        <span slot="tool"
+            v-if="currentTab === 'setting' && showDebugDockerBtn"
+            class="head-tool"
+            @click="handleDebug"
+        >{{ $t('editPage.docker.debugConsole') }}</span>
         <template v-slot:content>
-            
+
             <plugin-log :id="currentJob.containerHashId"
                 :build-id="execDetail.id"
                 :current-tab="currentTab"
@@ -28,19 +33,20 @@
                 :execute-count="executeCount"
                 ref="jobLog"
             />
-            <container-content v-show="currentTab === 'setting'"
+            <container-content v-if="currentTab === 'setting'"
                 :container-index="editingElementPos.containerIndex"
                 :container-group-index="editingElementPos.containerGroupIndex"
                 :stage-index="editingElementPos.stageIndex"
                 :stages="execDetail.model.stages"
                 :editable="false"
+                ref="container"
             />
         </template>
     </detail-container>
 </template>
 
 <script>
-    import { mapState } from 'vuex'
+    import { mapGetters } from 'vuex'
     import jobLog from './log/jobLog'
     import pluginLog from './log/pluginLog'
     import detailContainer from './detailContainer'
@@ -53,7 +59,16 @@
             pluginLog,
             ContainerContent
         },
-
+        props: {
+            execDetail: {
+                type: Object,
+                required: true
+            },
+            editingElementPos: {
+                type: Object,
+                required: true
+            }
+        },
         data () {
             return {
                 showTime: false,
@@ -63,9 +78,9 @@
         },
 
         computed: {
-            ...mapState('atom', [
-                'execDetail',
-                'editingElementPos'
+
+            ...mapGetters('atom', [
+                'checkShowDebugDockerBtn'
             ]),
 
             downLoadJobLink () {
@@ -80,7 +95,7 @@
                 const model = execDetail.model || {}
                 const stages = model.stages || []
                 const currentStage = stages[editingElementPos.stageIndex] || []
-                
+
                 try {
                     if (editingElementPos.containerGroupIndex === undefined) {
                         return currentStage.containers[editingElementPos.containerIndex]
@@ -96,10 +111,18 @@
                 const startUp = { name: 'Set up job', status: this.currentJob.startVMStatus, id: `startVM-${this.currentJob.id}`, executeCount: this.currentJob.executeCount || 1 }
                 return [startUp, ...this.currentJob.elements]
             },
+            showDebugDockerBtn () {
+                return this.checkShowDebugDockerBtn(this.currentJob, this.$route.name, this.execDetail)
+            },
 
             executeCount () {
                 const executeCountList = this.pluginList.map((plugin) => plugin.executeCount || 1)
                 return Math.max(...executeCountList)
+            }
+        },
+        methods: {
+            handleDebug () {
+                this.$refs.container?.startDebug?.()
             }
         }
     }

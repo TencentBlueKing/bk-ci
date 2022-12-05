@@ -26,7 +26,6 @@
  */
 
 dependencies {
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":core:process:api-process"))
     api(project(":core:project:api-project"))
     api(project(":core:dispatch:api-dispatch"))
@@ -41,7 +40,6 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-kafka"))
-    api("com.vmware:vijava")
     api("org.json:json")
     api("org.apache.commons:commons-exec")
 }

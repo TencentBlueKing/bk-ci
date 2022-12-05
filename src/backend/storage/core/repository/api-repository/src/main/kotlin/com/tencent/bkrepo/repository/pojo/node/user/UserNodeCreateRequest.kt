@@ -31,7 +31,7 @@
 
 package com.tencent.bkrepo.repository.pojo.node.user
 
-import com.tencent.bkrepo.repository.pojo.Auditable
+import com.tencent.bkrepo.repository.pojo.AuditableRequest
 import com.tencent.bkrepo.repository.pojo.UserRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeRequest
 import io.swagger.annotations.ApiModel
@@ -67,4 +67,4 @@ data class UserNodeCreateRequest(
     override val createdDate: LocalDateTime? = null,
     override val lastModifiedBy: String? = null,
     override val lastModifiedDate: LocalDateTime? = null
-) : NodeRequest, UserRequest, Auditable
+) : NodeRequest, UserRequest, AuditableRequest

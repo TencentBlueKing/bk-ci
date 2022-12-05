@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.project.pojo.app.AppProjectVO
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGitForAppResource {
 
-    @ApiOperation("获取stream项目")
+    @ApiOperation("获取stream项目(只返回以开启ci的项目)")
     @GET
     @Path("/projectList")
     fun getGitCIProjectList(
@@ -88,7 +88,7 @@ interface ServiceGitForAppResource {
         @ApiParam("流水线名称", required = false)
         @QueryParam("search")
         search: String?
-    ): Result<Pagination<GitProjectPipeline>>
+    ): Result<Pagination<StreamGitProjectPipeline>>
 
     @ApiOperation("根据流水线ID获取工蜂流水线信息")
     @GET
@@ -100,5 +100,5 @@ interface ServiceGitForAppResource {
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String
-    ): Result<GitProjectPipeline?>
+    ): Result<StreamGitProjectPipeline?>
 }

@@ -34,9 +34,9 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import org.junit.Assert
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 
 @Suppress("ALL", "UNUSED")
 class MutexControlTest {
@@ -85,23 +85,23 @@ class MutexControlTest {
             mutexGroup = mutexGroup,
             variables = variables
         )
-        Assert.assertNotNull(initMutexGroup)
-        Assert.assertEquals("mutexGroupNameTest", initMutexGroup!!.mutexGroupName)
-        Assert.assertEquals(10080, initMutexGroup.timeout)
-        Assert.assertEquals(10, initMutexGroup.queue)
+        Assertions.assertNotNull(initMutexGroup)
+        Assertions.assertEquals("mutexGroupNameTest", initMutexGroup!!.mutexGroupName)
+        Assertions.assertEquals(10080, initMutexGroup.timeout)
+        Assertions.assertEquals(10, initMutexGroup.queue)
     }
 
-    @Ignore
+    @Disabled
     // 测试MutexControl的锁功能
     fun checkContainerMutex() {
         val initMutexGroup = mutexControl.decorateMutexGroup(
             mutexGroup = mutexGroup,
             variables = variables
         )
-        Assert.assertEquals(ContainerMutexStatus.READY, mutexControl.acquireMutex(initMutexGroup, container))
+        Assertions.assertEquals(ContainerMutexStatus.READY, mutexControl.acquireMutex(initMutexGroup, container))
     }
 
-    @Ignore
+    @Disabled
     // 测试MutexControl的解锁功能
     fun releaseContainerMutex() {
         val initMutexGroup = mutexControl.decorateMutexGroup(

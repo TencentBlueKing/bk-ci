@@ -33,6 +33,7 @@ package com.tencent.bkrepo.repository.service.repo
 
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
 import com.tencent.bkrepo.repository.pojo.credendials.StorageCredentialsCreateRequest
+import com.tencent.bkrepo.repository.pojo.credendials.StorageCredentialsUpdateRequest
 
 /**
  * 存储凭证服务接口
@@ -42,7 +43,12 @@ interface StorageCredentialService {
     /**
      * 根据[request]创建存储凭证
      */
-    fun create(userId: String, request: StorageCredentialsCreateRequest)
+    fun create(userId: String, request: StorageCredentialsCreateRequest): StorageCredentials
+
+    /**
+     * 根据[request]更新存储凭证
+     */
+    fun update(userId: String, request: StorageCredentialsUpdateRequest): StorageCredentials
 
     /**
      * 根据[key]查询存储凭证[StorageCredentials]，不存在则返回`null`
@@ -51,11 +57,23 @@ interface StorageCredentialService {
 
     /**
      * 查询存储凭证列表
+     * @param region 部署区域
      */
-    fun list(): List<StorageCredentials>
+    fun list(region: String? = null): List<StorageCredentials>
+
+    /**
+     * 获取默认存储凭证
+     */
+    fun default(): StorageCredentials
 
     /**
      * 根据[key]删除存储凭证
      */
     fun delete(key: String)
+
+    /**
+     * 强制删除存储凭证
+     * @param key 要删除的存储凭证key
+     */
+    fun forceDelete(key: String)
 }

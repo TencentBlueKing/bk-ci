@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateId
 import com.tencent.devops.process.pojo.template.TemplateListModel
@@ -76,7 +78,14 @@ interface ApigwTemplateResourceV4 {
         userId: String,
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam("页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        pageSize: Int = 10
     ): Result<OptionalTemplateList>
 
     @ApiOperation("获取流水线模板详情", tags = ["v4_user_template_get", "v4_app_template_get"])
@@ -103,6 +112,30 @@ interface ApigwTemplateResourceV4 {
         version: Long?
     ): Result<TemplateModelDetail>
 
+    @ApiOperation("获取流水线模板详情", tags = ["v4_user_template_get", "v4_app_template_get"])
+    @GET
+    @Path("/{templateId}/get")
+    fun getTemplate(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @ApiParam("模板版本名称", required = false)
+        @QueryParam("versionName")
+        versionName: String?
+    ): Result<TemplateModelDetail>
+
     @ApiOperation("模版管理-获取模版列表", tags = ["v4_user_template_list", "v4_app_template_list"])
     @GET
     @Path("/")
@@ -124,7 +157,14 @@ interface ApigwTemplateResourceV4 {
         templateType: TemplateType?,
         @ApiParam("是否已关联到store", required = false)
         @QueryParam("storeFlag")
-        storeFlag: Boolean?
+        storeFlag: Boolean?,
+        @ApiParam("页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        pageSize: Int = 10
     ): Result<TemplateListModel>
 
     @ApiOperation("创建流水线模板", tags = ["v4_user_template_create", "v4_app_template_create"])

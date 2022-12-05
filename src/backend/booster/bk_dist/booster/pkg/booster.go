@@ -48,6 +48,8 @@ const (
 	renderKeyJobs = "JOBS"
 
 	osWindows = "windows"
+
+	envValueTrue = "true"
 )
 
 // ExtraItems describe the info from extra-project-data
@@ -62,6 +64,8 @@ type ExtraString struct {
 
 // NewBooster get a new booster instance
 func NewBooster(config dcType.BoosterConfig) (*Booster, error) {
+	blog.Infof("booster: new booster with config:%+v", config)
+
 	ensureConfig(&config)
 
 	cli := httpclient.NewHTTPClient()
@@ -231,7 +235,7 @@ func (b *Booster) getWorkersEnv() map[string]string {
 	requiredEnv[env.BoosterType] = b.config.Type.String()
 	requiredEnv[env.ProjectID] = b.config.ProjectID
 	if b.config.BatchMode {
-		requiredEnv[env.BatchMode] = "true"
+		requiredEnv[env.BatchMode] = envValueTrue
 	} else {
 		requiredEnv[env.BatchMode] = "false"
 	}
@@ -249,12 +253,13 @@ func (b *Booster) getWorkersEnv() map[string]string {
 
 	if b.config.Works.HookMode {
 		requiredEnv[env.KeyExecutorHookPreloadLibraryLinux] = b.config.Works.HookPreloadLibPath
+		requiredEnv[env.KeyExecutorHookPreloadLibraryMacos] = b.config.Works.HookPreloadLibPath
 		requiredEnv[env.KeyExecutorHookConfigContent] = b.config.Works.PreloadContent
 		requiredEnv[env.KeyExecutorHookConfigContentRaw] = b.config.Works.PreloadContentRaw
 	}
 
 	if b.config.Works.CheckMd5 {
-		requiredEnv[env.KeyCommonCheckMd5] = "true"
+		requiredEnv[env.KeyCommonCheckMd5] = envValueTrue
 	}
 
 	if b.work != nil {
@@ -270,35 +275,42 @@ func (b *Booster) getWorkersEnv() map[string]string {
 	}
 
 	if b.config.Works.SupportDirectives {
-		requiredEnv[env.KeyExecutorSupportDirectives] = "true"
+		requiredEnv[env.KeyExecutorSupportDirectives] = envValueTrue
 	}
 
 	if b.config.Works.Pump {
-		requiredEnv[env.KeyExecutorPump] = "true"
+		requiredEnv[env.KeyExecutorPump] = envValueTrue
 	}
 
 	if b.config.Works.PumpDisableMacro {
-		requiredEnv[env.KeyExecutorPumpDisableMacro] = "true"
+		requiredEnv[env.KeyExecutorPumpDisableMacro] = envValueTrue
 	}
 
 	if b.config.Works.PumpIncludeSysHeader {
-		requiredEnv[env.KeyExecutorPumpIncludeSysHeader] = "true"
+		requiredEnv[env.KeyExecutorPumpIncludeSysHeader] = envValueTrue
 	}
 
 	if b.config.Works.PumpCheck {
-		requiredEnv[env.KeyExecutorPumpCheck] = "true"
+		requiredEnv[env.KeyExecutorPumpCheck] = envValueTrue
 	}
+
+	if b.config.Works.PumpCache {
+		requiredEnv[env.KeyExecutorPumpCache] = envValueTrue
+	}
+
+	requiredEnv[env.KeyExecutorPumpCacheDir] = b.config.Works.PumpCacheDir
+	requiredEnv[env.KeyExecutorPumpCacheSizeMaxMB] = strconv.Itoa(int(b.config.Works.PumpCacheSizeMaxMB))
 
 	if b.config.Works.IOTimeoutSecs > 0 {
 		requiredEnv[env.KeyExecutorIOTimeout] = strconv.Itoa(b.config.Works.IOTimeoutSecs)
 	}
 
 	if b.config.Works.WorkerSideCache {
-		requiredEnv[env.KeyExecutorWorkerSideCache] = "true"
+		requiredEnv[env.KeyExecutorWorkerSideCache] = envValueTrue
 	}
 
 	if b.config.Works.LocalRecord {
-		requiredEnv[env.KeyExecutorLocalRecord] = "true"
+		requiredEnv[env.KeyExecutorLocalRecord] = envValueTrue
 	}
 
 	if len(b.config.Works.ForceLocalList) > 0 {
@@ -306,7 +318,7 @@ func (b *Booster) getWorkersEnv() map[string]string {
 	}
 
 	if b.config.Works.WriteMemroy {
-		requiredEnv[env.KeyExecutorWriteMemory] = "true"
+		requiredEnv[env.KeyExecutorWriteMemory] = envValueTrue
 	}
 
 	if b.config.Works.IdleKeepSecs > 0 {
@@ -457,7 +469,10 @@ func (b *Booster) runWithApply(pCtx context.Context) (int, error) {
 
 		case e := <-event:
 			if err = b.parseEvent(e); err != nil {
-				return b.runDegradeWorks(ctx)
+				// TODO (tomtian) : do not degrade when failed to apply resource
+				// return b.runDegradeWorks(ctx)
+				blog.Infof("booster: failed to apply resource for work(%s) with error:%v", b.workID, err)
+				return b.runWorks(ctx, nil, nil)
 			}
 			return b.runWorks(ctx, nil, nil)
 		}
@@ -469,6 +484,9 @@ func (b *Booster) run(pCtx context.Context) (int, error) {
 	if err := b.preliminaryChecks(); err != nil {
 		return b.runDegradeWorks(pCtx)
 	}
+
+	// support pump cache check
+	b.checkPumpCache()
 
 	// no work commands do not register
 	if b.config.Works.NoWork {
@@ -1231,6 +1249,7 @@ func (b *Booster) setToolChainWithJSON(tools *dcSDK.Toolchain) error {
 			Data: data,
 		}
 
+		blog.Infof("booster: set tool chain with WorkerKey:%+v", commonconfig.WorkerKey)
 		err := b.controller.SetConfig(&commonconfig)
 		if err != nil {
 			blog.Warnf("booster: failed to set config [%+v] with error:%v", commonconfig, err)
@@ -1240,4 +1259,25 @@ func (b *Booster) setToolChainWithJSON(tools *dcSDK.Toolchain) error {
 
 	blog.Debugf("booster: success to set tool chain")
 	return nil
+}
+
+func (b *Booster) checkPumpCache() {
+	if b.config.Works.PumpCache || b.config.Works.PumpCacheRemoveAll {
+		pumpdir := b.config.Works.PumpCacheDir
+		if pumpdir == "" {
+			pumpdir = dcUtil.GetPumpCacheDir()
+		}
+
+		if pumpdir != "" {
+			blog.Infof("booster: ready clean pump cache dir:%s", pumpdir)
+			if b.config.Works.PumpCacheRemoveAll {
+				os.RemoveAll(pumpdir)
+			} else {
+				limitsize := int64(b.config.Works.PumpCacheSizeMaxMB * 1024 * 1024)
+				cleanDirByTime(pumpdir, limitsize)
+			}
+		} else {
+			blog.Infof("booster: not found pump cache dir, do nothing")
+		}
+	}
 }

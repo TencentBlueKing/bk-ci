@@ -1,7 +1,0 @@
-service.name: dockerapi
-server.port: 25906
-
-dockerapi:
-  realm: bkrepo
-
-

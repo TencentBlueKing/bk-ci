@@ -27,4 +27,9 @@
 
 package config
 
-const AgentVersion = "v1.8.2"
+const AgentVersion = "v1.9.12"
+
+var (
+	GitCommit string
+	BuildTime string
+)

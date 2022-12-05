@@ -231,7 +231,7 @@ public abstract class AbstractDefectCommitConsumer {
                                   Map<String, CodeRepoEntity> repoIdMap, Map<String, CodeRepoEntity> urlMap) {
         if (!isFullScan) {
             // 校验构建号对应的仓库信息是否已存在
-            CodeRepoInfoEntity codeRepoInfo = codeRepoRepository.findByTaskIdAndBuildId(taskId,
+            CodeRepoInfoEntity codeRepoInfo = codeRepoRepository.findFirstByTaskIdAndBuildId(taskId,
                     buildEntity.getBuildId());
             if (codeRepoInfo != null && CollectionUtils.isNotEmpty(codeRepoInfo.getRepoList())) {
                 repoIdMap.putAll(codeRepoInfo.getRepoList().stream().collect(Collectors.toMap(CodeRepoEntity::getRepoId,

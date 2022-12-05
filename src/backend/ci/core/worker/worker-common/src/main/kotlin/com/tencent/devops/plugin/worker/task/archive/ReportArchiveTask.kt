@@ -28,6 +28,9 @@
 package com.tencent.devops.plugin.worker.task.archive
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.util.HttpRetryUtils
@@ -53,7 +56,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
 
 @TaskClassType(classTypes = [ReportArchiveElement.classType])
 class ReportArchiveTask : ITask() {
@@ -79,12 +81,20 @@ class ReportArchiveTask : ITask() {
 
             val fileDir = getFile(workspace, fileDirParam)
             if (!fileDir.isDirectory) {
-                throw NotFoundException("文件夹($fileDirParam)不存在")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "文件夹($fileDirParam)不存在"
+                )
             }
 
             val indexFile = getFile(fileDir, indexFileParam)
             if (!indexFile.exists()) {
-                throw RuntimeException("入口文件($indexFileParam)不在文件夹($fileDirParam)下")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "入口文件($indexFileParam)不在文件夹($fileDirParam)下"
+                )
             }
             LoggerService.addNormalLine("入口文件检测完成")
             val reportRootUrl = api.getRootUrl(elementId).data!!

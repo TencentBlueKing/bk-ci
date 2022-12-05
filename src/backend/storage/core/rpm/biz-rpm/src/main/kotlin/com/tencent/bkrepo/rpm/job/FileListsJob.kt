@@ -17,6 +17,7 @@ class FileListsJob {
 
     @Scheduled(fixedDelay = 60 * 1000)
     @SchedulerLock(name = "FileListsJob", lockAtMostFor = "PT60M")
+    @Suppress("SwallowedException", "TooGenericExceptionCaught")
     fun updateFilelistsIndex() {
         logger.info("update filelists index start")
         val startMillis = System.currentTimeMillis()
@@ -34,7 +35,7 @@ class FileListsJob {
                 val targetSet = RpmCollectionUtils.filterByDepth(jobService.findRepodataDirs(repo), repodataDepth)
                 for (repoDataPath in targetSet) {
                     logger.info("update filelists index[${repo.projectId}|${repo.name}|$repoDataPath] start")
-                    jobService.batchUpdateIndex(repo, repoDataPath, IndexType.FILELISTS, 30)
+                    jobService.updateIndex(repo, repoDataPath, IndexType.FILELISTS, 30)
                     logger.info("update filelists index[${repo.projectId}|${repo.name}|$repoDataPath] done")
                 }
                 logger.info("update filelists index[${repo.projectId}|${repo.name}] done")

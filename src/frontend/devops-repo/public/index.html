@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico" />
+    <script src="<%= BASE_URL %>assets/svg.js"></script>
+    <% if(htmlWebpackPlugin.options.isCi){ %>
+    <script src="<%= htmlWebpackPlugin.options.externalUrl %>/devops-utils.js"></script>
+    <% } %>
+    <title><%=htmlWebpackPlugin.options.title %></title>
+  </head>
+  <body>
+    <noscript>
+      <strong
+        >We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work
+        properly without JavaScript enabled. Please enable it to
+        continue.</strong
+      >
+    </noscript>
+    <div id="bk-repo-app"></div>
+    <script>
+      var PAAS_SERVICE_URL = '__BK_HTTP_SCHEMA__://__BK_REPO_PAAS_FQDN__'
+      var LOGIN_SERVICE_URL = /^https?/.test(PAAS_SERVICE_URL)
+        ? PAAS_SERVICE_URL + '/login/'
+        : '__BK_REPO_PAAS_LOGIN_URL__'
+      window.getLoginUrl = function (cUrl = location.href) {
+        if (/\{+curl\}+/i.test(LOGIN_SERVICE_URL)) {
+          return LOGIN_SERVICE_URL.replace(
+            /\{+curl\}+/i,
+            encodeURIComponent(cUrl)
+          )
+        } else if (/=%s/.test(LOGIN_SERVICE_URL)) {
+          return LOGIN_SERVICE_URL.replace(/%s/, cUrl)
+        } else {
+          const loginUrl = new URL(LOGIN_SERVICE_URL)
+          if (/=$/.test(loginUrl.search)) {
+            return LOGIN_SERVICE_URL + cUrl
+          } else {
+            loginUrl.searchParams.set('c_url', cUrl)
+            return loginUrl.href
+          }
+        }
+      }
+    </script>
+    <!-- built files will be auto injected -->
+  </body>
+</html>

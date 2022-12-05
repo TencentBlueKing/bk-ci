@@ -68,6 +68,12 @@ object CommonMessageCode {
     const val OAUTH_TOKEN_IS_INVALID = "2300005"
 
     /**
+     * 查看代码内容文件过大
+     */
+    const val FILE_CONTENT_TOO_LARGE = "2100019"
+
+
+    /**
      *  {0}无权限
      */
     const val PERMISSION_DENIED = "2300006"

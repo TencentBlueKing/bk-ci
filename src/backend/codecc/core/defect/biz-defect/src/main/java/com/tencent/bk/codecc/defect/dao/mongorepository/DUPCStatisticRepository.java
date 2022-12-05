@@ -68,7 +68,7 @@ public interface DUPCStatisticRepository extends MongoRepository<DUPCStatisticEn
      * @param buildId
      * @return
      */
-    DUPCStatisticEntity findByTaskIdAndBuildId(long taskId, String buildId);
+    DUPCStatisticEntity findFirstByTaskIdAndBuildId(long taskId, String buildId);
 
     /**
      * 根据任务ID、工具名称、构建ID查询
@@ -78,5 +78,5 @@ public interface DUPCStatisticRepository extends MongoRepository<DUPCStatisticEn
      * @param buildId
      * @return
      */
-    DUPCStatisticEntity findByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
+    DUPCStatisticEntity findFirstByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
 }

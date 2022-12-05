@@ -33,5 +33,5 @@ dependencies{
     api(project(":composer:api-composer"))
     api(project(":common:common-job"))
     api(project(":common:common-artifact:artifact-service"))
-    implementation("org.apache.commons:commons-compress")
+    implementation("com.google.code.gson:gson")
 }

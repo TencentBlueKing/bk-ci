@@ -75,6 +75,7 @@ class V0ProjectExtPermissionServiceImpl @Autowired constructor(
         checkManager: Boolean
     ): Boolean {
         return if (checkManager) {
+            // 相对下面的实现，多做了管理员校验
             projectIamV0Service.createUser2Project(
                 createUser = createUser,
                 userIds = userIds,
@@ -115,7 +116,8 @@ class V0ProjectExtPermissionServiceImpl @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response $responseContent")
+                logger.warn("Fail to request($request) with code ${response.code()} ," +
+                                " message ${response.message()} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent

@@ -7,6 +7,9 @@
         </div>
         <div class="biz-content-wrapper" style="padding: 0;">
             <div class="biz-panel-header biz-project-image-query">
+                <div class="left">
+                    <bk-button theme="primary" @click="goIwiki()">手动推送镜像</bk-button>
+                </div>
                 <div class="right">
                     <div class="biz-search-input">
                         <input @keyup.enter="enterHandler" v-model="searchKey" type="text" class="bk-form-input" placeholder="搜索">
@@ -74,7 +77,6 @@
     export default {
         data () {
             return {
-                DOCS_URL_PREFIX,
                 imageDialogConf: {
                     isShow: false,
                     width: 640,
@@ -120,6 +122,9 @@
             this.bkMessageInstance && this.bkMessageInstance.close()
         },
         methods: {
+            goIwiki () {
+                window.open(`${DOCS_URL_PREFIX}/x/Lozm`)
+            },
             toImageDetail (item) {
                 localStorage.setItem('backRouterName', 'projectImage')
                 // this.$router.push({

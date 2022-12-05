@@ -27,12 +27,8 @@ module.exports = (env = {}, argv) => {
             'axios',
             'vee-validate',
             'echarts',
-            'echarts/lib/chart/line',
-            'echarts/lib/chart/bar',
-            'echarts/lib/chart/pie',
-            'echarts/lib/component/tooltip',
-            'echarts/lib/component/title',
-            'echarts/lib/component/legend',
+            'vue-echarts',
+            'bkui-pipeline',
             'vue-i18n',
             'moment'
         ],
@@ -43,7 +39,7 @@ module.exports = (env = {}, argv) => {
         },
         resolve: {
             fallback: {
-                'path': false
+                path: false
             }
         },
         module: {

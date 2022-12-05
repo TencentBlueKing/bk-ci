@@ -39,8 +39,10 @@ import com.tencent.bkrepo.repository.UT_REPO_NAME
 import com.tencent.bkrepo.repository.UT_USER
 import com.tencent.bkrepo.repository.dao.FileReferenceDao
 import com.tencent.bkrepo.repository.dao.NodeDao
+import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.bkrepo.repository.pojo.node.service.NodeCreateRequest
 import com.tencent.bkrepo.repository.pojo.search.NodeQueryBuilder
+import com.tencent.bkrepo.repository.search.common.LocalDatetimeRuleInterceptor
 import com.tencent.bkrepo.repository.search.common.RepoNameRuleInterceptor
 import com.tencent.bkrepo.repository.search.common.RepoTypeRuleInterceptor
 import com.tencent.bkrepo.repository.search.node.NodeQueryInterpreter
@@ -57,6 +59,9 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest
 import org.springframework.context.annotation.Import
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @DisplayName("节点自定义查询测试")
 @DataMongoTest
@@ -65,7 +70,8 @@ import org.springframework.context.annotation.Import
     FileReferenceDao::class,
     NodeQueryInterpreter::class,
     RepoNameRuleInterceptor::class,
-    RepoTypeRuleInterceptor::class
+    RepoTypeRuleInterceptor::class,
+    LocalDatetimeRuleInterceptor::class
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class NodeSearchServiceTest @Autowired constructor(
@@ -157,11 +163,112 @@ class NodeSearchServiceTest @Autowired constructor(
         Assertions.assertEquals(2, result.records.size)
     }
 
+    @Test
+    fun testLocalDateTimeRuleInterceptor() {
+        val now = LocalDateTime.now()
+        val node1 = nodeService.createNode(
+            createRequest(
+                "/a/b/1.txt",
+                false,
+                metadata = mapOf("key" to "121"),
+                createdDate = now.plusMinutes(1L)
+            )
+        )
+        val node2 = nodeService.createNode(
+            createRequest(
+                "/a/b/2.txt",
+                false,
+                metadata = mapOf("key" to "131"),
+                createdDate = now.plusMinutes(2L)
+            )
+        )
+        nodeService.createNode(
+            createRequest(
+                "/a/b/3.txt",
+                false,
+                metadata = mapOf("key" to "131"),
+                createdDate = now.plusMinutes(3L)
+            )
+        )
+
+        // IN
+        testLocalDateTimeOperation(listOf(node1.createdDate, node2.createdDate), OperationType.IN, 2L)
+        // NIN
+        testLocalDateTimeOperation(listOf(node1.createdDate, node2.createdDate), OperationType.NIN, 1L)
+        // EQ
+        testLocalDateTimeOperation(node1.createdDate, OperationType.EQ, 1L)
+        // NE
+        testLocalDateTimeOperation(node1.createdDate, OperationType.NE, 2L)
+        val dateTime = now.plusMinutes(2L).format(DateTimeFormatter.ISO_DATE_TIME)
+        // BEFORE
+        testLocalDateTimeOperation(dateTime, OperationType.BEFORE, 1L)
+        // AFTER
+        testLocalDateTimeOperation(dateTime, OperationType.AFTER, 1L)
+        // unsupported operation
+        testLocalDateTimeOperation(dateTime, OperationType.GT, 0L)
+
+        // unsupported value
+        var queryModel = createQueryBuilder()
+            .rule(NodeInfo::createdDate.name, now.plusMinutes(1), OperationType.EQ)
+            .excludeFolder()
+            .build()
+        var result = nodeSearchService.search(queryModel)
+        Assertions.assertEquals(1, result.totalRecords)
+        Assertions.assertEquals(1, result.records.size)
+
+        val millis = now.plusMinutes(1).toInstant(ZoneOffset.UTC).toEpochMilli()
+        queryModel = createQueryBuilder()
+            .rule(NodeInfo::createdDate.name, millis, OperationType.EQ)
+            .excludeFolder()
+            .build()
+        result = nodeSearchService.search(queryModel)
+        Assertions.assertEquals(0, result.totalRecords)
+        Assertions.assertEquals(0, result.records.size)
+
+        // illegal value
+        queryModel = createQueryBuilder()
+            .rule(NodeInfo::createdDate.name, "illegal", OperationType.EQ)
+            .excludeFolder()
+            .build()
+        result = nodeSearchService.search(queryModel)
+        Assertions.assertEquals(0, result.totalRecords)
+        Assertions.assertEquals(0, result.records.size)
+    }
+
+    private fun testLocalDateTimeOperation(
+        createdDate: String,
+        operationType: OperationType,
+        expectedCount: Long
+    ) {
+        val queryModel = createQueryBuilder()
+            .rule(NodeInfo::createdDate.name, createdDate, operationType)
+            .excludeFolder()
+            .build()
+        val result = nodeSearchService.search(queryModel)
+        Assertions.assertEquals(expectedCount, result.totalRecords)
+        Assertions.assertEquals(expectedCount, result.records.size.toLong())
+    }
+
+    private fun testLocalDateTimeOperation(
+        createdDate: List<String>,
+        operationType: OperationType,
+        expectedCount: Long
+    ) {
+        val queryModel = createQueryBuilder()
+            .rule(NodeInfo::createdDate.name, createdDate, operationType)
+            .excludeFolder()
+            .build()
+        val result = nodeSearchService.search(queryModel)
+        Assertions.assertEquals(expectedCount, result.totalRecords)
+        Assertions.assertEquals(expectedCount, result.records.size.toLong())
+    }
+
     private fun createRequest(
         fullPath: String = "/a/b/c",
         folder: Boolean = true,
         size: Long = 1,
-        metadata: Map<String, String>? = null
+        metadata: Map<String, String>? = null,
+        createdDate: LocalDateTime? = null
     ): NodeCreateRequest {
         return NodeCreateRequest(
             projectId = UT_PROJECT_ID,
@@ -174,7 +281,9 @@ class NodeSearchServiceTest @Autowired constructor(
             sha256 = "sha256",
             md5 = "md5",
             operator = UT_USER,
-            metadata = metadata
+            metadata = metadata,
+            createdDate = createdDate,
+            lastModifiedDate = createdDate
         )
     }
 

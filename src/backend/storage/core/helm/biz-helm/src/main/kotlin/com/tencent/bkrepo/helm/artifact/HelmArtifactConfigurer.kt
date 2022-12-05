@@ -41,12 +41,15 @@ import com.tencent.bkrepo.common.service.util.SpringContextUtils
 import com.tencent.bkrepo.helm.artifact.repository.HelmLocalRepository
 import com.tencent.bkrepo.helm.artifact.repository.HelmRemoteRepository
 import com.tencent.bkrepo.helm.artifact.repository.HelmVirtualRepository
+import com.tencent.bkrepo.helm.config.HelmProperties
 import com.tencent.bkrepo.helm.pojo.HelmErrorResponse
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Configuration
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse
-import org.springframework.stereotype.Component
 
-@Component
+@Configuration
+@EnableConfigurationProperties(HelmProperties::class)
 class HelmArtifactConfigurer : ArtifactConfigurerSupport() {
 
     override fun getRepositoryType() = RepositoryType.HELM

@@ -47,6 +47,8 @@ go build -ldflags "%LDFLAG% %BuildBooster_LDFLAG%" -o %bindir%\bk-booster.exe %c
 
 go build -ldflags "%LDFLAG% %BuildBooster_LDFLAG%" -o %bindir%\bk-idle-loop.exe %curpath%\bk_dist\idleloop\main.go
 
+go build -ldflags "%LDFLAG% %BuildBooster_LDFLAG%" -o %bindir%\bk-dist-monitor.exe %curpath%\bk_dist\monitor\main.go
+
 go build -ldflags "%LDFLAG% %BuildBooster_LDFLAG%" -o %bindir%\bk-help-tool.exe %curpath%\bk_dist\helptool\main.go
 
 go build -ldflags "%LDFLAG% %BuildBooster_LDFLAG%" -o %bindir%\bk-ubt-tool.exe %curpath%\bk_dist\ubttool\main.go

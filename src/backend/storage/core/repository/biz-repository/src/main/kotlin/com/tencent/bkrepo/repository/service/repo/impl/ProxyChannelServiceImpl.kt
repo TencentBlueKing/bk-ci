@@ -33,15 +33,17 @@ package com.tencent.bkrepo.repository.service.repo.impl
 
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.api.message.CommonMessageCode
-import com.tencent.bkrepo.common.api.util.Preconditions
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.artifact.util.http.UrlFormatter
-import com.tencent.bkrepo.repository.dao.repository.ProxyChannelRepository
+import com.tencent.bkrepo.common.security.util.RsaUtils
+import com.tencent.bkrepo.repository.dao.ProxyChannelDao
 import com.tencent.bkrepo.repository.model.TProxyChannel
 import com.tencent.bkrepo.repository.pojo.proxy.ProxyChannelCreateRequest
+import com.tencent.bkrepo.repository.pojo.proxy.ProxyChannelDeleteRequest
 import com.tencent.bkrepo.repository.pojo.proxy.ProxyChannelInfo
+import com.tencent.bkrepo.repository.pojo.proxy.ProxyChannelUpdateRequest
 import com.tencent.bkrepo.repository.service.repo.ProxyChannelService
-import org.springframework.data.repository.findByIdOrNull
+import java.time.LocalDateTime
 import org.springframework.stereotype.Service
 
 /**
@@ -49,20 +51,16 @@ import org.springframework.stereotype.Service
  */
 @Service
 class ProxyChannelServiceImpl(
-    private val proxyChannelRepository: ProxyChannelRepository
+    private val proxyChannelDao: ProxyChannelDao
 ) : ProxyChannelService {
-
-    override fun findById(id: String): ProxyChannelInfo? {
-        val tProxyChannel = proxyChannelRepository.findByIdOrNull(id)
-        return convert(tProxyChannel)
-    }
 
     override fun createProxy(userId: String, request: ProxyChannelCreateRequest) {
         with(request) {
-            Preconditions.checkArgument(public, this::public.name)
-            Preconditions.checkNotBlank(name, this::name.name)
-            Preconditions.checkArgument(!checkExistByName(name, repoType), this::name.name)
-            Preconditions.checkArgument(!checkExistByUrl(url, repoType), this::url.name)
+            val pw = if (password.isNullOrEmpty()) {
+                password
+            } else {
+                RsaUtils.encrypt(password!!)
+            }
             val tProxyChannel = TProxyChannel(
                 public = public,
                 name = name.trim(),
@@ -70,29 +68,71 @@ class ProxyChannelServiceImpl(
                 repoType = repoType,
                 credentialKey = credentialKey,
                 username = username,
-                password = password
+                password = pw,
+                projectId = projectId,
+                repoName = repoName,
+                createdBy = userId,
+                createdDate = LocalDateTime.now(),
+                lastModifiedBy = userId,
+                lastModifiedDate = LocalDateTime.now()
             )
-            proxyChannelRepository.insert(tProxyChannel)
+            proxyChannelDao.insert(tProxyChannel)
+        }
+    }
+
+    override fun updateProxy(userId: String, request: ProxyChannelUpdateRequest) {
+        with(request) {
+            val pw = if (password.isNullOrEmpty()) {
+                password
+            } else {
+                RsaUtils.encrypt(password!!)
+            }
+            val tProxyChannel = proxyChannelDao.findByUniqueParams(
+                projectId = projectId,
+                repoName = repoName,
+                repoType = repoType,
+                name = name
+            )
+            tProxyChannel?.let {
+                tProxyChannel.public = public
+                tProxyChannel.lastModifiedDate = LocalDateTime.now()
+                tProxyChannel.lastModifiedBy = userId
+                tProxyChannel.url = url
+                tProxyChannel.username = username
+                tProxyChannel.password = pw
+                proxyChannelDao.save(tProxyChannel)
+            }
+        }
+    }
+
+    override fun queryProxyChannel(
+        projectId: String,
+        repoName: String,
+        repoType: RepositoryType,
+        name: String
+    ): ProxyChannelInfo? {
+        val proxy = proxyChannelDao.findByUniqueParams(
+            projectId = projectId,
+            repoName = repoName,
+            repoType = repoType,
+            name = name
+        )
+        return convert(proxy)
+    }
+
+    override fun deleteProxy(request: ProxyChannelDeleteRequest) {
+        with(request) {
+            proxyChannelDao.deleteByUnique(
+                projectId = projectId,
+                repoName = repoName,
+                repoType = repoType,
+                name = name
+            )
         }
     }
 
     override fun listPublicChannel(repoType: RepositoryType): List<ProxyChannelInfo> {
-        return proxyChannelRepository.findByPublicAndRepoType(true, repoType).map { convert(it)!! }
-    }
-
-    override fun checkExistById(id: String, repoType: RepositoryType): Boolean {
-        if (id.isBlank()) return false
-        return proxyChannelRepository.findByIdAndRepoType(id, repoType) != null
-    }
-
-    override fun checkExistByName(name: String, repoType: RepositoryType): Boolean {
-        if (name.isBlank()) return false
-        return proxyChannelRepository.findByNameAndRepoType(name, repoType) != null
-    }
-
-    override fun checkExistByUrl(url: String, repoType: RepositoryType): Boolean {
-        if (url.isBlank()) return false
-        return proxyChannelRepository.findByUrlAndRepoType(formatUrl(url), repoType) != null
+        return proxyChannelDao.findByRepoType(repoType).map { convert(it)!! }
     }
 
     private fun formatUrl(url: String): String {
@@ -107,6 +147,15 @@ class ProxyChannelServiceImpl(
 
         private fun convert(tProxyChannel: TProxyChannel?): ProxyChannelInfo? {
             return tProxyChannel?.let {
+                val pw = if (it.password.isNullOrEmpty()) {
+                    it.password
+                } else {
+                    try {
+                        RsaUtils.decrypt(it.password!!)
+                    } catch (e: Exception) {
+                        it.password
+                    }
+                }
                 ProxyChannelInfo(
                     id = it.id!!,
                     public = it.public,
@@ -115,7 +164,9 @@ class ProxyChannelServiceImpl(
                     repoType = it.repoType,
                     credentialKey = it.credentialKey,
                     username = it.username,
-                    password = it.password
+                    password = pw,
+                    projectId = it.projectId,
+                    repoName = it.repoName
                 )
             }
         }

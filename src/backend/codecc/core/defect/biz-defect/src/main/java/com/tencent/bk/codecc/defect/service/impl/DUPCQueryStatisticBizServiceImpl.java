@@ -30,13 +30,12 @@ import com.tencent.bk.codecc.defect.dao.mongorepository.DUPCStatisticRepository;
 import com.tencent.bk.codecc.defect.model.DUPCStatisticEntity;
 import com.tencent.bk.codecc.defect.service.IQueryStatisticBizService;
 import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
-import com.tencent.devops.common.api.analysisresult.CCNNotRepairedAuthorVO;
 import com.tencent.devops.common.api.analysisresult.DUPCLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.DUPCNotRepairedAuthorVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
 import com.tencent.devops.common.constant.ComConstants;
 import org.apache.commons.collections.CollectionUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -62,7 +61,7 @@ public class DUPCQueryStatisticBizServiceImpl implements IQueryStatisticBizServi
         if (isLast) {
             statisticEntity = dupcStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
         } else {
-            statisticEntity = dupcStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+            statisticEntity = dupcStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         }
 
         DUPCLastAnalysisResultVO lastAnalysisResultVO = new DUPCLastAnalysisResultVO();

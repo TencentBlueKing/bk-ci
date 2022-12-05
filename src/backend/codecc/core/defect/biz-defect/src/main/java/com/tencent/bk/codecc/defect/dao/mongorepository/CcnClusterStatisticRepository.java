@@ -6,5 +6,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 public interface CcnClusterStatisticRepository extends MongoRepository<CcnClusterStatisticEntity, String> {
     CcnClusterStatisticEntity findFirstByTaskIdOrderByTimeDesc(long taskId);
 
-    CcnClusterStatisticEntity findByTaskIdAndBuildId(Long taskId, String buildId);
+    CcnClusterStatisticEntity findFirstByTaskIdAndBuildId(Long taskId, String buildId);
 }

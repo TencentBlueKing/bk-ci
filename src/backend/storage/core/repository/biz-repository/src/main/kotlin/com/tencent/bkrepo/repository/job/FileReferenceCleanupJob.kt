@@ -36,13 +36,14 @@ import com.tencent.bkrepo.common.storage.core.StorageService
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
 import com.tencent.bkrepo.repository.constant.SHARDING_COUNT
 import com.tencent.bkrepo.repository.dao.FileReferenceDao
+import com.tencent.bkrepo.repository.job.base.CenterNodeJob
 import com.tencent.bkrepo.repository.model.TFileReference
 import com.tencent.bkrepo.repository.service.repo.StorageCredentialService
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
+import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.time.Duration
 
 /**
  * 清理引用=0的文件
@@ -51,60 +52,52 @@ import org.springframework.stereotype.Component
 class FileReferenceCleanupJob(
     private val fileReferenceDao: FileReferenceDao,
     private val storageService: StorageService,
-    private val storageCredentialService: StorageCredentialService
-) {
+    private val storageCredentialService: StorageCredentialService,
+    private val mongoTemplate: MongoTemplate = fileReferenceDao.determineMongoTemplate()
+) : CenterNodeJob() {
 
-    private val mongoTemplate = fileReferenceDao.determineMongoTemplate()
-
-    @Scheduled(cron = "0 0 4/6 * * ?") // 4点开始，6小时执行一次
-    @SchedulerLock(name = "FileReferenceCleanupJob", lockAtMostFor = "PT6H")
-    fun cleanup() {
-        logger.info("Starting to clean up file reference.")
-        var totalCount = 0L
-        var cleanupCount = 0L
-        var failedCount = 0L
-        var fileMissingCount = 0L
-        val storageCredentialsMap = mutableMapOf<String, StorageCredentials>()
-        val startTimeMillis = System.currentTimeMillis()
-        for (sequence in 0 until SHARDING_COUNT) {
-            handleCollection(sequence, storageCredentialsMap).let {
-                totalCount = it.totalCount
-                cleanupCount = it.cleanupCount
-                failedCount = it.failedCount
-                fileMissingCount = it.fileMissingCount
-            }
-        }
-        val elapseTimeMillis = System.currentTimeMillis() - startTimeMillis
-        logger.info(
-            "Clean up [$totalCount] files with zero reference, success[$cleanupCount], failed[$failedCount], " +
-                "file missing[$fileMissingCount], elapse [$elapseTimeMillis] ms totally."
-        )
+//    @Scheduled(cron = "0 0 4/6 * * ?") // 4点开始，6小时执行一次
+    override fun start() {
+        super.start()
     }
 
-    private fun handleCollection(sequence: Int, cacheMap: MutableMap<String, StorageCredentials>): CleanupResult {
-        val result = CleanupResult()
+    override fun run() {
+        val context = JobContext()
+        with(context) {
+            for (sequence in 0 until SHARDING_COUNT) {
+                cleanupCollection(sequence, context)
+            }
+            logger.info(
+                "Clean up [$total] zero reference files, success[$success], " +
+                    "failed[$failed], file missing[$fileMissing]."
+            )
+        }
+    }
+
+    override fun getLockAtMostFor(): Duration = Duration.ofDays(7)
+
+    private fun cleanupCollection(sequence: Int, context: JobContext) {
         val query = Query.query(TFileReference::count.isEqualTo(0))
         val collectionName = fileReferenceDao.parseSequenceToCollectionName(sequence)
         val zeroReferenceList = mongoTemplate.find(query, TFileReference::class.java, collectionName)
         zeroReferenceList.forEach {
-            val storageCredentials = getCredentials(it.credentialsKey, cacheMap)
+            val storageCredentials = getCredentials(it.credentialsKey, context.cacheMap)
             try {
                 if (it.sha256.isNotBlank() && storageService.exist(it.sha256, storageCredentials)) {
                     storageService.delete(it.sha256, storageCredentials)
-                    result.cleanupCount += 1
+                    context.success += 1
                 } else {
-                    result.fileMissingCount += 1
+                    context.fileMissing += 1
                     logger.warn("File[${it.sha256}] is missing on [$storageCredentials], skip cleaning up.")
                 }
                 mongoTemplate.remove(it, collectionName)
             } catch (ignored: Exception) {
-                result.failedCount += 1
+                context.failed += 1
                 logger.error("Failed to delete file[${it.sha256}] on [$storageCredentials].", ignored)
+            } finally {
+                context.total += 1
             }
-            result.totalCount += 1
         }
-
-        return result
     }
 
     private fun getCredentials(key: String?, cacheMap: MutableMap<String, StorageCredentials>): StorageCredentials? {
@@ -116,11 +109,12 @@ class FileReferenceCleanupJob(
         }
     }
 
-    data class CleanupResult(
-        var totalCount: Long = 0L,
-        var cleanupCount: Long = 0L,
-        var failedCount: Long = 0L,
-        var fileMissingCount: Long = 0L
+    data class JobContext(
+        val cacheMap: MutableMap<String, StorageCredentials> = mutableMapOf(),
+        var total: Long = 0L,
+        var success: Long = 0L,
+        var failed: Long = 0L,
+        var fileMissing: Long = 0L
     )
 
     companion object {

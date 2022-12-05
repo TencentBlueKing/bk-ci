@@ -91,12 +91,12 @@ public abstract class AbstractPlatformUploadDefectBizService extends AbstractUpl
         String toolName = uploadDefectVO.getToolName();
         String buildId = uploadDefectVO.getBuildId();
 
-        TaskLogEntity taskLogEntity = taskLogRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        TaskLogEntity taskLogEntity = taskLogRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         String buildNum = taskLogEntity.getBuildNum();
 
         TaskDetailVO taskDetailVO = thirdPartySystemCaller.getTaskInfoWithoutToolsByTaskId(taskId);
         Set<String> filterPathSet = filterPathService.getFilterPaths(taskDetailVO, toolName);
-        TransferAuthorEntity transferAuthorEntity = transferAuthorRepository.findByTaskId(taskId);
+        TransferAuthorEntity transferAuthorEntity = transferAuthorRepository.findFirstByTaskId(taskId);
         List<TransferAuthorEntity.TransferAuthorPair> transferAuthorList = null;
         if (transferAuthorEntity != null)
         {

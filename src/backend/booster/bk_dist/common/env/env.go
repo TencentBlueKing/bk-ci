@@ -24,6 +24,7 @@ const (
 
 	KeyExecutorLogLevel                = "LOG_LEVEL"
 	KeyExecutorHookPreloadLibraryLinux = "LD_PRELOAD"
+	KeyExecutorHookPreloadLibraryMacos = "DYLD_INSERT_LIBRARIES"
 	KeyExecutorHookConfigContent       = "HOOK_CONFIG_CONTENT"
 	KeyExecutorHookConfigContentRaw    = "HOOK_CONFIG_CONTENT_RAW"
 	KeyExecutorControllerScheme        = "CONTROLLER_SCHEME"
@@ -42,6 +43,9 @@ const (
 	KeyExecutorPumpDisableMacro        = "PUMP_DISABLE_MACRO"
 	KeyExecutorPumpIncludeSysHeader    = "PUMP_INCLUDE_SYS_HEADER"
 	KeyExecutorPumpCheck               = "PUMP_CHECK"
+	KeyExecutorPumpCache               = "PUMP_CACHE"             // cache pump inlude files
+	KeyExecutorPumpCacheDir            = "PUMP_CACHE_DIR"         // cache pump inlude files
+	KeyExecutorPumpCacheSizeMaxMB      = "PUMP_CACHE_SIZE_MAX_MB" // cache pump inlude files
 	KeyExecutorForceLocalKeys          = "FORCE_LOCAL_KEYS"
 	KeyExecutorEnvProfile              = "ENV_PROFILE"
 	KeyExecutorWorkerSideCache         = "WORKER_SIDE_CACHE"
@@ -73,16 +77,21 @@ const (
 	KeyWorkerCacheDir      = "CACHE_DIR"
 	KeyWorkerCachePoolSize = "CACHE_POOL_SIZE"
 	KeyWorkerCacheMinSize  = "CACHE_MIN_SIZE"
+	KeyWorkerMemPerJob     = "MEM_PER_JOB_4_WORKER" // memory per job
 
 	KeyCustomSetting = "CUSTOM_SETTINGS"
 
 	CommonBKEnvSepKey = "!!|!!"
+
+	KeyRemoteEnvAppend    = "REMOTE_ENV_APPEND"
+	KeyRemoteEnvOverwrite = "REMOTE_ENV_OVERWRITE"
 )
 
 // GetEnvKey return env value by specified key
 func GetEnvKey(key string) string {
 	// preload env key is set for system, not need prefix.
-	if key == KeyExecutorHookPreloadLibraryLinux {
+	if key == KeyExecutorHookPreloadLibraryLinux ||
+		key == KeyExecutorHookPreloadLibraryMacos {
 		return key
 	}
 

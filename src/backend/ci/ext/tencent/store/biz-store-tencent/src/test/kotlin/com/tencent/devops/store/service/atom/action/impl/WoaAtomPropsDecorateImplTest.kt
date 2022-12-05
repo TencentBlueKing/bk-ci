@@ -29,8 +29,8 @@ package com.tencent.devops.store.service.atom.action.impl
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
 @Suppress("UNCHECKED_CAST")
 class WoaAtomPropsDecorateImplTest {
@@ -39,13 +39,13 @@ class WoaAtomPropsDecorateImplTest {
 
     fun replaceUrl() {
         val b = WoaAtomPropsDecorateImpl()
-        Assert.assertEquals("https://devops.woa.com", b.replaceUrl("http://api.devops.oa.com"))
-        Assert.assertEquals("https://devops.woa.com", b.replaceUrl("https://devops.oa.com"))
-        Assert.assertEquals(
+        Assertions.assertEquals("https://devops.woa.com", b.replaceUrl("http://api.devops.oa.com"))
+        Assertions.assertEquals("https://devops.woa.com", b.replaceUrl("https://devops.oa.com"))
+        Assertions.assertEquals(
             "https://devops.woa.com/x/y/z?UT=1&cc=aa",
             b.replaceUrl("http://devops.woa.com/x/y/z?UT=1&cc=aa")
         )
-        Assert.assertEquals(
+        Assertions.assertEquals(
             "https://xxx.apigw.o.woa.com/x/y/z?UT=1&cc=aa",
             b.replaceUrl("http://xxx.apigw.o.oa.com/x/y/z?UT=1&cc=aa")
         )
@@ -58,8 +58,8 @@ class WoaAtomPropsDecorateImplTest {
         val bean1 = FirstAtomPropsDecorateImpl().apply { this.init() }
 
         val props = AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
-        Assert.assertEquals(bean1, props)
-        Assert.assertEquals(bean2, props?.getNext())
+        Assertions.assertEquals(bean1, props)
+        Assertions.assertEquals(bean2, props?.getNext())
 
         val map = mapOf(
             "demo" to "mock",
@@ -77,12 +77,12 @@ class WoaAtomPropsDecorateImplTest {
         )
 
         val decorate = props?.decorate(JsonUtil.toJson(map)) as Map<String, Any>
-        Assert.assertEquals("https://devops.woa.com", decorate["url"])
-        Assert.assertEquals(
+        Assertions.assertEquals("https://devops.woa.com", decorate["url"])
+        Assertions.assertEquals(
             "https://xxx.apigw.o.woa.com/x/y/z?UT=1&cc=aa",
             (decorate["key1"] as Map<String, Any>)["url"]
         )
-        Assert.assertEquals(
+        Assertions.assertEquals(
             "https://devops.woa.com/x/y/z?UT=1&cc=aa",
             ((decorate["input"] as Map<String, Any>)["level3"] as Map<String, Any>)["url"]
         )

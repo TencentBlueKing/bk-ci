@@ -57,5 +57,7 @@ data class EnvWithPermission(
     @ApiModelProperty("是否可以删除", required = false)
     val canDelete: Boolean?,
     @ApiModelProperty("是否可以使用", required = false)
-    val canUse: Boolean?
+    val canUse: Boolean?,
+    @ApiModelProperty("项目名称", required = false)
+    val projectName: String?
 )

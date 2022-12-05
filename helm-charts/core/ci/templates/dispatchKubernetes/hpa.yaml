@@ -1,0 +1,38 @@
+# dispatchKubernetes hpa
+{{ if .Values.dispatchKubernetes.enabled -}}
+{{ if .Values.dispatchKubernetes.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-dispatchKubernetes
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: dispatchKubernetes
+    app.kubernetes.io/component: microservice
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+    kind: Deployment
+    name: {{ include "bkci.names.fullname" . }}-dispatchKubernetes
+  minReplicas: {{ .Values.dispatchKubernetes.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.dispatchKubernetes.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.dispatchKubernetes.autoscaling.targetCPU }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.dispatchKubernetes.autoscaling.targetCPU }}
+    {{- end }}
+    {{- if .Values.dispatchKubernetes.autoscaling.targetMemory }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.dispatchKubernetes.autoscaling.targetMemory  }}
+    {{- end }}
+{{- end }}
+{{- end -}}

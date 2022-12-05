@@ -13,7 +13,9 @@
 package com.tencent.bk.codecc.schedule.vo;
 
 import com.tencent.devops.common.api.CommonVO;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 分析服务器的实体类
@@ -22,6 +24,8 @@ import lombok.Data;
  * @date 2019/11/4
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class FileIndexVO extends CommonVO
 {
     /**
@@ -33,6 +37,21 @@ public class FileIndexVO extends CommonVO
      * 文件路径
      */
     private String fileFolder;
+
+    /**
+     * 上传类型
+     */
+    private String uploadType;
+
+    /**
+     * 存储类型
+     */
+    private String storeType;
+
+    /**
+     *
+     */
+    private String downloadUrl;
 
     /**
      * 0-初始，1-上传成功

@@ -1,6 +1,5 @@
 package com.tencent.devops.common.util;
 
-import jersey.repackaged.com.google.common.collect.Sets;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -75,7 +74,7 @@ public class List2StrUtil
         //IP地址去重
         if (StringUtils.isNotEmpty(source))
         {
-            Set<String> bindIpSet = Sets.newHashSet();
+            Set<String> bindIpSet = new HashSet<>();
             for (String bindIp : source.split(spliter))
             {
                 bindIpSet.add(bindIp);

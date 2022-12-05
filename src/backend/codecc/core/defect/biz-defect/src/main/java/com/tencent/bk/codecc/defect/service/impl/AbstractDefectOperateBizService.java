@@ -24,11 +24,12 @@ import com.tencent.devops.common.constant.CommonMessageCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.bson.types.ObjectId;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 告警操作服务抽象类
@@ -48,7 +49,11 @@ public abstract class AbstractDefectOperateBizService implements IDefectOperateB
     @Override
     public void updateCodeComment(String commentId, String userName, SingleCommentVO singleCommentVO) {
         log.info("start to add code comment, comment id: {}", commentId);
-        CodeCommentEntity codeCommentEntity = codeCommentRepository.findOne(commentId);
+        Optional<CodeCommentEntity> optional = codeCommentRepository.findById(commentId);
+        if(!optional.isPresent()){
+            return;
+        }
+        CodeCommentEntity codeCommentEntity = optional.get();
         List<SingleCommentEntity> commentEntityList = codeCommentEntity.getCommentList();
         if (CollectionUtils.isNotEmpty(commentEntityList)) {
             SingleCommentEntity singleCommentEntity = commentEntityList.stream().filter(commentEntity ->
@@ -67,7 +72,11 @@ public abstract class AbstractDefectOperateBizService implements IDefectOperateB
     @Override
     public void deleteCodeComment(String commentId, String singleCommentId, String userName) {
         Boolean isAdmin = authExPermissionApi.isAdminMember(userName);
-        CodeCommentEntity codeCommentEntity = codeCommentRepository.findOne(commentId);
+        Optional<CodeCommentEntity> optional = codeCommentRepository.findById(commentId);
+        if(!optional.isPresent()){
+            return;
+        }
+        CodeCommentEntity codeCommentEntity = optional.get();
         List<SingleCommentEntity> commentEntityList = codeCommentEntity.getCommentList();
         if (CollectionUtils.isNotEmpty(commentEntityList)) {
             commentEntityList.removeIf(singleCommentEntity -> {
@@ -87,7 +96,11 @@ public abstract class AbstractDefectOperateBizService implements IDefectOperateB
 
 
     protected void saveCodeComment(String commentId, SingleCommentVO singleCommentVO) {
-        CodeCommentEntity codeCommentEntity = codeCommentRepository.findOne(commentId);
+        Optional<CodeCommentEntity> optional = codeCommentRepository.findById(commentId);
+        if(!optional.isPresent()){
+            return;
+        }
+        CodeCommentEntity codeCommentEntity = optional.get();
         SingleCommentEntity singleCommentEntity = new SingleCommentEntity();
         BeanUtils.copyProperties(singleCommentVO, singleCommentEntity);
         singleCommentEntity.setSingleCommentId(new ObjectId().toString());

@@ -1,2 +1,2 @@
-service.name: rpm
+spring.application.name: rpm
 server.port: 25807

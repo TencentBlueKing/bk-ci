@@ -9,4 +9,4 @@ const page = {
 }
 
 window.Pages = window.Pages || {}
-window.Pages['experience'] = page
+window.Pages.experience = page

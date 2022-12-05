@@ -92,12 +92,30 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(
         )
     }
 
+    override fun updateTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        versionName: String,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceUpdate>
+    ): TemplateOperationRet {
+        return templateFacadeService.updateTemplateInstances(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            versionName = versionName,
+            useTemplateSettings = useTemplateSettings,
+            instances = instances
+        )
+    }
+
     override fun listTemplate(
         userId: String,
         projectId: String,
         templateId: String,
-        page: Int?,
-        pageSize: Int?,
+        page: Int,
+        pageSize: Int,
         searchKey: String?,
         sortType: TemplateSortTypeEnum?,
         desc: Boolean?
@@ -134,5 +152,5 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(
         )
     }
 
-    private fun checkPageSize(pageSize: Int?) = if (pageSize != null && pageSize > 30) 30 else pageSize
+    private fun checkPageSize(pageSize: Int) = if (pageSize > 30) 30 else pageSize
 }

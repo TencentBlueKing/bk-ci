@@ -1,0 +1,17 @@
+parameters:
+  - name: username
+    type: string
+    default: world
+  - name: jobname
+    type: string
+    default: JOBNAME
+
+jobs:
+  res_repoA_job_id_3:
+    name: res_repoA_job_id_3
+    steps:
+      - run: |
+          echo "res_repoA_job_id_3"
+#      - template: step3.yml
+#        parameters:
+#          username: RES_REPOA_JOB3_STEP3

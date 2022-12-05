@@ -45,4 +45,12 @@ interface Ip4Service {
         repositoryType: RepositoryType?,
         change: Int
     ): List<P4FileSpec>
+
+    fun getFileContent(
+        p4Port: String,
+        filePath: String,
+        reversion: Int,
+        username: String,
+        password: String
+    ): String
 }

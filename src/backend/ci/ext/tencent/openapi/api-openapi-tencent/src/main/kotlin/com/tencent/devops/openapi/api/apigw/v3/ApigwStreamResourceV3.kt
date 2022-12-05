@@ -11,17 +11,17 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
-import com.tencent.devops.stream.pojo.GitCIBuildHistory
-import com.tencent.devops.stream.pojo.GitCIModelDetail
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
+import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
-import com.tencent.devops.stream.pojo.enums.GitCIProjectType
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
-import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
-import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
-import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
+import com.tencent.devops.stream.pojo.openapi.GitCIProjectType
+import com.tencent.devops.stream.pojo.openapi.GitCIUpdateSetting
+import com.tencent.devops.stream.pojo.openapi.GitUserValidateRequest
+import com.tencent.devops.stream.pojo.openapi.GitUserValidateResult
+import com.tencent.devops.stream.pojo.openapi.ProjectCIInfo
+import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
+import com.tencent.devops.stream.v1.pojo.V1GitCIModelDetail
+import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -113,7 +113,7 @@ interface ApigwStreamResourceV3 {
         @ApiParam("每页多少条（最大50）", required = false, defaultValue = "10", allowableValues = "range[1, 50]")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<GitProjectPipeline>>
+    ): Result<Page<V1GitProjectPipeline>>
 
     @ApiOperation("获取指定Stream流水线信息", tags = ["v3_stream_app_pipelines_info", "v3_stream_user_pipelines_info"])
     @GET
@@ -137,7 +137,7 @@ interface ApigwStreamResourceV3 {
         @ApiParam(value = "是否带有最新一次构建历史", required = false)
         @QueryParam("withHistory")
         withHistory: Boolean? = false
-    ): Result<GitProjectPipeline?>
+    ): Result<V1GitProjectPipeline?>
 
     @ApiOperation("开启或关闭Stream流水线", tags = ["v3_stream_app_pipelines_enable", "v3_stream_user_pipelines_enable"])
     @POST
@@ -179,7 +179,7 @@ interface ApigwStreamResourceV3 {
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long
-    ): Result<List<GitProjectPipeline>>
+    ): Result<List<V1GitProjectPipeline>>
 
     @ApiOperation("查看项目下的指定构建详情", tags = ["v3_stream_app_builds_detail", "v3_stream_user_builds_detail"])
     @GET
@@ -203,7 +203,7 @@ interface ApigwStreamResourceV3 {
         @ApiParam(value = "buildId", required = false)
         @QueryParam("buildId")
         buildId: String?
-    ): Result<GitCIModelDetail?>
+    ): Result<V1GitCIModelDetail?>
 
     @ApiOperation("可选条件检索Stream构建历史", tags = ["v3_stream_app_builds_history", "v3_stream_user_builds_history"])
     @GET
@@ -245,7 +245,7 @@ interface ApigwStreamResourceV3 {
         @ApiParam("流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?
-    ): Result<Page<GitCIBuildHistory>>
+    ): Result<Page<V1GitCIBuildHistory>>
 
     @ApiOperation("开启，关闭，初始化呢工蜂CI", tags = ["v3_stream_app_ci_enable", "v3_stream_user_ci_enable"])
     @POST

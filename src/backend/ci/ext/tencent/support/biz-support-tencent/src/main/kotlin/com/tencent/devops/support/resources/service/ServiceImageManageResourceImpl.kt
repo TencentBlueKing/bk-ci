@@ -28,61 +28,35 @@
 package com.tencent.devops.support.resources.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.support.api.service.ServiceImageManageResource
-import com.tencent.devops.support.services.AwsClientService
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.commons.codec.binary.Base64
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 import java.net.URL
-import java.nio.charset.Charset
 import java.nio.file.Files
 
 @RestResource
-class ServiceImageManageResourceImpl @Autowired constructor(private val awsClientService: AwsClientService) : ServiceImageManageResource {
-
-    private val logger = LoggerFactory.getLogger(ServiceImageManageResourceImpl::class.java)
+class ServiceImageManageResourceImpl @Autowired constructor() : ServiceImageManageResource {
 
     /**
      * 按照规定大小压缩图片
      */
     override fun compressImage(imageUrl: String, compressWidth: Int, compressHeight: Int): Result<String> {
-        val file = Files.createTempFile("random_" + System.currentTimeMillis(), ".png").toFile()
+        val file = Files.createTempFile(UUIDUtil.generate(), ".png").toFile()
         val url = URL(imageUrl)
         val bytes: ByteArray?
         try {
             Thumbnails.of(url)
-                    .size(compressWidth, compressHeight)
-                    .outputFormat("png")
-                    .toFile(file)
+                .size(compressWidth, compressHeight)
+                .outputFormat("png")
+                .toFile(file)
             bytes = Files.readAllBytes(file.toPath())
         } finally {
             file.delete()
         }
         val data = "data:image/png;base64," + Base64.encodeBase64String(bytes)
-        logger.info("the compressImage base64 data is:$data")
         return Result(data)
-    }
-
-    override fun uploadImage(
-        userId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<String?> {
-        val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
-        val index = fileName.lastIndexOf(".")
-        val fileSuffix = fileName.substring(index + 1)
-        val file = Files.createTempFile("random_" + System.currentTimeMillis(), ".$fileSuffix").toFile()
-        file.outputStream().use {
-            inputStream.copyTo(it)
-        }
-        try {
-            return awsClientService.uploadFile(file)
-        } finally {
-            file.delete()
-        }
     }
 }

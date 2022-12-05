@@ -48,6 +48,11 @@ class PackageDependentsController(
         return ResponseBuilder.success()
     }
 
+    override fun reduceDependents(relation: PackageDependentsRelation): Response<Void> {
+        packageDependentsService.reduceDependents(relation)
+        return ResponseBuilder.success()
+    }
+
     override fun queryDependents(projectId: String, repoName: String, packageKey: String): Response<Set<String>> {
         return ResponseBuilder.success(packageDependentsService.findByPackageKey(projectId, repoName, packageKey))
     }

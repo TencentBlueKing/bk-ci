@@ -62,7 +62,6 @@ import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -73,6 +72,7 @@ import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
@@ -444,7 +444,9 @@ class RepositoryService @Autowired constructor(
     private fun generateFinalTokenType(tokenType: TokenTypeEnum, repoProjectName: String): TokenTypeEnum {
         // 兼容历史插件的代码库不在公共group下的情况，历史插件的代码库信息更新要用用户的token更新
         var finalTokenType = tokenType
-        if (!repoProjectName.startsWith(devopsGroupName)) {
+        if (!repoProjectName.startsWith(devopsGroupName) && !repoProjectName
+            .contains("bkdevops-extension-service", true)
+        ) {
             finalTokenType = TokenTypeEnum.OAUTH
         }
         return finalTokenType
@@ -470,21 +472,16 @@ class RepositoryService @Autowired constructor(
     ): Long {
         if (!repository.isLegal()) {
             logger.warn("The repository($repository) is illegal")
-            val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(
-                RepositoryMessageCode.REPO_PATH_WRONG_PARM,
-                arrayOf(repository.getStartPrefix())
-            )
-            throw OperationException(
-                validateResult.message!!
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.REPO_PATH_WRONG_PARM,
+                params = arrayOf(repository.getStartPrefix())
             )
         }
 
         if (hasAliasName(projectId, null, repository.aliasName)) {
-            throw OperationException(
-                MessageCodeUtil.generateResponseDataObject<String?>(
-                    RepositoryMessageCode.REPO_NAME_EXIST,
-                    arrayOf(repository.aliasName)
-                ).message!!
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.REPO_NAME_EXIST,
+                params = arrayOf(repository.aliasName)
             )
         }
 
@@ -511,10 +508,11 @@ class RepositoryService @Autowired constructor(
                         url = repository.getFormatURL(),
                         type = ScmType.CODE_SVN
                     )
+                    // 如果repository为null，则默认为TC
                     repositoryCodeSvnDao.create(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        region = repository.region,
+                        region = repository.region ?: CodeSvnRegion.TC,
                         projectName = repository.projectName,
                         userName = repository.userName,
                         privateToken = repository.credentialId,
@@ -662,7 +660,11 @@ class RepositoryService @Autowired constructor(
                     aliasName = repository.aliasName,
                     url = repository.url,
                     credentialId = record.credentialId,
-                    region = CodeSvnRegion.valueOf(record.region),
+                    region = if (record.region.isNullOrBlank()) {
+                        CodeSvnRegion.TC
+                    } else {
+                        CodeSvnRegion.valueOf(record.region)
+                    },
                     projectName = record.projectName,
                     userName = record.userName,
                     projectId = repository.projectId,
@@ -850,7 +852,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeSvnDao.edit(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        region = repository.region,
+                        region = repository.region ?: CodeSvnRegion.TC,
                         projectName = repository.projectName,
                         userName = repository.userName,
                         credentialId = repository.credentialId,
@@ -956,8 +958,11 @@ class RepositoryService @Autowired constructor(
         repositoryType: ScmType?,
         aliasName: String?,
         offset: Int,
-        limit: Int
+        limit: Int,
+        sortBy: String? = null,
+        sortType: String? = null
     ): Pair<SQLPage<RepositoryInfoWithPermission>, Boolean> {
+        // 校验权限
         val hasCreatePermission = validatePermission(userId, projectId, AuthPermission.CREATE)
         val permissionToListMap = repositoryPermissionService.filterRepositories(
             userId = userId,
@@ -972,23 +977,25 @@ class RepositoryService @Autowired constructor(
             repositoryDao.countByProject(
                 dslContext = dslContext,
                 projectIds = setOf(projectId),
-                repositoryType = repositoryType,
+                repositoryTypes = repositoryType?.let { listOf(it) },
                 aliasName = aliasName,
                 repositoryIds = hasListPermissionRepoList.toSet()
             )
         val repositoryRecordList = repositoryDao.listByProject(
             dslContext = dslContext,
             projectId = projectId,
-            repositoryType = repositoryType,
+            repositoryTypes = repositoryType?.let { listOf(it) },
             aliasName = aliasName,
             repositoryIds = hasListPermissionRepoList.toSet(),
             offset = offset,
-            limit = limit
+            limit = limit,
+            sortBy = sortBy,
+            sortType = sortType
         )
         val gitRepoIds =
             repositoryRecordList.filter {
                 it.type == ScmType.CODE_GIT.name ||
-                        it.type == ScmType.CODE_TGIT.name
+                    it.type == ScmType.CODE_TGIT.name
             }.map { it.repositoryId }.toSet()
         val gitAuthMap =
             repositoryCodeGitDao.list(dslContext, gitRepoIds)?.map { it.repositoryId to it }?.toMap()
@@ -1059,26 +1066,28 @@ class RepositoryService @Autowired constructor(
     fun hasPermissionList(
         userId: String,
         projectId: String,
-        repositoryType: ScmType?,
+        repositoryType: String?,
         authPermission: AuthPermission,
         offset: Int,
-        limit: Int
+        limit: Int,
+        aliasName: String? = null
     ): SQLPage<RepositoryInfo> {
         val hasPermissionList = repositoryPermissionService.filterRepository(userId, projectId, authPermission)
+        val repositoryTypes = repositoryType?.split(",")?.map { ScmType.valueOf(it) }
 
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
             projectIds = setOf(projectId),
-            repositoryType = repositoryType,
-            aliasName = null,
+            repositoryTypes = repositoryTypes,
+            aliasName = aliasName,
             repositoryIds = hasPermissionList.toSet()
         )
         val repositoryRecordList =
             repositoryDao.listByProject(
                 dslContext = dslContext,
                 projectId = projectId,
-                repositoryType = repositoryType,
-                aliasName = null,
+                repositoryTypes = repositoryTypes,
+                aliasName = aliasName,
                 repositoryIds = hasPermissionList.toSet(),
                 offset = offset,
                 limit = limit
@@ -1106,7 +1115,7 @@ class RepositoryService @Autowired constructor(
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
             projectIds = projectIds,
-            repositoryType = repositoryType,
+            repositoryTypes = repositoryType?.let { listOf(it) },
             aliasName = null,
             repositoryIds = null
         )
@@ -1142,7 +1151,7 @@ class RepositoryService @Autowired constructor(
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
             projectIds = arrayListOf(projectId),
-            repositoryType = null,
+            repositoryTypes = null,
             aliasName = aliasName,
             repositoryIds = null
         )
@@ -1151,7 +1160,7 @@ class RepositoryService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 aliasName = aliasName,
-                repositoryType = null,
+                repositoryTypes = null,
                 repositoryIds = null,
                 offset = offset,
                 limit = limit
@@ -1334,7 +1343,8 @@ class RepositoryService @Autowired constructor(
                     aliasName = it.aliasName,
                     url = it.url,
                     type = ScmType.valueOf(it.type),
-                    updatedTime = it.updatedTime.timestampmilli()
+                    updatedTime = it.updatedTime.timestampmilli(),
+                    createUser = it.userId
                 )
             )
         }

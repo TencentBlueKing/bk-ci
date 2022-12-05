@@ -1,0 +1,126 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "common.names.fullname" . }}-common
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: common
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    spring:
+      application:
+        version: 4.0.0
+      redis:
+        host: {{ include "codecc.redis.host" . }}
+        password: {{ include "codecc.redis.password" . }}
+        port: {{ include "codecc.redis.port" . }}
+        jedis:
+          pool:
+            max-active: 16
+            max-wait: -1
+            max-idle: 16
+            min-idle: 0
+        connect-timeout: 5000
+        client-type: jedis
+      rabbitmq:
+        virtual-host: {{ include "codecc.rabbitmq.virtualhost" . }}
+        username: {{ include "codecc.rabbitmq.username" . }}
+        password: {{ include "codecc.rabbitmq.password" . }}
+        addresses: {{ include "codecc.rabbitmq.host" . }}
+        core:
+          virtual-host: {{ include "codecc.rabbitmq.virtualhost" . }}
+          username: {{ include "codecc.rabbitmq.username" . }}
+          password: {{ include "codecc.rabbitmq.password" . }}
+          addresses: {{ include "codecc.rabbitmq.host" . }}
+        extend:
+          virtual-host: {{ include "codecc.rabbitmq.virtualhost" . }}
+          username: {{ include "codecc.rabbitmq.username" . }}
+          password: {{ include "codecc.rabbitmq.password" . }}
+          addresses: {{ include "codecc.rabbitmq.host" . }}
+        listener:
+          simple:
+            concurrency: 2
+            acknowledge-mode: auto
+      cloud:
+        consul:
+          discovery:
+            tags: {{ .Values.config.bkCodeccConsulDiscoveryTag }}
+        kubernetes:
+          discovery:
+            enabled: true
+    metrics:
+      servo:
+        enabled: false
+    http:
+      encoding:
+        charset: UTF-8
+        enabled: true
+        force: true
+    endpoints:
+      metrics:
+        filter:
+          enabled: false
+    server:
+      servlet-path: /
+      undertow:
+        worker-threads: 100
+    management:
+      server:
+        context-path: /management
+      endpoints:
+        web:
+          exposure:
+            include: prometheus,health
+        metrics:
+          distribution:
+            sla:
+              http:
+                server:
+                  requests: 1ms,5ms,10ms,50ms,100ms,200ms,500ms,1s,5s
+      security:
+        enabled: false
+    bkci:
+      public:
+        url: {{ .Values.config.bkCiPublicUrl }}
+        schema: {{ .Values.config.bkCiPublicSchema }}
+      private:
+        url: {{ .Values.config.bkCiPrivateUrl }}
+    codecc:
+      public:
+        url: {{ .Values.config.bkCodeccPublicUrl }}
+      private:
+        url: {{ .Values.config.bkCodeccPrivateUrl }}
+    auth:
+      idProvider: {{ .Values.config.bkCiAuthProvider }}
+      grantType: rization_code
+      principalType: user
+      envName: prod
+      url: {{ .Values.config.bkIamPrivateUrl }}
+      appCode: {{ .Values.config.bkCodeccAppCode }}
+      appSecret: {{ .Values.config.bkCodeccAppToken }}
+      bkloginUrl: {{ .Values.config.bkPaasPrivateUrl }}/login/api/v2
+      iamCallBackUser: {{ .Values.config.bkCiIamCallbackUser }}
+    esb:
+      code: {{ .Values.config.bkCodeccAppCode }}
+      secret: {{ .Values.config.bkCodeccAppToken }}
+    bk:
+      paas:
+        host: {{ .Values.config.bkPaasPrivateUrl }}
+    storage:
+      type: {{ .Values.config.bkCodeccStorageType }}
+      expires: {{ .Values.config.bkCodeccStorageExpired }}
+      {{- if eq .Values.config.bkCodeccStorageType "bkrepo" }}
+      bkrepo:
+        username: {{ .Values.config.bkCodeccStorageBkrepoUsername }}
+        password: {{ .Values.config.bkCodeccStorageBkrepoPassword }}
+        project: {{ .Values.config.bkCodeccStorageBkrepoRepo }}
+        repo: {{ .Values.config.bkCodeccStorageBkrepoHost }}
+        host: {{ .Values.config.bkCodeccStorageBkrepoSchema }}
+        schema: {{ .Values.config.bkCodeccLogCollectEnable }}
+      {{- end }}
+

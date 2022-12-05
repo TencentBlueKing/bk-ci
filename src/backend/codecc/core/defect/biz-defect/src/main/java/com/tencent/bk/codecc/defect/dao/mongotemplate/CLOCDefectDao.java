@@ -12,7 +12,7 @@
 
 package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
-import com.mongodb.WriteResult;
+import com.mongodb.client.result.UpdateResult;
 import com.tencent.bk.codecc.defect.dto.CodeLineModel;
 import com.tencent.bk.codecc.defect.model.CLOCDefectEntity;
 import com.tencent.devops.common.constant.ComConstants.Tool;
@@ -42,7 +42,7 @@ public class CLOCDefectDao
     private MongoTemplate mongoTemplate;
 
 
-    public WriteResult upsertCLOCInfoByFileName(CLOCDefectEntity clocDefectEntity)
+    public UpdateResult upsertCLOCInfoByFileName(CLOCDefectEntity clocDefectEntity)
     {
         Query query = new Query();
         query.addCriteria(Criteria.where("task_id").is(clocDefectEntity.getTaskId()))

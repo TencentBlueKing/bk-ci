@@ -1,0 +1,352 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema",
+  "$comment" : "https://iwiki.woa.com/pages/viewpage.action?pageId=686380000",
+  "additionalProperties" : false,
+  "required" : [ "variables" ],
+  "properties" : {
+    "parameters" : {
+      "description" : "通过 parameters 关键字来实现参数的定义和传递，包含属性：name，type，default，values",
+      "type" : "array",
+      "items" : {
+        "anyOf" : [ {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "name", "type" ],
+          "properties" : {
+            "name" : {
+              "description" : "参数名称",
+              "type" : "string"
+            },
+            "type" : {
+              "description" : "参数类型，支持：string，number，boolean，array",
+              "enum" : [ "string", "number", "boolean", "array" ]
+            },
+            "default" : {
+              "description" : "默认值",
+              "anyOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "number"
+              }, {
+                "type" : "boolean"
+              }, {
+                "type" : "array",
+                "items" : {
+                  "anyOf" : [ {
+                    "type" : "string"
+                  }, {
+                    "type" : "number"
+                  }, {
+                    "type" : "boolean"
+                  } ]
+                }
+              } ]
+            },
+            "values" : {
+              "description" : "枚举值：当值可以枚举时，通过此属性将可选值枚举出来",
+              "type" : "array",
+              "items" : {
+                "anyOf" : [ {
+                  "type" : "string"
+                }, {
+                  "type" : "number"
+                }, {
+                  "type" : "boolean"
+                } ]
+              }
+            }
+          }
+        }, {
+          "description" : "模板引用，支持传入模板名称引用模板实例，模板实例按引用顺序插入",
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "template" ],
+          "properties" : {
+            "template" : {
+              "description" : "模板名称",
+              "type" : "string"
+            }
+          }
+        } ]
+      }
+    },
+    "version" : {
+      "description" : "YAML 的版本，v2.0 为新语法第一版",
+      "type" : "string",
+      "const" : "v2.0"
+    },
+    "name" : {
+      "description" : "pipeline 名称，缺省则设置为 YAML 文件相对于代码仓库根目录的路径",
+      "type" : "string"
+    },
+    "variables" : {
+      "description" : "全局变量，值格式为：Object，可以定义一个，多个变量或使用template引用模板，以字母、数字和下划线组成，当变量的 readonly 属性为 true 时，不允许修改值",
+      "type" : "object",
+      "propertyNames" : {
+        "pattern" : "^[0-9a-zA-Z_]+$"
+      },
+      "properties" : {
+        "template" : {
+          "$ref" : "#/definitions/template"
+        }
+      },
+      "additionalProperties" : {
+        "anyOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "number"
+        }, {
+          "type" : "boolean"
+        }, {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "value" ],
+          "properties" : {
+            "value" : {
+              "description" : "变量值",
+              "anyOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "number"
+              }, {
+                "type" : "boolean"
+              } ]
+            },
+            "readonly" : {
+              "description" : "是否只可读",
+              "type" : "boolean"
+            },
+            "allow-modify-at-startup" : {
+              "description" : "当前变量是否允许启动时修改",
+              "type" : "boolean"
+            },
+            "props" : {
+              "description" : "变量属性",
+              "type" : "object",
+              "additionalProperties" : false,
+              "required" : [ "type" ],
+              "properties" : {
+                "label" : {
+                  "description" : "展示名称",
+                  "type" : "string"
+                },
+                "type" : {
+                  "description" : "value属性类型",
+                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "company-staff-input", "tips" ]
+                },
+                "options" : {
+                  "description" : "多选或者单选的值, 和datasource二选一",
+                  "type" : "array",
+                  "items" : {
+                    "description" : "变量属性数据源",
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "required" : [ "id" ],
+                    "properties" : {
+                      "id" : {
+                        "description" : "value值",
+                        "anyOf" : [ {
+                          "type" : "string"
+                        }, {
+                          "type" : "number"
+                        }, {
+                          "type" : "boolean"
+                        } ]
+                      },
+                      "label" : {
+                        "description" : "value展示标签",
+                        "type" : "string"
+                      },
+                      "description" : {
+                        "description" : "value 说明",
+                        "type" : "string"
+                      }
+                    }
+                  }
+                },
+                "datasource" : {
+                  "description" : "变量属性 url数据源",
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "required" : [ "url" ],
+                  "properties" : {
+                    "url" : {
+                      "description" : "获取下拉列表中可选值的接口，需要接入蓝鲸网关",
+                      "type" : "string"
+                    },
+                    "data-path" : {
+                      "description" : "选项列表数据所在的、API返回体json中的路径",
+                      "type" : "string"
+                    },
+                    "param-id" : {
+                      "description" : "url返回规范中，用于下拉列表选项id的字段名，配合url使用",
+                      "type" : "string"
+                    },
+                    "param-name" : {
+                      "description" : "url返回规范中，用于下拉列表选项label的字段名，配合url使用",
+                      "type" : "string"
+                    },
+                    "has-add-item" : {
+                      "description" : "是否有新增按钮",
+                      "type" : "boolean"
+                    },
+                    "item-text" : {
+                      "description" : "新增按钮文字描述",
+                      "type" : "string"
+                    },
+                    "item-target-url" : {
+                      "description" : "点击新增按钮的跳转地址",
+                      "type" : "string"
+                    }
+                  }
+                },
+                "multiple" : {
+                  "description" : "是否可以多选",
+                  "type" : "boolean"
+                },
+                "description" : {
+                  "description" : "字段描述",
+                  "type" : "string"
+                },
+                "required" : {
+                  "description" : "当前字段是否必填",
+                  "type" : "boolean"
+                }
+              },
+              "allOf" : [ {
+                "$comment" : "variable prop 中 options、datasource 不共存",
+                "description" : "variable prop 中 options、datasource 不共存",
+                "if" : {
+                  "required" : [ "options" ]
+                },
+                "then" : {
+                  "description" : "不允许定义",
+                  "not" : {
+                    "required" : [ "datasource" ]
+                  }
+                }
+              }, {
+                "$comment" : "variable prop 中 options、datasource 不共存",
+                "description" : "variable prop 中 options、datasource 不共存",
+                "if" : {
+                  "required" : [ "datasource" ]
+                },
+                "then" : {
+                  "description" : "不允许定义",
+                  "not" : {
+                    "required" : [ "options" ]
+                  }
+                }
+              } ]
+            }
+          }
+        } ]
+      }
+    },
+    "resources" : {
+      "description" : "resources：引用远程资源，变量包含：repositories，pools",
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "repositories" : {
+          "description" : "引用其他代码库下的模板：可以在单独的代码库里管理模板文件，然后在其他多个代码库下引用模板。详见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380021#Stream%E6%A8%A1%E6%9D%BF-%E5%BC%95%E7%94%A8%E5%85%B6%E4%BB%96%E4%BB%A3%E7%A0%81%E5%BA%93%E4%B8%8B%E7%9A%84%E6%A8%A1%E6%9D%BF",
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "required" : [ "repository", "name" ],
+            "additionalProperties" : false,
+            "properties" : {
+              "repository" : {
+                "description" : "模板库命名空间和名称 group/repo",
+                "type" : "string"
+              },
+              "name" : {
+                "description" : "yaml引用时使用的名称 使用 xxx@name 引用",
+                "type" : "string"
+              },
+              "ref" : {
+                "description" : "用来拉取模板的分支，缺省为默认分支",
+                "type" : "string"
+              },
+              "credentials" : {
+                "description" : "拉取模板的凭证，使用用户自定的 private-key，默认为开启CI的用户的OAuth",
+                "type" : "object",
+                "additionalProperties" : false,
+                "required" : [ "personal-access-token" ],
+                "properties" : {
+                  "personal-access-token" : {
+                    "description" : "用户自定的 private-key",
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pools" : {
+          "description" : "引用第三方构建机池，详见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E8%B7%A8%E5%B7%A5%E7%A8%8B%E5%BC%95%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E6%9E%84%E5%BB%BA%E8%B5%84%E6%BA%90%E6%B1%A0",
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "required" : [ "from", "name" ],
+            "additionalProperties" : false,
+            "properties" : {
+              "from" : {
+                "description" : "语法和使用方方式，详见：https://iwiki.woa.com/pages/viewpage.action?pageId=914642753",
+                "type" : "string"
+              },
+              "name" : {
+                "description" : "pool-name 引用时使用的名字",
+                "type" : "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "template" : {
+      "description" : "模板引用，支持传入 array[string]|string 引用模板对象",
+      "anyOf" : [ {
+        "type" : "array",
+        "items" : {
+          "description" : "模板列表，name定义名称，parameters传递参数，按顺序依次插入模板实例",
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "name" ],
+          "properties" : {
+            "name" : {
+              "description" : "模板名称",
+              "type" : "string"
+            },
+            "parameters" : {
+              "$ref" : "#/definitions/parameters"
+            }
+          }
+        }
+      }, {
+        "description" : "模板名称",
+        "type" : "string"
+      } ]
+    },
+    "parameters" : {
+      "description" : "模板引用入参，支持传入 key:value，用来替换模板中定义的parameters的同名key的value",
+      "type" : "object",
+      "additionalProperties" : {
+        "anyOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "number"
+        }, {
+          "type" : "boolean"
+        }, {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        } ]
+      }
+    }
+  }
+}

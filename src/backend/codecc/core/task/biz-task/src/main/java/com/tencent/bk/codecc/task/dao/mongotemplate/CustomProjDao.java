@@ -12,9 +12,9 @@
  
 package com.tencent.bk.codecc.task.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.task.model.CustomProjEntity;
 import org.apache.commons.lang.StringUtils;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -43,8 +43,8 @@ public class CustomProjDao
      */
     public CustomProjEntity findByGongfengIdAndUrlAndBranch(String customProjSource, Integer gongfengProjectId,
                                                             String url, String branch, String logicRepo) {
-        BasicDBObject fieldsObj = new BasicDBObject();
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        Document fieldsObj = new Document();
+        Query query = new BasicQuery(new Document(), fieldsObj);
         query.addCriteria(Criteria.where("custom_proj_source").is(customProjSource));
         if (null != gongfengProjectId) {
             query.addCriteria(Criteria.where("gongfeng_project_id").is(gongfengProjectId));

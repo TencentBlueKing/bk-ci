@@ -32,7 +32,7 @@
 package com.tencent.bkrepo.nuget.util
 
 import com.tencent.bkrepo.common.api.util.readXmlString
-import com.tencent.bkrepo.nuget.model.nuspec.NuspecPackage
+import com.tencent.bkrepo.nuget.pojo.nuspec.NuspecPackage
 import org.apache.commons.compress.archivers.ArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import java.io.InputStream
@@ -49,13 +49,17 @@ object DecompressUtil {
         return nuspecContent.readXmlString()
     }
 
+    fun InputStream.resolverNuspecMetadata(): String {
+        return getNuspec(ZipArchiveInputStream(this))
+    }
+
     /**
      * 获取nupkg 压缩中的'.nuspec'文件
      * [archiveInputStream] 压缩文件流
      * return 以字符串格式返回.nuspec 文件内容
      */
     private fun getNuspec(archiveInputStream: ArchiveInputStream): String {
-        val stringBuilder = StringBuffer("")
+        val stringBuilder = StringBuffer()
         var zipEntry: ArchiveEntry
         loop@while (archiveInputStream.nextEntry.also { zipEntry = it } != null) {
             if ((!zipEntry.isDirectory) && zipEntry.name.endsWith(NUSPEC)) {

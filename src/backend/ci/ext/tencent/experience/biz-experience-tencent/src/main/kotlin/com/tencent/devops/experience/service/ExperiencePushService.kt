@@ -39,7 +39,9 @@ import com.tencent.devops.experience.pojo.enums.PushStatus
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRecord
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 
 @Service
@@ -82,12 +84,16 @@ class ExperiencePushService @Autowired constructor(
                     token = token
                 )
             }
-            experiencePushTokenDao.createUserToken(
-                dslContext = dslContext,
-                userId = userId,
-                token = token,
-                platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
-            )
+            try {
+                experiencePushTokenDao.createUserToken(
+                    dslContext = dslContext,
+                    userId = userId,
+                    token = token,
+                    platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
+                )
+            } catch (e: DuplicateKeyException) {
+                logger.warn("user token is exist , token:$token")
+            }
             return Result("用户绑定设备成功！", true)
         }
     }
@@ -259,7 +265,12 @@ class ExperiencePushService @Autowired constructor(
             dslContext = dslContext,
             userId = userId
         ) ?: return Result("该用户未绑定设备", false)
+
         val platform = userTokenRecord.platform
+        if (platform != appNotifyMessage.platform) {
+            return Result("绑定平台与包平台不一致", false)
+        }
+
         // 创建推送消息记录，此时状态发送中
         val messageId =
             experiencePushHistoryDao.createPushHistory(
@@ -306,5 +317,9 @@ class ExperiencePushService @Autowired constructor(
         appNotifyMessage.url = url
         appNotifyMessage.experienceHashId = experienceHashId
         return appNotifyMessage
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceService::class.java)
     }
 }

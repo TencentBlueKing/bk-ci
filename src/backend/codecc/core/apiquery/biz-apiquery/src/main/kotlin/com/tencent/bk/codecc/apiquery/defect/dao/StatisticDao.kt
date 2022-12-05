@@ -34,7 +34,7 @@ class StatisticDao @Autowired constructor(
     ): List<CommonStatisticModel> {
         val fieldsObj = BasicDBObject()
         PageUtils.getFilterFields(filterFields, fieldsObj)
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         val criteria = if (toolName.isNullOrBlank()) {
             Criteria.where("task_id").`in`(taskIds)
         } else {
@@ -68,7 +68,7 @@ class StatisticDao @Autowired constructor(
     ): List<LintStatisticModel> {
         val fieldsObj = BasicDBObject()
         PageUtils.getFilterFields(filterFields, fieldsObj)
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         val criteria = if (toolName.isNullOrBlank()) {
             Criteria.where("task_id").`in`(taskIds)
         } else {
@@ -104,7 +104,7 @@ class StatisticDao @Autowired constructor(
     ): List<CCNStatisticModel> {
         val fieldsObj = BasicDBObject()
         PageUtils.getFilterFields(filterFields, fieldsObj)
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(Criteria.where("task_id").`in`(taskIds))
         if (null != startTime && null != endTime) {
             query.addCriteria(Criteria.where("time").gte(startTime).lt(endTime))
@@ -134,7 +134,7 @@ class StatisticDao @Autowired constructor(
     ): List<DUPCStatisticModel> {
         val fieldsObj = BasicDBObject()
         PageUtils.getFilterFields(filterFields, fieldsObj)
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(Criteria.where("task_id").`in`(taskIds))
         if (null != startTime && null != endTime) {
             query.addCriteria(Criteria.where("time").gte(startTime).lt(endTime))
@@ -163,7 +163,7 @@ class StatisticDao @Autowired constructor(
     ): List<CLOCStatisticModel> {
         val fieldsObj = BasicDBObject()
         PageUtils.getFilterFields(filterFields, fieldsObj)
-        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        val query = BasicQuery(BasicDBObject().toJson(), fieldsObj.toJson())
         query.addCriteria(Criteria.where("task_id").`in`(taskIds)
                 .and("tool_name").`is`(toolName))
         if (null != startTime && null != endTime) {
@@ -185,7 +185,7 @@ class StatisticDao @Autowired constructor(
     fun findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId: Long, toolName: String): LintStatisticModel {
         val query = Query()
         query.addCriteria(Criteria.where("task_id").`is`(taskId).and("tool_name").`is`(toolName))
-        query.with(Sort(Sort.Direction.DESC, "time"))
+        query.with(Sort.by(Sort.Direction.DESC, "time"))
         val statisticModels = defectMongoTemplate.find(query, LintStatisticModel::class.java, "t_lint_statistic")
 
         return if (statisticModels.isEmpty()) LintStatisticModel() else statisticModels.first()

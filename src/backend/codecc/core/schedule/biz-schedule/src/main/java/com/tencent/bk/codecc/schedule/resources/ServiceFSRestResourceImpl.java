@@ -19,6 +19,7 @@ import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
+
 /**
  * 文件上传下载接口
  *
@@ -41,5 +42,10 @@ public class ServiceFSRestResourceImpl implements ServiceFSRestResource
     public Result<FileIndexVO> getFileIndex(String fileName, String type)
     {
         return new Result<>(uploadDownloadService.getFileIndex(fileName, type));
+    }
+
+    @Override
+    public Result<FileIndexVO> updateUploadInfo(FileIndexVO fileIndexVO) {
+        return new Result<>(uploadDownloadService.updateFileIndex(fileIndexVO));
     }
 }

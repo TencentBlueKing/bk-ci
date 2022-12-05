@@ -34,6 +34,7 @@ import org.slf4j.MDC
 /**
  * 流水线事件
  */
+@Suppress("LongParameterList")
 open class IPipelineEvent(
     open var actionType: ActionType,
     open val source: String,

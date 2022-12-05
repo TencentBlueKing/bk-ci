@@ -689,7 +689,9 @@ class TXPipelineService @Autowired constructor(
                     .getAgentsByEnvId(projectId, dispatchType.value)
             } else {
                 client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentsByEnvName(projectId, dispatchType.value)
+                    .getAgentsByEnvName(
+                        projectId,
+                        dispatchType.envProjectId?.let { "$it@${dispatchType.value}" } ?: dispatchType.envName)
             }
             val os = if (agentsResult.isNotOk() || null == agentsResult.data || agentsResult.data!!.isEmpty()) {
                 logger.error(
@@ -720,6 +722,7 @@ class TXPipelineService @Autowired constructor(
                 } else {
                     null
                 },
+                envProjectId = dispatchType.envProjectId,
                 envId = if (dispatchType.agentType == AgentType.ID) {
                     dispatchType.value
                 } else {

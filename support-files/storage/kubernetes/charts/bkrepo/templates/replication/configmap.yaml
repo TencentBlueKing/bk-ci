@@ -1,0 +1,23 @@
+{{- if .Values.replication.enabled -}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "common.names.fullname" . }}-replication
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: replication
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    # 应用版本
+    spring:
+      application:
+        version: 1.0.0
+    {{- if keys $.Values.replication.config }}
+      {{- toYaml .Values.replication.config | nindent 6 }}
+    {{- end}}
+  {{- end }}

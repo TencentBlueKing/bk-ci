@@ -31,7 +31,14 @@
 
 package com.tencent.bkrepo.common.storage.innercos.endpoint
 
+/**
+ * cos访问域名构造器
+ */
 interface EndpointBuilder {
 
+    /**
+     * 根据cos地域[region]和桶[bucket]构造访问域名
+     * @return cos访问域名
+     */
     fun buildEndpoint(region: String, bucket: String): String
 }

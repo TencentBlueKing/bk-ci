@@ -66,14 +66,14 @@ class CodeScoringConsumer @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CodeScoringConsumer::class.java)
     }
 
-    @Value("\${codecc.public.url}")
+    @Value("\${codecc.public.url:#{null}}")
     private val codeccGateWay: String? = null
 
     /**
      * 对蓝盾插件代码打分
      * 不合格的发送邮件提醒给代码告警人
      */
-    @RabbitListener(bindings = [QueueBinding(key = ROUTE_SCORING_OPENSOURCE,
+    @RabbitListener(bindings = [QueueBinding(key = [ROUTE_SCORING_OPENSOURCE],
             value = Queue(value = QUEUE_SCORING_OPENSOURCE, durable = "true"),
             exchange = Exchange(value = EXCHANGE_SCORING_OPENSOURCE, durable = "true", delayed = "true"))])
     fun scoring() {
@@ -98,7 +98,7 @@ class CodeScoringConsumer @Autowired constructor(
                     val currBuildLog = taskLogList.firstOrNull()
                     // 当前任务最近没有被扫描过，不再邮件提醒用户
                     if (currBuildLog != null
-                            && metricsRepository.findByTaskIdAndBuildId(taskId, currBuildLog.buildId) != null) {
+                            && metricsRepository.findFirstByTaskIdAndBuildId(taskId, currBuildLog.buildId) != null) {
                         logger.info(
                                 "scoring abort because of not new build, taskId: {}, buildId: {}",
                                 taskId,
@@ -248,7 +248,7 @@ class CodeScoringConsumer @Autowired constructor(
         val pair: Pair<Double, Double>
         when (toolName) {
             "CCN" -> {
-                val res = ccnStatisticRepository.findByTaskIdAndBuildId(taskId, buildId)
+                val res = ccnStatisticRepository.findFirstByTaskIdAndBuildId(taskId, buildId)
                 pair = Pair(res.ccnBeyondThresholdSum.toDouble(), 0.toDouble())
             }
             "WOODPECKER-SENSITIVE" -> {

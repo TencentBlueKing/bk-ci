@@ -33,7 +33,7 @@ import com.tencent.devops.common.util.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -73,7 +73,7 @@ public class CodeRepoServiceImpl implements CodeRepoService {
     @Override
     public Set<CodeRepoVO> getCodeRepoInfoByTaskId(Long taskId, String buildId) {
         CodeRepoFromAnalyzeLogEntity codeRepoFromAnalyzeLogEntity;
-        codeRepoFromAnalyzeLogEntity = codeRepoFromAnalyzeLogRepository.findCodeRepoFromAnalyzeLogEntityByTaskId(taskId);
+        codeRepoFromAnalyzeLogEntity = codeRepoFromAnalyzeLogRepository.findCodeRepoFromAnalyzeLogEntityFirstByTaskId(taskId);
         if (null == codeRepoFromAnalyzeLogEntity) {
             return new HashSet<>();
         }
@@ -191,7 +191,7 @@ public class CodeRepoServiceImpl implements CodeRepoService {
                 codeRepoStatisticEntityList.add(codeRepoStatisticEntity);
             }
         }
-        codeRepoStatisticRepository.save(codeRepoStatisticEntityList);
+        codeRepoStatisticRepository.saveAll(codeRepoStatisticEntityList);
         return true;
     }
 
@@ -257,7 +257,7 @@ public class CodeRepoServiceImpl implements CodeRepoService {
             }
             log.info("initCodeRepoStatistic, codeRepoStatDailyEntityList.size:[{}]",
                     codeRepoStatDailyEntityList.size());
-            codeRepoStatDailyRepository.save(codeRepoStatDailyEntityList);
+            codeRepoStatDailyRepository.saveAll(codeRepoStatDailyEntityList);
         });
         return true;
     }

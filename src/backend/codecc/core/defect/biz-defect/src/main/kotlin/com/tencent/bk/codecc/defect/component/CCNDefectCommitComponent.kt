@@ -11,7 +11,7 @@ import com.tencent.bk.codecc.defect.pojo.AggregateDefectNewInputModel
 import com.tencent.bk.codecc.defect.pojo.AggregateDefectOutputModelV2
 import com.tencent.bk.codecc.defect.pojo.DefectClusterDTO
 import com.tencent.devops.common.api.exception.CodeCCException
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.codecc.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
@@ -38,7 +38,7 @@ class CCNDefectCommitComponent constructor(
             val startTime = System.currentTimeMillis()
             logger.info("[ccn cluster process] cluster process begin! defect cluster info: $defectClusterDTO")
             //1. 从nfs中读取本次上报告警清单
-            val aggregateDefectNewInputModel = getCurrentDefectList(inputPathName)
+            val aggregateDefectNewInputModel = getCurrentDefectList(inputFilePath)
             val inputDefects = aggregateDefectNewInputModel.defectList
             val relPathSet = aggregateDefectNewInputModel.relPathSet
             val filePathSet = aggregateDefectNewInputModel.filePathSet

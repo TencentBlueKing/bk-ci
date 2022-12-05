@@ -33,6 +33,7 @@ import com.tencent.devops.store.service.atom.impl.SampleAtomNotifyServiceImpl
 import com.tencent.devops.store.service.atom.impl.SampleAtomReleaseServiceImpl
 import com.tencent.devops.store.service.atom.impl.SampleAtomServiceImpl
 import com.tencent.devops.store.service.atom.impl.SampleMarketAtomServiceImpl
+import com.tencent.devops.store.service.common.impl.SampleStoreCommonServiceImpl
 import com.tencent.devops.store.service.common.impl.SampleStoreLogoServiceImpl
 import com.tencent.devops.store.service.common.impl.SampleStoreNotifyServiceImpl
 import com.tencent.devops.store.service.common.impl.SampleStoreUserServiceImpl
@@ -85,4 +86,7 @@ class SampleStoreServiceConfig {
 
     @Bean
     fun storeLogoService() = SampleStoreLogoServiceImpl()
+
+    @Bean
+    fun storeCommonService() = SampleStoreCommonServiceImpl()
 }

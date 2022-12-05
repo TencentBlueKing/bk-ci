@@ -225,4 +225,18 @@ interface ArchiveFileService {
         userId: String,
         filePath: String
     )
+
+    /**
+     * 查询自定义仓库文件
+     */
+    fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        filePath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?,
+        modifiedTimeDesc: Boolean?
+    ): Page<FileInfo>
 }

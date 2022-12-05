@@ -56,7 +56,7 @@
                     </div>
                 </div>
             </div>
-            <form-field :label="$t('settings.notice')" style="margin-bottom: 0px">
+            <form-field :label="$t('settings.notify')" style="margin-bottom: 0px">
                 <bk-tab :active="curNavTab.name" type="unborder-card" @tab-change="changeCurTab">
                     <bk-tab-panel
                         v-for="(entry, index) in subscriptionList"
@@ -66,16 +66,30 @@
                         <div class="notice-tab">
                             <div class="bk-form-item item-notice">
                                 <label class="bk-label">{{ $t('settings.noticeType') }}：</label>
-                                <div class="bk-form-content">
+                                <div class="bk-form-content notice-group">
                                     <bk-checkbox-group :value="pipelineSubscription.types" @change="handleCheckNoticeType">
-                                        <bk-checkbox v-for="item in noticeList" :key="item.value" :value="item.value">
+                                        <bk-checkbox v-for="item in noticeList" :key="item.value" :value="item.value" class="atom-checkbox-list-item">
                                             {{ item.name }}
                                         </bk-checkbox>
                                     </bk-checkbox-group>
                                 </div>
                             </div>
+                            <div class="bk-form-item item-notice">
+                                <label class="bk-label">{{ $t('settings.noticeGroup') }}：</label>
+                                <div class="bk-form-content notice-group">
+                                    <bk-checkbox-group :value="pipelineSubscription.groups" @change="handleSwitch">
+                                        <bk-checkbox v-for="item in projectGroupAndUsers" :key="item.value" :value="item.groupId" class="atom-checkbox-list-item">
+                                            {{ item.groupName }}
+                                            <bk-popover placement="top">
+                                                <span class="info-notice-length">({{item.users.length}})</span>
+                                                <div class="notice-user-content" slot="content">{{item.users.length ? item.users.join(';') : $t('settings.emptyNoticeGroup')}}</div>
+                                            </bk-popover>
+                                        </bk-checkbox>
+                                    </bk-checkbox-group>
+                                </div>
+                            </div>
                             <form-field :label="$t('settings.additionUser')">
-                                <user-input :handle-change="(name,value) => pipelineSubscription.users = value.join(&quot;,&quot;)" name="users" :value="pipelineSettingUser"></user-input>
+                                <staff-input :handle-change="(name,value) => pipelineSubscription.users = value.join(&quot;,&quot;)" name="users" :value="pipelineSettingUser"></staff-input>
                             </form-field>
 
                             <form-field :label="$t('settings.noticeContent')" :is-error="errors.has(&quot;content&quot;)" :error-msg="errors.first(&quot;content&quot;)">
@@ -131,13 +145,13 @@
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
-    import UserInput from '@/components/atomFormField/UserInput/index.vue'
+    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     export default {
         components: {
             FormField,
-            UserInput,
+            StaffInput,
             GroupIdSelector,
             AtomCheckbox
         },
@@ -168,15 +182,15 @@
                     }
                 ],
                 subscriptionList: [
-                    { label: this.$t('settings.buildFail'), name: 'fail' },
-                    { label: this.$t('settings.buildSuc'), name: 'success' }
+                    { label: this.$t('settings.whenSuc'), name: 'success' },
+                    { label: this.$t('settings.whenFail'), name: 'fail' }
                 ],
-                curNavTab: { label: this.$t('settings.buildFail'), name: 'fail' },
+                curNavTab: { label: this.$t('settings.buildSuc'), name: 'success' },
                 noticeList: [
-                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' }
-                    // { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
-                    // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
-                    // { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
+                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'RTX' },
+                    { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
+                    { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
+                    { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
                 ],
                 pipelineSubscription: {
                     groups: [],
@@ -190,7 +204,8 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'pipelineSetting'
+                'pipelineSetting',
+                'projectGroupAndUsers'
             ]),
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
@@ -246,6 +261,7 @@
         },
         created () {
             this.requestTemplateSetting(this.$route.params)
+            this.requestProjectGroupAndUsers(this.$route.params)
             this.requestGrouptLists()
         },
         mounted () {
@@ -258,7 +274,8 @@
         methods: {
             ...mapActions('pipelines', [
                 'requestTemplateSetting',
-                'updatePipelineSetting'
+                'updatePipelineSetting',
+                'requestProjectGroupAndUsers'
             ]),
             handleLabelSelect (index, arg) {
                 let labels = []

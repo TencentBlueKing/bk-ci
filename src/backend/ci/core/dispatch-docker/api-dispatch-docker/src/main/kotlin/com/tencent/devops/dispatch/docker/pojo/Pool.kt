@@ -12,7 +12,8 @@ data class Pool(
 
 enum class BuildType {
     DOCKER_VM,
-    DEVCLOUD
+    DEVCLOUD,
+    BCS
 }
 
 data class Credential(

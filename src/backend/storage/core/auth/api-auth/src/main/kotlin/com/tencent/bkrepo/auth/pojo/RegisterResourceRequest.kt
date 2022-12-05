@@ -31,7 +31,6 @@
 
 package com.tencent.bkrepo.auth.pojo
 
-import com.tencent.bkrepo.auth.pojo.enums.ResourceType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -39,7 +38,7 @@ import io.swagger.annotations.ApiModelProperty
 class RegisterResourceRequest(
     @ApiModelProperty("类型")
     val uid: String,
-    override var resourceType: ResourceType,
+    override var resourceType: String,
     override var projectId: String? = null,
     override var repoName: String? = null,
     override var path: String? = null

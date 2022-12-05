@@ -10,23 +10,54 @@
 package disttask
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
+	"github.com/opesun/goquery"
 
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
 	"github.com/Tencent/bk-ci/src/booster/common/codec"
 	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
 	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/common/version"
 	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
 
 	"github.com/emicklei/go-restful"
 )
+
+// ListClientVersion handle the http request for listing client version
+func ListClientVersion(req *restful.Request, resp *restful.Response) {
+	url := version.DisttaskRepo
+	res, err := goquery.ParseUrl(url)
+	if err != nil {
+		blog.Errorf("list client version failed, err: %v", err)
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListVersionFailed, Message: err.Error()})
+	}
+	result := make([]string, 0, 100)
+	nodes := res.Find("a")
+	for _, v := range nodes {
+		buf := &bytes.Buffer{}
+		version.Search(buf, v)
+		s := buf.String()
+		if strings.HasPrefix(s, "install_v") {
+			i1 := strings.Index(s, "_v")
+			i2 := strings.Index(s, ".sh")
+			if i2 < i1 {
+				continue
+			}
+			result = append(result, s[i1+1:i2])
+		}
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(result)))
+	api.ReturnRest(&api.RestResponse{Resp: resp, Data: result})
+}
 
 // ListTask handle the http request for listing task with conditions.
 func ListTask(req *restful.Request, resp *restful.Response) {

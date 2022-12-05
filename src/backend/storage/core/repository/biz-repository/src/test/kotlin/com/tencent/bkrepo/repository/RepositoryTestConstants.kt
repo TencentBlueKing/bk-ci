@@ -41,6 +41,7 @@ const val UT_REPO_DISPLAY = "ut-repo-display"
 const val UT_REPO_DESC = "ut-repo-desc"
 const val UT_USER = "system"
 const val UT_STORAGE_CREDENTIALS_KEY = "ut-credentials-key"
+const val UT_REGION = "ut-test"
 const val UT_PACKAGE_NAME = "test-package"
 const val UT_PACKAGE_VERSION = "0.0.1"
 val UT_PACKAGE_KEY = PackageKeys.ofGav("com.tencent.bkrepo", "test")

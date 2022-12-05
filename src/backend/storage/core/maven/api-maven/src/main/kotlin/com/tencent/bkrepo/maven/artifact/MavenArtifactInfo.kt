@@ -32,7 +32,7 @@
 package com.tencent.bkrepo.maven.artifact
 
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
-import com.tencent.bkrepo.maven.pojo.MavenJar
+import com.tencent.bkrepo.maven.constants.SNAPSHOT_SUFFIX
 
 class MavenArtifactInfo(
     projectId: String,
@@ -68,12 +68,7 @@ class MavenArtifactInfo(
         return hasGroupId() && hasArtifactId() && hasVersion()
     }
 
-    fun toMavenJar(): MavenJar {
-        return MavenJar(
-            jarName,
-            groupId,
-            artifactId,
-            versionId
-        )
+    fun isSnapshot(): Boolean {
+        return versionId.endsWith(SNAPSHOT_SUFFIX)
     }
 }

@@ -4,7 +4,7 @@
             <template>
                 <label class="bk-label" v-if="label">{{ label }}：</label>
                 <bk-tooltip :placement="descDirection ? descDirection : right" v-if="desc">
-                    <i class="bk-icon" :class="[iconClass ? iconClass : 'icon-info-circle']"></i>
+                    <i class="devops-icon" :class="[iconClass ? iconClass : 'icon-info-circle']"></i>
                     <div slot="content" style="white-space: pre-wrap;font-weight: normal;">
                         <div>{{ desc }}</div>
                     </div>

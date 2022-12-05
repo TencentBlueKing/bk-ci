@@ -71,7 +71,7 @@ public interface TaskLogRepository extends MongoRepository<TaskLogEntity, String
      * @param buildId
      * @return
      */
-    TaskLogEntity findByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
+    TaskLogEntity findFirstByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
 
 
     /**

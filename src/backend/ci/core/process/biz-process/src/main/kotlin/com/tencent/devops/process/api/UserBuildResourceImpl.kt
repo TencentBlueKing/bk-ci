@@ -47,6 +47,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -84,7 +85,8 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>,
-        buildNo: Int?
+        buildNo: Int?,
+        triggerReviewers: List<String>?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
         return Result(
@@ -96,7 +98,8 @@ class UserBuildResourceImpl @Autowired constructor(
                     pipelineId = pipelineId,
                     values = values,
                     channelCode = ChannelCode.BS,
-                    buildNo = buildNo
+                    buildNo = buildNo,
+                    triggerReviewers = triggerReviewers
                 )
             )
         )
@@ -115,15 +118,19 @@ class UserBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(BuildId(pipelineBuildFacadeService.retry(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId,
-            failedContainer = failedContainer,
-            skipFailedTask = skipFailedTask
-        )))
+        return Result(
+            BuildId(
+                pipelineBuildFacadeService.retry(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    failedContainer = failedContainer,
+                    skipFailedTask = skipFailedTask
+                )
+            )
+        )
     }
 
     override fun manualShutdown(
@@ -166,6 +173,28 @@ class UserBuildResourceImpl @Autowired constructor(
             checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS)
         )
         return Result(true)
+    }
+
+    override fun buildTriggerReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        approve: Boolean
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.buildTriggerReview(
+                userId = userId,
+                buildId = buildId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                approve = approve
+            )
+        )
     }
 
     override fun manualStartStage(
@@ -215,6 +244,7 @@ class UserBuildResourceImpl @Autowired constructor(
         return Result(pipelineBuildFacadeService.goToReview(userId, projectId, pipelineId, buildId, elementId))
     }
 
+    @Timed
     override fun getBuildDetail(
         userId: String,
         projectId: String,
@@ -246,12 +276,14 @@ class UserBuildResourceImpl @Autowired constructor(
         if (buildNo <= 0) {
             throw ParamBlankException("Invalid buildNo")
         }
-        return Result(pipelineBuildFacadeService.getBuildDetailByBuildNo(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildNo = buildNo,
-            channelCode = ChannelCode.BS)
+        return Result(
+            pipelineBuildFacadeService.getBuildDetailByBuildNo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildNo = buildNo,
+                channelCode = ChannelCode.BS
+            )
         )
     }
 
@@ -288,6 +320,7 @@ class UserBuildResourceImpl @Autowired constructor(
         return Result(result)
     }
 
+    @Timed
     override fun getHistoryBuildNew(
         userId: String,
         projectId: String,

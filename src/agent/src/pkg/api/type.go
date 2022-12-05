@@ -36,12 +36,12 @@ type ThirdPartyAgentStartInfo struct {
 }
 
 type ThirdPartyBuildInfo struct {
-	ProjectId  string `json:"projectId"`
-	BuildId    string `json:"buildId"`
-	VmSeqId    string `json:"vmSeqId"`
-	Workspace  string `json:"workspace"`
-	PipelineId string `json:"pipelineId"`
-	ToDelTmpFiles []string // #5806 增加异常时清理脚本文件列表
+	ProjectId     string   `json:"projectId"`
+	BuildId       string   `json:"buildId"`
+	VmSeqId       string   `json:"vmSeqId"`
+	Workspace     string   `json:"workspace"`
+	PipelineId    string   `json:"pipelineId"`
+	ToDelTmpFiles []string `json:"-"` // #5806 增加异常时清理脚本文件列表, 不序列化
 }
 
 type ThirdPartyBuildWithStatus struct {
@@ -65,6 +65,12 @@ type AgentHeartbeatInfo struct {
 	AgentInstallPath  string                `json:"agentInstallPath"`
 	StartedUser       string                `json:"startedUser"`
 	TaskList          []ThirdPartyBuildInfo `json:"taskList"`
+	Props             AgentPropsInfo        `json:"props"`
+}
+
+type AgentPropsInfo struct {
+	Arch       string   `json:"arch"`
+	JdkVersion []string `json:"jdkVersion"`
 }
 
 type AgentHeartbeatResponse struct {
@@ -75,6 +81,24 @@ type AgentHeartbeatResponse struct {
 	Envs              map[string]string `json:"envs"`
 	Gateway           string            `json:"gateway"`
 	FileGateway       string            `json:"fileGateway"`
+	Props             AgentPropsResp    `json:"props"`
+}
+
+type AgentPropsResp struct {
+	IgnoreLocalIps string `json:"ignoreLocalIps"`
+	KeepLogsHours  int    `json:"keepLogsHours"`
+}
+
+type UpgradeInfo struct {
+	WorkerVersion  string   `json:"workerVersion"`
+	GoAgentVersion string   `json:"goAgentVersion"`
+	JdkVersion     []string `json:"jdkVersion"`
+}
+
+type UpgradeItem struct {
+	Agent  bool `json:"agent"`
+	Worker bool `json:"worker"`
+	Jdk    bool `json:"jdk"`
 }
 
 func NewPipelineResponse(seqId string, status string, response string) *PipelineResponse {

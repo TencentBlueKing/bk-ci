@@ -33,7 +33,7 @@ package com.tencent.bkrepo.nuget.artifact
 
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
 
-class NugetArtifactInfo(
+open class NugetArtifactInfo(
     projectId: String,
     repoName: String,
     artifactUri: String

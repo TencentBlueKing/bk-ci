@@ -33,6 +33,6 @@ public interface CodeLineStatisticRepository extends MongoRepository<CodeLineSta
      * @param dataFrom 统计来源
      * @return entity
      */
-    CodeLineStatisticEntity findByDateAndDataFrom(String date, String dataFrom);
+    CodeLineStatisticEntity findFirstByDateAndDataFrom(String date, String dataFrom);
 
 }

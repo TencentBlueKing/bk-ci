@@ -33,7 +33,6 @@ package com.tencent.bkrepo.repository.pojo.node
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
 
 /**
  * 节点恢复选项
@@ -41,7 +40,7 @@ import java.time.LocalDateTime
 @ApiModel("节点恢复选项")
 data class NodeRestoreOption(
     @ApiModelProperty("删除时间")
-    val deletedTime: LocalDateTime,
+    val deletedId: Long,
     @ApiModelProperty("冲突处理策略")
     val conflictStrategy: ConflictStrategy = ConflictStrategy.SKIP
 )

@@ -28,11 +28,11 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.enums.MyEnum
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertArrayEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
 class EnumUtilTest {
 

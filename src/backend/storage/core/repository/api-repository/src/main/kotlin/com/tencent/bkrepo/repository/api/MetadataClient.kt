@@ -74,14 +74,4 @@ interface MetadataClient {
     @ApiOperation("删除元数据")
     @DeleteMapping("/delete")
     fun deleteMetadata(@RequestBody request: MetadataDeleteRequest): Response<Void>
-
-    @Deprecated("replace with save")
-    @ApiOperation("创建/更新元数据列表")
-    @PostMapping
-    fun save(@RequestBody request: MetadataSaveRequest): Response<Void>
-
-    @Deprecated("replace with delete")
-    @ApiOperation("删除元数据")
-    @DeleteMapping
-    fun delete(@RequestBody request: MetadataDeleteRequest): Response<Void>
 }

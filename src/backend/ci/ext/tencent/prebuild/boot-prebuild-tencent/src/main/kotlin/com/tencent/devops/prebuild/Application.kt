@@ -29,12 +29,14 @@ package com.tencent.devops.prebuild
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
 
 /**
  *
  * Powered By Tencent
  */
 @MicroService
+@ComponentScan("com.tencent.devops.prebuild", "com.tencent.devops.process.yaml")
 class Application
 
 fun main(args: Array<String>) {

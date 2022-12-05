@@ -33,72 +33,44 @@ package com.tencent.bkrepo.helm.service.impl
 
 import com.tencent.bkrepo.auth.pojo.enums.PermissionAction
 import com.tencent.bkrepo.auth.pojo.enums.ResourceType
-import com.tencent.bkrepo.common.api.util.readYamlString
 import com.tencent.bkrepo.common.artifact.api.ArtifactFileMap
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHolder
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactRemoveContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactUploadContext
-import com.tencent.bkrepo.common.artifact.resolve.file.multipart.MultipartArtifactFile
 import com.tencent.bkrepo.common.security.permission.Permission
-import com.tencent.bkrepo.helm.artifact.HelmArtifactInfo
-import com.tencent.bkrepo.helm.handler.HelmPackageHandler
 import com.tencent.bkrepo.helm.constants.CHART
-import com.tencent.bkrepo.helm.constants.CHART_PACKAGE_FILE_EXTENSION
-import com.tencent.bkrepo.helm.constants.FULL_PATH
+import com.tencent.bkrepo.helm.constants.FILE_TYPE
 import com.tencent.bkrepo.helm.constants.PROV
-import com.tencent.bkrepo.helm.constants.SIZE
-import com.tencent.bkrepo.helm.exception.HelmErrorInvalidProvenanceFileException
 import com.tencent.bkrepo.helm.exception.HelmFileNotFoundException
-import com.tencent.bkrepo.helm.listener.event.ChartDeleteEvent
-import com.tencent.bkrepo.helm.listener.event.ChartVersionDeleteEvent
-import com.tencent.bkrepo.helm.model.metadata.HelmChartMetadata
-import com.tencent.bkrepo.helm.pojo.chart.ChartDeleteRequest
-import com.tencent.bkrepo.helm.pojo.chart.ChartVersionDeleteRequest
+import com.tencent.bkrepo.helm.pojo.artifact.HelmArtifactInfo
+import com.tencent.bkrepo.helm.pojo.artifact.HelmDeleteArtifactInfo
 import com.tencent.bkrepo.helm.service.ChartManipulationService
-import com.tencent.bkrepo.helm.utils.DecompressUtil.getArchivesContent
-import com.tencent.bkrepo.helm.utils.HelmUtils.getChartFileFullPath
-import com.tencent.bkrepo.helm.utils.HelmUtils.getProvFileFullPath
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import kotlin.streams.toList
 
 @Service
-class ChartManipulationServiceImpl(
-    private val helmPackageHandler: HelmPackageHandler
-) : AbstractChartService(), ChartManipulationService {
+class ChartManipulationServiceImpl : AbstractChartService(), ChartManipulationService {
 
     @Permission(ResourceType.REPO, PermissionAction.WRITE)
     @Transactional(rollbackFor = [Throwable::class])
     override fun upload(artifactInfo: HelmArtifactInfo, artifactFileMap: ArtifactFileMap) {
         val keys = artifactFileMap.keys
-        checkRepositoryExist(artifactInfo)
+        checkRepositoryExistAndCategory(artifactInfo)
         check(keys.contains(CHART) || keys.contains(PROV)) {
             throw HelmFileNotFoundException(
                 "no package or provenance file found in form fields chart and prov"
             )
         }
         if (keys.contains(CHART)) {
-            val artifactFile = artifactFileMap[CHART]!!
-            val context = ArtifactUploadContext(artifactFile)
-            val chartMetadata = parseChartFileInfo(artifactFileMap)
-            context.putAttribute(FULL_PATH, getChartFileFullPath(chartMetadata.name, chartMetadata.version))
+            val context = ArtifactUploadContext(artifactFileMap[CHART]!!)
+            context.putAttribute(FILE_TYPE, CHART)
             ArtifactContextHolder.getRepository().upload(context)
-
-            // create package
-            helmPackageHandler.createVersion(
-                context.userId,
-                artifactInfo,
-                chartMetadata,
-                context.getLongAttribute(SIZE)!!,
-                context.getBooleanAttribute("isOverwrite") ?: false
-            )
         }
         if (keys.contains(PROV)) {
             val context = ArtifactUploadContext(artifactFileMap[PROV]!!)
-            val provFileInfo = parseProvFileInfo(artifactFileMap)
-            context.putAttribute(FULL_PATH, getProvFileFullPath(provFileInfo.first, provFileInfo.second))
+            context.putAttribute(FILE_TYPE, PROV)
             ArtifactContextHolder.getRepository().upload(context)
         }
     }
@@ -106,80 +78,40 @@ class ChartManipulationServiceImpl(
     @Permission(ResourceType.REPO, PermissionAction.WRITE)
     @Transactional(rollbackFor = [Throwable::class])
     override fun uploadProv(artifactInfo: HelmArtifactInfo, artifactFileMap: ArtifactFileMap) {
-        checkRepositoryExist(artifactInfo)
+        checkRepositoryExistAndCategory(artifactInfo)
         check(artifactFileMap.keys.contains(PROV)) {
             throw HelmFileNotFoundException("no provenance file found in form fields prov")
         }
-        val context = ArtifactUploadContext(artifactFileMap)
-        val provFileInfo = parseProvFileInfo(artifactFileMap)
-        context.putAttribute(FULL_PATH, getProvFileFullPath(provFileInfo.first, provFileInfo.second))
+        val context = ArtifactUploadContext(artifactFileMap[PROV]!!)
+        context.putAttribute(FILE_TYPE, PROV)
         ArtifactContextHolder.getRepository().upload(context)
     }
 
-    fun parseChartFileInfo(artifactFileMap: ArtifactFileMap): HelmChartMetadata {
-        val inputStream = (artifactFileMap[CHART] as MultipartArtifactFile).getInputStream()
-        val result = inputStream.getArchivesContent(CHART_PACKAGE_FILE_EXTENSION)
-        return result.byteInputStream().readYamlString()
-    }
-
-    fun parseProvFileInfo(artifactFileMap: ArtifactFileMap): Pair<String, String> {
-        val inputStream = (artifactFileMap[PROV] as MultipartArtifactFile).getInputStream()
-        val contentStr = String(inputStream.readBytes())
-        val hasPGPBegin = contentStr.startsWith("-----BEGIN PGP SIGNED MESSAGE-----")
-        val nameMatch = Regex("\nname:[ *](.+)").findAll(contentStr).toList().flatMap(MatchResult::groupValues)
-        val versionMatch = Regex("\nversion:[ *](.+)").findAll(contentStr).toList().flatMap(MatchResult::groupValues)
-        if (!hasPGPBegin || nameMatch.size != 2 || versionMatch.size != 2) {
-            throw HelmErrorInvalidProvenanceFileException("invalid provenance file")
-        }
-        return Pair(nameMatch[1], versionMatch[1])
-    }
-
     @Permission(ResourceType.REPO, PermissionAction.WRITE)
     @Transactional(rollbackFor = [Throwable::class])
-    override fun deleteVersion(chartVersionDeleteRequest: ChartVersionDeleteRequest) {
-        logger.info("handling delete chart version request: [$chartVersionDeleteRequest]")
-        with(chartVersionDeleteRequest) {
-            val chartFullPath = getChartFileFullPath(name, version)
-            val provFullPath = getProvFileFullPath(name, version)
-            val context = ArtifactRemoveContext()
-            checkRepositoryExist(context.artifactInfo)
-            if (!exist(projectId, repoName, chartFullPath)) {
-                throw HelmFileNotFoundException("remove $chartFullPath failed: no such file or directory")
+    override fun deleteVersion(userId: String, artifactInfo: HelmDeleteArtifactInfo) {
+        logger.info("handling delete chart version request: [$artifactInfo]")
+        with(artifactInfo) {
+            if (!packageVersionExist(projectId, repoName, packageName, version)) {
+                throw HelmFileNotFoundException(
+                    "remove package $packageName for version [$version] failed: no such file or directory"
+                )
             }
-            context.putAttribute(FULL_PATH, mutableListOf(chartFullPath, provFullPath))
+            val context = ArtifactRemoveContext()
             ArtifactContextHolder.getRepository().remove(context)
-                .also { publishEvent(ChartVersionDeleteEvent(this)) }
-                .also {
-                    logger.info(
-                        "delete chart [$name], version: [$version] in repo [$projectId/$repoName] success."
-                    )
-                }
-            // 删除包版本
-            helmPackageHandler.deleteVersion(context.userId, name, version, context.artifactInfo)
         }
     }
 
     @Permission(ResourceType.REPO, PermissionAction.WRITE)
     @Transactional(rollbackFor = [Throwable::class])
-    override fun deletePackage(chartDeleteRequest: ChartDeleteRequest) {
-        logger.info("handling delete chart request: [$chartDeleteRequest]")
-        with(chartDeleteRequest) {
-            val context = ArtifactRemoveContext()
-            checkRepositoryExist(context.artifactInfo)
-            val originalIndexYamlMetadata = queryOriginalIndexYaml()
-            val versionList =
-                originalIndexYamlMetadata.entries[name]!!.stream().map { it.version }.toList()
-            val fullPathList = mutableListOf<String>()
-            versionList.forEach {
-                fullPathList.add(getChartFileFullPath(name, it))
-                fullPathList.add(getProvFileFullPath(name, it))
+    override fun deletePackage(userId: String, artifactInfo: HelmDeleteArtifactInfo) {
+        logger.info("handling delete chart request: [$artifactInfo]")
+        with(artifactInfo) {
+            if (!packageExist(projectId, repoName, packageName)) {
+                throw HelmFileNotFoundException("remove package $packageName failed: no such file or directory")
             }
-            context.putAttribute(FULL_PATH, fullPathList)
+            val context = ArtifactRemoveContext()
             ArtifactContextHolder.getRepository().remove(context)
-                .also { publishEvent(ChartDeleteEvent(this)) }
-                .also { logger.info("delete chart [$name] in repo [$projectId/$repoName] success.") }
-            // 删除包版本
-            helmPackageHandler.deletePackage(context.userId, name, context.artifactInfo)
         }
     }
 

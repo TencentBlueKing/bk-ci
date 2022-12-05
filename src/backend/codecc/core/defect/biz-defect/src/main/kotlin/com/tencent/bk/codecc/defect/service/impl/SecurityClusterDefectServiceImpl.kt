@@ -65,7 +65,7 @@ class SecurityClusterDefectServiceImpl @Autowired constructor(
         val securityClusterResultVO = SecurityClusterResultVO()
         securityClusterResultVO.type = ComConstants.ToolType.SECURITY.name
         val securityClusterStatisticEntity =
-                securityClusterStatisticRepository.findByTaskIdAndBuildId(taskId, buildId)
+                securityClusterStatisticRepository.findFirstByTaskIdAndBuildId(taskId, buildId)
                         ?: return securityClusterResultVO
         BeanUtils.copyProperties(securityClusterResultVO, securityClusterStatisticEntity)
         securityClusterResultVO.type = ComConstants.ToolType.SECURITY.name

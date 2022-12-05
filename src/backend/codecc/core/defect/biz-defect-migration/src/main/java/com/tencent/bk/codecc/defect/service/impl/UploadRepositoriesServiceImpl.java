@@ -16,7 +16,7 @@ import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -59,10 +59,10 @@ public class UploadRepositoriesServiceImpl implements UploadRepositoriesService
         List<String> repoWhiteList = uploadRepositoriesVO.getRepoWhiteList();
 
         // 更新构建运行时栈表
-        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         if (toolBuildStackEntity == null)
         {
-            ToolBuildInfoEntity toolBuildInfoEntity = toolBuildInfoRepository.findByTaskIdAndToolName(taskId, toolName);
+            ToolBuildInfoEntity toolBuildInfoEntity = toolBuildInfoRepository.findFirstByTaskIdAndToolName(taskId, toolName);
             toolBuildStackEntity = new ToolBuildStackEntity();
             toolBuildStackEntity.setTaskId(taskId);
             toolBuildStackEntity.setToolName(toolName);
@@ -74,7 +74,7 @@ public class UploadRepositoriesServiceImpl implements UploadRepositoriesService
         toolBuildStackDao.upsert(toolBuildStackEntity);
 
         // 校验构建号对应的仓库信息是否已存在
-        CodeRepoInfoEntity codeRepoInfo = codeRepoRepository.findByTaskIdAndBuildId(taskId, buildId);
+        CodeRepoInfoEntity codeRepoInfo = codeRepoRepository.findFirstByTaskIdAndBuildId(taskId, buildId);
         if (codeRepoInfo != null)
         {
             return new Result(0, CommonMessageCode.SUCCESS, "repo info of this build id is already exist.");

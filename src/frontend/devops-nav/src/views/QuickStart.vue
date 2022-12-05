@@ -84,7 +84,7 @@
         }
 
         @Watch('demo')
-        watchDemo (demo) {
+        watchDemo () {
             this.isError = !this.$refs.step.validate()
         }
 

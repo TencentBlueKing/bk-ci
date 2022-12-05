@@ -113,10 +113,8 @@ object ModelUtils {
             s.canRetry = stageStatus.isFailure() || stageStatus.isCancel()
             s.containers.forEach { c ->
                 initContainerOldData(c)
-                if (c is VMBuildContainer) {
-                    val jobStatus = BuildStatus.parse(c.status)
-                    c.canRetry = jobStatus.isFailure() || jobStatus.isCancel()
-                }
+                val jobStatus = BuildStatus.parse(c.status)
+                c.canRetry = jobStatus.isFailure() || jobStatus.isCancel()
                 if (c.canRetry == true) {
                     refreshContainer(c)
                 }

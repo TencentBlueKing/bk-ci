@@ -209,7 +209,7 @@ public class CheckerDefectStatConsumer {
                     generateCheckerDefectStatEntities(toolName, dataFrom, checkerUsageMap, checkerKeyList,
                             existCountMap, fixedCountMap, ignoreCountMap, excludeCountMap, checkerCreateTimeMap);
 
-            checkerDefectStatRepository.save(dataList);
+            checkerDefectStatRepository.saveAll(dataList);
         }
         // 记录更新时间
         redisTemplate.opsForValue()

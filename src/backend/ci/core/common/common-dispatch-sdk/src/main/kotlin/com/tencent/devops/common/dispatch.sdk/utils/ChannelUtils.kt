@@ -28,18 +28,18 @@
 package com.tencent.devops.common.dispatch.sdk.utils
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.BkTag
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 @Suppress("ALL")
-class ChannelUtils {
-
-    @Value("\${spring.cloud.consul.discovery.tags:prod}")
-    private val consulTag: String = "prod"
-
+class ChannelUtils @Autowired constructor(
+    private val bkTag: BkTag
+) {
     fun getChannelCode(): ChannelCode {
+        val consulTag = bkTag.getLocalTag()
         return if (consulTag.contains("stream")) {
             ChannelCode.GIT
         } else if (consulTag.contains("auto")) {

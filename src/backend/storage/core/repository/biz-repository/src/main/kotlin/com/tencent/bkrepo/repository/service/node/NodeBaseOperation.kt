@@ -60,6 +60,11 @@ interface NodeBaseOperation {
     fun listNodePage(artifact: ArtifactInfo, option: NodeListOption): Page<NodeInfo>
 
     /**
+     * 根据sha256分页查询节点
+     */
+    fun listNodePageBySha256(sha256: String, option: NodeListOption): Page<NodeInfo>
+
+    /**
      * 判断节点是否存在
      */
     fun checkExist(artifact: ArtifactInfo): Boolean

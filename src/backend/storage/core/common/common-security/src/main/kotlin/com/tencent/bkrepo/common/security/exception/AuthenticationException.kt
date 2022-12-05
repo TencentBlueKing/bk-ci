@@ -34,10 +34,12 @@ package com.tencent.bkrepo.common.security.exception
 import com.tencent.bkrepo.common.api.constant.HttpStatus
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.api.message.CommonMessageCode
+import com.tencent.bkrepo.common.api.message.MessageCode
 
 /**
  * 用户认证异常, 401错误
  */
 open class AuthenticationException(
-    val reason: String = HttpStatus.UNAUTHORIZED.reasonPhrase
+    val reason: String = HttpStatus.UNAUTHORIZED.reasonPhrase,
+    override val messageCode: MessageCode = CommonMessageCode.REQUEST_UNAUTHENTICATED
 ) : ErrorCodeException(HttpStatus.UNAUTHORIZED, CommonMessageCode.REQUEST_UNAUTHENTICATED, arrayOf(reason))

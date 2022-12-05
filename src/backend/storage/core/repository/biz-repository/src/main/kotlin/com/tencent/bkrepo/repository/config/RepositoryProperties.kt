@@ -31,7 +31,9 @@
 
 package com.tencent.bkrepo.repository.config
 
+import com.tencent.bkrepo.repository.job.base.RepoJobProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.NestedConfigurationProperty
 import org.springframework.context.annotation.Configuration
 
 @Configuration
@@ -39,5 +41,9 @@ import org.springframework.context.annotation.Configuration
 data class RepositoryProperties(
     var deletedNodeReserveDays: Long = 14,
     var defaultStorageCredentialsKey: String? = null,
-    var listCountLimit: Long = 100000L
+    var listCountLimit: Long = 100000L,
+    @NestedConfigurationProperty
+    var job: RepoJobProperties = RepoJobProperties(),
+    @NestedConfigurationProperty
+    var repoStorageMapping: RepoStorageMapping = RepoStorageMapping()
 )

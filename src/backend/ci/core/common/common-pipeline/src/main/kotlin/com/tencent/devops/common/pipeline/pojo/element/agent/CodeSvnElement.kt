@@ -45,9 +45,9 @@ data class CodeSvnElement(
     override var status: String? = null,
     @ApiModelProperty("代码库哈希ID", required = true)
     val repositoryHashId: String?,
-    @ApiModelProperty("revision", required = false)
+    @ApiModelProperty("revision 用于强制指定commitId", required = false)
     var revision: String? = null,
-    @ApiModelProperty("Checkout strategy", required = true)
+    @ApiModelProperty("checkout 策略", required = false)
     val strategy: CodePullStrategy? = CodePullStrategy.INCREMENT_UPDATE,
     @ApiModelProperty("代码存放路径", required = false)
     val path: String? = null,

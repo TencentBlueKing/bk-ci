@@ -3,10 +3,12 @@ package com.tencent.devops.stream.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.stream.pojo.StreamBasicSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.hibernate.validator.constraints.Range
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -31,7 +33,7 @@ interface OpGitCIBasicSettingResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(value = "工蜂项目", required = true)
-        gitCIBasicSetting: GitCIBasicSetting
+        gitCIBasicSetting: StreamBasicSetting
     ): Result<Boolean>
 
     @ApiOperation("填充存量流水线的组织架构信息")
@@ -58,4 +60,38 @@ interface OpGitCIBasicSettingResource {
     @GET
     @Path("/fixNameSpace")
     fun fixProjectNameSpace(): Result<Int>
+
+    @ApiOperation("修改项目开启人")
+    @POST
+    @Path("/updateEnableUserId")
+    fun updateEnableUserIdByNewUser(
+        @ApiParam(value = "旧userId", required = true)
+        @QueryParam("oldUserId")
+        oldUserId: String,
+        @ApiParam(value = "新userId", required = true)
+        @QueryParam("newUserId")
+        newUserId: String,
+        @ApiParam(value = "更新的数量", required = true)
+        @QueryParam("limitNumber")
+        @Range(min = 1, max = 50, message = "修改的数量不能小于1、大于50")
+        @Valid
+        limitNumber: Int
+    ): Result<Boolean>
+
+    @ApiOperation("修改工蜂老域名")
+    @POST
+    @Path("/updateGitDomain")
+    fun updateGitDomain(
+        @ApiParam(value = "git老域名", required = true)
+        @QueryParam("oldGitDomain")
+        oldGitDomain: String,
+        @ApiParam(value = "git新域名", required = true)
+        @QueryParam("newGitDomain")
+        newGitDomain: String,
+        @ApiParam(value = "更新的数量", required = true)
+        @QueryParam("limitNumber")
+        @Range(min = 1, max = 1000, message = "修改的数量不能小于1、大于1000")
+        @Valid
+        limitNumber: Int
+    ): Result<Boolean>
 }

@@ -1,0 +1,21 @@
+{{- if .Values.generic.enabled -}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "common.names.fullname" . }}-generic
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: generic
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    generic:
+      domain: {{ .Values.gateway.host }}/generic
+      {{- if keys $.Values.generic.config }}
+        {{- toYaml .Values.generic.config | nindent 6 }}
+      {{- end}}
+{{- end }}

@@ -17,6 +17,7 @@ class PrimaryJob {
 
     @Scheduled(fixedDelay = 20 * 1000)
     @SchedulerLock(name = "PrimaryJob", lockAtMostFor = "PT30M")
+    @Suppress("SwallowedException", "TooGenericExceptionCaught")
     fun updatePrimaryIndex() {
         logger.info("update primary index start")
         val startMillis = System.currentTimeMillis()
@@ -29,7 +30,7 @@ class PrimaryJob {
                 val targetSet = RpmCollectionUtils.filterByDepth(jobService.findRepodataDirs(repo), repodataDepth)
                 for (repoDataPath in targetSet) {
                     logger.info("update primary index [${repo.projectId}|${repo.name}|$repoDataPath] start")
-                    jobService.batchUpdateIndex(repo, repoDataPath, IndexType.PRIMARY, 20)
+                    jobService.updateIndex(repo, repoDataPath, IndexType.PRIMARY, 20)
                     logger.info("update primary index [${repo.projectId}|${repo.name}|$repoDataPath] done")
                 }
                 logger.info("update primary index [${repo.projectId}|${repo.name}] done")

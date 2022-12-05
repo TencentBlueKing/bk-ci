@@ -25,8 +25,8 @@ object PageUtils {
         } catch (e: Exception) {
             Sort.Direction.ASC
         }
-        val pageSort = Sort(sortTypeNotNull, sortFieldNotNull)
-        return PageRequest(
+        val pageSort = Sort.by(sortTypeNotNull, sortFieldNotNull)
+        return PageRequest.of(
             pageNumNotNull,
             pageSizeNotNull,
             pageSort
@@ -100,8 +100,8 @@ object PageUtils {
         } catch (e: Exception) {
             Sort.Direction.ASC
         }
-        val pageSort = Sort(sortTypeNotNull, sortFieldNotNull)
-        return PageRequest(pageNumNotNull, pageSizeNotNull, pageSort
+        val pageSort = Sort.by(sortTypeNotNull, sortFieldNotNull)
+        return PageRequest.of(pageNumNotNull, pageSizeNotNull, pageSort
         )
     }
 }

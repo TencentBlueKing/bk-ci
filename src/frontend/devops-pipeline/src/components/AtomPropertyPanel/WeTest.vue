@@ -106,9 +106,9 @@
             },
             edit (keyStr) {
                 if (keyStr === 'taskId') {
-                    window.open(`${WEB_URL_PIRFIX}/wetest/${this.projectId}/${this.element.taskId ? ('#' + this.element.taskId) : ''}`, '_blank')
+                    window.open(`${WEB_URL_PREFIX}/wetest/${this.projectId}/${this.element.taskId ? ('#' + this.element.taskId) : ''}`, '_blank')
                 } else {
-                    window.open(`${WEB_URL_PIRFIX}/wetest/${this.projectId}/mail${this.element.notifyType ? ('#' + this.element.notifyType) : ''}`, '_blank')
+                    window.open(`${WEB_URL_PREFIX}/wetest/${this.projectId}/mail${this.element.notifyType ? ('#' + this.element.notifyType) : ''}`, '_blank')
                 }
             },
             async hasPermission () {
@@ -118,10 +118,12 @@
                     if (e.code === 403) {
                         this.$showAskPermissionDialog({
                             noPermissionList: [{
-                                resource: this.$t('editPage.atomForm.wetestResName'),
-                                option: this.$t('view')
+                                actionId: this.$permissionActionMap.view,
+                                resourceId: this.$permissionResourceMap.pipeline,
+                                instanceId: [],
+                                projectId: this.$route.params.projectId
                             }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=wetest&project_code=${this.$route.params.projectId}&service_code=wetest&role_viewer=wetest`
+                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=wetest&project_code=${this.$route.params.projectId}&service_code=wetest&role_viewer=wetest`
                         })
                     } else {
                         this.$showTips({

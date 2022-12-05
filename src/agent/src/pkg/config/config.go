@@ -33,18 +33,19 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"gopkg.in/ini.v1"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	bconfig "github.com/astaxie/beego/config"
-	"github.com/astaxie/beego/logs"
 )
 
 const (
@@ -61,6 +62,9 @@ const (
 	KeyDetectShell       = "devops.agent.detect.shell"
 	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
 	KeyBatchInstall      = "devops.agent.batch.install"
+	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
+	// 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
+	KeyJdkDirPath = "devops.agent.jdk.dir.path"
 )
 
 // AgentConfig Agent 配置
@@ -79,6 +83,8 @@ type AgentConfig struct {
 	DetectShell       bool
 	IgnoreLocalIps    string
 	BatchInstallKey   string
+	LogsKeepHours     int
+	JdkDirPath        string
 }
 
 // AgentEnv Agent 环境配置
@@ -93,7 +99,6 @@ type AgentEnv struct {
 
 var GAgentEnv *AgentEnv
 var GAgentConfig *AgentConfig
-var GIsAgentUpgrading = false
 var GEnvVars map[string]string
 var UseCert bool
 
@@ -171,8 +176,9 @@ func DetectWorkerVersion() string {
 // DetectWorkerVersionByDir 检测指定目录下的Worker文件版本
 func DetectWorkerVersionByDir(workDir string) string {
 	jar := fmt.Sprintf("%s/%s", workDir, WorkAgentFile)
+	tmpDir, _ := systemutil.MkBuildTmpDir()
 	output, err := command.RunCommand(GetJava(),
-		[]string{"-Xmx256m", "-cp", jar, "com.tencent.devops.agent.AgentVersionKt"},
+		[]string{"-Djava.io.tmpdir=" + tmpDir, "-Xmx256m", "-cp", jar, "com.tencent.devops.agent.AgentVersionKt"},
 		workDir, nil)
 
 	if err != nil {
@@ -210,68 +216,81 @@ func BuildAgentJarPath() string {
 func LoadAgentConfig() error {
 	GAgentConfig = new(AgentConfig)
 
-	conf, err := bconfig.NewConfig("ini", systemutil.GetWorkDir()+"/.agent.properties")
+	conf, err := ini.Load(filepath.Join(systemutil.GetWorkDir(), ".agent.properties"))
 	if err != nil {
 		logs.Error("load agent config failed, ", err)
 		return errors.New("load agent config failed")
 	}
 
-	parallelTaskCount, err := conf.Int(KeyTaskCount)
+	parallelTaskCount, err := conf.Section("").Key(KeyTaskCount).Int()
 	if err != nil || parallelTaskCount < 0 {
 		return errors.New("invalid parallelTaskCount")
 	}
 
-	projectId := strings.TrimSpace(conf.String(KeyProjectId))
+	projectId := strings.TrimSpace(conf.Section("").Key(KeyProjectId).String())
 	if len(projectId) == 0 {
 		return errors.New("invalid projectId")
 	}
 
-	agentId := conf.String(KeyAgentId)
+	agentId := conf.Section("").Key(KeyAgentId).String()
 	if len(agentId) == 0 {
 		return errors.New("invalid agentId")
 	}
 
-	secretKey := strings.TrimSpace(conf.String(KeySecretKey))
+	secretKey := strings.TrimSpace(conf.Section("").Key(KeySecretKey).String())
 	if len(secretKey) == 0 {
 		return errors.New("invalid secretKey")
 	}
 
-	landunGateway := strings.TrimSpace(conf.String(KeyDevopsGateway))
+	landunGateway := strings.TrimSpace(conf.Section("").Key(KeyDevopsGateway).String())
 	if len(landunGateway) == 0 {
 		return errors.New("invalid landunGateway")
 	}
 
-	landunFileGateway := strings.TrimSpace(conf.String(KeyDevopsFileGateway))
+	landunFileGateway := strings.TrimSpace(conf.Section("").Key(KeyDevopsFileGateway).String())
 	if len(landunFileGateway) == 0 {
 		logs.Warn("fileGateway is empty")
 	}
 
-	envType := strings.TrimSpace(conf.String(KeyEnvType))
+	envType := strings.TrimSpace(conf.Section("").Key(KeyEnvType).String())
 	if len(envType) == 0 {
 		return errors.New("invalid envType")
 	}
 
-	slaveUser := strings.TrimSpace(conf.String(KeySlaveUser))
+	slaveUser := strings.TrimSpace(conf.Section("").Key(KeySlaveUser).String())
 	if len(slaveUser) == 0 {
 		slaveUser = systemutil.GetCurrentUser().Username
 	}
 
-	collectorOn, err := conf.Bool(KeyCollectorOn)
+	collectorOn, err := conf.Section("").Key(KeyCollectorOn).Bool()
 	if err != nil {
 		collectorOn = true
 	}
-	timeout, err := conf.Int64(KeyRequestTimeoutSec)
+	timeout, err := conf.Section("").Key(KeyRequestTimeoutSec).Int64()
 	if err != nil {
 		timeout = 5
 	}
-	detectShell := conf.DefaultBool(KeyDetectShell, false)
+	detectShell := conf.Section("").Key(KeyDetectShell).MustBool(false)
 
-	ignoreLocalIps := strings.TrimSpace(conf.String(KeyIgnoreLocalIps))
+	ignoreLocalIps := strings.TrimSpace(conf.Section("").Key(KeyIgnoreLocalIps).String())
 	if len(ignoreLocalIps) == 0 {
-		ignoreLocalIps = "127.0.0.1,192.168.10.255" // 临时代码，上线更新即移除
+		ignoreLocalIps = "127.0.0.1"
 	}
 
-	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.String(KeyBatchInstall))
+	logsKeepHours, err := conf.Section("").Key(KeyLogsKeepHours).Int()
+	if err != nil {
+		logsKeepHours = 96
+	}
+
+	jdkDirPath := conf.Section("").Key(KeyJdkDirPath).String()
+	// 如果路径为空，是第一次，需要主动去拿一次
+	if jdkDirPath == "" {
+		jdkDirPath = getJavaDir()
+	}
+
+	GAgentConfig.LogsKeepHours = logsKeepHours
+
+	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
 
 	GAgentConfig.Gateway = landunGateway
 	systemutil.DevopsGateway = landunGateway
@@ -301,6 +320,9 @@ func LoadAgentConfig() error {
 	GAgentConfig.IgnoreLocalIps = ignoreLocalIps
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
 	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
+	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)
+	GAgentConfig.JdkDirPath = jdkDirPath
+	logs.Info("jdkDirPath: ", GAgentConfig.JdkDirPath)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -321,6 +343,8 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyRequestTimeoutSec + "=" + strconv.FormatInt(GAgentConfig.TimeoutSec, 10) + "\n")
 	content.WriteString(KeyDetectShell + "=" + strconv.FormatBool(GAgentConfig.DetectShell) + "\n")
 	content.WriteString(KeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
+	content.WriteString(KeyLogsKeepHours + "=" + strconv.Itoa(GAgentConfig.LogsKeepHours) + "\n")
+	content.WriteString(KeyJdkDirPath + "=" + GAgentConfig.JdkDirPath + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {
@@ -342,12 +366,28 @@ func (a *AgentConfig) GetAuthHeaderMap() map[string]string {
 
 // GetJava 获取本地java命令路径
 func GetJava() string {
-	workDir := systemutil.GetWorkDir()
 	if systemutil.IsMacos() {
-		return workDir + "/jre/Contents/Home/bin/java"
+		return GAgentConfig.JdkDirPath + "/Contents/Home/bin/java"
 	} else {
-		return workDir + "/jre/bin/java"
+		return GAgentConfig.JdkDirPath + "/bin/java"
 	}
+}
+
+func SaveJdkDir(dir string) {
+	if dir == GAgentConfig.JdkDirPath {
+		return
+	}
+	GAgentConfig.JdkDirPath = dir
+	GAgentConfig.SaveConfig()
+}
+
+// getJavaDir 获取本地java文件夹
+func getJavaDir() string {
+	workDir := systemutil.GetWorkDir()
+	if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
+		return workDir + "/jre"
+	}
+	return workDir + "/jdk"
 }
 
 // initCert 初始化证书
@@ -370,7 +410,7 @@ func initCert() {
 		logs.Warn("Reading server certificate: %s", err)
 		return
 	}
-	logs.Informational("Cert content is: %s", string(caCert))
+	logs.Info("Cert content is: %s", string(caCert))
 	caCertPool, err := x509.SystemCertPool()
 	// Windows 下 SystemCertPool 返回 nil
 	if err != nil || caCertPool == nil {
@@ -380,6 +420,6 @@ func initCert() {
 	caCertPool.AppendCertsFromPEM(caCert)
 	tlsConfig := &tls.Config{RootCAs: caCertPool}
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = tlsConfig
-	logs.Informational("load cert success")
+	logs.Info("load cert success")
 	UseCert = true
 }

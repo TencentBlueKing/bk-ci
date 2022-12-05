@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -57,6 +58,7 @@ class UserPipelineFileResourceImpl @Autowired constructor(
         return Result(archiveFileService.show(userId, projectId, artifactoryType, path))
     }
 
+    @Timed
     override fun searchFile(
         userId: String,
         projectCode: String,

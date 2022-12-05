@@ -70,7 +70,7 @@ class InfluxdbClient {
     private val influxDB by lazy {
 
         val influxdb = InfluxDBFactory.connect(influxdbServer, influxdbUserName, influxdbPassword)
-//
+
         try {
             // 如果指定的数据库不存在，则新建一个新的数据库，并新建一个默认的数据保留规则
             if (!databaseExist(influxdb, dbName)) {
@@ -89,9 +89,9 @@ class InfluxdbClient {
             .flushDuration(flushDuration)
             .bufferLimit(bufferLimit)
             .jitterDuration(jitterDuration)
-            .exceptionHandler { points: Iterable<Point>, e: Throwable? ->
+            .exceptionHandler { points: Iterable<Point>, ignored: Throwable? ->
                 try {
-                    points.forEach { logger.error("failed to write point $it", e) }
+                    points.forEach { logger.error("BKSystemErrorMonitor|failed to write point $it", ignored) }
                 } catch (ignored: Exception) {
                     // Do nothing , 这个handler不能抛异常,否则influxdb批量插入的线程就会停止
                 }
@@ -135,7 +135,7 @@ class InfluxdbClient {
         insert(any::class.java.simpleName, tags, fields)
     }
 
-    fun insert(measurement: String, tags: Map<String, String>, fields: Map<String, Any>) {
+    fun insert(measurement: String, tags: Map<String, String>, fields: Map<String, Any?>) {
         val builder: Point.Builder = measurement(measurement)
         builder.tag(tags)
         builder.fields(fields)
@@ -147,8 +147,8 @@ class InfluxdbClient {
         return influxDB.query(Query(sql, dbName))
     }
 
-    private fun getFieldTagMap(any: Any): Pair<Map<String, Any>/*field*/, Map<String, String>/*tag*/> {
-        val field: MutableMap<String, Any> = mutableMapOf()
+    private fun getFieldTagMap(any: Any): Pair<Map<String, Any?>/*field*/, Map<String, String>/*tag*/> {
+        val field: MutableMap<String, Any?> = mutableMapOf()
         val tag: MutableMap<String, String> = mutableMapOf()
 
         FieldUtils.getAllFields(any.javaClass).forEach {
@@ -166,10 +166,10 @@ class InfluxdbClient {
     private fun generateField(
         it: Field,
         any: Any,
-        field: MutableMap<String, Any>
+        field: MutableMap<String, Any?>
     ) {
         val value = it.get(any)
-        field[it.name] = if (value == null) "" else {
+        field[it.name] = if (value == null) null else {
             if (value is Number) value else value.toString()
         }
     }

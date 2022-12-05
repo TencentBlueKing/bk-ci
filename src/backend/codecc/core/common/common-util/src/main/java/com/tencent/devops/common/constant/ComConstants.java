@@ -31,11 +31,10 @@ package com.tencent.devops.common.constant;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Arrays;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -962,7 +961,7 @@ public interface ComConstants {
         public static Set<String> getByStatType(Set<String> type) {
             Set<String> createFrom;
             if (type != null) {
-                createFrom = Sets.newHashSet();
+                createFrom = new HashSet<>();
                 if (type.contains(DefectStatType.GONGFENG_SCAN.value)) {
                     // 开源
                     createFrom.add(GONGFENG_SCAN.value());
@@ -973,7 +972,7 @@ public interface ComConstants {
                     createFrom.add(BS_PIPELINE.value());
                 }
             } else {
-                createFrom = Sets.newHashSet(BS_CODECC.value(), BS_PIPELINE.value(), GONGFENG_SCAN.value());
+                createFrom = new HashSet<>(Arrays.asList(BS_CODECC.value(), BS_PIPELINE.value(), GONGFENG_SCAN.value()));
             }
             return createFrom;
         }
@@ -1008,7 +1007,7 @@ public interface ComConstants {
 
         @NotNull
         public static List<Integer> getEffectiveStatus() {
-            return Lists.newArrayList(NOT_FOLLOW_UP_0.value, NOT_FOLLOW_UP_1.value, ACCESSED.value, EXPERIENCE.value);
+            return Arrays.asList(NOT_FOLLOW_UP_0.value, NOT_FOLLOW_UP_1.value, ACCESSED.value, EXPERIENCE.value);
         }
     }
 

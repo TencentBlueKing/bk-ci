@@ -54,8 +54,6 @@ data class BuildHistory(
     val status: String,
     @ApiModelProperty("各阶段状态", required = true)
     val stageStatus: List<BuildStageStatus>?,
-    @ApiModelProperty("结束原因", required = true)
-    val deleteReason: String?,
     @ApiModelProperty("服务器当前时间戳", required = true)
     val currentTimestamp: Long,
     @ApiModelProperty("是否是手机启动", required = false)
@@ -91,5 +89,7 @@ data class BuildHistory(
     @ApiModelProperty("自定义构建版本号", required = false)
     val buildNumAlias: String? = null,
     @ApiModelProperty("更新时间", required = false)
-    val updateTime: Long? = null
+    val updateTime: Long? = null,
+    @ApiModelProperty("并发时,设定的group", required = false)
+    var concurrencyGroup: String? = null
 )

@@ -202,7 +202,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         val fileDetail = try {
             bkRepoService.show(userId, projectId, artifactoryType, path)
         } catch (e: Exception) {
-            logger.error("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
+            logger.info("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
@@ -218,7 +218,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         }
 
         if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
-            logger.error("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
+            logger.info("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
@@ -245,7 +245,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 artifactoryType = artifactoryType,
                 modifiedTime = fileDetail.modifiedTime,
                 md5 = fileDetail.checksums.md5,
-                buildNum = NumberUtils.toInt(fileDetail.meta[ARCHIVE_PROPS_BUILD_NO], 0)
+                buildNum = NumberUtils.toInt(fileDetail.meta[ARCHIVE_PROPS_BUILD_NO], 0),
+                nodeMetadata = fileDetail.nodeMetadata
             )
         )
     }
@@ -267,14 +268,10 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
-        if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
-            throw BadRequestException("Path must end with ipa or apk")
-        }
 
         val result = if (path.endsWith(".ipa")) {
             bkRepoAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, false)
         } else {
-            // jfrog 对 android app 只有 derected方式
             bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, true)
         }
         return Result(result)

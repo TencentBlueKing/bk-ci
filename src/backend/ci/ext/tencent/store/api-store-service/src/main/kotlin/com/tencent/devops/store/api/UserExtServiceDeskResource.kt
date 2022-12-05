@@ -44,6 +44,7 @@ import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
+import javax.ws.rs.DELETE
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -124,6 +125,18 @@ interface UserExtServiceDeskResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<MyServiceVO>
+
+    @ApiOperation("工作台--删除扩展服务")
+    @DELETE
+    @Path("/{serviceCode}/delete")
+    fun deleteExtensionService(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("扩展服务Code", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String
+    ): Result<Boolean>
 
     @ApiOperation("根据插件版本ID获取插件详情")
     @GET

@@ -1,7 +1,0 @@
-dependencies {
-    compile project(":core:apiquery:biz-apiquery")
-}
-
-version = null
-
-apply from: "$rootDir/task_spring_boot_package.gradle"

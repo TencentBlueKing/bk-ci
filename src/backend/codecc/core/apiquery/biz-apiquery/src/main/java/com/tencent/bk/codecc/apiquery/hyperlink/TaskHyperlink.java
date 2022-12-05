@@ -61,7 +61,7 @@ public class TaskHyperlink extends AbstractCellWriteHandler {
 
                 // 去除小数点
                 String taskId = StringUtils.substringBefore(taskIdCellStr, ".");
-                hyperLink = "http://" + codeccServerApi + "/codecc/" + projectId + "/task/" + taskId + "/detail";
+                hyperLink = codeccServerApi + "/codecc/" + projectId + "/task/" + taskId + "/detail";
             } else {
                 return;
             }

@@ -52,7 +52,7 @@ public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
      * @param taskId
      * @return
      */
-    TaskInfoEntity findByTaskId(long taskId);
+    TaskInfoEntity findFirstByTaskId(long taskId);
 
     /**
      * 根据taskId查询任务的所有工具
@@ -61,7 +61,7 @@ public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
      * @return
      */
     @Query(fields = "{'task_id':1, 'tool_config_info_list':1}", value = "{'task_id': ?0}")
-    TaskInfoEntity findToolListByTaskId(long taskId);
+    TaskInfoEntity findToolListFirstByTaskId(long taskId);
 
     /**
      * 通过taskid查询任务信息，不包含工具信息
@@ -70,7 +70,7 @@ public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
      * @return
      */
     @Query(fields = "{'tool_config_info_list':0}", value = "{'task_id': ?0}")
-    TaskInfoEntity findTaskInfoWithoutToolsByTaskId(long taskId);
+    TaskInfoEntity findTaskInfoWithoutToolsFirstByTaskId(long taskId);
 
     /**
      * 根据任务英文名查询相应代码扫描任务
@@ -78,7 +78,7 @@ public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
      * @param nameEn
      * @return
      */
-    TaskInfoEntity findByNameEn(String nameEn);
+    TaskInfoEntity findFirstByNameEn(String nameEn);
 
     /**
      * 根据业务id清单查询对应代码扫描任务清单
@@ -95,7 +95,7 @@ public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
      * @return
      */
     @Query(fields = "{'code_lang':1}", value = "{'task_id': ?0}")
-    TaskInfoEntity findCodeLangByTaskId(long taskId);
+    TaskInfoEntity findCodeLangFirstByTaskId(long taskId);
 
     /**
      * 通过项目英文名查询
@@ -112,7 +112,7 @@ public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
      * @param pipelineId
      * @return
      */
-    TaskInfoEntity findByPipelineId(String pipelineId);
+    TaskInfoEntity findFirstByPipelineId(String pipelineId);
 
     /**
      * 通过流水线ID清单获取任务信息清单
@@ -239,16 +239,16 @@ public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
      * @param taskId
      * @return
      */
-    TaskInfoEntity findByTaskIdAndStatus(long taskId, int status);
+    TaskInfoEntity findFirstByTaskIdAndStatus(long taskId, int status);
 
     /**
      * 根据gongfengid查询
      * @param gongfengProjectId
      * @return
      */
-    TaskInfoEntity findByGongfengProjectIdAndStatusAndProjectIdRegex(Integer gongfengProjectId,
-                                                                     Integer status,
-                                                                     String projectId);
+    TaskInfoEntity findFirstByGongfengProjectIdAndStatusAndProjectIdRegex(Integer gongfengProjectId,
+                                                                          Integer status,
+                                                                          String projectId);
 
     /**
      * 通过项目ID和createFrom判断是否存在开源治理项目

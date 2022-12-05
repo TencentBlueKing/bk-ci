@@ -31,6 +31,8 @@
 
 package com.tencent.bkrepo.npm.resource
 
+import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.bkrepo.common.service.util.ResponseBuilder
 import com.tencent.bkrepo.npm.api.NpmFixToolResource
 import com.tencent.bkrepo.npm.artifact.NpmArtifactInfo
 import com.tencent.bkrepo.npm.pojo.fixtool.DateTimeFormatResponse
@@ -55,5 +57,10 @@ class NpmFixToolResourceImpl @Autowired constructor(
 
     override fun fixPackageManager(): List<PackageManagerResponse> {
         return npmFixToolService.fixPackageManager()
+    }
+
+    override fun inconsistentCorrectionData(artifactInfo: NpmArtifactInfo, name: String): Response<Any> {
+        npmFixToolService.inconsistentCorrectionData(artifactInfo, name)
+        return ResponseBuilder.success()
     }
 }

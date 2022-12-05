@@ -187,4 +187,14 @@ class FileSystemClientTest {
         fileSystemClient.mergeFiles(listOf(inputFile, inputFile), file)
         assertEquals("Hello, world!Hello, world!", file.readText())
     }
+
+    @Test
+    fun createLinkTest() {
+        val linkFile = fileSystemClient.createLink("/", outputFileName, inputFile).toFile()
+        inputFile.delete()
+        assertEquals(false, inputFile.exists())
+        assertEquals(true, linkFile.exists())
+        linkFile.delete()
+        assertEquals(false, linkFile.exists())
+    }
 }

@@ -146,6 +146,13 @@ class P4Api(
         }
     }
 
+    fun getFileContent(filePath: String, reversion: Int): String {
+        return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
+            p4Server.connectionRetry()
+            p4Server.getFileContent(filePath = filePath, reversion = reversion)
+        }
+    }
+
     private fun existEvent(
         p4Server: P4Server,
         eventType: TriggerType,

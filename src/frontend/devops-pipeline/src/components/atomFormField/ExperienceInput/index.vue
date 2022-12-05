@@ -19,7 +19,7 @@
         },
         computed: {
             artifactoryUrl () {
-                return `${WEB_URL_PIRFIX}/artifactory/`
+                return `${WEB_URL_PREFIX}/artifactory/`
             }
         },
         methods: {

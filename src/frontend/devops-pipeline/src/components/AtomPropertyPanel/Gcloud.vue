@@ -39,7 +39,7 @@
             }
         },
         computed: {
-            ...mapState('soda', [
+            ...mapState('common', [
                 'gcloudTempList'
             ]),
             projectId () {
@@ -67,7 +67,7 @@
         },
 
         watch: {
-            'gcloudTempList': function () {
+            gcloudTempList: function () {
                 this.updateTemplateList()
                 if (this.gcloudTempList.length > 0 && this.element.templateId) {
                     this.handleSelect('templateId', this.element.templateId)
@@ -88,7 +88,7 @@
         },
 
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestGcloudTempList'
             ]),
             updateTemplateList () {
@@ -112,8 +112,8 @@
                 const curTemplate = this.getCurrentTemp(value)
                 const preTask = this.element.taskParameters || ''
                 // 处理几个hidden的字段
-                Object.assign(newElement, { 'apiAuthCode': curTemplate.api_authorization_code })
-                Object.assign(newElement, { 'taskParameters': {} })
+                Object.assign(newElement, { apiAuthCode: curTemplate.api_authorization_code })
+                Object.assign(newElement, { taskParameters: {} })
                 // 每次切换task则清楚动态加入的element
                 this.deleteNewElement()
                 // 页面渲染新加的动态参数
@@ -130,7 +130,7 @@
                         Object.assign(newElement, { [curParam.key]: curValue })
                         Object.assign(CurTaskParams, { [curParam.key]: curValue })
                     }
-                    Object.assign(newElement, { 'taskParameters': CurTaskParams })
+                    Object.assign(newElement, { taskParameters: CurTaskParams })
                 }
                 this.updateAtom({
                     element: this.element,
@@ -148,7 +148,7 @@
                         Object.assign(taskParams, { [itemValue]: this.element[itemValue] })
                     }
                 })
-                Object.assign(newElement, { 'taskParameters': taskParams })
+                Object.assign(newElement, { taskParameters: taskParams })
 
                 this.updateAtom({
                     element: this.element,
@@ -178,7 +178,7 @@
             },
             deleteNewElement () {
                 // 把动态增加的元素从element中移除
-                Object.keys(this.element).map(key => {
+                Object.keys(this.element).forEach(key => {
                     const notRemove = this.settingKeys.find(item => item === key)
                     if (!notRemove) {
                         this.deletePropKey({

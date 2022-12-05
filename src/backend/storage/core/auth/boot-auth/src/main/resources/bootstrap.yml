@@ -1,4 +1,4 @@
-service.name: auth
+spring.application.name: auth
 server.port: 25902
 
 auth:

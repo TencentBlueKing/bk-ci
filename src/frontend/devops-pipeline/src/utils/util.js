@@ -531,7 +531,7 @@ export function debounce (fn, interval = DEFAULT_TIME_INTERVAL) {
     return (...args) => {
         clearTimeout(timer)
         timer = setTimeout(() => {
-            clearTimeout(timer)
+            timer = null
             return fn(...args)
         }, interval)
     }
@@ -583,6 +583,10 @@ export function getQueryParamList (arr = [], key) {
     } else if (arr && typeof arr === 'string') {
         return `${key}=${encodeURIComponent(arr)}`
     }
+}
+
+export function isAbsoluteURL (url = '') {
+    return /^https?:\/\//i.test(url)
 }
 
 export function getParamsValuesMap (params = []) {

@@ -28,7 +28,11 @@ package com.tencent.devops.lambda.pojo
 
 data class ProjectOrganize(
     val projectId: String,
+    val secrecy: Boolean?,
     val bgName: String,
     val deptName: String,
-    val centerName: String
+    val centerName: String,
+    val bgId: String,
+    val deptId: String,
+    val centerId: String
 )

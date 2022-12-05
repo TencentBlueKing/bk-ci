@@ -42,7 +42,8 @@ const store = {
         },
         tGitOAuth: {
             project: []
-        }
+        },
+        templateCodeLib: null
     },
     getters: {}
 }

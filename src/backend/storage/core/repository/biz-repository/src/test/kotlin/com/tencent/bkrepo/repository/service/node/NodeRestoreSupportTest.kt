@@ -59,6 +59,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.data.mongodb.core.query.where
+import java.sql.Timestamp
 import java.time.LocalDateTime
 
 @DisplayName("节点恢复测试")
@@ -107,7 +108,7 @@ class NodeRestoreSupportTest @Autowired constructor(
         val list2 = nodeService.listDeletedPoint(artifactInfo)
         Assertions.assertEquals(2, list2.size)
         // 恢复
-        val option = NodeRestoreOption(deletedTime = list2[0].deletedTime)
+        val option = NodeRestoreOption(deletedId = Timestamp.valueOf(list2[0].deletedTime).time)
         val result = nodeService.restoreNode(artifactInfo, option)
         Assertions.assertEquals("/a/1", result.fullPath)
         Assertions.assertEquals(1, result.restoreCount)
@@ -130,7 +131,10 @@ class NodeRestoreSupportTest @Autowired constructor(
         Assertions.assertEquals(1, list.size)
 
         // FAILED 模式恢复
-        val option1 = NodeRestoreOption(deletedTime = list[0].deletedTime, conflictStrategy = ConflictStrategy.FAILED)
+        val option1 = NodeRestoreOption(
+            deletedId = Timestamp.valueOf(list[0].deletedTime).time,
+            conflictStrategy = ConflictStrategy.FAILED
+        )
         assertThrows<ErrorCodeException> { nodeService.restoreNode(artifactInfo, option1) }
         // 数据不会有变化
         Assertions.assertEquals(2, nodeService.getNodeDetail(artifactInfo)!!.size)
@@ -172,7 +176,7 @@ class NodeRestoreSupportTest @Autowired constructor(
         Assertions.assertEquals(0, nodeService.listDeletedPoint(rootArtifactInfo).size)
         // 使用子节点的删除点来进行恢复
         val deletedTime = nodeService.listDeletedPoint(subArtifactInfo)[0].deletedTime
-        val option = NodeRestoreOption(deletedTime = deletedTime)
+        val option = NodeRestoreOption(deletedId = Timestamp.valueOf(deletedTime).time)
         val result = nodeService.restoreNode(rootArtifactInfo, option)
         Assertions.assertEquals("/", result.fullPath)
         Assertions.assertEquals(3, result.restoreCount)
@@ -184,7 +188,7 @@ class NodeRestoreSupportTest @Autowired constructor(
     @DisplayName("测试恢复无冲突的目录")
     fun testRestoreFolder1() {
         val deletedTime = initTestFolder(false)
-        val option = NodeRestoreOption(deletedTime = deletedTime)
+        val option = NodeRestoreOption(deletedId = Timestamp.valueOf(deletedTime).time)
         val result = nodeService.restoreNode(artifactInfo("/a"), option)
 
         Assertions.assertEquals(5, result.restoreCount)
@@ -197,7 +201,10 @@ class NodeRestoreSupportTest @Autowired constructor(
     @DisplayName("测试FAILED模式恢复存在冲突的目录")
     fun testRestoreFolder2() {
         val deletedTime = initTestFolder(true)
-        val option = NodeRestoreOption(deletedTime = deletedTime, conflictStrategy = ConflictStrategy.FAILED)
+        val option = NodeRestoreOption(
+            deletedId = Timestamp.valueOf(deletedTime).time,
+            conflictStrategy = ConflictStrategy.FAILED
+        )
         assertThrows<ErrorCodeException> { nodeService.restoreNode(artifactInfo("/"), option) }
     }
 
@@ -205,7 +212,10 @@ class NodeRestoreSupportTest @Autowired constructor(
     @DisplayName("测试SKIP模式恢复存在冲突的目录")
     fun testRestoreFolder3() {
         val deletedTime = initTestFolder(true)
-        val option = NodeRestoreOption(deletedTime = deletedTime, conflictStrategy = ConflictStrategy.SKIP)
+        val option = NodeRestoreOption(
+            deletedId = Timestamp.valueOf(deletedTime).time,
+            conflictStrategy = ConflictStrategy.SKIP
+        )
         val result = nodeService.restoreNode(artifactInfo("/a"), option)
 
         Assertions.assertEquals(2, result.restoreCount)
@@ -218,7 +228,10 @@ class NodeRestoreSupportTest @Autowired constructor(
     @DisplayName("测试OVERWRITE模式恢复存在冲突的目录")
     fun testRestoreFolder4() {
         val deletedTime = initTestFolder(true)
-        val option = NodeRestoreOption(deletedTime = deletedTime, conflictStrategy = ConflictStrategy.OVERWRITE)
+        val option = NodeRestoreOption(
+            deletedId = Timestamp.valueOf(deletedTime).time,
+            conflictStrategy = ConflictStrategy.OVERWRITE
+        )
         val result = nodeService.restoreNode(artifactInfo("/a"), option)
 
         Assertions.assertEquals(5, result.restoreCount)

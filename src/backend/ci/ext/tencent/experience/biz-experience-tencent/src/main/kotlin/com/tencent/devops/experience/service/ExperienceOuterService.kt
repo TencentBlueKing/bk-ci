@@ -236,16 +236,20 @@ class ExperienceOuterService @Autowired constructor(
         val nowMinute = LocalDateTime.now().plusMinutes(1).withSecond(0)
         val limitKey = "e:out:l:ip:$realIp:${df.format(nowMinute)}"
         val limit = redisOperation.increment(limitKey, 1)
-        redisOperation.expire(limitKey, 60)
-        return limit ?: 0 > 10 // 60s内只能登录10次
+        if (limit == 1L) {
+            redisOperation.expire(limitKey, 60)
+        }
+        return (limit ?: 0) > 10 // 60s内只能登录10次
     }
 
     private fun isAccountLimit(username: String): Boolean {
         val nowMinute = LocalDateTime.now().plusMinutes(1).withSecond(0)
         val limitKey = "e:out:l:ip:$username:${df.format(nowMinute)}"
         val limit = redisOperation.increment(limitKey, 1)
-        redisOperation.expire(limitKey, 60)
-        return limit ?: 0 > 5 // 60s内只能登录5次
+        if (limit == 1L) {
+            redisOperation.expire(limitKey, 60)
+        }
+        return (limit ?: 0) > 5 // 60s内只能登录5次
     }
 
     private fun tokenRedisKey(token: String) = "e:out:l:$token"

@@ -61,36 +61,46 @@ class StreamActiveProjectsReportJob @Autowired constructor(
 
         // 增加逻辑判断：只在灰度环境执行
         if (!streamSlaConfig.switch.toBoolean()) {
-            logger.info("switch is false , no start")
+            logger.info("StreamActiveProjectsReportJob|reportActiveProjectsDaily|switch is false , no start")
             return
         }
         if (illegalConfig()) {
-            logger.info("some params is null , reportDaily no start")
+            logger.info("StreamActiveProjectsReportJob|reportActiveProjectsDaily|some params is null")
             return
         }
         val redisLock = RedisLock(redisOperation, STREAM_ACTIVE_PROJECT_SLA_REPORT_KEY, 60L)
         try {
-            logger.info("StreamActiveProjectsReportJob , reportDaily start")
+            logger.info("StreamActiveProjectsReportJob|reportActiveProjectsDaily|start")
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 doReport()
-                logger.info("StreamActiveProjectsReportJob , reportDaily finish")
+                logger.info("StreamActiveProjectsReportJob|reportActiveProjectsDaily|finish")
             } else {
-                logger.info("reportDaily is running")
+                logger.info("StreamActiveProjectsReportJob|reportActiveProjectsDaily|running")
             }
         } catch (e: Throwable) {
-            logger.error("reportDaily error:", e)
+            logger.warn("StreamActiveProjectsReportJob|reportActiveProjectsDail|error", e)
         }
     }
 
     private fun doReport() {
-        // 获取v2版本的指定日志的日活跃项目
-        val yesterday = LocalDateTime.now().minusDays(1)
-        val startTime = yesterday.withHour(0).withMinute(0).withSecond(0).timestampmilli()
-        val endTime = yesterday.withHour(23).withMinute(59).withSecond(59).timestampmilli()
+        // 获取v2版本的指定日期的日活跃项目
+        val startDay = LocalDateTime.now().minusDays(7)
+        val endDay = LocalDateTime.now().minusDays(1)
+        val startTime = startDay.withHour(0).withMinute(0).withSecond(0).timestampmilli()
+        val endTime = endDay.withHour(23).withMinute(59).withSecond(59).timestampmilli()
         val projectCount = gitRequestEventBuildDao.getBuildActiveProjectCount(dslContext, startTime, endTime)
+        val repoHookProjectCount = gitRequestEventBuildDao.getBuildRepoHookActiveProjectCount(
+            dslContext = dslContext,
+            startTime = startTime,
+            endTime = endTime
+        )
         // 上报数据
-        oteamStatus(projectCount.toDouble(), streamSlaConfig.oteamActiveProjectTarget, startTime)
+        oteamStatus(
+            data = projectCount.toDouble() + repoHookProjectCount.toDouble(),
+            targetId = streamSlaConfig.oteamActiveProjectTarget,
+            startTime = endTime
+        )
     }
     private fun illegalConfig() =
         null == streamSlaConfig.oteamUrl || null == streamSlaConfig.oteamToken ||
@@ -106,7 +116,10 @@ class StreamActiveProjectsReportJob @Autowired constructor(
         startTime: Long
     ) {
         if (null == streamSlaConfig.oteamUrl) {
-            logger.warn("null oteamUrl , can not oteam status , targetId: $targetId , data: $data")
+            logger.warn(
+                "StreamActiveProjectsReportJob|oteamStatus" +
+                    "|null oteamUrl , can not oteam status , targetId: $targetId , data: $data"
+            )
             return
         }
         try {
@@ -132,7 +145,7 @@ class StreamActiveProjectsReportJob @Autowired constructor(
                           "jsonrpc":"2.0",
                           "id":"$timestamp"
                         }
-                    """.trimIndent(),
+                """.trimIndent(),
                 headers = mapOf(
                     "timestamp" to timestamp,
                     "techmapType" to techmapType,
@@ -141,9 +154,13 @@ class StreamActiveProjectsReportJob @Autowired constructor(
                     "content-type" to "application/json;charset=UTF-8"
                 )
             )
-            logger.info("oteam status , id:{} , resp:{}", timestamp, response.body()!!.string())
+            logger.info(
+                "StreamActiveProjectsReportJob|oteamStatus" +
+                    "|oteam status , id:{} , resp:{}",
+                timestamp, response.body()!!.string()
+            )
         } catch (e: Exception) {
-            logger.error("error , ", e)
+            logger.warn("StreamActiveProjectsReportJob|oteamStatus|error", e)
         }
     }
 }

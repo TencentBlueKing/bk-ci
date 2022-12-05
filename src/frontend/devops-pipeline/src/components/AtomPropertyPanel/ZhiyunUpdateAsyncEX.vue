@@ -46,7 +46,7 @@
             commonModel () {
                 const { product, pkgName, fromVersion, toVersion, installPath, ips, route } = this.newModel
                 return {
-                    'rows': { product, pkgName, fromVersion, toVersion, installPath, ips, route }
+                    rows: { product, pkgName, fromVersion, toVersion, installPath, ips, route }
                 }
             }
         },

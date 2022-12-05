@@ -37,6 +37,7 @@ import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.repository.pojo.project.RepoRangeQueryRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepoCreateRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepoDeleteRequest
+import com.tencent.bkrepo.repository.pojo.repo.RepoListOption
 import com.tencent.bkrepo.repository.pojo.repo.RepoUpdateRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
 import com.tencent.bkrepo.repository.pojo.repo.RepositoryInfo
@@ -49,7 +50,6 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -121,50 +121,11 @@ interface RepositoryClient {
         @PathVariable repoType: String
     ): Response<Page<RepositoryDetail>>
 
-    @Deprecated("replace with getRepoDetail")
-    @GetMapping("/query/{projectId}/{repoName}/{type}")
-    fun query(
-        @ApiParam(value = "所属项目", required = true)
+    @ApiOperation("查询项目下的有权限的仓库列表")
+    @PostMapping("/permission/{userId}/{projectId}")
+    fun listPermissionRepo(
+        @PathVariable userId: String,
         @PathVariable projectId: String,
-        @ApiParam(value = "仓库名称", required = true)
-        @PathVariable repoName: String,
-        @ApiParam(value = "仓库类型", required = true)
-        @PathVariable type: String
-    ): Response<RepositoryDetail?>
-
-    @Deprecated("replace with getRepoDetail")
-    @GetMapping("/query/{projectId}/{repoName}")
-    fun query(
-        @ApiParam(value = "所属项目", required = true)
-        @PathVariable projectId: String,
-        @ApiParam(value = "仓库名称", required = true)
-        @PathVariable repoName: String
-    ): Response<RepositoryDetail?>
-
-    @Deprecated("replace with getRepoDetail")
-    @ApiOperation("查询仓库详情")
-    @GetMapping("/detail/{projectId}/{repoName}/{type}")
-    fun getRepoDetailWithType(
-        @ApiParam(value = "所属项目", required = true)
-        @PathVariable projectId: String,
-        @ApiParam(value = "仓库名称", required = true)
-        @PathVariable repoName: String,
-        @ApiParam(value = "仓库类型", required = true)
-        @PathVariable type: String? = null
-    ): Response<RepositoryDetail?>
-
-    @Deprecated("replace with createRepo")
-    @ApiOperation("创建仓库")
-    @PostMapping
-    fun create(@RequestBody request: RepoCreateRequest): Response<RepositoryDetail>
-
-    @Deprecated("replace with updateRepo")
-    @ApiOperation("修改仓库")
-    @PutMapping
-    fun update(@RequestBody request: RepoUpdateRequest): Response<Void>
-
-    @Deprecated("replace with deleteRepo")
-    @ApiOperation("删除仓库")
-    @DeleteMapping
-    fun delete(@RequestBody request: RepoDeleteRequest): Response<Void>
+        @RequestBody option: RepoListOption
+    ): Response<List<RepositoryInfo>>
 }

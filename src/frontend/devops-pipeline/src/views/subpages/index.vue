@@ -47,7 +47,7 @@
                     </section>
                 </triggers>
 
-                <div :class="{ 'more-operation-entry': true, 'active': isDropmenuShow }">
+                <div :class="{ 'more-operation-entry': true }">
                     <show-tooltip placement="bottom-end" :content="$t('subpage.saveTempTooltips')" key="more_operation" name="more_operation" style="z-index: 1">
                         <div class="entry-btn">
                             <i class="entry-circle" v-for="i in [1, 2, 3]" :key="i" />
@@ -128,7 +128,7 @@
                 dialogConfig: {
                     title: '',
                     loading: false,
-                    formData: [],
+                    formData: {},
                     formConfig: [],
                     handleDialogConfirm: () => {},
                     handleDialogCancel: () => {}
@@ -166,6 +166,12 @@
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            hasCodeccAtom () {
+                if (this.execDetail && this.execDetail.model) {
+                    return this.getAllElements(this.execDetail.model.stages).some(element => element['@type'] === 'linuxPaasCodeCCScript')
+                }
+                return false
             },
             templateFormConfig () {
                 return [{
@@ -212,7 +218,7 @@
                 return this.saveStatus || this.executeStatus
             },
             saveBtnDisabled () {
-                return this.saveStatus || this.executeStatus || Object.keys(this.pipelineSetting).length === 0
+                return this.saveStatus || this.executeStatus || Object.keys(this.pipelineSetting).length === 0 || (this.authSettingEditing && Object.keys(this.pipelineAuthority).length === 0)
             },
             canManualStartup () {
                 return this.curPipeline ? this.curPipeline.canManualStartup : false
@@ -617,7 +623,7 @@
                         font-size: 10px;
 
                         &[disabled] {
-                            color: $fontLigtherColor;
+                            color: $fontLighterColor;
                             cursor: auto;
                         }
                     }
@@ -657,7 +663,7 @@
             height: 100%;
 
             .devops-icon {
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 padding-left: 16px;
                 cursor: pointer;
                 &:hover,

@@ -42,8 +42,11 @@ securityUtil = require("util.security_util")
 ciAuthUtil = require("util.ci_auth_util")
 buildUtil = require("util.build_util")
 cjson = require("cjson")
+resolvUtil = require("util.resolv_util")
 
 local ok_table = {status = 0, data = true}
+
+no_container_svr = {"scm" , "sign"}
 
 response_ok = json.encode(ok_table)
 

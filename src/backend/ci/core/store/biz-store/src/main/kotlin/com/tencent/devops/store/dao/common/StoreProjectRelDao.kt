@@ -52,9 +52,10 @@ class StoreProjectRelDao {
         projectCode: String,
         type: Byte,
         storeType: Byte
-    ) {
+    ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 ID,
                 STORE_CODE,
                 PROJECT_CODE,
@@ -62,16 +63,18 @@ class StoreProjectRelDao {
                 STORE_TYPE,
                 CREATOR,
                 MODIFIER
-            )
-                .values(
-                    UUIDUtil.generate(),
-                    storeCode,
-                    projectCode,
-                    type,
-                    storeType,
-                    userId,
-                    userId
-                )
+            ).values(
+                UUIDUtil.generate(),
+                storeCode,
+                projectCode,
+                type,
+                storeType,
+                userId,
+                userId
+            ).onDuplicateKeyUpdate()
+                .set(PROJECT_CODE, projectCode)
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }
@@ -432,6 +435,19 @@ class StoreProjectRelDao {
                 conditions.add(STORE_CODE.`in`(storeCodeList))
             }
             return dslContext.select(STORE_CODE).from(this).where(conditions).fetch()
+        }
+    }
+
+    fun getValidStoreCodes(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeType: StoreTypeEnum
+    ): Result<Record1<String>>? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            return dslContext.select(STORE_CODE).from(this).where(conditions).groupBy(STORE_CODE).fetch()
         }
     }
 

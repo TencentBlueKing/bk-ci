@@ -50,7 +50,8 @@ class GitCIServicesConfDao {
         updateUser: String?
     ) {
         with(TGitCiServicesConf.T_GIT_CI_SERVICES_CONF) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 IMAGE_NAME,
                 IMAGE_TAG,
                 REPO_URL,

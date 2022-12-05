@@ -52,11 +52,12 @@ import javax.servlet.http.HttpServletResponse
 @Suppress("UNCHECKED_CAST")
 open class ArtifactContext(
     repo: RepositoryDetail? = null,
-    artifact: ArtifactInfo? = null
+    artifact: ArtifactInfo? = null,
+    userId: String = SecurityUtils.getUserId()
 ) {
     val request: HttpServletRequest = HttpContextHolder.getRequest()
     val response: HttpServletResponse = HttpContextHolder.getResponse()
-    val userId: String = SecurityUtils.getUserId()
+    val userId: String = userId
     val artifactInfo: ArtifactInfo = artifact ?: request.getAttribute(ARTIFACT_INFO_KEY) as ArtifactInfo
     var repositoryDetail: RepositoryDetail = repo ?: request.getAttribute(REPO_KEY) as RepositoryDetail
     val storageCredentials: StorageCredentials? = repositoryDetail.storageCredentials

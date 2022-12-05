@@ -1,6 +1,6 @@
 <template>
-    <section v-if="container" :class="{ &quot;readonly&quot;: !editable }" class="container-property-panel bk-form bk-form-vertical">
-        <form-field label="Job ID" :is-error="errors.has(&quot;jobId&quot;)" :error-msg="errors.first(&quot;jobId&quot;)" :desc="$t('jobIdTips')">
+    <section v-if="container" :class="{ 'readonly': !editable }" class="container-property-panel bk-form bk-form-vertical">
+        <form-field label="Job ID" :is-error="errors.has('jobId')" :error-msg="errors.first('jobId')" :desc="$t('jobIdTips')">
             <div class="container-resource-name">
                 <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('jobIdTips')" name="jobId" v-validate.initial="`paramsRule|unique:${allJobId}`" :value="container.jobId" :handle-change="handleContainerChange" />
                 <atom-checkbox
@@ -15,7 +15,7 @@
                 </atom-checkbox>
             </div>
         </form-field>
-        <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId }">
+        <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId || isLoadingImage }">
             <form-field :label="$t('editPage.resourceType')">
                 <selector
                     :disabled="!editable"
@@ -36,7 +36,7 @@
                 <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}</span>
             </form-field>
 
-            <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
+            <form-field :label="$t('editPage.image')" v-if="showImagePublicTypeList.includes(buildResourceType)" :required="true" :is-error="errors.has('buildImageVersion') || errors.has('buildResource')" :error-msg="$t('editPage.imageErrMgs')">
                 <enum-input
                     name="imageType"
                     :list="imageTypeList"
@@ -50,7 +50,7 @@
                         <span :class="[{ disable: !editable }, { 'not-recommend': buildImageRecommendFlag === false }, 'image-named']" :title="buildImageRecommendFlag === false ? $t('editPage.notRecomendImage') : buildImageName">{{buildImageName || $t('editPage.chooseImage')}}</span>
                         <bk-button theme="primary" @click.stop="chooseImage" :disabled="!editable">{{buildImageCode ? $t('editPage.reElection') : $t('editPage.select')}}</bk-button>
                     </section>
-                    <bk-select @change="changeImageVersion" :value="buildImageVersion" searchable class="image-tag" :loading="isVersionLoading" :disabled="!editable" v-validate.initial="&quot;required&quot;" name="buildImageVersion">
+                    <bk-select @change="changeImageVersion" :value="buildImageVersion" searchable class="image-tag" :loading="isVersionLoading" :disabled="!editable" v-validate.initial="'required'" name="buildImageVersion">
                         <bk-option v-for="option in versionList"
                             :key="option.versionValue"
                             :id="option.versionValue"
@@ -60,11 +60,18 @@
                     </bk-select>
                 </section>
 
-                <bk-input v-else @change="changeThirdImage" :value="buildResource" :disabled="!editable" class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="&quot;required&quot;" name="buildResource"></bk-input>
+                <bk-input v-else @change="changeThirdImage" :value="buildResource" :disabled="!editable" class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="'required'" name="buildResource"></bk-input>
             </form-field>
-
-            <form-field :label="$t('editPage.assignResource')" v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
-                <container-env-node :disabled="!editable"
+            <form-field
+                :label="$t('editPage.assignResource')"
+                v-if="buildResourceType !== 'MACOS' && buildResourceType !== 'WINDOWS' && !isPublicResourceType && containerModalId && !showImagePublicTypeList.includes(buildResourceType)"
+                :is-error="errors.has('buildResource')"
+                :error-msg="errors.first('buildResource')"
+                :desc="buildResourceType === 'THIRD_PARTY_AGENT_ENV' ? this.$t('editPage.thirdSlaveTips') : ''"
+            >
+                <container-env-node
+                    :required="true"
+                    :disabled="!editable"
                     :os="container.baseOS"
                     :container-id="containerModalId"
                     :build-resource-type="buildResourceType"
@@ -74,11 +81,26 @@
                     :handle-change="changeBuildResource"
                     :add-thrid-slave="addThridSlave"
                     :value="buildResource"
-                    :has-error="errors.has(&quot;buildResource&quot;)"
-                    v-validate.initial="&quot;required&quot;"
+                    :env-project-id="buildResourceProj"
+                    :has-error="errors.has('buildResource')"
+                    v-validate.initial="'required'"
                     name="buildResource"
                 />
             </form-field>
+
+            <!-- windows公共构建机类型 -->
+            <template v-if="buildResourceType === 'WINDOWS'">
+                <form-field :label="$t('editPage.winSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
+                    <bk-select @change="changeWindowSystem" :disabled="!editable" :value="systemVersion" searchable :loading="isLoadingWin" name="systemVersion" v-validate.initial="'required'">
+                        <bk-option v-for="item in windowsVersionList"
+                            :key="item.name"
+                            :id="item.name"
+                            :name="item.systemVersion"
+                        >
+                        </bk-option>
+                    </bk-select>
+                </form-field>
+            </template>
 
             <template v-if="buildResourceType === 'MACOS'">
                 <form-field :label="$t('editPage.macSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
@@ -92,7 +114,7 @@
                     </bk-select>
                 </form-field>
                 <form-field :label="$t('editPage.xcodeVersion')" :required="true" :is-error="errors.has('xcodeVersion')" :error-msg="errors.first(`xcodeVersion`)">
-                    <bk-select :disabled="!editable" :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'">
+                    <bk-select :disabled="!editable" :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'" @toggle="toggleXcode">
                         <bk-option v-for="item in xcodeVersionList"
                             :key="item"
                             :id="item"
@@ -103,11 +125,11 @@
                 </form-field>
             </template>
 
-            <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
+            <form-field :label="$t('editPage.imageTicket')" v-if="showImagePublicTypeList.includes(buildResourceType) && buildImageType === 'THIRD'">
                 <select-input v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></select-input>
             </form-field>
 
-            <section v-if="buildResourceType === 'DOCKER'">
+            <section v-if="['DOCKER', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)">
                 <form-field :label="$t('editPage.performance')" v-show="isShowPerformance">
                     <devcloud-option
                         :disabled="!editable"
@@ -120,8 +142,21 @@
                 </form-field>
             </section>
 
-            <form-field :label="$t('editPage.workspace')" v-if="isThirdParty">
+            <form-field :label="$t('editPage.workspace')" v-if="isThirdParty && !isPCGBuildType">
                 <vuex-input :disabled="!editable" name="workspace" :value="container.dispatchType.workspace" :handle-change="changeBuildResource" :placeholder="$t('editPage.workspaceTips')" />
+            </form-field>
+
+            <form-field v-if="isPCGBuildType">
+                <atom-checkbox
+                    class="show-build-resource"
+                    :value="!!container.dispatchType.useRoot"
+                    :text="$t('editPage.useRootText')"
+                    :desc="$t('editPage.useRootDesc')"
+                    name="useRoot"
+                    :handle-change="changeBuildResource"
+                    :disabled="!editable"
+                >
+                </atom-checkbox>
             </form-field>
             <form-field class="container-app-field" v-if="isShowNFSDependencies">
                 <atom-checkbox
@@ -212,7 +247,7 @@
         </div>
 
         <image-selector :is-show.sync="showImageSelector"
-            v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)"
+            v-if="showImagePublicTypeList.includes(buildResourceType)"
             :code="buildImageCode"
             :build-resource-type="buildResourceType"
             @choose="choose"
@@ -268,11 +303,15 @@
         },
         data () {
             return {
+                showImagePublicTypeList: ['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD', 'KUBERNETES', 'PUBLIC_BCS'],
                 showImageSelector: false,
                 isVersionLoading: false,
                 isLoadingMac: false,
                 xcodeVersionList: [],
                 systemVersionList: [],
+                isLoadingImage: false,
+                isLoadingWin: false,
+                windowsVersionList: [],
                 isShowPerformance: false
             }
         },
@@ -293,12 +332,14 @@
                 'getContainerModalId',
                 'isThirdPartyContainer',
                 'isPublicResource',
-                'isDockerBuildResource'
+                'isDockerBuildResource',
+                'isPublicDevCloudContainer',
+                'getRealSeqId'
             ]),
             imageTypeList () {
                 return [
                     { label: this.$t('editPage.fromList'), value: 'BKSTORE' },
-                    { label: this.$t('editPage.fromHand'), value: 'THIRD', hidden: this.buildResourceType === 'PUBLIC_DEVCLOUD' }
+                    { label: this.$t('editPage.fromHand'), value: 'THIRD' }
                 ]
             },
             appEnvs () {
@@ -306,6 +347,9 @@
             },
             routeName () {
                 return this.$route.name
+            },
+            isDetailPage () {
+                return this.$route.name === 'pipelinesDetail'
             },
             projectId () {
                 return this.$route.params.projectId
@@ -334,6 +378,9 @@
             isThirdParty () {
                 return this.isThirdPartyContainer(this.container)
             },
+            isPCGBuildType () {
+                return this.buildResourceType === 'THIRD_PARTY_PCG'
+            },
             isDocker () {
                 return this.isDockerBuildResource(this.container)
             },
@@ -351,6 +398,9 @@
                     return ''
                 }
             },
+            isPublicDevCloud () {
+                return this.isPublicDevCloudContainer(this.container)
+            },
             xcodeVersion () {
                 return this.container.dispatchType.xcodeVersion
             },
@@ -359,6 +409,9 @@
             },
             buildResource () {
                 return this.container.dispatchType.value
+            },
+            buildResourceProj () {
+                return this.container.dispatchType.envProjectId
             },
             buildImageType () {
                 return this.container.dispatchType.imageType
@@ -462,19 +515,41 @@
                     agentType: 'ID'
                 }))
             }
+            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode && this.buildImageType !== 'THIRD') {
+                if (/\$\{/.test(this.buildResource)) {
+                    this.handleContainerChange('dispatchType', Object.assign({
+                        ...this.container.dispatchType,
+                        imageType: 'THIRD'
+                    }))
+                } else {
+                    this.isLoadingImage = true
+                    this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
+                        const data = res.data || {}
+                        this.handleContainerChange('dispatchType', Object.assign({
+                            ...this.container.dispatchType,
+                            imageType: 'BKSTORE'
+                        }))
+                        data.historyVersion = data.version
+                        if (data.code) this.choose(data)
+                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
+                }
+            }
             if (this.container.dispatchType && this.container.dispatchType.imageCode) {
                 this.getVersionList(this.container.dispatchType.imageCode)
             }
             if (this.buildResourceType === 'MACOS') this.getMacOsData()
+            if (this.buildResourceType === 'WINDOWS') this.getWinData()
         },
         methods: {
             ...mapActions('atom', [
                 'updateContainer',
                 'getMacSysVersion',
-                'getMacXcodeVersion'
+                'getMacXcodeVersion',
+                'getWinVersion'
             ]),
             ...mapActions('pipelines', [
-                'requestImageVersionlist'
+                'requestImageVersionlist',
+                'requestImageHistory'
             ]),
 
             changeResourceType (name, val) {
@@ -490,9 +565,11 @@
                     imageName: defaultBuildResource.name || '',
                     imageType: defaultBuildResource.imageType || '',
                     recommendFlag: defaultBuildResource.recommendFlag,
+                    useRoot: val === 'THIRD_PARTY_PCG' ? false : undefined,
                     [name]: val
                 }))
                 if (val === 'MACOS') this.getMacOsData()
+                if (val === 'WINDOWS') this.getWinData()
                 if (this.container.dispatchType && this.container.dispatchType.imageCode) this.getVersionList(this.container.dispatchType.imageCode)
             },
 
@@ -549,19 +626,32 @@
 
             getMacOsData () {
                 this.isLoadingMac = true
-                Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion()]).then(([sysVersion, xcodeVersion]) => {
-                    this.xcodeVersionList = xcodeVersion.data || []
-                    this.systemVersionList = sysVersion.data || []
+                Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion(this.systemVersion)]).then(([sysVersion, xcodeVersion]) => {
+                    this.xcodeVersionList = xcodeVersion.data?.versionList || []
+                    this.systemVersionList = sysVersion.data?.versionList || []
+                    if (this.container.dispatchType?.systemVersion === undefined && this.container.dispatchType?.xcodeVersion === undefined) {
+                        this.chooseMacSystem(sysVersion.data?.defaultVersion)
+                        this.chooseXcode(xcodeVersion.data?.defaultVersion)
+                    }
                 }).catch((err) => {
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => (this.isLoadingMac = false))
             },
+            async toggleXcode (show) {
+                if (show) {
+                    const res = await this.getMacXcodeVersion(this.systemVersion)
+                    this.xcodeVersionList = res.data?.versionList || []
+                }
+            },
             chooseMacSystem (item) {
-                this.handleContainerChange('dispatchType', Object.assign({
-                    ...this.container.dispatchType,
-                    systemVersion: item,
-                    value: `${item}:${this.xcodeVersion}`
-                }))
+                if (item !== this.systemVersion) {
+                    this.handleContainerChange('dispatchType', Object.assign({
+                        ...this.container.dispatchType,
+                        systemVersion: item,
+                        xcodeVersion: '',
+                        value: `${item}:''`
+                    }))
+                }
             },
             chooseXcode (item) {
                 this.handleContainerChange('dispatchType', Object.assign({
@@ -590,8 +680,12 @@
                 this.handleContainerChange('isError', isError)
             },
 
-            changeBuildResource (name, value) {
-                const emptyValueObj = (name === 'imageType' || name === 'agentType') ? { value: '' } : {}
+            changeBuildResource (name, value, envProjectId) {
+                console.log(name, value, envProjectId)
+                const emptyValueObj = (name === 'imageType' || name === 'agentType') ? { value: '', envProjectId: '' } : {}
+                if (name === 'value' && envProjectId) {
+                    emptyValueObj.envProjectId = envProjectId
+                }
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     [name]: value
@@ -603,6 +697,18 @@
                     ...this.container.dispatchType,
                     [name]: value
                 }))
+            },
+            changeWindowSystem (value) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    systemVersion: value,
+                    value
+                }))
+            },
+            async getWinData () {
+                this.isLoadingWin = true
+                this.windowsVersionList = await this.getWinVersion()
+                this.isLoadingWin = false
             },
             handleContainerChange (name, value) {
                 this.updateContainer({
@@ -637,6 +743,14 @@
                 this.handleContainerChange('buildEnv', {
                     ...buildEnv
                 })
+            },
+            async startDebug () {
+                const realSeqId = this.getRealSeqId(this.stages, this.stageIndex, this.containerIndex)
+                const vmSeqId = this.isDetailPage ? (this.container.containerId || realSeqId) : realSeqId
+                const tab = window.open('about:blank')
+                const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
+                const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&dispatchType=${this.buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                tab.location = url
             },
             handleNfsSwitchChange (name, value) {
                 if (!value) {
@@ -726,6 +840,11 @@
             }
         }
         .control-bar {
+            position: absolute;
+            right: 34px;
+            top: 12px;
+        }
+        .debug-btn {
             position: absolute;
             right: 34px;
             top: 12px;

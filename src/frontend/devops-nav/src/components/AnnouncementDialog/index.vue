@@ -1,6 +1,6 @@
 <template>
     <bk-dialog
-        v-model="showDialog"
+        v-model="showNotice"
         ext-cls="devops-announcement-dialog"
         :ok-text="$t('expNow')"
         :width="828"
@@ -8,6 +8,7 @@
         :position="{ top: '100' }"
         :title="currentNotice.noticeTitle"
         @confirm="toLink(currentNotice.redirectUrl)"
+        @cancel="closeDialog"
     >
         <main class="new-service-content">
             <div class="announcement-content">
@@ -21,45 +22,30 @@
 </template>
 <script lang='ts'>
     import Vue from 'vue'
-    import { Component, Watch } from 'vue-property-decorator'
-    import { State } from 'vuex-class'
+    import { Component } from 'vue-property-decorator'
+    import { State, Action } from 'vuex-class'
     @Component
     export default class NewServiceDialog extends Vue {
+        @State showNotice
         @State currentNotice
-        showDialog: boolean = false
+        
+        @Action toggleNoticeDialog
     
         get announcementHistory () : object[] {
             const announcementHistory = localStorage.getItem('announcementHistory')
             return announcementHistory ? JSON.parse(announcementHistory) : []
         }
 
-        @Watch('currentNotice')
-        handleWatchValue (currentNotice) {
-            this.init(currentNotice)
-        }
-
-        mounted () {
-            this.init(this.currentNotice)
-        }
-
-        init (currentNotice) {
-            if (currentNotice && currentNotice.id && currentNotice.noticeType === 0 && this.announcementHistory.indexOf(currentNotice.id) === -1) {
-                this.announcementHistory.push(currentNotice.id)
-                localStorage.setItem('announcementHistory', JSON.stringify(this.announcementHistory))
-                this.showDialog = true
-            }
-        }
-
         toLink (url) {
             if (url) {
                 window.location.href = url
             } else {
-                this.showDialog = false
+                this.toggleNoticeDialog(false)
             }
         }
 
         closeDialog () {
-            this.showDialog = false
+            this.toggleNoticeDialog(false)
         }
     }
 </script>
@@ -78,6 +64,7 @@
             height: 547px;
             background-image: url('../../assets/images/guide-foot.png');
             background-size: 100% 100%;
+            overflow-y: scroll;
         }
         .announcement-title {
             text-align: center;
@@ -100,6 +87,9 @@
             height: 360px;
             .content-detail img {
                 width: 100%;
+            }
+            p {
+                text-align: left;
             }
         }
         .announcement-footer {

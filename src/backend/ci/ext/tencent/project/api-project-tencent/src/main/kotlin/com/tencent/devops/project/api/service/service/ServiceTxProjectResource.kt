@@ -211,16 +211,18 @@ interface ServiceTxProjectResource {
     ): Result<List<String>>
 
     @GET
-//    @Path("/preBuild/userProject/{userId}")
-    @Path("/preBuild/userProject/userId/{userId}")
+    @Path("/rds/getOrCreate")
     @ApiOperation("查询用户项目")
-    fun getPreUserProjectV2(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
+    fun getOrCreateRdsProject(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("accessToken", required = true)
-        @QueryParam("accessToken")
-        accessToken: String
+        @ApiParam("蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("蓝盾项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String
     ): Result<ProjectVO?>
 
     @POST
@@ -305,50 +307,27 @@ interface ServiceTxProjectResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/createUserByUser")
+    @Path("/createProjectUser")
     fun createProjectUser(
         @ApiParam("执行人Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        createUser: String,
+        createUser: String?,
+        @ApiParam("是否校验管理员", required = true)
+        @QueryParam("checkManager")
+        checkManager: Boolean,
         @ApiParam("添加信息", required = true)
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean>
 
     @POST
-    @Path("/createUserByApp")
-    fun createProjectUserByApp(
-        @ApiParam("组织类型", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
-        organizationType: String,
-        @ApiParam("组织Id", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
-        organizationId: Long,
-        @ApiParam("添加信息", required = true)
-        createInfo: ProjectCreateUserDTO
-    ): Result<Boolean>
-
-    @POST
-    @Path("/create/permission/byUser")
-    fun createUserPipelinePermissionByUser(
-        @ApiParam("AccessToken", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
-        @ApiParam("执行人Id", required = true)
+    @Path("/create/permission/")
+    fun createPipelinePermission(
+        @ApiParam("执行人Id", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        createUser: String,
-        @ApiParam("添加信息", required = true)
-        createInfo: PipelinePermissionInfo
-    ): Result<Boolean>
-
-    @POST
-    @Path("/create/permission/byApp")
-    fun createUserPipelinePermissionByApp(
-        @ApiParam("组织类型", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
-        organizationType: String,
-        @ApiParam("组织Id", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
-        organizationId: Long,
+        createUser: String?,
+        @ApiParam("是否校验管理员", required = true)
+        @QueryParam("checkManager")
+        checkManager: Boolean,
         @ApiParam("添加信息", required = true)
         createInfo: PipelinePermissionInfo
     ): Result<Boolean>
@@ -358,13 +337,7 @@ interface ServiceTxProjectResource {
     fun getProjectRoles(
         @ApiParam("项目Id", required = true)
         @PathParam("projectId")
-        projectCode: String,
-        @ApiParam("组织类型", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
-        organizationType: String,
-        @ApiParam("组织Id", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
-        organizationId: Long
+        projectCode: String
     ): Result<List<BKAuthProjectRolesResources>>
 
     @PUT

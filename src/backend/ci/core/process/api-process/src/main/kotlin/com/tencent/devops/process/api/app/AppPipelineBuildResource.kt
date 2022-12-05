@@ -32,9 +32,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.quality.pojo.request.QualityReviewRequest
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
@@ -162,7 +164,9 @@ interface AppPipelineBuildResource {
         elementId: String,
         @ApiParam("动作", required = true)
         @PathParam("action")
-        action: ManualReviewAction
+        action: ManualReviewAction,
+        @ApiParam("红线ID", required = false)
+        request: QualityReviewRequest? = null
     ): Result<Boolean>
 
     @ApiOperation("人工审核")
@@ -208,6 +212,30 @@ interface AppPipelineBuildResource {
         @PathParam("elementId")
         elementId: String
     ): Result<ReviewParam>
+
+    @ApiOperation("触发审核")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/review")
+    fun buildTriggerReview(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("是否通过审核", required = true)
+        @QueryParam("approve")
+        approve: Boolean,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<Boolean>
 
     @ApiOperation("手动触发启动阶段")
     @POST

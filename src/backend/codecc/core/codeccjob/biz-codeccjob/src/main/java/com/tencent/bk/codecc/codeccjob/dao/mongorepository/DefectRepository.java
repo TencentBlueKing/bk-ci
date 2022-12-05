@@ -50,7 +50,7 @@ public interface DefectRepository extends MongoRepository<DefectEntity, String>
      * @param entityId
      * @return
      */
-    DefectEntity findByEntityId(String entityId);
+    DefectEntity findFirstByEntityId(String entityId);
 
     /**
      * 通过任务id，工具名查询告警信息

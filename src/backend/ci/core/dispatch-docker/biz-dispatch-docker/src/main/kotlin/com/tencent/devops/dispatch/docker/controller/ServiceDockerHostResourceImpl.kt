@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
+import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
 import com.tencent.devops.dispatch.docker.service.DispatchDockerService
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerHostZoneTaskService
@@ -67,6 +68,13 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
 
     override fun refresh(dockerIp: String, dockerIpInfoVO: DockerIpInfoVO): Result<Boolean> {
         return Result(dispatchDockerService.updateBuildLessStatus("buildless", dockerIp, dockerIpInfoVO))
+    }
+
+    override fun createSpecialDockerHost(
+        userId: String,
+        specialDockerHostVOs: List<SpecialDockerHostVO>
+    ): Result<Boolean> {
+        return Result(dockerHostZoneTaskService.create(userId, specialDockerHostVOs))
     }
 
     companion object {

@@ -1,0 +1,298 @@
+{
+  "additionalProperties" : false,
+  "required" : [ "variables" ],
+  "properties" : {
+    "parameters" : {
+      "type" : "array",
+      "items" : {
+        "anyOf" : [ {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "name", "type" ],
+          "properties" : {
+            "name" : {
+              "type" : "string"
+            },
+            "type" : {
+              "enum" : [ "string", "number", "boolean", "array" ]
+            },
+            "default" : {
+              "anyOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "number"
+              }, {
+                "type" : "boolean"
+              }, {
+                "type" : "array",
+                "items" : {
+                  "anyOf" : [ {
+                    "type" : "string"
+                  }, {
+                    "type" : "number"
+                  }, {
+                    "type" : "boolean"
+                  } ]
+                }
+              } ]
+            },
+            "values" : {
+              "type" : "array",
+              "items" : {
+                "anyOf" : [ {
+                  "type" : "string"
+                }, {
+                  "type" : "number"
+                }, {
+                  "type" : "boolean"
+                } ]
+              }
+            }
+          }
+        }, {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "template" ],
+          "properties" : {
+            "template" : {
+              "type" : "string"
+            }
+          }
+        } ]
+      }
+    },
+    "version" : {
+      "type" : "string",
+      "const" : "v2.0"
+    },
+    "name" : {
+      "type" : "string"
+    },
+    "variables" : {
+      "type" : "object",
+      "propertyNames" : {
+        "pattern" : "^[0-9a-zA-Z_]+$"
+      },
+      "properties" : {
+        "template" : {
+          "$ref" : "#/definitions/template"
+        }
+      },
+      "additionalProperties" : {
+        "anyOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "number"
+        }, {
+          "type" : "boolean"
+        }, {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "value" ],
+          "properties" : {
+            "value" : {
+              "anyOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "number"
+              }, {
+                "type" : "boolean"
+              } ]
+            },
+            "readonly" : {
+              "type" : "boolean"
+            },
+            "allow-modify-at-startup" : {
+              "type" : "boolean"
+            },
+            "props" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "required" : [ "type" ],
+              "properties" : {
+                "label" : {
+                  "type" : "string"
+                },
+                "type" : {
+                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "company-staff-input", "tips" ]
+                },
+                "options" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "required" : [ "id" ],
+                    "properties" : {
+                      "id" : {
+                        "anyOf" : [ {
+                          "type" : "string"
+                        }, {
+                          "type" : "number"
+                        }, {
+                          "type" : "boolean"
+                        } ]
+                      },
+                      "label" : {
+                        "type" : "string"
+                      },
+                      "description" : {
+                        "type" : "string"
+                      }
+                    }
+                  }
+                },
+                "datasource" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "required" : [ "url" ],
+                  "properties" : {
+                    "url" : {
+                      "type" : "string"
+                    },
+                    "data-path" : {
+                      "type" : "string"
+                    },
+                    "param-id" : {
+                      "type" : "string"
+                    },
+                    "param-name" : {
+                      "type" : "string"
+                    },
+                    "has-add-item" : {
+                      "type" : "boolean"
+                    },
+                    "item-text" : {
+                      "type" : "string"
+                    },
+                    "item-target-url" : {
+                      "type" : "string"
+                    }
+                  }
+                },
+                "multiple" : {
+                  "type" : "boolean"
+                },
+                "description" : {
+                  "type" : "string"
+                },
+                "required" : {
+                  "type" : "boolean"
+                }
+              },
+              "allOf" : [ {
+                "if" : {
+                  "required" : [ "options" ]
+                },
+                "then" : {
+                  "not" : {
+                    "required" : [ "datasource" ]
+                  }
+                }
+              }, {
+                "if" : {
+                  "required" : [ "datasource" ]
+                },
+                "then" : {
+                  "not" : {
+                    "required" : [ "options" ]
+                  }
+                }
+              } ]
+            }
+          }
+        } ]
+      }
+    },
+    "resources" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "repositories" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "required" : [ "repository", "name" ],
+            "additionalProperties" : false,
+            "properties" : {
+              "repository" : {
+                "type" : "string"
+              },
+              "name" : {
+                "type" : "string"
+              },
+              "ref" : {
+                "type" : "string"
+              },
+              "credentials" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "required" : [ "personal-access-token" ],
+                "properties" : {
+                  "personal-access-token" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pools" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "required" : [ "from", "name" ],
+            "additionalProperties" : false,
+            "properties" : {
+              "from" : {
+                "type" : "string"
+              },
+              "name" : {
+                "type" : "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "template" : {
+      "anyOf" : [ {
+        "type" : "array",
+        "items" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "required" : [ "name" ],
+          "properties" : {
+            "name" : {
+              "type" : "string"
+            },
+            "parameters" : {
+              "$ref" : "#/definitions/parameters"
+            }
+          }
+        }
+      }, {
+        "type" : "string"
+      } ]
+    },
+    "parameters" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "anyOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "number"
+        }, {
+          "type" : "boolean"
+        }, {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        } ]
+      }
+    }
+  },
+  "$schema" : "http://json-schema.org/draft-07/schema"
+}

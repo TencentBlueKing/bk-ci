@@ -36,6 +36,7 @@ import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
+import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.common.AbstractStoreHandleBuildResultService
 import com.tencent.devops.store.utils.VersionUtils
@@ -50,7 +51,8 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val marketAtomDao: MarketAtomDao,
-    private val marketAtomService: MarketAtomService
+    private val marketAtomService: MarketAtomService,
+    private val atomReleaseService: AtomReleaseService
 ) : AbstractStoreHandleBuildResultService() {
 
     private val logger = LoggerFactory.getLogger(AtomHandleBuildResultServiceImpl::class.java)
@@ -59,10 +61,10 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val atomId = storeBuildResultRequest.storeId
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
-        logger.info("handleStoreBuildResult atomRecord is:$atomRecord")
-        if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomId)
+            )
         // 防止重复的mq消息造成的状态异常
         if (atomRecord.atomStatus != AtomStatusEnum.BUILDING.status.toByte()) {
             return Result(true)
@@ -81,6 +83,14 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
             msg = null
         )
         if (atomStatus == AtomStatusEnum.TESTING) {
+            // 插件error.json文件数据入库
+            atomReleaseService.syncAtomErrorCodeConfig(
+                atomCode = atomCode,
+                atomVersion = version,
+                userId = atomRecord.modifier,
+                repositoryHashId = atomRecord.repositoryHashId,
+                branch = atomRecord.branch
+            )
             // 插件大版本内有测试版本则写入缓存
             redisOperation.hset(
                 key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",

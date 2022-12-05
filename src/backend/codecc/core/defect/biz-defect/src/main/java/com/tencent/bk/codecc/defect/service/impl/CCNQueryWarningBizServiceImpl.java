@@ -26,8 +26,6 @@
 
 package com.tencent.bk.codecc.defect.service.impl;
 
-import static com.tencent.devops.common.constant.ComConstants.MASK_STATUS;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.dao.mongorepository.BuildDefectRepository;
@@ -77,7 +75,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -176,7 +174,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         CCNDefectDetailQueryRspVO ccnDefectQueryRspVO = new CCNDefectDetailQueryRspVO();
 
         //查询告警信息
-        CCNDefectEntity ccnDefectEntity = ccnDefectRepository.findByEntityId(queryWarningDetailReq.getEntityId());
+        CCNDefectEntity ccnDefectEntity = ccnDefectRepository.findFirstByEntityId(queryWarningDetailReq.getEntityId());
 
         CCNDefectVO ccnDefectVO = new CCNDefectVO();
 
@@ -187,9 +185,15 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         // 校验传入的路径是否合法（路径是否是告警对应的文件）
         verifyFilePathIsValid(queryWarningDetailReq.getFilePath(), ccnDefectEntity.getFilePath());
 
+        //获取任务信息
+        Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        TaskDetailVO taskDetailVO = taskInfoResult.getData();
+
         //根据文件路径从分析集群获取文件内容
-        String content = getFileContent(taskId, null, userId, ccnDefectEntity.getUrl(), ccnDefectEntity.getRepoId(),
-            ccnDefectEntity.getRelPath(), ccnDefectEntity.getRevision(), ccnDefectEntity.getBranch(), ccnDefectEntity.getSubModule());
+        String content = getFileContent(taskId, taskDetailVO == null ? null : taskDetailVO.getProjectId(), userId,
+                ccnDefectEntity.getUrl(), ccnDefectEntity.getRepoId(),
+                ccnDefectEntity.getRelPath(), ccnDefectEntity.getRevision(), ccnDefectEntity.getBranch(),
+                ccnDefectEntity.getSubModule());
         content = trimCodeSegment(content, ccnDefectEntity.getStartLines(), ccnDefectEntity.getEndLines(), ccnDefectQueryRspVO);
 
         //设置代码评论

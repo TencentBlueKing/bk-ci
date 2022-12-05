@@ -81,7 +81,7 @@ interface ApigwBuildResourceV3 {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("启动参数", required = true)
+        @ApiParam("启动参数：map<变量名(string),变量值(string)>", required = true)
         values: Map<String, String>,
         @ApiParam("手动指定构建版本参数", required = false)
         @QueryParam("buildNo")

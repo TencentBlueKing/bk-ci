@@ -39,8 +39,11 @@ accessControlUtil = require("util.access_control_util")
 securityUtil = require("util.security_util")
 buildUtil = require("util.build_util")
 cjson = require("cjson")
+resolvUtil = require("util.resolv_util")
 
 local ok_table = {status = 0, data = true}
+
+no_container_svr = {}
 
 response_ok = json.encode(ok_table)
 

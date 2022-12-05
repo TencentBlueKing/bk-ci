@@ -27,12 +27,13 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
+import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
+import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.Pool
-import com.tencent.devops.common.ci.v2.StreamDispatchInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
@@ -47,7 +48,7 @@ import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.util.CommonCredentialUtils
-import com.tencent.devops.process.util.StreamDispatchUtils
+import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -94,13 +95,15 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     buildId = buildId,
                     dispatchType = dispatchType
                 )
+
                 // 腾讯内部版专有处理
                 if (dispatchType.imageType == ImageType.BKDEVOPS) {
                     if (dispatchType is DockerDispatchType) {
                         dispatchType.dockerBuildVersion = dispatchType.value.removePrefix("paas/")
                     } else if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的蓝盾源镜像，无需凭证
-                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
+                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null,
+                            false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value.removePrefix("paas/")
@@ -109,7 +112,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     // 第三方镜像
                     if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的第三方源镜像，带凭证
-                        genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
+                        genThirdDevCloudDispatchMessage(dispatchType, projectId, pipelineId, buildId)
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value
                     } else {
@@ -118,7 +121,8 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 }
             } else if (dispatchType.imageType == ImageType.BKDEVOPS) {
                 // 针对非商店的旧数据处理
-                if (dispatchType.value != DockerVersion.TLINUX1_2.value && dispatchType.value != DockerVersion.TLINUX2_2.value) {
+                if (dispatchType.value != DockerVersion.TLINUX1_2.value &&
+                    dispatchType.value != DockerVersion.TLINUX2_2.value) {
                     dispatchType.dockerBuildVersion = "bkdevops/" + dispatchType.value
                     dispatchType.value = "bkdevops/" + dispatchType.value
                 } else {
@@ -130,18 +134,19 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         val pool = Pool("devcloud/" + dispatchType.image!!.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
                     } else {
-                        logger.error("dispatchType.image==null,buildId=$buildId,dispatchType=${JsonUtil.toJson(dispatchType)}")
+                        logger.warn("[$buildId]|image=null,dispatchType=${JsonUtil.toJson(dispatchType)}")
                     }
                 }
             } else {
                 // 第三方镜像 DevCloud
                 if (dispatchType is PublicDevCloudDispathcType) {
-                    genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
+                    genThirdDevCloudDispatchMessage(dispatchType, projectId, pipelineId, buildId)
                 }
             }
-            logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
+            logger.info("$buildId DispatchTypeParserTxImpl:AfterTransfer:" +
+                            "dispatchType=(${JsonUtil.toJson(dispatchType)})")
         } else {
-            logger.info("DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
+            logger.info("$buildId DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
         }
     }
 
@@ -152,7 +157,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         customInfo: DispatchInfo,
         context: Map<String, String>
     ): SampleDispatchInfo? {
-        val runVariables = buildVariableService.getAllVariable(projectId, buildId)
+        val runVariables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         // 获取跨项目引用模板信息
         val buildTemplateAcrossInfo =
             if (runVariables[TEMPLATE_ACROSS_INFO_ID] != null && customInfo is StreamDispatchInfo) {
@@ -171,19 +176,20 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         return when (customInfo) {
             is StreamDispatchInfo -> SampleDispatchInfo(
                 name = customInfo.name,
-                dispatchType = StreamDispatchUtils.getDispatchType(
+                dispatchType = TXStreamDispatchUtils.getDispatchType(
                     client = client,
                     objectMapper = objectMapper,
                     job = customInfo.job,
                     projectCode = customInfo.projectCode,
                     defaultImage = customInfo.defaultImage,
+                    bizType = DispatchBizType.STREAM,
                     resources = customInfo.resources,
                     context = context,
                     containsMatrix = true,
                     buildTemplateAcrossInfo = buildTemplateAcrossInfo
                 ),
-                baseOS = StreamDispatchUtils.getBaseOs(customInfo.job, context),
-                buildEnv = StreamDispatchUtils.getBuildEnv(customInfo.job, context)
+                baseOS = TXStreamDispatchUtils.getBaseOs(customInfo.job, context),
+                buildEnv = TXStreamDispatchUtils.getBuildEnv(customInfo.job, context)
             )
             else -> null
         }
@@ -192,6 +198,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
     private fun genThirdDevCloudDispatchMessage(
         dispatchType: PublicDevCloudDispathcType,
         projectId: String,
+        pipelineId: String,
         buildId: String
     ) {
         var user = ""
@@ -204,7 +211,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         if (!dispatchType.credentialId.isNullOrBlank()) {
             val realCredentialId = EnvUtils.parseEnv(
                 command = dispatchType.credentialId!!,
-                data = buildVariableService.getAllVariable(projectId, buildId))
+                data = buildVariableService.getAllVariable(projectId, pipelineId, buildId))
             if (realCredentialId.isNotEmpty()) {
                 val ticketsMap = CommonCredentialUtils.getCredential(
                     client = client,

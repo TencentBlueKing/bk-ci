@@ -79,3 +79,7 @@ fun File.bound(range: Range): InputStream {
         this.inputStream()
     }
 }
+
+fun File.artifactStream(range: Range): ArtifactInputStream {
+    return FileArtifactInputStream(this, range)
+}

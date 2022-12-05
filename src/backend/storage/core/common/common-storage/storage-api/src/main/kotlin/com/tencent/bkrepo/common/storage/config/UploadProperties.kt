@@ -33,7 +33,12 @@ package com.tencent.bkrepo.common.storage.config
 
 data class UploadProperties(
     /**
-     * 文件上传临时目录
+     * 文件上传临时目录，可以为分布式文件系统路径
      */
-    var location: String = System.getProperty("java.io.tmpdir")
+    var location: String = System.getProperty("java.io.tmpdir"),
+
+    /**
+     * 文件上传本地目录，一定要为本地文件系统路径。
+     * */
+    var localPath: String = System.getProperty("java.io.tmpdir")
 )

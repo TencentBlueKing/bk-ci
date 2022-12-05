@@ -54,8 +54,6 @@ data class BuildHistoryWithVars(
     val status: String,
     @ApiModelProperty("各阶段状态", required = true)
     val stageStatus: List<BuildStageStatus>?,
-    @ApiModelProperty("结束原因", required = true)
-    val deleteReason: String?,
     @ApiModelProperty("服务器当前时间戳", required = true)
     val currentTimestamp: Long,
     @ApiModelProperty("是否是手机启动", required = false)
@@ -74,9 +72,9 @@ data class BuildHistoryWithVars(
     val executeTime: Long?,
     @ApiModelProperty("启动参数", required = false)
     val buildParameters: List<BuildParameters>?,
-    @ApiModelProperty("WebHookType", required = false)
+    @ApiModelProperty("WebHook类型", required = false)
     val webHookType: String?,
-    @ApiModelProperty("webhookInfo", required = false)
+    @ApiModelProperty("webhook信息", required = false)
     val webhookInfo: WebhookInfo?,
     @ApiModelProperty("启动类型(新)", required = false)
     val startType: String?,

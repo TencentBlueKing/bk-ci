@@ -65,7 +65,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.amqp.rabbit.AsyncRabbitTemplate;
-import org.springframework.beans.BeanUtils;
+import com.tencent.devops.common.util.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -110,7 +110,7 @@ public class LintDefectCommitConsumer extends AbstractDefectCommitConsumer {
 
         // 判断本次是增量还是全量扫描
         ToolBuildStackEntity toolBuildStackEntity =
-                toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+                toolBuildStackRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         boolean isFullScan = toolBuildStackEntity != null ? toolBuildStackEntity.isFullScan() : true;
 
         // 获取工具侧上报的已删除文件
@@ -354,7 +354,7 @@ public class LintDefectCommitConsumer extends AbstractDefectCommitConsumer {
                     fileIndex), null);
         }
 
-        TransferAuthorEntity transferAuthorEntity = transferAuthorRepository.findByTaskId(taskId);
+        TransferAuthorEntity transferAuthorEntity = transferAuthorRepository.findFirstByTaskId(taskId);
         List<TransferAuthorEntity.TransferAuthorPair> transferAuthorList = null;
         if (transferAuthorEntity != null) {
             transferAuthorList = transferAuthorEntity.getTransferAuthorList();
@@ -522,7 +522,7 @@ public class LintDefectCommitConsumer extends AbstractDefectCommitConsumer {
             }
         }
         if (CollectionUtils.isNotEmpty(needUpdateDefectList)) {
-            lintDefectV2Repository.save(needUpdateDefectList);
+            lintDefectV2Repository.saveAll(needUpdateDefectList);
         }
     }
 
@@ -541,6 +541,7 @@ public class LintDefectCommitConsumer extends AbstractDefectCommitConsumer {
                 commitDefectVO,
                 buildEntity,
                 transferAuthorList,
+                "",
                 ""
         );
         return newLintDefectTracingComponent.executeCluster(defectClusterDTO,

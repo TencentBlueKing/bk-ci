@@ -47,6 +47,31 @@ public class FileIndexEntity extends CommonEntity
     @Field("file_folder")
     private String fileFolder;
 
+    /**
+     * 上传类型
+     */
+    @Field("upload_type")
+    private String uploadType;
+
+    /**
+     * 存储类型
+     * {@link com.tencent.codecc.common.storage.constant.StorageType}
+     */
+    @Field("store_type")
+    private String storeType;
+
+    /**
+     * 下载地址，NFS文件存储模式下。为空
+     */
+    @Field("download_url")
+    private String downloadUrl;
+
+
+    /**
+     * 上传ID
+     */
+    @Field("upload_id")
+    private String uploadId;
 //    /**
 //     * 0-初始，1-上传成功
 //     */

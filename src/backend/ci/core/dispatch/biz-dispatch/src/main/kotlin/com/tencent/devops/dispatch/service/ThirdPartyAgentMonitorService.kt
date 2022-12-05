@@ -59,7 +59,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
 ) {
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "NestedBlockDepth")
     fun monitor(event: AgentStartMonitor) {
 
         val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return
@@ -77,18 +77,16 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             .getAgentDetail(userId = event.userId, projectId = event.projectId, agentHashId = record.agentId)
             .data
 
-        val tag = VMUtils.genStartVMTaskId(event.vmSeqId)
-
-        logMessage.append(
-            MessageCodeUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                params = arrayOf(event.projectId, record.agentId)
-            )
-        )
-
-        val heartbeatInfo = agentDetail?.heartbeatInfo
-
         if (agentDetail != null) {
+            val tag = VMUtils.genStartVMTaskId(event.vmSeqId)
+            val heartbeatInfo = agentDetail.heartbeatInfo
+
+            logMessage.append(
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
+                    params = arrayOf(event.projectId, agentDetail.nodeId)
+                )
+            )
             logMessage.append("|最大并行构建量(maximum parallelism)/当前正在运行构建数量(Running): ")
             if (agentDetail.parallelTaskCount != "0") {
                 logMessage.append(agentDetail.parallelTaskCount).append("/").append(heartbeatInfo?.busyTaskSize ?: 0)
@@ -97,26 +95,25 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             if (agentDetail.parallelTaskCount == "0") {
                 logMessage.append("无限制(unlimited), 注意负载(Attention)")
             }
-        }
-
-        log(event, logMessage, tag)
-
-        if (heartbeatInfo != null) {
-
-            heartbeatInfo.heartbeatTime?.let { self ->
-                logMessage.append("构建机最近心跳时间（heartbeat Time): ${DateTimeUtil.formatDate(Date(self))}")
-            }
-
-            logMessage.append("|最近${heartbeatInfo.taskList.size}次运行中的构建:\n")
-
-            heartbeatInfo.taskList.forEach {
-                thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
-                    logMessage.append("<a href='${genBuildDetailUrl(r1.projectId, r1.pipelineId, r1.buildId)}'>")
-                    logMessage.append("运行中(Running) #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n")
-                }
-            }
-
             log(event, logMessage, tag)
+
+            if (heartbeatInfo != null) {
+
+                heartbeatInfo.heartbeatTime?.let { self ->
+                    logMessage.append("构建机最近心跳时间（heartbeat Time): ${DateTimeUtil.formatDate(Date(self))}")
+                }
+
+                logMessage.append("|最近${heartbeatInfo.taskList.size}次运行中的构建:\n")
+
+                heartbeatInfo.taskList.forEach {
+                    thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)?.let { r1 ->
+                        logMessage.append("<a href='${genBuildDetailUrl(r1.projectId, r1.pipelineId, r1.buildId)}'>")
+                        logMessage.append("运行中(Running) #${r1.buildNum}</a> (${r1.pipelineName} ${r1.taskName})\n")
+                    }
+                }
+
+                log(event, logMessage, tag)
+            }
         }
     }
 

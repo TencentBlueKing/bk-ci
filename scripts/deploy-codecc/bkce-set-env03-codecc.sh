@@ -18,6 +18,7 @@ codecc_env_03="./bin/03-userdef/codecc.env"
 
 set_env03 (){
   for kv in "$@"; do
+    grep -qxF "$kv" "$codecc_env_default" 2>/dev/null || echo "$kv" >> "$codecc_env_default"
     if ! grep -q "^${kv%%=*}=[^ ]" "$codecc_env_03" 2>/dev/null; then  # 非空则不覆盖.
       echo "SET_ENV03: $codecc_env_03 中未曾赋值，新增 $kv"
       [[ "$kv" =~ ^[A-Z0-9_]+=$ ]] && echo -e "\033[31;1m注意：\033[m$kv 赋值为空，请检查蓝鲸是否安装正确
@@ -68,7 +69,8 @@ set_env03 BK_HTTP_SCHEMA=http \
   BK_CODECC_PAAS_LOGIN_URL=\$BK_PAAS_PUBLIC_URL/login/\?c_url= \
   BK_CODECC_REPOSITORY_GITLAB_URL=http://\$BK_CODECC_FQDN \
   BK_CODECC_APP_CODE=bk_codecc \
-  BK_CODECC_APP_TOKEN=$(uuid_v4)
+  BK_CODECC_APP_TOKEN=$(uuid_v4) \
+  BK_CODECC_GATEWAY_DNS_ADDR=127.0.0.1:53
 # 复用rabbitmq, 生成密码并创建账户, 刷新03env.
 set_env03 BK_CODECC_RABBITMQ_ADDR=$BK_RABBITMQ_IP:5672 BK_CODECC_RABBITMQ_USER=bk_codecc BK_CODECC_RABBITMQ_PASSWORD=$(random_pass) BK_CODECC_RABBITMQ_VHOST=bk_codecc
 # 复用redis, 读取密码, 刷新03env.
@@ -78,6 +80,10 @@ set_env03 BK_CODECC_REDIS_HOST="$BK_CI_REDIS_HOST" BK_CODECC_REDIS_PASSWORD="$BK
 # 复用mongodb, 读取密码, 刷新03env.
 set_env03 BK_CODECC_MONGODB_ADDR="$BK_CMDB_MONGODB_HOST:$BK_CMDB_MONGODB_PORT" BK_CODECC_MONGODB_USER=bk_codecc BK_CODECC_MONGODB_PASSWORD="$(random_pass)"
 
+if grep -w repo $CTRL_DIR/install.config|grep -v ^\# ; then
+  set_env03 BK_REPO_GATEWAY_IP=$BK_REPO_GATEWAY_IP \
+  BK_REPO_HOST=$BK_REPO_HOST
+fi
+
 echo "合并env."
 ./bin/merge_env.sh codecc &>/dev/null || true
-

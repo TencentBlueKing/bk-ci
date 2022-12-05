@@ -70,5 +70,7 @@ data class PackageSummary(
     @ApiModelProperty("版本标签")
     val versionTag: Map<String, String>,
     @ApiModelProperty("扩展字段")
-    val extension: Map<String, Any>
+    val extension: Map<String, Any>,
+    @ApiModelProperty("历史版本")
+    val historyVersion: Set<String>
 )

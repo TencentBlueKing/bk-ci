@@ -69,6 +69,7 @@ import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_SUCCESS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -261,6 +262,11 @@ class CodeWebhookService @Autowired constructor(
                 return
             }
 
+            if (variables[PIPELINE_START_CHANNEL] != ChannelCode.BS.name) {
+                logger.warn("Process instance($buildId) is not bs channel")
+                return
+            }
+
             val commitId = variables[PIPELINE_WEBHOOK_REVISION]
             var repositoryId = variables[PIPELINE_WEBHOOK_REPO]
             if (repositoryId.isNullOrBlank()) {
@@ -308,7 +314,7 @@ class CodeWebhookService @Autowired constructor(
                 )
             )
         } catch (ignore: Throwable) {
-            logger.error("[$buildId]|Code webhook fail", ignore)
+            logger.warn("[$buildId]|Code webhook fail", ignore)
         }
     }
 
@@ -325,13 +331,13 @@ class CodeWebhookService @Autowired constructor(
             event.retryTime--
             addGitCommitCheck(event)
         } catch (t: Throwable) {
-            logger.error("Consume git commit check fail. $event", t)
+            logger.warn("Consume git commit check fail. $event", t)
             when (event.retryTime) {
                 2 -> addGitCommitCheckEvent(event, 5)
                 1 -> addGitCommitCheckEvent(event, 10)
                 0 -> addGitCommitCheckEvent(event, 30)
                 else -> {
-                    logger.error("Consume git commit check retry fail")
+                    logger.warn("Consume git commit check retry fail")
                 }
             }
         }
@@ -483,13 +489,13 @@ class CodeWebhookService @Autowired constructor(
                 completedAt = completedAt
             )
         } catch (t: Throwable) {
-            logger.error("Consume github pr event fail. $event", t)
+            logger.warn("Consume github pr event fail. $event", t)
             when (event.retryTime) {
                 2 -> addGithubPrEvent(event, 5)
                 1 -> addGithubPrEvent(event, 10)
                 0 -> addGithubPrEvent(event, 30)
                 else -> {
-                    logger.error("Consume github pr event retry fail")
+                    logger.warn("Consume github pr event retry fail")
                 }
             }
         }

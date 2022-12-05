@@ -35,6 +35,7 @@ import com.tencent.devops.experience.api.app.AppExperienceResource
 import com.tencent.devops.experience.filter.annotions.AllowOuter
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
+import com.tencent.devops.experience.pojo.AppExperienceInstallPackage
 import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
@@ -89,7 +90,8 @@ class AppExperienceResourceImpl @Autowired constructor(
         } else {
             emptyList()
         }
-        val redPointCount = publicExperiences.count { it.redPointEnabled }
+        val redPointCount = privateExperiences.count { it.redPointEnabled } +
+                publicExperiences.count { it.redPointEnabled }
         return Result(ExperienceList(privateExperiences, publicExperiences, redPointCount))
     }
 
@@ -99,10 +101,11 @@ class AppExperienceResourceImpl @Autowired constructor(
         platform: Int,
         appVersion: String?,
         organization: String?,
-        experienceHashId: String
+        experienceHashId: String,
+        forceNew: Boolean
     ): Result<AppExperienceDetail> {
         checkParam(userId, experienceHashId)
-        val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion, organization)
+        val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion, organization, forceNew)
         return Result(result)
     }
 
@@ -153,6 +156,25 @@ class AppExperienceResourceImpl @Autowired constructor(
 
     override fun outerList(userId: String, projectId: String): Result<List<OuterSelectorVO>> {
         return Result(experienceOuterService.outerList(projectId).map { OuterSelectorVO(it) })
+    }
+
+    @AllowOuter
+    override fun installPackages(
+        userId: String,
+        platform: Int,
+        appVersion: String?,
+        organization: String?,
+        experienceHashId: String
+    ): Result<Pagination<AppExperienceInstallPackage>> {
+        return Result(
+            experienceAppService.installPackages(
+                userId = userId,
+                platform = platform,
+                appVersion = appVersion,
+                organization = organization,
+                experienceHashId = experienceHashId
+            )
+        )
     }
 
     override fun lastParams(

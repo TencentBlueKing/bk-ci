@@ -30,5 +30,5 @@ public interface AppCodeOrgDao extends MongoRepository<AppCodeOrgEntity, String>
      * @param appCode
      * @return
      */
-    AppCodeOrgEntity findByAppCode(String appCode);
+    AppCodeOrgEntity findFirstByAppCode(String appCode);
 }

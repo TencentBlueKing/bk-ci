@@ -1,0 +1,38 @@
+# openapi hpa
+{{ if .Values.openapi.enabled -}}
+{{ if .Values.openapi.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-openapi
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: openapi
+    app.kubernetes.io/component: microservice
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+    kind: Deployment
+    name: {{ include "bkci.names.fullname" . }}-openapi
+  minReplicas: {{ .Values.openapi.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.openapi.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.openapi.autoscaling.targetCPU }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.openapi.autoscaling.targetCPU }}
+    {{- end }}
+    {{- if .Values.openapi.autoscaling.targetMemory }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.openapi.autoscaling.targetMemory  }}
+    {{- end }}
+{{- end }}
+{{- end -}}

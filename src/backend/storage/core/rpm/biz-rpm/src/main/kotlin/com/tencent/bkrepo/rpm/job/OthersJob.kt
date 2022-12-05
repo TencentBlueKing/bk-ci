@@ -18,6 +18,7 @@ class OthersJob {
     // 每次任务间隔 ms
     @Scheduled(fixedDelay = 30 * 1000)
     @SchedulerLock(name = "OthersJob", lockAtMostFor = "PT30M")
+    @Suppress("SwallowedException", "TooGenericExceptionCaught")
     fun updateOthersIndex() {
         logger.info("update others index start")
         val startMillis = System.currentTimeMillis()
@@ -30,7 +31,7 @@ class OthersJob {
                 val targetSet = RpmCollectionUtils.filterByDepth(jobService.findRepodataDirs(repo), repodataDepth)
                 for (repoDataPath in targetSet) {
                     logger.info("update others index [${repo.projectId}|${repo.name}|$repoDataPath] start")
-                    jobService.batchUpdateIndex(repo, repoDataPath, IndexType.OTHERS, 20)
+                    jobService.updateIndex(repo, repoDataPath, IndexType.OTHER, 20)
                     logger.info("update others index [${repo.projectId}|${repo.name}|$repoDataPath] done")
                 }
                 logger.info("update others index [${repo.projectId}|${repo.name}] done")

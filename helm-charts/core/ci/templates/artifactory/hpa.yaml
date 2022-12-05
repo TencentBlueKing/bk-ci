@@ -1,0 +1,38 @@
+# artifactory hpa
+{{ if .Values.artifactory.enabled -}}
+{{ if .Values.artifactory.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-artifactory
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: artifactory
+    app.kubernetes.io/component: microservice
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+    kind: Deployment
+    name: {{ include "bkci.names.fullname" . }}-artifactory
+  minReplicas: {{ .Values.artifactory.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.artifactory.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.artifactory.autoscaling.targetCPU }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.artifactory.autoscaling.targetCPU }}
+    {{- end }}
+    {{- if .Values.artifactory.autoscaling.targetMemory }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.artifactory.autoscaling.targetMemory  }}
+    {{- end }}
+{{- end }}
+{{- end -}}

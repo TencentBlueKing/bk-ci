@@ -29,7 +29,9 @@ package com.tencent.devops.support.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
 import com.tencent.devops.support.model.approval.CreateMoaApproveRequest
+import com.tencent.devops.support.model.approval.MoaWorkItemElement
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -65,5 +67,21 @@ interface ServiceMessageApproveResource {
         @ApiParam(value = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
+    ): Result<Boolean>
+
+    @ApiOperation("创建MOA审批单")
+    @POST
+    @Path("/moa/create_work_item")
+    fun createMoaWorkItemMessageApproval(
+        @ApiParam("创建MOA审批单据请求报文体", required = true)
+        moaWorkItemElementList: List<MoaWorkItemElement>
+    ): Result<Boolean>
+
+    @ApiOperation("完成MOA审批单")
+    @POST
+    @Path("/moa/complete_work_item")
+    fun createMoaWorkItemMessageComplete(
+        @ApiParam("创建MOA审批单据请求报文体", required = true)
+        completeMoaWorkItemRequest: CompleteMoaWorkItemRequest
     ): Result<Boolean>
 }

@@ -45,7 +45,7 @@ data class GithubElement(
     override var status: String? = null,
     @ApiModelProperty("代码库哈希ID", required = true)
     val repositoryHashId: String?,
-    @ApiModelProperty("Checkout strategy", required = true)
+    @ApiModelProperty("checkout 策略", required = false)
     val strategy: CodePullStrategy? = CodePullStrategy.INCREMENT_UPDATE,
     @ApiModelProperty("代码存放路径", required = false)
     val path: String? = null,

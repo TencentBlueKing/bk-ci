@@ -197,6 +197,11 @@ func (c *Echo) PreExecute(command []string) (*dcSDK.BKDistCommand, error) {
 	}, nil
 }
 
+// NeedRemoteResource check whether this command need remote resource
+func (c *Echo) NeedRemoteResource(command []string) bool {
+	return true
+}
+
 // RemoteRetryTimes will return the remote retry times
 func (c *Echo) RemoteRetryTimes() int {
 	return 0

@@ -30,14 +30,15 @@ package com.tencent.devops.scm.resources
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.api.ServiceScmResource
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.TokenCheckResult
+import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.services.ScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -84,7 +85,9 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?
+        search: String?,
+        page: Int,
+        pageSize: Int
     ): Result<List<String>> {
         logger.info(
             "Start to list the branches of " +
@@ -100,7 +103,9 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
                 token = token,
                 region = region,
                 userName = userName,
-                search = search
+                search = search,
+                page = page,
+                pageSize = pageSize
             )
         )
     }
@@ -299,6 +304,28 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
                 type = type,
                 token = token,
                 mrId = mrId
+            )
+        )
+    }
+
+    override fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): Result<List<GitCommit>> {
+        return Result(
+            scmService.getMrCommitList(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                mrId = mrId,
+                page = page,
+                size = size
             )
         )
     }

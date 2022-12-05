@@ -1,6 +1,0 @@
-dependencies {
-//    compile("org.springframework.boot:spring-boot-starter-redis:1.4.7.RELEASE")
-    compile("org.springframework.boot:spring-boot-starter-data-redis")
-    compile("org.apache.commons:commons-pool2")
-}
-

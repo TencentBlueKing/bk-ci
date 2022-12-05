@@ -60,7 +60,7 @@ class JobManageServiceImpl @Autowired constructor(
     }
 
     override fun findJobByName(jobName: String): JobInstanceEntity {
-        return jobInstanceRepository.findByJobName(jobName)
+        return jobInstanceRepository.findFirstByJobName(jobName)
     }
 
     override fun saveJobs(jobInstances: List<JobInstanceEntity>): List<JobInstanceEntity> {
@@ -68,7 +68,7 @@ class JobManageServiceImpl @Autowired constructor(
             it.updatedBy = "sysadmin"
             it.updatedDate = System.currentTimeMillis()
         }
-        return jobInstanceRepository.save(jobInstances)
+        return jobInstanceRepository.saveAll(jobInstances)
     }
 
     override fun saveJobCompensate(jobCompensateEntity: JobCompensateEntity): JobCompensateEntity {
@@ -131,7 +131,7 @@ class JobManageServiceImpl @Autowired constructor(
                 logger.info("update cron expression fail!")
             }
         }
-        jobInstanceRepository.save(jobInstances)
+        jobInstanceRepository.saveAll(jobInstances)
     }
 
     //将定时时间全天平均，以10分钟为间隔

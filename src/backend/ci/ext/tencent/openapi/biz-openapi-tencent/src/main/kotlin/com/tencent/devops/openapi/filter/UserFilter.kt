@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.service.op.AppUserInfoService
 import com.tencent.devops.openapi.service.op.OpAppUserService
@@ -42,7 +43,6 @@ import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.ext.Provider
-import org.springframework.beans.factory.annotation.Value
 
 @Component
 @Provider
@@ -53,12 +53,9 @@ import org.springframework.beans.factory.annotation.Value
 class UserFilter @Autowired constructor(
     val redisOperation: RedisOperation,
     val appUserInfoService: AppUserInfoService,
-    val opAppUserService: OpAppUserService
+    val opAppUserService: OpAppUserService,
+    val bkTag: BkTag
 ) : ContainerRequestFilter {
-
-    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
-    private val tag: String? = null
-
     override fun filter(requestContext: ContainerRequestContext?) {
         if (requestContext == null) {
             return
@@ -75,11 +72,11 @@ class UserFilter @Autowired constructor(
                 val appManagerUser = appUserInfoService.get(appCode)
                 if (appManagerUser.isNullOrEmpty()) {
                     logger.warn("$userId is not rtx user, appCode: $appCode not has manager")
-                    if (redisOperation.get("$FILTER_RUN_FLAG_PREFIX$tag") != null) {
+                    if (redisOperation.get("$FILTER_RUN_FLAG_PREFIX${bkTag.getLocalTag()}") != null) {
                         throw ParamBlankException("非法用户")
                     }
                 } else {
-                    requestContext.headers.putSingle(AUTH_HEADER_USER_ID, appManagerUser!!)
+                    requestContext.headers.putSingle(AUTH_HEADER_USER_ID, appManagerUser)
                 }
             }
         }

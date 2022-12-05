@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.builds
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -41,12 +40,10 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class PipelineRetryFacadeService @Autowired constructor(
@@ -54,45 +51,41 @@ class PipelineRetryFacadeService @Autowired constructor(
     val pipelineEventDispatcher: PipelineEventDispatcher,
     val pipelineTaskService: PipelineTaskService,
     val pipelineContainerService: PipelineContainerService,
-    val taskBuildDetailService: TaskBuildDetailService,
     private val buildLogPrinter: BuildLogPrinter
 ) {
+
+    /**
+     * 对处于运行中的构建[buildId]，对指定的已经失败的插件任务[taskId]进行重试，
+     * [skipFailedTask]表示是否在重试时直接设置为跳过，并继续流转执行后续的其他插件任务。
+     * 当[taskId]参数不正确或其他原因导致找不到具体的构建任务时，返回false.
+     */
     fun runningBuildTaskRetry(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
-        taskId: String? = null
+        taskId: String? = null,
+        skipFailedTask: Boolean? = false
     ): Boolean {
         logger.info("runningBuildTaskRetry $userId|$projectId|$pipelineId|$buildId|$taskId}")
         if (taskId.isNullOrEmpty()) {
-            // 抛异常
-            throw ParamBlankException("Invalid taskId")
+            return false
         }
-        val taskInfo = pipelineTaskService.getBuildTask(projectId, buildId, taskId)
-        if (taskInfo == null) {
-            logger.warn("runningBuild task retry task empty $projectId|$pipelineId|$buildId|$taskId")
-            // 抛异常
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
-                params = arrayOf(buildId)
-            )
-        }
+        val taskInfo = pipelineTaskService.getBuildTask(projectId, buildId, taskId) ?: return false
+
         // 判断待重试task所属job是否为终态。 非终态判断是否是关机未完成。其他task直接报错
         // 此处请求可能早于关机到达。 若还未关机就点击重试，提示用户稍后再试
         val containerInfo = pipelineContainerService.getContainer(
             projectId = projectId,
             buildId = buildId,
             containerId = taskInfo.containerId,
-            stageId = null
+            stageId = taskInfo.stageId
         )
 
         // 校验当前job的关机事件是否有完成
         checkStopTask(projectId, buildId, containerInfo!!)
         // 刷新当前job的开关机以及job状态， container状态， detail数据
-        refreshTaskAndJob(userId, projectId, buildId, taskId, containerInfo)
+        refreshTaskAndJob(userId, projectId, buildId, taskId, containerInfo, skipFailedTask)
         // 发送container Refreash事件，重新开始task对应的调度
         sendContainerEvent(taskInfo, userId)
         buildLogPrinter.addYellowLine(
@@ -144,13 +137,19 @@ class PipelineRetryFacadeService @Autowired constructor(
         projectId: String,
         buildId: String,
         taskId: String,
-        containerInfo: PipelineBuildContainer
+        containerInfo: PipelineBuildContainer,
+        skipFailedTask: Boolean? = false
     ) {
         val taskRecords = pipelineTaskService.listContainerBuildTasks(projectId, buildId, containerInfo.containerId)
         // 待重试task所属job对应的startVm，stopVm，endTask，对应task状态重置为Queue
         val startAndEndTask = mutableListOf<PipelineBuildTask>()
         taskRecords.forEach { task ->
             if (task.taskId == taskId) {
+                // issues_6831: 若设置了手动跳过 且重试时选择了跳过当前插件则不刷新当前失败的插件,直接把task内状态改为SKIP
+                if (task.additionalOptions?.manualSkip == true && skipFailedTask!!) {
+                    pipelineTaskService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.SKIP)
+                    return@forEach
+                }
                 startAndEndTask.add(task)
             } else if (task.taskName.startsWith(VMUtils.getCleanVmLabel()) &&
                 task.taskId.startsWith(VMUtils.getStopVmLabel())) {

@@ -91,8 +91,8 @@
                     const res = await this.$ajax.get(url)
                     if (res.data) {
                         this.newModel.envId.list = res.data.map(item => ({
-                            id: item['envId'],
-                            name: item['envName']
+                            id: item.envId,
+                            name: item.envName
                         }))
                     }
                 } catch (e) {

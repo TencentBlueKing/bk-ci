@@ -68,7 +68,10 @@ interface ExternalThirdPartyAgentResource {
         agentId: String,
         @ApiParam("本地eTag标签", required = false)
         @QueryParam("eTag")
-        eTag: String?
+        eTag: String?,
+        @ApiParam("本地操作系统架构", required = false)
+        @QueryParam("arch")
+        arch: String?
     ): Response
 
     @ApiOperation("下载JRE")
@@ -82,7 +85,10 @@ interface ExternalThirdPartyAgentResource {
         agentId: String,
         @ApiParam("本地eTag标签", required = false)
         @QueryParam("eTag")
-        eTag: String?
+        eTag: String?,
+        @ApiParam("本地操作系统架构", required = false)
+        @QueryParam("arch")
+        arch: String?
     ): Response
 
     @ApiOperation("生成并下载新的批次安装所需要的文件")

@@ -33,6 +33,7 @@ package com.tencent.bkrepo.repository.service.file
 
 import com.tencent.bkrepo.repository.model.TNode
 import com.tencent.bkrepo.repository.model.TRepository
+import com.tencent.bkrepo.repository.pojo.file.FileReference
 
 /**
  * 文件引用服务接口
@@ -76,4 +77,12 @@ interface FileReferenceService {
      * [credentialsKey]为`null`则使用默认的存储实例
      */
     fun count(sha256: String, credentialsKey: String?): Long
+
+    /**
+     * 获取文件文件引用信息
+     *
+     * @param credentialsKey 文件所在存储实例
+     * @param sha256 所引用文件的sha256
+     */
+    fun get(credentialsKey: String?, sha256: String): FileReference
 }
