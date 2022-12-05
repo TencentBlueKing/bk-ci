@@ -40,21 +40,26 @@ object IamGroupUtils {
 
     fun buildDefaultDescription(projectName: String, groupName: String, userId: String): String {
         return "$projectName 用户组:$groupName,由$userId 创建于 " +
-            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+            DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
     }
 
     fun buildManagerDescription(projectName: String, userId: String): String {
         return "$projectName 分级管理员, 由$userId 创建于" +
-            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+            DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
     }
 
     fun buildManagerUpdateDescription(projectName: String, userId: String): String {
         return "$projectName 分级管理员, 由$userId 修改于" +
-            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+            DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
     }
 
     fun renameSystemLable(groupName: String): String {
         return groupName.substringAfterLast("-")
+    }
+
+    fun buildItsmDefaultReason(projectName: String, userId: String, isCreate: Boolean): String {
+        val createOrUpdate = if (isCreate) "创建" else "修改"
+        return "用户${userId}申请${createOrUpdate}蓝盾项目-$projectName,请审批！"
     }
 
     fun defaultRoleCheck(groupName: String): Boolean {

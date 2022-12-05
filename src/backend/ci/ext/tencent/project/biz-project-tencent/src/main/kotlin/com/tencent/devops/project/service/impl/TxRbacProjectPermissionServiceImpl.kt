@@ -33,46 +33,40 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
-import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
-import com.tencent.devops.project.listener.TxIamRbacCreateEvent
 import com.tencent.devops.project.listener.TxIamRbacCreateApplicationEvent
+import com.tencent.devops.project.listener.TxIamRbacCreateEvent
 import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ApproveStatus
-import com.tencent.devops.project.pojo.enums.ApproveType
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
-import com.tencent.devops.project.service.iam.AuthorizationUtils
+import com.tencent.devops.project.service.iam.IamRbacService
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -87,14 +81,12 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
     val iamManagerService: V2ManagerService,
     val projectApprovalCallbackDao: ProjectApprovalCallbackDao,
     val dslContext: DSLContext,
-    val projectDao: ProjectDao
+    val projectDao: ProjectDao,
+    val iamRbacService: IamRbacService
 ) : ProjectPermissionService {
 
     @Value("\${iam.v0.url:#{null}}")
     private val v0IamUrl: String = ""
-
-    @Value("\${itsm.callback.update.url:#{null}}")
-    private val itsmUpdateCallBackUrl: String = ""
 
     // 校验用户是否是项目成员
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
@@ -232,7 +224,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
                 return
             }
             if (needApproval) {
-                updateGradeManagerApplication(
+                iamRbacService.updateGradeManagerApplication(
                     projectCode = projectCode,
                     projectName = projectName,
                     userId = userId,
@@ -248,7 +240,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
                 }
                 // 若relationId为空，则表示并没有在Iam那边注册分级管理员，那么不需要去修改分级管理员
                 if (!relationId.isNullOrEmpty()) {
-                    updateManager(
+                    iamRbacService.updateManager(
                         projectCode = projectCode,
                         projectName = projectName,
                         userId = userId,
@@ -257,91 +249,6 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
                     )
                 }
             }
-        }
-    }
-
-    private fun updateManager(
-        projectCode: String,
-        projectName: String,
-        userId: String,
-        iamSubjectScopes: List<ManagerScopes>,
-        relationId: String
-    ) {
-        val authorizationScopes = AuthorizationUtils.buildManagerResources(
-            projectId = projectCode,
-            projectName = projectName,
-            iamConfiguration = iamConfiguration
-        )
-        val gradeManagerDetail = iamManagerService.getGradeManagerDetail(relationId)
-        val updateManagerDTO: UpdateManagerDTO = UpdateManagerDTO.builder()
-            .name("$SYSTEM_DEFAULT_NAME-$projectName")
-            .description(gradeManagerDetail.description)
-            .authorizationScopes(authorizationScopes)
-            .subjectScopes(iamSubjectScopes)
-            .members(gradeManagerDetail.members)
-            .syncPerm(gradeManagerDetail.syncPerm)
-            .build()
-        logger.info("updateManager : $updateManagerDTO")
-        iamManagerService.updateManagerV2(relationId, updateManagerDTO)
-    }
-
-    private fun updateGradeManagerApplication(
-        projectCode: String,
-        projectName: String,
-        userId: String,
-        iamSubjectScopes: List<ManagerScopes>,
-        projectInfo: TProjectRecord,
-        isAuthSecrecyChange: Boolean,
-        isSubjectScopesChange: Boolean,
-        subjectScopesStr: String
-    ) {
-        val authorizationScopes = AuthorizationUtils.buildManagerResources(
-            projectId = projectCode,
-            projectName = projectName,
-            iamConfiguration = iamConfiguration
-        )
-        val callbackId = UUIDUtil.generate()
-        val gradeManagerDetail = iamManagerService.getGradeManagerDetail(projectInfo.relationId)
-        val gradeManagerApplicationUpdateDTO = GradeManagerApplicationUpdateDTO.builder()
-            .name("$SYSTEM_DEFAULT_NAME-$projectName")
-            .description(gradeManagerDetail.description)
-            .authorizationScopes(authorizationScopes)
-            .subjectScopes(iamSubjectScopes)
-            .syncPerm(gradeManagerDetail.syncPerm)
-            .applicant(userId)
-            .members(gradeManagerDetail.members)
-            .reason(IamGroupUtils.buildManagerUpdateDescription(projectCode, userId))
-            .callbackId(callbackId)
-            .callbackUrl(itsmUpdateCallBackUrl)
-            // todo 需补充
-            .content(mapOf("test" to "test"))
-            .title("蓝盾修改项目申请")
-            .build()
-        logger.info("gradeManagerApplicationUpdateDTO : $gradeManagerApplicationUpdateDTO")
-        val updateGradeManagerApplication =
-            iamManagerService.updateGradeManagerApplication(projectInfo.relationId, gradeManagerApplicationUpdateDTO)
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            val approveType = if (isAuthSecrecyChange && isSubjectScopesChange) ApproveType.ALL_CHANGE_APPROVE.type
-            else if (isSubjectScopesChange) ApproveType.SUBJECT_SCOPES_APPROVE.type
-            else ApproveType.AUTH_SECRECY_APPROVE.type
-            logger.info("approveType : $approveType")
-            // 修改项目状态
-            projectDao.updateProjectStatusByEnglishName(
-                dslContext = context,
-                projectCode = projectInfo.englishName,
-                statusEnum = ApproveStatus.UPDATE_PENDING
-            )
-            // 存储审批单
-            projectApprovalCallbackDao.create(
-                dslContext = context,
-                applicant = userId,
-                englishName = projectCode,
-                callbackId = callbackId,
-                sn = updateGradeManagerApplication.sn,
-                subjectScopes = subjectScopesStr,
-                approveType = approveType
-            )
         }
     }
 

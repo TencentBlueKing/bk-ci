@@ -37,6 +37,7 @@ import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.iam.IamRbacService
 import com.tencent.devops.project.service.impl.TxRbacProjectPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -62,7 +63,8 @@ class TxRbacProjectInitConfiguration {
         iamManagerService: V2ManagerService,
         projectApprovalCallbackDao: ProjectApprovalCallbackDao,
         dslContext: DSLContext,
-        projectDao: ProjectDao
+        projectDao: ProjectDao,
+        iamRbacService: IamRbacService
     ): ProjectPermissionService = TxRbacProjectPermissionServiceImpl(
         objectMapper = objectMapper,
         authProperties = bkAuthProperties,
@@ -73,6 +75,7 @@ class TxRbacProjectInitConfiguration {
         iamConfiguration = iamConfiguration,
         projectApprovalCallbackDao = projectApprovalCallbackDao,
         dslContext = dslContext,
-        projectDao = projectDao
+        projectDao = projectDao,
+        iamRbacService = iamRbacService
     )
 }
