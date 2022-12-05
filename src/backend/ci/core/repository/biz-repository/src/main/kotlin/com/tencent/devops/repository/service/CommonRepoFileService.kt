@@ -126,16 +126,20 @@ class CommonRepoFileService @Autowired constructor(
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
                 ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
         )
-        // 如果获取项目信息成功,说明项目是公开的或者用户是项目成员
-        val result = gitService.getGitProjectInfo(
-            id = GitUtils.getProjectName(repoUrl),
-            token = token,
-            tokenType = TokenTypeEnum.OAUTH
-        )
-        return if (result.isNotOk() || result.data == null) {
-            Result(false)
-        } else {
+        val projectUser = gitService.getProjectMembersAll(
+            gitProjectId = GitUtils.getProjectName(repoUrl),
+            page = 1,
+            pageSize = 10,
+            search = userId,
+            tokenType = TokenTypeEnum.OAUTH,
+            token = token
+        ).data?.map {
+            it.username
+        } ?: emptyList()
+        return if (projectUser.isNotEmpty() && projectUser.contains(userId)) {
             Result(true)
+        } else {
+            Result(false)
         }
     }
 }
