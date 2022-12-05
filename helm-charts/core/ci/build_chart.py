@@ -53,6 +53,10 @@ default_value_dict = {
     'bkCiRepositoryGithubServer':'repository',
     'bkCiDockerRoutingType':'VM',
     'bkCiDockerJobQuotaEnable':'false',
+    'bkCiBcsCpu':'8.0',
+    'bkCiBcsMemory':'16048',
+    'bkCiKubernetesCpu':'8',
+    'bkCiKubernetesMemory':'16048',
 }
 
 if os.path.isfile(default_value_json):
