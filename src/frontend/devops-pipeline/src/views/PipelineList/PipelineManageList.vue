@@ -147,7 +147,7 @@
 
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import Logo from '@/components/Logo'
-    import { PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+    import { PIPELINE_SORT_FILED, ORDER_ENUM } from '@/utils/pipelineConst'
     import { bus, ADD_TO_PIPELINE_GROUP } from '@/utils/bus'
     import { getCacheViewId } from '@/utils/util'
     import {
@@ -328,7 +328,8 @@
                     ...this.$route,
                     query: {
                         ...this.$route.query,
-                        sortType
+                        sortType,
+                        collation: ORDER_ENUM.ascending
                     }
                 })
             },

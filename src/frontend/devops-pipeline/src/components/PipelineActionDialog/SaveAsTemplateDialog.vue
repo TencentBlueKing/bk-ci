@@ -1,5 +1,6 @@
 <template>
     <bk-dialog
+        ext-cls="bk-devops-center-align-dialog"
         width="600"
         v-model="isSaveAsTemplateShow"
         :title="$t('newlist.saveAsTemp')"
@@ -7,6 +8,8 @@
         :mask-close="false"
         :auto-close="false"
         header-position="left"
+        :draggable="false"
+        render-directive="if"
         @confirm="submit"
         @cancel="cancel">
         <bk-form v-if="isSaveAsTemplateShow" v-bkloading="{ isLoading: isSubmiting }" :model="formModel" label-width="120">

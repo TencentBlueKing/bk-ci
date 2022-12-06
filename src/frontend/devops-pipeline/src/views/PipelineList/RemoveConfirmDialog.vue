@@ -1,11 +1,14 @@
 <template>
     <bk-dialog
-        ext-cls="remove-pipeline-confirm-dialog"
+        ext-cls="remove-pipeline-confirm-dialog bk-devops-center-align-dialog"
         :width="width"
         :value="isShow"
         :title="title"
+        :quick-close="false"
         header-position="left"
+        render-directive="if"
         :draggable="false"
+        :on-close="handleClose"
     >
         <p class="remove-confirm-desc" v-if="isRemoveType" v-html="$t('removeConfirmTips', [groupName])">
         </p>

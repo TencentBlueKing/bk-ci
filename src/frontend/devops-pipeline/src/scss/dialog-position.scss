@@ -17,3 +17,12 @@
         }
     }
 }
+
+.bk-devops-center-align-dialog.bk-dialog-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .bk-dialog {
+        top: 0;
+    }
+}

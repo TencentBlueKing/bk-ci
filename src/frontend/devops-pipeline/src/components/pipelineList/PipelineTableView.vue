@@ -55,13 +55,27 @@
                     >
                         {{viewName}}
                     </bk-tag>
-                    <bk-tag
-                        :ref="`groupNameMore_${props.$index}`"
+                    <bk-popover
+                        theme="light"
+                        placement="bottom-end"
+                        max-width="250"
                         v-if="pipelineGroups[props.$index].showMore"
-                        v-bk-tooltips="pipelineGroups[props.$index].hiddenGroups.join(',')"
                     >
-                        +{{ pipelineGroups[props.$index].showMore }}
-                    </bk-tag>
+                        <bk-tag
+                            :ref="`groupNameMore_${props.$index}`"
+                        >
+                            +{{ pipelineGroups[props.$index].showMore }}
+                        </bk-tag>
+                        <div slot="content">
+                            <bk-tag
+                                v-for="hiddenGroup in pipelineGroups[props.$index].hiddenGroups"
+                                :key="hiddenGroup"
+                                @click="goGroup(hiddenGroup)"
+                            >
+                                {{hiddenGroup}}
+                            </bk-tag>
+                        </div>
+                    </bk-popover>
                 </template>
             </div>
         </bk-table-column>

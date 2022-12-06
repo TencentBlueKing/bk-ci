@@ -12,11 +12,11 @@
                 </h3>
                 <p class="bk-pipeline-card-summary">
                     <span>
-                        <logo size="12" name="record" />
+                        <logo size="16" name="record" />
                         {{pipeline.buildCount}}次
                     </span>
                     <span v-if="pipeline.viewNames" class="pipeline-group-names-span">
-                        <logo size="12" name="pipeline-group" />
+                        <logo size="16" name="pipeline-group" />
                         <span v-bk-tooltips="viewNamesStr">
                             {{viewNamesStr}}
                         </span>
