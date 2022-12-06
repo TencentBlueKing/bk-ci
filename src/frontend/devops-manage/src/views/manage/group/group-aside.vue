@@ -57,7 +57,7 @@ import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'GroupAside',
-
+  emits: ['create-group', 'choose-group'],
   data() {
     const { t } = useI18n();
 
@@ -127,9 +127,11 @@ export default {
     },
     handleChangeTab(group: any) {
       this.activeTab = group.name;
+      this.$emit('choose-group');
     },
     handleCreateGroup() {
       this.activeTab = '';
+      this.$emit('create-group');
     },
     handleCloseManage() {
       console.log('关闭权限管理');

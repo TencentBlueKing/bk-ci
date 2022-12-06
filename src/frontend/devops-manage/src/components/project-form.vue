@@ -1,14 +1,22 @@
 <script setup lang="ts">
 import {
   ref,
+  onBeforeUnmount,
   computed,
   onMounted,
-  nextTick,
 } from 'vue';
+import {
+  EditLine,
+} from 'bkui-vue/lib/icon';
+import IAMIframe from './IAM-Iframe';
 import { useI18n } from 'vue-i18n';
 import { Message } from 'bkui-vue';
 import http from '@/http/api';
-const { t } = useI18n();
+
+const {
+  t,
+} = useI18n();
+
 const emits = defineEmits(['change']);
 
 const props = defineProps({
@@ -17,7 +25,6 @@ const props = defineProps({
   isChange: Boolean,
 });
 
-const projectData = ref<any>(props.data);
 const logoFiles = computed(() => {
   const { logoAddr } = projectData.value;
   const files = [];
@@ -28,6 +35,8 @@ const logoFiles = computed(() => {
   }
   return files;
 });
+
+const projectData = ref<any>(props.data);
 
 const deptLoading = ref({
   bg: false,
@@ -40,6 +49,12 @@ const curDepartmentInfo = ref({
   dept: [],
   center: [],
 });
+
+const showDialog = ref(false);
+
+const query = {
+  role_id: 1,
+};
 
 const getDepartment = async (type: string, id: any) => {
   deptLoading.value[type] = true;
@@ -140,8 +155,35 @@ const handleUploadLogo = async (res: any) => {
     // projectData.value.logo = formData;
   }
 };
+
+const handleMessage = (event: any) => {
+  const { data } = event;
+  if (data.type === 'IAM') {
+    switch (data.code) {
+      case 'success':
+        projectData.value.subjectScopes = [
+          ...data.data.departments,
+          ...data.data.users,
+        ].map(item => ({
+          id: item.id,
+          type: item.type,
+          name: item.name,
+        }));
+        break;
+      case 'cancel':
+        showDialog.value = false;
+        break;
+    }
+  }
+};
+
 onMounted(() => {
   fetchDepartmentList();
+  window.addEventListener('message', handleMessage);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('message', handleMessage);
 });
 </script>
 
@@ -203,7 +245,7 @@ onMounted(() => {
       <div class="bk-dropdown-box">
         <bk-select
           v-model="projectData.deptId"
-          :placeholder="$t('部门')"
+          :placeholder="t('部门')"
           name="dept"
           :loading="deptLoading.dept"
           filterable
@@ -220,7 +262,7 @@ onMounted(() => {
       <div class="bk-dropdown-box">
         <bk-select
           v-model="projectData.centerId"
-          :placeholder="$t('中心')"
+          :placeholder="t('中心')"
           name="center"
           :loading="deptLoading.center"
           filterable
@@ -244,22 +286,31 @@ onMounted(() => {
         <bk-radio :label="true">{{ t('保密项目') }}</bk-radio>
       </bk-radio-group>
     </bk-form-item>
-    <bk-form-item :label="t('项目最大可授权人员范围')" :required="true">
-      <bk-select
-        :disabled="false"
-        searchable>
-        <bk-option
-          v-for="option in []"
-          :key="option.id"
-          :value="option.id"
-          :name="option.name">
-        </bk-option>
-      </bk-select>
+    <bk-form-item :label="t('项目最大可授权人员范围')" :required="true" :property="'name'">
+      <edit-line
+        class="edit-line"
+        @click="(showDialog = true)"
+      />
     </bk-form-item>
     <div>
       <slot></slot>
     </div>
   </bk-form>
+
+  <bk-dialog
+    title="设置项目最大可授权人员范围"
+    width="1328"
+    size="large"
+    dialog-type="show"
+    :is-show="showDialog"
+    @closed="() => showDialog = false"
+  >
+    <IAMIframe
+      class="member-iframe"
+      path="add-member-boundary"
+      :query="query"
+    />
+  </bk-dialog>
 </template>
 
 <style lang="postcss" scoped>
@@ -274,6 +325,12 @@ onMounted(() => {
   .logo-upload-tip {
     font-size: 12px;
     color: #979BA5;
+  }
+  .edit-line {
+    cursor: pointer;
+  }
+  .member-iframe {
+    height: 100%;
   }
   .bk-dropdown-box {
     width: 200px;
