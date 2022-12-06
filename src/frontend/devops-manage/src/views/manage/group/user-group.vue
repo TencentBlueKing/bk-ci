@@ -2,13 +2,14 @@
   <article class="group-manage">
     <!-- 管理员 -->
     <template v-if="hasPermission">
-      <group-aside></group-aside>
+      <group-aside
+        @choose-group="handleChooseGroup"
+        @create-group="handleCreateGroup"
+      ></group-aside>
       <IAMIframe
         class="group-frame"
-        path="user-group-detail/10137"
-        :query="{
-          role_id: 1
-        }"
+        :path="path"
+        :query="query"
       />
     </template>
     <!-- 为开启权限管理 -->
@@ -39,12 +40,38 @@ export default {
   data() {
     return {
       hasPermission: true,
+      path: 'user-group-detail/10137',
+      query: {
+        role_id: 1,
+      },
     };
   },
   mounted() {
+    window.addEventListener('message', this.handleMessage);
+  },
+  beforeUnmount() {
+    window.removeEventListener('message', this.handleMessage);
   },
   methods: {
-
+    handleChooseGroup() {
+      this.path = 'user-group-detail/10137';
+    },
+    handleCreateGroup() {
+      this.path = 'create-user-group';
+    },
+    handleMessage(event: any) {
+      const { data } = event;
+      if (data.type === 'IAM') {
+        switch (data.code) {
+          case 'cancel':
+            this.handleChooseGroup();
+            break;
+          case 'success':
+            this.handleChooseGroup();
+            break;
+        }
+      }
+    },
   },
 };
 </script>

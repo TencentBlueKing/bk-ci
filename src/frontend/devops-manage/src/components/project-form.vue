@@ -1,11 +1,55 @@
 <script setup lang="ts">
+import {
+  ref,
+  onBeforeMount,
+  onBeforeUnmount,
+} from 'vue';
+import {
+  EditLine,
+} from 'bkui-vue/lib/icon';
+import IAMIframe from './IAM-Iframe';
 
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
 
 defineProps<{
   data: object,
 }>();
+
+const {
+  t,
+} = useI18n();
+const showDialog = ref(false);
+const query = {
+  role_id: 1,
+};
+
+const handleMessage = (event: any) => {
+  const { data } = event;
+  if (data.type === 'IAM') {
+    switch (data.code) {
+      case 'success':
+        console.log([
+          ...data.data.departments,
+          ...data.data.users,
+        ].map(item => ({
+          id: item.id,
+          type: item.type,
+        })));
+        break;
+      case 'cancel':
+        showDialog.value = false;
+        break;
+    }
+  }
+};
+
+onBeforeMount(() => {
+  window.addEventListener('message', handleMessage);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('message', handleMessage);
+});
 </script>
 
 <template>
@@ -48,21 +92,30 @@ defineProps<{
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item :label="t('项目最大可授权人员范围')" :required="true" :property="'name'">
-      <bk-select
-        :disabled="false"
-        searchable>
-        <bk-option
-          v-for="option in []"
-          :key="option.id"
-          :id="option.id"
-          :name="option.name">
-        </bk-option>
-      </bk-select>
+      <edit-line
+        class="edit-line"
+        @click="(showDialog = true)"
+      />
     </bk-form-item>
     <div>
       <slot></slot>
     </div>
   </bk-form>
+
+  <bk-dialog
+    title="设置项目最大可授权人员范围"
+    width="1328"
+    size="large"
+    dialog-type="show"
+    :is-show="showDialog"
+    @closed="() => showDialog = false"
+  >
+    <IAMIframe
+      class="member-iframe"
+      path="add-member-boundary"
+      :query="query"
+    />
+  </bk-dialog>
 </template>
 
 <style lang="postcss" scoped>
@@ -77,5 +130,11 @@ defineProps<{
   .logo-upload-tip {
     font-size: 12px;
     color: #979BA5;
+  }
+  .edit-line {
+    cursor: pointer;
+  }
+  .member-iframe {
+    height: 100%;
   }
 </style>
