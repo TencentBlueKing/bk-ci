@@ -732,12 +732,19 @@ class IamRbacService @Autowired constructor(
     }
 
     private fun buildIamSubjectScopes(iamSubjectScopes: List<ManagerScopes>): List<ManagerScopes> {
+        val subjectScopeList = ArrayList<ManagerScopes>()
         iamSubjectScopes.forEach {
             if (it.type == "depart") {
-                it.type = DEPARTMENT
+                val subjectScope = ManagerScopes()
+                subjectScope.type = DEPARTMENT
+                subjectScope.id = it.id
+                subjectScopeList.add(subjectScope)
+            } else {
+                subjectScopeList.add(it)
             }
+
         }
-        return iamSubjectScopes
+        return subjectScopeList
     }
 
     companion object {
