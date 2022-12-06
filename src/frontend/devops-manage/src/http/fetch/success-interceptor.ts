@@ -15,6 +15,8 @@ export default async (response: Response, config: IFetchConfig) => {
       // 接口请求成功
       case 0:
         return Promise.resolve(data);
+      case 200:
+        return Promise.resolve(data);
       // 后端业务处理报错
       default:
         throw new RequestError(status, message || '系统错误', data);

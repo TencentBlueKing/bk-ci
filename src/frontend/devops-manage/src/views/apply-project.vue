@@ -1,8 +1,55 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+import {
+  ref,
+} from 'vue';
+import http from '@/http/api';
 import ManageHeader from '@/components/manage-header.vue';
 import ProjectForm from '@/components/project-form.vue';
-import { useI18n } from 'vue-i18n';
+import { Message } from 'bkui-vue';
+import {
+  useRouter,
+} from 'vue-router';
 const { t } = useI18n();
+const router = useRouter();
+const projectData = ref({
+  projectName: '',
+  englishName: '',
+  description: '',
+  logoAddr: '',
+  bgId: 0,
+  bgName: '',
+  deptId: 0,
+  deptName: '',
+  centerId: 0,
+  centerName: '',
+  subjectScopes: [],
+  secrecy: false,
+  authSecrecy: false,
+});
+const btnLoading = ref(false);
+
+const handleConfirm = async () => {
+  btnLoading.value = true;
+  projectData.value.subjectScopes  = [{ type: '*', id: '*' }];
+  const result = await http.requestCreateProject({
+    projectData: projectData.value,
+  });
+  if (result) {
+    btnLoading.value = false;
+    Message({
+      theme: 'success',
+      message: t('保存成功'),
+    });
+    router.push({
+      path: `${projectData.value.englishName}/show`,
+    });
+  }
+};
+
+const handleCancel = () => {
+
+};
 </script>
 
 <template>
@@ -13,10 +60,10 @@ const { t } = useI18n();
     />
     <article class="apply-project-content">
       <section class="create-project-form">
-        <project-form>
+        <project-form :data="projectData">
           <bk-form-item>
-            <bk-button class="btn mr10" theme="primary">{{ t('提交') }}</bk-button>
-            <bk-button class="btn" theme="default">{{ t('取消') }}</bk-button>
+            <bk-button class="btn mr10" theme="primary" @click="handleConfirm">{{ t('提交') }}</bk-button>
+            <bk-button class="btn" theme="default" @click="handleCancel">{{ t('取消') }}</bk-button>
           </bk-form-item>
         </project-form>
       </section>

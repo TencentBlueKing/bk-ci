@@ -41,6 +41,7 @@ const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
       credentials: 'include',
       headers: {
         'X-Requested-With': 'fetch',
+        'X-Gateway-Tag': 'kubernetes-dev-rbac',
         'Content-Type': contentTypeMap[config.responseType] || 'application/json',
       },
       redirect: 'follow',
