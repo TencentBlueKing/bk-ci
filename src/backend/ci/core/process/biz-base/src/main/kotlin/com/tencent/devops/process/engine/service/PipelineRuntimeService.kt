@@ -1156,7 +1156,7 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
             cancelUser = null, modelVar = mutableMapOf(),
-            status = null, startTime = null, endTime = null,
+            status = startBuildStatus.name, startTime = null, endTime = null,
             timestamps = emptyList(), timeCost = null
         )
         val stageBuildRecords = mutableListOf<BuildRecordStage>()
