@@ -16,6 +16,7 @@
             <bk-table-column :label="$t('pipeline.path')" show-overflow-tooltip>
                 <template slot-scope="props">
                     <span v-if="props.row.artifactoryType === 'PIPELINE'">{{ props.row.name }}</span>
+                    <span v-else-if="props.row.artifactoryType === 'IMAGE'">{{ props.row.registry }}</span>
                     <span v-else>{{ props.row.fullName }}</span>
                 </template>
             </bk-table-column>
