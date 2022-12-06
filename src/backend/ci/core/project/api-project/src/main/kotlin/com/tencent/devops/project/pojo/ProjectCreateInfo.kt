@@ -30,6 +30,7 @@ package com.tencent.devops.project.pojo
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 
 @ApiModel("项目-新增模型")
@@ -73,6 +74,7 @@ data class ProjectCreateInfo(
     @ApiModelProperty("项目最大可授权人员范围")
     var subjectScopes: ArrayList<ManagerScopes>? = ArrayList(),
     @ApiModelProperty("logo文件")
+    @FormDataParam("logo")
     val logo: InputStream? = null,
     @ApiModelProperty("是否权限私密")
     val authSecrecy: Boolean? = null
