@@ -62,8 +62,22 @@ const handleCancel = () => {
       <section class="create-project-form">
         <project-form :data="projectData">
           <bk-form-item>
-            <bk-button class="btn mr10" theme="primary" @click="handleConfirm">{{ t('提交') }}</bk-button>
-            <bk-button class="btn" theme="default" @click="handleCancel">{{ t('取消') }}</bk-button>
+            <bk-button
+              class="btn mr10"
+              theme="primary"
+              :loading="btnLoading"
+              @click="handleConfirm"
+            >
+              {{ t('提交') }}
+            </bk-button>
+            <bk-button
+              class="btn"
+              theme="default"
+              :loading="btnLoading"
+              @click="handleCancel"
+            >
+              {{ t('取消') }}
+            </bk-button>
           </bk-form-item>
         </project-form>
       </section>

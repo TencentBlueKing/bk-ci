@@ -79,8 +79,8 @@ const handleUpdate = async () => {
     projectId: projectData.value.englishName,
     projectData: projectData.value,
   });
+  btnLoading.value = false;
   if (result) {
-    btnLoading.value = false;
     Message({
       theme: 'success',
       message: t('保存成功'),
@@ -107,8 +107,21 @@ onMounted(() => {
         :data="projectData"
         @change="handleFormChange">
         <bk-form-item>
-          <bk-button class="btn mr10" theme="primary" @click="handleUpdate">{{ t('提交更新') }}</bk-button>
-          <bk-button class="btn" @click="handleCancel">{{ t('取消') }}</bk-button>
+          <bk-button
+            class="btn mr10"
+            theme="primary"
+            :loading="btnLoading"
+            @click="handleUpdate"
+          >
+            {{ t('提交更新') }}
+          </bk-button>
+          <bk-button
+            class="btn"
+            :loading="btnLoading"
+            @click="handleCancel"
+          >
+            {{ t('取消') }}
+          </bk-button>
         </bk-form-item>
       </project-form>
     </section>

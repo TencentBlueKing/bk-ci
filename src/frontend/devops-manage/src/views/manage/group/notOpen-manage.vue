@@ -13,9 +13,6 @@ export default {
   name: 'NotOpenManage',
   components: {
   },
-  props: {
-
-  },
   data() {
     const { t } = useI18n();
     return {
