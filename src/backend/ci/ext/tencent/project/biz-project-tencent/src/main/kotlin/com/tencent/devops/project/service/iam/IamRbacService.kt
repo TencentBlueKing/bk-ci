@@ -743,6 +743,7 @@ class IamRbacService @Autowired constructor(
                 subjectScopeList.add(it)
             }
         }
+        logger.info("buildIamSubjectScopes:$subjectScopeList")
         return subjectScopeList
     }
 
