@@ -59,7 +59,7 @@ object IamGroupUtils {
 
     fun buildItsmDefaultReason(projectName: String, userId: String, isCreate: Boolean): String {
         val createOrUpdate = if (isCreate) "创建" else "修改"
-        return "用户${userId}申请${createOrUpdate}蓝盾项目-$projectName,请审批！"
+        return "用户 $userId 申请${createOrUpdate}蓝盾项目 $projectName ,请审批！"
     }
 
     fun defaultRoleCheck(groupName: String): Boolean {

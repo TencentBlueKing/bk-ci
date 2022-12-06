@@ -382,6 +382,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     }
                     val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
                     logger.info("subjectScopesStr : $subjectScopesStr")
+                    // todo 只有在rbac集群，并且needApproved为True，此时才不落库所有字段。其他情况落库所有
                     projectDao.update(
                         dslContext = context,
                         userId = userId,
