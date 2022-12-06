@@ -224,8 +224,8 @@
                 pipelineList: [],
                 selectionLength: 0,
                 pagination: {
-                    current: 1,
-                    limit: 20,
+                    current: this.$route.query.page ?? 1,
+                    limit: this.$route.query.pageSize ?? 20,
                     count: 0
                 },
                 visibleTagCountList: {}
@@ -282,8 +282,10 @@
                     page: 1
                 })
             },
-            sortField: function () {
-                this.$nextTick(this.requestList)
+            sortField: function (newSortField, oldSortField) {
+                if (!isShallowEqual(newSortField, oldSortField)) {
+                    this.$nextTick(this.requestList)
+                }
             },
             filterParams: function (filterMap, oldFilterMap) {
                 if (!isShallowEqual(filterMap, oldFilterMap)) {

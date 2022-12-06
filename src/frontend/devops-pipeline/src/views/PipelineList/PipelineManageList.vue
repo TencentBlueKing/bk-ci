@@ -264,7 +264,9 @@
                     if (!this.isAllPipelineView) {
                         this.goList()
                     } else {
-                        this.refresh()
+                        this.$refs.pipelineBox?.requestList?.({
+                            page: 1
+                        })
                     }
                     this.checkHasCreatePermission()
                     this.handleCloseEditCount()
