@@ -44,9 +44,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
 import com.tencent.devops.process.service.StageTagService
@@ -73,18 +71,6 @@ class StageBuildRecordService(
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation
 ) {
-
-    fun batchSave(
-        transactionContext: DSLContext?,
-        stageList: List<BuildRecordStage>,
-        containerList: List<BuildRecordContainer>,
-        taskList: List<BuildRecordTask>
-    ) {
-        buildRecordStageDao.batchSave(transactionContext ?: dslContext, stageList)
-        containerBuildRecordService.batchSave(
-            transactionContext ?: dslContext, containerList, taskList
-        )
-    }
 
     fun updateStageStatus(
         projectId: String,

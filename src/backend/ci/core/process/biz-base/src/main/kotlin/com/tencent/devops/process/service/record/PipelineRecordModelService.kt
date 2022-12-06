@@ -39,6 +39,8 @@ import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.utils.KEY_CONTAINERS
 import com.tencent.devops.process.utils.KEY_ELEMENTS
@@ -60,6 +62,18 @@ class PipelineRecordModelService @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val dslContext: DSLContext
 ) {
+
+    fun batchSave(
+        transactionContext: DSLContext?,
+        model: BuildRecordModel,
+        stageList: List<BuildRecordStage>,
+        containerList: List<BuildRecordContainer>,
+        taskList: List<BuildRecordTask>
+    ) {
+        buildRecordStageDao.batchSave(transactionContext ?: dslContext, stageList)
+        buildRecordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
+        buildRecordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
+    }
 
     /**
      * 生成构建变量模型map集合
@@ -83,7 +97,7 @@ class PipelineRecordModelService @Autowired constructor(
             buildId = buildId,
             executeCount = executeCount
         )
-        val recordModelMap = buildRecordPipeline.pipelineVar
+        val recordModelMap = buildRecordPipeline.modelVar
         // 获取stage级别变量数据
         val buildRecordStages = buildRecordStageDao.getRecords(
             dslContext = dslContext,

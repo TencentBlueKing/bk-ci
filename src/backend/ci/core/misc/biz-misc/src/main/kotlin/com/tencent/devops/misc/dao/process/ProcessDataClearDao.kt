@@ -32,7 +32,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordContainer
-import com.tencent.devops.model.process.tables.TPipelineBuildRecordPipeline
+import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordStage
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.TPipelineBuildStage
@@ -130,7 +130,7 @@ class ProcessDataClearDao {
     }
 
     fun deleteBuildRecordPipelineByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
-        with(TPipelineBuildRecordPipeline.T_PIPELINE_BUILD_RECORD_PIPELINE) {
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUILD_ID.eq(buildId))

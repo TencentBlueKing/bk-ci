@@ -124,7 +124,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
-import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -138,12 +137,14 @@ import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
+import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
@@ -205,7 +206,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuleService: PipelineRuleService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val stageBuildRecordService: StageBuildRecordService,
+    private val buildRecordService: PipelineRecordModelService,
     private val pipelineUrlBean: PipelineUrlBean,
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation
@@ -926,6 +927,7 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineParamMap[PIPELINE_START_TASK_ID] =
                     BuildParameters(PIPELINE_START_TASK_ID, context.firstTaskId, readOnly = true)
 
+                val buildNum: Int
                 if (buildHistoryRecord != null) {
                     if (context.actionType.isRetry() && context.retryStartTaskId.isNullOrBlank()) {
                         // 完整重试,重置启动时间
@@ -960,7 +962,7 @@ class PipelineRuntimeService @Autowired constructor(
                         buildStatus = startBuildStatus,
                         cancelUser = ""
                     )
-                    val buildNum = buildHistoryRecord.buildNum
+                    buildNum = buildHistoryRecord.buildNum
                     pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
                         key = PIPELINE_BUILD_NUM, value = buildNum.toString(), readOnly = true
                     )
@@ -982,7 +984,7 @@ class PipelineRuntimeService @Autowired constructor(
                         )
                     }
                     // 构建号递增
-                    val buildNum = pipelineBuildSummaryDao.updateBuildNum(
+                    buildNum = pipelineBuildSummaryDao.updateBuildNum(
                         dslContext = transactionContext,
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -1083,7 +1085,10 @@ class PipelineRuntimeService @Autowired constructor(
                     variables = pipelineParamMap
                 )
 
-                saveBuildRecord(
+                saveBuildRuntimeRecord(
+                    context = context,
+                    startBuildStatus = startBuildStatus,
+                    buildNum = buildNum,
                     resourceVersion = version,
                     updateTaskExistsRecord = updateTaskExistsRecord,
                     transactionContext = transactionContext,
@@ -1132,7 +1137,10 @@ class PipelineRuntimeService @Autowired constructor(
         return buildId
     }
 
-    private fun saveBuildRecord(
+    private fun saveBuildRuntimeRecord(
+        context: StartBuildContext,
+        startBuildStatus: BuildStatus,
+        buildNum: Int,
         resourceVersion: Int,
         updateTaskExistsRecord: MutableList<PipelineBuildTask>,
         transactionContext: DSLContext,
@@ -1142,6 +1150,15 @@ class PipelineRuntimeService @Autowired constructor(
         updateStageExistsRecord: MutableList<PipelineBuildStage>,
         buildStages: ArrayList<PipelineBuildStage>
     ) {
+        val modelRecord = BuildRecordModel(
+            resourceVersion = resourceVersion, startUser = context.triggerUser,
+            startType = context.startType.name, buildNum = buildNum,
+            projectId = context.projectId, pipelineId = context.pipelineId,
+            buildId = context.buildId, executeCount = context.executeCount,
+            cancelUser = null, modelVar = mutableMapOf(),
+            status = null, startTime = null, endTime = null,
+            timestamps = emptyList(), timeCost = null
+        )
         val stageBuildRecords = mutableListOf<BuildRecordStage>()
         val containerBuildRecords = mutableListOf<BuildRecordContainer>()
         val taskBuildRecords = mutableListOf<BuildRecordTask>()
@@ -1170,8 +1187,9 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineStageService.batchSave(transactionContext, buildStages)
             saveStageRecords(buildStages, stageBuildRecords, resourceVersion)
         }
-        stageBuildRecordService.batchSave(
-            dslContext, stageBuildRecords, containerBuildRecords, taskBuildRecords
+        buildRecordService.batchSave(
+            dslContext, modelRecord, stageBuildRecords,
+            containerBuildRecords, taskBuildRecords
         )
     }
 

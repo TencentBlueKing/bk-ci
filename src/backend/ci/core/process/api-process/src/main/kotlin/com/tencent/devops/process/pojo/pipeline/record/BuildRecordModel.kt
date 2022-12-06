@@ -48,11 +48,11 @@ data class BuildRecordModel(
     @ApiModelProperty("执行次数", required = true)
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
-    val pipelineVar: MutableMap<String, Any>,
+    val modelVar: MutableMap<String, Any>,
     @ApiModelProperty("触发人", required = true)
     val startUser: String,
     @ApiModelProperty("触发器", required = true)
-    val trigger: String,
+    val startType: String,
     @ApiModelProperty("构建状态", required = false)
     var status: String?,
     @ApiModelProperty("取消人", required = false)
