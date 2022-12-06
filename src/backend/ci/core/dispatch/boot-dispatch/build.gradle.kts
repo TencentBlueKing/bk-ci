@@ -25,6 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+plugins {
+    `task-docker-build`
+}
+
 dependencies {
     api(project(":core:dispatch:biz-dispatch-sample"))
     api(project(":core:common:common-auth:common-auth-mock"))
