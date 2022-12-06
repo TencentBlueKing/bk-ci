@@ -32,7 +32,6 @@ enum class FileTypeEnum(val fileType: String) {
     BK_CUSTOM("bk-custom"), // 指定了自定义路径的归档类型，会覆盖
     BK_REPORT("bk-report"), // 报告产出物
     BK_PLUGIN_FE("bk-plugin-fe"); // 插件自定义UI前端文件
-
     fun toArtifactoryType(): ArtifactoryType {
         return when (this) {
             BK_ARCHIVE -> ArtifactoryType.PIPELINE

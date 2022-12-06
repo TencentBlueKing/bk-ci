@@ -317,7 +317,7 @@ func (m *Mgr) resourceCheck(ctx context.Context) {
 					// notify resource release
 					m.work.Resource().Release(nil)
 					// send and reset stat data
-					m.work.Resource().SendAndResetStats(false, 0)
+					m.work.Resource().SendAndResetStats(false, []int64{0})
 
 					// 重置最近一次使用时间
 					m.setLastUsed(0)
