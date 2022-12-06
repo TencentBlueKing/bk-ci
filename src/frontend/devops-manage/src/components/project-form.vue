@@ -4,7 +4,6 @@ import {
   onBeforeUnmount,
   computed,
   onMounted,
-  nextTick,
 } from 'vue';
 import {
   EditLine,
@@ -13,6 +12,11 @@ import IAMIframe from './IAM-Iframe';
 import { useI18n } from 'vue-i18n';
 import { Message } from 'bkui-vue';
 import http from '@/http/api';
+
+const {
+  t,
+} = useI18n();
+
 const emits = defineEmits(['change']);
 
 const props = defineProps({
@@ -21,7 +25,6 @@ const props = defineProps({
   isChange: Boolean,
 });
 
-const projectData = ref<any>(props.data);
 const logoFiles = computed(() => {
   const { logoAddr } = projectData.value;
   const files = [];
@@ -32,6 +35,8 @@ const logoFiles = computed(() => {
   }
   return files;
 });
+
+const projectData = ref<any>(props.data);
 
 const deptLoading = ref({
   bg: false,
@@ -45,10 +50,8 @@ const curDepartmentInfo = ref({
   center: [],
 });
 
-const {
-  t,
-} = useI18n();
 const showDialog = ref(false);
+
 const query = {
   role_id: 1,
 };
@@ -153,19 +156,19 @@ const handleUploadLogo = async (res: any) => {
   }
 };
 
-
 const handleMessage = (event: any) => {
   const { data } = event;
   if (data.type === 'IAM') {
     switch (data.code) {
       case 'success':
-        console.log([
+        projectData.value.subjectScopes = [
           ...data.data.departments,
           ...data.data.users,
         ].map(item => ({
           id: item.id,
           type: item.type,
-        })));
+          name: item.name,
+        }));
         break;
       case 'cancel':
         showDialog.value = false;
@@ -242,7 +245,7 @@ onBeforeUnmount(() => {
       <div class="bk-dropdown-box">
         <bk-select
           v-model="projectData.deptId"
-          :placeholder="$t('部门')"
+          :placeholder="t('部门')"
           name="dept"
           :loading="deptLoading.dept"
           filterable
@@ -259,7 +262,7 @@ onBeforeUnmount(() => {
       <div class="bk-dropdown-box">
         <bk-select
           v-model="projectData.centerId"
-          :placeholder="$t('中心')"
+          :placeholder="t('中心')"
           name="center"
           :loading="deptLoading.center"
           filterable
