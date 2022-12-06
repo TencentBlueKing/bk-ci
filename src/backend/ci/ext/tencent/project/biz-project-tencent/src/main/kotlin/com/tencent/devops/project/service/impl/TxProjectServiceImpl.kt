@@ -67,6 +67,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -161,7 +162,12 @@ class TxProjectServiceImpl @Autowired constructor(
             logger.info("getByEnglishName $userId is $englishName manager")
             return projectVO
         }
-
+        // 若该项目是该用户创建，并且还未创建成功，并不需要鉴权，直接返回项目详情
+        val isNotCreateSuccess = projectVO.creator == userId
+            && (projectVO.approvalStatus == ApproveStatus.CREATE_PENDING.status
+            || projectVO.approvalStatus == ApproveStatus.CREATE_REJECT.status)
+        if (isNotCreateSuccess)
+            return projectVO
         val englishNames = getProjectFromAuth(userId, accessToken)
         if (englishNames.isEmpty()) {
             return null
