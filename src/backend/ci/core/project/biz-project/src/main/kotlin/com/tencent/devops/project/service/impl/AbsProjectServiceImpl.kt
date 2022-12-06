@@ -200,7 +200,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw e
         } catch (e: Exception) {
             logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
-            throw OperationException("Failed to create project in permission center| ${e.message}")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
         }
         if (projectId.isNullOrEmpty()) {
             projectId = UUIDUtil.generate()
@@ -360,20 +360,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     needApproval = needApproval!!,
                     iamSubjectScopes = subjectScopes
                 )
-                try {
-                    modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
-                } catch (e: Exception) {
-                    logger.warn(
-                        "Error modifying project information in permission center：" +
-                            "$resourceUpdateInfo", e
-                    )
-                    throw OperationException(
-                        MessageCodeUtil.getCodeLanMessage(
-                            messageCode = ProjectMessageCode.PEM_UPDATE_FAIL,
-                            defaultMessage = "Error modifying project information in permission center:$e"
-                        )
-                    )
-                }
+                modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     // 修改时，若传递的可授权人员范围为空，则直接用全公司
@@ -382,7 +369,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     }
                     val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
                     logger.info("subjectScopesStr : $subjectScopesStr")
-                    // todo 只有在rbac集群，并且needApproved为True，此时才不落库所有字段。其他情况落库所有
                     projectDao.update(
                         dslContext = context,
                         userId = userId,
@@ -419,12 +405,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 success = true
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
-                throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
-                        messageCode = ProjectMessageCode.PROJECT_NAME_EXIST,
-                        defaultMessage = "project name exist : $e "
-                    )
-                )
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             } catch (e: Exception) {
                 logger.warn("update project failed :$projectUpdateInfo", e)
                 throw OperationException(
@@ -452,7 +433,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            //todo 修改拉取策略，只拉取拥有查看权限的项目  v3保留
+            // 是否需要toset
             val projects = getProjectFromAuth(userId, accessToken)
             if (projects.isEmpty() && !unApproved) {
                 return emptyList()
@@ -471,7 +452,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
-            if (unApproved) {
+            if (unApproved!!) {
                 projectDao.listUnapprovedByUserId(
                     dslContext = dslContext,
                     userId = userId
@@ -856,9 +837,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         val projectInfo = projectDao.get(dslContext, projectId) ?: throw InvalidParamException("项目不存在")
         val status = projectInfo.approvalStatus
-        if (!(
-                status == ApproveStatus.CREATE_PENDING.status ||
-                    status == ApproveStatus.CREATE_REJECT.status
+        if (!(status == ApproveStatus.CREATE_PENDING.status ||
+                status == ApproveStatus.CREATE_REJECT.status
                 )) {
             logger.warn(
                 "The project can't be cancel！ : ${projectInfo.englishName}"
