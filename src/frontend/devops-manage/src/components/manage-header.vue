@@ -45,6 +45,7 @@ defineProps<{
   align-items: center;
   justify-content: space-between;
   padding: 0 25px;
+  z-index: 100;
 }
 .manage-breadcrumb {
   position: absolute;

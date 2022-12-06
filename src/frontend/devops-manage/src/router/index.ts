@@ -3,15 +3,15 @@ import {
   createWebHistory,
 } from 'vue-router';
 
-const HomeEntry = () => import(/* webpackChunkName: "Manage" */ '../app.vue');
-const ApplyProject = () => import(/* webpackChunkName: "Apply" */ '../views/apply-project.vue');
+const HomeEntry = () => import(/* webpackChunkName: "HomeEntry" */ '../app.vue');
+const ApplyProject = () => import(/* webpackChunkName: "ApplyProject" */ '../views/apply-project.vue');
 // 项目管理
-const ManageEntry = () => import(/* webpackChunkName: "Manage" */ '../views/manage/manage-entry.vue');
-const EditProject = () => import(/* webpackChunkName: "Manage" */ '../views/manage/project/edit-project.vue');
-const ShowProject = () => import(/* webpackChunkName: "Manage" */ '../views/manage/project/show-project.vue');
+const ManageEntry = () => import(/* webpackChunkName: "ManageEntry" */ '../views/manage/manage-entry.vue');
+const EditProject = () => import(/* webpackChunkName: "EditProject" */ '../views/manage/project/edit-project.vue');
+const ShowProject = () => import(/* webpackChunkName: "ShowProject" */ '../views/manage/project/show-project.vue');
 // 用户组管理
-const UserGroup = () => import(/* webpackChunkName: "Manage" */ '../views/manage/group/user-group.vue');
-const ExpandManage = () => import(/* webpackChunkName: "Manage" */ '../views/manage/expand/list.vue');
+const UserGroup = () => import(/* webpackChunkName: "UserGroup" */ '../views/manage/group/user-group.vue');
+const ExpandManage = () => import(/* webpackChunkName: "ExpandManage" */ '../views/manage/expand/list.vue');
 
 const router = createRouter({
   history: createWebHistory('manage'),
