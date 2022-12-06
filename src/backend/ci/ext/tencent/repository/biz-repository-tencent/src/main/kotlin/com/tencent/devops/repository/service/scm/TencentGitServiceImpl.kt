@@ -37,8 +37,8 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
-import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
@@ -619,6 +619,20 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         )
     }
 
+    override fun enableCi(
+        projectName: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        enable: Boolean?
+    ): Result<Boolean> {
+        return client.getScm(ServiceGitResource::class).enableCi(
+            projectName = projectName,
+            token = token,
+            tokenType = tokenType,
+            enable = enable
+        )
+    }
+
     override fun gitCreateFile(
         gitProjectId: String,
         token: String,
@@ -644,7 +658,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
                 token = token,
                 gitOperationFile = gitOperationFile,
                 tokenType = tokenType
-        )
+            )
     }
 
     override fun getGitCodeProjectList(

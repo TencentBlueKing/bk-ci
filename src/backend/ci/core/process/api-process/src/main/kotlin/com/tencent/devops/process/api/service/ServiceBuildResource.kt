@@ -572,8 +572,8 @@ interface ServiceBuildResource {
 
     @ApiOperation("获取流水线构建历史, 返回buildid")
     @GET
-    @Path("/{projectId}/batch_builds_no_need_pipelineId")
-    fun getBuildsNoNeedPipelineId(
+    @Path("/{projectId}/batch_get_builds")
+    fun getBuilds(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

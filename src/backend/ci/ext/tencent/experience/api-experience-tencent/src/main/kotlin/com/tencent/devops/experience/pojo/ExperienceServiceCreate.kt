@@ -39,18 +39,18 @@ data class ExperienceServiceCreate(
     val artifactoryType: ArtifactoryType,
     @ApiModelProperty("截止日期", required = true)
     val expireDate: Long,
-    @ApiModelProperty("体验组", required = true)
-    val experienceGroups: Set<String>,
-    @ApiModelProperty("内部名单", required = true)
-    val innerUsers: Set<String>,
-    @ApiModelProperty("外部名单", required = true)
-    val outerUsers: Set<String>,
-    @ApiModelProperty("通知类型", required = true)
-    val notifyTypes: Set<NotifyType>,
+    @ApiModelProperty("体验组", required = false)
+    val experienceGroups: Set<String> = setOf(),
+    @ApiModelProperty("内部名单", required = false)
+    val innerUsers: Set<String> = setOf(),
+    @ApiModelProperty("外部名单", required = false)
+    val outerUsers: Set<String> = setOf(),
+    @ApiModelProperty("通知类型", required = false)
+    val notifyTypes: Set<NotifyType> = setOf(),
     @ApiModelProperty("是否开启企业微信群", required = true)
     val enableWechatGroups: Boolean = true,
-    @ApiModelProperty("企业微信群", required = true)
-    val wechatGroups: String,
+    @ApiModelProperty("企业微信群", required = false)
+    val wechatGroups: String = "",
     @ApiModelProperty("版本体验描述", required = false)
     val description: String? = "",
     @ApiModelProperty("体验名称", required = true)
