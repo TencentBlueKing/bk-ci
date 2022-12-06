@@ -26,6 +26,7 @@ const manageTabs = ref([
 ]);
 
 const routeName = route.name;
+const { projectCode } = route.params;
 const activeTab = ref(t('项目信息'));
 const handleChangeTab = (manageTab: any) => {
   activeTab.value = manageTab.title;
@@ -44,7 +45,7 @@ onMounted(() => {
 
 <template>
   <manage-header
-    :name="'项目名称'"
+    :name="projectCode"
   >
     <span class="manage-tabs">
       <span

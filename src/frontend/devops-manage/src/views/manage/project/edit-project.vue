@@ -1,29 +1,118 @@
 <script setup lang="ts">
-import ProjectForm from '@/components/project-form.vue';
-import { useI18n } from 'vue-i18n';
 import {
+  ref,
+  watch,
+  onMounted,
+} from 'vue';
+import {
+  useRoute,
   useRouter,
 } from 'vue-router';
+import http from '@/http/api';
+import { useI18n } from 'vue-i18n';
+import { InfoBox, Message } from 'bkui-vue';
+
+import ProjectForm from '@/components/project-form.vue';
+
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 
-const handleCancel = () => {
-  router.back();
+const { projectCode } = route.params;
+const projectData = ref<any>({});
+const isLoading = ref(false);
+const isChange = ref(false);
+const btnLoading = ref(false);
+
+const fetchProjectData = async () => {
+  isLoading.value = true;
+  await http.requestProjectData({
+    englishName: projectCode,
+  }).then((res) => {
+    projectData.value = res;
+  });
+  isLoading.value = false;
 };
 
+/**
+ * 取消编辑项目
+ */
+const handleCancel = () => {
+  const onClosed = () => {
+    isChange.value = false;
+    router.push({
+      path: 'show',
+    });
+  };
+  if (isChange.value) {
+    InfoBox({
+      type: 'warning',
+      title: t('确认离开当前页面吗?'),
+      subTitle: t('离开将会丢失未保存的信息，建议保存后离开'),
+      contentAlign: 'center',
+      headerAlign: 'center',
+      footerAlign: 'center',
+      confirmText: t('留在此页'),
+      cancelText: t('直接离开'),
+      onConfirm: () => true,
+      onClosed,
+    });
+  } else {
+    onClosed();
+  };
+};
+
+/**
+ * 表单数据变更
+ */
+const handleFormChange = (val: boolean) => {
+  isChange.value = val;
+};
+
+/**
+ * 更新项目
+ */
+const handleUpdate = async () => {
+  btnLoading.value = true;
+  projectData.value.subjectScopes  = [{ type: '*', id: '*' }];
+  const result = await http.requestUpdateProject({
+    projectId: projectData.value.englishName,
+    projectData: projectData.value,
+  });
+  if (result) {
+    btnLoading.value = false;
+    Message({
+      theme: 'success',
+      message: t('保存成功'),
+    });
+    router.push({
+      path: 'show',
+    });
+  }
+};
+
+onMounted(() => {
+  fetchProjectData();
+});
 </script>
 
 <template>
-  <article class="edit-project-content">
+  <bk-loading class="edit-project-content" :loading="isLoading">
     <section class="edit-project-form">
-      <project-form class="edit-form">
+      <project-form
+        v-if="!isLoading"
+        class="edit-form"
+        type="edit"
+        :is-change="isChange"
+        :data="projectData"
+        @change="handleFormChange">
         <bk-form-item>
-          <bk-button class="btn mr10" theme="primary">{{ t('提交更新') }}</bk-button>
-          <bk-button class="btn" theme="default" @click="handleCancel">{{ t('取消') }}</bk-button>
+          <bk-button class="btn mr10" theme="primary" @click="handleUpdate">{{ t('提交更新') }}</bk-button>
+          <bk-button class="btn" @click="handleCancel">{{ t('取消') }}</bk-button>
         </bk-form-item>
       </project-form>
     </section>
-  </article>
+  </bk-loading>
 </template>
 
 <style lang="postcss" scoped>
@@ -55,7 +144,7 @@ const handleCancel = () => {
         font-size: 12px;
       }
       :deep(.bk-form-content) {
-        max-width: 500px;
+        max-width: 700px;
       }
     }
     .mr10 {

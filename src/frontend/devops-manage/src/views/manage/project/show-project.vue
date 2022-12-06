@@ -1,54 +1,154 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
 import {
+  ref,
+} from 'vue';
+import { useI18n } from 'vue-i18n';
+import http from '@/http/api';
+import {
+  useRoute,
   useRouter,
 } from 'vue-router';
+import { Message, InfoBox } from 'bkui-vue';
+import { computed, onMounted } from '@vue/runtime-core';
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 
+const { projectCode } = route.params;
+const projectData = ref<any>({});
+const isLoading = ref(false);
+
+const showStatusTips = computed(() => [1, 3, 4, 6].includes(projectData.value.approvalStatus));
+const showCancelCreationBtn = computed(() => projectData.value.approvalStatus === 1);
+const fetchProjectData = async () => {
+  isLoading.value = true;
+  await http.requestProjectData({
+    englishName: projectCode,
+  }).then((res) => {
+    projectData.value = res;
+  });
+  isLoading.value = false;
+};
 
 const handleEdit = () => {
   router.push({
     path: 'edit',
   });
 };
+
+/**
+ * 取消创建项目
+ */
+const handleCancelCreation = () => {
+  const onConfirm = async () => {
+    const result = await http.cancelCreateProject({
+      projectId: projectData.value.id,
+    });
+    if (result) {
+      Message({
+        theme: 'success',
+        message: t('取消创建成功'),
+      });
+      // doing...
+    }
+  };
+
+  InfoBox({
+    type: 'warning',
+    title: t('确定取消创建项目'),
+    contentAlign: 'center',
+    headerAlign: 'center',
+    footerAlign: 'center',
+    onConfirm,
+  });
+};
+
+const approvalStatusMap = {
+  1: {
+    type: 'success',
+    message: t('新建项目申请目前正在审批中，可前往查看'),
+  },
+  2: {
+    type: 'success',
+    message: t('新建项目申请已通过'),
+  },
+  3: {
+    type: 'error',
+    message: t('新建项目申请被拒绝。拒绝理由：项目所属组织信息填写有误。可前往查看'),
+  },
+  4: {
+    type: 'success',
+    message: t('编辑项目目前正在审批中，可前往查看'),
+  },
+  5: {
+    type: 'success',
+    message: t('编辑项目审批已通过'),
+  },
+  6: {
+    type: 'error',
+    message: t('编辑项目审批未通过。未通过理由：项目所属组织信息填写有误。可前往查看'),
+  },
+};
+
+onMounted(() => {
+  fetchProjectData();
+});
 </script>
 
 <template>
-  <section class="content-wrapper">
+  <bk-loading class="content-wrapper" :loading="isLoading">
     <article class="project-info-content">
-      <bk-alert type="success" title="新建项目申请目前正在审批中，可前往查看" closable></bk-alert>
+      <bk-alert type="error" closable v-if="showStatusTips">
+        <template #title>
+          {{ approvalStatusMap[projectData.approvalStatus].message || '--' }}
+        </template>
+      </bk-alert>
       <section class="content-main">
         <bk-form class="detail-content-form" :label-width="160">
           <bk-form-item :label="t('项目名称')" :property="'name'">
-            <span class="item-value">王者荣耀</span>
+            <div class="project-name">
+              <img v-if="projectData.logoAddr" class="project-logo" :src="projectData.logoAddr" alt="">
+              <span class="item-value">{{ projectData.projectName }}</span>
+            </div>
           </bk-form-item>
           <bk-form-item :label="t('项目ID')" :property="'name'">
-            <span class="item-value">wzry</span>
+            <span class="item-value">{{ projectData.englishName }}</span>
           </bk-form-item>
           <bk-form-item :label="t('项目描述')" :property="'name'">
-            <span class="item-value">《王者荣耀》是腾讯第一5V5团队公平竞技手游，国民MOBA手游大作！5V5王者峡谷、公平对战、还原MOBA经典体验；契约之战、
-              五军对决、边境突围等，带来花式作战乐趣！10秒实时跨区匹配，与好友开黑上分，向最强王者进击！多款英雄任凭选择，一血、五杀、超神，
-              实力碾压，收割全场！敌军即将到达战场，王者召唤师快来集结好友，准备团战，就在《王者荣耀》！</span>
+            <span class="item-value">{{ projectData.description }}</span>
           </bk-form-item>
           <bk-form-item :label="t('项目所属组织')" :property="'name'">
-            <span class="item-value">IEG互动娱乐事业群-技术运营部-蓝鲸产品中心-蓝鲸运营组；</span>
+            <div>{{ projectData.bgName }} - {{ projectData.deptName }} - {{ projectData.centerName }}</div>
           </bk-form-item>
           <bk-form-item :label="t('项目性质')" :property="'name'">
-            <span class="item-value">私有项目</span>
+            <span class="item-value">{{ projectData.authSecrecy ? t('保密项目') : t('私有项目') }}</span>
           </bk-form-item>
           <bk-form-item :label="t('项目最大可授权人员范围')" :property="'name'">
             <span class="item-value">腾讯公司</span>
           </bk-form-item>
           <bk-form-item>
-            <bk-button class="btn mr10" theme="primary" @click="handleEdit">{{ t('编辑') }}</bk-button>
-            <bk-button class="btn" theme="default">{{ t('取消创建') }}</bk-button>
+            <bk-button
+              class="btn mr10"
+              theme="primary"
+              :disabled="showCancelCreationBtn"
+              @click="handleEdit"
+            >
+              {{ t('编辑') }}
+            </bk-button>
+            <bk-button
+              v-if="projectData.approvalStatus === 1"
+              class="btn"
+              theme="default"
+              @click="handleCancelCreation"
+            >
+              {{ t('取消创建') }}
+            </bk-button>
           </bk-form-item>
         </bk-form>
 
       </section>
     </article>
-  </section>
+  </bk-loading>
 </template>
 
 <style lang="postcss" scoped>
@@ -97,6 +197,16 @@ const handleEdit = () => {
       font-size: 12px;
       text-align: left;
       color: #979BA5;
+    }
+    .project-name {
+      display: flex;
+      align-items: center;
+    }
+    .project-logo {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      margin-right: 5px;
     }
     .item-value {
       display: inline-block;
