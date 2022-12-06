@@ -33,4 +33,39 @@ export default {
     }];
     return fetch.put(`${STORE_PERFIX}/user/market/service/project/${projectCode}/serviceCodes/${serviceCode}/uninstalled`, { reasonList });
   },
+  /**
+   * 创建项目
+   */
+  requestCreateProject(params: any) {
+    const { projectData } = params;
+    return fetch.post(`${PROJECT_PERFIX}/user/projects/`, projectData);
+  },
+  /**
+   * 修改项目信息
+   */
+  requestUpdateProject(params: any) {
+    const { projectId, projectData } = params;
+    return fetch.put(`${PROJECT_PERFIX}/user/projects/${projectId}`, projectData);
+  },
+  /**
+   * 获取项目详情
+   */
+  requestProjectData(params: any) {
+    const { englishName } = params;
+    return fetch.get(`${PROJECT_PERFIX}/user/projects/${englishName}`);
+  },
+  /**
+   * 取消创建项目
+   */
+  cancelCreateProject(params: any) {
+    const { projectId } = params;
+    return fetch.put(`${PROJECT_PERFIX}/user/projects/${projectId}/cancelCreateProject`);
+  },
+  /**
+   * 获取公司组织列表
+   */
+  getOrganizations(params: any) {
+    const { type, id } = params;
+    return fetch.get(`${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}`);
+  },
 };
