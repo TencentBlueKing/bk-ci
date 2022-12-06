@@ -25,25 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.resources.user
+package com.tencent.devops.remotedev.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
-import com.tencent.devops.remotedev.pojo.RemoteDevSettings
-import com.tencent.devops.remotedev.service.RemoteDevSettingService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-@Suppress("ALL")
-class UserRemoteDevResourceImpl @Autowired constructor(
-val remoteDevSettingService:RemoteDevSettingService
-) : UserRemoteDevResource {
-    override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
-        return Result(remoteDevSettingService.getRemoteDevSettings(userId))
-    }
-
-    override fun updateRemoteDevSettings(userId: String, remoteDevSettings: RemoteDevSettings): Result<Boolean> {
-        return Result(remoteDevSettingService.updateRemoteDevSettings(userId, remoteDevSettings))
-    }
-}
+@ApiModel("远程开发配置")
+data class RemoteDevFile(
+    @ApiModelProperty("文件id")
+    val id: Long?,
+    @ApiModelProperty("md5 32位")
+    val md5: String?,
+    @ApiModelProperty("文件路径")
+    val path: String,
+    @ApiModelProperty("文件内容")
+    val content: String
+)

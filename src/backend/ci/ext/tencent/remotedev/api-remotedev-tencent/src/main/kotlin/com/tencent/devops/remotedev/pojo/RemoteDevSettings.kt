@@ -33,19 +33,17 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("远程开发配置")
 data class RemoteDevSettings(
     @ApiModelProperty("默认shell")
-    val defaultShell: String,
-    @ApiModelProperty("默认外观")
-    val appearance: String,
-    @ApiModelProperty("默认语言")
-    val language: String,
-    @ApiModelProperty("是否开启声音通知")
-    val notice: Boolean,
+    val defaultShell: String = "shell",
+    @ApiModelProperty("客户端使用，后台只管存的信息")
+    val basicSetting: Map<String, String> = emptyMap(),
     @ApiModelProperty("是否连接工蜂")
-    val gitAttached: Boolean,
+    val gitAttached: Boolean = false,
     @ApiModelProperty("是否连接TAPD")
-    val tapdAttached: Boolean,
+    val tapdAttached: Boolean = false,
     @ApiModelProperty("是否连接GitHub")
-    val githubAttached: Boolean,
+    val githubAttached: Boolean = false,
     @ApiModelProperty("远程开发环境变量配置")
-    val envs: Map<String, String> = emptyMap()
+    val envsForVariable: Map<String, String> = emptyMap(),
+    @ApiModelProperty("远程开发文件配置")
+    val envsForFile: List<RemoteDevFile> = emptyList()
 )
