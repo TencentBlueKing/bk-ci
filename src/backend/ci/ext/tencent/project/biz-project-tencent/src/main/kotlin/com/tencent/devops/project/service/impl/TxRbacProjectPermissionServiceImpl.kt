@@ -168,6 +168,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         val approvalStatus = projectInfo.approvalStatus
         val relationId = projectInfo.relationId
         val reason = resourceUpdateInfo.projectUpdateInfo.description
+        // todo 上线之前这里必须刷数据，要不会报错，因为拿出的数据库，可授权人员范围为空。
         // 数据库中的最大可授权人员范围
         val dbSubjectscopes = JsonUtil.to(
             projectInfo.subjectscopes, object : TypeReference<ArrayList<ManagerScopes>>() {}
