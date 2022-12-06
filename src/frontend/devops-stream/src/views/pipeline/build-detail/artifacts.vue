@@ -15,7 +15,7 @@
             </bk-table-column>
             <bk-table-column :label="$t('pipeline.path')" show-overflow-tooltip>
                 <template slot-scope="props">
-                    <span v-if="props.row.artifactoryType === 'PIPELINE'">{{ props.row.name }}</span>
+                    <span v-if="props.row.artifactoryType === 'PIPELINE'">{{ getRepoName(props.row) }}</span>
                     <span v-else-if="props.row.artifactoryType === 'IMAGE'">{{ props.row.registry }}</span>
                     <span v-else>{{ props.row.fullName }}</span>
                 </template>
@@ -172,6 +172,12 @@
             isApkOrIpa (row) {
                 const type = row.name.toUpperCase().substring(row.name.lastIndexOf('.') + 1)
                 return type === 'APK' || type === 'IPA'
+            },
+            getRepoName (row) {
+                const properties = row.properties || []
+                const projectInfo = properties.find(property => property.key === 'projectId') || {}
+                const repoName = properties.find(property => property.key === 'repoName')
+                return `${row.registry}/${projectInfo.value}/${repoName.value}/${row.fullName}`
             },
             goToRepo (row) {
                 const properties = row.properties || []
