@@ -200,7 +200,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw e
         } catch (e: Exception) {
             logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
-            throw OperationException("Failed to create project in permission center| ${e.message}")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
         }
         if (projectId.isNullOrEmpty()) {
             projectId = UUIDUtil.generate()
@@ -360,20 +360,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     needApproval = needApproval!!,
                     iamSubjectScopes = subjectScopes
                 )
-                try {
-                    modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
-                } catch (e: Exception) {
-                    logger.warn(
-                        "Error modifying project information in permission center：" +
-                            "$resourceUpdateInfo", e
-                    )
-                    throw OperationException(
-                        MessageCodeUtil.getCodeLanMessage(
-                            messageCode = ProjectMessageCode.PEM_UPDATE_FAIL,
-                            defaultMessage = "Error modifying project information in permission center:$e"
-                        )
-                    )
-                }
+                modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     // 修改时，若传递的可授权人员范围为空，则直接用全公司
@@ -418,12 +405,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 success = true
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
-                throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
-                        messageCode = ProjectMessageCode.PROJECT_NAME_EXIST,
-                        defaultMessage = "project name exist : $e "
-                    )
-                )
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             } catch (e: Exception) {
                 logger.warn("update project failed :$projectUpdateInfo", e)
                 throw OperationException(

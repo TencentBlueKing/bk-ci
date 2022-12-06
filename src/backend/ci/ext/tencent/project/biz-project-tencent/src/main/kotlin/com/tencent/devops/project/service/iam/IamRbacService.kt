@@ -104,98 +104,6 @@ class IamRbacService @Autowired constructor(
 
     @Value("\${itsm.callback.create.url:#{null}}")
     private val itsmCreateCallBackUrl: String = ""
-    fun updateManager(
-        projectCode: String,
-        projectName: String,
-        userId: String,
-        iamSubjectScopes: List<ManagerScopes>,
-        relationId: String
-    ) {
-        val authorizationScopes = AuthorizationUtils.buildManagerResources(
-            projectId = projectCode,
-            projectName = projectName,
-            iamConfiguration = iamConfiguration
-        )
-        val gradeManagerDetail = iamManagerService.getGradeManagerDetail(relationId)
-        val updateManagerDTO: UpdateManagerDTO = UpdateManagerDTO.builder()
-            .name("$SYSTEM_DEFAULT_NAME-$projectName")
-            .description(gradeManagerDetail.description)
-            .authorizationScopes(authorizationScopes)
-            .subjectScopes(iamSubjectScopes)
-            .members(gradeManagerDetail.members)
-            .syncPerm(gradeManagerDetail.syncPerm)
-            .build()
-        TxRbacProjectPermissionServiceImpl.logger.info("updateManager : $updateManagerDTO")
-        iamManagerService.updateManagerV2(relationId, updateManagerDTO)
-    }
-
-    fun updateGradeManagerApplication(
-        projectCode: String,
-        projectName: String,
-        userId: String,
-        iamSubjectScopes: List<ManagerScopes>,
-        projectInfo: TProjectRecord,
-        isAuthSecrecyChange: Boolean,
-        isSubjectScopesChange: Boolean,
-        subjectScopesStr: String
-    ) {
-        val authorizationScopes = AuthorizationUtils.buildManagerResources(
-            projectId = projectCode,
-            projectName = projectName,
-            iamConfiguration = iamConfiguration
-        )
-        val callbackId = UUIDUtil.generate()
-        val itsmContentDTO = buildItsmContentDTO(
-            projectName = projectName,
-            projectId = projectCode,
-            desc = projectInfo.description,
-            organization = "${projectInfo.bgName}-${projectInfo.deptName}-${projectInfo.deptName}",
-            authSecrecy = projectInfo.isAuthSecrecy,
-            subjectScopes = iamSubjectScopes
-        )
-        val gradeManagerDetail = iamManagerService.getGradeManagerDetail(projectInfo.relationId)
-        val gradeManagerApplicationUpdateDTO = GradeManagerApplicationUpdateDTO.builder()
-            .name("$SYSTEM_DEFAULT_NAME-$projectName")
-            .description(gradeManagerDetail.description)
-            .authorizationScopes(authorizationScopes)
-            .subjectScopes(iamSubjectScopes)
-            .syncPerm(gradeManagerDetail.syncPerm)
-            .applicant(userId)
-            .members(gradeManagerDetail.members)
-            .reason(IamGroupUtils.buildItsmDefaultReason(projectCode, userId, false))
-            .callbackId(callbackId)
-            .callbackUrl(itsmUpdateCallBackUrl)
-            .content(itsmContentDTO)
-            .title("修改蓝盾项目申请")
-            .build()
-        logger.info("gradeManagerApplicationUpdateDTO : $gradeManagerApplicationUpdateDTO")
-        val updateGradeManagerApplication =
-            iamManagerService.updateGradeManagerApplication(projectInfo.relationId, gradeManagerApplicationUpdateDTO)
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            val approveType = if (isAuthSecrecyChange && isSubjectScopesChange) ApproveType.ALL_CHANGE_APPROVE.type
-            else if (isSubjectScopesChange) ApproveType.SUBJECT_SCOPES_APPROVE.type
-            else ApproveType.AUTH_SECRECY_APPROVE.type
-            TxRbacProjectPermissionServiceImpl.logger.info("approveType : $approveType")
-            // 修改项目状态
-            projectDao.updateProjectStatusByEnglishName(
-                dslContext = context,
-                projectCode = projectInfo.englishName,
-                statusEnum = ApproveStatus.UPDATE_PENDING
-            )
-            // 存储审批单
-            projectApprovalCallbackDao.create(
-                dslContext = context,
-                applicant = userId,
-                englishName = projectCode,
-                callbackId = callbackId,
-                sn = updateGradeManagerApplication.sn,
-                subjectScopes = subjectScopesStr,
-                approveType = approveType
-            )
-        }
-    }
-
     fun createIamRbacProject(event: TxIamRbacCreateEvent) {
         val watcher = Watcher(id = "IAM|CreateProject|${event.projectId}|${event.userId}")
         logger.info("start create iamRbac project: $event")
@@ -300,6 +208,150 @@ class IamRbacService @Autowired constructor(
         }
     }
 
+    fun updateManager(
+        projectCode: String,
+        projectName: String,
+        userId: String,
+        iamSubjectScopes: List<ManagerScopes>,
+        relationId: String
+    ) {
+        val authorizationScopes = AuthorizationUtils.buildManagerResources(
+            projectId = projectCode,
+            projectName = projectName,
+            iamConfiguration = iamConfiguration
+        )
+        val gradeManagerDetail = iamManagerService.getGradeManagerDetail(relationId)
+        val updateManagerDTO: UpdateManagerDTO = UpdateManagerDTO.builder()
+            .name("$SYSTEM_DEFAULT_NAME-$projectName")
+            .description(gradeManagerDetail.description)
+            .authorizationScopes(authorizationScopes)
+            .subjectScopes(iamSubjectScopes)
+            .members(gradeManagerDetail.members)
+            .syncPerm(gradeManagerDetail.syncPerm)
+            .build()
+        TxRbacProjectPermissionServiceImpl.logger.info("updateManager : $updateManagerDTO")
+        iamManagerService.updateManagerV2(relationId, updateManagerDTO)
+    }
+
+    fun updateGradeManagerApplication(
+        projectCode: String,
+        projectName: String,
+        userId: String,
+        iamSubjectScopes: List<ManagerScopes>,
+        projectInfo: TProjectRecord,
+        isAuthSecrecyChange: Boolean,
+        isSubjectScopesChange: Boolean,
+        subjectScopesStr: String
+    ) {
+        val authorizationScopes = AuthorizationUtils.buildManagerResources(
+            projectId = projectCode,
+            projectName = projectName,
+            iamConfiguration = iamConfiguration
+        )
+        val callbackId = UUIDUtil.generate()
+        val itsmContentDTO = buildItsmContentDTO(
+            projectName = projectName,
+            projectId = projectCode,
+            desc = projectInfo.description,
+            organization = "${projectInfo.bgName}-${projectInfo.deptName}-${projectInfo.deptName}",
+            authSecrecy = projectInfo.isAuthSecrecy,
+            subjectScopes = iamSubjectScopes
+        )
+        val gradeManagerDetail = iamManagerService.getGradeManagerDetail(projectInfo.relationId)
+        val gradeManagerApplicationUpdateDTO = GradeManagerApplicationUpdateDTO.builder()
+            .name("$SYSTEM_DEFAULT_NAME-$projectName")
+            .description(gradeManagerDetail.description)
+            .authorizationScopes(authorizationScopes)
+            .subjectScopes(iamSubjectScopes)
+            .syncPerm(gradeManagerDetail.syncPerm)
+            .applicant(userId)
+            .members(gradeManagerDetail.members)
+            .reason(IamGroupUtils.buildItsmDefaultReason(projectCode, userId, false))
+            .callbackId(callbackId)
+            .callbackUrl(itsmUpdateCallBackUrl)
+            .content(itsmContentDTO)
+            .title("修改蓝盾项目申请")
+            .build()
+        logger.info("gradeManagerApplicationUpdateDTO : $gradeManagerApplicationUpdateDTO")
+        val updateGradeManagerApplication =
+            iamManagerService.updateGradeManagerApplication(projectInfo.relationId, gradeManagerApplicationUpdateDTO)
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val approveType = if (isAuthSecrecyChange && isSubjectScopesChange) ApproveType.ALL_CHANGE_APPROVE.type
+            else if (isSubjectScopesChange) ApproveType.SUBJECT_SCOPES_APPROVE.type
+            else ApproveType.AUTH_SECRECY_APPROVE.type
+            TxRbacProjectPermissionServiceImpl.logger.info("approveType : $approveType")
+            // 修改项目状态
+            projectDao.updateProjectStatusByEnglishName(
+                dslContext = context,
+                projectCode = projectInfo.englishName,
+                statusEnum = ApproveStatus.UPDATE_PENDING
+            )
+            // 存储审批单
+            projectApprovalCallbackDao.create(
+                dslContext = context,
+                applicant = userId,
+                englishName = projectCode,
+                callbackId = callbackId,
+                sn = updateGradeManagerApplication.sn,
+                subjectScopes = subjectScopesStr,
+                approveType = approveType
+            )
+        }
+    }
+
+    fun batchCreateDefaultGroups(
+        userId: String,
+        gradeManagerId: Int,
+        projectCode: String,
+        projectName: String,
+    ) {
+        // 创建管理员组，赋予权限，并把项目创建人加入到管理员组
+        createManagerGroup(
+            userId = userId,
+            gradeManagerId = gradeManagerId,
+            projectCode = projectCode,
+            projectName = projectName
+        )
+        // 创建默认组（开发组，测试组等），并赋予权限
+        createDefaultGroup(
+            userId = userId,
+            gradeManagerId = gradeManagerId,
+            projectCode = projectCode,
+            defaultGroupType = DefaultGroupType.DEVELOPER
+        )
+        createDefaultGroup(
+            userId = userId,
+            gradeManagerId = gradeManagerId,
+            projectCode = projectCode,
+            defaultGroupType = DefaultGroupType.MAINTAINER
+        )
+        createDefaultGroup(
+            userId = userId,
+            gradeManagerId = gradeManagerId,
+            projectCode = projectCode,
+            defaultGroupType = DefaultGroupType.TESTER
+        )
+        createDefaultGroup(
+            userId = userId,
+            gradeManagerId = gradeManagerId,
+            projectCode = projectCode,
+            defaultGroupType = DefaultGroupType.QC
+        )
+        createDefaultGroup(
+            userId = userId,
+            gradeManagerId = gradeManagerId,
+            projectCode = projectCode,
+            defaultGroupType = DefaultGroupType.PM
+        )
+        createDefaultGroup(
+            userId = userId,
+            gradeManagerId = gradeManagerId,
+            projectCode = projectCode,
+            defaultGroupType = DefaultGroupType.VIEWER
+        )
+    }
+
     private fun createGradeManagerApplication(
         projectInfo: TProjectRecord,
         userId: String,
@@ -363,6 +415,27 @@ class IamRbacService @Autowired constructor(
         }
     }
 
+    private fun createGradeManager(
+        userId: String,
+        resourceRegisterInfo: ResourceRegisterInfo,
+        subjectScopes: List<ManagerScopes>?
+    ): String {
+        val authorizationScopes = AuthorizationUtils.buildManagerResources(
+            projectId = resourceRegisterInfo.resourceCode,
+            projectName = resourceRegisterInfo.resourceName,
+            iamConfiguration = iamConfiguration
+        )
+        val createManagerDTO = CreateManagerDTO.builder()
+            .name("$SYSTEM_DEFAULT_NAME-${resourceRegisterInfo.resourceName}")
+            .description(IamGroupUtils.buildManagerDescription(resourceRegisterInfo.resourceName, userId))
+            .members(arrayListOf(userId))
+            .authorization_scopes(authorizationScopes)
+            .subject_scopes(subjectScopes)
+            .sync_perm(true)
+            .build()
+        return iamManagerService.createManagerV2(createManagerDTO).toString()
+    }
+
     private fun buildItsmContentDTO(
         projectName: String,
         projectId: String,
@@ -407,79 +480,6 @@ class IamRbacService @Autowired constructor(
         value["subjectScopes"] = ItsmStyle.builder().value(objectMapper.writeValueAsString(itsmSubjectScopes)).build()
         val itsmValue = ItsmValue.builder().scheme("content_table").lable("项目创建审批").value(listOf(value)).build()
         return ItsmContentDTO.builder().formData(Arrays.asList(itsmValue)).schemes(scheme).build()
-    }
-
-    fun batchCreateDefaultGroups(
-        userId: String,
-        gradeManagerId: Int,
-        projectCode: String,
-        projectName: String,
-    ) {
-        // 创建管理员组，赋予权限，并把项目创建人加入到管理员组
-        createManagerGroup(
-            userId = userId,
-            gradeManagerId = gradeManagerId,
-            projectCode = projectCode,
-            projectName = projectName
-        )
-        // 创建默认组（开发组，测试组等），并赋予权限
-        createDefaultGroup(
-            userId = userId,
-            gradeManagerId = gradeManagerId,
-            projectCode = projectCode,
-            defaultGroupType = DefaultGroupType.DEVELOPER
-        )
-        createDefaultGroup(
-            userId = userId,
-            gradeManagerId = gradeManagerId,
-            projectCode = projectCode,
-            defaultGroupType = DefaultGroupType.MAINTAINER
-        )
-        createDefaultGroup(
-            userId = userId,
-            gradeManagerId = gradeManagerId,
-            projectCode = projectCode,
-            defaultGroupType = DefaultGroupType.TESTER
-        )
-        createDefaultGroup(
-            userId = userId,
-            gradeManagerId = gradeManagerId,
-            projectCode = projectCode,
-            defaultGroupType = DefaultGroupType.QC
-        )
-        createDefaultGroup(
-            userId = userId,
-            gradeManagerId = gradeManagerId,
-            projectCode = projectCode,
-            defaultGroupType = DefaultGroupType.PM
-        )
-        createDefaultGroup(
-            userId = userId,
-            gradeManagerId = gradeManagerId,
-            projectCode = projectCode,
-            defaultGroupType = DefaultGroupType.VIEWER
-        )
-    }
-
-    private fun createGradeManager(
-        userId: String,
-        resourceRegisterInfo: ResourceRegisterInfo,
-        subjectScopes: List<ManagerScopes>?
-    ): String {
-        val authorizationScopes = AuthorizationUtils.buildManagerResources(
-            projectId = resourceRegisterInfo.resourceCode,
-            projectName = resourceRegisterInfo.resourceName,
-            iamConfiguration = iamConfiguration
-        )
-        val createManagerDTO = CreateManagerDTO.builder()
-            .name("$SYSTEM_DEFAULT_NAME-${resourceRegisterInfo.resourceName}")
-            .description(IamGroupUtils.buildManagerDescription(resourceRegisterInfo.resourceName, userId))
-            .members(arrayListOf(userId))
-            .authorization_scopes(authorizationScopes)
-            .subject_scopes(subjectScopes)
-            .sync_perm(true)
-            .build()
-        return iamManagerService.createManagerV2(createManagerDTO).toString()
     }
 
     private fun createManagerGroup(userId: String, gradeManagerId: Int, projectCode: String, projectName: String) {
@@ -555,6 +555,7 @@ class IamRbacService @Autowired constructor(
                 DefaultGroupType.QC -> addIamGroupAction(roleId, projectCode, DefaultGroupType.QC)
                 DefaultGroupType.PM -> addIamGroupAction(roleId, projectCode, DefaultGroupType.PM)
                 DefaultGroupType.VIEWER -> addIamGroupAction(roleId, projectCode, DefaultGroupType.VIEWER)
+                else -> {}
             }
         } catch (e: Exception) {
             iamManagerService.deleteRoleGroupV2(roleId)
