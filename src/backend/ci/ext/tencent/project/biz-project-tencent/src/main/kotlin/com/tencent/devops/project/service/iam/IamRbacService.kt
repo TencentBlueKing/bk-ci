@@ -225,7 +225,7 @@ class IamRbacService @Autowired constructor(
             .name("$SYSTEM_DEFAULT_NAME-$projectName")
             .description(gradeManagerDetail.description)
             .authorizationScopes(authorizationScopes)
-            .subjectScopes(iamSubjectScopes)
+            .subjectScopes(buildIamSubjectScopes(iamSubjectScopes))
             .members(gradeManagerDetail.members)
             .syncPerm(gradeManagerDetail.syncPerm)
             .build()
@@ -262,7 +262,7 @@ class IamRbacService @Autowired constructor(
             .name("$SYSTEM_DEFAULT_NAME-$projectName")
             .description(gradeManagerDetail.description)
             .authorizationScopes(authorizationScopes)
-            .subjectScopes(iamSubjectScopes)
+            .subjectScopes(buildIamSubjectScopes(iamSubjectScopes))
             .syncPerm(gradeManagerDetail.syncPerm)
             .applicant(userId)
             .members(gradeManagerDetail.members)
@@ -384,7 +384,7 @@ class IamRbacService @Autowired constructor(
             .description(IamGroupUtils.buildManagerDescription(projectCode, userId))
             .members(arrayListOf(userId))
             .authorizationScopes(authorizationScopes)
-            .subjectScopes(iamSubjectScopes)
+            .subjectScopes(buildIamSubjectScopes(iamSubjectScopes))
             .syncPerm(true)
             .applicant(userId)
             .reason(IamGroupUtils.buildItsmDefaultReason(projectName, projectCode, true))
@@ -430,7 +430,7 @@ class IamRbacService @Autowired constructor(
             .description(IamGroupUtils.buildManagerDescription(resourceRegisterInfo.resourceName, userId))
             .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
-            .subject_scopes(subjectScopes)
+            .subject_scopes(buildIamSubjectScopes(subjectScopes!!))
             .sync_perm(true)
             .build()
         return iamManagerService.createManagerV2(createManagerDTO).toString()
@@ -450,7 +450,7 @@ class IamRbacService @Autowired constructor(
             if (it.type == "*") {
                 managerScopes.type = ALL_COMPANY
                 managerScopes.id = ALL_MEMBER
-            } else if (it.type == DEPARTMENT) {
+            } else if (it.type == "depart") {
                 managerScopes.type = DEPARTMENT_CHINESE_NAME
                 managerScopes.id = tofService.getDeptInfo("", it.id.toInt()).name
             } else {
@@ -729,6 +729,15 @@ class IamRbacService @Autowired constructor(
             logger.info("$resource $resourceStrategyList")
         }
         return Pair(projectStrategyList, resourceStrategyMap)
+    }
+
+    private fun buildIamSubjectScopes(iamSubjectScopes: List<ManagerScopes>): List<ManagerScopes> {
+        iamSubjectScopes.forEach {
+            if (it.type == "depart") {
+                it.type = DEPARTMENT
+            }
+        }
+        return iamSubjectScopes
     }
 
     companion object {
