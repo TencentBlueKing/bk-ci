@@ -18,6 +18,7 @@ var (
 
 	resourceStatusTypeTotal = "total"
 	resourceStatusTypeUsed  = "used"
+	resourceStatusTypeLeft  = "left"
 )
 
 // ResourceStatusLabels define the http resource status metrics labels.
@@ -75,6 +76,11 @@ func (rsc *ResourceStatusController) UpdateCPUUsed(label ResourceStatusLabels, v
 	rsc.cpuGaugeVec.WithLabelValues(label.IP, label.Zone, resourceStatusTypeUsed).Set(value)
 }
 
+// UpdateCPULeft set cpu left status with newest data and labels.
+func (rsc *ResourceStatusController) UpdateCPULeft(label ResourceStatusLabels, value float64) {
+	rsc.cpuGaugeVec.WithLabelValues(label.IP, label.Zone, resourceStatusTypeLeft).Set(value)
+}
+
 // UpdateMemTotal set mem total status with newest data and labels.
 func (rsc *ResourceStatusController) UpdateMemTotal(label ResourceStatusLabels, value float64) {
 	rsc.memGaugeVec.WithLabelValues(label.IP, label.Zone, resourceStatusTypeTotal).Set(value)
@@ -85,6 +91,11 @@ func (rsc *ResourceStatusController) UpdateMemUsed(label ResourceStatusLabels, v
 	rsc.memGaugeVec.WithLabelValues(label.IP, label.Zone, resourceStatusTypeUsed).Set(value)
 }
 
+// UpdateMemLeft set mem left status with newest data and labels.
+func (rsc *ResourceStatusController) UpdateMemLeft(label ResourceStatusLabels, value float64) {
+	rsc.memGaugeVec.WithLabelValues(label.IP, label.Zone, resourceStatusTypeLeft).Set(value)
+}
+
 // UpdateDiskTotal set disk total status with newest data and labels.
 func (rsc *ResourceStatusController) UpdateDiskTotal(label ResourceStatusLabels, value float64) {
 	rsc.diskGaugeVec.WithLabelValues(label.IP, label.Zone, resourceStatusTypeTotal).Set(value)
@@ -93,4 +104,9 @@ func (rsc *ResourceStatusController) UpdateDiskTotal(label ResourceStatusLabels,
 // UpdateDiskUsed set disk used status with newest data and labels.
 func (rsc *ResourceStatusController) UpdateDiskUsed(label ResourceStatusLabels, value float64) {
 	rsc.diskGaugeVec.WithLabelValues(label.IP, label.Zone, resourceStatusTypeUsed).Set(value)
+}
+
+// UpdateDiskLeft set disk left status with newest data and labels.
+func (rsc *ResourceStatusController) UpdateDiskLeft(label ResourceStatusLabels, value float64) {
+	rsc.diskGaugeVec.WithLabelValues(label.IP, label.Zone, resourceStatusTypeLeft).Set(value)
 }

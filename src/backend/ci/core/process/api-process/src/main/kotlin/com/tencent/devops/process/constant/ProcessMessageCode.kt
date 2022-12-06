@@ -150,6 +150,7 @@ object ProcessMessageCode {
     const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101905" // 暂停的流水线已开始运行
     const val ERROR_ELEMENT_TOO_LONG = "2101906" // {0} element大小越界
     const val ERROR_JOB_RUNNING = "2101907" // job非完成态，不能进行重试
+    const val ERROR_RETRY_STAGE_NOT_FAILED = "2101911" // stage非失败状态，不能进行重试
 
     const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
     const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在

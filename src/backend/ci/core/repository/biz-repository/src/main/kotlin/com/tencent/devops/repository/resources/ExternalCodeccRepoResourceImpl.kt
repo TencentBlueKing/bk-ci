@@ -126,6 +126,10 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
         return commonRepoFileService.getGitProjectAllMembers(repoUrl, userId)
     }
 
+    override fun isProjectMember(repoUrl: String, userId: String): Result<Boolean> {
+        return commonRepoFileService.isProjectMember(repoUrl = repoUrl, userId = userId)
+    }
+
     override fun getFileContentByUrl(
         projectId: String,
         repoUrl: String,

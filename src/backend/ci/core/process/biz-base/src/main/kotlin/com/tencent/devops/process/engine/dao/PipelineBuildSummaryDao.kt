@@ -541,4 +541,26 @@ class PipelineBuildSummaryDao {
             dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
+
+    @Deprecated("改操作不安全，业务不要使用，仅限op使用")
+    fun fixPipelineSummaryCount(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        finishCount: Int,
+        runningCount: Int?,
+        queueCount: Int?
+    ): Boolean {
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            val update = dslContext.update(this).set(FINISH_COUNT, FINISH_COUNT + finishCount)
+            if (runningCount != null) {
+                update.set(RUNNING_COUNT, RUNNING_COUNT + runningCount)
+            }
+            if (queueCount != null) {
+                update.set(QUEUE_COUNT, QUEUE_COUNT + queueCount)
+            }
+            return update.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .execute() == 1
+        }
+    }
 }

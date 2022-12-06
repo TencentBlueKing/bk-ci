@@ -296,6 +296,7 @@ class ProcessDataClearDao {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 
@@ -304,6 +305,7 @@ class ProcessDataClearDao {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUILD_ID.eq(buildId))
+                .execute()
         }
     }
 }

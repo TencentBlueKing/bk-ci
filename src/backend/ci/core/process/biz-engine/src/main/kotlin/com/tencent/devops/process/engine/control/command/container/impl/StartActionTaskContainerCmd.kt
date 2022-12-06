@@ -435,9 +435,8 @@ class StartActionTaskContainerCmd(
             return
         }
         // 更新task列表状态
-        val startIndex = index + 1
         val endIndex = containerTasks.size - 1
-        for (i in startIndex..endIndex) {
+        for (i in index..endIndex) {
             val task = containerTasks[i]
             for (updateTaskStatusInfo in updateTaskStatusInfos) {
                 val taskId = updateTaskStatusInfo.taskId

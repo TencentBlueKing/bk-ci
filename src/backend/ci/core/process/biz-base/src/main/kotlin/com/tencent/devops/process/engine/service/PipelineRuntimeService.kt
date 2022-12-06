@@ -1778,6 +1778,19 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.count(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId)
     }
 
+    fun getBuilds(
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?
+    ): List<String> {
+        return pipelineBuildDao.getBuilds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildStatus = buildStatus
+        )
+    }
+
     fun getPipelineBuildHistoryCount(
         projectId: String,
         pipelineId: String,

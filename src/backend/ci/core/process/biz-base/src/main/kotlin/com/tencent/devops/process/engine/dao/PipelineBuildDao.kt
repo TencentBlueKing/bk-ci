@@ -33,11 +33,11 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -50,13 +50,13 @@ import com.tencent.devops.process.pojo.pipeline.RepositoryTriggerInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
+import org.jooq.Record2
 import org.jooq.Result
+import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
-import org.jooq.Record2
-import org.jooq.SelectConditionStep
 
 @Suppress("ALL")
 @Repository
@@ -836,6 +836,25 @@ class PipelineBuildDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_NUM.eq(buildNo))
                 .fetchAny()
+        }
+    }
+
+    fun getBuilds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?
+    ): List<String> {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val dsl = dslContext.select(BUILD_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!buildStatus.isNullOrEmpty()) {
+                dsl.and(STATUS.`in`(buildStatus.map { it.ordinal }))
+            }
+            return dsl.fetch(BUILD_ID)
         }
     }
 
