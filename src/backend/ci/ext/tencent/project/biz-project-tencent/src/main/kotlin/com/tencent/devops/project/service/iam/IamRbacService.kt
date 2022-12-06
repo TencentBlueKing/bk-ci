@@ -371,17 +371,20 @@ class IamRbacService @Autowired constructor(
         authSecrecy: Boolean,
         subjectScopes: List<ManagerScopes>
     ): ItsmContentDTO {
-        var itsmSubjectScopes = subjectScopes
-        itsmSubjectScopes.forEach {
+        val itsmSubjectScopes = ArrayList<ManagerScopes>()
+        subjectScopes.forEach {
+            val managerScopes = ManagerScopes()
             if (it.type == "*") {
-                it.type = ALL_COMPANY
-                it.id = ALL_MEMBER
+                managerScopes.type = ALL_COMPANY
+                managerScopes.id = ALL_MEMBER
             } else if (it.type == DEPARTMENT) {
-                it.type = DEPARTMENT_CHINESE_NAME
-                it.id = tofService.getDeptInfo("", it.id.toInt()).name
+                managerScopes.type = DEPARTMENT_CHINESE_NAME
+                managerScopes.id = tofService.getDeptInfo("", it.id.toInt()).name
             } else {
-                it.type = USER_CHINESE_NAME
+                managerScopes.type = USER_CHINESE_NAME
+                managerScopes.id = it.id
             }
+            itsmSubjectScopes.add(managerScopes)
         }
         val itsmColumns = listOf(
             ItsmColumn.builder().key("projectName").name("项目名称").type("text").build(),
