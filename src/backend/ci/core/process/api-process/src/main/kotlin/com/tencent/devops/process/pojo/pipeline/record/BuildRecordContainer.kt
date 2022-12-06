@@ -53,6 +53,8 @@ data class BuildRecordContainer(
     val containerVar: MutableMap<String, Any>,
     @ApiModelProperty("作业容器类型", required = true)
     val containerType: String,
+    @ApiModelProperty("构建状态", required = false)
+    var status: String?,
     @ApiModelProperty("是否为构建矩阵组", required = false)
     val matrixGroupFlag: Boolean? = null,
     @ApiModelProperty("所在矩阵组ID", required = false)

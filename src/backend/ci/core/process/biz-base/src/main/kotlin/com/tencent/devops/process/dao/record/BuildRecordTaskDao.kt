@@ -29,6 +29,7 @@ package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
@@ -72,6 +73,7 @@ class BuildRecordTaskDao {
         taskId: String,
         executeCount: Int,
         taskVar: Map<String, Any>,
+        buildStatus: BuildStatus?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
         timestamps: List<BuildRecordTimeStamp>?,
@@ -80,6 +82,7 @@ class BuildRecordTaskDao {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val update = dslContext.update(this)
                 .set(TASK_VAR, JsonUtil.toJson(taskVar, false))
+            buildStatus?.let { update.set(STATUS, buildStatus.name) }
             startTime?.let { update.set(START_TIME, startTime) }
             endTime?.let { update.set(END_TIME, endTime) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
@@ -173,6 +176,7 @@ class BuildRecordTaskDao {
                     classType = classType,
                     atomCode = atomCode,
                     originClassType = originClassType,
+                    status = status,
                     startTime = startTime,
                     endTime = endTime,
                     timestamps = timestamps?.let {

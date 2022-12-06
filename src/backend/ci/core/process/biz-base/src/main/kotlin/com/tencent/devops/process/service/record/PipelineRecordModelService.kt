@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
-import com.tencent.devops.process.dao.record.BuildRecordPipelineDao
+import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
@@ -53,7 +53,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class PipelineRecordModelService @Autowired constructor(
-    private val buildRecordPipelineDao: BuildRecordPipelineDao,
+    private val buildRecordModelDao: BuildRecordModelDao,
     private val buildRecordStageDao: BuildRecordStageDao,
     private val buildRecordContainerDao: BuildRecordContainerDao,
     private val buildRecordTaskDao: BuildRecordTaskDao,
@@ -76,7 +76,7 @@ class PipelineRecordModelService @Autowired constructor(
         executeCount: Int
     ): Map<String, Any> {
         // 获取流水线级别变量数据
-        val buildRecordPipeline = buildRecordPipelineDao.getRecord(
+        val buildRecordPipeline = buildRecordModelDao.getRecord(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,

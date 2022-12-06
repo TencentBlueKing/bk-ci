@@ -51,6 +51,8 @@ data class BuildRecordStage(
     val stageSeq: Int,
     @ApiModelProperty("执行变量", required = true)
     val stageVar: MutableMap<String, Any>,
+    @ApiModelProperty("构建状态", required = false)
+    var status: String?,
     @ApiModelProperty("开始时间", required = false)
     val startTime: LocalDateTime?,
     @ApiModelProperty("结束时间", required = false)

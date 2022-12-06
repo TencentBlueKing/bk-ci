@@ -124,6 +124,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
+import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -136,6 +137,9 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.BuildVariableService
@@ -201,6 +205,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuleService: PipelineRuleService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val stageBuildRecordService: StageBuildRecordService,
     private val pipelineUrlBean: PipelineUrlBean,
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation
@@ -1078,26 +1083,16 @@ class PipelineRuntimeService @Autowired constructor(
                     variables = pipelineParamMap
                 )
 
-                if (updateTaskExistsRecord.isNotEmpty()) {
-                    pipelineTaskService.batchUpdate(transactionContext, updateTaskExistsRecord)
-                }
-                if (buildTaskList.isNotEmpty()) {
-                    pipelineTaskService.batchSave(transactionContext, buildTaskList)
-                }
-
-                if (updateContainerExistsRecord.isNotEmpty()) {
-                    pipelineContainerService.batchUpdate(transactionContext, updateContainerExistsRecord)
-                }
-                if (buildContainers.isNotEmpty()) {
-                    pipelineContainerService.batchSave(transactionContext, buildContainers)
-                }
-
-                if (updateStageExistsRecord.isNotEmpty()) {
-                    pipelineStageService.batchUpdate(transactionContext, updateStageExistsRecord)
-                }
-                if (buildStages.isNotEmpty()) {
-                    pipelineStageService.batchSave(transactionContext, buildStages)
-                }
+                saveBuildRecord(
+                    resourceVersion = version,
+                    updateTaskExistsRecord = updateTaskExistsRecord,
+                    transactionContext = transactionContext,
+                    buildTaskList = buildTaskList,
+                    updateContainerExistsRecord = updateContainerExistsRecord,
+                    buildContainers = buildContainers,
+                    updateStageExistsRecord = updateStageExistsRecord,
+                    buildStages = buildStages
+                )
                 // 排队计数+1
                 pipelineBuildSummaryDao.updateQueueCount(
                     dslContext = transactionContext,
@@ -1135,6 +1130,97 @@ class PipelineRuntimeService @Autowired constructor(
             )
         }
         return buildId
+    }
+
+    private fun saveBuildRecord(
+        resourceVersion: Int,
+        updateTaskExistsRecord: MutableList<PipelineBuildTask>,
+        transactionContext: DSLContext,
+        buildTaskList: MutableList<PipelineBuildTask>,
+        updateContainerExistsRecord: MutableList<PipelineBuildContainer>,
+        buildContainers: MutableList<PipelineBuildContainer>,
+        updateStageExistsRecord: MutableList<PipelineBuildStage>,
+        buildStages: ArrayList<PipelineBuildStage>
+    ) {
+        val stageBuildRecords = mutableListOf<BuildRecordStage>()
+        val containerBuildRecords = mutableListOf<BuildRecordContainer>()
+        val taskBuildRecords = mutableListOf<BuildRecordTask>()
+        if (updateTaskExistsRecord.isNotEmpty()) {
+            pipelineTaskService.batchUpdate(transactionContext, updateTaskExistsRecord)
+            saveTaskRecords(updateTaskExistsRecord, taskBuildRecords, resourceVersion)
+        }
+        if (buildTaskList.isNotEmpty()) {
+            pipelineTaskService.batchSave(transactionContext, buildTaskList)
+            saveTaskRecords(buildTaskList, taskBuildRecords, resourceVersion)
+        }
+        if (updateContainerExistsRecord.isNotEmpty()) {
+            pipelineContainerService.batchUpdate(transactionContext, updateContainerExistsRecord)
+            saveContainerRecords(updateContainerExistsRecord, containerBuildRecords, resourceVersion)
+        }
+        if (buildContainers.isNotEmpty()) {
+            pipelineContainerService.batchSave(transactionContext, buildContainers)
+            saveContainerRecords(buildContainers, containerBuildRecords, resourceVersion)
+        }
+
+        if (updateStageExistsRecord.isNotEmpty()) {
+            pipelineStageService.batchUpdate(transactionContext, updateStageExistsRecord)
+            saveStageRecords(updateStageExistsRecord, stageBuildRecords, resourceVersion)
+        }
+        if (buildStages.isNotEmpty()) {
+            pipelineStageService.batchSave(transactionContext, buildStages)
+            saveStageRecords(buildStages, stageBuildRecords, resourceVersion)
+        }
+        stageBuildRecordService.batchSave(
+            dslContext, stageBuildRecords, containerBuildRecords, taskBuildRecords
+        )
+    }
+
+    private fun saveTaskRecords(
+        buildTaskList: MutableList<PipelineBuildTask>,
+        taskBuildRecords: MutableList<BuildRecordTask>,
+        resourceVersion: Int
+    ) {
+        buildTaskList.forEach {
+            taskBuildRecords.add(
+                BuildRecordTask(
+                    projectId = it.projectId, pipelineId = it.pipelineId, buildId = it.buildId,
+                    stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
+                    taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
+                    executeCount = it.executeCount ?: 1, originClassType = null,
+                    resourceVersion = resourceVersion, status = null, startTime = null,
+                    endTime = null, timestamps = emptyList(), timeCost = null, taskVar = mutableMapOf()
+                )
+            )
+        }
+    }
+
+    private fun saveContainerRecords(buildContainers: MutableList<PipelineBuildContainer>, containerBuildRecords: MutableList<BuildRecordContainer>, resourceVersion: Int) {
+        buildContainers.forEach {
+            containerBuildRecords.add(
+                BuildRecordContainer(
+                    projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
+                    buildId = it.buildId, stageId = it.stageId, containerId = it.containerId,
+                    containerType = it.containerType, executeCount = it.executeCount,
+                    matrixGroupFlag = null, matrixGroupId = null, containerVar = mutableMapOf(),
+                    status = null, startTime = null, endTime = null,
+                    timestamps = emptyList(), timeCost = null
+                )
+            )
+        }
+    }
+
+    private fun saveStageRecords(updateStageExistsRecord: MutableList<PipelineBuildStage>, stageBuildRecords: MutableList<BuildRecordStage>, resourceVersion: Int) {
+        updateStageExistsRecord.forEach {
+            stageBuildRecords.add(
+                BuildRecordStage(
+                    projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
+                    buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
+                    executeCount = it.executeCount, stageVar = mutableMapOf(),
+                    status = null, startTime = null, endTime = null,
+                    timestamps = emptyList(), timeCost = null
+                )
+            )
+        }
     }
 
     fun approveTriggerReview(

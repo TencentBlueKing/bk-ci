@@ -32,21 +32,21 @@ import com.tencent.devops.common.api.constant.BUILD_COMPLETED
 import com.tencent.devops.common.api.constant.BUILD_FAILED
 import com.tencent.devops.common.api.constant.BUILD_REVIEWING
 import com.tencent.devops.common.api.constant.BUILD_RUNNING
-import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.process.dao.BuildDetailDao
+import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
-import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
 import com.tencent.devops.process.service.StageTagService
@@ -64,9 +64,27 @@ class StageBuildRecordService(
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val stageTagService: StageTagService,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val redisOperation: RedisOperation
+    buildRecordModelDao: BuildRecordModelDao,
+    pipelineEventDispatcher: PipelineEventDispatcher,
+    redisOperation: RedisOperation
+) : BaseBuildRecordService(
+    dslContext = dslContext,
+    buildRecordModelDao = buildRecordModelDao,
+    pipelineEventDispatcher = pipelineEventDispatcher,
+    redisOperation = redisOperation
 ) {
+
+    fun batchSave(
+        transactionContext: DSLContext?,
+        stageList: List<BuildRecordStage>,
+        containerList: List<BuildRecordContainer>,
+        taskList: List<BuildRecordTask>
+    ) {
+        buildRecordStageDao.batchSave(transactionContext ?: dslContext, stageList)
+        containerBuildRecordService.batchSave(
+            transactionContext ?: dslContext, containerList, taskList
+        )
+    }
 
     fun updateStageStatus(
         projectId: String,
@@ -80,26 +98,26 @@ class StageBuildRecordService(
             "[$buildId]|update_stage_status|stageId=$stageId|" +
                 "status=$buildStatus|executeCount=$executeCount"
         )
+        var allStageStatus: List<BuildStageStatus>? = null
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
+            cancelUser = null, operation = "updateStageStatus#$stageId"
+        ) {
+            val stageVar = mutableMapOf<String, Any>()
+            if (buildStatus.isRunning() && stageVar[Stage::startEpoch.name] == null) {
+                stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
+            } else if (buildStatus.isFinish() && stageVar[Stage::startEpoch.name] != null) {
+                stageVar[Stage::elapsed.name] =
+                    System.currentTimeMillis() - stageVar[Stage::startEpoch.name].toString().toLong()
+            }
 
-        val stageVar = mutableMapOf<String, Any>()
-        if (buildStatus.isRunning() && stageVar[Stage::startEpoch.name] == null) {
-            stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
-        } else if (buildStatus.isFinish() && stageVar[Stage::startEpoch.name] != null) {
-            stageVar[Stage::elapsed.name] =
-                System.currentTimeMillis() - stageVar[Stage::startEpoch.name].toString().toLong()
+            allStageStatus = updateContainerByMap(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                stageId = stageId, executeCount = executeCount, stageVar = stageVar,
+                buildStatus = buildStatus
+            )
         }
-        stageVar[Stage::status.name] = buildStatus.name
-
-        return updateContainerByMap(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId,
-            executeCount = executeCount,
-            stageVar = stageVar,
-            operation = "updateStageStatus#$stageId",
-            buildStatus = buildStatus
-        )
+        return allStageStatus ?: emptyList()
     }
 
     fun stageSkip(
@@ -107,22 +125,27 @@ class StageBuildRecordService(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        executeCount: Int
+        executeCount: Int,
+        containers: List<PipelineBuildContainer>
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_skip|stageId=$stageId")
-        // TODO 刷新所有container为SKIP
-        return updateContainerByMap(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId,
-            executeCount = executeCount,
-            stageVar = mapOf(
-                Stage::status.name to BuildStatus.RUNNING.name
-            ),
-            operation = "stageSkip#$stageId",
-            buildStatus = BuildStatus.RUNNING
-        )
+        var allStageStatus: List<BuildStageStatus>? = null
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
+            cancelUser = null, operation = "stageSkip#$stageId"
+        ) {
+            containers.forEach { container ->
+                containerBuildRecordService.containerSkip(
+                    projectId, pipelineId, buildId, executeCount, container.containerId
+                )
+            }
+            allStageStatus = updateContainerByMap(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                stageId = stageId, executeCount = executeCount, buildStatus = BuildStatus.SKIP,
+                stageVar = emptyMap()
+            )
+        }
+        return allStageStatus ?: emptyList()
     }
 
     fun stagePause(
@@ -137,25 +160,24 @@ class StageBuildRecordService(
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_pause|stageId=$stageId")
 
-        val stageVar = mutableMapOf<String, Any>()
-        stageVar[Stage::status.name] = BuildStatus.SKIP.name
-        stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
-        stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
-        stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
-        checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
-        checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
-
-        return updateContainerByMap(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId,
-            executeCount = executeCount,
-            stageVar = stageVar,
-            operation = "stagePause#$stageId",
-            buildStatus = BuildStatus.REVIEWING,
-            reviewers = checkIn?.groupToReview()?.reviewers
-        )
+        var allStageStatus: List<BuildStageStatus>? = null
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.STAGE_SUCCESS,
+            cancelUser = null, operation = "stagePause#$stageId"
+        ) {
+            val stageVar = mutableMapOf<String, Any>()
+            stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
+            stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
+            stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
+            checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
+            checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
+            allStageStatus = updateContainerByMap(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                stageId = stageId, executeCount = executeCount, stageVar = emptyMap(),
+                buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers
+            )
+        }
+        return allStageStatus ?: emptyList()
     }
 
     fun stageCancel(
@@ -169,24 +191,28 @@ class StageBuildRecordService(
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_cancel|stageId=$stageId")
+        var allStageStatus: List<BuildStageStatus>? = null
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.CANCELED,
+            cancelUser = null, operation = "stageCancel#$stageId"
+        ) {
+            val stageVar = mutableMapOf<String, Any>()
+            stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
+            stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
+            checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
+            checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
 
-        val stageVar = mutableMapOf<String, Any>()
-        stageVar[Stage::status.name] = BuildStatus.SKIP.name
-        stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
-        stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
-        checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
-        checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
-
-        return updateContainerByMap(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId,
-            executeCount = executeCount,
-            stageVar = stageVar,
-            operation = "stageCancel#$stageId",
-            buildStatus = BuildStatus.RUNNING
-        )
+            allStageStatus = updateContainerByMap(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stageId,
+                executeCount = executeCount,
+                stageVar = stageVar,
+                buildStatus = null
+            )
+        }
+        return allStageStatus ?: emptyList()
     }
 
     fun stageCheckQuality(
@@ -200,29 +226,33 @@ class StageBuildRecordService(
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
+        var allStageStatus: List<BuildStageStatus>? = null
         val (oldBuildStatus, newBuildStatus) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
             checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
             Pair(BuildStatus.RUNNING, BuildStatus.REVIEWING)
         } else {
             Pair(BuildStatus.REVIEWING, BuildStatus.RUNNING)
         }
-        val stageVar = mutableMapOf<String, Any>()
-        stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
-        checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
-        checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
-
-        val allStageStatus = updateContainerByMap(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId,
-            executeCount = executeCount,
-            stageVar = stageVar,
-            operation = "stageCheckQuality#$stageId",
-            buildStatus = BuildStatus.RUNNING
-        )
-        pipelineBuildDao.updateStatus(dslContext, projectId, buildId, oldBuildStatus, newBuildStatus)
-        return allStageStatus
+        update(
+            projectId, pipelineId, buildId, executeCount, newBuildStatus,
+            cancelUser = null, operation = "stageCheckQuality#$stageId"
+        ) {
+            val stageVar = mutableMapOf<String, Any>()
+            stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
+            checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
+            checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
+            allStageStatus = updateContainerByMap(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stageId,
+                executeCount = executeCount,
+                stageVar = stageVar,
+                buildStatus = null // 红线不改变stage原状态
+            )
+            pipelineBuildDao.updateStatus(dslContext, projectId, buildId, oldBuildStatus, newBuildStatus)
+        }
+        return allStageStatus ?: emptyList()
     }
 
     fun stageReview(
@@ -236,22 +266,27 @@ class StageBuildRecordService(
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_review|stageId=$stageId")
+        var allStageStatus: List<BuildStageStatus>? = null
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.STAGE_SUCCESS,
+            cancelUser = null, operation = "stageReview#$stageId"
+        ) {
+            val stageVar = mutableMapOf<String, Any>()
+            stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
+            checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
+            checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
 
-        val stageVar = mutableMapOf<String, Any>()
-        stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
-        checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
-        checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
-
-        return updateContainerByMap(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId,
-            executeCount = executeCount,
-            stageVar = stageVar,
-            operation = "stageReview#$stageId",
-            buildStatus = BuildStatus.STAGE_SUCCESS
-        )
+            allStageStatus = updateContainerByMap(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stageId,
+                executeCount = executeCount,
+                stageVar = stageVar,
+                buildStatus = null
+            )
+        }
+        return allStageStatus ?: emptyList()
     }
 
     fun stageStart(
@@ -265,23 +300,27 @@ class StageBuildRecordService(
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_start|stageId=$stageId")
+        var allStageStatus: List<BuildStageStatus>? = null
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
+            cancelUser = null, operation = "stageStart#$stageId"
+        ) {
+            val stageVar = mutableMapOf<String, Any>()
+            stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
+            checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
+            checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
 
-        val stageVar = mutableMapOf<String, Any>()
-        stageVar[Stage::status.name] = BuildStatus.QUEUE.name
-        stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
-        checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
-        checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
-
-        return updateContainerByMap(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId,
-            executeCount = executeCount,
-            stageVar = stageVar,
-            operation = "stageStart#$stageId",
-            buildStatus = BuildStatus.RUNNING
-        )
+            allStageStatus = updateContainerByMap(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stageId,
+                executeCount = executeCount,
+                stageVar = stageVar,
+                buildStatus = BuildStatus.QUEUE
+            )
+        }
+        return allStageStatus ?: emptyList()
     }
 
     fun updateContainerByMap(
@@ -291,8 +330,7 @@ class StageBuildRecordService(
         stageId: String,
         executeCount: Int,
         stageVar: Map<String, Any>,
-        buildStatus: BuildStatus,
-        operation: String,
+        buildStatus: BuildStatus?,
         reviewers: List<String>? = null,
         errorMsg: String? = null,
         startTime: LocalDateTime? = null,
@@ -300,11 +338,9 @@ class StageBuildRecordService(
         timestamps: List<BuildRecordTimeStamp>? = null,
         timeCost: BuildRecordTimeCost? = null
     ): List<BuildStageStatus> {
-        val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         var allStageStatus: List<BuildStageStatus>? = null
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            watcher.start("getRecords")
             val recordStages = buildRecordStageDao.getRecords(
                 dslContext = context,
                 projectId = projectId,
@@ -319,12 +355,13 @@ class StageBuildRecordService(
                 return@transaction
             }
             stage.stageVar.putAll(stageVar)
-            allStageStatus = fetchHistoryStageStatus(
-                recordStages = recordStages,
-                buildStatus = buildStatus,
-                reviewers = reviewers
-            )
-            watcher.start("updateRecord")
+            allStageStatus = buildStatus?.let {
+                fetchHistoryStageStatus(
+                    recordStages = recordStages,
+                    buildStatus = buildStatus,
+                    reviewers = reviewers
+                )
+            }
             buildRecordStageDao.updateRecord(
                 dslContext = context,
                 projectId = projectId,
@@ -333,14 +370,13 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
+                buildStatus = buildStatus,
                 startTime = startTime,
                 endTime = endTime,
                 timestamps = timestamps,
                 timeCost = timeCost
             )
-            watcher.start("updated")
         }
-        watcher.stop()
         return allStageStatus ?: emptyList()
     }
 
@@ -369,7 +405,7 @@ class StageBuildRecordService(
             BuildStageStatus(
                 stageId = it.stageId,
                 name = it.stageVar[Stage::name.name]?.toString() ?: it.stageId,
-                status = it.stageVar[Stage::status.name].toString(),
+                status = it.status,
                 startEpoch = it.stageVar[Stage::startEpoch.name].toString().toLong(),
                 elapsed = it.stageVar[Stage::elapsed.name].toString().toLong(),
                 tag = (it.stageVar[Stage::tag.name] as List<String>).map { _it ->

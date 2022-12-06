@@ -29,6 +29,7 @@ package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordStage
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordStageRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
@@ -42,21 +43,23 @@ import java.time.LocalDateTime
 @Repository
 class BuildRecordStageDao {
 
-    fun createRecord(dslContext: DSLContext, record: BuildRecordStage) {
+    fun batchSave(dslContext: DSLContext, records: List<BuildRecordStage>) {
         with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
-            dslContext.insertInto(this)
-                .set(BUILD_ID, record.buildId)
-                .set(PROJECT_ID, record.projectId)
-                .set(PIPELINE_ID, record.buildId)
-                .set(RESOURCE_VERSION, record.resourceVersion)
-                .set(STAGE_ID, record.stageId)
-                .set(EXECUTE_COUNT, record.executeCount)
-                .set(SEQ, record.stageSeq)
-                .set(STAGE_VAR, JsonUtil.toJson(record.stageVar, false))
-                .set(START_TIME, record.startTime)
-                .set(END_TIME, record.endTime)
-                .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                .execute()
+            records.forEach { record ->
+                dslContext.insertInto(this)
+                    .set(BUILD_ID, record.buildId)
+                    .set(PROJECT_ID, record.projectId)
+                    .set(PIPELINE_ID, record.buildId)
+                    .set(RESOURCE_VERSION, record.resourceVersion)
+                    .set(STAGE_ID, record.stageId)
+                    .set(EXECUTE_COUNT, record.executeCount)
+                    .set(SEQ, record.stageSeq)
+                    .set(STAGE_VAR, JsonUtil.toJson(record.stageVar, false))
+                    .set(START_TIME, record.startTime)
+                    .set(END_TIME, record.endTime)
+                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
+                    .execute()
+            }
         }
     }
 
@@ -68,6 +71,7 @@ class BuildRecordStageDao {
         stageId: String,
         executeCount: Int,
         stageVar: Map<String, Any>,
+        buildStatus: BuildStatus?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
         timestamps: List<BuildRecordTimeStamp>?,
@@ -76,6 +80,7 @@ class BuildRecordStageDao {
         with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
             val update = dslContext.update(this)
                 .set(STAGE_VAR, JsonUtil.toJson(stageVar, false))
+            buildStatus?.let { update.set(STATUS, buildStatus.name) }
             startTime?.let { update.set(START_TIME, startTime) }
             endTime?.let { update.set(END_TIME, endTime) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
@@ -142,6 +147,7 @@ class BuildRecordStageDao {
                     stageId = stageId,
                     stageVar = JsonUtil.getObjectMapper().readValue(stageVar) as MutableMap<String, Any>,
                     stageSeq = seq,
+                    status = status,
                     startTime = startTime,
                     endTime = endTime,
                     timestamps = timestamps?.let {

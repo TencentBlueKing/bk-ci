@@ -27,25 +27,21 @@
 
 package com.tencent.devops.process.engine.service.record
 
-import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
+import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
-import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -58,11 +54,14 @@ class ContainerBuildRecordService(
     private val dslContext: DSLContext,
     private val buildRecordContainerDao: BuildRecordContainerDao,
     private val buildRecordTaskDao: BuildRecordTaskDao,
-    pipelineBuildDao: PipelineBuildDao,
-    buildDetailDao: BuildDetailDao,
+    buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
-    stageTagService: StageTagService,
     redisOperation: RedisOperation
+) : BaseBuildRecordService(
+    dslContext = dslContext,
+    buildRecordModelDao = buildRecordModelDao,
+    pipelineEventDispatcher = pipelineEventDispatcher,
+    redisOperation = redisOperation
 ) {
 
     fun getRecord(
@@ -103,19 +102,20 @@ class ContainerBuildRecordService(
         containerId: String,
         executeCount: Int
     ) {
-        updateContainerByMap(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            containerId = containerId,
-            executeCount = executeCount,
-            containerVar = mapOf(
-                Container::status.name to BuildStatus.PREPARE_ENV.name,
-                Container::startVMStatus.name to BuildStatus.RUNNING.name
-            ),
-            startTime = LocalDateTime.now(),
-            operation = "containerPreparing#$containerId"
-        )
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
+            cancelUser = null, operation = "containerPreparing#$containerId"
+        ) {
+            updateContainerByMap(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                containerId = containerId, executeCount = executeCount,
+                buildStatus = BuildStatus.PREPARE_ENV,
+                containerVar = mapOf(
+                    Container::startVMStatus.name to BuildStatus.RUNNING.name
+                ),
+                startTime = LocalDateTime.now()
+            )
+        }
     }
 
     fun containerStarted(
@@ -126,22 +126,23 @@ class ContainerBuildRecordService(
         executeCount: Int,
         containerBuildStatus: BuildStatus
     ) {
-        updateContainerByMap(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            containerId = containerId,
-            executeCount = executeCount,
-            containerVar = mapOf(
-                Container::status.name to if (containerBuildStatus.isFailure()) {
-                    containerBuildStatus.name
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
+            cancelUser = null, operation = "containerStarted#$containerId"
+        ) {
+            updateContainerByMap(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                containerId = containerId, executeCount = executeCount,
+                buildStatus = if (containerBuildStatus.isFailure()) {
+                    containerBuildStatus
                 } else {
-                    BuildStatus.RUNNING.name
+                    BuildStatus.RUNNING
                 },
-                Container::startVMStatus.name to containerBuildStatus.name
-            ),
-            operation = "containerStarted#$containerId"
-        )
+                containerVar = mapOf(
+                    Container::startVMStatus.name to containerBuildStatus.name
+                )
+            )
+        }
     }
 
     fun updateContainerStatus(
@@ -153,56 +154,50 @@ class ContainerBuildRecordService(
         buildStatus: BuildStatus,
         operation: String
     ) {
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            val recordContainer = buildRecordContainerDao.getRecord(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                containerId = containerId,
-                executeCount = executeCount
-            ) ?: run {
-                logger.warn(
-                    "ENGINE|$buildId|updateContainerByMap| get container($containerId) record failed."
-                )
-                return@transaction
-            }
-            val containerVar = mutableMapOf<String, Any>()
-            containerVar.putAll(recordContainer.containerVar)
-            val containerName = containerVar[Container::name.name]?.toString() ?: ""
-            if (buildStatus.isReadyToRun()) {
-                when (recordContainer.containerType) {
-                    VMBuildContainer.classType -> containerVar[VMBuildContainer::mutexGroup.name]
-                    NormalContainer.classType -> containerVar[NormalContainer::mutexGroup.name]
-                    else -> null
-                }?.let {
-                    containerVar[Container::name.name] = ContainerUtils.getMutexWaitName(containerName)
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
+            cancelUser = null, operation = "updateContainerStatus#$containerId"
+        ) {
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                val recordContainer = buildRecordContainerDao.getRecord(
+                    dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                    buildId = buildId, containerId = containerId, executeCount = executeCount
+                ) ?: run {
+                    logger.warn(
+                        "ENGINE|$buildId|updateContainerByMap| get container($containerId) record failed."
+                    )
+                    return@transaction
                 }
-            } else {
-                ContainerUtils.getMutexFixedContainerName(containerName)
-            }
-            containerVar[Container::status.name] = buildStatus.name
-            containerVar[Container::executeCount.name] = executeCount
+                val containerVar = mutableMapOf<String, Any>()
+                containerVar.putAll(recordContainer.containerVar)
+                val containerName = containerVar[Container::name.name]?.toString() ?: ""
+                if (buildStatus.isReadyToRun()) {
+                    when (recordContainer.containerType) {
+                        VMBuildContainer.classType -> containerVar[VMBuildContainer::mutexGroup.name]
+                        NormalContainer.classType -> containerVar[NormalContainer::mutexGroup.name]
+                        else -> null
+                    }?.let {
+                        containerVar[Container::name.name] = ContainerUtils.getMutexWaitName(containerName)
+                    }
+                } else {
+                    ContainerUtils.getMutexFixedContainerName(containerName)
+                }
+                containerVar[Container::executeCount.name] = executeCount
 
-            if (buildStatus.isFinish() &&
-                !BuildStatus.parse(containerVar[Container::startVMStatus.name]?.toString()).isFinish()) {
-                containerVar[Container::startVMStatus.name] = buildStatus.name
+                if (buildStatus.isFinish() &&
+                    !BuildStatus.parse(containerVar[Container::startVMStatus.name]?.toString()).isFinish()) {
+                    containerVar[Container::startVMStatus.name] = buildStatus.name
+                }
+                // TODO 耗时计算
+                buildRecordContainerDao.updateRecord(
+                    dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                    buildId = buildId, containerId = containerId, executeCount = executeCount,
+                    containerVar = containerVar.plus(containerVar), buildStatus = buildStatus,
+                    startTime = null, endTime = if (buildStatus.isFinish()) LocalDateTime.now() else null,
+                    timestamps = null, timeCost = null
+                )
             }
-            // TODO 耗时计算
-            buildRecordContainerDao.updateRecord(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                containerId = containerId,
-                executeCount = executeCount,
-                containerVar = containerVar.plus(containerVar),
-                startTime = null,
-                endTime = if (buildStatus.isFinish()) LocalDateTime.now() else null,
-                timestamps = null,
-                timeCost = null
-            )
         }
     }
 
@@ -217,23 +212,24 @@ class ContainerBuildRecordService(
         matrixOption: MatrixControlOption,
         modelContainer: Container?
     ) {
-        logger.info(
-            "[$buildId]|matrix_group_record|j(${modelContainer?.containerId})|" +
-                "groupId=$matrixGroupId|status=$buildStatus"
-        )
-        updateContainerByMap(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            containerId = matrixGroupId,
-            executeCount = executeCount,
-            containerVar = mapOf(
-                Container::status.name to buildStatus.name,
-                VMBuildContainer::matrixControlOption.name to matrixOption
-            ),
-            startTime = LocalDateTime.now(),
-            operation = "updateMatrixGroupContainer#$matrixGroupId"
-        )
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
+            cancelUser = null, operation = "updateMatrixGroupContainer#$matrixGroupId"
+        ) {
+            logger.info(
+                "[$buildId]|matrix_group_record|j(${modelContainer?.containerId})|" +
+                    "groupId=$matrixGroupId|status=$buildStatus"
+            )
+            updateContainerByMap(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                containerId = matrixGroupId, executeCount = executeCount,
+                buildStatus = buildStatus,
+                containerVar = mapOf(
+                    VMBuildContainer::matrixControlOption.name to matrixOption
+                ),
+                startTime = LocalDateTime.now()
+            )
+        }
     }
 
     fun containerSkip(
@@ -243,43 +239,31 @@ class ContainerBuildRecordService(
         executeCount: Int,
         containerId: String
     ) {
-        logger.info("[$buildId]|container_skip|j($containerId)")
-        updateContainerByMap(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            containerId = containerId,
-            executeCount = executeCount,
-            containerVar = mapOf(
-                Container::status.name to BuildStatus.SKIP.name,
-                Container::startVMStatus.name to BuildStatus.SKIP.name
-            ),
-            startTime = LocalDateTime.now(),
-            operation = "containerSkip#$containerId"
-        )
-        buildRecordTaskDao.getRecords(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            containerId = containerId,
-            executeCount = executeCount
-        ).forEach { task ->
-            buildRecordTaskDao.updateRecord(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                taskId = task.taskId,
-                executeCount = executeCount,
-                startTime = null,
-                endTime = null,
-                taskVar = task.taskVar.plus(
-                    mapOf(Element::status.name to BuildStatus.SKIP.name)
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
+            cancelUser = null, operation = "containerSkip#$containerId"
+        ) {
+            logger.info("[$buildId]|container_skip|j($containerId)")
+            updateContainerByMap(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                containerId = containerId, executeCount = executeCount,
+                buildStatus = BuildStatus.SKIP, containerVar = mapOf(
+                    Container::startVMStatus.name to BuildStatus.SKIP.name
                 ),
-                timestamps = null,
-                timeCost = null
+                startTime = LocalDateTime.now()
             )
+            buildRecordTaskDao.getRecords(
+                dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, containerId = containerId, executeCount = executeCount
+            ).forEach { task ->
+                buildRecordTaskDao.updateRecord(
+                    dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
+                    buildId = buildId, taskId = task.taskId, executeCount = executeCount,
+                    startTime = null, endTime = null,
+                    taskVar = task.taskVar, buildStatus = BuildStatus.SKIP,
+                    timestamps = null, timeCost = null
+                )
+            }
         }
     }
 
@@ -290,46 +274,31 @@ class ContainerBuildRecordService(
         containerId: String,
         executeCount: Int,
         containerVar: Map<String, Any>,
-        operation: String,
+        buildStatus: BuildStatus,
         startTime: LocalDateTime? = null,
         endTime: LocalDateTime? = null,
         timestamps: List<BuildRecordTimeStamp>? = null,
         timeCost: BuildRecordTimeCost? = null
     ) {
-        val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            watcher.start("getRecord")
             val recordVar = buildRecordContainerDao.getRecordContainerVar(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                containerId = containerId,
-                executeCount = executeCount
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, containerId = containerId, executeCount = executeCount
             )?.toMutableMap() ?: run {
                 logger.warn(
                     "ENGINE|$buildId|updateContainerByMap| get container($containerId) record failed."
                 )
                 return@transaction
             }
-            watcher.start("updateRecord")
             buildRecordContainerDao.updateRecord(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                containerId = containerId,
-                executeCount = executeCount,
-                containerVar = recordVar.plus(containerVar),
-                startTime = startTime,
-                endTime = endTime,
-                timestamps = timestamps,
-                timeCost = timeCost
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, containerId = containerId, executeCount = executeCount,
+                containerVar = recordVar.plus(containerVar), buildStatus = buildStatus,
+                startTime = startTime, endTime = endTime,
+                timestamps = timestamps, timeCost = timeCost
             )
-            watcher.start("updated")
         }
-        watcher.stop()
     }
 
     companion object {

@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
 @ApiModel("构建详情记录-插件任务")
-data class BuildRecordPipeline(
+data class BuildRecordModel(
     @ApiModelProperty("构建ID", required = true)
     val buildId: String,
     @ApiModelProperty("项目ID", required = true)
@@ -53,6 +53,8 @@ data class BuildRecordPipeline(
     val startUser: String,
     @ApiModelProperty("触发器", required = true)
     val trigger: String,
+    @ApiModelProperty("构建状态", required = false)
+    var status: String?,
     @ApiModelProperty("取消人", required = false)
     val cancelUser: String?,
     @ApiModelProperty("开始时间", required = false)

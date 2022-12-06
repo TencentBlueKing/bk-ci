@@ -29,6 +29,7 @@ package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordContainer
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordContainerRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -73,6 +74,7 @@ class BuildRecordContainerDao {
         containerId: String,
         executeCount: Int,
         containerVar: Map<String, Any>,
+        buildStatus: BuildStatus?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
         timestamps: List<BuildRecordTimeStamp>?,
@@ -81,6 +83,7 @@ class BuildRecordContainerDao {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             val update = dslContext.update(this)
                 .set(CONTAINER_VAR, JsonUtil.toJson(containerVar, false))
+            buildStatus?.let { update.set(STATUS, buildStatus.name) }
             startTime?.let { update.set(START_TIME, startTime) }
             endTime?.let { update.set(END_TIME, endTime) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
@@ -168,6 +171,7 @@ class BuildRecordContainerDao {
                     containerId = containerId,
                     containerVar = JsonUtil.getObjectMapper().readValue(containerVar) as MutableMap<String, Any>,
                     containerType = containerType,
+                    status = status,
                     matrixGroupFlag = matrixGroupFlag,
                     matrixGroupId = matrixGroupId,
                     startTime = startTime,

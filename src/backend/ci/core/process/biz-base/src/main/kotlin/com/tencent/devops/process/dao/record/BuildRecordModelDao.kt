@@ -29,9 +29,10 @@ package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordPipeline
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordPipelineRecord
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordPipeline
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
 import org.jooq.DSLContext
@@ -40,9 +41,9 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class BuildRecordPipelineDao {
+class BuildRecordModelDao {
 
-    fun createRecord(dslContext: DSLContext, record: BuildRecordPipeline) {
+    fun createRecord(dslContext: DSLContext, record: BuildRecordModel) {
         with(TPipelineBuildRecordPipeline.T_PIPELINE_BUILD_RECORD_PIPELINE) {
             dslContext.insertInto(this)
                 .set(BUILD_ID, record.buildId)
@@ -68,19 +69,21 @@ class BuildRecordPipelineDao {
         pipelineId: String,
         buildId: String,
         executeCount: Int,
-        pipelineVar: Map<String, Any>,
+        buildStatus: BuildStatus,
         cancelUser: String?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
-        timestamps: List<BuildRecordTimeStamp>?
+        timestamps: List<BuildRecordTimeStamp>?,
+        timeCost: BuildRecordTimeCost?
     ) {
         with(TPipelineBuildRecordPipeline.T_PIPELINE_BUILD_RECORD_PIPELINE) {
             val update = dslContext.update(this)
-                .set(PIPELINE_VAR, JsonUtil.toJson(pipelineVar, false))
+                .set(STATUS, buildStatus.name)
             cancelUser?.let { update.set(CANCEL_USER, cancelUser) }
             startTime?.let { update.set(START_TIME, startTime) }
             endTime?.let { update.set(END_TIME, endTime) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
+            timeCost?.let { update.set(TIME_COST, JsonUtil.toJson(timeCost, false)) }
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
@@ -96,7 +99,7 @@ class BuildRecordPipelineDao {
         pipelineId: String,
         buildId: String,
         executeCount: Int
-    ): BuildRecordPipeline {
+    ): BuildRecordModel {
         with(TPipelineBuildRecordPipeline.T_PIPELINE_BUILD_RECORD_PIPELINE) {
             return dslContext.selectFrom(this)
                 .where(
@@ -108,10 +111,10 @@ class BuildRecordPipelineDao {
         }
     }
 
-    class BuildRecordPipelineJooqMapper : RecordMapper<TPipelineBuildRecordPipelineRecord, BuildRecordPipeline> {
-        override fun map(record: TPipelineBuildRecordPipelineRecord?): BuildRecordPipeline? {
+    class BuildRecordPipelineJooqMapper : RecordMapper<TPipelineBuildRecordPipelineRecord, BuildRecordModel> {
+        override fun map(record: TPipelineBuildRecordPipelineRecord?): BuildRecordModel? {
             return record?.run {
-                BuildRecordPipeline(
+                BuildRecordModel(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
@@ -121,6 +124,7 @@ class BuildRecordPipelineDao {
                     pipelineVar = JsonUtil.getObjectMapper().readValue(pipelineVar) as MutableMap<String, Any>,
                     startUser = startUser,
                     trigger = trigger,
+                    status = status,
                     cancelUser = cancelUser,
                     startTime = startTime,
                     endTime = endTime,

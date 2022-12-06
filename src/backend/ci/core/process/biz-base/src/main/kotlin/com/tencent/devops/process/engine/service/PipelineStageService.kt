@@ -47,6 +47,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
@@ -136,7 +137,7 @@ class PipelineStageService @Autowired constructor(
         )
     }
 
-    fun skipStage(userId: String, buildStage: PipelineBuildStage) {
+    fun skipStage(userId: String, buildStage: PipelineBuildStage, containers: List<PipelineBuildContainer>) {
         with(buildStage) {
             val allStageStatus = stageBuildDetailService.stageSkip(
                 projectId = projectId,
@@ -148,7 +149,8 @@ class PipelineStageService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 stageId = stageId,
-                executeCount = executeCount
+                executeCount = executeCount,
+                containers = containers
             )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)

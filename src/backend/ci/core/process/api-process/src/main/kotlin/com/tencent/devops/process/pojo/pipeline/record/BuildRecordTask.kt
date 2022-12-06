@@ -59,6 +59,8 @@ data class BuildRecordTask(
     val classType: String,
     @ApiModelProperty("市场插件标识", required = true)
     val atomCode: String,
+    @ApiModelProperty("构建状态", required = false)
+    var status: String?,
     @ApiModelProperty("分裂前原类型标识", required = false)
     var originClassType: String?, // 如果为空则不再矩阵内，一个字段多个用处
     @ApiModelProperty("开始时间", required = false)

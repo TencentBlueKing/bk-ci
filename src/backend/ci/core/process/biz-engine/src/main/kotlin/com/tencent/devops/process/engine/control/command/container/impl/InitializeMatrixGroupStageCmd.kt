@@ -540,6 +540,7 @@ class InitializeMatrixGroupStageCmd(
                     matrixGroupFlag = false,
                     matrixGroupId = matrixGroupId,
                     containerVar = mutableMapOf(),
+                    status = null,
                     startTime = null,
                     endTime = null,
                     timestamps = emptyList(),
@@ -548,7 +549,6 @@ class InitializeMatrixGroupStageCmd(
             },
             recordTaskList
         )
-
     }
 
     private fun generateMatrixElements(

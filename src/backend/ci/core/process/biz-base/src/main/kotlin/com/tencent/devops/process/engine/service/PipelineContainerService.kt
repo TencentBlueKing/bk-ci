@@ -337,6 +337,7 @@ class PipelineContainerService @Autowired constructor(
                         executeCount = context.executeCount,
                         originClassType = atomElement.getClassType(),
                         resourceVersion = resourceVersion,
+                        status = null,
                         startTime = null,
                         endTime = null,
                         timestamps = emptyList(),
