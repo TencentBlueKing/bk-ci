@@ -352,6 +352,10 @@ class ExperienceService @Autowired constructor(
         isPublic: Boolean,
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
     ): Long {
+        experience.experienceName?.let {
+            experience.experienceName = it.substring(0, it.length.coerceAtMost(90))
+        }
+
         val fileDetail =
             client.get(ServiceArtifactoryResource::class).show(userId, projectId, artifactoryType, experience.path).data
 
@@ -520,6 +524,10 @@ class ExperienceService @Autowired constructor(
     }
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
+        experience.experienceName?.let {
+            experience.experienceName = it.substring(0, it.length.coerceAtMost(90))
+        }
+
         val experienceRecord = getExperienceId4Update(experienceHashId, userId, projectId)
         val endDate = if (experience.expireDate != null) {
             LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate!!), ZoneId.systemDefault())
