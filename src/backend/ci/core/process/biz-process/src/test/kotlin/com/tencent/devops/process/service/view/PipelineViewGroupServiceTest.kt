@@ -827,13 +827,26 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     }
 
     @Nested
-    inner class HasPermisson {
+    inner class HasPermission {
         @Test
-        @DisplayName("返回值测试")
+        @DisplayName("返回值测试1")
         fun test_1() {
-            every { mockGet(ServiceProjectResource::class).hasPermission(any(), any(), any()) } returns Result(true)
+            every {
+                client.mockGet(ServiceProjectResource::class).hasPermission(any(), any(), any())
+            } returns Result(true)
             self.hasPermission("test", "test").let {
                 Assertions.assertEquals(true, it)
+            }
+        }
+
+        @Test
+        @DisplayName("返回值测试2")
+        fun test_2() {
+            every {
+                client.mockGet(ServiceProjectResource::class).hasPermission(any(), any(), any())
+            } returns Result(false)
+            self.hasPermission("test", "test").let {
+                Assertions.assertEquals(false, it)
             }
         }
     }

@@ -6,7 +6,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import io.mockk.MockKMatcherScope
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkClass
 import io.mockk.spyk
 import org.apache.commons.lang3.reflect.MethodUtils
 import org.jooq.DSLContext
@@ -18,6 +17,8 @@ import org.jooq.impl.DSL
 import org.jooq.tools.jdbc.Mock
 import org.jooq.tools.jdbc.MockConnection
 import org.junit.jupiter.api.BeforeAll
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisCallback
 import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KClass
@@ -58,28 +59,37 @@ open class BkCiAbstractTest {
         }
     }
 
+    inline fun <reified T : Any> Client.mockGet(clz: KClass<T>): T {
+        if (this !== client) {
+            logger.error("Just mock client can call mockGet")
+            throw RuntimeException()
+        }
+        var mockResourceMap = mockResourceMapThreadLocal.get()
+        if (null == mockResourceMap) {
+            mockResourceMap = mutableMapOf()
+            mockResourceMapThreadLocal.set(mockResourceMap)
+        }
+        if (mockResourceMap.contains(clz)) {
+            return mockResourceMap[clz] as T
+        }
+        val mockResource = mockk<T>()
+        mockResourceMap[clz] = mockResource
+        return mockResource
+    }
+
     companion object {
+        val logger: Logger = LoggerFactory.getLogger("BKCI_JUNIT_TEST_LOGGER")
         val redisOperation: RedisOperation = mockk(relaxed = true)
         val client: Client = mockk(relaxed = true)
-        private val mockResourceMap = mutableMapOf<KClass<*>, Any>()
+        val mockResourceMapThreadLocal = ThreadLocal<MutableMap<KClass<*>, Any>>()
 
         @JvmStatic
         @BeforeAll
         fun mockGet() {
             every { client.get(any() as KClass<*>) } answers {
                 val clz = args[0] as KClass<*>
-                if (mockResourceMap.contains(clz)) {
-                    return@answers mockGet(clz)
-                }
-                val mockResource = mockkClass(clz)
-                mockResourceMap[clz] = mockResource
-                return@answers mockResource
+                return@answers mockResourceMapThreadLocal.get()[clz]!!
             }
-        }
-
-        @JvmStatic
-        fun <T : Any> mockGet(clz: KClass<T>): T {
-            return mockResourceMap[clz] as T
         }
 
 
