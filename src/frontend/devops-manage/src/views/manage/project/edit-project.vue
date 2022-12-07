@@ -109,6 +109,7 @@ onMounted(() => {
         <bk-form-item>
           <bk-button
             class="btn mr10"
+            :disabled="[1, 4].includes(projectData.approvalStatus)"
             theme="primary"
             :loading="btnLoading"
             @click="handleUpdate"

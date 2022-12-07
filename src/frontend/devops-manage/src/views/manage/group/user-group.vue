@@ -9,7 +9,6 @@
       <IAMIframe
         class="group-frame"
         :path="path"
-        :query="query"
       />
     </template>
     <!-- 为开启权限管理 -->
@@ -41,9 +40,6 @@ export default {
     return {
       hasPermission: true,
       path: 'user-group-detail/10137',
-      query: {
-        role_id: 1,
-      },
     };
   },
   mounted() {

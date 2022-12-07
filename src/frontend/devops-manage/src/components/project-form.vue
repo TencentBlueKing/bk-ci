@@ -52,10 +52,6 @@ const curDepartmentInfo = ref({
 
 const showDialog = ref(false);
 
-const query = {
-  role_id: 1,
-};
-
 const getDepartment = async (type: string, id: any) => {
   deptLoading.value[type] = true;
   try {
@@ -148,11 +144,21 @@ const handleUploadLogo = async (res: any) => {
       reader.readAsDataURL(file);
       reader.onload = () => {
         projectData.value.logoAddr = reader.result;
+        const formData = new FormData();
+        formData.append('file', file);
+        projectData.value.logo = formData;
+        // const config = {
+        //   headers: {
+        //     'Content-Type': 'multipart/form-data',
+        //   },
+        // };
+        // http.changeProjectLogo({
+        //   englishName: projectData.value.englishName,
+        //   formData,
+        //   config,
+        // });
       };
     }
-    const formData = new FormData();
-    formData.append('logo', file);
-    // projectData.value.logo = formData;
   }
 };
 
@@ -308,7 +314,6 @@ onBeforeUnmount(() => {
     <IAMIframe
       class="member-iframe"
       path="add-member-boundary"
-      :query="query"
     />
   </bk-dialog>
 </template>

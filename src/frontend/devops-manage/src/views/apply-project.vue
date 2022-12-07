@@ -48,7 +48,7 @@ const handleConfirm = async () => {
 };
 
 const handleCancel = () => {
-
+  router.back();
 };
 </script>
 

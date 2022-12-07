@@ -68,4 +68,9 @@ export default {
     const { type, id } = params;
     return fetch.get(`${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}`);
   },
+
+  changeProjectLogo(params: any) {
+    const { englishName, formData, config } = params;
+    return fetch.put(`${PROJECT_PERFIX}/user/projects/${englishName}/logo`, formData, config);
+  },
 };
