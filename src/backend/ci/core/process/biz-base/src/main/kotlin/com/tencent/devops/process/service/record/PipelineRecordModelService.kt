@@ -70,6 +70,7 @@ class PipelineRecordModelService @Autowired constructor(
         containerList: List<BuildRecordContainer>,
         taskList: List<BuildRecordTask>
     ) {
+        buildRecordModelDao.createRecord(transactionContext ?: dslContext, model)
         buildRecordStageDao.batchSave(transactionContext ?: dslContext, stageList)
         buildRecordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
         buildRecordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
