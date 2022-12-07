@@ -498,7 +498,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @Test
         @DisplayName("项目流水线组 & 校验不通过")
         fun test_1() {
-            every { self["checkPermission"](any() as String, any() as String) } returns false
+            every { self["hasPermission"](any() as String, any() as String) } returns false
             try {
                 self.invokePrivate<Unit>("checkPermission", "test", "test", true, "test")
             } catch (e: Throwable) {
@@ -691,8 +691,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     inner class BulkAdd {
         @BeforeEach
         fun permissionFalse() {
-            every { self["checkPermission"]("false", any() as String) } returns false
-            every { self["checkPermission"]("true", any() as String) } returns true
+            every { self["hasPermission"]("false", any() as String) } returns false
+            every { self["hasPermission"]("true", any() as String) } returns true
         }
 
         private val ba = PipelineViewBulkAdd(
@@ -760,8 +760,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
 
         @BeforeEach
         fun permissionFalse() {
-            every { self["checkPermission"]("false", any() as String) } returns false
-            every { self["checkPermission"]("true", any() as String) } returns true
+            every { self["hasPermission"]("false", any() as String) } returns false
+            every { self["hasPermission"]("true", any() as String) } returns true
         }
 
         @Test

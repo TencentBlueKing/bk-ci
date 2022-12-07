@@ -377,7 +377,7 @@ class PipelineViewGroupService @Autowired constructor(
 
     private fun checkPermission(userId: String, projectId: String, isProject: Boolean, creator: String? = null) {
         if (isProject) {
-            if (!checkPermission(userId, projectId)) {
+            if (!hasPermission(userId, projectId)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_VIEW_GROUP_NO_PERMISSION,
                     defaultMessage = "user:$userId has no permission to edit view group, project:$projectId"
@@ -553,7 +553,7 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Boolean {
-        val isProjectManager = checkPermission(userId, projectId)
+        val isProjectManager = hasPermission(userId, projectId)
         val viewIds = pipelineViewDao.list(
             dslContext = dslContext,
             projectId = projectId,
@@ -609,7 +609,7 @@ class PipelineViewGroupService @Autowired constructor(
             projectId = projectId,
             viewId = viewId
         ) ?: return false
-        val isProjectManager = checkPermission(userId, projectId)
+        val isProjectManager = hasPermission(userId, projectId)
         if (isProjectManager && !view.isProject && view.createUser != userId) {
             logger.warn("bulkRemove , $userId is ProjectManager , but can`t remove other view")
             throw ErrorCodeException(
@@ -628,7 +628,7 @@ class PipelineViewGroupService @Autowired constructor(
         return true
     }
 
-    fun checkPermission(userId: String, projectId: String) =
+    fun hasPermission(userId: String, projectId: String) =
         client.get(ServiceProjectResource::class).hasPermission(userId, projectId, AuthPermission.MANAGE).data ?: false
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
