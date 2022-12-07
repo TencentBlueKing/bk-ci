@@ -48,7 +48,7 @@ class UserManageService @Autowired constructor(
     @Value("\${esb.secret:#{null}}")
     val appSecret: String? = null
 
-    @Value("\${user.manage.url:#{null}")
+    @Value("\${user.manage.url:#{null}}")
     val userManageUrl: String? = null
     fun getDepartment(departId: String): DepartmentInfo {
         val header: MutableMap<String, String?> = mutableMapOf()
