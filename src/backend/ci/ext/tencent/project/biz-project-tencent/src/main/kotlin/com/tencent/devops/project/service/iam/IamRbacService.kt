@@ -77,7 +77,6 @@ import com.tencent.devops.project.listener.TxIamRbacCreateEvent
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ApproveType
 import com.tencent.devops.project.service.impl.TxRbacProjectPermissionServiceImpl
-import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -97,7 +96,7 @@ class IamRbacService @Autowired constructor(
     val client: Client,
     val projectApprovalCallbackDao: ProjectApprovalCallbackDao,
     val objectMapper: ObjectMapper,
-    val tofService: TOFService
+    val userManageService: UserManageService
 ) {
     @Value("\${itsm.callback.update.url:#{null}}")
     private val itsmUpdateCallBackUrl: String = ""
@@ -280,7 +279,7 @@ class IamRbacService @Autowired constructor(
             val approveType = if (isAuthSecrecyChange && isSubjectScopesChange) ApproveType.ALL_CHANGE_APPROVE.type
             else if (isSubjectScopesChange) ApproveType.SUBJECT_SCOPES_APPROVE.type
             else ApproveType.AUTH_SECRECY_APPROVE.type
-            TxRbacProjectPermissionServiceImpl.logger.info("approveType : $approveType")
+            logger.info("approveType : $approveType")
             // 修改项目状态
             projectDao.updateProjectStatusByEnglishName(
                 dslContext = context,
@@ -452,7 +451,7 @@ class IamRbacService @Autowired constructor(
                 managerScopes.id = ALL_MEMBER
             } else if (it.type == "depart") {
                 managerScopes.type = DEPARTMENT_CHINESE_NAME
-                managerScopes.id = tofService.getDeptInfo("", it.id.toInt()).name
+                managerScopes.id = userManageService.getDepartment(it.id).name
             } else {
                 managerScopes.type = USER_CHINESE_NAME
                 managerScopes.id = it.id
