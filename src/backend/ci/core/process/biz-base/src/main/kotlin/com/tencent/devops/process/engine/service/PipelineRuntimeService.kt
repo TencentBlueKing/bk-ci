@@ -245,6 +245,9 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.convert(t)
     }
 
+    /** 根据状态信息获取并发组构建列表
+     * @return Pair( PIPELINE_ID , BUILD_ID )
+     */
     fun getBuildInfoListByConcurrencyGroup(
         projectId: String,
         concurrencyGroup: String,
@@ -1651,26 +1654,26 @@ class PipelineRuntimeService @Autowired constructor(
     fun getPipelineBuildHistoryCount(
         projectId: String,
         pipelineId: String,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
+        materialAlias: List<String>? = null,
+        materialUrl: String? = null,
+        materialBranch: List<String>? = null,
+        materialCommitId: String? = null,
+        materialCommitMessage: String? = null,
         status: List<BuildStatus>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String?,
-        startUser: List<String>?
+        trigger: List<StartType>? = null,
+        queueTimeStartTime: Long? = null,
+        queueTimeEndTime: Long? = null,
+        startTimeStartTime: Long? = null,
+        startTimeEndTime: Long? = null,
+        endTimeStartTime: Long? = null,
+        endTimeEndTime: Long? = null,
+        totalTimeMin: Long? = null,
+        totalTimeMax: Long? = null,
+        remark: String? = null,
+        buildNoStart: Int? = null,
+        buildNoEnd: Int? = null,
+        buildMsg: String? = null,
+        startUser: List<String>? = null
     ): Int {
         return pipelineBuildDao.count(
             dslContext = dslContext,
