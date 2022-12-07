@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.TreeMap
 
 @Service
 class UserManageService @Autowired constructor(
@@ -51,7 +52,7 @@ class UserManageService @Autowired constructor(
     @Value("\${user.manage.url:#{null}")
     val userManageUrl: String? = null
     fun getDepartment(departId: String): DepartmentInfo {
-        val header: MutableMap<String, String?> = mutableMapOf()
+        val header = TreeMap<String, String?>()
         header["bk_app_secret"] = appSecret
         header["bk_app_code"] = appCode
         val headerStr = objectMapper.writeValueAsString(header)
