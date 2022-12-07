@@ -1352,7 +1352,7 @@ class PipelineBuildFacadeService(
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
-        // 拿排队位置，分两种排队。GROUP_LOCK 排队只算当前并发组、 LOCK排队只算当前流水线排队。
+        // 拿排队位置，分两种排队。GROUP_LOCK 排队只算当前并发组、 LOCK排队只算当前流水线。
         val currentQueuePosition = if (!buildHistory.concurrencyGroup.isNullOrBlank()) {
             pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                 projectId = projectId,

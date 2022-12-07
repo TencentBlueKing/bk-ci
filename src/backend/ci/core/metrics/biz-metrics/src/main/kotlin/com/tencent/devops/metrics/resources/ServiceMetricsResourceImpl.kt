@@ -42,7 +42,7 @@ import com.tencent.devops.metrics.utils.QueryParamCheckUtil
 @RestResource
 class ServiceMetricsResourceImpl constructor(
     private val thirdPartyManageService: ThirdPartyManageService,
-    private val pipelineOverviewManageService: PipelineOverviewManageService,
+    private val pipelineOverviewManageService: PipelineOverviewManageService
 ) : ServiceMetricsResource {
 
     override fun queryPipelineSumInfo(
