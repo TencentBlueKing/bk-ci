@@ -51,11 +51,11 @@ class UserManageService @Autowired constructor(
 
     @Value("\${user.manage.url:#{null}}")
     val userManageUrl: String? = null
-    fun getDepartment(departId: String): DepartmentInfo {
+    fun getDepartment(departId: String): String {
         val header = TreeMap<String, String?>()
         header["bk_app_secret"] = appSecret
         header["bk_app_code"] = appCode
-        val headerStr = objectMapper.writeValueAsString(header).replace("\n","")
+        val headerStr = objectMapper.writeValueAsString(header).replace("\n", "")
         val url = String.format(userManageUrl!!, departId)
         logger.info("getDepartment: url = $url")
         logger.info("header :$headerStr")
@@ -78,7 +78,8 @@ class UserManageService @Autowired constructor(
                     "request getDepartment failed|message[${response["message"]}]"
                 )
             }
-            return response["data"] as DepartmentInfo
+            val responseData = response["data"] as HashMap<String, Any>
+            return responseData.get("name").toString()
         }
     }
 

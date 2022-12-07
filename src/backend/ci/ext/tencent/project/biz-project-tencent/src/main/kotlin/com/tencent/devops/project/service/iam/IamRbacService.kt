@@ -451,7 +451,7 @@ class IamRbacService @Autowired constructor(
                 managerScopes.id = ALL_MEMBER
             } else if (it.type == "depart") {
                 managerScopes.type = DEPARTMENT_CHINESE_NAME
-                managerScopes.id = userManageService.getDepartment(it.id).name
+                managerScopes.id = userManageService.getDepartment(it.id)
             } else {
                 managerScopes.type = USER_CHINESE_NAME
                 managerScopes.id = it.id
