@@ -279,11 +279,11 @@ class QualityRuleService @Autowired constructor(
         }
         val templateRange = templateMap?.map { UserQualityRule.RangeItem(it.key, it.value.name) } ?: listOf()
 
-        logger.info("QualityRuleService userGetRule range: [$range.size]", )
+        logger.info("QualityRuleService userGetRule range: [$range.size]")
         // 获取模板对应的流水线总数
         val templatePipelineCount = client.get(ServiceTemplateInstanceResource::class)
             .countTemplateInstance(projectId, templateIds).data ?: 0
-        logger.info("QualityRuleService userGetRule template pipelineCount: [$templatePipelineCount]", )
+        logger.info("QualityRuleService userGetRule template pipelineCount: [$templatePipelineCount]")
 
         return UserQualityRule(
             hashId = rule.hashId,
