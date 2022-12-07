@@ -282,7 +282,7 @@ class QualityRuleService @Autowired constructor(
         // 获取模板对应的流水线总数
         val templatePipelineCount = client.get(ServiceTemplateInstanceResource::class)
             .countTemplateInstance(projectId, templateIds).data ?: 0
-        logger.info("templatePipelineCount :{}", templatePipelineCount)
+        logger.info("QualityRuleService userGetRule template pipelineCount :{}", templatePipelineCount)
 
         return UserQualityRule(
             hashId = rule.hashId,
