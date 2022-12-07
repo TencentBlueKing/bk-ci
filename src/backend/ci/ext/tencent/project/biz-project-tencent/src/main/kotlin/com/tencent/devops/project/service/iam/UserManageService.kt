@@ -58,6 +58,7 @@ class UserManageService @Autowired constructor(
         val headerStr = objectMapper.writeValueAsString(header).trim()
         val url = String.format(userManageUrl!!, departId)
         logger.info("getDepartment: url = $url")
+        logger.info("header :$headerStr")
         val request = Request.Builder().url(url)
             .addHeader("x-bkapi-authorization", headerStr)
             .get()
