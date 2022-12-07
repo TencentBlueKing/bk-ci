@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.ServiceMetricsResource
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.openapi.api.apigw.v4.ApigwMetricsResourceV4
 import com.tencent.devops.openapi.pojo.ApigwMetricsSummary
 import org.slf4j.LoggerFactory
@@ -59,7 +60,7 @@ class ApigwMetricsResourceV4Impl @Autowired constructor(
                 sumInfo = client.get(ServiceMetricsResource::class).queryPipelineSumInfo(
                     projectId = projectId,
                     userId = userId,
-                    baseQueryReq = null
+                    baseQueryReq = BaseQueryReqVO()
                 ).data
             )
         )
