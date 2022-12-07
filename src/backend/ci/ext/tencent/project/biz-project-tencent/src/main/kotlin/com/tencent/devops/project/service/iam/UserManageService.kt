@@ -55,7 +55,7 @@ class UserManageService @Autowired constructor(
         val header = TreeMap<String, String?>()
         header["bk_app_secret"] = appSecret
         header["bk_app_code"] = appCode
-        val headerStr = objectMapper.writeValueAsString(header)
+        val headerStr = objectMapper.writeValueAsString(header).trim()
         val url = String.format(userManageUrl!!, departId)
         logger.info("getDepartment: url = $url")
         val request = Request.Builder().url(url)
