@@ -2,7 +2,6 @@ package com.tencent.devops.process.service.view
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW
@@ -26,6 +25,8 @@ import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.Result
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -45,7 +46,6 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val pipelineViewGroupDao: PipelineViewGroupDao = mockk()
     private val pipelineViewTopDao: PipelineViewTopDao = mockk()
     private val pipelineInfoDao: PipelineInfoDao = mockk()
-    private val client: Client = mockk()
 
     private val self: PipelineViewGroupService = spyk(
         PipelineViewGroupService(
@@ -822,6 +822,18 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every { pipelineViewGroupDao.batchRemove(anyDslContext(), any(), any(), any()) } returns Unit
             self.bulkRemove("true", "test", br).let {
                 Assertions.assertEquals(it, true)
+            }
+        }
+    }
+
+    @Nested
+    inner class HasPermisson {
+        @Test
+        @DisplayName("返回值测试")
+        fun test_1() {
+            every { mockGet(ServiceProjectResource::class).hasPermission(any(), any(), any()) } returns Result(true)
+            self.hasPermission("test", "test").let {
+                Assertions.assertEquals(true, it)
             }
         }
     }
