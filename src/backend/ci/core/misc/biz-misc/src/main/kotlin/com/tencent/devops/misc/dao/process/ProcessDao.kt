@@ -271,8 +271,16 @@ class ProcessDao {
         pipelineId: String,
         version: Int
     ): PipelineVersionSimple? {
-        with(Tables.T_PIPELINE_RESOURCE_VERSION) {
-            return dslContext.select(CREATE_TIME, CREATOR, VERSION_NAME, VERSION, REFER_FLAG, REFER_COUNT)
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.select(
+                PIPELINE_ID,
+                CREATOR,
+                CREATE_TIME,
+                VERSION,
+                VERSION_NAME,
+                REFER_FLAG,
+                REFER_COUNT
+            )
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version)))
                 .fetchOneInto(PipelineVersionSimple::class.java)
