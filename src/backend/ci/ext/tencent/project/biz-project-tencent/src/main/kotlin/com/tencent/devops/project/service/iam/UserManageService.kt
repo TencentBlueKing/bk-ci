@@ -59,7 +59,7 @@ class UserManageService @Autowired constructor(
         val url = String.format(userManageUrl!!, departId)
         logger.info("getDepartment: url = $url")
         val request = Request.Builder().url(url)
-            .header("x-bkapi-authorization", headerStr)
+            .addHeader("x-bkapi-authorization", headerStr)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use {
