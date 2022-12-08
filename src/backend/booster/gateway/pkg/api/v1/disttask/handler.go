@@ -11,6 +11,7 @@ package disttask
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -35,11 +36,11 @@ import (
 // ListClientVersion handle the http request for listing client version
 func ListClientVersion(req *restful.Request, resp *restful.Response) {
 	f, err := os.Open("./data/VersionList.txt")
+	defer f.Close()
 	if err != nil {
 		blog.Error("List Version error:(%v)", err)
 		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
 	}
-	defer f.Close()
 
 	result := make([]string, 0, 100)
 	r := bufio.NewReader(f)
@@ -52,6 +53,39 @@ func ListClientVersion(req *restful.Request, resp *restful.Response) {
 	}
 	sort.Sort(sort.Reverse(sort.StringSlice(result)))
 	api.ReturnRest(&api.RestResponse{Resp: resp, Data: result})
+}
+
+// ListWorkerImages handle the http request for listing worker images
+func ListWorkerImages(req *restful.Request, resp *restful.Response) {
+	args := req.Request.URL.Query()
+	queueName := args.Get("queue_name")
+
+	f, err := os.Open("./data/DisttaskWorkerList.json")
+	defer f.Close()
+	if err != nil {
+		blog.Error("List worker images error:(%v)", err)
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
+	}
+
+	result := commonTypes.DisttaskImage{
+		Mesos: make([]commonTypes.Image, 0, 100),
+		K8s:   make([]commonTypes.Image, 0, 100),
+	}
+	data, _ := ioutil.ReadAll(f)
+	err = json.Unmarshal([]byte(data), &result)
+	if err != nil {
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
+	}
+
+	switch queueName {
+	case "shenzhen", "shanghai", "chengdu", "tianjin":
+		api.ReturnRest(&api.RestResponse{Resp: resp, Data: result.Mesos})
+	case "K8S://gd":
+		api.ReturnRest(&api.RestResponse{Resp: resp, Data: result.K8s})
+	default:
+		message := fmt.Sprintf("unknown queue name : %s", queueName)
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: message})
+	}
 }
 
 // ListTask handle the http request for listing task with conditions.

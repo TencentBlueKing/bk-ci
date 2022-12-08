@@ -10,12 +10,8 @@
 package version
 
 import (
-	"bytes"
 	"fmt"
 	"runtime"
-
-	"github.com/opesun/goquery"
-	"github.com/opesun/goquery/exp/html"
 )
 
 var (
@@ -50,16 +46,4 @@ func GetVersion() string {
 	version := fmt.Sprintf("GoVersion: %s\nVersion:   %s\nTag:       %s\nBuildTime: %s\nGitHash:   %s\n",
 		runtime.Version(), Version, Tag, BuildTime, GitHash)
 	return version
-}
-
-func Search(buf *bytes.Buffer, n *goquery.Node) {
-	if n == nil {
-		return
-	}
-	if n.Type == html.TextNode {
-		fmt.Fprintf(buf, "%v", n.Data)
-	}
-	for _, v := range n.Child {
-		Search(buf, &goquery.Node{v})
-	}
 }
