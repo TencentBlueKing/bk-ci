@@ -59,10 +59,10 @@ func (c *TCPClient) Connect(server string) error {
 	c.conn, err = net.DialTCP("tcp", nil, resolvedserver)
 	d := time.Now().Sub(t)
 	if d > 50*time.Millisecond {
-		blog.Infof("TCP Dail to long gt50 to server(%s): %s", resolvedserver, d.String())
+		blog.Debugf("TCP Dail to long gt50 to server(%s): %s", resolvedserver, d.String())
 	}
 	if d > 200*time.Millisecond {
-		blog.Infof("TCP Dail to long gt200 to server(%s): %s", resolvedserver, d.String())
+		blog.Debugf("TCP Dail to long gt200 to server(%s): %s", resolvedserver, d.String())
 	}
 
 	if err != nil {
@@ -71,7 +71,7 @@ func (c *TCPClient) Connect(server string) error {
 	}
 
 	blog.Debugf("succeed to connect to server [%s] ", server)
-	blog.Infof("succeed to establish connection [%s] ", c.ConnDesc())
+	// blog.Infof("succeed to establish connection [%s] ", c.ConnDesc())
 
 	// not sure whether it can imporve performance
 	err = c.conn.SetNoDelay(false)
@@ -302,7 +302,7 @@ func sendMessages(client *TCPClient, messages []protocol.Message) error {
 
 // Close close conn
 func (c *TCPClient) Close() error {
-	blog.Infof("ready close connection [%v] ", c.ConnDesc())
+	blog.Debugf("ready close connection [%v] ", c.ConnDesc())
 	return c.conn.Close()
 }
 

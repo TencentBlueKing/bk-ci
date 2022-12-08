@@ -66,11 +66,11 @@ func (i *Info) Exist() bool {
 }
 
 // ModifyTime return the nano-second of this file's mod time
-func (i *Info) ModifyTime() int {
+func (i *Info) ModifyTime() int64 {
 	if i.info == nil {
 		return 0
 	}
-	return i.info.ModTime().Nanosecond()
+	return i.info.ModTime().UnixNano()
 }
 
 // ModifyTime64 return the ModifyTime as int64

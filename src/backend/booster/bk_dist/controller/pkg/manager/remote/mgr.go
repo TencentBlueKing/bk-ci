@@ -744,7 +744,7 @@ func (m *Mgr) checkOrLockSendFile(server string, desc dcSDK.FileDesc) (types.Fil
 
 	t2 := time.Now().Local()
 	if d1 := t2.Sub(t1); d1 > 50*time.Millisecond {
-		blog.Infof("check cache lock wait too long server(%s): %s", server, d1.String())
+		blog.Debugf("check cache lock wait too long server(%s): %s", server, d1.String())
 	}
 
 	defer func() {
