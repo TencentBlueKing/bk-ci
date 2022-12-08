@@ -48,7 +48,7 @@ class BuildRecordModelDao {
             dslContext.insertInto(this)
                 .set(BUILD_ID, record.buildId)
                 .set(PROJECT_ID, record.projectId)
-                .set(PIPELINE_ID, record.buildId)
+                .set(PIPELINE_ID, record.pipelineId)
                 .set(RESOURCE_VERSION, record.resourceVersion)
                 .set(BUILD_NUM, record.buildNum)
                 .set(EXECUTE_COUNT, record.buildNum)

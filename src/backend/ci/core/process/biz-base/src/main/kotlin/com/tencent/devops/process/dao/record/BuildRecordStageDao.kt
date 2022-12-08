@@ -49,7 +49,7 @@ class BuildRecordStageDao {
                 dslContext.insertInto(this)
                     .set(BUILD_ID, record.buildId)
                     .set(PROJECT_ID, record.projectId)
-                    .set(PIPELINE_ID, record.buildId)
+                    .set(PIPELINE_ID, record.pipelineId)
                     .set(RESOURCE_VERSION, record.resourceVersion)
                     .set(STAGE_ID, record.stageId)
                     .set(EXECUTE_COUNT, record.executeCount)
