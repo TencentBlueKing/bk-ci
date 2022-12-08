@@ -133,7 +133,7 @@ class PipelineBuildRecordService @Autowired constructor(
             dslContext, projectId, pipelineId, buildInfo.version
         ) ?: return null
 
-        val modelMap = ModelUtils.generateBuildModelDetail(
+        val model = ModelUtils.generatePipelineBuildModel(
             baseModelMap = JsonUtil.getObjectMapper().readValue(resourceStr),
             modelFieldRecordMap = recordMap
         )
@@ -143,9 +143,6 @@ class PipelineBuildRecordService @Autowired constructor(
         ) ?: return null
 
         val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
-
-        // TODO 改成直接获取model
-        val model = JsonUtil.to(JsonUtil.toJson(modelMap, false), Model::class.java)
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         if (refreshStatus) {
@@ -331,7 +328,7 @@ class PipelineBuildRecordService @Autowired constructor(
         var allStageStatus: List<BuildStageStatus> = emptyList()
         // TODO 时间戳、执行次数计算
         buildRecordModelDao.updateRecord(
-            dslContext, projectId, pipelineId, buildId, 1, buildStatus,
+            dslContext, projectId, pipelineId, buildId, null, buildStatus,
             emptyMap(), null, null, LocalDateTime.now(), null, null
         )
 //        val model = update(

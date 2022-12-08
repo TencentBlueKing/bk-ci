@@ -37,6 +37,7 @@ import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -69,7 +70,7 @@ class BuildRecordModelDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int,
+        executeCount: Int?,
         buildStatus: BuildStatus,
         modelVar: Map<String, Any>,
         cancelUser: String?,
@@ -87,11 +88,16 @@ class BuildRecordModelDao {
             endTime?.let { update.set(END_TIME, endTime) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
             timeCost?.let { update.set(TIME_COST, JsonUtil.toJson(timeCost, false)) }
+            val exeCount = executeCount ?: dslContext.select(DSL.max(EXECUTE_COUNT)).where(
+                BUILD_ID.eq(buildId)
+                    .and(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+            ).fetchAny()?.value1()!!
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
-                    .and(EXECUTE_COUNT.eq(executeCount))
+                    .and(EXECUTE_COUNT.eq(exeCount))
             ).execute()
         }
     }
