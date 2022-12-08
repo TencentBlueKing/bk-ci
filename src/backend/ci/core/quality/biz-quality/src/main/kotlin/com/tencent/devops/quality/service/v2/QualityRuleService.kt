@@ -253,6 +253,8 @@ class QualityRuleService @Autowired constructor(
     }
 
     fun userGetRule(userId: String, projectId: String, ruleHashId: String): UserQualityRule {
+        logger.info("QualityRuleService userGetRule userId: [$userId], " +
+                "projectId: [$projectId], ruleHashId: [$ruleHashId]")
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
         val record = qualityRuleDao.get(dslContext, ruleId)
 
@@ -293,7 +295,9 @@ class QualityRuleService @Autowired constructor(
             controlPoint = rule.controlPoint,
             range = range,
             templateRange = templateRange,
-            pipelineCount = range.size + templatePipelineCount,
+//            pipelineCount = range.size + templatePipelineCount,
+            // 测试用
+            pipelineCount = 2,
             operation = rule.operation,
             notifyTypeList = rule.notifyTypeList,
             notifyGroupList = rule.notifyGroupList?.map { HashUtil.encodeLongId(it.toLong()) },
