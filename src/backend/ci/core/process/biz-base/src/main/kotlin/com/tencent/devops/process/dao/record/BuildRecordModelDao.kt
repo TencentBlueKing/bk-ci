@@ -102,7 +102,7 @@ class BuildRecordModelDao {
         pipelineId: String,
         buildId: String,
         executeCount: Int
-    ): BuildRecordModel {
+    ): BuildRecordModel? {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
             return dslContext.selectFrom(this)
                 .where(
@@ -110,7 +110,7 @@ class BuildRecordModelDao {
                         .and(PROJECT_ID.eq(projectId))
                         .and(PIPELINE_ID.eq(pipelineId))
                         .and(EXECUTE_COUNT.eq(executeCount))
-                ).fetchSingle(mapper)
+                ).fetchAny(mapper)
         }
     }
 

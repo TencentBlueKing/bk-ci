@@ -88,17 +88,10 @@ class PipelineRecordModelService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int
+        executeCount: Int,
+        buildRecordModel: BuildRecordModel
     ): Map<String, Any> {
-        // 获取流水线级别变量数据
-        val buildRecordPipeline = buildRecordModelDao.getRecord(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            executeCount = executeCount
-        )
-        val recordModelMap = buildRecordPipeline.modelVar
+        val recordModelMap = buildRecordModel.modelVar
         // 获取stage级别变量数据
         val buildRecordStages = buildRecordStageDao.getRecords(
             dslContext = dslContext,
@@ -130,7 +123,7 @@ class PipelineRecordModelService @Autowired constructor(
         val matrixContainerFlag = buildRecordContainers.indexOfFirst { it.matrixGroupFlag == true } >= 0
         if (matrixContainerFlag) {
             // 查出该次构建对应的流水线基本模型
-            val version = buildRecordPipeline.resourceVersion
+            val version = buildRecordModel.resourceVersion
             val modelStr = pipelineResDao.getVersionModelString(
                 dslContext = dslContext,
                 projectId = projectId,
