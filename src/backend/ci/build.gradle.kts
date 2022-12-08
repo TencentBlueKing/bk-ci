@@ -15,7 +15,9 @@ allprojects {
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
     // Docker镜像构建
-    if (name.startsWith("boot-") && properties["devops.assemblyMode"] == "KUBERNETES") {
+    if (name.startsWith("boot-")
+        && properties["devops.assemblyMode"] ?: System.getProperty("devops.assemblyMode") == "KUBERNETES"
+    ) {
         pluginManager.apply("task-docker-build")
     }
 

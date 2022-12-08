@@ -32,15 +32,19 @@ val toImageTemplate = System.getProperty("to.image.template")
 val toImageTag = System.getProperty("to.image.tag")
 
 val service = name.split("-")[1]
-
-if (System.getProperty("jib.to.image").isNullOrBlank() && !toImageTemplate.isNullOrBlank()) {
+var toImage = System.getProperty("jib.to.image")
+if (toImage.isNullOrBlank() && !toImageTemplate.isNullOrBlank()) {
     // 替换掉模板的__service__和__tag__
-    System.setProperty("jib.to.image", toImageTemplate.replace("__service__", service).replace("__tag__", toImageTag))
+    toImage= toImageTemplate.replace("__service__", service).replace("__tag__", toImageTag)
 }
 
-val springProfiles = System.getProperty("devops.spring.profiles")
-val configNamespace = System.getProperty("devops.config.namespace")
-val externalJvmFlags = System.getProperty("external.jvmFlags")?.split(System.lineSeparator()) ?: emptyList()
+val springProfiles = System.getProperty("spring.profiles")
+val serviceNamespace = System.getProperty("service.namespace")
+val configNamespace = System.getProperty("config.namespace")
+val jvmFlags = File(System.getProperty("jvmFlags.file")).readLines().map {
+    it.replace("__service__",service)
+        .replace("__namespace__",serviceNamespace)
+}
 
 val finalJvmFlags = mutableListOf(
     "-server",
@@ -76,7 +80,7 @@ val finalJvmFlags = mutableListOf(
     "-Dio.undertow.legacy.cookie.ALLOW_HTTP_SEPARATORS_IN_V0=true",
     "-Dserver.port=80"
 )
-finalJvmFlags.addAll(externalJvmFlags)
+finalJvmFlags.addAll(jvmFlags)
 
 jib {
     // 环境变量
@@ -88,5 +92,9 @@ jib {
     // 启动参数
     container {
         jvmFlags = finalJvmFlags
+    }
+    // 目标镜像
+    to {
+        image = toImage
     }
 }
