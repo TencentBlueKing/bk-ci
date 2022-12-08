@@ -295,9 +295,7 @@ class QualityRuleService @Autowired constructor(
             controlPoint = rule.controlPoint,
             range = range,
             templateRange = templateRange,
-//            pipelineCount = range.size + templatePipelineCount,
-            // 测试用
-            pipelineCount = 2,
+            pipelineCount = range.size + templatePipelineCount,
             operation = rule.operation,
             notifyTypeList = rule.notifyTypeList,
             notifyGroupList = rule.notifyGroupList?.map { HashUtil.encodeLongId(it.toLong()) },

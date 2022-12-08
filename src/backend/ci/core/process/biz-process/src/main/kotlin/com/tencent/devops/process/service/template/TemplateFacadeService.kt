@@ -1884,7 +1884,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun serviceCountTemplateInstances(projectId: String, templateIds: Collection<String>): Int {
-        logger.info("[$projectId|$templateIds] serviceCountTemplateInstances List the templates instances")
+        logger.info("[$projectId|$templateIds] service count templateInstances List the templates instances")
         if (templateIds.isEmpty()) return 0
         val count = templatePipelineDao.countByTemplates(
             dslContext = dslContext,
