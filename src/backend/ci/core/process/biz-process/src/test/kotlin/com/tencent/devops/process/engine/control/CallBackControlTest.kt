@@ -91,6 +91,7 @@ class CallBackControlTest : TestBase() {
             lastModifyUser = "yongyiduan",
             executeTime = 100,
             timeCost = BuildRecordTimeCost(),
+            errorInfoList = emptyList(),
             buildMsg = "xxx",
             material = null,
             remark = "111",

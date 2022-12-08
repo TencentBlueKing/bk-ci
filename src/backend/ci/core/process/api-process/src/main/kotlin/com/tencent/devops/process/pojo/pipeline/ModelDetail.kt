@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
@@ -73,6 +74,8 @@ data class ModelDetail(
     val executeTime: Long = 0,
     @ApiModelProperty("各项耗时", required = true)
     val timeCost: BuildRecordTimeCost,
+    @ApiModelProperty("流水线任务执行错误", required = false)
+    var errorInfoList: List<ErrorInfo>?,
     @ApiModelProperty("触发审核人列表", required = false)
     val triggerReviewers: List<String>? = null,
     @ApiModelProperty("查询的执行次数", required = false)

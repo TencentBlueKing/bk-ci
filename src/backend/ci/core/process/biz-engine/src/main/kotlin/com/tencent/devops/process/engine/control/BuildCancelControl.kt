@@ -50,6 +50,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
@@ -76,6 +77,7 @@ class BuildCancelControl @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val buildVariableService: BuildVariableService,
@@ -128,6 +130,13 @@ class BuildCancelControl @Autowired constructor(
                 // 修改detail model
                 pipelineBuildDetailService.buildCancel(
                     projectId = event.projectId,
+                    buildId = event.buildId,
+                    buildStatus = event.status,
+                    cancelUser = event.userId
+                )
+                pipelineBuildRecordService.buildCancel(
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
                     buildId = event.buildId,
                     buildStatus = event.status,
                     cancelUser = event.userId

@@ -74,6 +74,7 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
+import com.tencent.devops.process.engine.service.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -81,6 +82,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -135,6 +137,8 @@ class PipelineBuildFacadeService(
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
+    private val buildRecordService: PipelineBuildRecordService,
+    private val containerRecordService: ContainerBuildRecordService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val jmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
@@ -872,6 +876,7 @@ class PipelineBuildFacadeService(
         )
         if (params.status == ManualReviewAction.ABORT) {
             buildDetailService.updateBuildCancelUser(projectId, buildId, userId)
+            buildRecordService.updateBuildCancelUser(projectId, buildId, userId)
         }
     }
 

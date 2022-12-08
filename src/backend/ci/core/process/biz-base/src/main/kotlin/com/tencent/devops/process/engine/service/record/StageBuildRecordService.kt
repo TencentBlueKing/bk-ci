@@ -27,24 +27,17 @@
 
 package com.tencent.devops.process.engine.service.record
 
-import com.tencent.devops.common.api.constant.BUILD_CANCELED
-import com.tencent.devops.common.api.constant.BUILD_COMPLETED
-import com.tencent.devops.common.api.constant.BUILD_FAILED
-import com.tencent.devops.common.api.constant.BUILD_REVIEWING
-import com.tencent.devops.common.api.constant.BUILD_RUNNING
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
 import com.tencent.devops.process.service.StageTagService
@@ -60,14 +53,15 @@ class StageBuildRecordService(
     private val dslContext: DSLContext,
     private val buildRecordStageDao: BuildRecordStageDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val stageTagService: StageTagService,
     private val pipelineBuildDao: PipelineBuildDao,
+    stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
     redisOperation: RedisOperation
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = buildRecordModelDao,
+    stageTagService = stageTagService,
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation
 ) {
@@ -364,45 +358,6 @@ class StageBuildRecordService(
             )
         }
         return allStageStatus ?: emptyList()
-    }
-
-    private fun fetchHistoryStageStatus(
-        recordStages: List<BuildRecordStage>,
-        buildStatus: BuildStatus,
-        reviewers: List<String>? = null,
-        errorMsg: String? = null,
-        cancelUser: String? = null
-    ): List<BuildStageStatus> {
-        val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
-        // 更新Stage状态至BuildHistory
-        val (statusMessage, reason) = if (buildStatus == BuildStatus.REVIEWING) {
-            Pair(BUILD_REVIEWING, reviewers?.joinToString(","))
-        } else if (buildStatus.isFailure()) {
-            Pair(BUILD_FAILED, errorMsg ?: buildStatus.name)
-        } else if (buildStatus.isCancel()) {
-            Pair(BUILD_CANCELED, cancelUser)
-        } else if (buildStatus.isSuccess()) {
-            Pair(BUILD_COMPLETED, null)
-        } else {
-            Pair(BUILD_RUNNING, null)
-        }
-        return recordStages.map {
-            BuildStageStatus(
-                stageId = it.stageId,
-                name = it.stageVar[Stage::name.name]?.toString() ?: it.stageId,
-                status = it.status,
-                startEpoch = it.stageVar[Stage::startEpoch.name].toString().toLong(),
-                elapsed = it.stageVar[Stage::elapsed.name].toString().toLong(),
-                tag = (it.stageVar[Stage::tag.name] as List<String>).map { _it ->
-                    stageTagMap.getOrDefault(_it, "null")
-                },
-                // #6655 利用stageStatus中的第一个stage传递构建的状态信息
-                showMsg = if (it.stageId == STATUS_STAGE) {
-                    MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
-                } else null
-            )
-        }
     }
 
     companion object {

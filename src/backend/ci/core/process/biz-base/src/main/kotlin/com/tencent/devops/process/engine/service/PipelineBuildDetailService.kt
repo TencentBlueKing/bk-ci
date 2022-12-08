@@ -178,6 +178,7 @@ class PipelineBuildDetailService @Autowired constructor(
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime,
+            errorInfoList = buildInfo.errorInfoList,
             triggerReviewers = triggerReviewers,
             executeCount = 1,
             buildMsg = buildInfo.buildMsg,

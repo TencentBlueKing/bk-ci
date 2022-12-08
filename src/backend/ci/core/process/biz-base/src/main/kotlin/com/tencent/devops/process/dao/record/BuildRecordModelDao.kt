@@ -142,6 +142,21 @@ class BuildRecordModelDao {
         }
     }
 
+    fun updateBuildCancelUser(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        cancelUser: String
+    ) {
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
+            dslContext.update(this)
+                .set(CANCEL_USER, cancelUser)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
     companion object {
         private val mapper = BuildRecordPipelineJooqMapper()
     }

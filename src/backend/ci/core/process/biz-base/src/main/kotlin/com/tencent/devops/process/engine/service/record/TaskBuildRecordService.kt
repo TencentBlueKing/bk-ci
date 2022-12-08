@@ -46,6 +46,7 @@ import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -60,12 +61,14 @@ class TaskBuildRecordService(
     private val buildRecordTaskDao: BuildRecordTaskDao,
     private val buildTaskDao: PipelineBuildTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
+    stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
     redisOperation: RedisOperation
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = buildRecordModelDao,
+    stageTagService = stageTagService,
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation
 ) {

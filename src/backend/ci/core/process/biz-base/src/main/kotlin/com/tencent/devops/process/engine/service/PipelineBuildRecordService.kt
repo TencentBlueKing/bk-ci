@@ -28,31 +28,22 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
-import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
 import com.tencent.devops.process.engine.service.record.BaseBuildRecordService
-import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
@@ -85,6 +76,7 @@ class PipelineBuildRecordService @Autowired constructor(
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = buildRecordModelDao,
+    stageTagService = stageTagService,
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation
 ) {
@@ -212,8 +204,9 @@ class PipelineBuildRecordService @Autowired constructor(
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime,
+            errorInfoList = buildInfo.errorInfoList,
             triggerReviewers = triggerReviewers,
-            executeCount = 1,
+            executeCount = executeCount,
             buildMsg = buildInfo.buildMsg,
             material = buildInfo.material,
             remark = buildInfo.remark,
@@ -234,8 +227,15 @@ class PipelineBuildRecordService @Autowired constructor(
 //        pipelineDetailChangeEvent(projectId, buildId)
     }
 
-//    fun buildCancel(projectId: String, buildId: String, buildStatus: BuildStatus, cancelUser: String) {
-//        logger.info("Cancel the build $buildId by $cancelUser")
+    fun buildCancel(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        buildStatus: BuildStatus,
+        cancelUser: String
+    ) {
+        // TODO 修正所有Record状态，自行获取最新executeCount
+        logger.info("Cancel the build $buildId by $cancelUser")
 //        update(
 //            projectId = projectId, buildId = buildId,
 //            modelInterface = object : ModelInterface {
@@ -318,16 +318,22 @@ class PipelineBuildRecordService @Autowired constructor(
 //            },
 //            buildStatus = BuildStatus.RUNNING, cancelUser = cancelUser, operation = "buildCancel"
 //        )
-//    }
-//
-//    fun buildEnd(
-//        projectId: String,
-//        buildId: String,
-//        buildStatus: BuildStatus,
-//        errorMsg: String?
-//    ): Pair<Model, List<BuildStageStatus>> {
-//        logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
-//        var allStageStatus: List<BuildStageStatus> = emptyList()
+    }
+
+    fun buildEnd(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        buildStatus: BuildStatus,
+        errorMsg: String?
+    ): List<BuildStageStatus> {
+        logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
+        var allStageStatus: List<BuildStageStatus> = emptyList()
+        // TODO 时间戳、执行次数计算
+        buildRecordModelDao.updateRecord(
+            dslContext, projectId, pipelineId, buildId, 1, buildStatus,
+            emptyMap(), null, null, LocalDateTime.now(), null, null
+        )
 //        val model = update(
 //            projectId = projectId, buildId = buildId,
 //            modelInterface = object : ModelInterface {
@@ -396,19 +402,19 @@ class PipelineBuildRecordService @Autowired constructor(
 //            },
 //            buildStatus = buildStatus, operation = "buildEnd"
 //        )
-//        return model to allStageStatus
-//    }
-//
-//    fun updateBuildCancelUser(projectId: String, buildId: String, cancelUserId: String) {
-//        buildDetailDao.updateBuildCancelUser(
-//            dslContext = dslContext,
-//            projectId = projectId,
-//            buildId = buildId,
-//            cancelUser = cancelUserId
-//        )
-//    }
-//
-//    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
+        return allStageStatus
+    }
+
+    fun updateBuildCancelUser(projectId: String, buildId: String, cancelUserId: String) {
+        buildRecordModelDao.updateBuildCancelUser(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            cancelUser = cancelUserId
+        )
+    }
+
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
 //        update(
 //            projectId = projectId,
 //            buildId = buildId,
@@ -434,13 +440,5 @@ class PipelineBuildRecordService @Autowired constructor(
 //            buildStatus = BuildStatus.RUNNING,
 //            operation = "saveBuildVmInfo($projectId,$pipelineId)"
 //        )
-//    }
-
-    fun getBuildDetailPipelineId(projectId: String, buildId: String): String? {
-        return pipelineBuildDao.getBuildInfo(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId
-        )?.pipelineId
     }
 }
