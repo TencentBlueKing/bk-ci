@@ -88,6 +88,7 @@ class StageBuildRecordService(
                 stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
             } else if (buildStatus.isFinish() && stageVar[Stage::startEpoch.name] != null) {
                 stageVar[Stage::elapsed.name] =
+
                     System.currentTimeMillis() - stageVar[Stage::startEpoch.name].toString().toLong()
             }
 
@@ -263,7 +264,8 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                buildStatus = null
+                buildStatus = null,
+
             )
         }
         return allStageStatus ?: emptyList()

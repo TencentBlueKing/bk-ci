@@ -62,6 +62,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -94,6 +95,7 @@ class BuildEndControl @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRedisService: PipelineRedisService,
@@ -180,6 +182,13 @@ class BuildEndControl @Autowired constructor(
         // 设置状态
         val (model, allStageStatus) = pipelineBuildDetailService.buildEnd(
             projectId = projectId,
+            buildId = buildId,
+            buildStatus = buildStatus,
+            errorMsg = errorMsg
+        )
+        pipelineBuildRecordService.buildEnd(
+            projectId = projectId,
+            pipelineId = pipelineId,
             buildId = buildId,
             buildStatus = buildStatus,
             errorMsg = errorMsg

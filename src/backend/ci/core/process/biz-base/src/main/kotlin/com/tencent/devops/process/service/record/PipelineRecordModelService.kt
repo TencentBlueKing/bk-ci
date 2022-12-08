@@ -55,26 +55,12 @@ import org.springframework.stereotype.Service
 
 @Service
 class PipelineRecordModelService @Autowired constructor(
-    private val buildRecordModelDao: BuildRecordModelDao,
     private val buildRecordStageDao: BuildRecordStageDao,
     private val buildRecordContainerDao: BuildRecordContainerDao,
     private val buildRecordTaskDao: BuildRecordTaskDao,
     private val pipelineResDao: PipelineResDao,
     private val dslContext: DSLContext
 ) {
-
-    fun batchSave(
-        transactionContext: DSLContext?,
-        model: BuildRecordModel,
-        stageList: List<BuildRecordStage>,
-        containerList: List<BuildRecordContainer>,
-        taskList: List<BuildRecordTask>
-    ) {
-        buildRecordModelDao.createRecord(transactionContext ?: dslContext, model)
-        buildRecordStageDao.batchSave(transactionContext ?: dslContext, stageList)
-        buildRecordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
-        buildRecordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
-    }
 
     /**
      * 生成构建变量模型map集合

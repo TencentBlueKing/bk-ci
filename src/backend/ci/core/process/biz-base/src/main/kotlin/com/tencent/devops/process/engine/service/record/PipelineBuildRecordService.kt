@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.process.engine.service.record
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
@@ -38,15 +38,22 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
+import com.tencent.devops.process.dao.record.BuildRecordStageDao
+import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
-import com.tencent.devops.process.engine.service.record.BaseBuildRecordService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
@@ -68,6 +75,9 @@ class PipelineBuildRecordService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineBuildDao: PipelineBuildDao,
     private val buildRecordModelDao: BuildRecordModelDao,
+    private val buildRecordStageDao: BuildRecordStageDao,
+    private val buildRecordContainerDao: BuildRecordContainerDao,
+    private val buildRecordTaskDao: BuildRecordTaskDao,
     private val pipelineRecordModelService: PipelineRecordModelService,
     private val pipelineResDao: PipelineResDao,
     redisOperation: RedisOperation,
@@ -86,6 +96,19 @@ class PipelineBuildRecordService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(PipelineBuildRecordService::class.java)!!
+    }
+
+    fun batchSave(
+        transactionContext: DSLContext?,
+        model: BuildRecordModel,
+        stageList: List<BuildRecordStage>,
+        containerList: List<BuildRecordContainer>,
+        taskList: List<BuildRecordTask>
+    ) {
+        buildRecordModelDao.createRecord(transactionContext ?: dslContext, model)
+        buildRecordStageDao.batchSave(transactionContext ?: dslContext, stageList)
+        buildRecordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
+        buildRecordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
     }
 
     private fun checkPassDays(startTime: Long?): Boolean {
