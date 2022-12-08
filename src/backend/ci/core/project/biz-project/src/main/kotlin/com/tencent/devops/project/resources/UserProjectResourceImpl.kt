@@ -174,13 +174,13 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun applyToJoinProject(
         userId: String,
-        projectId: String,
+        englishName: String,
         applicationInfo: ApplicationInfo
     ): Result<Boolean> {
         return Result(
             projectService.applyToJoinProject(
                 userId = userId,
-                projectId = projectId,
+                englishName = englishName,
                 applicationInfo = applicationInfo
             )
         )
