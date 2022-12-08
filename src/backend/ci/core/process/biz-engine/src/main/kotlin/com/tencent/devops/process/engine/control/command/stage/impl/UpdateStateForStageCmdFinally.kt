@@ -293,7 +293,7 @@ class UpdateStateForStageCmdFinally(
                 buildStatus = commandContext.buildStatus
             )
             stageBuildRecordService.updateStageStatus(
-                projectId = event.projectId, pipelineId = event.buildId, buildId = event.buildId,
+                projectId = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId,
                 stageId = event.stageId, executeCount = commandContext.executeCount,
                 buildStatus = commandContext.buildStatus
             )
