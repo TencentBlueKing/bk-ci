@@ -433,6 +433,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
+            //todo 修改拉取策略，只拉取拥有查看权限的项目  v3保留
             val projects = getProjectFromAuth(userId, accessToken)
             if (projects.isEmpty() && !unApproved) {
                 return emptyList()
@@ -451,7 +452,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
-            if (unApproved) {
+            if (unApproved!!) {
                 projectDao.listUnapprovedByUserId(
                     dslContext = dslContext,
                     userId = userId
@@ -836,9 +837,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         val projectInfo = projectDao.get(dslContext, projectId) ?: throw InvalidParamException("项目不存在")
         val status = projectInfo.approvalStatus
-        if (!(
-                status == ApproveStatus.CREATE_PENDING.status ||
-                    status == ApproveStatus.CREATE_REJECT.status
+        if (!(status == ApproveStatus.CREATE_PENDING.status ||
+                status == ApproveStatus.CREATE_REJECT.status
                 )) {
             logger.warn(
                 "The project can't be cancel！ : ${projectInfo.englishName}"
@@ -878,12 +878,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun applyToJoinProject(
         userId: String,
-        projectId: String,
+        englishName: String,
         applicationInfo: ApplicationInfo
     ): Boolean {
         var success = false
-        val projectInfo = projectDao.get(dslContext, projectId)
-            ?: throw InvalidParamException("project is not exist!|$applicationInfo.projectId")
+        val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
+            ?: throw InvalidParamException("project is not exist!")
         val gradeManagerId = projectInfo.relationId
         try {
             createRoleGroupApplication(
@@ -897,7 +897,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw OperationException(
                 MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.APPLY_TO_JOIN_PROJECT_FAIL,
-                    defaultMessage = "Apply to join project failed  ： ${projectInfo.englishName}|$applicationInfo"
+                    defaultMessage = "Apply to join project failed ！"
                 )
             )
         }

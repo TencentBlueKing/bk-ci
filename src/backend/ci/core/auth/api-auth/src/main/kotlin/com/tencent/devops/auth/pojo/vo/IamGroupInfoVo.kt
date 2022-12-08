@@ -23,38 +23,26 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.auth.api.pojo
+package com.tencent.devops.auth.pojo.vo
 
-/**
- * 项目角色组
- */
-enum class BkAuthGroup(
-    val value: String,
-    val groupName: String
-) {
-    CIADMIN("ciAdmin", "CI管理员"), // CI管理员
-    MANAGER("manager", "管理员"), // 管理员
-    DEVELOPER("developer", "开发人员"), // 开发人员
-    MAINTAINER("maintainer", "运维人员"), // 运维人员
-    TESTER("tester", "测试人员"), // 测试人员
-    PM("pm", "产品人员"), // 产品人员
-    QC("qc", "质量管理员"); // 质量管理员
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    companion object {
-        fun get(value: String): BkAuthGroup {
-            values().forEach {
-                if (value == it.value) return it
-            }
-            throw IllegalArgumentException("No enum for constant $value")
-        }
-
-        fun contains(value: String): Boolean {
-            values().forEach {
-                if (value == it.value) return true
-            }
-            return false
-        }
-    }
-}
+@ApiModel("iam用户组信息")
+data class IamGroupInfoVo(
+    @ApiModelProperty("用户组ID")
+    val id: Int,
+    @ApiModelProperty("用户组名称")
+    val name: String,
+    @ApiModelProperty("用户组描述")
+    val description: String,
+    @ApiModelProperty("是否是只读用户组")
+    val readonly: Boolean,
+    @ApiModelProperty("用户组成员user数量")
+    val userCount:Int,
+    @ApiModelProperty("用户组成员department数量")
+    val departmentCount: Int
+)

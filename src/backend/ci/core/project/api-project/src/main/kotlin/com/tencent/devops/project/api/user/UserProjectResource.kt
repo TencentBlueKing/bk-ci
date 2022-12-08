@@ -135,6 +135,7 @@ interface UserProjectResource {
     @POST
     @Path("/")
     @ApiOperation("创建项目")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun create(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
@@ -149,6 +150,7 @@ interface UserProjectResource {
     @PUT
     @Path("/{project_id}")
     @ApiOperation("修改项目")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun update(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
@@ -254,15 +256,15 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @ApiOperation("申请加入项目")
-    @Path("/{project_id}/applyToJoinProject/")
+    @Path("/{english_name}/applyToJoinProject/")
     @POST
     fun applyToJoinProject(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("申请加入项目实体类", required = true)
-        @PathParam("project_id")
-        projectId: String,
+        @PathParam("english_name")
+        englishName: String,
         @ApiParam("申请加入项目实体类", required = true)
         applicationInfo: ApplicationInfo
     ): Result<Boolean>

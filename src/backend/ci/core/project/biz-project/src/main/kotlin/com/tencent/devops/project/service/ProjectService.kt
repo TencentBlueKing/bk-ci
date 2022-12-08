@@ -185,7 +185,7 @@ interface ProjectService {
 
     fun applyToJoinProject(
         userId: String,
-        projectId: String,
+        englishName: String,
         applicationInfo: ApplicationInfo
     ): Boolean
 }
