@@ -1,6 +1,12 @@
 <template>
-    <bk-select :value="paramValue[paramKey]" @change="changeParamValue" v-bind="{ ...$props, ...paramProps }" class="g-turbo-single-width">
-        <bk-option v-for="(param, index) in paramEnum"
+    <bk-select
+        class="g-turbo-single-width"
+        v-bind="{ ...$props, ...paramProps }"
+        :value="paramValue[paramKey]"
+        :loading="isLoading"
+        @change="changeParamValue"
+    >
+        <bk-option v-for="(param, index) in renderList"
             :key="index"
             :id="param.paramValue"
             :name="param.paramName">
@@ -10,8 +16,65 @@
 
 <script>
     import mixin from './mixins.js'
+    import { http } from '@/api/index.js'
 
     export default {
-        mixins: [mixin]
+        mixins: [mixin],
+
+        data () {
+            return {
+                renderList: [],
+                queryKey: [],
+                isLoading: false
+            }
+        },
+
+        watch: {
+            paramValue: {
+                handler (value, oldValue) {
+                    const index = this.queryKey.findIndex((key) => value[key] !== oldValue[key])
+                    if (index > -1) {
+                        this.initRenderList()
+                    }
+                },
+                deep: true
+            }
+        },
+
+        created () {
+            this.handleDefaultValue()
+            this.initRenderList()
+        },
+
+        methods: {
+            initRenderList () {
+                if (this.dataType === 'remote') {
+                    this.isLoading = true
+                    const url = this.handleQueryUrl(this.paramUrl)
+                    http
+                        .get(url)
+                        .then((res) => {
+                            this.renderList = res.data || []
+                        })
+                        .catch((err) => {
+                            console.error(err.message || err)
+                        })
+                        .finally(() => {
+                            this.isLoading = false
+                        })
+                } else {
+                    this.renderList = this.paramEnum
+                }
+            },
+
+            handleQueryUrl (url) {
+                this.queryKey = []
+                return url.replace(/\{(.+)\}/g, (all, key) => {
+                    const val = this.paramValue[key]
+                    this.queryKey.push(key)
+                    return val
+                })
+            }
+        }
     }
 </script>
