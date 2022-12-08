@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -540,7 +541,7 @@ class WorkspaceService @Autowired constructor(
         return gitTransferService.getFileNameTree(
             userId = userId,
             pathWithNamespace = pathWithNamespace,
-            path = ".preci", // 根目录
+            path = Constansts.devFileDirectoryName, // 根目录
             ref = branch,
             recursive = false // 不递归
         )

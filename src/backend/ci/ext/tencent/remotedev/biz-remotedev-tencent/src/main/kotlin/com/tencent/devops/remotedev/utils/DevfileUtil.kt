@@ -44,11 +44,12 @@ object DevfileUtil {
 
         return with(preDevfile) {
             Devfile(
-                gitConfig = gitConfig,
+                version = version,
+                envs = envs,
                 image = devfileImage,
                 vscode = vscode,
                 ports = ports,
-                postCreateCommand = postCreateCommand
+                commands = commands
             )
         }
     }

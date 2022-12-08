@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.service.transfer
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.service.GitTransferService
 import com.tencent.devops.repository.api.ServiceOauthResource
@@ -97,7 +98,13 @@ class TGitTransferService @Autowired constructor(
             ref = ref,
             recursive = recursive,
             tokenType = TokenTypeEnum.OAUTH,
-        ).data?.filter { it.type == "blob" && it.name.endsWith(".yaml") }?.map { it.name } ?: emptyList()
+        ).data?.filter {
+            it.type == "blob" && (
+                it.name.endsWith(Constansts.devFileExtensionYaml) || it.name.endsWith(
+                    Constansts.devFileExtensionYml
+                )
+            )
+        }?.map { it.name } ?: emptyList()
     }
 
     private fun getAndCheckOauthToken(
