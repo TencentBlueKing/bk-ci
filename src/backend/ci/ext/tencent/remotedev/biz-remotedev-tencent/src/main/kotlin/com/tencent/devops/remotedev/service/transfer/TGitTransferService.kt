@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.service.transfer
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.service.GitTransferService
 import com.tencent.devops.repository.api.ServiceOauthResource
@@ -11,6 +12,8 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,15 +26,14 @@ class TGitTransferService @Autowired constructor(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
         return client.get(ServiceOauthResource::class).isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
             redirectUrl = redirectUrl,
-            gitProjectId = gitProjectId,
-            refreshToken = false
+            gitProjectId = null,
+            refreshToken = refreshToken
         )
     }
 
@@ -70,6 +72,39 @@ class TGitTransferService @Autowired constructor(
             pageSize = pageSize,
             search = search
         ).data?.map { it.name }
+    }
+
+    override fun getFileContent(userId: String, pathWithNamespace: String, filePath: String, ref: String): String {
+        return client.get(ServiceGitResource::class).getGitFileContent(
+            token = getAndCheckOauthToken(userId).accessToken,
+            authType = RepoAuthType.OAUTH,
+            repoName = URLEncoder.encode(pathWithNamespace, "UTF-8"),
+            ref = ref,
+            filePath = filePath
+        ).data!!
+    }
+
+    override fun getFileNameTree(
+        userId: String,
+        pathWithNamespace: String,
+        path: String?,
+        ref: String?,
+        recursive: Boolean
+    ): List<String> {
+        return client.get(ServiceGitResource::class).getGitFileTree(
+            gitProjectId = URLEncoder.encode(pathWithNamespace, "UTF-8"),
+            path = path ?: "",
+            token = getAndCheckOauthToken(userId).accessToken,
+            ref = ref,
+            recursive = recursive,
+            tokenType = TokenTypeEnum.OAUTH,
+        ).data?.filter {
+            it.type == "blob" && (
+                it.name.endsWith(Constansts.devFileExtensionYaml) || it.name.endsWith(
+                    Constansts.devFileExtensionYml
+                )
+            )
+        }?.map { it.name } ?: emptyList()
     }
 
     private fun getAndCheckOauthToken(

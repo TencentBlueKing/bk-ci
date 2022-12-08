@@ -30,12 +30,13 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.github.GithubAppUrl
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
+import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.service.GitTransferService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.repository.pojo.AuthorizeResult
@@ -49,7 +50,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     val workspaceService: WorkspaceService
 ) : UserWorkspaceResource {
 
-    override fun createWorkspace(userId: String, workspace: Workspace): Result<String> {
+    override fun createWorkspace(userId: String, workspace: WorkspaceCreate): Result<String> {
         return Result(workspaceService.createWorkspace(userId, workspace))
     }
 
@@ -75,6 +76,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
 
     override fun getWorkspaceDetail(userId: String, workspaceId: Long): Result<WorkspaceDetail?> {
         return Result(workspaceService.getWorkspaceDetail(userId, workspaceId))
+    }
+
+    override fun getWorkspaceUserDetail(userId: String): Result<WorkspaceUserDetail?> {
+        return Result(workspaceService.getWorkspaceUserDetail(userId))
     }
 
     override fun getAuthorizedGitRepository(
@@ -127,11 +132,20 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
+    override fun checkDevfile(userId: String, pathWithNamespace: String, branch: String): Result<List<String>> {
+        return Result(
+            workspaceService.checkDevfile(
+                userId = userId,
+                pathWithNamespace = pathWithNamespace,
+                branch = branch
+            )
+        )
+    }
+
     override fun isOAuth(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
         // 权限校验？
@@ -139,7 +153,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
             userId = userId,
             redirectUrlType = redirectUrlType,
             redirectUrl = redirectUrl,
-            gitProjectId = gitProjectId,
             refreshToken = refreshToken
         )
     }

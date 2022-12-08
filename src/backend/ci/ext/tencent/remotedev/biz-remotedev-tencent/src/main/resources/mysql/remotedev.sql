@@ -18,12 +18,14 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
                                              `IMAGE_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '镜像地址',
                                              `CPU` int(11) NOT NULL DEFAULT 16 COMMENT 'CPU',
                                              `MEMORY` int(11) NOT NULL DEFAULT 32768 COMMENT '内存',
+                                             `USAGE_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '已使用时间（容器结束时更新）',
+                                             `SLEEPING_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '已休眠时间（容器启动时更新）',
                                              `DISK` int(11) NOT NULL DEFAULT 100 COMMENT '磁盘',
                                              `CREATOR` varchar(1024) NOT NULL DEFAULT '' COMMENT '创建人',
                                              `CREATOR_BG_NAME` varchar(128) NOT NULL DEFAULT ''  COMMENT '预留字段，CI开启人所在事业群，用作度量统计',
                                              `CREATOR_DEPT_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '预留字段，CI开启人所在部门，用作度量统计',
                                              `CREATOR_CENTER_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '预留字段，CI开启人所在中心，用作度量统计',
-                                             `STATUS` int(11) NOT NULL DEFAULT 0 COMMENT '工作空间状态',
+                                             `STATUS` int(11) NOT NULL DEFAULT 0 COMMENT '工作空间状态,0-PREPARING,1-RUNNING,2-STOPPED,3-SLEEP,4-DELETED,5-EXCEPTION',
                                              `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                              `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
                                              `LAST_STATUS_UPDATE_TIME` timestamp NULL DEFAULT NULL COMMENT '状态最近修改时间',
@@ -57,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_OP_HIS` (
                                                     `ID` bigint(20) NOT NULL AUTO_INCREMENT,
                                                     `WORKSPACE_ID` bigint(20) NOT NULL DEFAULT 0 COMMENT '工作空间ID',
                                                     `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
-                                                    `ACTION` int(10) NOT NULL DEFAULT 0 COMMENT '操作行为: CREATE, START, SLEEP, DELETE, SHARE',
+                                                    `ACTION` int(10) NOT NULL DEFAULT 0 COMMENT '操作行为: 0-CREATE, 1-START, 2-SLEEP, 3-DELETE, 4-SHARE',
                                                     `ACTION_MSG` varchar(256) NOT NULL DEFAULT '' COMMENT '操作行为描述',
                                                     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 
@@ -84,26 +86,20 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_HISTORY` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '工作空间运行记录表';
 
 -- ----------------------------
--- Table structure for T_WORKSPACE_OP_HIS
+-- Table structure for T_REMOTE_DEV_SETTINGS
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
-                                                       `ID` bigint(20) NOT NULL AUTO_INCREMENT,
                                                        `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户',
                                                        `DEFAULT_SHELL` varchar(10) NOT NULL DEFAULT '' COMMENT '默认shell: zsh | bash',
-                                                       `APPEARANCE` varchar(64) NOT NULL DEFAULT '' COMMENT '外观',
-                                                       `LANGUAGE` varchar(64) NOT NULL DEFAULT '' COMMENT '语言',
-                                                       `VOICE_NOTICE` tinyint NOT NULL DEFAULT 0 COMMENT '是否开启声音提醒',
-                                                       `DOCK_NOTICE` tinyint NOT NULL DEFAULT 0 COMMENT '是否开启DOCK显示',
-                                                       `GIT_ATTACHED` tinyint NOT NULL DEFAULT 0 COMMENT '是否连接git',
-                                                       `TAPD_ATTACHED` tinyint NOT NULL DEFAULT 0 COMMENT '是否连接TAPD',
-                                                       `GITHUB_ATTACHED` tinyint NOT NULL DEFAULT 0 COMMENT '是否连接github',
-                                                       `ENV` varchar(1024) NOT NULL DEFAULT '' COMMENT '环境变量配置',
-                                                       `FILE_CONTENT` longtext NOT NULL COMMENT '文件内容',
+                                                       `BASIC_SETTING` mediumtext NOT NULL COMMENT '客户端使用，后台只管存的信息',
+                                                       `GIT_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接git',
+                                                       `TAPD_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接TAPD',
+                                                       `GITHUB_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接github',
+                                                       `ENVS_FOR_VARIABLE` mediumtext NOT NULL COMMENT '远程开发环境变量配置',
                                                        `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
                                                        `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 
-                                                       PRIMARY KEY (`ID`) USING BTREE,
-                                                       KEY `uni_1` (`USER_ID`)
+                                                       PRIMARY KEY (`USER_ID`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '用户远程开发配置表';
 
 -- ----------------------------
@@ -118,3 +114,19 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_SHARED` (
     PRIMARY KEY (`ID`) USING BTREE,
     KEY `uni_1` (`WORKSPACE_ID`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '工作空间共享记录表';
+
+-- ----------------------------
+-- Table structure for T_REMOTE_DEV_FILE 云开发文件存储
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_FILE` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+    `PATH` varchar(1024) NOT NULL DEFAULT '' COMMENT '文件路径',
+    `CONTENT` blob NOT NULL COMMENT '压缩后文件内容',
+    `MD5` varchar(32) NOT NULL DEFAULT '' COMMENT 'md5校验',
+    `USER` varchar(64) NOT NULL DEFAULT '' COMMENT '用户',
+    `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`) USING BTREE,
+    KEY `idx_user` (`USER`),
+    KEY `idx_user_md5` (`USER`, `md5`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '云开发文件存储';

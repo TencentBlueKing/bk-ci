@@ -31,18 +31,19 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
+import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
 class UserRemoteDevResourceImpl @Autowired constructor(
-
+val remoteDevSettingService:RemoteDevSettingService
 ) : UserRemoteDevResource {
     override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
-        TODO("Not yet implemented")
+        return Result(remoteDevSettingService.getRemoteDevSettings(userId))
     }
 
     override fun updateRemoteDevSettings(userId: String, remoteDevSettings: RemoteDevSettings): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(remoteDevSettingService.updateRemoteDevSettings(userId, remoteDevSettings))
     }
 }

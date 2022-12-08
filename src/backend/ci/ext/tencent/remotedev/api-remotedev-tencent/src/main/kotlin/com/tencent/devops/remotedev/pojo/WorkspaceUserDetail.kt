@@ -30,24 +30,24 @@ package com.tencent.devops.remotedev.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工作空间信息")
-data class Workspace(
-    @ApiModelProperty("工作空间ID<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val workspaceId: Long?,
-    @ApiModelProperty("工作空间名称")
-    val name: String,
-    @ApiModelProperty("远程开发仓库地址")
-    val repositoryUrl: String,
-    @ApiModelProperty("仓库分支")
-    val branch: String,
-    @ApiModelProperty("devfile配置路径")
-    val devFilePath: String?,
-    @ApiModelProperty("devfile 内容")
-    val yaml: String?,
-    @ApiModelProperty("工作空间模板ID")
-    val wsTemplateId: Int?,
-    @ApiModelProperty("工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val status: WorkspaceStatus?,
-    @ApiModelProperty("状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val lastStatusUpdateTime: Long?
+@ApiModel("工作空间详情页信息")
+data class WorkspaceUserDetail(
+    @ApiModelProperty("运行中容器数量")
+    val runningCount: Int,
+    @ApiModelProperty("已休眠容器数量")
+    val sleepingCount: Int,
+    @ApiModelProperty("已销毁容器数量")
+    val deleteCount: Int,
+    @ApiModelProperty("计费时间（分钟）")
+    val chargeableTime: Int,
+    @ApiModelProperty("使用时间（分钟）")
+    val usageTime: Int,
+    @ApiModelProperty("休眠时间（分钟）")
+    val sleepingTime: Int,
+    @ApiModelProperty("CPU 核心数")
+    val cpu: Int,
+    @ApiModelProperty("内存大小（MB）")
+    val memory: Int,
+    @ApiModelProperty("存储空间大小（GB）")
+    val disk: Int
 )

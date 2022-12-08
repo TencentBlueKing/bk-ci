@@ -62,7 +62,7 @@ class WorkspaceHistoryDao {
 
     fun updateWorkspaceHistory(
         dslContext: DSLContext,
-        workspaceId: Long,
+        id: Long,
         stopUserId: String
     ): Int {
         with(TWorkspaceHistory.T_WORKSPACE_HISTORY) {
@@ -70,7 +70,7 @@ class WorkspaceHistoryDao {
                 .set(STARTER, stopUserId)
                 .set(END_TIME, LocalDateTime.now())
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(WORKSPACE_ID.eq(workspaceId))
+                .where(ID.eq(id))
                 .execute()
         }
     }
@@ -83,6 +83,17 @@ class WorkspaceHistoryDao {
             return dslContext.selectFrom(this)
                 .where(WORKSPACE_ID.eq(workspaceId))
                 .orderBy(CREATED_TIME.desc()).fetch()
+        }
+    }
+
+    fun fetchAnyHistory(
+        dslContext: DSLContext,
+        workspaceId: Long
+    ): TWorkspaceHistoryRecord? {
+        with(TWorkspaceHistory.T_WORKSPACE_HISTORY) {
+            return dslContext.selectFrom(this)
+                .where(WORKSPACE_ID.eq(workspaceId))
+                .orderBy(CREATED_TIME.desc()).fetchAny()
         }
     }
 }

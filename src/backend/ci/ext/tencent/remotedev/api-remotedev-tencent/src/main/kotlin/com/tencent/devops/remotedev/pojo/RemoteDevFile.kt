@@ -30,24 +30,14 @@ package com.tencent.devops.remotedev.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工作空间信息")
-data class Workspace(
-    @ApiModelProperty("工作空间ID<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val workspaceId: Long?,
-    @ApiModelProperty("工作空间名称")
-    val name: String,
-    @ApiModelProperty("远程开发仓库地址")
-    val repositoryUrl: String,
-    @ApiModelProperty("仓库分支")
-    val branch: String,
-    @ApiModelProperty("devfile配置路径")
-    val devFilePath: String?,
-    @ApiModelProperty("devfile 内容")
-    val yaml: String?,
-    @ApiModelProperty("工作空间模板ID")
-    val wsTemplateId: Int?,
-    @ApiModelProperty("工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val status: WorkspaceStatus?,
-    @ApiModelProperty("状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val lastStatusUpdateTime: Long?
+@ApiModel("远程开发配置")
+data class RemoteDevFile(
+    @ApiModelProperty("文件id")
+    val id: Long?,
+    @ApiModelProperty("md5 32位")
+    val md5: String?,
+    @ApiModelProperty("文件路径")
+    val path: String,
+    @ApiModelProperty("文件内容")
+    val content: String
 )

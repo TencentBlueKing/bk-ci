@@ -33,8 +33,10 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
+import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import io.swagger.annotations.Api
@@ -63,7 +65,7 @@ interface UserWorkspaceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("工作空间描述", required = true)
-        workspace: Workspace
+        workspace: WorkspaceCreate
     ): Result<String>
 
     @ApiOperation("获取用户工作空间列表")
@@ -76,7 +78,7 @@ interface UserWorkspaceResource {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页多少条", required = false, defaultValue = "6666")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<Workspace>>
@@ -132,9 +134,9 @@ interface UserWorkspaceResource {
     ): Result<Boolean>
     //todo 获取运行日志的接口
 
-    @ApiOperation("获取用户工作空间详情")
+    @ApiOperation("获取指定工作空间详情")
     @GET
-    @Path("/detail")
+    @Path("/workspace_detail")
     fun getWorkspaceDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -145,6 +147,15 @@ interface UserWorkspaceResource {
     ): Result<WorkspaceDetail?>
 
     @ApiOperation("获取用户工作空间详情")
+    @GET
+    @Path("/user_detail")
+    fun getWorkspaceUserDetail(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<WorkspaceUserDetail?>
+
+    @ApiOperation("获取指定工作空间详情时间线")
     @GET
     @Path("/detail_timeline")
     fun getWorkspaceTimeline(
@@ -180,7 +191,7 @@ interface UserWorkspaceResource {
         pageSize: Int?
     ): Result<List<RemoteDevRepository>>
 
-    @ApiOperation("获取用户已授权代码库列表")
+    @ApiOperation("获取目标授权代码库分支")
     @GET
     @Path("/repository_branch")
     fun getRepositoryBranch(
@@ -201,6 +212,21 @@ interface UserWorkspaceResource {
         pageSize: Int?
     ): Result<List<String>>
 
+    @ApiOperation("返回目标代码库devfile路径")
+    @GET
+    @Path("/repository_devfile")
+    fun checkDevfile(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("代码库项目全路径", required = true)
+        @QueryParam("pathWithNamespace")
+        pathWithNamespace: String,
+        @ApiParam("分支", required = true)
+        @QueryParam("branch")
+        branch: String
+    ): Result<List<String>>
+
     @ApiOperation("根据用户ID判断用户是否已经oauth认证")
     @GET
     @Path("/isOauth")
@@ -214,9 +240,6 @@ interface UserWorkspaceResource {
         @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
         @QueryParam("redirectUrl")
         redirectUrl: String?,
-        @ApiParam(value = "stream 项目Id", required = false)
-        @QueryParam("gitProjectId")
-        gitProjectId: Long,
         @ApiParam(value = "是否刷新token", required = false)
         @QueryParam("refreshToken")
         refreshToken: Boolean? = true
