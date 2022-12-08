@@ -31,13 +31,6 @@ plugins {
 val toImageTemplate = System.getProperty("to.image.template")
 val toImageTag = System.getProperty("to.image.tag")
 
-tasks.register("checkDockerBuild") {
-    if (toImageTemplate.isNullOrBlank() || toImageTag.isNullOrBlank()) {
-        throw RuntimeException("Either jib.to.image or devops.to.image.template must not empty")
-    }
-    tasks.getByName("jib").dependsOn(this.name)
-}
-
 val service = name.split("-")[1]
 
 if (System.getProperty("jib.to.image").isNullOrBlank() && !toImageTemplate.isNullOrBlank()) {
