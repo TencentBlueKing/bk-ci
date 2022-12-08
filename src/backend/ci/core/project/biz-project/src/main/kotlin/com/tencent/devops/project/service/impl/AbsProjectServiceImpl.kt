@@ -839,7 +839,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val status = projectInfo.approvalStatus
         if (!(status == ApproveStatus.CREATE_PENDING.status ||
                 status == ApproveStatus.CREATE_REJECT.status
-        )) {
+                )) {
             logger.warn(
                 "The project can't be cancel！ : ${projectInfo.englishName}"
             )
