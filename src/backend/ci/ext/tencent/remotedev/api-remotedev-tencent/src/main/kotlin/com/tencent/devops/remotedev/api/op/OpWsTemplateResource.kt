@@ -61,6 +61,14 @@ interface OpWsTemplateResource {
         @ApiParam(value = "模板信息", required = true)
         workspaceTemplate: WorkspaceTemplate
     ): Result<Boolean>
+    @ApiOperation("获取工作空间模板")
+    @GET
+    @Path("/list")
+    fun getWorkspaceTemplateList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<WorkspaceTemplate>>
 
     @ApiOperation("更新工作空间模板")
     @PUT

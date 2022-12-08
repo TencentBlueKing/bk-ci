@@ -17,6 +17,11 @@ class OpWsTemplateResourceImpl  @Autowired constructor(
         return Result(workspaceTemplateService.addWorkspaceTemplate(userId, workspaceTemplate))
     }
 
+    override fun getWorkspaceTemplateList(userId: String): Result<List<WorkspaceTemplate>> {
+        return Result(workspaceTemplateService.getWorkspaceTemplateList(userId) ?: emptyList())
+    }
+
+
     override fun updateWorkspaceTemplate(
         userId: String,
         workspaceTemplateId: Long,
