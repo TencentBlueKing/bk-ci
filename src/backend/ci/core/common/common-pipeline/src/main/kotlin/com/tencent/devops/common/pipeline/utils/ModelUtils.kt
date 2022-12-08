@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.utils
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -171,6 +172,20 @@ object ModelUtils {
     }
 
     /**
+     * 根据流水线基础模型map集合和构建变量模型map集合生成完整的流水线构建模型
+     * @param baseModelMap 流水线基础模型map集合
+     * @param modelFieldRecordMap 构建变量模型map集合
+     * @return 完整的流水线构建模型
+     */
+    fun generatePipelineBuildModel(
+        baseModelMap: MutableMap<String, Any>,
+        modelFieldRecordMap: Map<String, Any>
+    ): Model {
+        val modelStr = JsonUtil.toJson(generateBuildModelDetail(baseModelMap, modelFieldRecordMap), false)
+        return JsonUtil.to(modelStr, Model::class.java)
+    }
+
+    /**
      * 根据流水线基础模型map集合和构建变量模型map集合生成完整的构建模型map集合
      * @param baseModelMap 流水线基础模型map集合
      * @param modelFieldRecordMap 构建变量模型map集合
@@ -190,12 +205,12 @@ object ModelUtils {
                 // 如果基础模型字段值为空，则直接拿变量集合中的字段值覆盖
                 baseModelMap[fieldRecordName] = fieldRecordValue
             } else {
-                if (fieldRecordValue is Map<*, *> && !fieldRecordValue.isNullOrEmpty()) {
+                if (fieldRecordValue is Map<*, *> && fieldRecordValue.isNotEmpty()) {
                     // 如果变量字段类型为map，则进行递归合并
                     val baseDataMap = baseModelMap[fieldRecordName] as MutableMap<String, Any>
                     val varDataMap = fieldRecordValue as MutableMap<String, Any>
                     baseModelMap[fieldRecordName] = generateBuildModelDetail(baseDataMap, varDataMap)
-                } else if (fieldRecordValue is List<*> && !fieldRecordValue.isNullOrEmpty()) {
+                } else if (fieldRecordValue is List<*> && fieldRecordValue.isNotEmpty()) {
                     // 如果变量字段类型为list，则遍历list进行递归合并
                     val baseDataList = baseModelMap[fieldRecordName] as MutableList<Any>
                     val varDataList = fieldRecordValue as MutableList<Any>
@@ -224,7 +239,7 @@ object ModelUtils {
                     baseDataList[index] = listItemObj
                 }
             } else {
-                if (listItemObj is Map<*, *> && !listItemObj.isNullOrEmpty()) {
+                if (listItemObj is Map<*, *> && listItemObj.isNotEmpty()) {
                     val baseListItemDataMap = if (index > baseDataList.size - 1) {
                         // 如果基础模型list集合中没有该对象则在添加一个空map集合用于合并
                         val emptyMap = mutableMapOf<String, Any>()
@@ -236,7 +251,7 @@ object ModelUtils {
                     val varListItemDataMap = listItemObj as MutableMap<String, Any>
                     // 对map类型对象进行递归合并
                     baseDataList[index] = generateBuildModelDetail(baseListItemDataMap, varListItemDataMap)
-                } else if (listItemObj is List<*> && !listItemObj.isNullOrEmpty()) {
+                } else if (listItemObj is List<*> && listItemObj.isNotEmpty()) {
                     val baseListItemDataList = if (index > baseDataList.size - 1) {
                         // 如果基础模型list集合中没有该对象则在添加一个空list集合用于合并
                         val emptyList = mutableListOf<Any>()
