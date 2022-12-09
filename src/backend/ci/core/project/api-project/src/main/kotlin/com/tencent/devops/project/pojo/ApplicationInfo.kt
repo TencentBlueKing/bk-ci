@@ -5,8 +5,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("项目-申请加入项目实体类")
 data class ApplicationInfo(
-    @ApiModelProperty("项目ID")
-    val projectId: String,
+    @ApiModelProperty("项目英文名")
+    val englishName: String,
     @ApiModelProperty("过期时间")
     val expireTime: String,
     @ApiModelProperty("申请理由")
