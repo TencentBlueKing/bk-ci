@@ -75,7 +75,7 @@ data class ProjectCreateInfo(
     var subjectScopes: ArrayList<ManagerScopes>? = ArrayList(),
     @ApiModelProperty("logo文件")
     @FormDataParam("logo")
-    val logo: InputStream? = null,
+    var logo: InputStream? = null,
     @ApiModelProperty("是否权限私密")
     val authSecrecy: Boolean? = null
 )
