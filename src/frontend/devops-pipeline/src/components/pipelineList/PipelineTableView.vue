@@ -251,6 +251,7 @@
                 const res = this.pipelineList.map((pipeline, index) => {
                     const { viewNames } = pipeline
                     const visibleCount = this.visibleTagCountList[index]
+                                        
                     if (visibleCount >= 1) {
                         return {
                             visibleGroups: viewNames.slice(0, visibleCount),
@@ -258,6 +259,7 @@
                             showMore: viewNames.length - visibleCount
                         }
                     }
+                    
                     return {
                         visibleGroups: viewNames,
                         hiddenGroups: [],
@@ -361,7 +363,7 @@
                         current: page
                     })
                     this.pipelineList = records
-                    if (this.isAllPipelineView || this.isDeleteView) {
+                    if (this.isAllPipelineView || this.isPatchView || this.isDeleteView) {
                         this.visibleTagCountList = {}
                         setTimeout(this.calcOverPos, 100)
                     }
