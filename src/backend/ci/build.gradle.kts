@@ -103,6 +103,7 @@ allprojects {
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
             }
+            dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
         }
     }
 
