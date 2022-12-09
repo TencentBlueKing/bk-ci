@@ -30,7 +30,7 @@ package com.tencent.devops.remotedev.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工作空间详情页信息")
+@ApiModel("获取用户工作空间详情model")
 data class WorkspaceUserDetail(
     @ApiModelProperty("运行中容器数量")
     val runningCount: Int,
