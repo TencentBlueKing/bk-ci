@@ -93,17 +93,9 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun create(
         userId: String,
-        accessToken: String?,
-        projectCreateJson: String,
-        logo: InputStream?,
-        disposition: FormDataContentDisposition?
+        projectCreateInfo: ProjectCreateInfo,
+        accessToken: String?
     ): Result<Boolean> {
-        val projectCreateInfo = JsonUtil.to(
-            projectCreateJson, object : TypeReference<ProjectCreateInfo>() {}
-        )
-        if (logo != null) {
-            projectCreateInfo.logo = logo
-        }
         // 创建项目
         projectService.create(
             userId = userId,
