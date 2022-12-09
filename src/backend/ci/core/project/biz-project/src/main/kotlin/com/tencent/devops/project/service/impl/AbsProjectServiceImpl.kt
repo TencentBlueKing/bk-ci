@@ -710,7 +710,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun uploadLogo(
         userId: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition,
         accessToken: String?
     ): Result<String> {
         var logoFile: File? = null

@@ -117,7 +117,6 @@ interface ProjectService {
     fun uploadLogo(
         userId: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition,
         accessToken: String?
     ): Result<String>
 
