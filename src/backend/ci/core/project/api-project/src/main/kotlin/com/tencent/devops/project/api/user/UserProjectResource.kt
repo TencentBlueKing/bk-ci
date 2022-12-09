@@ -144,7 +144,7 @@ interface UserProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?,
         @ApiParam(value = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo,
+        projectCreateJson: String,
         @ApiParam(value = "logo", required = false)
         @FormDataParam("logo")
         logo: InputStream? = null,
