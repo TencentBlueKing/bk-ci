@@ -111,6 +111,16 @@ interface ProjectService {
         accessToken: String?
     ): Result<ProjectLogo>
 
+    /**
+     * 上传Logo
+     */
+    fun uploadLogo(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        accessToken: String?
+    ): Result<String>
+
     fun updateProjectName(userId: String, projectId: String/* projectId is englishName */, projectName: String): Boolean
 
     /**
