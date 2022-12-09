@@ -28,9 +28,7 @@
 package com.tencent.devops.common.auth.api
 
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 
-@Component
 class BkCCProperties {
     @Value("\${paas_cc.url:#{null}}")
     val url: String? = null
