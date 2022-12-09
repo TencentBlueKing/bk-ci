@@ -112,7 +112,9 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_SHARED` (
     `SHARED_USER` varchar(64) NOT NULL DEFAULT '' COMMENT '被共享的用户',
     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`ID`) USING BTREE,
-    KEY `uni_1` (`WORKSPACE_ID`)
+    KEY `uni_1` (`WORKSPACE_ID`),
+    KEY `uni_2` (`SHARED_USER`),
+    KEY `uni_3` (`OPERATOR`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '工作空间共享记录表';
 
 -- ----------------------------

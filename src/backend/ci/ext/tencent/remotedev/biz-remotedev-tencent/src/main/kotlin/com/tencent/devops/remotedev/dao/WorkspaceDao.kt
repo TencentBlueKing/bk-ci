@@ -29,12 +29,14 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TWorkspace
+import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -114,6 +116,30 @@ class WorkspaceDao {
             }
             return dslContext.selectFrom(this)
                 .where(condition).orderBy(CREATE_TIME.desc(), ID.desc())
+                .limit(limit.limit).offset(limit.offset)
+                .fetch()
+        }
+    }
+
+    fun limitFetchUserWorkspace(
+        dslContext: DSLContext,
+        limit: SQLLimit,
+        userId: String
+    ): Result<TWorkspaceRecord>? {
+        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(USER_ID.eq(userId)).unionAll(
+                    DSL.selectFrom(this).where(
+                        ID.`in`(
+                            DSL.select(shared.WORKSPACE_ID).from(shared).where(
+                                shared.SHARED_USER.eq(
+                                    userId
+                                )
+                            )
+                        )
+                    )
+                ).orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
         }

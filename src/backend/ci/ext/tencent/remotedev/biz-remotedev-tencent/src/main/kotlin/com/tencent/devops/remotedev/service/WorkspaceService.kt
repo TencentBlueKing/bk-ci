@@ -147,7 +147,9 @@ class WorkspaceService @Autowired constructor(
                 yaml = yaml,
                 wsTemplateId = wsTemplateId,
                 status = null,
-                lastStatusUpdateTime = null
+                lastStatusUpdateTime = null,
+                sleepingTime = null,
+                createUserId = userId
             )
         }
 
@@ -421,7 +423,7 @@ class WorkspaceService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
         val count = workspaceDao.countWorkspace(dslContext, userId)
-        val result = workspaceDao.limitFetchWorkspace(
+        val result = workspaceDao.limitFetchUserWorkspace(
             dslContext = dslContext,
             userId = userId,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
@@ -440,7 +442,9 @@ class WorkspaceService @Autowired constructor(
                     yaml = it.yaml,
                     wsTemplateId = it.templateId,
                     status = status,
-                    lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp()
+                    lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp(),
+                    sleepingTime = if (status.isSleeping()) it.lastStatusUpdateTime.timestamp() else null,
+                    createUserId = it.creator
                 )
             }
         )
