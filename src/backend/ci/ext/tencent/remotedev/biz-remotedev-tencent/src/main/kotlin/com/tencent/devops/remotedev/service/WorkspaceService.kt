@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -137,6 +138,10 @@ class WorkspaceService @Autowired constructor(
             }
         } else TODO("官方devfile")
 
+        val userInfo = kotlin.runCatching {
+            client.get(ServiceTxUserResource::class).get(userId)
+        }.onFailure { logger.warn("get $userId info error|${it.message}") }.getOrElse { null }?.data
+
         val workspace = with(workspaceCreate) {
             Workspace(
                 workspaceId = null,
@@ -157,7 +162,8 @@ class WorkspaceService @Autowired constructor(
             userId = userId,
             workspace = workspace,
             workspaceStatus = WorkspaceStatus.PREPARING,
-            dslContext = dslContext
+            dslContext = dslContext,
+            userInfo = userInfo
         )
 
         val devfile = DevfileUtil.parseDevfile(yaml)
