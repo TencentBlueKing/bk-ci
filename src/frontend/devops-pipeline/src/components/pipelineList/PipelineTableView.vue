@@ -51,6 +51,7 @@
                         :ref="`groupName_${props.$index}`"
                         v-for="(viewName, index) in pipelineGroups[props.$index].visibleGroups"
                         :key="index"
+                        v-bk-tooltips="viewName"
                         @click="goGroup(viewName)"
                     >
                         {{viewName}}
@@ -69,7 +70,9 @@
                         <div slot="content">
                             <bk-tag
                                 v-for="hiddenGroup in pipelineGroups[props.$index].hiddenGroups"
+                                ext-cls="pipeline-group-name-tag"
                                 :key="hiddenGroup"
+                                v-bk-tooltips="hiddenGroup"
                                 @click="goGroup(hiddenGroup)"
                             >
                                 {{hiddenGroup}}
