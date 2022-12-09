@@ -1204,6 +1204,7 @@ class PipelineRuntimeService @Autowired constructor(
         resourceVersion: Int
     ) {
         buildTaskList.forEach {
+            if (it.taskType == EnvControlTaskType.VM.name) return@forEach
             taskBuildRecords.add(
                 BuildRecordTask(
                     projectId = it.projectId, pipelineId = it.pipelineId, buildId = it.buildId,
@@ -1211,7 +1212,8 @@ class PipelineRuntimeService @Autowired constructor(
                     taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
                     executeCount = it.executeCount ?: 1, originClassType = null,
                     resourceVersion = resourceVersion, status = null, startTime = null,
-                    endTime = null, timestamps = emptyList(), timeCost = null, taskVar = mutableMapOf()
+                    endTime = null, timestamps = emptyList(), timeCost = null,
+                    taskVar = mutableMapOf("@type" to it.taskType)
                 )
             )
         }

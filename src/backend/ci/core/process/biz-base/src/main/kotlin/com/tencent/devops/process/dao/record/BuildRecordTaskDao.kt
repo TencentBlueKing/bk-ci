@@ -56,6 +56,8 @@ class BuildRecordTaskDao {
                     .set(CONTAINER_ID, record.containerId)
                     .set(TASK_ID, record.taskId)
                     .set(EXECUTE_COUNT, record.executeCount)
+                    .set(CLASS_TYPE, record.classType)
+                    .set(ORIGIN_CLASS_TYPE, record.originClassType)
                     .set(TASK_VAR, JsonUtil.toJson(record.taskVar, false))
                     .set(TASK_SEQ, record.taskSeq)
                     .set(ATOM_CODE, record.atomCode)
