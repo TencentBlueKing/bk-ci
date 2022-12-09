@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.container
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -74,7 +75,9 @@ data class TriggerContainer(
     @ApiModelProperty("是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var containPostTaskFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    override var matrixGroupFlag: Boolean? = false
+    override var matrixGroupFlag: Boolean? = false,
+    @ApiModelProperty("各项耗时", required = true)
+    override var timeCost: BuildRecordTimeCost? = BuildRecordTimeCost()
 ) : Container {
     companion object {
         const val classType = "trigger"

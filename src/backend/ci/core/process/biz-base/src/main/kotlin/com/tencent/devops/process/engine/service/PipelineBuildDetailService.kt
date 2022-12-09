@@ -51,7 +51,6 @@ import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
@@ -178,14 +177,7 @@ class PipelineBuildDetailService @Autowired constructor(
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime,
-            errorInfoList = buildInfo.errorInfoList,
-            triggerReviewers = triggerReviewers,
-            executeCount = 1,
-            buildMsg = buildInfo.buildMsg,
-            material = buildInfo.material,
-            remark = buildInfo.remark,
-            repositoryTriggerInfo = buildInfo.repositoryTriggerInfo,
-            timeCost = BuildRecordTimeCost() // TODO 计算耗时
+            triggerReviewers = triggerReviewers
         )
     }
 

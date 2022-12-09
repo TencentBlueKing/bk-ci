@@ -49,12 +49,12 @@ import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.VmInfo
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -130,7 +130,7 @@ class PipelineBuildRecordService @Autowired constructor(
         buildId: String,
         executeCount: Int,
         refreshStatus: Boolean = true
-    ): ModelDetail? {
+    ): ModelRecord? {
 
         val buildInfo = pipelineBuildDao.convert(
             pipelineBuildDao.getBuildInfo(
@@ -205,13 +205,14 @@ class PipelineBuildRecordService @Autowired constructor(
             pipelineId = pipelineInfo.pipelineId,
             buildId = buildId
         )
-        return ModelDetail(
+        return ModelRecord(
             id = buildInfo.buildId,
             pipelineId = buildInfo.pipelineId,
             pipelineName = model.name,
             userId = buildInfo.startUser ?: "",
             triggerUser = buildInfo.triggerUser,
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
+            queueTime = buildInfo.queueTime,
             startTime = buildInfo.startTime ?: LocalDateTime.now().timestampmilli(),
             endTime = buildInfo.endTime,
             status = buildInfo.status.name,
@@ -352,7 +353,7 @@ class PipelineBuildRecordService @Autowired constructor(
         // TODO 时间戳、执行次数计算
         buildRecordModelDao.updateRecord(
             dslContext, projectId, pipelineId, buildId, null, buildStatus,
-            emptyMap(), null, null, LocalDateTime.now(), null, null
+            emptyMap(), null, null, LocalDateTime.now(), null
         )
 //        val model = update(
 //            projectId = projectId, buildId = buildId,

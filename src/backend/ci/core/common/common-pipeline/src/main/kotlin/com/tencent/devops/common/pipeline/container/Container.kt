@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.annotations.ApiModel
 
 @ApiModel("流水线模型-多态基类")
@@ -56,6 +57,7 @@ interface Container {
     val jobId: String? // 用户自定义id
     var containPostTaskFlag: Boolean? // 是否包含post任务
     val matrixGroupFlag: Boolean? // 是否为构建矩阵组
+    var timeCost: BuildRecordTimeCost? // 耗时结果
 
     /**
      * 重置所有状态数据

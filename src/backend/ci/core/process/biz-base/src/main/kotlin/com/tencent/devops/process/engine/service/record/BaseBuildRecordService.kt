@@ -112,8 +112,7 @@ class BaseBuildRecordService(
                     ?: if (buildStatus.isCancel() && record.cancelUser.isNullOrBlank()) "System" else null,
                 startTime = null,
                 endTime = null,
-                timestamps = null,
-                timeCost = null
+                timestamps = null
             )
 
             watcher.start("dispatchEvent")

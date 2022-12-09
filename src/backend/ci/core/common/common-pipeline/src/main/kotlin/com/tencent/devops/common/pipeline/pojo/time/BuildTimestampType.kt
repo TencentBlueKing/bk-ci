@@ -24,19 +24,15 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.pipeline.pojo.time
 
-package com.tencent.devops.process.pojo.pipeline.record.time
-
-import com.tencent.devops.process.pojo.enums.BuildTimestampType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("构建详情记录-作业容器")
-data class BuildRecordTimeStamp(
-    @ApiModelProperty("记录时间戳", required = true)
-    val timestampType: BuildTimestampType, // 枚举待评估
-    @ApiModelProperty("开始时间", required = true)
-    val startTime: Long,
-    @ApiModelProperty("结束时间", required = true)
-    val endTime: Long?
-)
+enum class BuildTimestampType {
+    STAGE_CHECK_IN_WAITING,
+    STAGE_CHECK_OUT_WAITING,
+    JOB_MUTEX_WAITING,
+    JOB_CONTAINER_STARTUP,
+    JOB_CONTAINER_SHUTDOWN,
+    TASK_ATOM_LOADING,
+    TASK_REVIEW_WAITING,
+    UNKNOWN;
+}

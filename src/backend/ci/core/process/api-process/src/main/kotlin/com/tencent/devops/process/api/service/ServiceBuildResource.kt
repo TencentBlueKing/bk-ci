@@ -53,6 +53,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -373,7 +374,7 @@ interface ServiceBuildResource {
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
-    ): Result<ModelDetail>
+    ): Result<ModelRecord>
 
     @ApiOperation("获取流水线构建历史")
     @GET

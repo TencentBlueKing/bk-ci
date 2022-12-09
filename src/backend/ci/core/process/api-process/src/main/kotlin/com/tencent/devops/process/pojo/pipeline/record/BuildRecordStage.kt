@@ -27,11 +27,9 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
 
 @ApiModel("构建详情记录-插件任务")
 data class BuildRecordStage(
@@ -54,7 +52,5 @@ data class BuildRecordStage(
     @ApiModelProperty("构建状态", required = false)
     var status: String?,
     @ApiModelProperty("业务时间戳集合", required = true)
-    val timestamps: List<BuildRecordTimeStamp>,
-    @ApiModelProperty("各项耗时", required = true)
-    val timeCost: BuildRecordTimeCost?
+    val timestamps: List<BuildRecordTimeStamp>
 )

@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -255,7 +256,7 @@ interface UserBuildResource {
         @ApiParam("构建ID", required = true)
         @QueryParam("executeCount")
         executeCount: Int
-    ): Result<ModelDetail>
+    ): Result<ModelRecord>
 
     @ApiOperation("获取构建详情")
     @GET

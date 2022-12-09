@@ -33,13 +33,11 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class BuildRecordTaskDao {
@@ -76,17 +74,13 @@ class BuildRecordTaskDao {
         executeCount: Int,
         taskVar: Map<String, Any>,
         buildStatus: BuildStatus?,
-        startTime: LocalDateTime?,
-        endTime: LocalDateTime?,
-        timestamps: List<BuildRecordTimeStamp>?,
-        timeCost: BuildRecordTimeCost?
+        timestamps: List<BuildRecordTimeStamp>?
     ) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val update = dslContext.update(this)
                 .set(TASK_VAR, JsonUtil.toJson(taskVar, false))
             buildStatus?.let { update.set(STATUS, buildStatus.name) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
-            timeCost?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timeCost, false)) }
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
@@ -179,10 +173,7 @@ class BuildRecordTaskDao {
                     status = status,
                     timestamps = timestamps?.let {
                         JsonUtil.getObjectMapper().readValue(it) as List<BuildRecordTimeStamp>
-                    } ?: emptyList(),
-                    timeCost = timeCost?.let {
-                        JsonUtil.getObjectMapper().readValue(it, BuildRecordTimeCost::class.java)
-                    }
+                    } ?: emptyList()
                 )
             }
         }

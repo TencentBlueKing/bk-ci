@@ -38,8 +38,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -264,8 +263,7 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                buildStatus = null,
-
+                buildStatus = null
             )
         }
         return allStageStatus ?: emptyList()
@@ -317,8 +315,7 @@ class StageBuildRecordService(
         errorMsg: String? = null,
         startTime: LocalDateTime? = null,
         endTime: LocalDateTime? = null,
-        timestamps: List<BuildRecordTimeStamp>? = null,
-        timeCost: BuildRecordTimeCost? = null
+        timestamps: List<BuildRecordTimeStamp>? = null
     ): List<BuildStageStatus> {
         var allStageStatus: List<BuildStageStatus>? = null
         dslContext.transaction { configuration ->
@@ -353,10 +350,7 @@ class StageBuildRecordService(
                 executeCount = executeCount,
                 stageVar = stageVar,
                 buildStatus = buildStatus,
-                startTime = startTime,
-                endTime = endTime,
-                timestamps = timestamps,
-                timeCost = timeCost
+                timestamps = timestamps
             )
         }
         return allStageStatus ?: emptyList()

@@ -339,7 +339,6 @@ class PipelineContainerService @Autowired constructor(
                         resourceVersion = resourceVersion,
                         status = null,
                         timestamps = emptyList(),
-                        timeCost = null,
                         // 对矩阵产生的插件特殊表示类型
                         taskVar = mutableMapOf("@type" to MatrixStatusElement.classType)
                     )

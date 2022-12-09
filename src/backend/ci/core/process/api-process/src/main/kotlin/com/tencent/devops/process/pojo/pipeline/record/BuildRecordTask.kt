@@ -27,11 +27,9 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
 
 @ApiModel("构建详情记录-插件任务")
 data class BuildRecordTask(
@@ -64,7 +62,5 @@ data class BuildRecordTask(
     @ApiModelProperty("分裂前原类型标识", required = false)
     var originClassType: String?, // 如果为空则不再矩阵内，一个字段多个用处
     @ApiModelProperty("业务时间戳集合", required = true)
-    var timestamps: List<BuildRecordTimeStamp>,
-    @ApiModelProperty("各项耗时", required = true)
-    var timeCost: BuildRecordTimeCost?
+    var timestamps: List<BuildRecordTimeStamp>
 )

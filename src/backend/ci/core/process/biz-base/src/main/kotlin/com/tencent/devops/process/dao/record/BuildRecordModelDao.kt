@@ -33,8 +33,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModelRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
@@ -74,8 +73,7 @@ class BuildRecordModelDao {
         cancelUser: String?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
-        timestamps: List<BuildRecordTimeStamp>?,
-        timeCost: BuildRecordTimeCost?
+        timestamps: List<BuildRecordTimeStamp>?
     ) {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
             val update = dslContext.update(this)
@@ -83,7 +81,6 @@ class BuildRecordModelDao {
                 .set(MODEL_VAR, JsonUtil.toJson(modelVar, false))
             cancelUser?.let { update.set(CANCEL_USER, cancelUser) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
-            timeCost?.let { update.set(TIME_COST, JsonUtil.toJson(timeCost, false)) }
             val exeCount = executeCount ?: dslContext.select(DSL.max(EXECUTE_COUNT)).where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
@@ -133,10 +130,7 @@ class BuildRecordModelDao {
                     cancelUser = cancelUser,
                     timestamps = timestamps?.let {
                         JsonUtil.getObjectMapper().readValue(it) as List<BuildRecordTimeStamp>
-                    } ?: emptyList(),
-                    timeCost = timeCost?.let {
-                        JsonUtil.getObjectMapper().readValue(it, BuildRecordTimeCost::class.java)
-                    }
+                    } ?: emptyList()
                 )
             }
         }

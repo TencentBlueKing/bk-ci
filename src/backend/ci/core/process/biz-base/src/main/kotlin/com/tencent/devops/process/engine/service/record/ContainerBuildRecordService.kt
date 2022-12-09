@@ -40,14 +40,12 @@ import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Suppress("LongParameterList", "MagicNumber")
 @Service
@@ -115,8 +113,7 @@ class ContainerBuildRecordService(
                 buildStatus = BuildStatus.PREPARE_ENV,
                 containerVar = mapOf(
                     Container::startVMStatus.name to BuildStatus.RUNNING.name
-                ),
-                startTime = LocalDateTime.now()
+                )
             )
         }
     }
@@ -197,7 +194,7 @@ class ContainerBuildRecordService(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, containerId = containerId, executeCount = executeCount,
                     containerVar = containerVar.plus(containerVar), buildStatus = buildStatus,
-                    timestamps = null, timeCost = null
+                    timestamps = null
                 )
             }
         }
@@ -228,8 +225,7 @@ class ContainerBuildRecordService(
                 buildStatus = buildStatus,
                 containerVar = mapOf(
                     VMBuildContainer::matrixControlOption.name to matrixOption
-                ),
-                startTime = LocalDateTime.now()
+                )
             )
         }
     }
@@ -251,8 +247,7 @@ class ContainerBuildRecordService(
                 containerId = containerId, executeCount = executeCount,
                 buildStatus = BuildStatus.SKIP, containerVar = mapOf(
                     Container::startVMStatus.name to BuildStatus.SKIP.name
-                ),
-                startTime = LocalDateTime.now()
+                )
             )
             buildRecordTaskDao.getRecords(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
@@ -261,9 +256,8 @@ class ContainerBuildRecordService(
                 buildRecordTaskDao.updateRecord(
                     dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, taskId = task.taskId, executeCount = executeCount,
-                    startTime = null, endTime = null,
                     taskVar = task.taskVar, buildStatus = BuildStatus.SKIP,
-                    timestamps = null, timeCost = null
+                    timestamps = null
                 )
             }
         }
@@ -277,10 +271,7 @@ class ContainerBuildRecordService(
         executeCount: Int,
         containerVar: Map<String, Any>,
         buildStatus: BuildStatus,
-        startTime: LocalDateTime? = null,
-        endTime: LocalDateTime? = null,
-        timestamps: List<BuildRecordTimeStamp>? = null,
-        timeCost: BuildRecordTimeCost? = null
+        timestamps: List<BuildRecordTimeStamp>? = null
     ) {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -297,7 +288,7 @@ class ContainerBuildRecordService(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, containerId = containerId, executeCount = executeCount,
                 containerVar = recordVar.plus(containerVar), buildStatus = buildStatus,
-                timestamps = timestamps, timeCost = timeCost
+                timestamps = timestamps
             )
         }
     }

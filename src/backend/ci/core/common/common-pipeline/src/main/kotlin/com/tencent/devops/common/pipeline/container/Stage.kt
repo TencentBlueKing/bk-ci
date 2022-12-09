@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.container
 
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -61,7 +62,9 @@ data class Stage(
     @ApiModelProperty("stage准入配置", required = false)
     var checkIn: StagePauseCheck? = null, // stage准入配置
     @ApiModelProperty("stage准出配置", required = false)
-    var checkOut: StagePauseCheck? = null // stage准出配置
+    var checkOut: StagePauseCheck? = null, // stage准出配置
+    @ApiModelProperty("各项耗时", required = true)
+    var timeCost: BuildRecordTimeCost? = BuildRecordTimeCost()
 ) {
     /**
      * 刷新stage的所有配置，如果是初始化则重置所有历史数据

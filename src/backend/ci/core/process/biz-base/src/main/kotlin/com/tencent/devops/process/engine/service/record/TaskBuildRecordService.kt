@@ -42,8 +42,8 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
@@ -219,10 +219,7 @@ class TaskBuildRecordService(
                     executeCount = executeCount,
                     taskVar = taskVar,
                     buildStatus = taskStatus,
-                    startTime = LocalDateTime.now(),
-                    endTime = null,
-                    timestamps = null,
-                    timeCost = null
+                    timestamps = null
                 )
             }
         }
@@ -320,10 +317,7 @@ class TaskBuildRecordService(
                     executeCount = executeCount,
                     taskVar = taskVar,
                     buildStatus = buildStatus,
-                    startTime = null,
-                    endTime = LocalDateTime.now(),
-                    timestamps = null,
-                    timeCost = null
+                    timestamps = null
                 )
             }
         }
@@ -402,10 +396,7 @@ class TaskBuildRecordService(
                 executeCount = executeCount,
                 taskVar = recordVar.plus(taskVar),
                 buildStatus = buildStatus,
-                startTime = startTime,
-                endTime = endTime,
-                timestamps = timestamps,
-                timeCost = timeCost
+                timestamps = timestamps
             )
         }
     }

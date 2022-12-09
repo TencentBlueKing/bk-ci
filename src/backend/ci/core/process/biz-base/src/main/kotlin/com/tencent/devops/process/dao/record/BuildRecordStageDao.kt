@@ -33,12 +33,10 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordStage
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordStageRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeCost
-import com.tencent.devops.process.pojo.pipeline.record.time.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class BuildRecordStageDao {
@@ -70,17 +68,13 @@ class BuildRecordStageDao {
         executeCount: Int,
         stageVar: Map<String, Any>,
         buildStatus: BuildStatus?,
-        startTime: LocalDateTime?,
-        endTime: LocalDateTime?,
-        timestamps: List<BuildRecordTimeStamp>?,
-        timeCost: BuildRecordTimeCost?
+        timestamps: List<BuildRecordTimeStamp>?
     ) {
         with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
             val update = dslContext.update(this)
                 .set(STAGE_VAR, JsonUtil.toJson(stageVar, false))
             buildStatus?.let { update.set(STATUS, buildStatus.name) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
-            timeCost?.let { update.set(TIME_COST, JsonUtil.toJson(timeCost, false)) }
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
@@ -146,10 +140,7 @@ class BuildRecordStageDao {
                     status = status,
                     timestamps = timestamps?.let {
                         JsonUtil.getObjectMapper().readValue(it) as List<BuildRecordTimeStamp>
-                    } ?: emptyList(),
-                    timeCost = timeCost?.let {
-                        JsonUtil.getObjectMapper().readValue(it, BuildRecordTimeCost::class.java)
-                    }
+                    } ?: emptyList()
                 )
             }
         }

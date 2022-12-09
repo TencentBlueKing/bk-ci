@@ -1161,7 +1161,7 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
             cancelUser = null, modelVar = mutableMapOf(),
-            status = startBuildStatus.name, timestamps = emptyList(), timeCost = null
+            status = startBuildStatus.name, timestamps = emptyList()
         )
         val stageBuildRecords = mutableListOf<BuildRecordStage>()
         val containerBuildRecords = mutableListOf<BuildRecordContainer>()
@@ -1211,8 +1211,8 @@ class PipelineRuntimeService @Autowired constructor(
                     stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
                     taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
                     executeCount = it.executeCount ?: 1, originClassType = null,
-                    resourceVersion = resourceVersion, status = null, timestamps = emptyList(),
-                    timeCost = null, taskVar = mutableMapOf()
+                    resourceVersion = resourceVersion, status = null,
+                    timestamps = emptyList(), taskVar = mutableMapOf()
                 )
             )
         }
@@ -1226,7 +1226,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = it.buildId, stageId = it.stageId, containerId = it.containerId,
                     containerType = it.containerType, executeCount = it.executeCount,
                     matrixGroupFlag = null, matrixGroupId = null, containerVar = mutableMapOf(),
-                    status = null, timestamps = emptyList(), timeCost = null
+                    status = null, timestamps = emptyList()
                 )
             )
         }
@@ -1239,7 +1239,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
                     buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
                     executeCount = it.executeCount, stageVar = mutableMapOf(),
-                    status = null, timestamps = emptyList(), timeCost = null
+                    status = null, timestamps = emptyList()
                 )
             )
         }

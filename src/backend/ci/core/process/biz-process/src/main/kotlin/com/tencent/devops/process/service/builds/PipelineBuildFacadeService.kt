@@ -97,6 +97,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
@@ -1313,7 +1314,7 @@ class PipelineBuildFacadeService(
         executeCount: Int,
         channelCode: ChannelCode,
         checkPermission: Boolean = true
-    ): ModelDetail {
+    ): ModelRecord {
 
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
