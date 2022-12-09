@@ -139,11 +139,16 @@ interface UserProjectResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo,
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        accessToken: String?,
+        @ApiParam(value = "项目信息", required = true)
+        projectCreateJson: String,
+        @ApiParam(value = "logo", required = false)
+        @FormDataParam("logo")
+        logo: InputStream? = null,
+        @FormDataParam("logo")
+        disposition: FormDataContentDisposition? = null
     ): Result<Boolean>
 
     @PUT

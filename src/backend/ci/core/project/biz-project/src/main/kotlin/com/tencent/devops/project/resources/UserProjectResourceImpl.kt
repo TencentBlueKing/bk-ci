@@ -27,8 +27,10 @@
 
 package com.tencent.devops.project.resources
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectResource
@@ -89,7 +91,19 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(projectService.getByEnglishName(userId, projectId, accessToken))
     }
 
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
+    override fun create(
+        userId: String,
+        accessToken: String?,
+        projectCreateJson: String,
+        logo: InputStream?,
+        disposition: FormDataContentDisposition?
+    ): Result<Boolean> {
+        val projectCreateInfo = JsonUtil.to(
+            projectCreateJson, object : TypeReference<ProjectCreateInfo>() {}
+        )
+        if (logo != null) {
+            projectCreateInfo.logo = logo
+        }
         // 创建项目
         projectService.create(
             userId = userId,
