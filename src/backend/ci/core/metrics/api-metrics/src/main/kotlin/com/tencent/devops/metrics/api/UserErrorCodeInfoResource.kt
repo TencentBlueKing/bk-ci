@@ -61,9 +61,9 @@ interface UserErrorCodeInfoResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("错误类型", required = false)
+        @ApiParam("错误类型,使用逗号进行分隔", required = false)
         @QueryParam("errorTypes")
-        errorTypes: List<Int>?,
+        errorTypes: String?,
         @ApiParam("页码", required = true, defaultValue = "1")
         @QueryParam("page")
         page: Int,
