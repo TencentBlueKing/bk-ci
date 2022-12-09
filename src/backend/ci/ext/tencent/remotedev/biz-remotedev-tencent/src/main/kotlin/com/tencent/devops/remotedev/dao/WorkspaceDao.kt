@@ -100,18 +100,6 @@ class WorkspaceDao {
         }
     }
 
-    fun countWorkspace(
-        dslContext: DSLContext,
-        userId: String? = null,
-    ): Long {
-        with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId = userId)
-            return dslContext.selectCount().from(this)
-                .where(condition)
-                .fetchOne(0, Long::class.java) ?: 0
-        }
-    }
-
     fun limitFetchWorkspace(
         dslContext: DSLContext,
         limit: SQLLimit,
@@ -131,6 +119,34 @@ class WorkspaceDao {
         }
     }
 
+    /**
+     * 获得用户所拥有工作空间列表（计数）
+     */
+    fun countUserWorkspace(
+        dslContext: DSLContext,
+        userId: String? = null,
+    ): Long {
+        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectCount().from(this)
+                .where(USER_ID.eq(userId)).unionAll(
+                    DSL.selectCount().from(this).where(
+                        ID.`in`(
+                            DSL.select(shared.WORKSPACE_ID).from(shared).where(
+                                shared.SHARED_USER.eq(
+                                    userId
+                                )
+                            )
+                        )
+                    )
+                )
+                .fetch(0, Long::class.java).sum()
+        }
+    }
+
+    /**
+     * 获得用户所拥有工作空间列表
+     */
     fun limitFetchUserWorkspace(
         dslContext: DSLContext,
         limit: SQLLimit,
