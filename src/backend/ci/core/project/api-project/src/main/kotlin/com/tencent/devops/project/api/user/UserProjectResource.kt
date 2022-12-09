@@ -135,7 +135,6 @@ interface UserProjectResource {
     @POST
     @Path("/")
     @ApiOperation("创建项目")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun create(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
@@ -150,7 +149,6 @@ interface UserProjectResource {
     @PUT
     @Path("/{project_id}")
     @ApiOperation("修改项目")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun update(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
