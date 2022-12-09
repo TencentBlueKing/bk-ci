@@ -273,7 +273,20 @@ class UserBuildResourceImpl @Autowired constructor(
         buildId: String,
         executeCount: Int
     ): Result<ModelDetail> {
-        TODO("Not yet implemented")
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildRecord(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = executeCount,
+                channelCode = ChannelCode.BS
+            )
+        )
     }
 
     override fun getBuildDetailByBuildNo(

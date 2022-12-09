@@ -1305,6 +1305,39 @@ class PipelineBuildFacadeService(
         )
     }
 
+    fun getBuildRecord(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        channelCode: ChannelCode,
+        checkPermission: Boolean = true
+    ): ModelDetail {
+
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
+            )
+        }
+
+        return buildRecordService.get(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            defaultMessage = "构建任务${buildId}不存在",
+            params = arrayOf(buildId)
+        )
+    }
+
     fun goToLatestFinishedBuild(
         userId: String,
         projectId: String,

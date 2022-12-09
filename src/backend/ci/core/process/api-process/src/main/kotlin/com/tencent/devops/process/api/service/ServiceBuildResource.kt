@@ -369,7 +369,9 @@ interface ServiceBuildResource {
         buildId: String,
         @ApiParam("构建ID", required = true)
         @QueryParam("executeCount")
-        executeCount: Int
+        executeCount: Int,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
     ): Result<ModelDetail>
 
     @ApiOperation("获取流水线构建历史")
