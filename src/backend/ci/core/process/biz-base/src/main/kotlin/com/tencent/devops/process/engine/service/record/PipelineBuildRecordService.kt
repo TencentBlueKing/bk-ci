@@ -231,8 +231,7 @@ class PipelineBuildRecordService @Autowired constructor(
             buildMsg = buildInfo.buildMsg,
             material = buildInfo.material,
             remark = buildInfo.remark,
-            repositoryTriggerInfo = buildInfo.repositoryTriggerInfo,
-            timeCost = BuildRecordTimeCost() // TODO 计算耗时
+            repositoryTriggerInfo = buildInfo.repositoryTriggerInfo
         )
     }
 

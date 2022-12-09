@@ -89,13 +89,7 @@ class CallBackControlTest : TestBase() {
             latestBuildNum = 1,
             latestVersion = 1,
             lastModifyUser = "yongyiduan",
-            executeTime = 100,
-            timeCost = BuildRecordTimeCost(),
-            errorInfoList = emptyList(),
-            buildMsg = "xxx",
-            material = null,
-            remark = "111",
-            repositoryTriggerInfo = null
+            executeTime = 100
         )
 
         whenever(pipelineBuildDetailService.get(projectId = projectId, buildId = buildId, refreshStatus = false))

@@ -74,8 +74,6 @@ data class ModelRecord(
     val lastModifyUser: String?,
     @ApiModelProperty("执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
     val executeTime: Long = 0,
-    @ApiModelProperty("各项耗时", required = true)
-    val timeCost: BuildRecordTimeCost,
     @ApiModelProperty("流水线任务执行错误", required = false)
     var errorInfoList: List<ErrorInfo>?,
     @ApiModelProperty("触发审核人列表", required = false)
