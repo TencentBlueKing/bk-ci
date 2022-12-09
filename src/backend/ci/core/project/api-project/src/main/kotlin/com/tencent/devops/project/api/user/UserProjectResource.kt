@@ -135,7 +135,6 @@ interface UserProjectResource {
     @POST
     @Path("/")
     @ApiOperation("创建项目")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun create(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
@@ -150,7 +149,6 @@ interface UserProjectResource {
     @PUT
     @Path("/{project_id}")
     @ApiOperation("修改项目")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun update(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
@@ -200,6 +198,24 @@ interface UserProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<ProjectLogo>
+
+    @POST
+    @Path("/upload/logo")
+    @ApiOperation("上传logo")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun uploadLogo(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("logo")
+        inputStream: InputStream,
+        @FormDataParam("logo")
+        disposition: FormDataContentDisposition,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
+    ): Result<String>
 
     @PUT
     @Path("/{validateType}/names/validate")

@@ -138,6 +138,15 @@ class UserProjectResourceImpl @Autowired constructor(
         return projectService.updateLogo(userId, englishName, inputStream, disposition, accessToken)
     }
 
+    override fun uploadLogo(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        accessToken: String?
+    ): Result<String> {
+        return projectService.uploadLogo(userId, inputStream, disposition, accessToken)
+    }
+
     override fun validate(
         userId: String,
         validateType: ProjectValidateType,
