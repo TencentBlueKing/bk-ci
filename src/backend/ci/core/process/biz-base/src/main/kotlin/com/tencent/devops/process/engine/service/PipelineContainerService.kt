@@ -342,7 +342,7 @@ class PipelineContainerService @Autowired constructor(
                         endTime = null,
                         timestamps = emptyList(),
                         timeCost = null,
-                        taskVar = mutableMapOf()
+                        taskVar = mutableMapOf("@type" to MatrixStatusElement.classType)
                     )
                 )
             }
