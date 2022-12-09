@@ -89,7 +89,16 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(projectService.getByEnglishName(userId, projectId, accessToken))
     }
 
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
+    override fun create(
+        userId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        logo: InputStream?,
+        disposition: FormDataContentDisposition?
+    ): Result<Boolean> {
+        if (logo != null) {
+            projectCreateInfo.logo = logo
+        }
         // 创建项目
         projectService.create(
             userId = userId,
