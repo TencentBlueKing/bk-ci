@@ -838,7 +838,7 @@ class PipelineBuildDao {
         }
     }
 
-    fun getBuildsNoNeedPipelineId(
+    fun getBuilds(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String?,

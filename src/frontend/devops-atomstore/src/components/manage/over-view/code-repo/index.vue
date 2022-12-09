@@ -57,7 +57,7 @@
                 if (VERSION_TYPE !== 'ee') {
                     this.list = [
                         { label: this.$t('store.开发语言：'), value: this.detail.language },
-                        { label: this.$t('store.已托管至：'), value: this.$t('store.工蜂'), link: 'https://git.code.oa.com/' },
+                        { label: this.$t('store.已托管至：'), value: this.$t('store.工蜂'), link: 'https://git.woa.com/' },
                         { label: this.$t('store.代码库：'), value: this.detail.codeSrc, tool: { show: true, label: this.$t('store.复制'), click: () => copyString(this.detail.codeSrc) } },
                         {
                             label: this.$t('store.授权人：'),
@@ -79,7 +79,7 @@
 
                 if (VERSION_TYPE !== 'ee') {
                     this.list = [
-                        { label: this.$t('store.已托管至：'), value: this.$t('store.工蜂'), link: 'https://git.code.oa.com/' },
+                        { label: this.$t('store.已托管至：'), value: this.$t('store.工蜂'), link: 'https://git.woa.com/' },
                         { label: this.$t('store.代码库：'), value: this.detail.codeSrc, tool: { show: true, label: this.$t('store.复制'), click: () => copyString(this.detail.codeSrc) } },
                         {
                             label: this.$t('store.授权人：'),

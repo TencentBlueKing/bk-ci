@@ -414,13 +414,17 @@ class PipelineBuildFacadeService(
                     model.stages.forEach { s ->
                         // stage 级重试
                         if (s.id == taskId) {
-                            pipelineStageService.getStage(projectId, buildId, stageId = s.id) ?: run {
+                            val stage = pipelineStageService.getStage(projectId, buildId, stageId = s.id) ?: run {
                                 throw ErrorCodeException(
                                     errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
                                     defaultMessage = "构建数据已过期，请使用rebuild进行重试(Please use rebuild)"
                                 )
                             }
-
+                            // 只有失败或取消情况下提供重试得可能
+                            if (!stage.status.isFailure() && !stage.status.isCancel()) throw ErrorCodeException(
+                                errorCode = ProcessMessageCode.ERROR_RETRY_STAGE_NOT_FAILED,
+                                defaultMessage = "Stage($taskId)未处于失败或取消状态，无法重试"
+                            )
                             paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                                 key = PIPELINE_RETRY_START_TASK_ID, value = s.id!!
                             )
@@ -1471,14 +1475,14 @@ class PipelineBuildFacadeService(
         return buildHistories
     }
 
-    fun getBuildsNoNeedPipelineId(
+    fun getBuilds(
         userId: String,
         projectId: String,
         pipelineId: String?,
         buildStatus: Set<BuildStatus>?,
         checkPermission: Boolean
     ): List<String> {
-        return pipelineRuntimeService.getBuildsNoNeedPipelineId(
+        return pipelineRuntimeService.getBuilds(
             projectId, pipelineId, buildStatus
         )
     }

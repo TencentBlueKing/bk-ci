@@ -63,6 +63,7 @@ class StreamHistoryService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
+    @Suppress("ComplexMethod")
     fun getHistoryBuildList(
         userId: String,
         gitProjectId: Long,
@@ -75,7 +76,7 @@ class StreamHistoryService @Autowired constructor(
 
         val buildIds = if (!search?.status.isNullOrEmpty()) {
             // 如果查询条件有状态信息，需要到引擎里面匹配，拿到buildIds之后再在event build 表里面进行其他条件匹配
-            client.get(ServiceBuildResource::class).getBuildsNoNeedPipelineId(
+            client.get(ServiceBuildResource::class).getBuilds(
                 userId = userId,
                 projectId = conf.projectCode!!,
                 pipelineId = search?.pipelineId,
@@ -83,6 +84,15 @@ class StreamHistoryService @Autowired constructor(
                 channelCode = channelCode
             ).data
         } else null
+
+        if (buildIds?.isEmpty() == true) {
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0,
+                records = emptyList()
+            )
+        }
 
         val totalPage = gitRequestEventBuildDao.getRequestEventBuildListMultipleCount(
             dslContext = dslContext,
