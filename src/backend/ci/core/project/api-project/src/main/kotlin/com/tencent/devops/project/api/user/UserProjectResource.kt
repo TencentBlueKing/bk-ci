@@ -210,8 +210,6 @@ interface UserProjectResource {
         @ApiParam("文件", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,
-        @FormDataParam("logo")
-        disposition: FormDataContentDisposition,
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
