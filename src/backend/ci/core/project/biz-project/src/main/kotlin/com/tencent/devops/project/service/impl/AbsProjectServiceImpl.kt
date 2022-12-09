@@ -213,9 +213,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
                 val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
                 val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
-                // 上传logo
-                val logo = projectCreateInfo.logo
-                val logoAddress = getLogoAddress(userId, logo, projectCreateInfo.englishName)
+                val logoAddress = projectCreateInfo.logoAddress
                 projectDao.create(
                     dslContext = context,
                     userId = userId,
@@ -237,12 +235,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         createExtInfo = createExtInfo
                     )
                     // 修改bcs的logo
-                    if (logo != null) {
+                    if (logoAddress != null) {
                         projectDispatcher.dispatch(
                             ProjectUpdateLogoBroadCastEvent(
                                 userId = userId,
                                 projectId = projectId,
-                                logoAddr = logoAddress!!
+                                logoAddr = logoAddress
                             )
                         )
                     }
@@ -352,8 +350,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     englishName = englishName
                 ) ?: throw NotFoundException("project - $englishName is not exist!")
                 val projectId = projectInfo.projectId
-                val logo = projectUpdateInfo.logo
-                val logoAddress = getLogoAddress(userId, logo, englishName)
+                val logoAddress = projectUpdateInfo.logoAddress
+                logger.info("logoAddress : $logoAddress")
                 val resourceUpdateInfo = ResourceUpdateInfo(
                     userId = userId,
                     projectUpdateInfo = projectUpdateInfo,
@@ -386,7 +384,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             projectInfo = projectUpdateInfo
                         )
                     )
-                    if (logo != null) {
+                    if (logoAddress != null) {
                         logger.info("logoAddress : $logoAddress")
                         projectDispatcher.dispatch(
                             ProjectUpdateLogoBroadCastEvent(
@@ -709,6 +707,22 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun uploadLogo(
+        userId: String,
+        inputStream: InputStream,
+        accessToken: String?
+    ): Result<String> {
+        var logoFile: File? = null
+        try {
+            logoFile = FileUtil.convertTempFile(inputStream)
+            val logoAddress = saveLogoAddress(userId, "", logoFile)
+            return Result(logoAddress)
+        } catch (e: Exception) {
+            logger.warn("fail update projectLogo", e)
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
+        }
+    }
+
     override fun updateProjectName(userId: String, projectId: String, projectName: String): Boolean {
         if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
@@ -878,12 +892,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun applyToJoinProject(
         userId: String,
-        projectId: String,
+        englishName: String,
         applicationInfo: ApplicationInfo
     ): Boolean {
         var success = false
-        val projectInfo = projectDao.get(dslContext, projectId)
-            ?: throw InvalidParamException("project is not exist!|$applicationInfo.projectId")
+        val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
+            ?: throw InvalidParamException("project is not exist!")
         val gradeManagerId = projectInfo.relationId
         try {
             createRoleGroupApplication(
@@ -897,7 +911,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw OperationException(
                 MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.APPLY_TO_JOIN_PROJECT_FAIL,
-                    defaultMessage = "Apply to join project failed  ： ${projectInfo.englishName}|$applicationInfo"
+                    defaultMessage = "Apply to join project failed ！"
                 )
             )
         }

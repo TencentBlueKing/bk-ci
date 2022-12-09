@@ -199,6 +199,22 @@ interface UserProjectResource {
         accessToken: String?
     ): Result<ProjectLogo>
 
+    @POST
+    @Path("/upload/logo")
+    @ApiOperation("上传logo")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun uploadLogo(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("logo")
+        inputStream: InputStream,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
+    ): Result<String>
+
     @PUT
     @Path("/{validateType}/names/validate")
     @ApiOperation("校验项目名称和项目英文名")
@@ -254,15 +270,15 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @ApiOperation("申请加入项目")
-    @Path("/{project_id}/applyToJoinProject/")
+    @Path("/{english_name}/applyToJoinProject/")
     @POST
     fun applyToJoinProject(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("申请加入项目实体类", required = true)
-        @PathParam("project_id")
-        projectId: String,
+        @PathParam("english_name")
+        englishName: String,
         @ApiParam("申请加入项目实体类", required = true)
         applicationInfo: ApplicationInfo
     ): Result<Boolean>

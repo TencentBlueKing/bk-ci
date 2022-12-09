@@ -138,6 +138,14 @@ class UserProjectResourceImpl @Autowired constructor(
         return projectService.updateLogo(userId, englishName, inputStream, disposition, accessToken)
     }
 
+    override fun uploadLogo(
+        userId: String,
+        inputStream: InputStream,
+        accessToken: String?
+    ): Result<String> {
+        return projectService.uploadLogo(userId, inputStream, accessToken)
+    }
+
     override fun validate(
         userId: String,
         validateType: ProjectValidateType,
@@ -174,13 +182,13 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun applyToJoinProject(
         userId: String,
-        projectId: String,
+        englishName: String,
         applicationInfo: ApplicationInfo
     ): Result<Boolean> {
         return Result(
             projectService.applyToJoinProject(
                 userId = userId,
-                projectId = projectId,
+                englishName = englishName,
                 applicationInfo = applicationInfo
             )
         )
