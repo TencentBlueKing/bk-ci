@@ -59,10 +59,6 @@ data class BuildRecordContainer(
     val matrixGroupFlag: Boolean? = null,
     @ApiModelProperty("所在矩阵组ID", required = false)
     val matrixGroupId: String? = null,
-    @ApiModelProperty("开始时间", required = false)
-    val startTime: LocalDateTime?,
-    @ApiModelProperty("结束时间", required = false)
-    val endTime: LocalDateTime?,
     @ApiModelProperty("业务时间戳集合", required = true)
     val timestamps: List<BuildRecordTimeStamp>,
     @ApiModelProperty("各项耗时", required = true)

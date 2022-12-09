@@ -63,10 +63,6 @@ data class BuildRecordTask(
     var status: String?,
     @ApiModelProperty("分裂前原类型标识", required = false)
     var originClassType: String?, // 如果为空则不再矩阵内，一个字段多个用处
-    @ApiModelProperty("开始时间", required = false)
-    var startTime: LocalDateTime?,
-    @ApiModelProperty("结束时间", required = false)
-    var endTime: LocalDateTime?,
     @ApiModelProperty("业务时间戳集合", required = true)
     var timestamps: List<BuildRecordTimeStamp>,
     @ApiModelProperty("各项耗时", required = true)

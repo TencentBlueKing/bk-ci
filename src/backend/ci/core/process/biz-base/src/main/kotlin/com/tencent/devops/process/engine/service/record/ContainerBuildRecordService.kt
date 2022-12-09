@@ -197,7 +197,6 @@ class ContainerBuildRecordService(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, containerId = containerId, executeCount = executeCount,
                     containerVar = containerVar.plus(containerVar), buildStatus = buildStatus,
-                    startTime = null, endTime = if (buildStatus.isFinish()) LocalDateTime.now() else null,
                     timestamps = null, timeCost = null
                 )
             }
@@ -298,7 +297,6 @@ class ContainerBuildRecordService(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, containerId = containerId, executeCount = executeCount,
                 containerVar = recordVar.plus(containerVar), buildStatus = buildStatus,
-                startTime = startTime, endTime = endTime,
                 timestamps = timestamps, timeCost = timeCost
             )
         }

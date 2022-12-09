@@ -1161,8 +1161,7 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
             cancelUser = null, modelVar = mutableMapOf(),
-            status = startBuildStatus.name, startTime = null, endTime = null,
-            timestamps = emptyList(), timeCost = null
+            status = startBuildStatus.name, timestamps = emptyList(), timeCost = null
         )
         val stageBuildRecords = mutableListOf<BuildRecordStage>()
         val containerBuildRecords = mutableListOf<BuildRecordContainer>()
@@ -1204,6 +1203,7 @@ class PipelineRuntimeService @Autowired constructor(
         resourceVersion: Int
     ) {
         buildTaskList.forEach {
+            // 自动填充的构建机控制插件不需要存入Record
             if (it.taskType == EnvControlTaskType.VM.name) return@forEach
             taskBuildRecords.add(
                 BuildRecordTask(
@@ -1211,9 +1211,8 @@ class PipelineRuntimeService @Autowired constructor(
                     stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
                     taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
                     executeCount = it.executeCount ?: 1, originClassType = null,
-                    resourceVersion = resourceVersion, status = null, startTime = null,
-                    endTime = null, timestamps = emptyList(), timeCost = null,
-                    taskVar = mutableMapOf("@type" to it.taskType)
+                    resourceVersion = resourceVersion, status = null, timestamps = emptyList(),
+                    timeCost = null, taskVar = mutableMapOf()
                 )
             )
         }
@@ -1227,8 +1226,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = it.buildId, stageId = it.stageId, containerId = it.containerId,
                     containerType = it.containerType, executeCount = it.executeCount,
                     matrixGroupFlag = null, matrixGroupId = null, containerVar = mutableMapOf(),
-                    status = null, startTime = null, endTime = null,
-                    timestamps = emptyList(), timeCost = null
+                    status = null, timestamps = emptyList(), timeCost = null
                 )
             )
         }
@@ -1241,8 +1239,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
                     buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
                     executeCount = it.executeCount, stageVar = mutableMapOf(),
-                    status = null, startTime = null, endTime = null,
-                    timestamps = emptyList(), timeCost = null
+                    status = null, timestamps = emptyList(), timeCost = null
                 )
             )
         }

@@ -55,8 +55,6 @@ class BuildRecordStageDao {
                     .set(EXECUTE_COUNT, record.executeCount)
                     .set(SEQ, record.stageSeq)
                     .set(STAGE_VAR, JsonUtil.toJson(record.stageVar, false))
-                    .set(START_TIME, record.startTime)
-                    .set(END_TIME, record.endTime)
                     .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
                     .execute()
             }
@@ -81,8 +79,6 @@ class BuildRecordStageDao {
             val update = dslContext.update(this)
                 .set(STAGE_VAR, JsonUtil.toJson(stageVar, false))
             buildStatus?.let { update.set(STATUS, buildStatus.name) }
-            startTime?.let { update.set(START_TIME, startTime) }
-            endTime?.let { update.set(END_TIME, endTime) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
             timeCost?.let { update.set(TIME_COST, JsonUtil.toJson(timeCost, false)) }
             update.where(
@@ -148,8 +144,6 @@ class BuildRecordStageDao {
                     stageVar = JsonUtil.getObjectMapper().readValue(stageVar) as MutableMap<String, Any>,
                     stageSeq = seq,
                     status = status,
-                    startTime = startTime,
-                    endTime = endTime,
                     timestamps = timestamps?.let {
                         JsonUtil.getObjectMapper().readValue(it) as List<BuildRecordTimeStamp>
                     } ?: emptyList(),

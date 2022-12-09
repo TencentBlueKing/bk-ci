@@ -57,10 +57,6 @@ data class BuildRecordModel(
     var status: String?,
     @ApiModelProperty("取消人", required = false)
     val cancelUser: String?,
-    @ApiModelProperty("开始时间", required = false)
-    val startTime: LocalDateTime?,
-    @ApiModelProperty("结束时间", required = false)
-    val endTime: LocalDateTime?,
     @ApiModelProperty("业务时间戳集合", required = true)
     val timestamps: List<BuildRecordTimeStamp> = emptyList(),
     @ApiModelProperty("各项耗时", required = true)
