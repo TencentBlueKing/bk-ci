@@ -74,18 +74,9 @@ const handleFormChange = (val: boolean) => {
  */
 const handleUpdate = async () => {
   btnLoading.value = true;
-  const formData = new FormData();
-  Object.keys(projectData.value).forEach((key) => {
-    if (!['logoAddr', 'subjectScopes'].includes(key)) {
-      formData.append(key, projectData.value[key]);
-    }
-    if (key === 'subjectScopes') {
-      formData.append(key, JSON.stringify(projectData.value[key]));
-    }
-  });
   const result = await http.requestUpdateProject({
     projectId: projectData.value.englishName,
-    formData,
+    projectData: projectData.value,
   });
   btnLoading.value = false;
   if (result) {

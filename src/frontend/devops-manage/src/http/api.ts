@@ -5,7 +5,6 @@ import {
   STORE_PERFIX,
   PROJECT_PERFIX,
 } from './constants';
-
 export default {
   getUser() {
     return http.get(`${API_PERFIX}/user`);
@@ -37,34 +36,15 @@ export default {
    * 创建项目
    */
   requestCreateProject(params: any) {
-    const { formData } = params;
-    return fetch(`${PROJECT_PERFIX}/user/projects/`, {
-      body: formData,
-      method: 'POST',
-      headers: {
-        'X-Requested-With': 'fetch',
-        'X-Gateway-Tag': 'kubernetes-dev-rbac',
-      },
-    });
-    // return http.post(`${PROJECT_PERFIX}/user/projects/`, projectData);
+    const { projectData } = params;
+    return http.post(`${PROJECT_PERFIX}/user/projects/`, projectData);
   },
   /**
    * 修改项目信息
    */
   requestUpdateProject(params: any) {
-    const { projectId, formData } = params;
-    return fetch(`${PROJECT_PERFIX}/user/projects/${projectId}`, {
-      body: formData,
-      method: 'PUT',
-      headers: {
-        'X-Requested-With': 'fetch',
-        'X-Gateway-Tag': 'kubernetes-dev-rbac',
-      },
-      // headers: {
-      //   'Content-type': 'multipart/form-data',
-      // },
-    });
-    // return http.put(`${PROJECT_PERFIX}/user/projects/${projectId}`, projectData);
+    const { projectId, projectData } = params;
+    return http.put(`${PROJECT_PERFIX}/user/projects/${projectId}`, projectData);
   },
   /**
    * 获取项目详情
@@ -88,11 +68,13 @@ export default {
     return http.get(`${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}`);
   },
 
-  changeProjectLogo(params: any) {
-    const { englishName, formData } = params;
-    return fetch(`${PROJECT_PERFIX}/user/projects/${englishName}/logo`, {
-      body: formData,
-      method: 'PUT',
-    });
+  /**
+   * 上传项目logo 
+   */
+  async uploadProjectLogo(params: any) {
+    const { formData } = params;
+    return http.post(`${PROJECT_PERFIX}/user/projects/upload/logo`, formData, {
+      disabledResponseType: true
+    })
   },
 };

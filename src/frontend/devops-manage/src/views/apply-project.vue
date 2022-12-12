@@ -28,21 +28,11 @@ const projectData = ref({
   authSecrecy: false,
 });
 const btnLoading = ref(false);
-
 const handleConfirm = async () => {
   btnLoading.value = true;
   projectData.value.subjectScopes  = [{ type: '*', id: '*' }];
-  const formData = new FormData();
-  Object.keys(projectData.value).forEach((key) => {
-    if (!['logoAddr', 'subjectScopes'].includes(key)) {
-      formData.append(key, projectData.value[key]);
-    }
-    if (key === 'subjectScopes') {
-      formData.append(key, JSON.stringify(projectData.value[key]));
-    }
-  });
   const result = await http.requestCreateProject({
-    formData,
+    projectData: projectData.value,
   }).catch(() => false);
   if (result) {
     Message({
@@ -69,7 +59,10 @@ const handleCancel = () => {
     />
     <article class="apply-project-content">
       <section class="create-project-form">
-        <project-form :data="projectData">
+        <project-form
+          ref="projectFrom"
+          :data="projectData"
+        >
           <bk-form-item>
             <bk-button
               class="btn mr10"

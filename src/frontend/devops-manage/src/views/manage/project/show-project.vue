@@ -48,7 +48,8 @@ const handleCancelCreation = () => {
         theme: 'success',
         message: t('取消创建成功'),
       });
-      // doing...
+      const { origin } = window.location;
+      window.location.href = `${origin}/console/pm`
     }
   };
 

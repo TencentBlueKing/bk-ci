@@ -35,6 +35,46 @@ const logoFiles = computed(() => {
   }
   return files;
 });
+const projectFrom = ref();
+const rules = {
+  projectName: [
+    {
+      required: true,
+      message: t('请填写项目名称'),
+      trigger: 'blur',
+    },
+  ],
+  englishName: [
+    {
+      required: true,
+      message: t('请填写项目ID'),
+      trigger: 'blur',
+    },
+  ],
+  description: [
+    {
+      required: true,
+      message: t('请填写项目描述'),
+      trigger: 'blur',
+    },
+  ],
+  bgId: [
+    {
+      required: true,
+      message: t('请选择项目所属组织'),
+      trigger: 'blur',
+    },
+  ],
+  subjectScopes: [
+    {
+      validator: (val) => {
+        return projectData.value.subjectScopes.length >= 1
+      },
+      message: t('请选择项目项目最大可授权人员范围'),
+      trigger: 'change',
+    }
+  ]
+};
 
 const projectData = ref<any>(props.data);
 
@@ -110,6 +150,10 @@ const handleChangeCenter = (type: string, id: any) => {
   };
 };
 
+const formValidate = () => {
+  return projectFrom.value.validate();
+};
+
 const fetchDepartmentList = () => {
   const { bgId, deptId } = projectData.value;
   getDepartment('bg', 0);
@@ -144,15 +188,15 @@ const handleUploadLogo = async (res: any) => {
       reader.readAsDataURL(file);
       reader.onload = () => {
         projectData.value.logoAddr = reader.result;
-        const formData = new FormData();
-        formData.append('logo', file);
-        projectData.value.logo = file;
-        http.changeProjectLogo({
-          englishName: projectData.value.englishName,
-          formData,
-        });
       };
     }
+    const formData = new FormData();
+    formData.append('logo', file);
+    await http.uploadProjectLogo({
+      formData,
+    }).then(res => {
+      projectData.value.logoAddress = res
+    })
   }
 };
 
@@ -190,7 +234,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <bk-form :label-width="160">
+  <bk-form
+    ref="projectFrom"
+    :model="projectData"
+    :rules="rules"
+    :label-width="160">
     <bk-form-item :label="t('项目名称')" :required="true">
       <bk-input
         v-model="projectData.projectName"

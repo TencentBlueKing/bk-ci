@@ -5,7 +5,8 @@ import RequestError from './request-error';
 
 export interface IFetchConfig extends RequestInit {
   responseType?: 'json' | 'text' | 'arrayBuffer' | 'blob' | 'formData',
-  globalError?: Boolean
+  globalError?: Boolean,
+  disabledResponseType?: Boolean,
 }
 
 type HttpMethod = (url: string, payload?: any, config?: IFetchConfig) => Promise<any>;
@@ -32,6 +33,14 @@ const allMethods = [...methodsWithoutData, ...methodsWithData];
 
 // 拼装发送请求配置
 const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
+  let headers = {
+    'X-Requested-With': 'fetch',
+    'X-Gateway-Tag': 'kubernetes-dev-rbac',
+    'Content-Type': contentTypeMap[config.responseType] || 'application/json'
+  }
+  if (config.disabledResponseType) {
+    delete headers['Content-Type']
+  }
   // 合并配置
   let fetchConfig: IFetchConfig = deepMerge(
     {
@@ -39,11 +48,7 @@ const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
       mode: 'cors',
       cache: 'default',
       credentials: 'include',
-      headers: {
-        'X-Requested-With': 'fetch',
-        'X-Gateway-Tag': 'kubernetes-dev-rbac',
-        'Content-Type': contentTypeMap[config.responseType] || 'application/json',
-      },
+      headers,
       redirect: 'follow',
       referrerPolicy: 'no-referrer-when-downgrade',
       responseType: 'json',
@@ -52,8 +57,9 @@ const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
     config,
   );
   // merge payload
+  const body = config.disabledResponseType ? payload : JSON.stringify(payload)
   if (methodsWithData.includes(method)) {
-    fetchConfig = deepMerge(fetchConfig, { body: JSON.stringify(payload) });
+    fetchConfig = deepMerge(fetchConfig, { body });
   } else {
     fetchConfig = deepMerge(fetchConfig, payload);
   }
