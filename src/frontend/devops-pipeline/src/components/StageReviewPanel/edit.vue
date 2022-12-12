@@ -128,10 +128,10 @@
                 return this.stageControl && Array.isArray(this.stageControl.reviewParams) ? this.stageControl.reviewParams : []
             },
             notifyType () {
-                return this.stageControl && this.stageControl.notifyType
+                return (this.stageControl && this.stageControl.notifyType) || []
             },
             notifyGroup () {
-                return this.stageControl && this.stageControl.notifyGroup
+                return (this.stageControl && this.stageControl.notifyGroup) || []
             },
             markdownContent () {
                 return this.stageControl && this.stageControl.markdownContent
