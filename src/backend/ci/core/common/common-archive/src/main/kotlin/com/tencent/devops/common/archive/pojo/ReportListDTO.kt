@@ -25,17 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.common.archive.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("版本仓库-文件下载统计")
-data class FileDownloadUserCount(
-    @ApiModelProperty("下载用户", required = true)
+@ApiModel("")
+data class ReportListDTO(
+    @ApiModelProperty("用户id", required = false)
     val userId: String,
-    @ApiModelProperty("下载次数", required = true)
-    val count: Int,
-    @ApiModelProperty("最后下载时间(秒)", required = true)
-    val updateTime: Long
+    @ApiModelProperty("项目id", required = false)
+    val projectId: String,
+    @ApiModelProperty("流水线id", required = false)
+    val pipelineId: String,
+    @ApiModelProperty("构建id", required = false)
+    val buildId: String,
+    @ApiModelProperty("是否有操作权限", required = false)
+    val needPermission: Boolean
 )

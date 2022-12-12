@@ -25,15 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.common.archive.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("上传图片请求报文体")
-data class UploadImageRequest(
-    @ApiModelProperty("图片类型")
-    val imageType: String,
-    @ApiModelProperty("图片内容")
-    val imageContentStr: String
+@ApiModel("自定义报告-报告信息")
+data class TaskReport(
+    @ApiModelProperty("名称", required = true)
+    val name: String,
+    @ApiModelProperty("首页地址", required = true)
+    val indexFileUrl: String,
+    @ApiModelProperty("报告类型", required = true)
+    val type: String,
+    @ApiModelProperty("插件名称", required = true)
+    val atomName: String,
+    @ApiModelProperty("插件Id", required = true)
+    val taskId: String,
+    @ApiModelProperty("插件code", required = true)
+    val atomCode: String
 )
