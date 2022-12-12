@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.code.RbacRepoAuthServiceCode
 import com.tencent.devops.common.auth.code.RbacTicketAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -51,6 +52,7 @@ import org.springframework.core.Ordered
 @Suppress("ALL")
 @Configuration
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
+@AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class RbacAuthAutoConfiguration {
