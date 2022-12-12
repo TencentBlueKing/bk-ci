@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.record
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.constant.STATUS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.utils.ModelUtils
@@ -123,6 +124,7 @@ class PipelineRecordModelService @Autowired constructor(
             val stageVarMap = buildRecordStage.stageVar
             val stageId = buildRecordStage.stageId
             stageVarMap[ID] = stageId
+            stageVarMap[STATUS] = buildRecordStage.status ?: ""
             handleStageRecordContainer(
                 buildRecordContainers = buildRecordContainers,
                 stageId = stageId,
@@ -151,6 +153,7 @@ class PipelineRecordModelService @Autowired constructor(
             val containerVarMap = stageRecordContainer.containerVar
             val containerId = stageRecordContainer.containerId
             containerVarMap[ID] = containerId
+            containerVarMap[STATUS] = stageRecordContainer.status ?: ""
             handleContainerRecordTask(stageRecordTasks, containerId, containerVarMap)
             val matrixGroupFlag = stageRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
@@ -166,6 +169,7 @@ class PipelineRecordModelService @Autowired constructor(
                     var matrixContainerVarMap = matrixRecordContainer.containerVar
                     val matrixContainerId = matrixRecordContainer.containerId
                     matrixContainerVarMap[ID] = matrixContainerId
+                    matrixContainerVarMap[STATUS] = matrixRecordContainer.status ?: ""
                     handleContainerRecordTask(
                         stageRecordTasks = stageRecordTasks,
                         containerId = matrixContainerId,
@@ -198,6 +202,7 @@ class PipelineRecordModelService @Autowired constructor(
             var taskVarMap = containerRecordTask.taskVar
             val taskId = containerRecordTask.taskId
             taskVarMap[ID] = taskId
+            taskVarMap[STATUS] = containerRecordTask.status ?: ""
             containerBaseMap?.let {
                 // 生成矩阵task的变量模型
                 val taskBaseMap = (it[KEY_ELEMENTS] as List<Map<String, Any>>)[index].toMutableMap()
