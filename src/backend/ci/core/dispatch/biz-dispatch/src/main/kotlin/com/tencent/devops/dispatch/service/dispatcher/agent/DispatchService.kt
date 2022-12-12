@@ -57,7 +57,7 @@ class DispatchService @Autowired constructor(
         redisOperation.hset(
             secretInfoRedisKey(event.buildId),
             secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1),
-            JsonUtil.toJson(SecretInfo(hashId, secretKey))
+            JsonUtil.toJson(SecretInfo(hashId, secretKey), formatted = false)
         )
         val expireAt = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(7)
         redisOperation.expireAt(secretInfoRedisKey, Date(expireAt))

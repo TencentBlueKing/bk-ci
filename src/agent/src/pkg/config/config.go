@@ -34,10 +34,10 @@ import (
 	"errors"
 	"fmt"
 	"gopkg.in/ini.v1"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -64,7 +64,7 @@ const (
 	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
 	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
-	// 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
+	// KeyJdkDirPath 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
 	KeyJdkDirPath        = "devops.agent.jdk.dir.path"
 	KeyDockerTaskCount   = "devops.docker.parallel.task.count"
 	keyEnableDockerBuild = "devops.docker.enable"
@@ -198,12 +198,23 @@ func DetectWorkerVersionByDir(workDir string) string {
 
 // parseWorkerVersion 解析worker版本
 func parseWorkerVersion(output string) string {
+	// 用正则匹配正确的版本信息，当正则式出错时(versionRegexp = nil)，继续使用原逻辑
+	// 主要解决tmp空间不足的情况下，jvm会打印出提示信息，导致识别不到worker版本号
+	versionRegexp := regexp.MustCompile(`^v(\d+\.)(\d+\.)(\d+)((-RELEASE)|(-SNAPSHOT)?)$`)
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if !(line == "") && !strings.Contains(line, " ") && !strings.Contains(line, "OPTIONS") {
 			if len(line) > 64 {
 				line = line[:64]
+			}
+			if versionRegexp != nil {
+				if versionRegexp.MatchString(line) {
+					logs.Info("worker version: ", line)
+					return line
+				} else {
+					continue
+				}
 			}
 			logs.Info("worker version: ", line)
 			return line
@@ -376,7 +387,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyDockerTaskCount + "=" + strconv.Itoa(GAgentConfig.DockerParallelTaskCount) + "\n")
 	content.WriteString(keyEnableDockerBuild + "=" + strconv.FormatBool(GAgentConfig.EnableDockerBuild) + "\n")
 
-	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
+	err := os.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {
 		logs.Error("write config failed:", err.Error())
 		return errors.New("write config failed")
@@ -408,7 +419,11 @@ func SaveJdkDir(dir string) {
 		return
 	}
 	GAgentConfig.JdkDirPath = dir
-	GAgentConfig.SaveConfig()
+	err := GAgentConfig.SaveConfig()
+	if err != nil {
+		logs.Error("config.go|SaveJdkDir(dir=%s) failed: %s", dir, err.Error())
+		return
+	}
 }
 
 // getJavaDir 获取本地java文件夹
@@ -447,7 +462,7 @@ func initCert() {
 		return
 	}
 	// Load client cert
-	caCert, err := ioutil.ReadFile(AbsCertFilePath)
+	caCert, err := os.ReadFile(AbsCertFilePath)
 	if err != nil {
 		logs.Warn("Reading server certificate: %s", err)
 		return

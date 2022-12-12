@@ -96,7 +96,7 @@ class ThirdPartyAgentBuildDao {
                         DOCKER_INFO, if (dockerInfo == null) {
                             null
                         } else {
-                            JSON.json(JsonUtil.toJson(dockerInfo))
+                            JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
                         }
                     )
                     .set(EXECUTE_COUNT, executeCount)
@@ -140,7 +140,7 @@ class ThirdPartyAgentBuildDao {
                 if (dockerInfo == null) {
                     null
                 } else {
-                    JSON.json(JsonUtil.toJson(dockerInfo))
+                    JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
                 },
                 executeCount,
                 containerHashId
