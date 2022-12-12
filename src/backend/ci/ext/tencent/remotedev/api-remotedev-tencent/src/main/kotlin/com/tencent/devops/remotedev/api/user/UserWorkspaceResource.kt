@@ -130,6 +130,7 @@ interface UserWorkspaceResource {
         @QueryParam("workspaceId")
         workspaceId: Long,
         @ApiParam("分享用户", required = true)
+        @QueryParam("sharedUser")
         sharedUser: String
     ): Result<Boolean>
     //todo 获取运行日志的接口

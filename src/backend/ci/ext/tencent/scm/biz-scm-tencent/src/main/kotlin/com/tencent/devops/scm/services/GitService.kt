@@ -835,7 +835,8 @@ class GitService @Autowired constructor(
         logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree")
+            val url = StringBuilder("$gitCIUrl/api/v3/projects/" +
+                "${URLEncoder.encode(gitProjectId, "UTF-8")}/repository/tree")
             setToken(tokenType, url, token)
             with(url) {
                 append(
