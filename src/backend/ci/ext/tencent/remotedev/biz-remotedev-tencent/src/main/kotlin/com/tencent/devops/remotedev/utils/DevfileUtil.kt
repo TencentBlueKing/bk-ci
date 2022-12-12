@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.DevfileImage
+import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.remotedev.pojo.PreDevfile
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
@@ -15,10 +15,7 @@ object DevfileUtil {
     private val logger = LoggerFactory.getLogger(DevfileUtil::class.java)
     fun parseDevfile(fileContent: String): Devfile {
         val preDevfile = kotlin.runCatching {
-            JsonUtil.to(
-                ScriptYmlUtils.formatYaml(fileContent),
-                object : TypeReference<PreDevfile>() {}
-            )
+            YamlCommonUtils.getObjectMapper().readValue(fileContent, object : TypeReference<PreDevfile>() {})
         }.getOrElse {
             logger.warn("yaml parse error $fileContent|${it.message}")
             throw CustomException(Response.Status.BAD_REQUEST, "devfile解析报错，请检查文件内容。错误信息: ${it.message}")

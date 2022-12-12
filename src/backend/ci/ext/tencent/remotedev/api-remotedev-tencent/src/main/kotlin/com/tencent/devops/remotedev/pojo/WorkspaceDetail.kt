@@ -30,7 +30,7 @@ package com.tencent.devops.remotedev.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工作空间详情页信息")
+@ApiModel("获取指定工作空间详情model")
 data class WorkspaceDetail(
     @ApiModelProperty("工作空间ID")
     val workspaceId: Long,

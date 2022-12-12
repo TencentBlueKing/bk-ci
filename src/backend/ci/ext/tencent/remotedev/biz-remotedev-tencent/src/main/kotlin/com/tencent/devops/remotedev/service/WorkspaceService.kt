@@ -27,6 +27,8 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -36,6 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -76,9 +79,21 @@ class WorkspaceService @Autowired constructor(
     private val client: Client
 ) {
 
+    private val devfileCache = CacheBuilder.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build(
+            object : CacheLoader<String, String>() {
+                override fun load(key: String): String {
+                    return redisOperation.get(key) ?: ""
+                }
+            }
+        )
+
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private const val REDIS_CALL_LIMIT_KEY = "remotedev:calllimit"
+        private const val REDIS_OFFICIAL_DEVFILE = "remotedev:devfile"
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(1)
     }
 
@@ -121,7 +136,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun createWorkspace(userId: String, workspaceCreate: WorkspaceCreate): String {
-        logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate)}")
+        logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
 
         val yaml = if (workspaceCreate.useOfficialDevfile == false) {
             kotlin.runCatching {
@@ -135,7 +150,17 @@ class WorkspaceService @Autowired constructor(
                 logger.warn("get yaml failed ${it.message}")
                 throw CustomException(Response.Status.BAD_REQUEST, "获取 devfile 异常 ${it.message}")
             }
-        } else TODO("官方devfile")
+        } else devfileCache.get(REDIS_OFFICIAL_DEVFILE)
+
+        if (yaml.isBlank()) {
+            logger.warn("create workspace get devfile blank,return." +
+                "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}")
+            throw CustomException(Response.Status.BAD_REQUEST, "devfile 为空，请确认。")
+        }
+
+        val userInfo = kotlin.runCatching {
+            client.get(ServiceTxUserResource::class).get(userId)
+        }.onFailure { logger.warn("get $userId info error|${it.message}") }.getOrElse { null }?.data
 
         val workspace = with(workspaceCreate) {
             Workspace(
@@ -147,18 +172,21 @@ class WorkspaceService @Autowired constructor(
                 yaml = yaml,
                 wsTemplateId = wsTemplateId,
                 status = null,
-                lastStatusUpdateTime = null
+                lastStatusUpdateTime = null,
+                sleepingTime = null,
+                createUserId = userId
             )
         }
+
+        val devfile = DevfileUtil.parseDevfile(yaml)
 
         val workspaceId = workspaceDao.createWorkspace(
             userId = userId,
             workspace = workspace,
             workspaceStatus = WorkspaceStatus.PREPARING,
-            dslContext = dslContext
+            dslContext = dslContext,
+            userInfo = userInfo
         )
-
-        val devfile = DevfileUtil.parseDevfile(yaml)
 
         kotlin.runCatching {
             client.get(ServiceRemoteDevResource::class).createWorkspace(
@@ -420,8 +448,8 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get user workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
-        val count = workspaceDao.countWorkspace(dslContext, userId)
-        val result = workspaceDao.limitFetchWorkspace(
+        val count = workspaceDao.countUserWorkspace(dslContext, userId)
+        val result = workspaceDao.limitFetchUserWorkspace(
             dslContext = dslContext,
             userId = userId,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
@@ -440,7 +468,9 @@ class WorkspaceService @Autowired constructor(
                     yaml = it.yaml,
                     wsTemplateId = it.templateId,
                     status = status,
-                    lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp()
+                    lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp(),
+                    sleepingTime = if (status.isSleeping()) it.lastStatusUpdateTime.timestamp() else null,
+                    createUserId = it.creator
                 )
             }
         )

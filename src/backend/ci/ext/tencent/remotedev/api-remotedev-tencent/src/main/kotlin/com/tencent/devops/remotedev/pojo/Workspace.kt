@@ -49,5 +49,9 @@ data class Workspace(
     @ApiModelProperty("工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     val status: WorkspaceStatus?,
     @ApiModelProperty("状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val lastStatusUpdateTime: Long?
+    val lastStatusUpdateTime: Long?,
+    @ApiModelProperty("休眠时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    val sleepingTime: Long?,
+    @ApiModelProperty("工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    val createUserId: String
 )

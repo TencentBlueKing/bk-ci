@@ -29,12 +29,15 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.remotedev.tables.TWorkspace
+import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -45,58 +48,55 @@ class WorkspaceDao {
         userId: String,
         workspace: Workspace,
         workspaceStatus: WorkspaceStatus,
+        userInfo: UserDeptDetail?,
         dslContext: DSLContext
     ): Long {
         return with(TWorkspace.T_WORKSPACE) {
             dslContext.insertInto(
-                this,
-                USER_ID,
-                PROJECT_ID,
-                NAME,
-                TEMPLATE_ID,
-                URL,
-                BRANCH,
-                YAML_PATH,
-                IMAGE_PATH,
-                CPU,
-                MEMORY,
-                DISK,
-                STATUS,
-                LAST_STATUS_UPDATE_TIME,
-                YAML,
-                DOCKERFILE
+                /* into = */ this,
+                /* field1 = */ USER_ID,
+                /* field2 = */ PROJECT_ID,
+                /* field3 = */ NAME,
+                /* field4 = */ TEMPLATE_ID,
+                /* field5 = */ URL,
+                /* field6 = */ BRANCH,
+                /* field7 = */ YAML_PATH,
+                /* field8 = */ IMAGE_PATH,
+                /* field9 = */ CPU,
+                /* field10 = */ MEMORY,
+                /* field11 = */ DISK,
+                /* field12 = */ STATUS,
+                /* field13 = */ LAST_STATUS_UPDATE_TIME,
+                /* field14 = */ YAML,
+                /* field15 = */ DOCKERFILE,
+                /* field16 = */ CREATOR,
+                /* field17 = */ CREATOR_BG_NAME,
+                /* field18 = */ CREATOR_DEPT_NAME,
+                /* field19 = */ CREATOR_CENTER_NAME
             )
                 .values(
-                    userId,
-                    "",
-                    workspace.name,
-                    workspace.wsTemplateId,
-                    workspace.repositoryUrl,
-                    workspace.branch,
-                    workspace.devFilePath,
-                    "",
-                    8,
-                    16,
-                    100,
-                    workspaceStatus.ordinal,
-                    LocalDateTime.now(),
-                    workspace.yaml,
-                    ""
+                    /* value1 = */ userId,
+                    /* value2 = */ "",
+                    /* value3 = */ workspace.name,
+                    /* value4 = */ workspace.wsTemplateId,
+                    /* value5 = */ workspace.repositoryUrl,
+                    /* value6 = */ workspace.branch,
+                    /* value7 = */ workspace.devFilePath,
+                    /* value8 = */ "",
+                    /* value9 = */ 8,
+                    /* value10 = */ 16,
+                    /* value11 = */ 100,
+                    /* value12 = */ workspaceStatus.ordinal,
+                    /* value13 = */ LocalDateTime.now(),
+                    /* value14 = */ workspace.yaml,
+                    /* value15 = */ "",
+                    /* value16 = */ workspace.createUserId,
+                    /* value17 = */ userInfo?.bgName ?: "",
+                    /* value18 = */ userInfo?.deptName ?: "",
+                    /* value19 = */ userInfo?.centerName ?: ""
                 )
                 .returning(ID)
                 .fetchOne()!!.id
-        }
-    }
-
-    fun countWorkspace(
-        dslContext: DSLContext,
-        userId: String? = null,
-    ): Long {
-        with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId = userId)
-            return dslContext.selectCount().from(this)
-                .where(condition)
-                .fetchOne(0, Long::class.java) ?: 0
         }
     }
 
@@ -114,6 +114,58 @@ class WorkspaceDao {
             }
             return dslContext.selectFrom(this)
                 .where(condition).orderBy(CREATE_TIME.desc(), ID.desc())
+                .limit(limit.limit).offset(limit.offset)
+                .fetch()
+        }
+    }
+
+    /**
+     * 获得用户所拥有工作空间列表（计数）
+     */
+    fun countUserWorkspace(
+        dslContext: DSLContext,
+        userId: String? = null,
+    ): Long {
+        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectCount().from(this)
+                .where(USER_ID.eq(userId)).unionAll(
+                    DSL.selectCount().from(this).where(
+                        ID.`in`(
+                            DSL.select(shared.WORKSPACE_ID).from(shared).where(
+                                shared.SHARED_USER.eq(
+                                    userId
+                                )
+                            )
+                        )
+                    )
+                )
+                .fetch(0, Long::class.java).sum()
+        }
+    }
+
+    /**
+     * 获得用户所拥有工作空间列表
+     */
+    fun limitFetchUserWorkspace(
+        dslContext: DSLContext,
+        limit: SQLLimit,
+        userId: String
+    ): Result<TWorkspaceRecord>? {
+        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(USER_ID.eq(userId)).unionAll(
+                    DSL.selectFrom(this).where(
+                        ID.`in`(
+                            DSL.select(shared.WORKSPACE_ID).from(shared).where(
+                                shared.SHARED_USER.eq(
+                                    userId
+                                )
+                            )
+                        )
+                    )
+                ).orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
         }
