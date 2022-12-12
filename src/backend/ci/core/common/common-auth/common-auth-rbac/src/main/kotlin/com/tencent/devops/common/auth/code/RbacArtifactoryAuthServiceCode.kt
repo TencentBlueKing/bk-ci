@@ -25,17 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api("org.apache.commons:commons-collections4")
-    api("org.apache.httpcomponents:httpclient")
-//    implementation(group = "org.apache.commons", name = "commons-collections4", version = "4.4")
-    api("com.tencent.bk.sdk:iam-java-sdk")
+package com.tencent.devops.common.auth.code
+
+/**
+ * Artifactory ServiceCode
+ */
+class RbacArtifactoryAuthServiceCode : ArtifactoryAuthServiceCode {
+    override fun id() = RbacAuthServiceCode.ARTIFACTORY.value
 }

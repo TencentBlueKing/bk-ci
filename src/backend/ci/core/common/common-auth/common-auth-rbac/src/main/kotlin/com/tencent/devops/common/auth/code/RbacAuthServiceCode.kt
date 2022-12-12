@@ -25,17 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api("org.apache.commons:commons-collections4")
-    api("org.apache.httpcomponents:httpclient")
-//    implementation(group = "org.apache.commons", name = "commons-collections4", version = "4.4")
-    api("com.tencent.bk.sdk:iam-java-sdk")
+package com.tencent.devops.common.auth.code
+
+enum class RbacAuthServiceCode(val value: String) {
+    BCS("bk_bcs"),
+    REPO("bk_repo"),
+    ARTIFACTORY(BK_DEVOPS_SCOPE),
+    CODE(BK_DEVOPS_SCOPE),
+    PIPELINE(BK_DEVOPS_SCOPE),
+    TICKET(BK_DEVOPS_SCOPE),
+    ENVIRONMENT(BK_DEVOPS_SCOPE),
+    PROJECT(BK_DEVOPS_SCOPE),
+    QUALITY(BK_DEVOPS_SCOPE);
+
+    companion object {
+        fun get(value: String): RbacAuthServiceCode {
+            values().forEach {
+                if (value == it.value) return it
+            }
+            throw IllegalArgumentException("No enum for constant $value")
+        }
+    }
 }

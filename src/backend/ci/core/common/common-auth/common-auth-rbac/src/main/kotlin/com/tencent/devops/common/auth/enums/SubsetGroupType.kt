@@ -23,19 +23,21 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api("org.apache.commons:commons-collections4")
-    api("org.apache.httpcomponents:httpclient")
-//    implementation(group = "org.apache.commons", name = "commons-collections4", version = "4.4")
-    api("com.tencent.bk.sdk:iam-java-sdk")
+package com.tencent.devops.common.auth.enums
+
+/**
+ * 二级管理员用户组类型
+ */
+enum class SubsetGroupType(val value: String) {
+    // 拥有者
+    OWNER("owner"),
+    // 编辑执行者
+    EDIT_EXECUTOR("edit_executor"),
+    // 执行者
+    EXECUTOR("executor"),
+    // 查看者
+    VIEWER("viewer")
 }

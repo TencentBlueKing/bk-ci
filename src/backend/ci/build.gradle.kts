@@ -117,6 +117,7 @@ allprojects {
                 "org.springframework.cloud:spring-cloud-kubernetes-client-discovery:" +
                         "${Versions.KubernetesDiscovery}"
             )
+            dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
         }
     }
 
