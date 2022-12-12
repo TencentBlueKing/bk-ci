@@ -66,6 +66,7 @@ class ErrorCodeInfoDao {
     ): Long {
         val conditions = mutableListOf<Condition>()
         with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
+            conditions.add(ATOM_CODE.eq(queryCondition.atomCode))
             if (!queryCondition.keyword.isNullOrBlank()) {
                 conditions.add(ERROR_CODE.like("%${queryCondition.keyword}%"))
             }

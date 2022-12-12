@@ -42,6 +42,7 @@ class UserErrorCodeInfoResourceImpl constructor(
     override fun getErrorCodeInfo(
         projectId: String,
         userId: String,
+        atomCode: String,
         errorTypes: String?,
         page: Int,
         pageSize: Int,
@@ -53,6 +54,7 @@ class UserErrorCodeInfoResourceImpl constructor(
         return Result(
             errorCodeInfoManageService.getErrorCodeInfo(
                 QueryErrorCodeInfoDTO(
+                    atomCode = atomCode,
                     errorTypes = errorTypeList,
                     keyword = keyword,
                     page = page,

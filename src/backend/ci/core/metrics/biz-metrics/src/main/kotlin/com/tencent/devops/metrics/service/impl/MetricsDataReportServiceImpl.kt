@@ -315,7 +315,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 errorCode = taskErrorCode,
                 errorMsg = taskMetricsData.errorMsg,
                 startUser = startUser,
-                currentTime = currentTime
+                currentTime = currentTime,
+                atomCode = taskMetricsData.atomCode
             )
         }
     }
@@ -766,7 +767,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         errorCode: Int,
         errorMsg: String?,
         startUser: String,
-        currentTime: LocalDateTime
+        currentTime: LocalDateTime,
+        atomCode: String? = null
     ) {
         saveErrorCodeInfoPOs.add(
             SaveErrorCodeInfoPO(
@@ -778,7 +780,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 creator = startUser,
                 modifier = startUser,
                 createTime = currentTime,
-                updateTime = currentTime
+                updateTime = currentTime,
+                atomCode = atomCode
             )
         )
     }
