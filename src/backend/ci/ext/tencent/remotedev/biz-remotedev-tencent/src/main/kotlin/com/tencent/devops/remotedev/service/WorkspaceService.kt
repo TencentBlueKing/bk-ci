@@ -94,7 +94,7 @@ class WorkspaceService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
-        private const val REDIS_CALL_LIMIT_KEY = "remotedev:calllimit"
+        private const val REDIS_CALL_LIMIT_KEY = "remotedev:callLimit"
         private const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime"
         private const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
         private const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
@@ -209,11 +209,11 @@ class WorkspaceService @Autowired constructor(
                 )
             ).data!!
         }.fold(
-            {
+            { workspaceName ->
                 dslContext.transaction { configuration ->
                     val transactionContext = DSL.using(configuration)
                     // 创建成功后，更新name
-                    workspaceDao.updateWorkspaceName(workspaceId, it, transactionContext)
+                    workspaceDao.updateWorkspaceName(workspaceId, workspaceName, transactionContext)
                     workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.RUNNING, transactionContext)
                     workspaceHistoryDao.createWorkspaceHistory(
                         dslContext = transactionContext,
@@ -230,7 +230,7 @@ class WorkspaceService @Autowired constructor(
                             getOpHistory(OpHistoryCopyWriting.CREATE),
                             pathWithNamespace,
                             workspace.branch,
-                            workspace.name
+                            workspaceName
                         )
                     )
                     workspaceOpHistoryDao.createWorkspaceHistory(
@@ -245,7 +245,7 @@ class WorkspaceService @Autowired constructor(
                 // 获取远程登录url
                 val workspaceUrl = client.get(ServiceRemoteDevResource::class).getWorkspaceUrl(
                     userId,
-                    it
+                    workspaceName
                 ).data
 
                 return workspaceUrl!!
@@ -253,10 +253,10 @@ class WorkspaceService @Autowired constructor(
             {
                 // 创建失败
                 logger.warn("create workspace $workspaceId failed|${it.message}", it)
+                workspaceDao.deleteWorkspace(workspaceId, dslContext)
+                throw CustomException(Response.Status.BAD_REQUEST, "工作空间创建失败，参考原因:${it.message}")
             }
         )
-
-        return ""
     }
 
     fun startWorkspace(userId: String, workspaceId: Long): Boolean {
@@ -269,10 +269,18 @@ class WorkspaceService @Autowired constructor(
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
                 ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
             // 校验状态
-            if (WorkspaceStatus.values()[workspace.status].isRunning()) {
+            val status = WorkspaceStatus.values()[workspace.status]
+            if (status.isRunning()) {
                 logger.info("$workspace has been started, return error.")
                 throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been started")
             }
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceId = workspaceId,
+                operator = userId,
+                action = WorkspaceAction.START,
+                actionMessage = getOpHistory(OpHistoryCopyWriting.NOT_FIRST_START)
+            )
             val res = kotlin.runCatching {
                 client.get(ServiceRemoteDevResource::class).startWorkspace(
                     userId,
@@ -313,8 +321,11 @@ class WorkspaceService @Autowired constructor(
                         workspaceId = workspaceId,
                         operator = userId,
                         action = WorkspaceAction.START,
-                        // todo 内容待确定
-                        actionMessage = ""
+                        actionMessage = String.format(
+                            getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                            status.name,
+                            WorkspaceStatus.RUNNING.name
+                        )
                     )
                 }
             }
@@ -333,10 +344,19 @@ class WorkspaceService @Autowired constructor(
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
                 ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
             // 校验状态
-            if (WorkspaceStatus.values()[workspace.status].isSleeping()) {
+            val status = WorkspaceStatus.values()[workspace.status]
+            if (status.isSleeping()) {
                 logger.info("$workspace has been stopped, return error.")
                 throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been stopped")
             }
+
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceId = workspaceId,
+                operator = userId,
+                action = WorkspaceAction.SLEEP,
+                actionMessage = getOpHistory(OpHistoryCopyWriting.MANUAL_STOP)
+            )
             val res = kotlin.runCatching {
                 client.get(ServiceRemoteDevResource::class).stopWorkspace(
                     userId,
@@ -374,8 +394,11 @@ class WorkspaceService @Autowired constructor(
                         workspaceId = workspaceId,
                         operator = userId,
                         action = WorkspaceAction.SLEEP,
-                        // todo 内容待确定
-                        actionMessage = ""
+                        actionMessage = String.format(
+                            getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                            status.name,
+                            WorkspaceStatus.SLEEP.name
+                        )
                     )
                 }
             }
@@ -393,11 +416,18 @@ class WorkspaceService @Autowired constructor(
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
                 ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
             // 校验状态
-            if (WorkspaceStatus.values()[workspace.status].isDeleted()) {
+            val status = WorkspaceStatus.values()[workspace.status]
+            if (status.isDeleted()) {
                 logger.info("$workspace has been deleted, return error.")
                 throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been deleted")
             }
-
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceId = workspaceId,
+                operator = userId,
+                action = WorkspaceAction.DELETE,
+                actionMessage = getOpHistory(OpHistoryCopyWriting.DELETE)
+            )
             val res = kotlin.runCatching {
                 client.get(ServiceRemoteDevResource::class).deleteWorkspace(
                     userId,
@@ -417,8 +447,11 @@ class WorkspaceService @Autowired constructor(
                         workspaceId = workspaceId,
                         operator = userId,
                         action = WorkspaceAction.DELETE,
-                        // todo 内容待确定
-                        actionMessage = ""
+                        actionMessage = String.format(
+                            getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                            status.name,
+                            WorkspaceStatus.DELETED.name
+                        )
                     )
                 }
             }
@@ -450,8 +483,7 @@ class WorkspaceService @Autowired constructor(
                     workspaceId = workspaceId,
                     operator = userId,
                     action = WorkspaceAction.SHARE,
-                    // todo 内容待确定
-                    actionMessage = ""
+                    actionMessage = getOpHistory(OpHistoryCopyWriting.SHARE)
                 )
             }
             return true
@@ -589,7 +621,8 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    private fun getOpHistory(key: OpHistoryCopyWriting) = redisCache.get(REDIS_OP_HISTORY_KEY_PREFIX + key.name).ifBlank {
-        key.default
-    }
+    private fun getOpHistory(key: OpHistoryCopyWriting) =
+        redisCache.get(REDIS_OP_HISTORY_KEY_PREFIX + key.name).ifBlank {
+            key.default
+        }
 }

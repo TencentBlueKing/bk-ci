@@ -276,4 +276,15 @@ class WorkspaceDao {
                 .execute()
         }
     }
+
+    fun deleteWorkspace(
+        workspaceId: Long,
+        dslContext: DSLContext
+    ): Int {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.delete(this)
+                .where(ID.eq(workspaceId))
+                .execute()
+        }
+    }
 }
