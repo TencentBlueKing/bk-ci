@@ -52,6 +52,9 @@ class AgentGrayUtils constructor(
         private const val CURRENT_AGENT_LINUX_MIPS64_JDK_VERSION =
             "environment.thirdparty.agent.linux_mips64_jdk.verison"
 
+        private const val CURRENT_AGENT_LINUX_AMD64_DOCKER_INIT_FILE_MD5 =
+            "environment.thirdparty.agent.linux_amd64.docker_init_file.md5"
+
         private const val CAN_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:can_upgrade"
 
         private const val LOCK_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:lock_upgrade"
@@ -59,12 +62,16 @@ class AgentGrayUtils constructor(
         private const val LOCK_UPGRADE_AGENT_WORKER_SET_KEY = "environment:thirdparty:worker:lock_upgrade"
         private const val LOCK_UPGRADE_AGENT_GO_SET_KEY = "environment:thirdparty:goagent:lock_upgrade"
         private const val LOCK_UPGRADE_AGENT_JDK_SET_KEY = "environment:thirdparty:jdk:lock_upgrade"
+        private const val LOCK_UPGRADE_DOCKER_INIT_FILE_SET_KEY =
+            "environment:thirdparty:docker_init_file:lock_upgrade"
 
         private const val FORCE_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:force_upgrade"
 
         private const val FORCE_UPGRADE_AGENT_WORKER_SET_KEY = "environment:thirdparty:worker:force_upgrade"
         private const val FORCE_UPGRADE_AGENT_GO_SET_KEY = "environment:thirdparty:goagent:force_upgrade"
         private const val FORCE_UPGRADE_AGENT_JDK_SET_KEY = "environment:thirdparty:jdk:force_upgrade"
+        private const val FORCE_UPGRADE_AGENT_DOCKER_INIT_FILE_SET_KEY =
+            "environment:thirdparty:docker_init_file:force_upgrade"
 
         private const val DEFAULT_GATEWAY_KEY = "environment:thirdparty:default_gateway"
         private const val DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:default_file_gateway"
@@ -114,6 +121,7 @@ class AgentGrayUtils constructor(
             AgentUpgradeType.WORKER -> FORCE_UPGRADE_AGENT_WORKER_SET_KEY
             AgentUpgradeType.GO_AGENT -> FORCE_UPGRADE_AGENT_GO_SET_KEY
             AgentUpgradeType.JDK -> FORCE_UPGRADE_AGENT_JDK_SET_KEY
+            AgentUpgradeType.DOCKER_INIT_FILE -> FORCE_UPGRADE_AGENT_DOCKER_INIT_FILE_SET_KEY
         }
     }
 
@@ -155,6 +163,7 @@ class AgentGrayUtils constructor(
             AgentUpgradeType.WORKER -> LOCK_UPGRADE_AGENT_WORKER_SET_KEY
             AgentUpgradeType.GO_AGENT -> LOCK_UPGRADE_AGENT_GO_SET_KEY
             AgentUpgradeType.JDK -> LOCK_UPGRADE_AGENT_JDK_SET_KEY
+            AgentUpgradeType.DOCKER_INIT_FILE -> LOCK_UPGRADE_DOCKER_INIT_FILE_SET_KEY
         }
     }
 
@@ -224,6 +233,10 @@ class AgentGrayUtils constructor(
                 AgentArchType.AMD64 -> CURRENT_AGENT_LINUX_AMD64_JDK_VERSION
             }
         }
+    }
+
+    fun getDockerInitFileMd5Key(): String {
+        return CURRENT_AGENT_LINUX_AMD64_DOCKER_INIT_FILE_MD5
     }
 
     fun getDefaultGateway(): String? {

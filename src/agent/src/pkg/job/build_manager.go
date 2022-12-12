@@ -38,10 +38,8 @@ import (
 	"sync"
 )
 
-// buildManager 当前构建对象管理
+// buildManager 二进制构建对象管理
 type buildManager struct {
-	// Lock 多协诚修改时的执行锁
-	Lock sync.Mutex
 	// preInstance 接取的构建任务但还没开始进行构建 [string]bool
 	preInstances sync.Map
 	// instances 正在执行中的构建对象 [int]*api.ThirdPartyBuildInfo
@@ -99,7 +97,7 @@ func (b *buildManager) waitProcessDone(processId int) {
 		errMsg := fmt.Sprintf("build process err, pid: %d, err: %s", processId, err.Error())
 		logs.Warn(errMsg)
 		b.instances.Delete(processId)
-		workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *info, Message: errMsg})
+		workerBuildFinish(info.ToFinish(false, errMsg, api.BuildProcessRunErrorEnum))
 		return
 	}
 
@@ -123,7 +121,11 @@ func (b *buildManager) waitProcessDone(processId int) {
 
 	buildInfo := info
 	b.instances.Delete(processId)
-	workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Success: success, Message: msg})
+	if success {
+		workerBuildFinish(buildInfo.ToFinish(success, msg, api.NoErrorEnum))
+	} else {
+		workerBuildFinish(buildInfo.ToFinish(success, msg, api.BuildProcessRunErrorEnum))
+	}
 }
 
 func (b *buildManager) GetPreInstancesCount() int {

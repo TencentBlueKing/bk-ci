@@ -36,7 +36,9 @@ data class ThirdPartyAgentEnvDispatchType(
     @JsonProperty("value") var envName: String,
     var envProjectId: String?,
     var workspace: String?,
-    val agentType: AgentType = AgentType.NAME
+    val agentType: AgentType = AgentType.NAME,
+    // 第三方构建机用docker作为构建机
+    val dockerInfo: ThirdPartyAgentDockerInfo?
 ) : DispatchType(
     envName
 ) {
