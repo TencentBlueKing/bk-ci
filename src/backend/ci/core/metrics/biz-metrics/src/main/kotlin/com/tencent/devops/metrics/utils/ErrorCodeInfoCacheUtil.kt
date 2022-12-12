@@ -25,28 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.po
+package com.tencent.devops.metrics.utils
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
+import com.github.benmanes.caffeine.cache.Caffeine
+import java.util.concurrent.TimeUnit
 
-@ApiModel("保存错误码信息")
-data class SaveErrorCodeInfoPO(
-    @ApiModelProperty("主键ID")
-    val id: Long,
-    @ApiModelProperty("错误类型")
-    val errorType: Int,
-    @ApiModelProperty("错误码")
-    val errorCode: Int,
-    @ApiModelProperty("错误描述")
-    val errorMsg: String? = null,
-    @ApiModelProperty("创建人")
-    val creator: String,
-    @ApiModelProperty("修改人")
-    val modifier: String,
-    @ApiModelProperty("创建时间")
-    val createTime: LocalDateTime,
-    @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
-)
+/**
+ * 错误码信息缓存
+ *
+ * @since: 2022-12-09
+ * @version: $Revision$ $Date$ $LastChangedBy$
+ *
+ */
+object ErrorCodeInfoCacheUtil {
+
+    private val shardingRoutingCache = Caffeine.newBuilder()
+        .maximumSize(5000)
+        .expireAfterWrite(7, TimeUnit.DAYS)
+        .build<String, Boolean>()
+
+    /**
+     * 保存错误码信息缓存
+     * @param key 缓存key (atomCode:errorType:errorCode)
+     * @param value 缓存value
+     */
+    fun put(key: String, value: Boolean) {
+        shardingRoutingCache.put(key, value)
+    }
+
+    /**
+     * 从缓存中获取错误码信息
+     * @param key 缓存key
+     * @return 缓存value
+     */
+    fun getIfPresent(key: String): Boolean? {
+        return shardingRoutingCache.getIfPresent(key)
+    }
+}

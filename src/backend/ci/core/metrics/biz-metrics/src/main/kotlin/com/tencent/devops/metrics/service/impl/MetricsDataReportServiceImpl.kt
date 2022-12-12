@@ -46,10 +46,12 @@ import com.tencent.devops.metrics.pojo.po.SavePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomOverviewDataPO
+import com.tencent.devops.metrics.pojo.po.UpdateErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.service.MetricsDataReportService
+import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
@@ -57,6 +59,7 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -176,7 +179,23 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     metricsDataReportDao.batchSaveAtomFailDetailData(dslContext, saveAtomFailDetailDataPOs)
                 }
                 if (saveErrorCodeInfoPOs.isNotEmpty()) {
-                    metricsDataReportDao.batchSaveErrorCodeInfo(context, saveErrorCodeInfoPOs)
+                    saveErrorCodeInfoPOs.forEach { saveErrorCodeInfoPO ->
+                        try {
+                            metricsDataReportDao.saveErrorCodeInfo(dslContext, saveErrorCodeInfoPO)
+                        } catch (ignored: DuplicateKeyException) {
+                            logger.warn("fail to update errorCodeInfo:$saveErrorCodeInfoPO", ignored)
+                            metricsDataReportDao.updateErrorCodeInfo(
+                                dslContext = dslContext,
+                                updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
+                                    errorType = saveErrorCodeInfoPO.errorType,
+                                    errorCode = saveErrorCodeInfoPO.errorCode,
+                                    errorMsg = saveErrorCodeInfoPO.errorMsg,
+                                    modifier = saveErrorCodeInfoPO.modifier,
+                                    updateTime = LocalDateTime.now()
+                                )
+                            )
+                        }
+                    }
                 }
             }
             logger.info("[$projectId|$pipelineId|$buildId]|end metricsDataReport")
@@ -311,6 +330,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         if (taskErrorCode != null) {
             addErrorCodeInfo(
                 saveErrorCodeInfoPOs = saveErrorCodeInfoPOs,
+                atomCode = taskMetricsData.atomCode,
                 errorType = taskErrorType,
                 errorCode = taskErrorCode,
                 errorMsg = taskMetricsData.errorMsg,
@@ -625,6 +645,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             // 添加错误信息
             addErrorCodeInfo(
                 saveErrorCodeInfoPOs = saveErrorCodeInfoPOs,
+                atomCode = errorInfo.atomCode,
                 errorType = errorType,
                 errorCode = errorCode,
                 errorMsg = errorMsg,
@@ -762,24 +783,33 @@ class MetricsDataReportServiceImpl @Autowired constructor(
 
     private fun addErrorCodeInfo(
         saveErrorCodeInfoPOs: MutableSet<SaveErrorCodeInfoPO>,
+        atomCode: String,
         errorType: Int,
         errorCode: Int,
         errorMsg: String?,
         startUser: String,
         currentTime: LocalDateTime
     ) {
-        saveErrorCodeInfoPOs.add(
-            SaveErrorCodeInfoPO(
-                id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("METRICS_ERROR_CODE_INFO").data ?: 0,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg,
-                creator = startUser,
-                modifier = startUser,
-                createTime = currentTime,
-                updateTime = currentTime
+        // 从本地缓存获取错误码信息
+        val cacheKey = "$atomCode:$errorType:$errorCode"
+        val errorCodeInfo = ErrorCodeInfoCacheUtil.getIfPresent(cacheKey)
+        if (errorCodeInfo != null) {
+            // 缓存中不存在则需要入库
+            saveErrorCodeInfoPOs.add(
+                SaveErrorCodeInfoPO(
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("METRICS_ERROR_CODE_INFO").data ?: 0,
+                    errorType = errorType,
+                    errorCode = errorCode,
+                    errorMsg = errorMsg,
+                    creator = startUser,
+                    modifier = startUser,
+                    createTime = currentTime,
+                    updateTime = currentTime
+                )
             )
-        )
+            // 将错误码信息放入缓存中
+            ErrorCodeInfoCacheUtil.put(cacheKey, true)
+        }
     }
 }
