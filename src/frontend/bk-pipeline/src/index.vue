@@ -7,6 +7,7 @@
             :editable="editable"
             :stage="stage"
             :is-preview="isPreview"
+            :hide-skip-task="hideSkipTask"
             :is-exec-detail="isExecDetail"
             :can-skip-element="canSkipElement"
             :has-finally-stage="hasFinallyStage"
@@ -73,6 +74,10 @@
                 default: true
             },
             isPreview: {
+                type: Boolean,
+                default: false
+            },
+            hideSkipTask: {
                 type: Boolean,
                 default: false
             },

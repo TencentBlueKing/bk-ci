@@ -68,6 +68,7 @@
                 :stage-length="stageLength"
                 :editable="editable"
                 :is-preview="isPreview"
+                :hide-skip-task="hideSkipTask"
                 :is-exec-detail="isExecDetail"
                 :can-skip-element="isShowCheckbox"
                 :handle-change="handleChange"
@@ -169,6 +170,10 @@
                 default: false
             },
             isPreview: {
+                type: Boolean,
+                default: false
+            },
+            hideSkipTask: {
                 type: Boolean,
                 default: false
             },
@@ -279,7 +284,7 @@
             },
             computedContainer: {
                 get () {
-                    return this.containers
+                    return this.containers.filter(container => !this.hideSkipTask || (this.hideSkipTask && container.status !== 'SKIP'))
                 },
                 set (containers) {
                     let data = []

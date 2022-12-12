@@ -78,3 +78,22 @@ export function pluginUrlParse (originUrl, query) {
     return new Function('ctx', `return '${originUrl.replace(PLUGIN_URL_PARAM_REG, '\'\+ (ctx.hasOwnProperty(\'$1\') ? ctx[\'$1\'] : "") \+\'')}'`)(query)
     /* eslint-enable */
 }
+
+export const errorTypeMap = [
+    {
+        title: 'systemError',
+        icon: 'cog'
+    },
+    {
+        title: 'userError',
+        icon: 'user'
+    },
+    {
+        title: 'thirdPartyError',
+        icon: 'third-party'
+    },
+    {
+        title: 'pluginError',
+        icon: 'plugin'
+    }
+]

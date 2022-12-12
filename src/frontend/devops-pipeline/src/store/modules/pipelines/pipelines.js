@@ -327,7 +327,7 @@ const actions = {
     },
     searchPipelineList ({ commit, state, dispatch }, { projectId, searchName = '' }) {
         const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${encodeURIComponent(searchName)}`
-        
+
         return ajax.get(url).then(response => {
             return response.data
         })
@@ -506,7 +506,7 @@ const actions = {
     },
     // 查询流水线历史版本编排内容
     requestPipelineByVersion: (_, { projectId, pipelineId, version }) => {
-        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/${version}`)
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/${version}`)
     },
     // 查询流水线历史版本设置内容
     requestPipelineSettingByVersion: (_, { projectId, pipelineId, version }) => {
@@ -521,6 +521,11 @@ const actions = {
     // 删除流水线历史版本
     deletePipelineVersion (_, { projectId, pipelineId, version }) {
         return ajax.delete(`${prefix}${projectId}/${pipelineId}/${version}`)
+    },
+    updateBuildRemark (_, { projectId, pipelineId, buildId, remark }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/updateRemark`, {
+            remark
+        })
     }
 }
 

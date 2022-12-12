@@ -40,7 +40,7 @@ const pipelinesEntry = () => import(/* webpackChunkName: "pipelinesEntry" */'../
 // 客户端流水线任务历史 - history
 const pipelinesHistory = () => import(/* webpackChunkName: "pipelinesHistory" */'../../views/subpages/history.vue')
 // 客户端流水线任务详情 - detail
-const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'../../views/subpages/exec_detail.vue')
+const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'../../views/subpages/execDetail.vue')
 // 客户端流水线编辑 - edit
 const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../../views/subpages/edit.vue')
 // 客户端流水线执行预览 - edit

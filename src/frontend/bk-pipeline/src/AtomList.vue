@@ -98,6 +98,10 @@
                 type: Boolean,
                 default: false
             },
+            hideSkipTask: {
+                type: Boolean,
+                default: false
+            },
             canSkipElement: {
                 type: Boolean,
                 default: false
@@ -145,7 +149,7 @@
                             atom.atomCode = atom['@type']
                         }
                         return atom
-                    })
+                    }).filter(atom => !this.hideSkipTask || (this.hideSkipTask && atom.status !== 'SKIP'))
                 },
                 set (elements) {
                     this.handleChange(this.container, { elements })

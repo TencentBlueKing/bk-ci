@@ -563,11 +563,12 @@
     "paramsInvalidMsg": "流水线执行参数出错"
   },
   "details": {
+    "executorInfo": "{0} {1}触发于 {2}",
     "pipelineVersionDiffTips": "流水线编排版本号已发生变化",
     "executeDetail": "执行详情",
-    "partView": "查看构件",
+    "outputs": "产出物",
     "codeRecords": "代码变更记录",
-    "outputReport": "产出物报告",
+    "startupParams": "启动参数",
     "canceller": "取消人",
     "executor": "执行人",
     "trigger": "触发人",
@@ -641,7 +642,26 @@
       "canSet": "该插件支持使用质量红线服务设置质量要求，保证版本质量。",
       "settingNow": "立即配置",
       "reflashSetting": "已配置点此刷新"
-    }
+    },
+    "triggerTime": "触发时间",
+    "startTime": "开始时间",
+    "endTime": "结束时间",
+    "codeMode": "Code方式",
+    "uiMode": "UI 方式",
+    "totalCost": "总耗时",
+    "executeCost": "执行耗时",
+    "systemCost": "系统耗时",
+    "waitCost": "等待耗时",
+    "queueCost": "排除耗时",
+    "checkSum": "校验和",
+    "shareOutput": "分享产出物",
+    "goRepo": "去制品库",
+    "artifact": "制品",
+    "addRemarkForBuild": "为本次构建添加一个备注",
+    "triggerRepo": "触发库",
+    "hideSkipStep": "隐藏跳过的步骤",
+    "num": "第",
+    "times": "次"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",

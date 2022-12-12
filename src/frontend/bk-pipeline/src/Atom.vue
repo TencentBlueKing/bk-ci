@@ -29,6 +29,7 @@
         <template
             v-else
         >
+            <Logo v-if="atom.locateActive" name="location-right" size="18" class="active-atom-location-icon" />
             <status-icon
                 v-if="!isSkip && !!atomStatus"
                 type="element"
@@ -512,6 +513,12 @@
     transition: all .4s ease-in-out;
     z-index: 2;
     border: 1px solid $fontLighterColor;
+
+    .active-atom-location-icon {
+        position: absolute;
+        color: $primaryColor;
+        left: -30px;
+    }
 
     &.trigger-atom {
         &:before,

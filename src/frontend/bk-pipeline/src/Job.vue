@@ -50,6 +50,7 @@
             :container="container"
             :editable="editable"
             :is-preview="isPreview"
+            :hide-skip-task="hideSkipTask"
             :can-skip-element="canSkipElement"
             :stage-index="stageIndex"
             :handle-change="handleChange"
@@ -127,6 +128,10 @@
                 default: false
             },
             isPreview: {
+                type: Boolean,
+                default: false
+            },
+            hideSkipTask: {
                 type: Boolean,
                 default: false
             },

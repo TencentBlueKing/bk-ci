@@ -560,11 +560,12 @@
     "paramsInvalidMsg": "Params Invalid"
   },
   "details": {
+    "executorInfo": "{0} {1}触发于 {2}",
     "pipelineVersionDiffTips": "The pipeline config version has changed",
     "executeDetail": "Build detail",
-    "partView": "Artifacts",
+    "outputs": "Outputs",
     "codeRecords": "Commits",
-    "outputReport": "Report",
+    "startupParams": "Parameters",
     "canceller": "Canceller",
     "executor": "Executor",
     "trigger": "Trigger",
@@ -638,7 +639,26 @@
       "canSet": " Support using quality redlines to set quality requirement for this plugin so as to ensure the quality of this version",
       "settingNow": "Set now",
       "reflashSetting": " Click here to refresh"
-    }
+    },
+    "triggerTime": "触发时间",
+    "startTime": "开始时间",
+    "endTime": "结束时间",
+    "codeMode": "Code方式",
+    "uiMode": "UI 方式",
+    "totalCost": "总耗时",
+    "executeCost": "执行耗时",
+    "systemCost": "系统耗时",
+    "waitCost": "等待耗时",
+    "queueCost": "排除耗时",
+    "checkSum": "校验和",
+    "shareOutput": "分享产出物",
+    "goRepo": "去制品库",
+    "artifact": "制品",
+    "addRemarkForBuild": "为本次构建添加一个备注",
+    "triggerRepo": "触发库",
+    "hideSkipStep": "隐藏跳过的步骤",
+    "num": "第",
+    "times": "次"
   },
   "editPage": {
     "invalidValue": "Plugin's Input {0} Invalid",

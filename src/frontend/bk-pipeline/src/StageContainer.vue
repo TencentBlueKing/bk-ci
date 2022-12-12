@@ -76,6 +76,10 @@
                 type: Boolean,
                 default: false
             },
+            hideSkipTask: {
+                type: Boolean,
+                default: false
+            },
             canSkipElement: {
                 type: Boolean,
                 default: false

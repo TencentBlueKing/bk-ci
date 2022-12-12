@@ -22,8 +22,8 @@
     import BaseInfo from '@/components/pipelineSetting/BaseInfo'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
     import CodeRecordTable from '@/components/codeRecord/CodeRecordTable'
-    import thirdPartyReport from '@/components/outputOption/thirdParty_report'
-    import IframeReport from '@/components/outputOption/IframeReport'
+    import thirdPartyReport from '@/components/Outputs/thirdParty_report'
+    import IframeReport from '@/components/Outputs/IframeReport'
 
     export default {
         name: 'vertical-tab',

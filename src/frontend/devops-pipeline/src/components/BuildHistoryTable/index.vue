@@ -99,7 +99,13 @@
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
                     <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
                         <div @click.stop="" class="error-code-item" :style="`max-width: ${col.width - 30}px`" v-for="item in props.row.errorInfoList" :key="item.taskId">
-                            <logo class="svg-error-icon" v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" size="12" :name="errorTypeMap[item.errorType].icon" />
+                            <logo
+                                class="svg-error-icon"
+                                v-if="item.errorTypeConf"
+                                :title="$t(item.errorTypeConf.title)"
+                                size="12"
+                                :name="item.errorTypeConf.icon"
+                            />
                             <span v-bk-tooltips="{ content: item.errorMsg }" v-if="item.errorMsg">{{ item.errorMsg }} </span>
                         </div>
                     </template>
@@ -139,12 +145,12 @@
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     import Logo from '@/components/Logo'
     import emptyTips from '@/components/devops/emptyTips'
     import { convertFileSize, convertMStoStringByRule, convertMiniTime, convertMStoString } from '@/utils/util'
-    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
+    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap } from '@/utils/pipelineConst'
     import qrcode from '@/components/devops/qrcode'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import StageSteps from '@/components/StageSteps'
 
@@ -209,26 +215,6 @@
                     SKIP: 'redo-arrow'
                 }
             },
-            errorTypeMap () {
-                return [
-                    {
-                        title: 'systemError',
-                        icon: 'cog'
-                    },
-                    {
-                        title: 'userError',
-                        icon: 'user'
-                    },
-                    {
-                        title: 'thirdPartyError',
-                        icon: 'third-party'
-                    },
-                    {
-                        title: 'pluginError',
-                        icon: 'plugin'
-                    }
-                ]
-            },
             data () {
                 return this.buildList.map((item, index) => {
                     const active = index === this.activeIndex
@@ -279,6 +265,7 @@
                         artifactories: needShowAll ? artifactories.slice(0, 11) : artifactories,
                         visible: this.visibleIndex === index,
                         stageStatus,
+                        errorTypeConf: errorTypeMap[item.errorType] ?? null,
                         errorInfoList: !active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1 ? item.errorInfoList.slice(0, 1) : item.errorInfoList
                     }
                 })
@@ -316,6 +303,9 @@
             }
         },
         methods: {
+            ...mapActions('pipelines', [
+                'updateBuildRemark'
+            ]),
             isNotLatest ({ $index }) {
                 const length = this.data.length
                 // table最后一条记录必不变化
@@ -361,7 +351,9 @@
                         this.isChangeRemark = true
                         this.$set(row, 'remark', tempRemark)
                         this.resetRemark()
-                        await this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/${row.id}/updateRemark`, {
+                        await this.updateBuildRemark({
+                            ...params,
+                            buildId: row.id,
                             remark: tempRemark
                         })
                         this.$showTips({

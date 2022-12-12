@@ -1,6 +1,8 @@
 <template>
-    <section class="pipeline-detail-wrapper"
-        v-bkloading="{ isLoading: isLoading || fetchingAtomList }">
+    <section
+        class="pipeline-detail-wrapper"
+        v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
+    >
         <empty-tips
             v-if="hasNoPermission"
             :show-lock="true"
@@ -10,39 +12,26 @@
         </empty-tips>
 
         <template v-else-if="execDetail">
-            <bk-tab :active="curItemTab" @tab-change="switchTab" class="bkdevops-pipeline-tab-card pipeline-detail-tab-card" type="unborder-card">
-                <div slot="setting" class="pipeline-info">
-                    <div class="info-item">
-                        <span class="item-label">{{ $t('status') }}：</span>
-                        <template v-if="execDetail.status === 'CANCELED'">
-                            <span v-bk-tooltips.light="`${$t('details.canceller')}：${execDetail.cancelUserId}`" :class="{ [execDetail.status]: execDetail.status }">{{ getStatusLabel(execDetail.status) }}</span>
-                        </template>
-
-                        <span v-else :class="{ [execDetail.status]: execDetail.status }">{{ getStatusLabel(execDetail.status) }}</span>
-                        <i v-if="showRetryIcon" title="rebuild" class="devops-icon icon-retry" @click.stop="retry(execDetail.id, true)"></i>
-                        <logo v-else-if="execDetail.status === 'STAGE_SUCCESS'" :title="$t('details.statusMap.STAGE_SUCCESS')" name="flag" fill="#34d97b" size="16"></logo>
-                        <i v-else :title="$t('history.stopBuild')" class="devops-icon icon-stop-shape" @click.stop="stopExecute(execDetail.id)"></i>
-                    </div>
-                    <div class="info-item">
-                        <span class="item-label">{{ $t('details.trigger') }}：</span>
-                        <span class="trigger-mode">{{ execDetail.triggerUser || '--' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="item-label">{{ $t('details.executionTime') }}：</span>
-                        <span>{{ execDetail.executeTime ? convertMStoStringByRule(execDetail.executeTime) : '--' }}</span>
-                    </div>
-                </div>
-                <bk-tab-panel
-                    v-for="panel in panels"
-                    v-bind="{ name: panel.name, label: panel.label }"
-                    render-directive="if"
-                    :key="panel.name"
+            <Summary :exec-detail="execDetail"></Summary>
+            <main class="exec-detail-main">
+                <bk-tab
+                    :active="curItemTab"
+                    @tab-change="switchTab"
+                    class="pipeline-detail-tab-card"
+                    type="unborder-card"
                 >
-                    <div :class="panel.className" style="height: 100%">
-                        <component :is="panel.component" v-bind="panel.bindData" v-on="panel.listeners"></component>
-                    </div>
-                </bk-tab-panel>
-            </bk-tab>
+                    <bk-tab-panel
+                        v-for="panel in panels"
+                        v-bind="{ name: panel.name, label: panel.label }"
+                        render-directive="if"
+                        :key="panel.name"
+                    >
+                        <div :class="panel.className" style="height: 100%">
+                            <component :is="panel.component" v-bind="panel.bindData" v-on="panel.listeners"></component>
+                        </div>
+                    </bk-tab-panel>
+                </bk-tab>
+            </main>
         </template>
         <template v-if="editingElementPos && execDetail">
             <template v-if="showPanelType === 'PAUSE'">
@@ -69,29 +58,6 @@
                 <stage-review-panel :stage="stage" @approve="requestPipelineExecDetail(routerParams)" />
             </template>
         </template>
-        <template v-if="execDetail && showCompleteLog">
-            <complete-log @close="showLog = false"></complete-log>
-        </template>
-        <mini-map :stages="execDetail.model.stages" scroll-class=".exec-pipeline" v-if="!isLoading && !fetchingAtomList && curItemTab === 'executeDetail' && !hasNoPermission"></mini-map>
-        <bk-dialog
-            v-model="showRetryStageDialog"
-            render-directive="if"
-            ext-cls="stage-retry-dialog"
-            :width="400"
-            :auto-close="false"
-            @confirm="retryPipeline(true)"
-        >
-            <bk-radio-group v-model="failedContainer">
-                <bk-radio :value="false">{{ $t('editPage.retryAllJobs') }}</bk-radio>
-                <bk-radio :value="true">{{ $t('editPage.retryFailJobs') }}</bk-radio>
-            </bk-radio-group>
-        </bk-dialog>
-
-        <check-atom-dialog
-            :is-show-check-dialog="isShowCheckDialog"
-            :toggle-check="toggleCheckDialog"
-            :element="currentAtom"
-        ></check-atom-dialog>
     </section>
 </template>
 
@@ -99,35 +65,37 @@
     import { mapState, mapActions } from 'vuex'
     import webSocketMessage from '@/utils/webSocketMessage'
     import codeRecord from '@/components/codeRecord'
+    import StartParams from '@/components/StartParams'
+    import ExecPipeline from '@/components/ExecPipeline'
+    import Outputs from '@/components/Outputs'
     import StagePropertyPanel from '@/components/StagePropertyPanel'
     import emptyTips from '@/components/devops/emptyTips'
-    import completeLog from '@/components/ExecDetail/completeLog.vue'
     import plugin from '@/components/ExecDetail/plugin'
     import job from '@/components/ExecDetail/job'
+    import Summary from '@/components/ExecDetail/Summary'
     import stage from '@/components/ExecDetail/stage'
     import stageReviewPanel from '@/components/StageReviewPanel'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
-    import { convertMStoStringByRule } from '@/utils/util'
+    import { convertTime } from '@/utils/util'
     import Logo from '@/components/Logo'
-    import MiniMap from '@/components/MiniMap'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
-    import CheckAtomDialog from '@/components/CheckAtomDialog'
 
     export default {
         components: {
             StagePropertyPanel,
+            Outputs,
             codeRecord,
+            StartParams,
+            ExecPipeline,
             emptyTips,
             plugin,
-            completeLog,
             job,
             stage,
             stageReviewPanel,
             Logo,
-            MiniMap,
             AtomPropertyPanel,
-            CheckAtomDialog
+            Summary
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
@@ -136,12 +104,6 @@
                 isLoading: true,
                 hasNoPermission: false,
                 linkUrl: WEB_URL_PREFIX + location.pathname,
-                showRetryStageDialog: false,
-                retryTaskId: '',
-                skipTask: false,
-                failedContainer: false,
-                isShowCheckDialog: false,
-                currentAtom: {},
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -169,10 +131,6 @@
         },
 
         computed: {
-            ...mapState('common', [
-                'ruleList',
-                'templateRuleList'
-            ]),
             ...mapState('atom', [
                 'execDetail',
                 'editingElementPos',
@@ -186,37 +144,21 @@
             ...mapState([
                 'fetchError'
             ]),
-            userName () {
-                return this.$userInfo && this.$userInfo.username ? this.$userInfo.username : ''
-            },
             panels () {
                 return [{
                     name: 'executeDetail',
                     label: this.$t('details.executeDetail'),
-                    component: 'bk-pipeline',
+                    component: 'exec-pipeline',
                     className: 'exec-pipeline',
                     bindData: {
-                        editable: false,
-                        isExecDetail: true,
-                        userName: this.userName,
-                        cancelUserId: this.execDetail && this.execDetail.cancelUserId,
-                        pipeline: this.execDetail && this.execDetail.model,
+                        execDetail: this.execDetail,
                         matchRules: this.curMatchRules
-                    },
-                    listeners: {
-                        click: this.handlePiplineClick,
-                        'stage-check': this.handleStageCheck,
-                        'stage-retry': this.handleRetry,
-                        'atom-quality-check': this.qualityCheck,
-                        'atom-review': this.reviewAtom,
-                        'atom-continue': this.handleContinue,
-                        'atom-exec': this.handleExec
                     }
                 }, {
-                    name: 'partView',
-                    label: this.$t('details.partView'),
+                    name: 'outputs',
+                    label: this.$t('details.outputs'),
                     className: '',
-                    component: 'view-part',
+                    component: 'outputs',
                     bindData: {}
                 }, {
                     name: 'codeRecords',
@@ -225,29 +167,12 @@
                     component: 'code-record',
                     bindData: {}
                 }, {
-                    name: 'output',
-                    label: this.$t('details.outputReport'),
+                    name: 'startupParams',
+                    label: this.$t('details.startupParams'),
                     className: '',
-                    component: 'output-option',
-                    bindData: {
-                        curPipeline: this.execDetail && this.execDetail.model
-                    }
+                    component: 'start-params',
+                    bindData: {}
                 }]
-            },
-            showLog: {
-                get () {
-                    const { editingElementPos, isPropertyPanelVisible, $route: { params } } = this
-                    return typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo && isPropertyPanelVisible
-                },
-                set (value) {
-                    this.togglePropertyPanel({
-                        isShow: value
-                    })
-                }
-            },
-            showCompleteLog () {
-                const { isShowCompleteLog, $route: { params } } = this
-                return isShowCompleteLog && params.buildNo
             },
             showStagePanel () {
                 return typeof this.editingElementPos.stageIndex !== 'undefined' && this.isPropertyPanelVisible
@@ -259,12 +184,16 @@
             stage () {
                 const { editingElementPos, execDetail } = this
                 if (editingElementPos) {
-                    const model = execDetail.model || {}
-                    const stages = model.stages || []
+                    const model = execDetail?.model ?? {}
+                    const stages = model.stages ?? []
                     const stage = stages[editingElementPos.stageIndex]
                     return stage
                 }
                 return null
+            },
+
+            execFormatStartTime () {
+                return convertTime(this.execDetail?.startTime)
             },
             getElementViewName () {
                 try {
@@ -300,11 +229,14 @@
             showRetryIcon () {
                 return this.execDetail && ['RUNNING', 'QUEUE', 'STAGE_SUCCESS'].indexOf(this.execDetail.status) < 0
             },
-            isInstanceEditable () {
-                return this.execDetail?.model?.instanceFromTemplate
-            },
-            curMatchRules () {
-                return this.$route.path.indexOf('template') > 0 ? this.templateRuleList : this.isInstanceEditable ? this.templateRuleList.concat(this.ruleList) : this.ruleList
+            executeCounts () {
+                return [{
+                    id: 1,
+                    name: 1
+                }, {
+                    id: 2,
+                    name: 2
+                }]
             }
         },
 
@@ -330,10 +262,6 @@
 
         mounted () {
             this.requestPipelineExecDetail(this.routerParams)
-            this.$store.dispatch('common/requestInterceptAtom', {
-                projectId: this.routerParams.projectId,
-                pipelineId: this.routerParams.pipelineId
-            })
             webSocketMessage.installWsMessage(this.setPipelineDetail)
 
             // 第三方系统、通知等，点击链接进入流水线执行详情页面时，定位到具体的 task/ job (自动打开对应的侧滑框)
@@ -353,9 +281,7 @@
 
         beforeDestroy () {
             this.setPipelineDetail(null)
-            this.togglePropertyPanel({
-                isShow: false
-            })
+
             webSocketMessage.unInstallWsMessage()
         },
 
@@ -373,7 +299,6 @@
             ...mapActions('common', [
                 'requestInterceptAtom'
             ]),
-            convertMStoStringByRule,
             handlePiplineClick (args) {
                 this.togglePropertyPanel({
                     isShow: true,
@@ -416,115 +341,7 @@
                     done()
                 }
             },
-            toggleCheckDialog (isShow = false) {
-                this.isShowCheckDialog = isShow
-                if (!isShow) {
-                    this.currentAtom = {}
-                }
-            },
-            async reviewAtom (atom) {
-                // 人工审核
-                this.currentAtom = atom
-                this.toggleCheckDialog(true)
-            },
-            async handleContinue ({ taskId, skip = false }, done) {
-                this.retryTaskId = taskId
-                this.skipTask = skip
-                await this.retryPipeline()
-                done()
-            },
-            async handleExec ({
-                stageIndex,
-                containerIndex,
-                containerGroupIndex,
-                isContinue,
-                elementIndex,
-                showPanelType,
-                stageId,
-                containerId,
-                taskId,
-                atom
-            }, done) {
-                if (!isContinue) {
-                    const postData = {
-                        projectId: this.routerParams.projectId,
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo,
-                        stageId,
-                        containerId,
-                        taskId,
-                        isContinue,
-                        element: atom
-                    }
 
-                    try {
-                        await this.pausePlugin(postData)
-                        this.requestPipelineExecDetail(this.routerParams)
-                    } catch (err) {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    } finally {
-                        done()
-                    }
-                } else {
-                    this.togglePropertyPanel({
-                        isShow: true,
-                        showPanelType,
-                        editingElementPos: {
-                            stageIndex,
-                            containerIndex,
-                            containerGroupIndex,
-                            elementIndex
-                        }
-                    })
-                }
-            },
-            handleRetry ({ taskId, skip = false }) {
-                this.showRetryStageDialog = true
-                this.retryTaskId = taskId
-                this.skipTask = skip
-            },
-            async retryPipeline (isStageRetry) {
-                let message, theme
-                this.showRetryStageDialog = false
-                try {
-                    // 请求执行构建
-                    const res = await this.requestRetryPipeline({
-                        projectId: this.routerParams.projectId,
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo,
-                        taskId: this.retryTaskId,
-                        skip: this.skipTask,
-                        ...(isStageRetry ? { failedContainer: this.failedContainer } : {})
-                    })
-                    if (res.id) {
-                        message = this.$t('subpage.retrySuc')
-                        theme = 'success'
-                    } else {
-                        message = this.$t('subpage.retryFail')
-                        theme = 'error'
-                    }
-                } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.execute,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.routerParams.pipelineId,
-                            name: this.routerParams.pipelineId
-                        }],
-                        projectId: this.routerParams.projectId
-                    }])
-                } finally {
-                    message && this.$showTips({
-                        message,
-                        theme
-                    })
-                    this.retryTaskId = ''
-                    this.skipTask = false
-                }
-            },
             switchTab (tabType = 'executeDetail') {
                 this.$router.push({
                     name: 'pipelinesDetail',
@@ -543,15 +360,26 @@
     @import './../../scss/pipelineStatus';
     .pipeline-detail-wrapper {
         height: 100%;
-        padding: 7px 25px 0 25px;
-
+        display: flex;
+        flex-direction: column;
+        .exec-detail-main {
+            padding: 16px 24px;
+            background: #F5F7FA;
+            flex: 1;
+        }
         .pipeline-detail-tab-card {
             height: 100%;
             display: flex;
             flex-direction: column;
-            .bk-tab-content {
-                height: calc(100% - 25px);
+            background: white;
+            .bk-tab-section {
+                position: relative;
+                flex: 1;
+                padding: 0;
                 overflow: auto;
+            }
+            .bk-tab-content {
+                height: 100%;
             }
         }
         .exec-pipeline {
