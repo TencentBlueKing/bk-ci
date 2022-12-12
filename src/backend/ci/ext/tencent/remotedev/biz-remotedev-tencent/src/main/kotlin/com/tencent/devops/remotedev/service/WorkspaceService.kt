@@ -79,7 +79,7 @@ class WorkspaceService @Autowired constructor(
     private val client: Client
 ) {
 
-    private val appCodeProjectCache = CacheBuilder.newBuilder()
+    private val devfileCache = CacheBuilder.newBuilder()
         .maximumSize(10)
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build(
@@ -150,7 +150,13 @@ class WorkspaceService @Autowired constructor(
                 logger.warn("get yaml failed ${it.message}")
                 throw CustomException(Response.Status.BAD_REQUEST, "获取 devfile 异常 ${it.message}")
             }
-        } else TODO("官方devfile")
+        } else devfileCache.get(REDIS_OFFICIAL_DEVFILE)
+
+        if (yaml.isBlank()) {
+            logger.warn("create workspace get devfile blank,return." +
+                "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}")
+            throw CustomException(Response.Status.BAD_REQUEST, "devfile 为空，请确认。")
+        }
 
         val userInfo = kotlin.runCatching {
             client.get(ServiceTxUserResource::class).get(userId)
