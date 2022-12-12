@@ -32,11 +32,19 @@ const btnLoading = ref(false);
 const handleConfirm = async () => {
   btnLoading.value = true;
   projectData.value.subjectScopes  = [{ type: '*', id: '*' }];
-  const result = await http.requestCreateProject({
-    projectData: projectData.value,
+  const formData = new FormData();
+  Object.keys(projectData.value).forEach((key) => {
+    if (!['logoAddr', 'subjectScopes'].includes(key)) {
+      formData.append(key, projectData.value[key]);
+    }
+    if (key === 'subjectScopes') {
+      formData.append(key, JSON.stringify(projectData.value[key]));
+    }
   });
+  const result = await http.requestCreateProject({
+    formData,
+  }).catch(() => false);
   if (result) {
-    btnLoading.value = false;
     Message({
       theme: 'success',
       message: t('保存成功'),
@@ -45,6 +53,7 @@ const handleConfirm = async () => {
       path: `${projectData.value.englishName}/show`,
     });
   }
+  btnLoading.value = false;
 };
 
 const handleCancel = () => {

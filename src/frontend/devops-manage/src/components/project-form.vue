@@ -145,18 +145,12 @@ const handleUploadLogo = async (res: any) => {
       reader.onload = () => {
         projectData.value.logoAddr = reader.result;
         const formData = new FormData();
-        formData.append('file', file);
-        projectData.value.logo = formData;
-        // const config = {
-        //   headers: {
-        //     'Content-Type': 'multipart/form-data',
-        //   },
-        // };
-        // http.changeProjectLogo({
-        //   englishName: projectData.value.englishName,
-        //   formData,
-        //   config,
-        // });
+        formData.append('logo', file);
+        projectData.value.logo = file;
+        http.changeProjectLogo({
+          englishName: projectData.value.englishName,
+          formData,
+        });
       };
     }
   }
@@ -167,6 +161,7 @@ const handleMessage = (event: any) => {
   if (data.type === 'IAM') {
     switch (data.code) {
       case 'success':
+        handleChangeForm();
         projectData.value.subjectScopes = [
           ...data.data.departments,
           ...data.data.users,
@@ -175,6 +170,7 @@ const handleMessage = (event: any) => {
           type: item.type,
           name: item.name,
         }));
+        showDialog.value = false;
         break;
       case 'cancel':
         showDialog.value = false;
@@ -292,7 +288,7 @@ onBeforeUnmount(() => {
         <bk-radio :label="true">{{ t('保密项目') }}</bk-radio>
       </bk-radio-group>
     </bk-form-item>
-    <bk-form-item :label="t('项目最大可授权人员范围')" :required="true" :property="'name'">
+    <bk-form-item :label="t('项目最大可授权人员范围')" :required="true">
       <edit-line
         class="edit-line"
         @click="(showDialog = true)"
@@ -309,7 +305,6 @@ onBeforeUnmount(() => {
     size="large"
     dialog-type="show"
     :is-show="showDialog"
-    @closed="() => showDialog = false"
   >
     <IAMIframe
       class="member-iframe"

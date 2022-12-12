@@ -54,6 +54,7 @@
 <script lang="ts">
 import { InfoBox } from 'bkui-vue';
 import { useI18n } from 'vue-i18n';
+import http from '@/http/api';
 
 export default {
   name: 'GroupAside',
