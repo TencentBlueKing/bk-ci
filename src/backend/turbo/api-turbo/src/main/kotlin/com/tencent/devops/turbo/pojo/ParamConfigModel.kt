@@ -23,5 +23,9 @@ data class ParamConfigModel(
     @ApiModelProperty("是否必填")
     var required: Boolean? = false,
     @ApiModelProperty("参数tips")
-    var tips: String? = null
+    var tips: String? = null,
+    @ApiModelProperty("值为remote表示接口获取,其它则表示默认")
+    var dataType: String? = null,
+    @ApiModelProperty("与dataType搭配使用,表示接口地址")
+    var paramUrl: String? = null
 )

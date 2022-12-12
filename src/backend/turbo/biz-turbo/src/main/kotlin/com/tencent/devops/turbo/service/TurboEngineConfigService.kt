@@ -19,6 +19,7 @@ import com.tencent.devops.turbo.pojo.ParamEnumSimpleModel
 import com.tencent.devops.turbo.pojo.TurboDisplayFieldModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigPriorityModel
+import com.tencent.devops.turbo.sdk.TBSSdkApi
 import com.tencent.devops.turbo.vo.TurboEngineConfigVO
 import org.quartz.CronScheduleBuilder
 import org.quartz.JobBuilder
@@ -181,7 +182,9 @@ class TurboEngineConfigService @Autowired constructor(
                         tips = it.tips,
                         displayed = it.displayed,
                         defaultValue = it.defaultValue,
-                        required = it.required
+                        required = it.required,
+                        dataType = it.dataType,
+                        paramUrl = it.paramUrl
                     )
                 },
                 displayFields = displayFields!!.map {
@@ -729,6 +732,34 @@ class TurboEngineConfigService @Autowired constructor(
         } else {
             val parser = SpelExpressionParser()
             parser.parseExpression(turboEngineConfigEntity.spelExpression)
+        }
+    }
+
+    /**
+     * 根据区域队列名获取对应的编译器版本清单
+     */
+    fun getCompilerVersionListByQueueName(
+        engineCode: String,
+        queueName: String?
+    ): List<ParamEnumModel> {
+        if (queueName.isNullOrEmpty()) {
+            logger.info("getCompilerVersionList queueName is invalid")
+            return listOf()
+        }
+
+        val queryTurboCompileList = TBSSdkApi.queryTurboCompileList(
+            engineCode = engineCode,
+            queryParam = mapOf(
+                "queue_name" to queueName
+            )
+        )
+        logger.info("queryTurboCompileList: ${queryTurboCompileList.size}")
+        return queryTurboCompileList.map {
+            ParamEnumModel(
+                paramValue = it.paramValue,
+                paramName = it.paramName,
+                visualRange = it.visualRange
+            )
         }
     }
 }
