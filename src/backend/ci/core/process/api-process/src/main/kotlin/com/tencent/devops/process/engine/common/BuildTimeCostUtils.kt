@@ -39,16 +39,18 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 
 object BuildTimeCostUtils {
 
+    // TODO 某层结束执行时获取内部所有耗时并计算，build对象可能因为数据清理不存在，startTime和endTime也不一定有值，需兜底
+
     fun generateBuildTimeCost(
         buildInfo: BuildInfo,
-        buildStagePairs: List<Pair<PipelineBuildStage, BuildRecordStage>>
+        stagePairs: List<Pair<BuildRecordStage, PipelineBuildStage?>>
     ): BuildRecordTimeCost {
         val startTime = buildInfo.startTime
         val endTime = buildInfo.endTime
 
-        buildStagePairs.forEach { (build, record) ->
-            val start = build.startTime
-            val end = build.endTime
+        stagePairs.forEach { (record, build) ->
+            val start = build?.startTime
+            val end = build?.endTime
             val timestamps = record.timestamps
         }
 
@@ -57,14 +59,14 @@ object BuildTimeCostUtils {
 
     fun generateStageTimeCost(
         buildStage: PipelineBuildStage,
-        buildContainerPairs: List<Pair<PipelineBuildContainer, BuildRecordContainer>>
+        containerPairs: List<Pair<BuildRecordContainer, PipelineBuildContainer?>>
     ): BuildRecordTimeCost {
         val startTime = buildStage.startTime
         val endTime = buildStage.endTime
 
-        buildContainerPairs.forEach { (build, record) ->
-            val start = build.startTime
-            val end = build.endTime
+        containerPairs.forEach { (record, build) ->
+            val start = build?.startTime
+            val end = build?.endTime
             val timestamps = record.timestamps
         }
         return BuildRecordTimeCost()
@@ -72,14 +74,14 @@ object BuildTimeCostUtils {
 
     fun generateContainerTimeCost(
         buildContainer: PipelineBuildContainer,
-        buildTaskPairs: List<Pair<PipelineBuildTask, BuildRecordTask>>
+        taskPairs: List<Pair<BuildRecordTask, PipelineBuildTask?>>
     ): BuildRecordTimeCost {
         val startTime = buildContainer.startTime
         val endTime = buildContainer.endTime
 
-        buildTaskPairs.forEach { (build, record) ->
-            val start = build.startTime
-            val end = build.endTime
+        taskPairs.forEach { (record, build) ->
+            val start = build?.startTime
+            val end = build?.endTime
             val timestamps = record.timestamps
         }
         return BuildRecordTimeCost()

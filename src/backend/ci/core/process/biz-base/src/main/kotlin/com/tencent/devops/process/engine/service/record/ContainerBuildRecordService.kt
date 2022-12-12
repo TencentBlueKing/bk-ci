@@ -41,6 +41,9 @@ import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils
+import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
+import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -51,8 +54,10 @@ import org.springframework.stereotype.Service
 @Service
 class ContainerBuildRecordService(
     private val dslContext: DSLContext,
-    private val buildRecordContainerDao: BuildRecordContainerDao,
-    private val buildRecordTaskDao: BuildRecordTaskDao,
+    private val recordContainerDao: BuildRecordContainerDao,
+    private val recordTaskDao: BuildRecordTaskDao,
+    private val buildContainerDao: PipelineBuildContainerDao,
+    private val buildTaskDao: PipelineBuildTaskDao,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -73,7 +78,7 @@ class ContainerBuildRecordService(
         containerId: String,
         executeCount: Int
     ): BuildRecordContainer? {
-        return buildRecordContainerDao.getRecord(
+        return recordContainerDao.getRecord(
             transactionContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -88,8 +93,8 @@ class ContainerBuildRecordService(
         containerList: List<BuildRecordContainer>,
         taskList: List<BuildRecordTask>
     ) {
-        buildRecordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
-        buildRecordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
+        recordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
+        recordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
     }
 
 //    fun batchUpdate(transactionContext: DSLContext?, containerList: List<BuildRecordContainer>) {
@@ -160,7 +165,7 @@ class ContainerBuildRecordService(
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                val recordContainer = buildRecordContainerDao.getRecord(
+                val recordContainer = recordContainerDao.getRecord(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, containerId = containerId, executeCount = executeCount
                 ) ?: run {
@@ -172,7 +177,7 @@ class ContainerBuildRecordService(
                 val containerVar = mutableMapOf<String, Any>()
                 containerVar.putAll(recordContainer.containerVar)
                 val containerName = containerVar[Container::name.name]?.toString() ?: ""
-                if (buildStatus.isReadyToRun()) {
+                containerVar[Container::name.name] = if (buildStatus.isReadyToRun()) {
                     when (recordContainer.containerType) {
                         VMBuildContainer.classType -> containerVar[VMBuildContainer::mutexGroup.name]
                         NormalContainer.classType -> containerVar[NormalContainer::mutexGroup.name]
@@ -182,15 +187,31 @@ class ContainerBuildRecordService(
                     }
                 } else {
                     ContainerUtils.getMutexFixedContainerName(containerName)
-                }
+                } ?: containerName
+
                 containerVar[Container::executeCount.name] = executeCount
 
-                if (buildStatus.isFinish() &&
-                    !BuildStatus.parse(containerVar[Container::startVMStatus.name]?.toString()).isFinish()) {
-                    containerVar[Container::startVMStatus.name] = buildStatus.name
+                // 结束时进行启动状态校准，并计算所有耗时
+                if (buildStatus.isFinish()) {
+                    if (!BuildStatus.parse(containerVar[Container::startVMStatus.name]?.toString()).isFinish()) {
+                        containerVar[Container::startVMStatus.name] = buildStatus.name
+                    }
+                    buildContainerDao.getByContainerId(context, projectId, buildId, null, containerId)
+                        ?.let { container ->
+                            val recordTasks = recordTaskDao.getRecords(
+                                context, projectId, pipelineId, buildId, executeCount, containerId
+                            )
+                            val buildTaskMap = buildTaskDao.getByContainerId(context, projectId, buildId, containerId)
+                                .associateBy { it.taskId }
+                            val buildTaskPairs = recordTasks.map { task ->
+                                task to buildTaskMap[task.taskId]
+                            }
+                            containerVar[Container::timeCost.name] = BuildTimeCostUtils.generateContainerTimeCost(
+                                container, buildTaskPairs
+                            )
+                        }
                 }
-                // TODO 耗时计算
-                buildRecordContainerDao.updateRecord(
+                recordContainerDao.updateRecord(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, containerId = containerId, executeCount = executeCount,
                     containerVar = containerVar.plus(containerVar), buildStatus = buildStatus,
@@ -249,11 +270,11 @@ class ContainerBuildRecordService(
                     Container::startVMStatus.name to BuildStatus.SKIP.name
                 )
             )
-            buildRecordTaskDao.getRecords(
+            recordTaskDao.getRecords(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, containerId = containerId, executeCount = executeCount
             ).forEach { task ->
-                buildRecordTaskDao.updateRecord(
+                recordTaskDao.updateRecord(
                     dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, taskId = task.taskId, executeCount = executeCount,
                     taskVar = task.taskVar, buildStatus = BuildStatus.SKIP,
@@ -275,20 +296,20 @@ class ContainerBuildRecordService(
     ) {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val recordVar = buildRecordContainerDao.getRecordContainerVar(
+            val record = recordContainerDao.getRecord(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, containerId = containerId, executeCount = executeCount
-            )?.toMutableMap() ?: run {
+            ) ?: run {
                 logger.warn(
                     "ENGINE|$buildId|updateContainerByMap| get container($containerId) record failed."
                 )
                 return@transaction
             }
-            buildRecordContainerDao.updateRecord(
+            recordContainerDao.updateRecord(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, containerId = containerId, executeCount = executeCount,
-                containerVar = recordVar.plus(containerVar), buildStatus = buildStatus,
-                timestamps = timestamps
+                containerVar = record.containerVar.plus(containerVar), buildStatus = buildStatus,
+                timestamps = timestamps?.let { record.timestamps.plus(timestamps) }
             )
         }
     }

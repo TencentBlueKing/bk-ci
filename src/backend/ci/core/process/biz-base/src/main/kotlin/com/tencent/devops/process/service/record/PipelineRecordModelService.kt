@@ -91,7 +91,8 @@ class PipelineRecordModelService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            executeCount = executeCount
+            executeCount = executeCount,
+            stageId = null
         )
         // 获取所有task级别变量数据
         val buildRecordTasks = buildRecordTaskDao.getRecords(

@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
@@ -58,7 +59,7 @@ import java.time.LocalDateTime
 class TaskBuildRecordService(
     private val buildVariableService: BuildVariableService,
     private val dslContext: DSLContext,
-    private val buildRecordTaskDao: BuildRecordTaskDao,
+    private val recordTaskDao: BuildRecordTaskDao,
     private val buildTaskDao: PipelineBuildTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
     stageTagService: StageTagService,
@@ -145,7 +146,7 @@ class TaskBuildRecordService(
             val delimiters = ","
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                val recordTask = buildRecordTaskDao.getRecord(
+                val recordTask = recordTaskDao.getRecord(
                     dslContext = context,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -210,7 +211,7 @@ class TaskBuildRecordService(
                     )
                 }
 
-                buildRecordTaskDao.updateRecord(
+                recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -274,7 +275,7 @@ class TaskBuildRecordService(
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                val recordTask = buildRecordTaskDao.getRecord(
+                val recordTask = recordTaskDao.getRecord(
                     dslContext = context,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -307,8 +308,10 @@ class TaskBuildRecordService(
                     taskBuildEndParam.errorCode?.let { taskVar[Element::errorCode.name] = it }
                     taskBuildEndParam.errorMsg?.let { taskVar[Element::errorMsg.name] = it }
                 }
-                // TODO 计算总耗时
-                buildRecordTaskDao.updateRecord(
+                buildTaskDao.get(context, projectId, buildId, taskId)?.let {
+                    taskVar[Element::timeCost.name] = BuildTimeCostUtils.generateTaskTimeCost(it, recordTask.timestamps)
+                }
+                recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -374,7 +377,7 @@ class TaskBuildRecordService(
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            val recordVar = buildRecordTaskDao.getRecordTaskVar(
+            val recordVar = recordTaskDao.getRecordTaskVar(
                 dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -387,7 +390,7 @@ class TaskBuildRecordService(
                 )
                 return@transaction
             }
-            buildRecordTaskDao.updateRecord(
+            recordTaskDao.updateRecord(
                 dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
