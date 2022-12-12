@@ -40,6 +40,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
@@ -64,27 +65,31 @@ const (
 	KeyBatchInstall      = "devops.agent.batch.install"
 	KeyLogsKeepHours     = "devops.agent.logs.keep.hours"
 	// 这个key不会预先出现在配置文件中，因为workdir未知，需要第一次动态获取
-	KeyJdkDirPath = "devops.agent.jdk.dir.path"
+	KeyJdkDirPath        = "devops.agent.jdk.dir.path"
+	KeyDockerTaskCount   = "devops.docker.parallel.task.count"
+	keyEnableDockerBuild = "devops.docker.enable"
 )
 
 // AgentConfig Agent 配置
 type AgentConfig struct {
-	Gateway           string
-	FileGateway       string
-	BuildType         string
-	ProjectId         string
-	AgentId           string
-	SecretKey         string
-	ParallelTaskCount int
-	EnvType           string
-	SlaveUser         string
-	CollectorOn       bool
-	TimeoutSec        int64
-	DetectShell       bool
-	IgnoreLocalIps    string
-	BatchInstallKey   string
-	LogsKeepHours     int
-	JdkDirPath        string
+	Gateway                 string
+	FileGateway             string
+	BuildType               string
+	ProjectId               string
+	AgentId                 string
+	SecretKey               string
+	ParallelTaskCount       int
+	EnvType                 string
+	SlaveUser               string
+	CollectorOn             bool
+	TimeoutSec              int64
+	DetectShell             bool
+	IgnoreLocalIps          string
+	BatchInstallKey         string
+	LogsKeepHours           int
+	JdkDirPath              string
+	DockerParallelTaskCount int
+	EnableDockerBuild       bool
 }
 
 // AgentEnv Agent 环境配置
@@ -288,6 +293,17 @@ func LoadAgentConfig() error {
 		jdkDirPath = getJavaDir()
 	}
 
+	// 兼容旧版本 .agent.properties 没有这个键
+	dockerParallelTaskCount := 4
+	if conf.Section("").HasKey(KeyDockerTaskCount) {
+		dockerParallelTaskCount, err = conf.Section("").Key(KeyDockerTaskCount).Int()
+		if err != nil || dockerParallelTaskCount < 0 {
+			return errors.New("invalid dockerParallelTaskCount")
+		}
+	}
+
+	enableDocker := conf.Section("").Key(keyEnableDockerBuild).MustBool(false)
+
 	GAgentConfig.LogsKeepHours = logsKeepHours
 
 	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
@@ -323,12 +339,24 @@ func LoadAgentConfig() error {
 	logs.Info("logsKeepHours: ", GAgentConfig.LogsKeepHours)
 	GAgentConfig.JdkDirPath = jdkDirPath
 	logs.Info("jdkDirPath: ", GAgentConfig.JdkDirPath)
+	GAgentConfig.DockerParallelTaskCount = dockerParallelTaskCount
+	logs.Info("DockerParallelTaskCount: ", GAgentConfig.DockerParallelTaskCount)
+	GAgentConfig.EnableDockerBuild = enableDocker
+	logs.Info("EnableDockerBuild: ", GAgentConfig.EnableDockerBuild)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
 
+// 可能存在不同协诚写入文件的操作，加上锁保险些
+var saveConfigLock = sync.Mutex{}
+
 // SaveConfig 将配置回写到agent.properties文件保存
 func (a *AgentConfig) SaveConfig() error {
+	saveConfigLock.Lock()
+	defer func() {
+		saveConfigLock.Unlock()
+	}()
+
 	filePath := systemutil.GetWorkDir() + "/.agent.properties"
 
 	content := bytes.Buffer{}
@@ -345,6 +373,8 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
 	content.WriteString(KeyLogsKeepHours + "=" + strconv.Itoa(GAgentConfig.LogsKeepHours) + "\n")
 	content.WriteString(KeyJdkDirPath + "=" + GAgentConfig.JdkDirPath + "\n")
+	content.WriteString(KeyDockerTaskCount + "=" + strconv.Itoa(GAgentConfig.DockerParallelTaskCount) + "\n")
+	content.WriteString(keyEnableDockerBuild + "=" + strconv.FormatBool(GAgentConfig.EnableDockerBuild) + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {
@@ -388,6 +418,18 @@ func getJavaDir() string {
 		return workDir + "/jre"
 	}
 	return workDir + "/jdk"
+}
+
+func GetDockerInitFilePath() string {
+	return systemutil.GetWorkDir() + "/" + DockerInitFile
+}
+
+func GetGateWay() string {
+	if strings.HasPrefix(GAgentConfig.Gateway, "http") || strings.HasPrefix(GAgentConfig.Gateway, "https") {
+		return GAgentConfig.Gateway
+	} else {
+		return "http://" + GAgentConfig.Gateway
+	}
 }
 
 // initCert 初始化证书
