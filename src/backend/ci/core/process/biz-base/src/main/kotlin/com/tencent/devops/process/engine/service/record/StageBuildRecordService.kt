@@ -39,6 +39,10 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.process.dao.record.BuildRecordContainerDao
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils
+import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
+import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -50,7 +54,10 @@ import java.time.LocalDateTime
 @Service
 class StageBuildRecordService(
     private val dslContext: DSLContext,
-    private val buildRecordStageDao: BuildRecordStageDao,
+    private val recordStageDao: BuildRecordStageDao,
+    private val recordContainerDao: BuildRecordContainerDao,
+    private val buildStageDao: PipelineBuildStageDao,
+    private val buildContainerDao: PipelineBuildContainerDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineBuildDao: PipelineBuildDao,
     stageTagService: StageTagService,
@@ -87,7 +94,6 @@ class StageBuildRecordService(
                 stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
             } else if (buildStatus.isFinish() && stageVar[Stage::startEpoch.name] != null) {
                 stageVar[Stage::elapsed.name] =
-
                     System.currentTimeMillis() - stageVar[Stage::startEpoch.name].toString().toLong()
             }
 
@@ -122,7 +128,7 @@ class StageBuildRecordService(
             allStageStatus = updateContainerByMap(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, buildStatus = BuildStatus.SKIP,
-                stageVar = emptyMap()
+                stageVar = mutableMapOf()
             )
         }
         return allStageStatus ?: emptyList()
@@ -153,7 +159,7 @@ class StageBuildRecordService(
             checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
             allStageStatus = updateContainerByMap(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                stageId = stageId, executeCount = executeCount, stageVar = emptyMap(),
+                stageId = stageId, executeCount = executeCount, stageVar = mutableMapOf(),
                 buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers
             )
         }
@@ -309,7 +315,7 @@ class StageBuildRecordService(
         buildId: String,
         stageId: String,
         executeCount: Int,
-        stageVar: Map<String, Any>,
+        stageVar: MutableMap<String, Any>,
         buildStatus: BuildStatus?,
         reviewers: List<String>? = null,
         errorMsg: String? = null,
@@ -320,7 +326,7 @@ class StageBuildRecordService(
         var allStageStatus: List<BuildStageStatus>? = null
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val recordStages = buildRecordStageDao.getRecords(
+            val recordStages = recordStageDao.getRecords(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -333,7 +339,23 @@ class StageBuildRecordService(
                 )
                 return@transaction
             }
-            stage.stageVar.putAll(stageVar)
+            // 结束时进行启动状态校准，并计算所有耗时
+            if (buildStatus?.isFinish() == true) {
+                buildStageDao.get(dslContext, projectId, buildId, stageId)?.let { buildStage ->
+                    val recordContainers = recordContainerDao.getRecords(
+                        context, projectId, pipelineId, buildId, executeCount, stageId
+                    )
+                    val buildContainerMap = buildContainerDao.listByBuildId(
+                        dslContext = context, projectId = projectId, buildId = buildId, stageId = stageId
+                    ).associateBy { it.containerId }
+                    val containerPairs = recordContainers.map { container ->
+                        container to buildContainerMap[container.containerId]
+                    }
+                    stageVar[Stage::timeCost.name] = BuildTimeCostUtils.generateStageTimeCost(
+                        buildStage, containerPairs
+                    )
+                }
+            }
             allStageStatus = buildStatus?.let {
                 fetchHistoryStageStatus(
                     recordStages = recordStages,
@@ -341,14 +363,14 @@ class StageBuildRecordService(
                     reviewers = reviewers
                 )
             }
-            buildRecordStageDao.updateRecord(
+            recordStageDao.updateRecord(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 stageId = stageId,
                 executeCount = executeCount,
-                stageVar = stageVar,
+                stageVar = stage.stageVar.plus(stageVar),
                 buildStatus = buildStatus,
                 timestamps = timestamps
             )

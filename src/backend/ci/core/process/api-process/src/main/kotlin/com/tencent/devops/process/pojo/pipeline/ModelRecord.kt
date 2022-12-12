@@ -30,7 +30,6 @@ package com.tencent.devops.process.pojo.pipeline
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
-import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

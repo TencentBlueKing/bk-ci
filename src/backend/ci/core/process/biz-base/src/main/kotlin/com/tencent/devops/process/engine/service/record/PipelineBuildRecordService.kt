@@ -53,12 +53,14 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
-import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils
+import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -74,18 +76,19 @@ class PipelineBuildRecordService @Autowired constructor(
     private val pipelineTriggerReviewDao: PipelineTriggerReviewDao,
     private val dslContext: DSLContext,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val buildRecordModelDao: BuildRecordModelDao,
-    private val buildRecordStageDao: BuildRecordStageDao,
-    private val buildRecordContainerDao: BuildRecordContainerDao,
-    private val buildRecordTaskDao: BuildRecordTaskDao,
-    private val pipelineRecordModelService: PipelineRecordModelService,
+    private val buildStageDao: PipelineBuildStageDao,
+    private val recordModelDao: BuildRecordModelDao,
+    private val recordStageDao: BuildRecordStageDao,
+    private val recordContainerDao: BuildRecordContainerDao,
+    private val recordTaskDao: BuildRecordTaskDao,
+    private val recordModelService: PipelineRecordModelService,
     private val pipelineResDao: PipelineResDao,
     redisOperation: RedisOperation,
     stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseBuildRecordService(
     dslContext = dslContext,
-    buildRecordModelDao = buildRecordModelDao,
+    buildRecordModelDao = recordModelDao,
     stageTagService = stageTagService,
     pipelineEventDispatcher = pipelineEventDispatcher,
     redisOperation = redisOperation
@@ -105,10 +108,10 @@ class PipelineBuildRecordService @Autowired constructor(
         containerList: List<BuildRecordContainer>,
         taskList: List<BuildRecordTask>
     ) {
-        buildRecordModelDao.createRecord(transactionContext ?: dslContext, model)
-        buildRecordStageDao.batchSave(transactionContext ?: dslContext, stageList)
-        buildRecordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
-        buildRecordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
+        recordModelDao.createRecord(transactionContext ?: dslContext, model)
+        recordStageDao.batchSave(transactionContext ?: dslContext, stageList)
+        recordTaskDao.batchSave(transactionContext ?: dslContext, taskList)
+        recordContainerDao.batchSave(transactionContext ?: dslContext, containerList)
     }
 
     private fun checkPassDays(startTime: Long?): Boolean {
@@ -141,7 +144,7 @@ class PipelineBuildRecordService @Autowired constructor(
         ) ?: return null
 
         // 获取流水线级别变量数据
-        val buildRecordPipeline = buildRecordModelDao.getRecord(
+        val buildRecordPipeline = recordModelDao.getRecord(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -149,7 +152,7 @@ class PipelineBuildRecordService @Autowired constructor(
             executeCount = executeCount
         ) ?: return null
 
-        val recordMap = pipelineRecordModelService.generateFieldRecordModelMap(
+        val recordMap = recordModelService.generateFieldRecordModelMap(
             projectId, pipelineId, buildId, executeCount, buildRecordPipeline
         )
         val resourceStr = pipelineResDao.getVersionModelString(
@@ -344,89 +347,56 @@ class PipelineBuildRecordService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
+        executeCount: Int,
         buildStatus: BuildStatus,
         errorMsg: String?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
         var allStageStatus: List<BuildStageStatus> = emptyList()
-        // TODO 时间戳、执行次数计算
-        buildRecordModelDao.updateRecord(
-            dslContext, projectId, pipelineId, buildId, null, buildStatus,
-            emptyMap(), null, null, LocalDateTime.now(), null
-        )
-//        val model = update(
-//            projectId = projectId, buildId = buildId,
-//            modelInterface = object : ModelInterface {
-//                var update = false
-//
-//                override fun onFindContainer(container: Container, stage: Stage): Traverse {
-//                    if (BuildStatus.parse(container.status).isRunning()) {
-//                        container.status = buildStatus.name
-//                        update = true
-//                        if (container.startEpoch == null) {
-//                            container.elementElapsed = 0
-//                        } else {
-//                            container.elementElapsed = System.currentTimeMillis() - container.startEpoch!!
-//                        }
-//                        ContainerUtils.clearQueueContainerName(container)
-//                    }
-//                    return Traverse.CONTINUE
-//                }
-//
-//                override fun onFindStage(stage: Stage, model: Model): Traverse {
-//                    if (allStageStatus.isEmpty()) {
-//                        allStageStatus = fetchHistoryStageStatus(
-//                            model = model,
-//                            buildStatus = buildStatus,
-//                            errorMsg = errorMsg
-//                        )
-//                    }
-//                    if (BuildStatus.parse(stage.status).isRunning()) {
-//                        stage.status = buildStatus.name
-//                        update = true
-//                        if (stage.startEpoch == null) {
-//                            stage.elapsed = 0
-//                        } else {
-//                            stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
-//                        }
-//                    }
-//                    return Traverse.CONTINUE
-//                }
-//
-//                override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
-//                    if (!e.status.isNullOrBlank() && BuildStatus.valueOf(e.status!!).isRunning()) {
-//                        e.status = buildStatus.name
-//                        update = true
-//                        if (e.startEpoch != null) {
-//                            e.elapsed = System.currentTimeMillis() - e.startEpoch!!
-//                        }
-//
-//                        var elementElapsed = 0L
-//                        run lit@{
-//                            c.elements.forEach {
-//                                elementElapsed += it.elapsed ?: 0
-//                                if (it == e) {
-//                                    return@lit
-//                                }
-//                            }
-//                        }
-//                        c.elementElapsed = elementElapsed
-//                    }
-//
-//                    return Traverse.CONTINUE
-//                }
-//
-//                override fun needUpdate(): Boolean {
-//                    return update
-//                }
-//            },
-//            buildStatus = buildStatus, operation = "buildEnd"
-//        )
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val recordModel = recordModelDao.getRecord(dslContext, projectId, pipelineId, buildId, executeCount) ?: run {
+                logger.warn(
+                    "ENGINE|$buildId|buildEnd| get model($buildId) record failed."
+                )
+                return@transaction
+            }
+            val buildInfo = pipelineBuildDao.convert(
+                pipelineBuildDao.getBuildInfo(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    buildId = buildId
+                )
+            ) ?: run {
+                logger.warn(
+                    "ENGINE|$buildId|buildEnd| get build ($buildId) info failed."
+                )
+                return@transaction
+            }
+            val recordStages = recordStageDao.getRecords(
+                context, projectId, pipelineId, buildId, executeCount
+            )
+            val buildStageMap = buildStageDao.getByBuildId(
+                dslContext = context, projectId = projectId, buildId = buildId
+            ).associateBy { it.stageId }
+            val stagePairs = recordStages.map { stage ->
+                stage to buildStageMap[stage.stageId]
+            }
+            val modelVar = mutableMapOf<String, Any>()
+            modelVar[Model::timeCost.name] = BuildTimeCostUtils.generateBuildTimeCost(
+                buildInfo, stagePairs
+            )
+            recordModelDao.updateRecord(
+                context, projectId, pipelineId, buildId, null, buildStatus,
+                recordModel.modelVar.plus(modelVar), null, null, LocalDateTime.now(), null
+            )
+        }
+
         return allStageStatus
     }
 
     fun updateBuildCancelUser(projectId: String, buildId: String, cancelUserId: String) {
-        buildRecordModelDao.updateBuildCancelUser(
+        recordModelDao.updateBuildCancelUser(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,

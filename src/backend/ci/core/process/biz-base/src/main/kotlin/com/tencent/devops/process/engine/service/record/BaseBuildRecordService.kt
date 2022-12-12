@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
@@ -163,6 +164,7 @@ class BaseBuildRecordService(
     protected fun fetchHistoryStageStatus(
         recordStages: List<BuildRecordStage>,
         buildStatus: BuildStatus,
+        timeCost: BuildRecordTimeCost? = null,
         reviewers: List<String>? = null,
         errorMsg: String? = null,
         cancelUser: String? = null
@@ -188,6 +190,7 @@ class BaseBuildRecordService(
                 status = it.status,
                 startEpoch = it.stageVar[Stage::startEpoch.name].toString().toLong(),
                 elapsed = it.stageVar[Stage::elapsed.name].toString().toLong(),
+                timeCost = timeCost,
                 tag = (it.stageVar[Stage::tag.name] as List<String>).map { _it ->
                     stageTagMap.getOrDefault(_it, "null")
                 },

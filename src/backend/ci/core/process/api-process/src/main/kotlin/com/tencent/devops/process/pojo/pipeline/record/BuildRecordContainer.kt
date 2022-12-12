@@ -58,5 +58,5 @@ data class BuildRecordContainer(
     @ApiModelProperty("所在矩阵组ID", required = false)
     val matrixGroupId: String? = null,
     @ApiModelProperty("业务时间戳集合", required = true)
-    val timestamps: List<BuildRecordTimeStamp>
+    var timestamps: List<BuildRecordTimeStamp>
 )

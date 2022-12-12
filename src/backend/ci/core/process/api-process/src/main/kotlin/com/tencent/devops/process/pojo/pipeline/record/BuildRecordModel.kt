@@ -56,5 +56,5 @@ data class BuildRecordModel(
     @ApiModelProperty("取消人", required = false)
     val cancelUser: String?,
     @ApiModelProperty("业务时间戳集合", required = false)
-    val timestamps: List<BuildRecordTimeStamp> = emptyList()
+    var timestamps: List<BuildRecordTimeStamp>
 )
