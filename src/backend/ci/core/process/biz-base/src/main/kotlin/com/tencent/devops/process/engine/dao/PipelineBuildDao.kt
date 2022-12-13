@@ -334,14 +334,14 @@ class PipelineBuildDao {
         projectId: String,
         buildId: String,
         startTime: LocalDateTime? = null,
-        retry: Boolean = false
+        executeCount: Int = 1
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this).set(STATUS, BuildStatus.RUNNING.ordinal)
-            if (!retry) {
+            if (executeCount == 1) {
                 update.set(START_TIME, startTime)
             }
-            update.set(IS_RETRY, retry)
+            update.set(EXECUTE_COUNT, executeCount)
             update.setNull(ERROR_INFO)
             update.where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
         }
@@ -516,7 +516,7 @@ class PipelineBuildDao {
                 buildParameters = t.buildParameters?.let { self ->
                     JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                 },
-                retryFlag = t.isRetry,
+                executeCount = t.executeCount,
                 executeTime = t.executeTime ?: 0,
                 concurrencyGroup = t.concurrencyGroup,
                 webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },

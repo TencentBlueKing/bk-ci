@@ -99,7 +99,7 @@ class PipelineOverviewDao {
             val conditions = getConditions(queryPipelineOverview, tProjectPipelineLabelInfo, pipelineIds)
             val step = dslContext.select(
                 STATISTICS_TIME.`as`(BK_STATISTICS_TIME),
-                sum<Long>(TOTAL_EXECUTE_COUNT) .`as`(BK_TOTAL_EXECUTE_COUNT),
+                sum<Long>(TOTAL_EXECUTE_COUNT).`as`(BK_TOTAL_EXECUTE_COUNT),
                 sum<Long>(FAIL_EXECUTE_COUNT).`as`(BK_FAIL_EXECUTE_COUNT),
                 sum<Long>(TOTAL_AVG_COST_TIME).`as`(BK_TOTAL_AVG_COST_TIME),
                 sum<Long>(FAIL_AVG_COST_TIME).`as`(BK_FAIL_AVG_COST_TIME)

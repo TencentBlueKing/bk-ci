@@ -51,23 +51,27 @@ class PipelineBuildMaterialService @Autowired constructor(
     ): Int {
         var newPipelineBuildMaterials = pipelineBuildMaterials
         val pipelineBuildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
-        if (pipelineBuildHistoryRecord != null && pipelineBuildHistoryRecord.isRetry != true) {
-            val material = pipelineBuildHistoryRecord.material
-            if (StringUtils.isNoneBlank(material)) {
-                val originPipelineBuildMaterials =
-                    JsonUtil.to(material, object : TypeReference<List<PipelineBuildMaterial>>() {})
-                newPipelineBuildMaterials = newPipelineBuildMaterials.plus(originPipelineBuildMaterials)
-            }
-
-            val materials = JsonUtil.toJson(newPipelineBuildMaterials, formatted = false)
-            logger.info("BuildId: $buildId save material size: ${newPipelineBuildMaterials.size}")
-            pipelineBuildDao.updateBuildMaterial(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId,
-                material = materials
-            )
+        // 如果找不到构建历史或重试时，不做原材料写入
+        if (pipelineBuildHistoryRecord == null ||
+            pipelineBuildHistoryRecord.executeCount?.let { it > 1 } == true
+        ) {
+            return 0
         }
+        val material = pipelineBuildHistoryRecord.material
+        if (StringUtils.isNoneBlank(material)) {
+            val originPipelineBuildMaterials =
+                JsonUtil.to(material, object : TypeReference<List<PipelineBuildMaterial>>() {})
+            newPipelineBuildMaterials = newPipelineBuildMaterials.plus(originPipelineBuildMaterials)
+        }
+
+        val materials = JsonUtil.toJson(newPipelineBuildMaterials, formatted = false)
+        logger.info("BuildId: $buildId save material size: ${newPipelineBuildMaterials.size}")
+        pipelineBuildDao.updateBuildMaterial(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            material = materials
+        )
         return pipelineBuildMaterials.size
     }
 }

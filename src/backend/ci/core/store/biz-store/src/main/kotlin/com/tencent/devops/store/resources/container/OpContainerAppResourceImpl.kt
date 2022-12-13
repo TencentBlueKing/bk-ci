@@ -37,8 +37,8 @@ import com.tencent.devops.store.service.container.ContainerAppService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpContainerAppResourceImpl @Autowired constructor(private val containerAppService: ContainerAppService)
-    : OpContainerAppResource {
+class OpContainerAppResourceImpl @Autowired constructor(private val containerAppService: ContainerAppService) :
+    OpContainerAppResource {
     override fun deleteContainerAppById(id: Int): Result<Boolean> {
         return containerAppService.deleteContainerAppInfo(id)
     }

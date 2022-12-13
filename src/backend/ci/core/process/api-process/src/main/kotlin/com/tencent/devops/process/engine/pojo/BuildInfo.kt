@@ -56,7 +56,7 @@ data class BuildInfo(
     val channelCode: ChannelCode,
     val buildParameters: List<BuildParameters>?,
     var errorInfoList: List<ErrorInfo>?,
-    val retryFlag: Boolean? = null,
+    val executeCount: Int? = 1,
     val concurrencyGroup: String? = null,
     val webhookInfo: WebhookInfo? = null,
     val buildMsg: String? = null,

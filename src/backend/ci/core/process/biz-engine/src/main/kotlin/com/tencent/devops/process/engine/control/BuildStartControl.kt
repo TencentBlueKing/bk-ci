@@ -235,7 +235,7 @@ class BuildStartControl @Autowired constructor(
                         taskCount = buildInfo.taskCount,
                         buildNum = buildInfo.buildNum
                     ),
-                    retry = (actionType == ActionType.RETRY)
+                    executeCount = executeCount
                 )
                 broadcastStartEvent(buildInfo)
             }

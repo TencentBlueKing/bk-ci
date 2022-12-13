@@ -96,6 +96,23 @@ class BuildRecordModelDao {
         }
     }
 
+    fun updateStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        buildStatus: BuildStatus,
+        executeCount: Int
+    ) {
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
+            dslContext.update(this).set(STATUS, buildStatus.name)
+                .where(
+                    PROJECT_ID.eq(projectId)
+                        .and(BUILD_ID.eq(buildId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).execute()
+        }
+    }
+
     fun getRecord(
         dslContext: DSLContext,
         projectId: String,

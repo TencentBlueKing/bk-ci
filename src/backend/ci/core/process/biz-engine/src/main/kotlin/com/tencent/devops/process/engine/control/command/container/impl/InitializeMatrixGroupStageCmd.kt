@@ -541,7 +541,7 @@ class InitializeMatrixGroupStageCmd(
                     matrixGroupId = matrixGroupId,
                     containerVar = mutableMapOf(),
                     status = null,
-                    timestamps = emptyList()
+                    timestamps = mapOf()
                 )
             },
             recordTaskList

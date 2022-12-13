@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.pipeline.utils
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.JsonUtil.toJson
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.NameAndValue

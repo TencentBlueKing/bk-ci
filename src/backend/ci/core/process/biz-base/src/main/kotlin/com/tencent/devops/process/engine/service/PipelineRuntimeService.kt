@@ -92,6 +92,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.BuildDetailDao
+import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
@@ -202,6 +203,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val buildDetailDao: BuildDetailDao,
+    private val recordModelDao: BuildRecordModelDao,
     private val buildVariableService: BuildVariableService,
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuleService: PipelineRuleService,
@@ -501,7 +503,7 @@ class PipelineRuntimeService @Autowired constructor(
                 webhookInfo = webhookInfo?.let { self -> JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {}) },
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
-                retry = isRetry ?: false,
+                retry = executeCount > 1,
                 errorInfoList = errorInfo?.let { self ->
                     // 特殊兼容修改数据类型前的老数据，必须保留try catch
                     try {
@@ -513,7 +515,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildMsg = BuildMsgUtils.getBuildMsg(buildMsg, startType = startType, channelCode = channelCode),
                 buildNumAlias = buildNumAlias,
                 updateTime = updateTime?.timestampmilli() ?: endTime?.timestampmilli() ?: 0L, // 防止空异常
-                concurrencyGroup = concurrencyGroup
+                concurrencyGroup = concurrencyGroup,
+                executeCount = executeCount
             )
         }
     }
@@ -1161,7 +1164,7 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
             cancelUser = null, modelVar = mutableMapOf(),
-            status = startBuildStatus.name, timestamps = emptyList()
+            status = startBuildStatus.name, timestamps = mapOf()
         )
         val stageBuildRecords = mutableListOf<BuildRecordStage>()
         val containerBuildRecords = mutableListOf<BuildRecordContainer>()
@@ -1212,7 +1215,7 @@ class PipelineRuntimeService @Autowired constructor(
                     taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
                     executeCount = it.executeCount ?: 1, originClassType = null,
                     resourceVersion = resourceVersion, status = null,
-                    timestamps = emptyList(), taskVar = mutableMapOf()
+                    timestamps = mapOf(), taskVar = mutableMapOf()
                 )
             )
         }
@@ -1226,7 +1229,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = it.buildId, stageId = it.stageId, containerId = it.containerId,
                     containerType = it.containerType, executeCount = it.executeCount,
                     matrixGroupFlag = null, matrixGroupId = null, containerVar = mutableMapOf(),
-                    status = null, timestamps = emptyList()
+                    status = null, timestamps = mapOf()
                 )
             )
         }
@@ -1239,7 +1242,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
                     buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
                     executeCount = it.executeCount, stageVar = mutableMapOf(),
-                    status = null, timestamps = emptyList()
+                    status = null, timestamps = mapOf()
                 )
             )
         }
@@ -1249,7 +1252,8 @@ class PipelineRuntimeService @Autowired constructor(
         userId: String,
         buildId: String,
         pipelineId: String,
-        projectId: String
+        projectId: String,
+        executeCount: Int
     ) {
         val newBuildStatus = BuildStatus.QUEUE
         logger.info("[$buildId|APPROVE_BUILD|userId($userId)|newBuildStatus=$newBuildStatus")
@@ -1263,6 +1267,13 @@ class PipelineRuntimeService @Autowired constructor(
                 oldBuildStatus = BuildStatus.TRIGGER_REVIEWING,
                 newBuildStatus = newBuildStatus,
                 startTime = now
+            )
+            recordModelDao.updateStatus(
+                dslContext = transactionContext,
+                projectId = projectId,
+                buildId = buildId,
+                buildStatus = newBuildStatus,
+                executeCount = executeCount
             )
             buildDetailDao.updateStatus(
                 dslContext = transactionContext,
@@ -1290,7 +1301,8 @@ class PipelineRuntimeService @Autowired constructor(
         userId: String,
         buildId: String,
         pipelineId: String,
-        projectId: String
+        projectId: String,
+        executeCount: Int
     ) {
         val newBuildStatus = BuildStatus.FAILED
         logger.info("[$buildId|DISAPPROVE_BUILD|userId($userId)|pipelineId=$pipelineId")
@@ -1300,10 +1312,12 @@ class PipelineRuntimeService @Autowired constructor(
             buildStatus = newBuildStatus,
             errorMsg = "Rejected by $userId"
         )
+
         pipelineBuildRecordService.buildEnd(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
+            executeCount = executeCount,
             buildStatus = newBuildStatus,
             errorMsg = "Rejected by $userId"
         )
@@ -1604,7 +1618,7 @@ class PipelineRuntimeService @Autowired constructor(
     /**
      * 开始最新一次构建
      */
-    fun startLatestRunningBuild(latestRunningBuild: LatestRunningBuild, retry: Boolean) {
+    fun startLatestRunningBuild(latestRunningBuild: LatestRunningBuild, executeCount: Int) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             val startTime = LocalDateTime.now()
@@ -1620,7 +1634,7 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = latestRunningBuild.projectId,
                 buildId = latestRunningBuild.buildId,
                 startTime = startTime,
-                retry = retry
+                executeCount = executeCount
             )
             pipelineInfoDao.updateLatestStartTime(
                 dslContext = transactionContext,
