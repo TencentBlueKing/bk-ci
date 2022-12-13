@@ -101,7 +101,11 @@ object BuildTimeCostUtils {
             waitCost += cost.waitCost
         }
         val systemCost = totalCost - executeCost - waitCost - queueCost
-        return BuildRecordTimeCost()
+        return BuildRecordTimeCost(totalCost = totalCost,
+            executeCost = executeCost,
+            waitCost = waitCost,
+            queueCost = queueCost,
+            systemCost = systemCost)
     }
 
     /**

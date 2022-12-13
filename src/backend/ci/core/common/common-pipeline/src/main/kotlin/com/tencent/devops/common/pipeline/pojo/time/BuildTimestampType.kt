@@ -43,5 +43,5 @@ enum class BuildTimestampType(val action: String) {
     fun taskCheckWait() = this == TASK_ATOM_LOADING || this == TASK_REVIEW_WAITING
 
     /*使container处于等待的类型*/
-    fun containerCheckWait() = this == JOB_MUTEX_WAITING
+    fun containerCheckWait() = this == JOB_MUTEX_WAITING || this == JOB_THIRD_PARTY_WAITING
 }
