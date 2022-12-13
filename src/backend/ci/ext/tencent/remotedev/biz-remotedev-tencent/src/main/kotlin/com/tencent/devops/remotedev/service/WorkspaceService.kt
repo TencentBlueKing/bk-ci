@@ -143,7 +143,7 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
 
         val pathWithNamespace = GitUtils.getDomainAndRepoName(workspaceCreate.repositoryUrl).second
-
+        val projectName = pathWithNamespace.substring(pathWithNamespace.lastIndexOf("/") + 1)
         val yaml = if (workspaceCreate.useOfficialDevfile == false) {
             kotlin.runCatching {
                 gitTransferService.getFileContent(
@@ -182,7 +182,8 @@ class WorkspaceService @Autowired constructor(
                 status = null,
                 lastStatusUpdateTime = null,
                 sleepingTime = null,
-                createUserId = userId
+                createUserId = userId,
+                workPath = Constansts.prefixWorkPath.plus(projectName)
             )
         }
 
@@ -516,7 +517,8 @@ class WorkspaceService @Autowired constructor(
                     status = status,
                     lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp(),
                     sleepingTime = if (status.isSleeping()) it.lastStatusUpdateTime.timestamp() else null,
-                    createUserId = it.creator
+                    createUserId = it.creator,
+                    workPath = it.workPath
                 )
             }
         )

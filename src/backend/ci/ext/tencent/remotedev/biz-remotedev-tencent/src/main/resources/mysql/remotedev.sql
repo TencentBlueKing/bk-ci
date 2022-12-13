@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
                                              `YAML_PATH` varchar(1024) NOT NULL DEFAULT ''  COMMENT '配置yaml路径',
                                              `DOCKERFILE` longtext NOT NULL COMMENT '依赖镜像的DockerFile内容',
                                              `IMAGE_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '镜像地址',
+                                             `WORK_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '工作区路径',
                                              `CPU` int(11) NOT NULL DEFAULT 16 COMMENT 'CPU',
                                              `MEMORY` int(11) NOT NULL DEFAULT 32768 COMMENT '内存',
                                              `USAGE_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '已使用时间,单位:s（容器结束时更新）',
