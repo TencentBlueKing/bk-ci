@@ -131,7 +131,7 @@ class WorkspaceDao {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectCount().from(this)
-                .where(USER_ID.eq(userId)).unionAll(
+                .where(CREATOR.eq(userId)).unionAll(
                     DSL.selectCount().from(this).where(
                         ID.`in`(
                             DSL.select(shared.WORKSPACE_ID).from(shared).where(
@@ -157,7 +157,7 @@ class WorkspaceDao {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
-                .where(USER_ID.eq(userId)).unionAll(
+                .where(CREATOR.eq(userId)).unionAll(
                     DSL.selectFrom(this).where(
                         ID.`in`(
                             DSL.select(shared.WORKSPACE_ID).from(shared).where(
@@ -229,7 +229,7 @@ class WorkspaceDao {
         val condition = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
             if (!userId.isNullOrBlank()) {
-                condition.add(USER_ID.eq(userId))
+                condition.add(CREATOR.eq(userId))
             }
             if (workspaceId != null) {
                 condition.add(ID.eq(workspaceId))
