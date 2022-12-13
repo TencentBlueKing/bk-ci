@@ -51,7 +51,7 @@ default_value_dict = {
     'bkCiStreamGitUrl': 'www.github.com',
     'bkCiClusterTag': 'devops',
     'bkCiRepositoryGithubServer':'repository',
-    'bkCiDockerRoutingType':'VM',
+    'bkCiDockerRoutingType':'KUBERNETES',
     'bkCiDockerJobQuotaEnable':'false',
     'bkCiBcsCpu':'8.0',
     'bkCiBcsMemory':'16048',

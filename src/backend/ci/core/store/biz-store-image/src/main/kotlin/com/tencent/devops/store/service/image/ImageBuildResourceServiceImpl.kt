@@ -60,7 +60,6 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
     override fun getDefaultBuildResource(buildType: BuildType): Any? {
         logger.info("getDefaultBuildResource buildType=${buildType.name}")
         if (buildType.name == BuildType.DOCKER.name ||
-            buildType.name == BuildType.IDC.name ||
             buildType.name == BuildType.PUBLIC_DEVCLOUD.name ||
             buildType.name == BuildType.KUBERNETES.name ||
             buildType.name == BuildType.PUBLIC_BCS.name) {
