@@ -10,5 +10,7 @@ data class UpgradeItem(
     @ApiModelProperty("升级worker")
     val worker: Boolean,
     @ApiModelProperty("升级jdk")
-    val jdk: Boolean
+    val jdk: Boolean,
+    @ApiModelProperty("升级docker init 脚本")
+    val dockerInitFile: Boolean
 )
