@@ -23,6 +23,7 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.ticket.config
@@ -35,16 +36,18 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CredentialDao
-import com.tencent.devops.ticket.service.BluekingCertPermissionService
-import com.tencent.devops.ticket.service.BluekingCredentialPermissionService
 import com.tencent.devops.ticket.service.CertPermissionService
 import com.tencent.devops.ticket.service.CredentialPermissionService
-import com.tencent.devops.ticket.service.MockCertPermissionService
-import com.tencent.devops.ticket.service.MockCredentialPermissionService
-import com.tencent.devops.ticket.service.StreamCertPermissionServiceImpl
-import com.tencent.devops.ticket.service.StreamCredentialPermissionServiceImpl
-import com.tencent.devops.ticket.service.V3CertPermissionService
-import com.tencent.devops.ticket.service.V3CredentialPermissionService
+import com.tencent.devops.ticket.service.permission.BluekingCertPermissionService
+import com.tencent.devops.ticket.service.permission.BluekingCredentialPermissionService
+import com.tencent.devops.ticket.service.permission.MockCertPermissionService
+import com.tencent.devops.ticket.service.permission.MockCredentialPermissionService
+import com.tencent.devops.ticket.service.permission.RbacCertPermissionService
+import com.tencent.devops.ticket.service.permission.RbacCredentialPermissionService
+import com.tencent.devops.ticket.service.permission.StreamCertPermissionServiceImpl
+import com.tencent.devops.ticket.service.permission.StreamCredentialPermissionServiceImpl
+import com.tencent.devops.ticket.service.permission.V3CertPermissionService
+import com.tencent.devops.ticket.service.permission.V3CredentialPermissionService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -209,5 +212,29 @@ class TicketPermConfiguration {
         credentialDao = credentialDao,
         client = client,
         tokenService = tokenService
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
+    fun rbacCertPermissionService(
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        ticketAuthServiceCode: TicketAuthServiceCode
+    ): CertPermissionService = RbacCertPermissionService(
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        ticketAuthServiceCode = ticketAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
+    fun rbacCredentialPermissionService(
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        ticketAuthServiceCode: TicketAuthServiceCode
+    ): CredentialPermissionService = RbacCredentialPermissionService(
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        ticketAuthServiceCode = ticketAuthServiceCode
     )
 }

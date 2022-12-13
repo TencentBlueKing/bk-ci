@@ -61,7 +61,7 @@ class RbacAuthPermissionApi : AuthPermissionApi {
         permission: AuthPermission,
         supplier: (() -> List<String>)?
     ): List<String> {
-        return true
+        return emptyList()
     }
 
     override fun getUserResourcesByPermissions(
