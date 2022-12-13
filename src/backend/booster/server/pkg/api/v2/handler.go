@@ -244,7 +244,7 @@ func getTaskInfo(taskID string) (*RespTaskInfo, error) {
 	if tb.Status.Status == engine.TaskStatusStaging {
 		rank, err = defaultManager.GetTaskRank(taskID)
 		if err != nil {
-			blog.Errorf("get apply param: get task(q%s) rank from engine(%s) queue(%s) failed: %v",
+			blog.Warnf("get apply param: get task(%s) rank from engine(%s) queue(%s) failed: %v",
 				taskID, tb.Client.EngineName.String(), tb.Client.QueueName, err)
 			rank = 0
 		}

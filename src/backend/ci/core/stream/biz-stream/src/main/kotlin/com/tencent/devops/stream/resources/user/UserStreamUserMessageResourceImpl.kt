@@ -45,6 +45,8 @@ class UserStreamUserMessageResourceImpl @Autowired constructor(
         projectId: String?,
         messageType: UserMessageType?,
         haveRead: Boolean?,
+        messageId: String?,
+        triggerUserId: String?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<UserMessageRecord>> {
@@ -54,6 +56,8 @@ class UserStreamUserMessageResourceImpl @Autowired constructor(
                 userId = userId,
                 messageType = messageType,
                 haveRead = haveRead,
+                messageId = messageId?.ifBlank { null },
+                triggerUserId = triggerUserId?.ifBlank { null },
                 page = page ?: 1,
                 pageSize = pageSize ?: 10
             )

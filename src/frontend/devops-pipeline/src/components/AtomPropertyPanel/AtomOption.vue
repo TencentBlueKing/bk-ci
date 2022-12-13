@@ -57,10 +57,6 @@
                     }
                 ]
 
-                if (this.element.data && this.element.data.config && (this.element.data.config.canPauseBeforeRun === true)) {
-                    model.pauseBeforeExec.value = true
-                }
-
                 if (!(this.atomOption.manualSkip === false && this.atomOption.failControl && this.atomOption.failControl.includes('continueWhenFailed'))) {
                     model.failControl.list.push(failControlManualRetryOption)
                 }

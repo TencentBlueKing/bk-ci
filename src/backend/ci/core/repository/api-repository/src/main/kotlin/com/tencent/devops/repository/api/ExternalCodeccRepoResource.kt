@@ -164,6 +164,18 @@ interface ExternalCodeccRepoResource {
         userId: String
     ): Result<List<GitMember>>
 
+    @ApiOperation("获取代码库有权限成员列表")
+    @GET
+    @Path("/isProjectMember")
+    fun isProjectMember(
+        @ApiParam(value = "代码库url")
+        @QueryParam("repoName")
+        repoUrl: String,
+        @ApiParam(value = "用户id")
+        @QueryParam("userId")
+        userId: String
+    ): Result<Boolean>
+
     @ApiOperation("通过凭证Id获取文件内容")
     @GET
     @Path("/{projectId}/getFileContentByUrl")
