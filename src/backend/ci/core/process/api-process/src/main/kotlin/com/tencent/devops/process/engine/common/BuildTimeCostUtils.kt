@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.engine.common
 
-import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -37,8 +37,12 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import org.slf4j.LoggerFactory
+import java.time.Duration
 
 object BuildTimeCostUtils {
+    private val logger = LoggerFactory.getLogger(BuildTimeCostUtils::class.java)
+
 
     // TODO 某层结束执行时获取内部所有耗时并计算，build对象可能因为数据清理不存在，startTime和endTime也不一定有值，需兜底
 
@@ -75,26 +79,64 @@ object BuildTimeCostUtils {
 
     fun generateContainerTimeCost(
         buildContainer: PipelineBuildContainer,
+        recordContainer: BuildRecordContainer,
         taskPairs: List<Pair<BuildRecordTask, PipelineBuildTask?>>
     ): BuildRecordTimeCost {
         val startTime = buildContainer.startTime
         val endTime = buildContainer.endTime
-
-        taskPairs.forEach { (record, build) ->
-            val start = build?.startTime
-            val end = build?.endTime
-            val timestamps = record.timestamps
+        val totalCost = Duration.between(startTime, endTime).toMillis()
+        var executeCost = 0L
+        var waitCost = 0L
+        val queueCost = recordContainer.timestamps.toList().sumOf { (type, time) ->
+            if (!type.containerCheckWait()) return@sumOf 0
+            logTimeWhenNull(
+                time, "${buildContainer.buildId}|${buildContainer.containerId}|${type.name}"
+            )
+            return@sumOf time.between()
         }
+        taskPairs.forEach { (record, build) ->
+            if (build == null) return@forEach
+            val cost = generateTaskTimeCost(build, record.timestamps)
+            executeCost += cost.executeCost
+            waitCost += cost.waitCost
+        }
+        val systemCost = totalCost - executeCost - waitCost - queueCost
         return BuildRecordTimeCost()
     }
 
+    /**
+     * 计算task级别的所有时间消耗
+     * queueCost、 systemCost 保持为 0
+     */
     fun generateTaskTimeCost(
         buildTask: PipelineBuildTask,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
     ): BuildRecordTimeCost {
         val start = buildTask.startTime
         val end = buildTask.endTime
+        val totalCost = Duration.between(start, end).toMillis()
+        val waitCost = timestamps.toList().sumOf { (type, time) ->
+            if (!type.taskCheckWait()) return@sumOf 0
+            logTimeWhenNull(
+                time, "${buildTask.buildId}|${buildTask.taskId}|${type.name}"
+            )
+            return@sumOf time.between()
+        }
+        val executeCost = totalCost - waitCost
 
-        return BuildRecordTimeCost()
+        return BuildRecordTimeCost(
+            totalCost = totalCost,
+            waitCost = waitCost,
+            executeCost = executeCost
+        )
+    }
+
+    private fun logTimeWhenNull(time: BuildRecordTimeStamp, logInfo: String) {
+        if (time.startTime == null) {
+            logger.warn("$logInfo|warning! start time is null.")
+        }
+        if (time.endTime == null) {
+            logger.warn("$logInfo|warning! end time is null.")
+        }
     }
 }

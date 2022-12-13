@@ -36,4 +36,6 @@ data class BuildRecordTimeStamp(
     val startTime: Long?,
     @ApiModelProperty("结束时间", required = true)
     val endTime: Long?
-)
+) {
+    fun between() = (endTime ?: startTime ?: 0) - (startTime ?: 0)
+}

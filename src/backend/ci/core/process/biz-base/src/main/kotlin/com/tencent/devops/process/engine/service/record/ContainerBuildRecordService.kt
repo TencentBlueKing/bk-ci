@@ -210,7 +210,7 @@ class ContainerBuildRecordService(
                         null, LocalDateTime.now().timestampmilli()
                     )
                     buildContainerDao.getByContainerId(context, projectId, buildId, null, containerId)
-                        ?.let { container ->
+                        ?.let { buildContainer ->
                             val recordTasks = recordTaskDao.getRecords(
                                 context, projectId, pipelineId, buildId, executeCount, containerId
                             )
@@ -220,7 +220,7 @@ class ContainerBuildRecordService(
                                 task to buildTaskMap[task.taskId]
                             }
                             containerVar[Container::timeCost.name] = BuildTimeCostUtils.generateContainerTimeCost(
-                                container, buildTaskPairs
+                                buildContainer, recordContainer, buildTaskPairs
                             )
                         }
                 }
