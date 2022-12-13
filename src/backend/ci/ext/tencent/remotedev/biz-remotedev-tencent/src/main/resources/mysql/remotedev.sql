@@ -6,7 +6,6 @@ CREATE DATABASE IF NOT EXISTS `devops_remotedev` DEFAULT CHARACTER SET utf8mb4;
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
                                              `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '工作空间ID',
-                                             `USER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '用户',
                                              `PROJECT_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '项目ID',
                                              `NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称，唯一性',
                                              `TEMPLATE_ID` int(11) NOT NULL DEFAULT 16 COMMENT '模板ID',
@@ -17,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
                                              `DOCKERFILE` longtext NOT NULL COMMENT '依赖镜像的DockerFile内容',
                                              `IMAGE_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '镜像地址',
                                              `WORK_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '工作区路径',
+                                             `HOST_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '工作空间对应的IP',
                                              `CPU` int(11) NOT NULL DEFAULT 16 COMMENT 'CPU',
                                              `MEMORY` int(11) NOT NULL DEFAULT 32768 COMMENT '内存',
                                              `USAGE_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '已使用时间,单位:s（容器结束时更新）',

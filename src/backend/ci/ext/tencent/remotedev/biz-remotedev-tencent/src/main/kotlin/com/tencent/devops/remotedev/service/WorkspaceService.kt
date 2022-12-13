@@ -183,7 +183,8 @@ class WorkspaceService @Autowired constructor(
                 lastStatusUpdateTime = null,
                 sleepingTime = null,
                 createUserId = userId,
-                workPath = Constansts.prefixWorkPath.plus(projectName)
+                workPath = Constansts.prefixWorkPath.plus(projectName),
+                hostName = ""
             )
         }
 
@@ -518,7 +519,8 @@ class WorkspaceService @Autowired constructor(
                     lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp(),
                     sleepingTime = if (status.isSleeping()) it.lastStatusUpdateTime.timestamp() else null,
                     createUserId = it.creator,
-                    workPath = it.workPath
+                    workPath = it.workPath,
+                    hostName = it.hostName
                 )
             }
         )
