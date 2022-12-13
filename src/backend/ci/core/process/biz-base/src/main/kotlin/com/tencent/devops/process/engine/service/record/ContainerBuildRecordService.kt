@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service.record
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -50,6 +51,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Suppress("LongParameterList", "MagicNumber")
 @Service
@@ -119,6 +121,10 @@ class ContainerBuildRecordService(
                 buildStatus = BuildStatus.PREPARE_ENV,
                 containerVar = mapOf(
                     Container::startVMStatus.name to BuildStatus.RUNNING.name
+                ),
+                timestamps = mapOf(
+                    BuildTimestampType.JOB_CONTAINER_STARTUP to
+                        BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
                 )
             )
         }
@@ -146,6 +152,10 @@ class ContainerBuildRecordService(
                 },
                 containerVar = mapOf(
                     Container::startVMStatus.name to containerBuildStatus.name
+                ),
+                timestamps = mapOf(
+                    BuildTimestampType.JOB_CONTAINER_STARTUP to
+                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
                 )
             )
         }
@@ -297,7 +307,7 @@ class ContainerBuildRecordService(
     ) {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val record = recordContainerDao.getRecord(
+            val recordContainer = recordContainerDao.getRecord(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, containerId = containerId, executeCount = executeCount
             ) ?: run {
@@ -306,11 +316,12 @@ class ContainerBuildRecordService(
                 )
                 return@transaction
             }
+
             recordContainerDao.updateRecord(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, containerId = containerId, executeCount = executeCount,
-                containerVar = record.containerVar.plus(containerVar), buildStatus = buildStatus,
-                timestamps = timestamps?.let { record.timestamps.plus(timestamps) }
+                containerVar = recordContainer.containerVar.plus(containerVar), buildStatus = buildStatus,
+                timestamps = timestamps?.let { mergeTimestamps(timestamps, recordContainer.timestamps) }
             )
         }
     }

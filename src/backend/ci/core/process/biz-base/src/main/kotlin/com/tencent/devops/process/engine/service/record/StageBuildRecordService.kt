@@ -378,21 +378,6 @@ class StageBuildRecordService(
                     reviewers = reviewers
                 )
             }
-            // 针对各时间戳的开始结束时间分别写入，避免覆盖
-            val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
-            timestamps?.forEach { (type, new) ->
-                val old = recordStage.timestamps[type]
-                newTimestamps[type] = if (old != null) {
-                    // 如果时间戳已存在，则将新的值覆盖旧的值
-                    BuildRecordTimeStamp(
-                        startTime = new.startTime ?: old.startTime,
-                        endTime = new.endTime ?: old.endTime
-                    )
-                } else {
-                    // 如果时间戳不存在，则直接新增
-                    new
-                }
-            }
             recordStageDao.updateRecord(
                 dslContext = context,
                 projectId = projectId,
@@ -402,7 +387,7 @@ class StageBuildRecordService(
                 executeCount = executeCount,
                 stageVar = recordStage.stageVar.plus(stageVar),
                 buildStatus = buildStatus,
-                timestamps = newTimestamps
+                timestamps = timestamps?.let { mergeTimestamps(timestamps, recordStage.timestamps) }
             )
         }
         return allStageStatus ?: emptyList()

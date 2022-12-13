@@ -33,6 +33,7 @@ enum class BuildTimestampType(val action: String) {
     STAGE_CHECK_IN_WAITING("stage准入等待"),
     STAGE_CHECK_OUT_WAITING("stage准出等待"),
     JOB_MUTEX_WAITING("job互斥并发等待"),
+    JOB_THIRD_PARTY_WAITING("job第三方构建机资源等待"),
     JOB_CONTAINER_STARTUP("job构建机启动"),
     JOB_CONTAINER_SHUTDOWN("job构建机关闭"),
     TASK_ATOM_LOADING("task可执行文件加载等待"),
