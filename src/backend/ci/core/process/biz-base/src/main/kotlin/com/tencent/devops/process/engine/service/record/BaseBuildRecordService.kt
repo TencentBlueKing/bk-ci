@@ -35,8 +35,10 @@ import com.tencent.devops.common.api.constant.BUILD_RUNNING
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
@@ -200,6 +202,26 @@ class BaseBuildRecordService(
                 } else null
             )
         }
+    }
+
+    protected fun mergeTimestamps(
+        newTimestamps: Map<BuildTimestampType, BuildRecordTimeStamp>,
+        oldTimestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
+    ): Map<BuildTimestampType, BuildRecordTimeStamp> {
+        // 针对各时间戳的开始结束时间分别写入，避免覆盖
+        return newTimestamps.map { (type, new) ->
+            val old = oldTimestamps[type]
+            type to if (old != null) {
+                // 如果时间戳已存在，则将新的值覆盖旧的值
+                BuildRecordTimeStamp(
+                    startTime = new.startTime ?: old.startTime,
+                    endTime = new.endTime ?: old.endTime
+                )
+            } else {
+                // 如果时间戳不存在，则直接新增
+                new
+            }
+        }.toMap()
     }
 
     companion object {

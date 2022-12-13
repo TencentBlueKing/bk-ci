@@ -62,6 +62,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.BuildVariableService
@@ -86,6 +87,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
     private val containerBuildDetailService: ContainerBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -206,7 +208,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         // 注意区分buildId和vmSeqId，BuildId是一次构建整体的ID，
         // vmSeqId是该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         containerBuildDetailService.containerPreparing(projectId, buildId, vmSeqId)
-
+        containerBuildRecordService.containerPreparing(
+            projectId, pipelineId, buildId, vmSeqId, task.executeCount ?: 1
+        )
         dispatch(task, pipelineInfo!!, param, vmNames, container!!)
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.CALL_WAITING)
