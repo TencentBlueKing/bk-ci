@@ -71,6 +71,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ComplexMethod")
 class DocumentService {
     @Value("\${spring.application.desc:#{null}}")
     private val applicationDesc: String = "DevOps openapi Service"

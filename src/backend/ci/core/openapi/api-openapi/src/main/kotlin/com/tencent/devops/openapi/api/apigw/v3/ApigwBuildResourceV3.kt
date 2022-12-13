@@ -84,7 +84,7 @@ interface ApigwBuildResourceV3 {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam(
-            "启动参数：map<变量名(string),变量值(string)>", required = true,
+            "启动参数：map<变量名(string),变量值(string)>", required = false,
             examples = Example(
                 value = [
                     ExampleProperty(
@@ -96,7 +96,7 @@ interface ApigwBuildResourceV3 {
                 ]
             )
         )
-        values: Map<String, String>,
+        values: Map<String, String>?,
         @ApiParam("手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
         buildNo: Int? = null

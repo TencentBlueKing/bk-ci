@@ -20,6 +20,7 @@ class Table(
             body.append(Text(6, "无此参数", ""))
             return body.toString()
         }
+        body.append('\n')
         val interval = getColumnWidths(rows.plus(header), MIN_FILL)
         header.columns.tableJoinToString(
             buffer = body,
@@ -47,7 +48,7 @@ class Table(
                 WHITESPACE + element.padEnd(interval[index] ?: 0, ' ') + WHITESPACE
             }.append('\n')
         }
-        return body.toString()
+        return body.append('\n').toString()
     }
 
     fun setRow(vararg row: String): Table {

@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface OpSwaggerDocResource {
-    @ApiOperation("获取appCode的管理员")
+    @ApiOperation("文档输出")
     @GET
     @Path("/init")
     fun docInit(

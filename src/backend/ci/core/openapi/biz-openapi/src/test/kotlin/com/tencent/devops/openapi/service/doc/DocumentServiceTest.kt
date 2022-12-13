@@ -104,6 +104,7 @@ class DocumentServiceTest @Autowired constructor(
      *  @param clazz 目标类
      *  @return 带默认值的map
      */
+    @Suppress("ComplexMethod")
     fun getDataClassParameterDefault(clazz: Class<*>): Map<String, SwaggerDocParameterInfo> {
         val kClazz = clazz.kotlin
         if (!kClazz.isData) return emptyMap()
