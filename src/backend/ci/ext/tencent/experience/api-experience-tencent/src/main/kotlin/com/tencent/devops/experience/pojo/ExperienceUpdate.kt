@@ -51,7 +51,7 @@ data class ExperienceUpdate(
     @ApiModelProperty("企业微信群ID(逗号分隔)", required = false)
     val wechatGroups: String?,
     @ApiModelProperty("体验名称", required = false)
-    val experienceName: String?,
+    var experienceName: String?,
     @ApiModelProperty("版本标题", required = false)
     val versionTitle: String?,
     @ApiModelProperty("产品类别", required = false)
