@@ -197,7 +197,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	creatResp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image:      imageStr,
 		Cmd:        []string{},
-		Entrypoint: []string{"/bin/bash", "-c", entryPointCmd},
+		Entrypoint: []string{"/bin/sh", "-c", entryPointCmd},
 		Env:        parseContainerEnv(dockerBuildInfo),
 	}, hostConfig, nil, nil, containerName)
 	if err != nil {
