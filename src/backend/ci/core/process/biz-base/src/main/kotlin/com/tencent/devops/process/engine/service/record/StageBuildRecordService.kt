@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service.record
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -209,17 +210,29 @@ class StageBuildRecordService(
         stageId: String,
         executeCount: Int,
         controlOption: PipelineBuildStageControlOption,
+        inOrOut: Boolean,
         checkIn: StagePauseCheck?,
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
         var allStageStatus: List<BuildStageStatus>? = null
+        val timestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
+        val timestampType = if (inOrOut) {
+            BuildTimestampType.STAGE_CHECK_IN_WAITING
+        } else {
+            BuildTimestampType.STAGE_CHECK_OUT_WAITING
+        }
         val (oldBuildStatus, newBuildStatus) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
             checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+            // 即将卡审核
+            timestamps[timestampType] = BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
             Pair(BuildStatus.RUNNING, BuildStatus.REVIEWING)
         } else {
+            // 即将完成审核
+            timestamps[timestampType] = BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
             Pair(BuildStatus.REVIEWING, BuildStatus.RUNNING)
         }
+
         update(
             projectId, pipelineId, buildId, executeCount, newBuildStatus,
             cancelUser = null, operation = "stageCheckQuality#$stageId"
@@ -235,7 +248,8 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                buildStatus = null // 红线不改变stage原状态
+                buildStatus = null, // 红线不改变stage原状态
+                timestamps = timestamps
             )
             pipelineBuildDao.updateStatus(dslContext, projectId, buildId, oldBuildStatus, newBuildStatus)
         }
@@ -334,7 +348,7 @@ class StageBuildRecordService(
                 buildId = stageId,
                 executeCount = executeCount
             )
-            val stage = recordStages.find { it.stageId == stageId } ?: run {
+            val recordStage = recordStages.find { it.stageId == stageId } ?: run {
                 logger.warn(
                     "ENGINE|$buildId|updateStageStatus| get stage($stageId) record failed."
                 )
@@ -364,6 +378,21 @@ class StageBuildRecordService(
                     reviewers = reviewers
                 )
             }
+            // 针对各时间戳的开始结束时间分别写入，避免覆盖
+            val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
+            timestamps?.forEach { (type, new) ->
+                val old = recordStage.timestamps[type]
+                newTimestamps[type] = if (old != null) {
+                    // 如果时间戳已存在，则将新的值覆盖旧的值
+                    BuildRecordTimeStamp(
+                        startTime = new.startTime ?: old.startTime,
+                        endTime = new.endTime ?: old.endTime
+                    )
+                } else {
+                    // 如果时间戳不存在，则直接新增
+                    new
+                }
+            }
             recordStageDao.updateRecord(
                 dslContext = context,
                 projectId = projectId,
@@ -371,9 +400,9 @@ class StageBuildRecordService(
                 buildId = buildId,
                 stageId = stageId,
                 executeCount = executeCount,
-                stageVar = stage.stageVar.plus(stageVar),
+                stageVar = recordStage.stageVar.plus(stageVar),
                 buildStatus = buildStatus,
-                timestamps = timestamps
+                timestamps = newTimestamps
             )
         }
         return allStageStatus ?: emptyList()

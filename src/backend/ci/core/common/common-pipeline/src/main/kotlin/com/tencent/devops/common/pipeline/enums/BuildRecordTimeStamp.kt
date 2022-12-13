@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("构建详情记录-事件时间戳")
 data class BuildRecordTimeStamp(
     @ApiModelProperty("开始时间", required = true)
-    val startTime: Long,
+    val startTime: Long?,
     @ApiModelProperty("结束时间", required = true)
     val endTime: Long?
 )
