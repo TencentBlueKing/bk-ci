@@ -27,6 +27,12 @@
 
 dependencies {
     api(project(":core:common:common-api"))
+    api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:common:common-redis"))
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-redis"))
+    api(project(":core:auth:api-auth"))
     api("com.fasterxml.jackson.core:jackson-databind")
     api("com.fasterxml.jackson.core:jackson-core")
     api("com.fasterxml.jackson.core:jackson-annotations")
@@ -34,8 +40,4 @@ dependencies {
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api("org.apache.commons:commons-collections4")
-    api("org.apache.httpcomponents:httpclient")
-//    implementation(group = "org.apache.commons", name = "commons-collections4", version = "4.4")
-    api("com.tencent.bk.sdk:iam-java-sdk")
 }

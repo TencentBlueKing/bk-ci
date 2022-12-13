@@ -56,6 +56,7 @@ object AuthMessageCode {
     const val CAN_NOT_FIND_RELATION = "2121011" // 权限系统：用户组无关联系统用户组
     const val IAM_SYSTEM_ERROR = "2121012" // 权限系统：Iam权限中心异常。异常信息{0}
     const val USER_NOT_EXIST = "2121013" // 权限系统: 用户中心非法用户/组织
+    const val PROJECT_NOT_FIND_RELATION = "2121014" // 权限系统：项目{0}没有关联系统分级管理员
 
     const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
     const val PARENT_TYPE_FAIL = "2121107" // 权限系统：父类资源必须为"项目"
@@ -77,6 +78,7 @@ object AuthMessageCode {
     const val STRATEGT_NAME_NOT_EXIST = "2121209" // 权限系统： 权限集合{0}不存在
     const val APPROVAL_RECORD_NOT_EXIST = "2121210" // 审批记录不存在
     const val MANAGER_PERMISSION_EXPIRE = "2121211" // 管理员权限过期
+    const val STRATEGT_NOT_EXIST = "2121212" // 策略不存在
 
     const val LOGIN_THIRD_CODE_INVALID = "2121501" // 权限系统： 第三方登陆code校验失败
     const val LOGIN_USER_INFO_EXIST = "2121502" // 权限系统： 用户已存在，无需重复创建
