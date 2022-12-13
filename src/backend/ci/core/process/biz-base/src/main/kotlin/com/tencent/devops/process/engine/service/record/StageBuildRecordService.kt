@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
@@ -98,8 +99,7 @@ class StageBuildRecordService(
                 stageVar[Stage::elapsed.name] =
                     System.currentTimeMillis() - stageVar[Stage::startEpoch.name].toString().toLong()
             }
-
-            allStageStatus = updateContainerByMap(
+            allStageStatus = updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, stageVar = stageVar,
                 buildStatus = buildStatus
@@ -127,7 +127,7 @@ class StageBuildRecordService(
                     projectId, pipelineId, buildId, executeCount, container.containerId
                 )
             }
-            allStageStatus = updateContainerByMap(
+            allStageStatus = updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, buildStatus = BuildStatus.SKIP,
                 stageVar = mutableMapOf()
@@ -159,7 +159,7 @@ class StageBuildRecordService(
             stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
             checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
             checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
-            allStageStatus = updateContainerByMap(
+            allStageStatus = updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, stageVar = mutableMapOf(),
                 buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers
@@ -190,7 +190,7 @@ class StageBuildRecordService(
             checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
             checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
 
-            allStageStatus = updateContainerByMap(
+            allStageStatus = updateStageRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -241,7 +241,7 @@ class StageBuildRecordService(
             stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
             checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
             checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
-            allStageStatus = updateContainerByMap(
+            allStageStatus = updateStageRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -277,7 +277,7 @@ class StageBuildRecordService(
             checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
             checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
 
-            allStageStatus = updateContainerByMap(
+            allStageStatus = updateStageRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -311,7 +311,7 @@ class StageBuildRecordService(
             checkIn?.let { stageVar[Stage::checkIn.name] = checkIn }
             checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
 
-            allStageStatus = updateContainerByMap(
+            allStageStatus = updateStageRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -324,7 +324,7 @@ class StageBuildRecordService(
         return allStageStatus ?: emptyList()
     }
 
-    fun updateContainerByMap(
+    private fun updateStageRecord(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -334,8 +334,6 @@ class StageBuildRecordService(
         buildStatus: BuildStatus?,
         reviewers: List<String>? = null,
         errorMsg: String? = null,
-        startTime: LocalDateTime? = null,
-        endTime: LocalDateTime? = null,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ): List<BuildStageStatus> {
         var allStageStatus: List<BuildStageStatus>? = null
@@ -355,6 +353,7 @@ class StageBuildRecordService(
                 return@transaction
             }
             // 结束时进行启动状态校准，并计算所有耗时
+            var timeCost: BuildRecordTimeCost? = null
             if (buildStatus?.isFinish() == true) {
                 buildStageDao.get(dslContext, projectId, buildId, stageId)?.let { buildStage ->
                     val recordContainers = recordContainerDao.getRecords(
@@ -366,16 +365,19 @@ class StageBuildRecordService(
                     val containerPairs = recordContainers.map { container ->
                         container to buildContainerMap[container.containerId]
                     }
-                    stageVar[Stage::timeCost.name] = BuildTimeCostUtils.generateStageTimeCost(
+                    timeCost = BuildTimeCostUtils.generateStageTimeCost(
                         buildStage, containerPairs
                     )
+                    timeCost?.let { stageVar[Stage::timeCost.name] = it }
                 }
             }
             allStageStatus = buildStatus?.let {
                 fetchHistoryStageStatus(
                     recordStages = recordStages,
                     buildStatus = buildStatus,
-                    reviewers = reviewers
+                    reviewers = reviewers,
+                    errorMsg = errorMsg,
+                    timeCost = timeCost
                 )
             }
             recordStageDao.updateRecord(

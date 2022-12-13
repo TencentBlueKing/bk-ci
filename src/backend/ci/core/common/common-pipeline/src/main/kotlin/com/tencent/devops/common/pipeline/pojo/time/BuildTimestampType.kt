@@ -36,6 +36,5 @@ enum class BuildTimestampType(val action: String) {
     JOB_THIRD_PARTY_WAITING("job第三方构建机资源等待"),
     JOB_CONTAINER_STARTUP("job构建机启动（包含了第三方构建机资源等待）"),
     JOB_CONTAINER_SHUTDOWN("job构建机关闭"),
-    TASK_ATOM_LOADING("task可执行文件加载等待"),
-    TASK_REVIEW_WAITING("插件审核等待（包括人工审核，质量用心审核）");
+    TASK_REVIEW_PAUSE_WAITING("task等待（包括插件暂停、人工审核、质量红线审核）");
 }

@@ -334,7 +334,7 @@ class BuildCancelControl @Autowired constructor(
                 )
                 // 释放互斥锁
                 unlockMutexGroup(
-                    variables = variables, container = container,
+                    variables = variables, container = container, pipelineId = event.pipelineId,
                     buildId = event.buildId, projectId = event.projectId, stageId = stageId
                 )
                 // 构建机关机
@@ -411,6 +411,7 @@ class BuildCancelControl @Autowired constructor(
     private fun unlockMutexGroup(
         container: Container,
         buildId: String,
+        pipelineId: String,
         projectId: String,
         stageId: String,
         variables: Map<String, String>
@@ -425,6 +426,7 @@ class BuildCancelControl @Autowired constructor(
         if (mutexGroup?.enable == true && !mutexGroup.mutexGroupName.isNullOrBlank()) {
             mutexControl.releaseContainerMutex(
                 projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
                 stageId = stageId,
                 containerId = container.id!!,

@@ -115,7 +115,7 @@ class ContainerBuildRecordService(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "containerPreparing#$containerId"
         ) {
-            updateContainerByMap(
+            updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 containerId = containerId, executeCount = executeCount,
                 buildStatus = BuildStatus.PREPARE_ENV,
@@ -142,7 +142,7 @@ class ContainerBuildRecordService(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "containerStarted#$containerId"
         ) {
-            updateContainerByMap(
+            updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 containerId = containerId, executeCount = executeCount,
                 buildStatus = if (containerBuildStatus.isFailure()) {
@@ -200,13 +200,15 @@ class ContainerBuildRecordService(
                     ContainerUtils.getMutexFixedContainerName(containerName)
                 } ?: containerName
 
-                containerVar[Container::executeCount.name] = executeCount
-
                 // 结束时进行启动状态校准，并计算所有耗时
+                val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
                 if (buildStatus.isFinish()) {
                     if (!BuildStatus.parse(containerVar[Container::startVMStatus.name]?.toString()).isFinish()) {
                         containerVar[Container::startVMStatus.name] = buildStatus.name
                     }
+                    newTimestamps[BuildTimestampType.JOB_CONTAINER_SHUTDOWN] = BuildRecordTimeStamp(
+                        null, LocalDateTime.now().timestampmilli()
+                    )
                     buildContainerDao.getByContainerId(context, projectId, buildId, null, containerId)
                         ?.let { container ->
                             val recordTasks = recordTaskDao.getRecords(
@@ -226,7 +228,7 @@ class ContainerBuildRecordService(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, containerId = containerId, executeCount = executeCount,
                     containerVar = containerVar.plus(containerVar), buildStatus = buildStatus,
-                    timestamps = null
+                    timestamps = mergeTimestamps(newTimestamps, recordContainer.timestamps)
                 )
             }
         }
@@ -251,7 +253,7 @@ class ContainerBuildRecordService(
                 "[$buildId]|matrix_group_record|j(${modelContainer?.containerId})|" +
                     "groupId=$matrixGroupId|status=$buildStatus"
             )
-            updateContainerByMap(
+            updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 containerId = matrixGroupId, executeCount = executeCount,
                 buildStatus = buildStatus,
@@ -274,7 +276,7 @@ class ContainerBuildRecordService(
             cancelUser = null, operation = "containerSkip#$containerId"
         ) {
             logger.info("[$buildId]|container_skip|j($containerId)")
-            updateContainerByMap(
+            updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 containerId = containerId, executeCount = executeCount,
                 buildStatus = BuildStatus.SKIP, containerVar = mapOf(
@@ -295,14 +297,14 @@ class ContainerBuildRecordService(
         }
     }
 
-    private fun updateContainerByMap(
+    fun updateContainerRecord(
         projectId: String,
         pipelineId: String,
         buildId: String,
         containerId: String,
         executeCount: Int,
         containerVar: Map<String, Any>,
-        buildStatus: BuildStatus,
+        buildStatus: BuildStatus?,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
         dslContext.transaction { configuration ->
