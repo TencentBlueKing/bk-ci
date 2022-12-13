@@ -3,41 +3,32 @@ package com.tencent.devops.process.engine.service.record
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
 import java.time.LocalDateTime
 
 internal class BaseBuildRecordServiceTest {
 
     @Test
     fun mergeTimestamps() {
+        val t1 = LocalDateTime.now().timestampmilli() - 6
+        val t2 = LocalDateTime.now().timestampmilli()
+        val t3 = LocalDateTime.now().timestampmilli() + 6
+
         val oldTimestamps = mutableMapOf(
-            BuildTimestampType.STAGE_CHECK_IN_WAITING to
-                BuildRecordTimeStamp(LocalDateTime.now().timestampmilli() - 6, null),
-            BuildTimestampType.STAGE_CHECK_OUT_WAITING to
-                BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null),
+            BuildTimestampType.STAGE_CHECK_IN_WAITING to BuildRecordTimeStamp(t1, null),
+            BuildTimestampType.STAGE_CHECK_OUT_WAITING to BuildRecordTimeStamp(t2, null)
         )
         val newTimestamps = mutableMapOf(
             BuildTimestampType.STAGE_CHECK_IN_WAITING to
-                BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                BuildRecordTimeStamp(null, t3)
         )
-        // 针对各时间戳的开始结束时间分别写入，避免覆盖
-        val result = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
-        result.putAll(oldTimestamps)
-        newTimestamps.forEach { (type, new) ->
-            val old = oldTimestamps[type]
-            result[type] = if (old != null) {
-                // 如果时间戳已存在，则将新的值覆盖旧的值
-                BuildRecordTimeStamp(
-                    startTime = new.startTime ?: old.startTime,
-                    endTime = new.endTime ?: old.endTime
-                )
-            } else {
-                // 如果时间戳不存在，则直接新增
-                new
-            }
-        }
-        println(result)
+        Assertions.assertEquals(
+            mapOf(
+                BuildTimestampType.STAGE_CHECK_IN_WAITING to BuildRecordTimeStamp(t1, t3),
+                BuildTimestampType.STAGE_CHECK_OUT_WAITING to BuildRecordTimeStamp(t2, null)
+            ),
+            BaseBuildRecordService.mergeTimestamps(newTimestamps, oldTimestamps)
+        )
     }
 }
