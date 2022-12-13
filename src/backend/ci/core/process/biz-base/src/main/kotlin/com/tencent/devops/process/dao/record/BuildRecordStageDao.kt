@@ -34,6 +34,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildRecordStage
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordStageRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
@@ -68,7 +69,7 @@ class BuildRecordStageDao {
         executeCount: Int,
         stageVar: Map<String, Any>,
         buildStatus: BuildStatus?,
-        timestamps: List<BuildRecordTimeStamp>?
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>?
     ) {
         with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
             val update = dslContext.update(this)
@@ -139,8 +140,8 @@ class BuildRecordStageDao {
                     stageSeq = seq,
                     status = status,
                     timestamps = timestamps?.let {
-                        JsonUtil.getObjectMapper().readValue(it) as List<BuildRecordTimeStamp>
-                    } ?: emptyList()
+                        JsonUtil.getObjectMapper().readValue(it) as Map<BuildTimestampType, BuildRecordTimeStamp>
+                    } ?: mapOf()
                 )
             }
         }

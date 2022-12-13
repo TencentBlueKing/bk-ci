@@ -74,7 +74,7 @@ class BuildRecordTaskDao {
         executeCount: Int,
         taskVar: Map<String, Any>,
         buildStatus: BuildStatus?,
-        timestamps: List<BuildRecordTimeStamp>?
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>?
     ) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val update = dslContext.update(this)
@@ -172,8 +172,8 @@ class BuildRecordTaskDao {
                     originClassType = originClassType,
                     status = status,
                     timestamps = timestamps?.let {
-                        JsonUtil.getObjectMapper().readValue(it) as List<BuildRecordTimeStamp>
-                    } ?: emptyList()
+                        JsonUtil.getObjectMapper().readValue(it) as Map<BuildTimestampType, BuildRecordTimeStamp>
+                    } ?: mapOf()
                 )
             }
         }

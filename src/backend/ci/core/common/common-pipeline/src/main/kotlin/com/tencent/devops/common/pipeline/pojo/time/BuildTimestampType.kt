@@ -26,13 +26,15 @@
  */
 package com.tencent.devops.common.pipeline.pojo.time
 
-enum class BuildTimestampType {
-    STAGE_CHECK_IN_WAITING,
-    STAGE_CHECK_OUT_WAITING,
-    JOB_MUTEX_WAITING,
-    JOB_CONTAINER_STARTUP,
-    JOB_CONTAINER_SHUTDOWN,
-    TASK_ATOM_LOADING,
-    TASK_REVIEW_WAITING,
-    UNKNOWN;
+import io.swagger.annotations.ApiModel
+
+@ApiModel("构建详情记录-时间戳类型（勿随意删除）")
+enum class BuildTimestampType(val action: String) {
+    STAGE_CHECK_IN_WAITING("stage准入等待"),
+    STAGE_CHECK_OUT_WAITING("stage准出等待"),
+    JOB_MUTEX_WAITING("job互斥并发等待"),
+    JOB_CONTAINER_STARTUP("job构建机启动"),
+    JOB_CONTAINER_SHUTDOWN("job构建机关闭"),
+    TASK_ATOM_LOADING("task可执行文件加载等待"),
+    TASK_REVIEW_WAITING("插件审核等待（包括人工审核，质量用心审核）");
 }

@@ -34,6 +34,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModelRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
@@ -73,7 +74,7 @@ class BuildRecordModelDao {
         cancelUser: String?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
-        timestamps: List<BuildRecordTimeStamp>?
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>?
     ) {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
             val update = dslContext.update(this)
@@ -129,8 +130,8 @@ class BuildRecordModelDao {
                     status = status,
                     cancelUser = cancelUser,
                     timestamps = timestamps?.let {
-                        JsonUtil.getObjectMapper().readValue(it) as List<BuildRecordTimeStamp>
-                    } ?: emptyList()
+                        JsonUtil.getObjectMapper().readValue(it) as Map<BuildTimestampType, BuildRecordTimeStamp>
+                    } ?: mapOf()
                 )
             }
         }

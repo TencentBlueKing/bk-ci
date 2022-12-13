@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
@@ -321,7 +322,7 @@ class StageBuildRecordService(
         errorMsg: String? = null,
         startTime: LocalDateTime? = null,
         endTime: LocalDateTime? = null,
-        timestamps: List<BuildRecordTimeStamp>? = null
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ): List<BuildStageStatus> {
         var allStageStatus: List<BuildStageStatus>? = null
         dslContext.transaction { configuration ->

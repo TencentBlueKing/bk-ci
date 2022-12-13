@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.pipeline.record
 
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -56,5 +57,5 @@ data class BuildRecordModel(
     @ApiModelProperty("取消人", required = false)
     val cancelUser: String?,
     @ApiModelProperty("业务时间戳集合", required = false)
-    var timestamps: List<BuildRecordTimeStamp>
+    var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )

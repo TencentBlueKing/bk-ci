@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.pipeline.record
 
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -58,5 +59,5 @@ data class BuildRecordContainer(
     @ApiModelProperty("所在矩阵组ID", required = false)
     val matrixGroupId: String? = null,
     @ApiModelProperty("业务时间戳集合", required = true)
-    var timestamps: List<BuildRecordTimeStamp>
+    var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )

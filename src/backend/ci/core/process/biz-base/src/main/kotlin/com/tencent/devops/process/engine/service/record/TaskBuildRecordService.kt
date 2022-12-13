@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
@@ -372,8 +373,7 @@ class TaskBuildRecordService(
         buildStatus: BuildStatus,
         startTime: LocalDateTime? = null,
         endTime: LocalDateTime? = null,
-        timestamps: List<BuildRecordTimeStamp>? = null,
-        timeCost: BuildRecordTimeCost? = null
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)

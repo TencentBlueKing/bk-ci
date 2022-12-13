@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.common
 
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
@@ -89,7 +90,7 @@ object BuildTimeCostUtils {
 
     fun generateTaskTimeCost(
         buildTask: PipelineBuildTask,
-        timestamps: List<BuildRecordTimeStamp>
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
     ): BuildRecordTimeCost {
         val start = buildTask.startTime
         val end = buildTask.endTime

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.pipeline.record
 
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -52,5 +53,5 @@ data class BuildRecordStage(
     @ApiModelProperty("构建状态", required = false)
     var status: String?,
     @ApiModelProperty("业务时间戳集合", required = true)
-    var timestamps: List<BuildRecordTimeStamp>
+    var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )
