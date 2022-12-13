@@ -137,7 +137,7 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         if (experienceHashId.isBlank()) {
             throw ParamBlankException("Invalid experienceHashId")
         }
-        //TODO 暂时不校验 , 否则外部用户无法下载构件
+        // TODO 暂时不校验 , 否则外部用户无法下载构件
 //        if (userId != null && client.get(ServiceProjectResource::class)
 //                .verifyUserProjectPermission(projectCode = projectId, userId = userId).data != true
 //        ) {
