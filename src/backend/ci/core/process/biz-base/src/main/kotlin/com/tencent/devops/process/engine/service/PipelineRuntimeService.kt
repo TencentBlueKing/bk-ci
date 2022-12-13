@@ -503,7 +503,7 @@ class PipelineRuntimeService @Autowired constructor(
                 webhookInfo = webhookInfo?.let { self -> JsonUtil.to(self, object : TypeReference<WebhookInfo?>() {}) },
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
-                retry = executeCount > 1,
+                retry = executeCount?.let { it > 1 } == true,
                 errorInfoList = errorInfo?.let { self ->
                     // 特殊兼容修改数据类型前的老数据，必须保留try catch
                     try {

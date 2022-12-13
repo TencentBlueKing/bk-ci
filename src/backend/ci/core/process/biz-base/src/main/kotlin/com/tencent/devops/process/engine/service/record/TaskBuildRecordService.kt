@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service.record
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -93,7 +94,7 @@ class TaskBuildRecordService(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = operation
         ) {
-            updateTaskByMap(
+            updateTaskRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -119,14 +120,19 @@ class TaskBuildRecordService(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "taskPause#$taskId"
         ) {
-            updateTaskByMap(
+            updateTaskRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId,
                 executeCount = executeCount,
                 buildStatus = BuildStatus.PAUSE,
-                taskVar = emptyMap()
+                taskVar = emptyMap(),
+                timestamps = mapOf(
+                    BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to BuildRecordTimeStamp(
+                        LocalDateTime.now().timestampmilli(), null
+                    )
+                )
             )
         }
     }
@@ -161,6 +167,7 @@ class TaskBuildRecordService(
                 }
                 val taskVar = mutableMapOf<String, Any>()
                 taskVar.putAll(recordTask.taskVar)
+                val newTimeStamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
                 val taskStatus: BuildStatus
                 if (
                     recordTask.classType == ManualReviewUserTaskElement.classType ||
@@ -210,7 +217,11 @@ class TaskBuildRecordService(
                         operation = "taskStart#$taskId"
                     )
                 }
-
+                recordTask.timestamps[BuildTimestampType.TASK_REVIEW_PAUSE_WAITING]?.let {
+                    // 如果插件有被暂停则增加暂停结束的时间戳
+                    newTimeStamps[BuildTimestampType.TASK_REVIEW_PAUSE_WAITING] =
+                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                }
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -220,7 +231,7 @@ class TaskBuildRecordService(
                     executeCount = executeCount,
                     taskVar = taskVar,
                     buildStatus = taskStatus,
-                    timestamps = null
+                    timestamps = mergeTimestamps(newTimeStamps, recordTask.timestamps)
                 )
             }
         }
@@ -241,7 +252,7 @@ class TaskBuildRecordService(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = cancelUser, operation = "taskCancel#$taskId"
         ) {
-            updateTaskByMap(
+            updateTaskRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -362,7 +373,7 @@ class TaskBuildRecordService(
         )
     }
 
-    fun updateTaskByMap(
+    fun updateTaskRecord(
         projectId: String,
         pipelineId: String,
         buildId: String,
