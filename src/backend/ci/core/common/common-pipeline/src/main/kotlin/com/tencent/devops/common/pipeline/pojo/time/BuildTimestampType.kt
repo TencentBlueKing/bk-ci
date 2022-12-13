@@ -37,4 +37,10 @@ enum class BuildTimestampType(val action: String) {
     JOB_CONTAINER_SHUTDOWN("job构建机关闭"),
     TASK_ATOM_LOADING("task可执行文件加载等待"),
     TASK_REVIEW_WAITING("插件审核等待（包括人工审核，质量用心审核）");
+
+    /*使插件处于等待的类型*/
+    fun taskCheckWait() = this == TASK_ATOM_LOADING || this == TASK_REVIEW_WAITING
+
+    /*使container处于等待的类型*/
+    fun containerCheckWait() = this == JOB_MUTEX_WAITING
 }
