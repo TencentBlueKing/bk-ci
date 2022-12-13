@@ -53,7 +53,7 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
-import com.tencent.devops.repository.pojo.git.GitCreateFile
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
@@ -1470,6 +1470,42 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "enableCi"], value = "bk_tgit_api_time")
+    fun enableCi(
+        projectName: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        enable: Boolean ? = true
+    ): Result<Boolean> {
+        logger.info(
+            "enableCi projectName:$projectName," +
+                "enable:$enable,tokenType:$tokenType"
+        )
+        val encodeProjectName = URLEncoder.encode(projectName, "utf-8")
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/ci/enable")
+        setToken(tokenType, url, token)
+        url.append("&enable_ci=$enable")
+        val request = Request.Builder()
+            .url(url.toString())
+            .put(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"), "{}"
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("enableCi response>> $data")
+            val dataMap = JsonUtil.toMap(data)
+            val code = dataMap["code"]
+            if (code != 200) {
+                // 把工蜂的错误提示抛出去
+                return Result(code as Int, "${dataMap["message"]}")
+            }
+            return Result(true)
+        }
+    }
+
     @BkTimed(extraTags = ["operation", "move_project_group"], value = "bk_tgit_api_time")
     fun moveProjectToGroup(
         groupCode: String,
@@ -2096,9 +2132,14 @@ class GitService @Autowired constructor(
             .url(url.toString())
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
-            if (!it.isSuccessful) throw RuntimeException("fail to getGitCIAllMembers with: $url($data)")
+        OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body()!!.string()
+            if (!response.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "(${response.code()})${response.message()}"
+                )
+            }
             return Result(JsonUtil.to(data, object : TypeReference<List<GitMember>>() {}))
         }
     }
@@ -2253,7 +2294,7 @@ class GitService @Autowired constructor(
     fun gitCreateFile(
         gitProjectId: String,
         token: String,
-        gitCreateFile: GitCreateFile,
+        gitOperationFile: GitOperationFile,
         tokenType: TokenTypeEnum
     ): Boolean {
         val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/files")
@@ -2263,12 +2304,45 @@ class GitService @Autowired constructor(
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json;charset=utf-8"),
-                    JsonUtil.toJson(gitCreateFile)
+                    JsonUtil.toJson(gitOperationFile)
                 )
             )
             .build()
         OkhttpUtils.doHttp(request).use {
             logger.info("request: $request Start to create file resp: $it")
+            if (!it.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(it)
+            }
+            return true
+        }
+    }
+
+    fun tGitUpdateFile(
+        repoUrl: String?,
+        repoName: String,
+        token: String,
+        gitOperationFile: GitOperationFile,
+        tokenType: TokenTypeEnum
+    ): Boolean {
+        val apiUrl = if (repoUrl.isNullOrBlank()) {
+            gitConfig.gitApiUrl
+        } else {
+            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
+        }
+        val encode = URLEncoder.encode(repoName, "utf-8")
+        val url = StringBuilder("$apiUrl/projects/$encode/repository/files")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .put(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"),
+                    JsonUtil.toJson(gitOperationFile)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request Start to update file resp: $it")
             if (!it.isSuccessful) {
                 throw GitCodeUtils.handleErrorMessage(it)
             }

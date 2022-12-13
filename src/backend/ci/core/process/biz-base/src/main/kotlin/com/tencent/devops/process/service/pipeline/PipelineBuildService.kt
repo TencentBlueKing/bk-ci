@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
@@ -61,12 +62,16 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
+import com.tencent.devops.process.utils.PIPELINE_START_MANUAL_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_SERVICE_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -90,7 +95,8 @@ class PipelineBuildService(
     private val templateService: TemplateService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val projectCacheService: ProjectCacheService,
-    private val simpleRateLimiter: SimpleRateLimiter
+    private val simpleRateLimiter: SimpleRateLimiter,
+    private val buildIdGenerator: BuildIdGenerator
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
@@ -162,6 +168,9 @@ class PipelineBuildService(
             val userName = when (startType) {
                 StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value ?: userId
                 StartType.WEB_HOOK -> pipelineParamMap[PIPELINE_START_WEBHOOK_USER_ID]?.value ?: userId
+                StartType.SERVICE -> pipelineParamMap[PIPELINE_START_SERVICE_USER_ID]?.value ?: userId
+                StartType.MANUAL -> pipelineParamMap[PIPELINE_START_MANUAL_USER_ID]?.value ?: userId
+                StartType.TIME_TRIGGER -> pipelineParamMap[PIPELINE_START_TIME_TRIGGER_USER_ID]?.value ?: userId
                 StartType.REMOTE -> startValues?.get(PIPELINE_START_REMOTE_USER_ID) ?: userId
                 else -> userId
             }
@@ -230,6 +239,8 @@ class PipelineBuildService(
             pipelineParamMap[PIPELINE_BUILD_MSG]?.let { buildMsgParam -> originStartParams.add(buildMsgParam) }
             pipelineParamMap[PIPELINE_RETRY_COUNT]?.let { retryCountParam -> originStartParams.add(retryCountParam) }
 
+            val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
+
             // #6987 修复stream的并发执行判断问题 在判断并发时再替换上下文
             setting?.concurrencyGroup?.let {
                 val varMap = pipelineParamMap.values.associate { param -> param.key to param.value.toString() }
@@ -242,7 +253,8 @@ class PipelineBuildService(
                     pipelineInfo = pipeline,
                     model = model,
                     startType = startType,
-                    setting = setting
+                    setting = setting,
+                    buildId = buildId
                 )
             )
             if (interceptResult.isNotOk()) {
@@ -262,6 +274,7 @@ class PipelineBuildService(
                 buildNo = buildNo,
                 buildNumRule = pipelineSetting.buildNumRule,
                 setting = setting,
+                buildId = buildId,
                 triggerReviewers = triggerReviewers
             )
         } finally {

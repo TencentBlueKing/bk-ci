@@ -352,7 +352,8 @@ class PreBuildService @Autowired constructor(
                 ThirdPartyAgentIDDispatchType(
                     displayName = agentInfo.agentId,
                     workspace = startUpReq.workspace,
-                    agentType = AgentType.ID
+                    agentType = AgentType.ID,
+                    dockerInfo = null
                 )
             }
 

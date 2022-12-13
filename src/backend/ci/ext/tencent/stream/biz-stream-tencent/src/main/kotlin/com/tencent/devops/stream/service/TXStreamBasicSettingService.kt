@@ -341,4 +341,21 @@ class TXStreamBasicSettingService @Autowired constructor(
             idList = idList
         )
     }
+    fun updateGitDomain(
+        oldGitDomain: String,
+        newGitDomain: String,
+        limitNumber: Int
+    ): Int {
+        val idList = streamBasicSettingDao.getProjectByGitDomain(
+            dslContext = dslContext,
+            gitDomain = oldGitDomain,
+            limit = limitNumber
+        ).map { it.value1() }
+        return streamBasicSettingDao.updateGitDomainByIds(
+            dslContext = dslContext,
+            oldGitDomain = oldGitDomain,
+            newGitDomain = newGitDomain,
+            idList = idList
+        )
+    }
 }

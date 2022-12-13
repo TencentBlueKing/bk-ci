@@ -109,9 +109,18 @@ interface StreamGitTransferService {
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long?,
+        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult>
+
+    /**
+     * 主动开启git侧 ci
+     */
+    fun enableCi(
+        userId: String,
+        projectName: String,
+        enable: Boolean? = true
+    ): Result<Boolean>
 
     /**
      * 获取当前项目的提交记录

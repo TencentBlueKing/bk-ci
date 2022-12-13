@@ -36,6 +36,9 @@ class LambdaKafkaTopicConfig {
     @Value("\${spring.kafka.topics.buildHistoryTopic:#{null}}")
     val buildHistoryTopic: String? = null
 
+    @Value("\${spring.kafka.topics.invalidVarBuildHistoryTopic:#{null}}")
+    val invalidVarBuildHistoryTopic: String? = null
+
     @Value("\${spring.kafka.topics.buildDetailTopic:#{null}}")
     val buildDetailTopic: String? = null
 

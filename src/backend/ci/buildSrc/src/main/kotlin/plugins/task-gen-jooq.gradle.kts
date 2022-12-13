@@ -46,7 +46,7 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
         listOf("process", "project", "openapi")
     }
     "lambda" -> {
-        listOf("process", "project", "lambda")
+        listOf("process", "project", "lambda", "store")
     }
     "gitci" -> {
         listOf("stream")
@@ -54,8 +54,8 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
     else -> listOf(moduleName)
 }
 
-if (name == "model-dispatch-bcs") {
-    moduleNames = listOf("dispatch_bcs")
+if (name == "model-dispatch-kubernetes") {
+    moduleNames = listOf("dispatch_kubernetes")
 }
 
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")

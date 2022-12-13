@@ -367,7 +367,7 @@ class WebIDEService @Autowired constructor(
                 thirdPartyWorkspace = null,
                 dockerBuildVersion = null,
                 tstackAgentId = null,
-                dispatchType = ThirdPartyAgentIDDispatchType(agentId, null, AgentType.ID)
+                dispatchType = ThirdPartyAgentIDDispatchType(agentId, null, AgentType.ID, null)
         )
         val stage2 = Stage(listOf(vmContainer), "stage-2")
         stageList.add(stage2)

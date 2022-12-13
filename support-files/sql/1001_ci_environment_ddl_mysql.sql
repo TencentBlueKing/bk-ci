@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS `T_ENVIRONMENT_THIRDPARTY_AGENT` (
   `AGENT_ENVS` text COMMENT '环境变量',
   `FILE_GATEWAY` varchar(256) DEFAULT '' COMMENT '文件网关路径',
   `AGENT_PROPS` text COMMENT 'agent config 配置项Json',
+  `DOCKER_PARALLEL_TASK_COUNT` int(11) DEFAULT NULL COMMENT 'Docker构建机并行任务计数',
   PRIMARY KEY (`ID`),
   KEY `idx_agent_node` (`NODE_ID`),
   KEY `idx_agent_project` (`PROJECT_ID`)

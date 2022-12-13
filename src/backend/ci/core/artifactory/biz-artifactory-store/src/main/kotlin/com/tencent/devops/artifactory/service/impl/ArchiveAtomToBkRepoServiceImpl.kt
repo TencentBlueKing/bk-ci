@@ -1,6 +1,5 @@
 package com.tencent.devops.artifactory.service.impl
 
-import com.tencent.devops.artifactory.client.bkrepo.DefaultBkRepoClient
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
@@ -21,9 +20,7 @@ import javax.ws.rs.NotFoundException
 
 @Service
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
-class ArchiveAtomToBkRepoServiceImpl(
-    private val bkRepoClient: DefaultBkRepoClient
-) : ArchiveAtomServiceImpl() {
+class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
 
     override fun getAtomArchiveBasePath(): String {
         return System.getProperty("java.io.tmpdir")
@@ -46,25 +43,42 @@ class ArchiveAtomToBkRepoServiceImpl(
         val atomArchivePath = buildAtomArchivePath(projectCode, atomCode, version)
         val frontendDir = buildAtomFrontendPath(atomCode, version)
         logger.info("atom plugin: $atomArchivePath, $frontendDir")
-        File(atomArchivePath).walk().filter { it.path != atomArchivePath }.forEach {
-            val path = it.path.removePrefix("${getAtomArchiveBasePath()}/$BK_CI_ATOM_DIR")
-            bkRepoClient.uploadLocalFile(
-                userId = BKREPO_DEFAULT_USER,
-                projectId = BKREPO_STORE_PROJECT_ID,
-                repoName = REPO_NAME_PLUGIN,
-                path = path,
-                file = it
-            )
-        }
-        File(frontendDir).walk().filter { it.path != frontendDir }.forEach {
-            val path = it.path.removePrefix("${getAtomArchiveBasePath()}/$STATIC/$BK_CI_PLUGIN_FE_DIR")
-            bkRepoClient.uploadLocalFile(
-                userId = BKREPO_DEFAULT_USER,
-                projectId = BKREPO_STORE_PROJECT_ID,
-                repoName = REPO_NAME_STATIC,
-                path = path,
-                file = it
-            )
+
+        directoryIteration(
+            directoryFile = File(atomArchivePath),
+            prefix = "${getAtomArchiveBasePath()}/$BK_CI_ATOM_DIR",
+            directoryPath = atomArchivePath,
+            repoName = REPO_NAME_PLUGIN
+        )
+        directoryIteration(
+            directoryFile = File(frontendDir),
+            prefix = "${getAtomArchiveBasePath()}/$STATIC/$BK_CI_PLUGIN_FE_DIR",
+            directoryPath = frontendDir,
+            repoName = REPO_NAME_STATIC
+        )
+    }
+
+    private fun directoryIteration(directoryFile: File, prefix: String, directoryPath: String, repoName: String) {
+        directoryFile.walk().filter { it.path != directoryPath }.forEach {
+            if (it.isDirectory) {
+                directoryIteration(
+                    directoryFile = it,
+                    prefix = prefix,
+                    directoryPath = it.path,
+                    repoName = repoName
+                )
+            } else {
+                val path = it.path.removePrefix(prefix)
+                logger.debug("uploadLocalFile fileName=${it.name}|path=$path")
+
+                bkRepoClient.uploadLocalFile(
+                    userId = BKREPO_DEFAULT_USER,
+                    projectId = BKREPO_STORE_PROJECT_ID,
+                    repoName = repoName,
+                    path = path,
+                    file = it
+                )
+            }
         }
     }
 

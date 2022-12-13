@@ -1,4 +1,6 @@
 {
+  "$schema" : "http://json-schema.org/draft-07/schema",
+  "$comment" : "https://iwiki.woa.com/pages/viewpage.action?pageId=686380000",
   "additionalProperties" : false,
   "required" : [ "variables" ],
   "properties" : {
@@ -113,6 +115,129 @@
             "readonly" : {
               "description" : "是否只可读",
               "type" : "boolean"
+            },
+            "allow-modify-at-startup" : {
+              "description" : "当前变量是否允许启动时修改",
+              "type" : "boolean"
+            },
+            "props" : {
+              "description" : "变量属性",
+              "type" : "object",
+              "additionalProperties" : false,
+              "required" : [ "type" ],
+              "properties" : {
+                "label" : {
+                  "description" : "展示名称",
+                  "type" : "string"
+                },
+                "type" : {
+                  "description" : "value属性类型",
+                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "company-staff-input", "tips" ]
+                },
+                "options" : {
+                  "description" : "多选或者单选的值, 和datasource二选一",
+                  "type" : "array",
+                  "items" : {
+                    "description" : "变量属性数据源",
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "required" : [ "id" ],
+                    "properties" : {
+                      "id" : {
+                        "description" : "value值",
+                        "anyOf" : [ {
+                          "type" : "string"
+                        }, {
+                          "type" : "number"
+                        }, {
+                          "type" : "boolean"
+                        } ]
+                      },
+                      "label" : {
+                        "description" : "value展示标签",
+                        "type" : "string"
+                      },
+                      "description" : {
+                        "description" : "value 说明",
+                        "type" : "string"
+                      }
+                    }
+                  }
+                },
+                "datasource" : {
+                  "description" : "变量属性 url数据源",
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "required" : [ "url" ],
+                  "properties" : {
+                    "url" : {
+                      "description" : "获取下拉列表中可选值的接口，需要接入蓝鲸网关",
+                      "type" : "string"
+                    },
+                    "data-path" : {
+                      "description" : "选项列表数据所在的、API返回体json中的路径",
+                      "type" : "string"
+                    },
+                    "param-id" : {
+                      "description" : "url返回规范中，用于下拉列表选项id的字段名，配合url使用",
+                      "type" : "string"
+                    },
+                    "param-name" : {
+                      "description" : "url返回规范中，用于下拉列表选项label的字段名，配合url使用",
+                      "type" : "string"
+                    },
+                    "has-add-item" : {
+                      "description" : "是否有新增按钮",
+                      "type" : "boolean"
+                    },
+                    "item-text" : {
+                      "description" : "新增按钮文字描述",
+                      "type" : "string"
+                    },
+                    "item-target-url" : {
+                      "description" : "点击新增按钮的跳转地址",
+                      "type" : "string"
+                    }
+                  }
+                },
+                "multiple" : {
+                  "description" : "是否可以多选",
+                  "type" : "boolean"
+                },
+                "description" : {
+                  "description" : "字段描述",
+                  "type" : "string"
+                },
+                "required" : {
+                  "description" : "当前字段是否必填",
+                  "type" : "boolean"
+                }
+              },
+              "allOf" : [ {
+                "$comment" : "variable prop 中 options、datasource 不共存",
+                "description" : "variable prop 中 options、datasource 不共存",
+                "if" : {
+                  "required" : [ "options" ]
+                },
+                "then" : {
+                  "description" : "不允许定义",
+                  "not" : {
+                    "required" : [ "datasource" ]
+                  }
+                }
+              }, {
+                "$comment" : "variable prop 中 options、datasource 不共存",
+                "description" : "variable prop 中 options、datasource 不共存",
+                "if" : {
+                  "required" : [ "datasource" ]
+                },
+                "then" : {
+                  "description" : "不允许定义",
+                  "not" : {
+                    "required" : [ "options" ]
+                  }
+                }
+              } ]
             }
           }
         } ]
@@ -124,7 +249,7 @@
       "additionalProperties" : false,
       "properties" : {
         "repositories" : {
-          "description" : "引用其他代码库下的模板：可以在单独的代码库里管理模板文件，然后在其他多个代码库下引用模板。详见：补充文档/pages/viewpage.action?pageId=686380021#Stream%E6%A8%A1%E6%9D%BF-%E5%BC%95%E7%94%A8%E5%85%B6%E4%BB%96%E4%BB%A3%E7%A0%81%E5%BA%93%E4%B8%8B%E7%9A%84%E6%A8%A1%E6%9D%BF",
+          "description" : "引用其他代码库下的模板：可以在单独的代码库里管理模板文件，然后在其他多个代码库下引用模板。详见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380021#Stream%E6%A8%A1%E6%9D%BF-%E5%BC%95%E7%94%A8%E5%85%B6%E4%BB%96%E4%BB%A3%E7%A0%81%E5%BA%93%E4%B8%8B%E7%9A%84%E6%A8%A1%E6%9D%BF",
           "type" : "array",
           "items" : {
             "type" : "object",
@@ -159,7 +284,7 @@
           }
         },
         "pools" : {
-          "description" : "引用第三方构建机池，详见：补充文档/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E8%B7%A8%E5%B7%A5%E7%A8%8B%E5%BC%95%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E6%9E%84%E5%BB%BA%E8%B5%84%E6%BA%90%E6%B1%A0",
+          "description" : "引用第三方构建机池，详见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E8%B7%A8%E5%B7%A5%E7%A8%8B%E5%BC%95%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E6%9E%84%E5%BB%BA%E8%B5%84%E6%BA%90%E6%B1%A0",
           "type" : "array",
           "items" : {
             "type" : "object",
@@ -167,7 +292,7 @@
             "additionalProperties" : false,
             "properties" : {
               "from" : {
-                "description" : "语法和使用方方式，详见：补充文档/pages/viewpage.action?pageId=914642753",
+                "description" : "语法和使用方方式，详见：https://iwiki.woa.com/pages/viewpage.action?pageId=914642753",
                 "type" : "string"
               },
               "name" : {
@@ -223,7 +348,5 @@
         } ]
       }
     }
-  },
-  "$schema" : "http://json-schema.org/draft-07/schema",
-  "$comment" : "补充文档/pages/viewpage.action?pageId=686380000"
+  }
 }

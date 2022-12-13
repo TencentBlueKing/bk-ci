@@ -41,7 +41,9 @@ data class ThirdPartyAgentEnvDispatchType(
     @ApiModelProperty("工作空间")
     var workspace: String?,
     @ApiModelProperty("agent类型,默认NAME")
-    val agentType: AgentType = AgentType.NAME
+    val agentType: AgentType = AgentType.NAME,
+    // 第三方构建机用docker作为构建机
+    val dockerInfo: ThirdPartyAgentDockerInfo?
 ) : DispatchType(
     envName
 ) {

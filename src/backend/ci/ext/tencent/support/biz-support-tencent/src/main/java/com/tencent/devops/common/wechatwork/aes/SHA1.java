@@ -37,6 +37,8 @@ import java.util.Arrays;
  *
  * 计算消息签名接口.
  */
+@Deprecated
+// 请使用SHA1V2
 class SHA1 {
 
 	/**

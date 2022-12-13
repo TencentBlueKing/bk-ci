@@ -37,7 +37,8 @@ object GitActionCommon {
     fun matchAndStartParams(
         action: BaseAction,
         triggerOn: TriggerOn?,
-        needMatch: Boolean = true
+        needMatch: Boolean = true,
+        onlyMatch: Boolean = false
     ): Pair<Boolean, Map<String, String>> {
         logger.info("TGitActionCommon|matchAndStartParams|match and start params|triggerOn|$triggerOn")
 
@@ -71,7 +72,9 @@ object GitActionCommon {
                 )
             }
             EventCacheUtil.putIfAbsentEventCache(
-                repository, eventRepoCache
+                projectId = action.data.setting.projectCode ?: "",
+                repo = repository,
+                eventCache = eventRepoCache
             )
             val isMatch = if (needMatch) {
                 matcher.isMatch(
@@ -86,7 +89,7 @@ object GitActionCommon {
             } else {
                 true
             }
-            val startParam = if (isMatch) {
+            val startParam = if (isMatch && !onlyMatch) {
                 WebhookStartParamsRegistrar.getService(element = element).getStartParams(
                     projectId = action.data.eventCommon.gitProjectId,
                     element = element,

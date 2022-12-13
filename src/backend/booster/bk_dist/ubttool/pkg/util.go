@@ -11,6 +11,7 @@ package pkg
 
 import (
 	"io/ioutil"
+	"runtime"
 	"strings"
 	"sync/atomic"
 
@@ -18,6 +19,13 @@ import (
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
 	"github.com/Tencent/bk-ci/src/booster/common/codec"
 )
+
+func defaultCPULimit(custom int) int {
+	if custom > 0 {
+		return custom
+	}
+	return runtime.NumCPU() - 2
+}
 
 func resolveActionJSON(filename string) (*common.UE4Action, error) {
 	blog.Debugf("resolve action json file %s", filename)

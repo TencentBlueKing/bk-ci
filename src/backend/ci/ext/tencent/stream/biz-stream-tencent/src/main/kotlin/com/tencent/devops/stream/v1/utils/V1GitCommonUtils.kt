@@ -104,7 +104,7 @@ object V1GitCommonUtils {
     // 判断是否为fork库的mr请求并返回带fork库信息的event
     fun checkAndGetForkBranch(
         gitRequestEvent: V1GitRequestEvent,
-        gitProjectCache: Lazy<V1GitProjectCache>?
+        gitProjectCache: Lazy<V1GitProjectCache?>?
     ): V1GitRequestEvent {
         var realEvent = gitRequestEvent
         // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
@@ -117,6 +117,18 @@ object V1GitCommonUtils {
             )
         }
         return realEvent
+    }
+
+    // 判断是否为远程库的请求并返回带远程库信息的event
+    fun checkAndGetRepoBranch(gitRequestEvent: V1GitRequestEvent, pathWithNamespace: String?): V1GitRequestEvent {
+        return gitRequestEvent.copy(
+            // name_with_namespace: git_namespace/project_name , 要的是  git_namespace/project_name:branch
+            branch = if (pathWithNamespace != null) {
+                "$pathWithNamespace:${gitRequestEvent.branch}"
+            } else {
+                gitRequestEvent.branch
+            }
+        )
     }
 
     // 判断是否为远程库的请求并返回带远程库信息的event
@@ -139,7 +151,7 @@ object V1GitCommonUtils {
         gitProjectId: Long,
         sourceGitProjectId: Long?,
         branch: String,
-        gitProjectCache: Lazy<V1GitProjectCache>?
+        gitProjectCache: Lazy<V1GitProjectCache?>?
     ): String {
         // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
         if (sourceGitProjectId != null && gitProjectId != sourceGitProjectId) {

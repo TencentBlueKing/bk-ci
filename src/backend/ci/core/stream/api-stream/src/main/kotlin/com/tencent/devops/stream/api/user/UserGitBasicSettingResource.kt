@@ -142,10 +142,10 @@ interface UserGitBasicSettingResource {
         redirectUrl: String?,
         @ApiParam(value = "stream 项目Id", required = false)
         @QueryParam("gitProjectId")
-        gitProjectId: Long? = null,
+        gitProjectId: Long,
         @ApiParam(value = "是否刷新token", required = false)
         @QueryParam("refreshToken")
-        refreshToken: Boolean? = false
+        refreshToken: Boolean? = true
     ): Result<AuthorizeResult>
 
     @ApiOperation("获取第三方构建机任务")

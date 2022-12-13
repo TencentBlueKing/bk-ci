@@ -37,6 +37,11 @@ function _M:isSafe()
             ngx.log(ngx.ERR, "it is unsafe , host : ", host, " , path : ", path)
             return false
         end
+        -- 防止spring actuator被调用
+        if string.find(path, "/actuator/") ~= nil then
+            ngx.log(ngx.ERR, "it is unsafe , host : ", host, " , path : ", path)
+            return false
+        end
     end
     return true
 end

@@ -33,11 +33,13 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
+import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
 import com.tencent.devops.process.yaml.modelCreate.ModelCreate
 import com.tencent.devops.process.yaml.modelCreate.QualityRulesException
 import com.tencent.devops.process.yaml.modelCreate.inner.GitData
@@ -54,10 +56,8 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
-import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
-import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -144,6 +144,7 @@ class StreamYamlBuild @Autowired constructor(
     fun gitStartBuild(
         action: BaseAction,
         triggerResult: TriggerResult,
+        startParams: Map<String, String>,
         yaml: ScriptBuildYaml,
         gitBuildId: Long?,
         onlySavePipeline: Boolean,
@@ -192,6 +193,7 @@ class StreamYamlBuild @Autowired constructor(
 
             // 改名时保存需要修改名称
             realPipeline.displayName = pipeline.displayName
+            realPipeline.lastModifier = pipeline.lastModifier
             action.data.context.pipeline = realPipeline
 
             // 注册各种事件
@@ -206,7 +208,7 @@ class StreamYamlBuild @Autowired constructor(
                     action = action,
                     yaml = yaml,
                     gitBuildId = gitBuildId,
-                    params = triggerResult.startParams,
+                    params = startParams,
                     yamlTransferData = yamlTransferData,
                     manualInputs = manualInputs
                 )
@@ -345,9 +347,11 @@ class StreamYamlBuild @Autowired constructor(
             asCodeSettings = action.data.context.pipelineAsCodeSettings
         )
         // 判断是否更新最后修改人
-        val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
-        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
-            !(action is StreamMrAction && action.checkMrForkAction())
+        val updateLastModifyUser = action.needUpdateLastModifyUser(pipeline.filePath)
+        // 兼容定时触发，取流水线最近修改人
+        if (updateLastModifyUser && action.getStartType() == StartType.TIME_TRIGGER) {
+            modelParams.webHookParams[PIPELINE_START_TIME_TRIGGER_USER_ID] = action.data.getUserId()
+        }
 
         return streamYamlBaseBuild.startBuild(
             action = action,
@@ -390,9 +394,7 @@ class StreamYamlBuild @Autowired constructor(
         )
 
         // 判断是否更新最后修改人
-        val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
-        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
-            !(action is StreamMrAction && action.checkMrForkAction())
+        val updateLastModifyUser = action.needUpdateLastModifyUser(pipeline.filePath)
         StreamBuildLock(
             redisOperation = redisOperation,
             gitProjectId = action.data.getGitProjectId().toLong(),

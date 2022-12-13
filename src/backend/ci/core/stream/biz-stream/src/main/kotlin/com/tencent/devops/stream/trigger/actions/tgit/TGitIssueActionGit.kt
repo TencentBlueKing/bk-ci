@@ -38,7 +38,6 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -71,7 +70,6 @@ class TGitIssueActionGit(
         streamObjectKind = StreamObjectKind.ISSUE
     )
 
-    override lateinit var data: ActionData
     override fun event() = data.event as GitIssueEvent
 
     override val api: TGitApiService
@@ -171,10 +169,14 @@ class TGitIssueActionGit(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val (isTrigger, startParams) = GitActionCommon.matchAndStartParams(this, triggerOn)
+        val (isTrigger, _) = GitActionCommon.matchAndStartParams(
+            action = this,
+            triggerOn = triggerOn,
+            onlyMatch = true
+        )
         return TriggerResult(
             trigger = TriggerBody(isTrigger),
-            startParams = startParams,
+            triggerOn = triggerOn,
             timeTrigger = false,
             deleteTrigger = false
         )
