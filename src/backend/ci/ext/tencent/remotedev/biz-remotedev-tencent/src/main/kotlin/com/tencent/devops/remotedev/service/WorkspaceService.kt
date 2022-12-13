@@ -82,7 +82,7 @@ class WorkspaceService @Autowired constructor(
 ) {
 
     private val redisCache = CacheBuilder.newBuilder()
-        .maximumSize(10)
+        .maximumSize(20)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(
             object : CacheLoader<String, String>() {
