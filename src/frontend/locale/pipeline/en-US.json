@@ -115,6 +115,7 @@
   "stageReviewInputNotice": "Review notice",
   "weChatGroupID": "Enterprise WeChat group ID",
   "notifyGroupDesc": "Multiple groups are separated by English commas",
+  "stageWeChatGroupIDError": "Please enter the enterprise WeChat group ID",
   "markdownContentLabel": "Enterprise WeChat messages are sent in markdown format",
   "stageReviewInputDesc": "Review instructions",
   "stageReviewInputDescTip": "You can fill in the audit criteria or the meaning of each parameter here",

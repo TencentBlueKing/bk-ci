@@ -25,8 +25,8 @@
                 <atom-checkbox-list :list="notifyTypeList" :disabled="disabled" name="notifyType" :handle-change="handleUpdateNotifyType" :value="notifyType"></atom-checkbox-list>
             </form-field>
 
-            <form-field v-show="showNotifyGroup" :disabled="disabled" required :label="$t('weChatGroupID')" class="mt14">
-                <vuex-input name="notifyGroup" :placeholder="('notifyGroupDesc')" required :handle-change="handleUpdateNotifyGroup" :value="notifyGroup"></vuex-input>
+            <form-field v-show="showNotifyGroup" :disabled="disabled" required :label="$t('weChatGroupID')" class="mt14" :is-error="!validWeChatGroupID" :error-msg="$t('stageWeChatGroupIDError')">
+                <vuex-input name="notifyGroup" :placeholder="$t('notifyGroupDesc')" required :handle-change="handleUpdateNotifyGroup" :value="notifyGroup"></vuex-input>
             </form-field>
 
             <form-field :disabled="disabled" class="mt14">
@@ -121,6 +121,9 @@
             validTimeout () {
                 return /\d+/.test(this.timeout) && parseInt(this.timeout) > 0 && parseInt(this.timeout) <= 1440
             },
+            validWeChatGroupID () {
+                return this.notifyGroup.length
+            },
             reviewDesc () {
                 return this.stageControl && this.stageControl.reviewDesc
             },
@@ -156,9 +159,15 @@
             },
             validTimeout (valid) {
                 this.handleUpdateStageControl('isReviewError', !this.validateStageControl())
+            },
+            validWeChatGroupID () {
+                this.handleUpdateStageControl('isReviewError', !this.validateStageControl())
             }
         },
         mounted () {
+            if (!this.notifyType.length) {
+                this.stageControl.notifyType = []
+            }
             if (!this.disabled) {
                 this.initStageReview()
                 this.handleUpdateStageControl('isReviewError', !this.validateStageControl())
@@ -198,16 +207,17 @@
                 }
             },
             validateStageControl () {
-                return !this.manualTrigger || (this.validTimeout && this.hasTriggerMember)
+                return !this.manualTrigger || (this.validTimeout && this.hasTriggerMember && this.validWeChatGroupID)
             },
             handleUpdateNotifyType (name, value) {
                 if (!value.includes('WEWORK_GROUP')) {
-                    this.stageControl.notifyGroup = []
+                    delete this.stageControl.notifyGroup
                 }
                 this.handleUpdateStageControl(name, value)
             },
             handleUpdateNotifyGroup (name, value) {
-                this.handleUpdateStageControl(name, value.split(','))
+                const curVal = value ? value.split(',') : []
+                this.handleUpdateStageControl(name, curVal)
             }
         }
     }
