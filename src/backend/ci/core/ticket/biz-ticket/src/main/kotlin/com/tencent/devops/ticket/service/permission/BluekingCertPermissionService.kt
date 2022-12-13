@@ -23,19 +23,27 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api("org.apache.commons:commons-collections4")
-    api("org.apache.httpcomponents:httpclient")
-//    implementation(group = "org.apache.commons", name = "commons-collections4", version = "4.4")
-    api("com.tencent.bk.sdk:iam-java-sdk")
+package com.tencent.devops.ticket.service.permission
+
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.ticket.service.AbstractCertPermissionService
+
+class BluekingCertPermissionService constructor(
+    authResourceApi: AuthResourceApi,
+    authPermissionApi: AuthPermissionApi,
+    ticketAuthServiceCode: TicketAuthServiceCode
+) : AbstractCertPermissionService(
+    authResourceApi = authResourceApi,
+    authPermissionApi = authPermissionApi,
+    ticketAuthServiceCode = ticketAuthServiceCode
+) {
+
+    override fun supplierForPermission(projectId: String): () -> MutableList<String> {
+        return { mutableListOf() }
+    }
 }

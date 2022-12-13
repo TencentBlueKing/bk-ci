@@ -35,5 +35,6 @@ dependencies {
     api(project(":core:ticket:api-ticket"))
     api(project(":core:auth:api-auth"))
     api(project(":core:ticket:model-ticket"))
+    api(project(":core:project:api-project"))
     api("org.dom4j:dom4j")
 }
