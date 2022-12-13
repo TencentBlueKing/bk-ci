@@ -205,7 +205,6 @@ class BaseBuildRecordService(
     }
 
     companion object {
-        fun refreshOperation(f: () -> Int): Int = f()
         private const val ExpiredTimeInSeconds: Long = 10
         private val logger = LoggerFactory.getLogger(BaseBuildRecordService::class.java)
 
