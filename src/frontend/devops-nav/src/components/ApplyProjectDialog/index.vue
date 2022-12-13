@@ -200,19 +200,21 @@
                             theme: 'success',
                             message: this.$t('applySuccess')
                         })
-                        this.handleCancel()
+                    }).catch((err) => {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: err.message
+                        })
                     })
                     this.isLoading = false
+                    this.handleCancel()
                 })
             },
             handleCancel () {
                 this.isShow = false
                 this.customTime = 1
-                this.formData = {
-                    expireTime: 0,
-                    englishName: '',
-                    reason: ''
-                }
+                this.formData.expireTime = 0
+                this.formData.reason = ''
             },
             handleChangeCustomTime (value) {
                 if (!/^[0-9]*$/.test(value)) {

@@ -79,8 +79,36 @@
                         prop="creator"
                     >
                         <template slot-scope="{ row }">
-                            {{ approvalStatusMap[row.approvalStatus] }}
-                            <i class="bk-icon icon-info-circle-shape"></i>
+                            <span class="project-status">
+                                <LoadingIcon v-if="row.approvalStatus === 1" />
+                                <icon
+                                    v-else-if="!row.enabled"
+                                    class="devops-icon status-icon"
+                                    :size="20"
+                                    name="unknown"
+                                />
+                                <icon
+                                    v-else-if="row.enabled"
+                                    class="devops-icon status-icon"
+                                    :size="20"
+                                    name="normal"
+                                />
+                                {{ approvalStatusMap[row.approvalStatus] }}
+                                <icon
+                                    v-bk-tooltips="{ content: statusTips[row.approvalStatus] }"
+                                    v-if="[3, 6].includes(row.approvalStatus)"
+                                    class="devops-icon status-icon"
+                                    :size="20"
+                                    name="warning-circle"
+                                />
+                                <icon
+                                    v-bk-tooltips="{ content: statusTips[row.approvalStatus] }"
+                                    v-if="[1, 4].includes(row.approvalStatus)"
+                                    class="devops-icon status-icon"
+                                    :size="20"
+                                    name="wait"
+                                />
+                            </span>
                         </template>
                     </bk-table-column>
                     <bk-table-column
@@ -118,28 +146,28 @@
                 >
                     {{ $t('newProject') }}
                 </bk-button>
-                <a
-                    class="empty-btns-item"
-                    href="javascript:;"
+                
+                <bk-button
+                    theme="success"
                     @click="handleApplyProject"
                 >
-                    <bk-button theme="success">{{ $t('applyProject') }}</bk-button>
-                </a>
+                    {{ $t('applyProject') }}
+                </bk-button>
             </empty-tips>
+            <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
         </section>
-        <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
-       
     </div>
 </template>
 
 <script>
-
     import { mapActions } from 'vuex'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
+    import LoadingIcon from '../components/LoadingIcon/index.vue'
     export default ({
         name: 'ProjectManage',
-        component: {
-            ApplyProjectDialog
+        components: {
+            ApplyProjectDialog,
+            LoadingIcon
         },
         data () {
             return {
@@ -164,6 +192,12 @@
                     4: this.$t('启用中'),
                     5: this.$t('启用中'),
                     6: this.$t('启用中')
+                },
+                statusTips: {
+                    1: this.$t('新建项目申请审批中'),
+                    4: this.$t('项目信息修改审批中'),
+                    3: this.$t('新建项目申请已拒绝'),
+                    6: this.$t('项目信息修改已拒绝')
                 }
             }
         },
@@ -393,6 +427,12 @@
             font-size: 22px;
             color: #333;
         }
+    }
+    .project-status {
+        display: flex;
+    }
+    .status-icon {
+        margin-right: 5px;
     }
 </style>
 
