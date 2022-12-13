@@ -27,7 +27,6 @@ open class BkCiAbstractTest {
     val dslContext: DSLContext = DSL.using(MockConnection(Mock.of(0)), SQLDialect.MYSQL)
     val objectMapper: ObjectMapper = spyk()
 
-
     /**
      * Mock JooQ 的返回
      * records 不传值 , Result为空
@@ -91,7 +90,6 @@ open class BkCiAbstractTest {
                 return@answers mockResourceMapThreadLocal.get()[clz]!!
             }
         }
-
 
         @JvmStatic
         @BeforeAll
