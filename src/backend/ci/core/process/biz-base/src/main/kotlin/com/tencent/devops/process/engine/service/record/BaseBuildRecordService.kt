@@ -207,11 +207,13 @@ class BaseBuildRecordService(
     protected fun mergeTimestamps(
         newTimestamps: Map<BuildTimestampType, BuildRecordTimeStamp>,
         oldTimestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
-    ): Map<BuildTimestampType, BuildRecordTimeStamp> {
+    ): MutableMap<BuildTimestampType, BuildRecordTimeStamp> {
         // 针对各时间戳的开始结束时间分别写入，避免覆盖
-        return newTimestamps.map { (type, new) ->
+        val result = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
+        result.putAll(oldTimestamps)
+        newTimestamps.forEach { (type, new) ->
             val old = oldTimestamps[type]
-            type to if (old != null) {
+            result[type] = if (old != null) {
                 // 如果时间戳已存在，则将新的值覆盖旧的值
                 BuildRecordTimeStamp(
                     startTime = new.startTime ?: old.startTime,
@@ -221,7 +223,8 @@ class BaseBuildRecordService(
                 // 如果时间戳不存在，则直接新增
                 new
             }
-        }.toMap()
+        }
+        return result
     }
 
     companion object {
