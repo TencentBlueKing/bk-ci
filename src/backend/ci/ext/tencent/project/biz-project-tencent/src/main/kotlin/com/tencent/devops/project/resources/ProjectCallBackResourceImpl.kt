@@ -40,7 +40,6 @@ class ProjectCallBackResourceImpl @Autowired constructor(
 ) : ProjectCallBackResource {
     override fun handleItsmProjectCreateCallBack(
         itsmCallBackInfo: ItsmCallBackInfo,
-        projectId: String
     ): Result<Boolean> {
         projectCallBackSevice.createProjectCallBack(itsmCallBackInfo)
         return Result(true)
