@@ -20,6 +20,7 @@ const (
 	DockerContainerCreateError
 	DockerContainerStartError
 	DockerContainerRunError
+	DockerContainerDoneStatusError
 )
 
 type ErrorTypes string
@@ -95,6 +96,11 @@ var (
 		Type:    User,
 		Code:    DockerContainerRunError,
 		Message: "docker容器运行失败",
+	}
+	DockerContainerDoneStatusErrorEnum = &ErrorEnum{
+		Type:    User,
+		Code:    DockerContainerDoneStatusError,
+		Message: "docker容器运行结束时状态码不为0",
 	}
 )
 
