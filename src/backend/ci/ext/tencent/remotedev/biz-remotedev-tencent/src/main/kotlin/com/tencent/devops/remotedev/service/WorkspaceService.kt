@@ -646,7 +646,7 @@ class WorkspaceService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = 400,
                     errorCode = ErrorCodeEnum.OAUTH_ILLEGAL.errorCode.toString(),
-                    defaultMessage = ErrorCodeEnum.OAUTH_ILLEGAL.formatErrorMessage,
+                    defaultMessage = ErrorCodeEnum.OAUTH_ILLEGAL.formatErrorMessage.format(userId),
                     params = arrayOf(userId)
                 )
             }

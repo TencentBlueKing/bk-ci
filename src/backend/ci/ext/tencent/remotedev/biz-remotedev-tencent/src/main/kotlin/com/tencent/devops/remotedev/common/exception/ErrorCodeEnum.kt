@@ -16,6 +16,6 @@ enum class ErrorCodeEnum(
     OAUTH_ILLEGAL(
         errorType = ErrorType.USER,
         errorCode = 401,
-        formatErrorMessage = "[%s] oauth失效，需重新授权"
+        formatErrorMessage = "%s oauth失效，需重新授权"
     )
 }
