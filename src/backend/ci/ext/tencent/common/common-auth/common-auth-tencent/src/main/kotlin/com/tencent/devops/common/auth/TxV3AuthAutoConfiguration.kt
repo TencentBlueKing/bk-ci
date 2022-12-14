@@ -70,11 +70,6 @@ class TxV3AuthAutoConfiguration {
     ) = ManagerServiceImpl(apigwHttpClientServiceImpl(iamConfiguration), iamConfiguration)
 
     @Bean
-    fun iamV2ManagerService(
-        iamConfiguration: IamConfiguration
-    ) = V2ManagerServiceImpl(apigwHttpClientServiceImpl(iamConfiguration), iamConfiguration)
-
-    @Bean
     @Primary
     fun bkAuthProperties() = BkAuthProperties()
 
