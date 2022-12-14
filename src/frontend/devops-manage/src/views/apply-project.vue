@@ -4,14 +4,15 @@ import {
   ref,
 } from 'vue';
 import http from '@/http/api';
+import { Message } from 'bkui-vue';
 import ManageHeader from '@/components/manage-header.vue';
 import ProjectForm from '@/components/project-form.vue';
-import { Message } from 'bkui-vue';
 import {
   useRouter,
 } from 'vue-router';
 const { t } = useI18n();
 const router = useRouter();
+
 const projectData = ref({
   projectName: '',
   englishName: '',
@@ -30,7 +31,6 @@ const projectData = ref({
 const btnLoading = ref(false);
 const handleConfirm = async () => {
   btnLoading.value = true;
-  projectData.value.subjectScopes  = [{ type: '*', id: '*' }];
   const result = await http.requestCreateProject({
     projectData: projectData.value,
   }).catch(() => false);
@@ -60,7 +60,7 @@ const handleCancel = () => {
     <article class="apply-project-content">
       <section class="create-project-form">
         <project-form
-          ref="projectFrom"
+          ref="projectForm"
           :data="projectData"
         >
           <bk-form-item>

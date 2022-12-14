@@ -12,11 +12,9 @@ import IAMIframe from './IAM-Iframe';
 import { useI18n } from 'vue-i18n';
 import { Message } from 'bkui-vue';
 import http from '@/http/api';
-
 const {
   t,
 } = useI18n();
-
 const emits = defineEmits(['change']);
 
 const props = defineProps({
@@ -237,23 +235,23 @@ onBeforeUnmount(() => {
   <bk-form
     ref="projectFrom"
     :model="projectData"
-    :rules="rules"
-    :label-width="160">
-    <bk-form-item :label="t('项目名称')" :required="true">
+    :label-width="160"
+  >
+    <bk-form-item :label="t('项目名称')" property="projectName" :required="true">
       <bk-input
         v-model="projectData.projectName"
         :placeholder="t('请输入1-32字符的项目名称')"
         @change="handleChangeForm"
       ></bk-input>
     </bk-form-item>
-    <bk-form-item :label="t('项目ID')" :required="true">
+    <bk-form-item :label="t('项目ID')" property="englishName" :required="true">
       <bk-input
         v-model="projectData.englishName"
         :disabled="type === 'edit'"
         :placeholder="t('请输入2-32 字符的项目ID，由小写字母、数字、中划线组成，以小写字母开头。提交后不可修改。')"
       ></bk-input>
     </bk-form-item>
-    <bk-form-item :label="t('项目描述')" :required="true">
+    <bk-form-item :label="t('项目描述')" property="description" :required="true">
       <bk-input
         v-model="projectData.description"
         class="textarea"
@@ -274,7 +272,7 @@ onBeforeUnmount(() => {
       />
       <span class="logo-upload-tip">{{ t('只允许上传png、jpg，大小不超过 2M')}}</span>
     </bk-form-item>
-    <bk-form-item :label="t('项目所属组织')" :required="true">
+    <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
       <div class="bk-dropdown-box">
         <bk-select
           v-model="projectData.bgId"
@@ -327,7 +325,7 @@ onBeforeUnmount(() => {
         </bk-select>
       </div>
     </bk-form-item>
-    <bk-form-item :label="t('项目性质')" :required="true">
+    <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
       <bk-radio-group
         v-model="projectData.authSecrecy"
         @change="handleChangeForm"
@@ -336,7 +334,11 @@ onBeforeUnmount(() => {
         <bk-radio :label="true">{{ t('保密项目') }}</bk-radio>
       </bk-radio-group>
     </bk-form-item>
-    <bk-form-item :label="t('项目最大可授权人员范围')" :required="true">
+     <bk-form-item
+      :label="t('项目最大可授权人员范围')"
+      :description="t('该范围表示您可以给哪些人员分配权限，同时也只有他们才能申请到您创建的用户组')"
+      property="subjectScopes"
+      :required="true">
       <edit-line
         class="edit-line"
         @click="(showDialog = true)"
@@ -353,6 +355,7 @@ onBeforeUnmount(() => {
     size="large"
     dialog-type="show"
     :is-show="showDialog"
+    @closed="() => showDialog = false"
   >
     <IAMIframe
       class="member-iframe"
