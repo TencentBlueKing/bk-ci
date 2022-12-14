@@ -164,7 +164,7 @@ class BuildRecordContainerDao {
                     executeCount = executeCount,
                     stageId = stageId,
                     containerId = containerId,
-                    containerVar = JsonUtil.anyTo(containerVar, object : TypeReference<MutableMap<String, Any>>() {}),
+                    containerVar = JsonUtil.anyTo(containerVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
                     containerType = containerType,
                     status = status,
                     matrixGroupFlag = matrixGroupFlag,

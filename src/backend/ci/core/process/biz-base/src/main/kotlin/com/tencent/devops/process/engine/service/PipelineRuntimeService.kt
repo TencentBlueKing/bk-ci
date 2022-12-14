@@ -1647,6 +1647,13 @@ class PipelineRuntimeService @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING,
                 startTime = startTime
             )
+            recordModelDao.updateStatus(
+                dslContext = transactionContext,
+                projectId = latestRunningBuild.projectId,
+                buildId = latestRunningBuild.buildId,
+                executeCount = executeCount,
+                buildStatus = BuildStatus.RUNNING
+            )
             pipelineBuildDao.startBuild(
                 dslContext = transactionContext,
                 projectId = latestRunningBuild.projectId,

@@ -167,7 +167,7 @@ class BuildRecordTaskDao {
                     stageId = stageId,
                     containerId = containerId,
                     taskId = taskId,
-                    taskVar = JsonUtil.anyTo(taskVar, object : TypeReference<MutableMap<String, Any>>() {}),
+                    taskVar = JsonUtil.anyTo(taskVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
                     taskSeq = taskSeq,
                     classType = classType,
                     atomCode = atomCode,

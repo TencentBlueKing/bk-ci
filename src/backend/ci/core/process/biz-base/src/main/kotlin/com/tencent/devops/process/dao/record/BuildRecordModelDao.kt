@@ -158,7 +158,7 @@ class BuildRecordModelDao {
                     resourceVersion = resourceVersion,
                     executeCount = executeCount,
                     buildNum = buildNum,
-                    modelVar = JsonUtil.anyTo(modelVar, object : TypeReference<MutableMap<String, Any>>() {}),
+                    modelVar = JsonUtil.anyTo(modelVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
                     startUser = startUser,
                     startType = startType,
                     status = status,

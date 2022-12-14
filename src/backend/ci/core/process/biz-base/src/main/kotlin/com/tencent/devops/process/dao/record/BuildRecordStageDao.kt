@@ -137,7 +137,7 @@ class BuildRecordStageDao {
                     resourceVersion = resourceVersion,
                     executeCount = executeCount,
                     stageId = stageId,
-                    stageVar = JsonUtil.anyTo(stageVar, object : TypeReference<MutableMap<String, Any>>() {}),
+                    stageVar = JsonUtil.anyTo(stageVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
                     stageSeq = seq,
                     status = status,
                     timestamps = timestamps?.let {
