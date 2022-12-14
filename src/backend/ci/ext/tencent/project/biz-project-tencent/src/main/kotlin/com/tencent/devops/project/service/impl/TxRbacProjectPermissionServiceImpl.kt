@@ -73,7 +73,6 @@ import org.springframework.beans.factory.annotation.Value
 
 class TxRbacProjectPermissionServiceImpl @Autowired constructor(
     val objectMapper: ObjectMapper,
-    val authProperties: BkAuthProperties,
     val projectDispatcher: ProjectDispatcher,
     val client: Client,
     val tokenService: ClientTokenService,
