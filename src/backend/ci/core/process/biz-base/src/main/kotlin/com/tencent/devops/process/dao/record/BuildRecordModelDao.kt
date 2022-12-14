@@ -158,13 +158,13 @@ class BuildRecordModelDao {
                     resourceVersion = resourceVersion,
                     executeCount = executeCount,
                     buildNum = buildNum,
-                    modelVar = JsonUtil.anyTo(modelVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
+                    modelVar = JsonUtil.to(modelVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
                     startUser = startUser,
                     startType = startType,
                     status = status,
                     cancelUser = cancelUser,
                     timestamps = timestamps?.let {
-                        JsonUtil.anyTo(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
+                        JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()
                 )
             }

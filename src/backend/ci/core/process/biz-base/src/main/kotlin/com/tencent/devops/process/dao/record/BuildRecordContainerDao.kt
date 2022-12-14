@@ -164,13 +164,13 @@ class BuildRecordContainerDao {
                     executeCount = executeCount,
                     stageId = stageId,
                     containerId = containerId,
-                    containerVar = JsonUtil.anyTo(containerVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
+                    containerVar = JsonUtil.to(containerVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
                     containerType = containerType,
                     status = status,
                     matrixGroupFlag = matrixGroupFlag,
                     matrixGroupId = matrixGroupId,
                     timestamps = timestamps?.let {
-                        JsonUtil.anyTo(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
+                        JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()
                 )
             }

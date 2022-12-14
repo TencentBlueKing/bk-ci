@@ -137,11 +137,11 @@ class BuildRecordStageDao {
                     resourceVersion = resourceVersion,
                     executeCount = executeCount,
                     stageId = stageId,
-                    stageVar = JsonUtil.anyTo(stageVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
+                    stageVar = JsonUtil.to(stageVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
                     stageSeq = seq,
                     status = status,
                     timestamps = timestamps?.let {
-                        JsonUtil.anyTo(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
+                        JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()
                 )
             }

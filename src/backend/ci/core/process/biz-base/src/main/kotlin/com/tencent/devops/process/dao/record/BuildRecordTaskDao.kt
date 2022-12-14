@@ -167,14 +167,14 @@ class BuildRecordTaskDao {
                     stageId = stageId,
                     containerId = containerId,
                     taskId = taskId,
-                    taskVar = JsonUtil.anyTo(taskVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
+                    taskVar = JsonUtil.to(taskVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
                     taskSeq = taskSeq,
                     classType = classType,
                     atomCode = atomCode,
                     originClassType = originClassType,
                     status = status,
                     timestamps = timestamps?.let {
-                        JsonUtil.anyTo(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
+                        JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()
                 )
             }
