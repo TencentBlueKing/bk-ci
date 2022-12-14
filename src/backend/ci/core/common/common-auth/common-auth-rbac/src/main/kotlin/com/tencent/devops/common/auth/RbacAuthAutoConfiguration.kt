@@ -29,6 +29,7 @@ package com.tencent.devops.common.auth
 
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.common.auth.api.RbacAuthPermissionApi
+import com.tencent.devops.common.auth.api.RbacAuthProjectApi
 import com.tencent.devops.common.auth.api.RbacAuthTokenApi
 import com.tencent.devops.common.auth.api.RbacResourceApi
 import com.tencent.devops.common.auth.code.RbacArtifactoryAuthServiceCode
@@ -70,6 +71,9 @@ class RbacAuthAutoConfiguration {
         client: Client,
         tokenService: ClientTokenService
     ) = RbacResourceApi(client = client, tokenService = tokenService)
+
+    @Bean
+    fun authProjectApi() = RbacAuthProjectApi()
 
     @Bean
     fun authPermissionApi() = RbacAuthPermissionApi()
