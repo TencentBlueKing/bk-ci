@@ -32,6 +32,7 @@ import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -642,7 +643,7 @@ class WorkspaceService @Autowired constructor(
         return kotlin.runCatching {
             action()
         }.onFailure {
-            if (it is RemoteServiceException && it.httpStatus == HTTP_401) {
+            if (it is RemoteServiceException && it.httpStatus == HTTP_401 || it is OauthForbiddenException) {
                 throw ErrorCodeException(
                     statusCode = 400,
                     errorCode = ErrorCodeEnum.OAUTH_ILLEGAL.errorCode.toString(),
