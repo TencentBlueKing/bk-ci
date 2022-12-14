@@ -139,12 +139,12 @@ class BuildRecordModelDao {
         buildId: String
     ): List<String> {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
-            return dslContext.selectFrom(this)
+            return dslContext.select(START_USER).from(this)
                 .where(
                     BUILD_ID.eq(buildId)
                         .and(PROJECT_ID.eq(projectId))
                         .and(PIPELINE_ID.eq(pipelineId))
-                ).fetch(START_USER)
+                ).orderBy(EXECUTE_COUNT.asc()).fetch(START_USER)
         }
     }
 
