@@ -29,7 +29,10 @@ package com.tencent.devops.remotedev.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -40,6 +43,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResour
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -110,14 +114,16 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get user git repository|$search|$page|$pageSize")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        return gitTransferService.getProjectList(
-            userId = userId,
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
-            search = search,
-            owned = false,
-            minAccessLevel = GitAccessLevelEnum.DEVELOPER
-        )
+        return checkOauthIllegal(userId) {
+            gitTransferService.getProjectList(
+                userId = userId,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                search = search,
+                owned = false,
+                minAccessLevel = GitAccessLevelEnum.DEVELOPER
+            )
+        }
     }
 
     fun getRepositoryBranch(
@@ -130,13 +136,15 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get git repository branch list|$pathWithNamespace|$search|$page|$pageSize")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        return gitTransferService.getProjectBranches(
-            userId = userId,
-            pathWithNamespace = pathWithNamespace,
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
-            search = search
-        ) ?: emptyList()
+        return checkOauthIllegal(userId) {
+            gitTransferService.getProjectBranches(
+                userId = userId,
+                pathWithNamespace = pathWithNamespace,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                search = search
+            ) ?: emptyList()
+        }
     }
 
     fun createWorkspace(userId: String, workspaceCreate: WorkspaceCreate): String {
@@ -616,13 +624,33 @@ class WorkspaceService @Autowired constructor(
 
     fun checkDevfile(userId: String, pathWithNamespace: String, branch: String): List<String> {
         logger.info("$userId get devfile list from git. $pathWithNamespace|$branch")
-        return gitTransferService.getFileNameTree(
-            userId = userId,
-            pathWithNamespace = pathWithNamespace,
-            path = Constansts.devFileDirectoryName, // 根目录
-            ref = branch,
-            recursive = false // 不递归
-        )
+        return checkOauthIllegal(userId) {
+            gitTransferService.getFileNameTree(
+                userId = userId,
+                pathWithNamespace = pathWithNamespace,
+                path = Constansts.devFileDirectoryName, // 根目录
+                ref = branch,
+                recursive = false // 不递归
+            )
+        }
+    }
+
+    /**
+     * 检查工蜂接口是否返回401，针对这种情况，抛出OAUTH_ILLEGAL 让前端跳转去重新授权
+     */
+    private fun <T> checkOauthIllegal(userId: String, action: () -> T): T {
+        return kotlin.runCatching {
+            action()
+        }.onFailure {
+            if (it is RemoteServiceException && it.httpStatus == HTTP_401) {
+                throw ErrorCodeException(
+                    statusCode = 400,
+                    errorCode = ErrorCodeEnum.OAUTH_ILLEGAL.errorCode.toString(),
+                    defaultMessage = ErrorCodeEnum.OAUTH_ILLEGAL.formatErrorMessage,
+                    params = arrayOf(userId)
+                )
+            }
+        }.getOrThrow()
     }
 
     private fun getOpHistory(key: OpHistoryCopyWriting) =

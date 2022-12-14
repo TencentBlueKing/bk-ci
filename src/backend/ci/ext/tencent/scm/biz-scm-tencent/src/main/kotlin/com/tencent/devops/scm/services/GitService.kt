@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -222,8 +223,10 @@ class GitService @Autowired constructor(
     ): List<Project> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        val url = ("${gitConfig.gitApiUrl}/projects?access_token=$accessToken" +
-                "&page=$pageNotNull&per_page=$pageSizeNotNull")
+        val url = (
+            "${gitConfig.gitApiUrl}/projects?access_token=$accessToken" +
+                "&page=$pageNotNull&per_page=$pageSizeNotNull"
+        )
             .addParams(
                 mapOf(
                     "search" to search,
@@ -291,6 +294,12 @@ class GitService @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    httpStatus = response.code(),
+                    errorMessage = "(${response.code()})${response.message()}"
+                )
+            }
             val data = response.body()?.string() ?: return@use
             val branList = JsonParser().parse(data).asJsonArray
             if (!branList.isJsonNull) {
@@ -835,8 +844,10 @@ class GitService @Autowired constructor(
         logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = StringBuilder("$gitCIUrl/api/v3/projects/" +
-                "${URLEncoder.encode(gitProjectId, "UTF-8")}/repository/tree")
+            val url = StringBuilder(
+                "$gitCIUrl/api/v3/projects/" +
+                "${URLEncoder.encode(gitProjectId, "UTF-8")}/repository/tree"
+            )
             setToken(tokenType, url, token)
             with(url) {
                 append(
@@ -2240,6 +2251,12 @@ class GitService @Autowired constructor(
         logger.info("getProjectList: $url")
         RetryUtils.retryFun("getGitCodeProjectList") {
             OkhttpUtils.doHttp(request).use { response ->
+                if (!response.isSuccessful) {
+                    throw RemoteServiceException(
+                        httpStatus = response.code(),
+                        errorMessage = "(${response.code()})${response.message()}"
+                    )
+                }
                 val data = response.body()?.string() ?: return@use
                 val repoList = JsonParser().parse(data).asJsonArray
                 if (!repoList.isJsonNull) {
