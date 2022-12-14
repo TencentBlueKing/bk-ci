@@ -50,10 +50,7 @@ interface ProjectCallBackResource {
     @ApiOperation("处理Itsm项目创建回调")
     fun handleItsmProjectCreateCallBack(
         @ApiParam(value = "itsm回调内容", required = true)
-        itsmCallBackInfo: ItsmCallBackInfo,
-        @ApiParam(value = "itsm回调内容", required = true)
-        @QueryParam("x-devops-project-id")
-        projectId: String
+        itsmCallBackInfo: ItsmCallBackInfo
     ): Result<Boolean>
 
     @Path("/update_callback")

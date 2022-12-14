@@ -377,6 +377,8 @@ class IamRbacService @Autowired constructor(
             authSecrecy = projectInfo.isAuthSecrecy,
             subjectScopes = iamSubjectScopes
         )
+        logger.info("itsmCreateCallBackUrl:$itsmCreateCallBackUrl")
+        logger.info("itsmCreateCallBackUrl:${String.format(itsmCreateCallBackUrl, projectCode)}")
         val gradeManagerApplicationCreateDTO: GradeManagerApplicationCreateDTO = GradeManagerApplicationCreateDTO
             .builder()
             .name("$SYSTEM_DEFAULT_NAME-$projectName")
