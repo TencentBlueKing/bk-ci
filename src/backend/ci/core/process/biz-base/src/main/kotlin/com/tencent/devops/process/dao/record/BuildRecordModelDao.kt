@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.dao.record
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -157,13 +158,13 @@ class BuildRecordModelDao {
                     resourceVersion = resourceVersion,
                     executeCount = executeCount,
                     buildNum = buildNum,
-                    modelVar = JsonUtil.getObjectMapper().readValue(modelVar) as MutableMap<String, Any>,
+                    modelVar = JsonUtil.anyTo(modelVar, object : TypeReference<MutableMap<String, Any>>() {}),
                     startUser = startUser,
                     startType = startType,
                     status = status,
                     cancelUser = cancelUser,
                     timestamps = timestamps?.let {
-                        JsonUtil.getObjectMapper().readValue(it) as Map<BuildTimestampType, BuildRecordTimeStamp>
+                        JsonUtil.anyTo(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()
                 )
             }
