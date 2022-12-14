@@ -93,7 +93,7 @@ import java.nio.file.Files
 import java.time.LocalDateTime
 
 @Service
-@Suppress("LongParameterList", "LongMethod", "ReturnCount")
+@Suppress("LongParameterList", "LongMethod", "ReturnCount", "ComplexMethod","NestedBlockDepth")
 class OpAtomServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val classifyDao: ClassifyDao,
