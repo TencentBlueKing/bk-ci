@@ -529,7 +529,7 @@ class PipelineBuildDao {
                 },
                 remark = t.remark,
                 repositoryTriggerInfo = t.repoTriggerInfo?.let {
-                    JsonUtil.to(t.webhookInfo, RepositoryTriggerInfo::class.java)
+                    JsonUtil.to(it, RepositoryTriggerInfo::class.java)
                 }
             )
         }

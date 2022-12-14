@@ -1312,7 +1312,7 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int,
+        executeCount: Int?,
         channelCode: ChannelCode,
         checkPermission: Boolean = true
     ): ModelRecord {

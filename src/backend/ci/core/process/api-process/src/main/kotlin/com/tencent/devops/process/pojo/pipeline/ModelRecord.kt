@@ -78,7 +78,7 @@ data class ModelRecord(
     @ApiModelProperty("触发审核人列表", required = false)
     val triggerReviewers: List<String>? = null,
     @ApiModelProperty("查询的执行次数", required = false)
-    val executeCount: Int? = 1,
+    val executeCount: Int,
     @ApiModelProperty("构建信息", required = false)
     var buildMsg: String?,
     @ApiModelProperty("原材料", required = false)

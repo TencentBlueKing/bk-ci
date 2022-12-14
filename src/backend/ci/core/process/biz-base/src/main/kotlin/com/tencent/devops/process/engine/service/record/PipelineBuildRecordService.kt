@@ -131,7 +131,7 @@ class PipelineBuildRecordService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int,
+        executeCount: Int?,
         refreshStatus: Boolean = true
     ): ModelRecord? {
 
@@ -143,17 +143,19 @@ class PipelineBuildRecordService @Autowired constructor(
             )
         ) ?: return null
 
+        val fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
+
         // 获取流水线级别变量数据
         val buildRecordPipeline = recordModelDao.getRecord(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            executeCount = executeCount
+            executeCount = fixedExecuteCount
         ) ?: return null
 
         val recordMap = recordModelService.generateFieldRecordModelMap(
-            projectId, pipelineId, buildId, executeCount, buildRecordPipeline
+            projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline
         )
         val resourceStr = pipelineResDao.getVersionModelString(
             dslContext, projectId, pipelineId, buildInfo.version
@@ -230,7 +232,7 @@ class PipelineBuildRecordService @Autowired constructor(
             executeTime = buildInfo.executeTime,
             errorInfoList = buildInfo.errorInfoList,
             triggerReviewers = triggerReviewers,
-            executeCount = executeCount,
+            executeCount = fixedExecuteCount,
             buildMsg = buildInfo.buildMsg,
             material = buildInfo.material,
             remark = buildInfo.remark,
