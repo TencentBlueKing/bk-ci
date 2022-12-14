@@ -51,6 +51,12 @@ default_value_dict = {
     'bkCiStreamGitUrl': 'www.github.com',
     'bkCiClusterTag': 'devops',
     'bkCiRepositoryGithubServer':'repository',
+    'bkCiDockerRoutingType':'KUBERNETES',
+    'bkCiDockerJobQuotaEnable':'false',
+    'bkCiBcsCpu':'8.0',
+    'bkCiBcsMemory':'16048',
+    'bkCiKubernetesCpu':'8',
+    'bkCiKubernetesMemory':'16048',
 }
 
 if os.path.isfile(default_value_json):
