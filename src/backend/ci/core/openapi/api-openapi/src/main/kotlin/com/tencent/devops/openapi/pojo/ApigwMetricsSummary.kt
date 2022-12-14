@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -24,22 +24,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.pojo
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-util"))
-    api(project(":core:quality:api-quality"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:store:api-store"))
-    api(project(":core:auth:api-auth"))
-    api(project(":core:process:api-process"))
-    api(project(":core:project:api-project"))
-    api(project(":core:metrics:api-metrics"))
-    api("com.tencent.devops:devops-boot-starter-api")
-    api("com.tencent.bk.devops.turbo:api-turbo:0.0.2-RELEASE") {
-        isTransitive = false
-    }
-    api(project(":core:dispatch-docker:api-dispatch-docker"))
-}
+import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
+import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("流水线构建统计数据响应消息体")
+data class ApigwMetricsSummary(
+    @ApiModelProperty("第三方汇总信息")
+    val overview: ThirdPlatformOverviewInfoVO?,
+    @ApiModelProperty("流水线汇总信息")
+    val sumInfo: PipelineSumInfoVO?
+)
