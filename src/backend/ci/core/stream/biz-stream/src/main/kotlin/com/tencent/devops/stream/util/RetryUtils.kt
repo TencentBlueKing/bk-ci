@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.util
 
 import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 
 object RetryUtils {
 
@@ -43,6 +44,15 @@ object RetryUtils {
                 Thread.sleep(retryPeriodMills)
             }
             clientRetry(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
+        } catch (e: RemoteServiceException) {
+            // 对限流重试
+            if (e.httpStatus != 429) throw e
+            if (retryTime - 1 < 0) {
+                throw e
+            }
+            // 固定延迟1s
+            Thread.sleep(1000)
+            clientRetry(action = action, retryTime = retryTime - 1)
         }
     }
 
