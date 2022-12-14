@@ -329,7 +329,7 @@ class MutexControl @Autowired constructor(
             containerId = containerId, executeCount = executeCount,
             containerVar = emptyMap(), buildStatus = null,
             timestamps = mapOf(
-                BuildTimestampType.JOB_MUTEX_WAITING to
+                BuildTimestampType.JOB_MUTEX_QUEUE to
                     BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
             )
         )
@@ -351,7 +351,7 @@ class MutexControl @Autowired constructor(
             containerId = containerId, executeCount = executeCount,
             containerVar = emptyMap(), buildStatus = null,
             timestamps = mapOf(
-                BuildTimestampType.JOB_MUTEX_WAITING to
+                BuildTimestampType.JOB_MUTEX_QUEUE to
                     BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
             )
         )
