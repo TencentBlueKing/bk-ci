@@ -52,11 +52,6 @@ class BuildTypeEnumModifier : EnumModifier {
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
-            enumName = BuildType.IDC.name,
-            additionalValues = arrayOf("公共：Docker on IDC CVM", listOf(OS.LINUX), true, false, true)
-        )
-        EnumUtil.addEnum(
-            enumType = BuildType::class.java,
             enumName = BuildType.PUBLIC_DEVCLOUD.name,
             additionalValues = arrayOf("公共：Docker on DevCloud", listOf(OS.LINUX), true, true, true)
         )
