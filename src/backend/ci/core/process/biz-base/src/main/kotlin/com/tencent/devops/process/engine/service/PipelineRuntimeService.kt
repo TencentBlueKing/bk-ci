@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
@@ -67,6 +68,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -126,6 +128,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -209,6 +212,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineRuleService: PipelineRuleService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineBuildRecordService: PipelineBuildRecordService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineUrlBean: PipelineUrlBean,
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation
@@ -1508,6 +1512,20 @@ class PipelineRuntimeService @Autowired constructor(
                             variables = params.params.associate { it.key to it.value.toString() }
                         )
                     }
+
+                    taskBuildRecordService.updateTaskRecord(
+                        projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                        taskId = taskId, executeCount = executeCount ?: 1, buildStatus = null,
+                        taskVar = mapOf(
+                            ManualReviewUserTaskElement::desc.name to (params.desc ?: ""),
+                            ManualReviewUserTaskElement::suggest.name to (params.suggest ?: ""),
+                            ManualReviewUserTaskElement::params.name to params.params
+                        ),
+                        timestamps = mapOf(
+                            BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                                BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                        )
+                    )
 
                     pipelineTaskService.updateTaskParam(
                         projectId = projectId,
