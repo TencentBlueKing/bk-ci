@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.time.LocalDateTime
 
 object BuildTimeCostUtils {
     private val logger = LoggerFactory.getLogger(BuildTimeCostUtils::class.java)
@@ -69,8 +70,8 @@ object BuildTimeCostUtils {
         recordStage: BuildRecordStage,
         containerPairs: List<Pair<BuildRecordContainer, PipelineBuildContainer?>>
     ): BuildRecordTimeCost {
-        val startTime = buildStage.startTime
-        val endTime = buildStage.endTime
+        val startTime = buildStage.startTime ?: return BuildRecordTimeCost()
+        val endTime = buildStage.endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
         var executeCost = 0L
         val waitCost = recordStage.timestamps.toList().sumOf { (type, time) ->
@@ -101,8 +102,8 @@ object BuildTimeCostUtils {
         recordContainer: BuildRecordContainer,
         taskPairs: List<Pair<BuildRecordTask, PipelineBuildTask?>>
     ): BuildRecordTimeCost {
-        val startTime = buildContainer.startTime
-        val endTime = buildContainer.endTime
+        val startTime = buildContainer.startTime ?: return BuildRecordTimeCost()
+        val endTime = buildContainer.endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
         var executeCost = 0L
         var waitCost = 0L
@@ -137,9 +138,9 @@ object BuildTimeCostUtils {
         buildTask: PipelineBuildTask,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
     ): BuildRecordTimeCost {
-        val start = buildTask.startTime
-        val end = buildTask.endTime
-        val totalCost = Duration.between(start, end).toMillis()
+        val startTime = buildTask.startTime ?: return BuildRecordTimeCost()
+        val endTime = buildTask.endTime ?: LocalDateTime.now()
+        val totalCost = Duration.between(startTime, endTime).toMillis()
         val waitCost = timestamps.toList().sumOf { (type, time) ->
             if (!type.taskCheckWait()) return@sumOf 0L
             logWhenNull(

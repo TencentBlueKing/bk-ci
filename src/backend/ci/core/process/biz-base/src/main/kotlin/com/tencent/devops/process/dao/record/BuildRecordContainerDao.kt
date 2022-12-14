@@ -30,18 +30,19 @@ package com.tencent.devops.process.dao.record
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordContainer
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordContainerRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
-import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
-import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
 
 @Repository
+@Suppress("LongParameterList")
 class BuildRecordContainerDao {
 
     fun batchSave(dslContext: DSLContext, records: List<BuildRecordContainer>) {
@@ -104,6 +105,7 @@ class BuildRecordContainerDao {
                 .where(
                     BUILD_ID.eq(buildId)
                         .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
                         .and(BUILD_ID.eq(buildId))
                         .and(CONTAINER_ID.eq(containerId))
                         .and(EXECUTE_COUNT.eq(executeCount))
@@ -164,7 +166,9 @@ class BuildRecordContainerDao {
                     executeCount = executeCount,
                     stageId = stageId,
                     containerId = containerId,
-                    containerVar = JsonUtil.to(containerVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
+                    containerVar = JsonUtil.to(
+                        containerVar, object : TypeReference<Map<String, Any>>() {}
+                    ).toMutableMap(),
                     containerType = containerType,
                     status = status,
                     matrixGroupFlag = matrixGroupFlag,

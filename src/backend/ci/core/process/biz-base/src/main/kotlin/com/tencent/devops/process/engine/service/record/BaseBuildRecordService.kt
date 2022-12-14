@@ -54,11 +54,9 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 
-@Suppress("LongParameterList", "MagicNumber")
-@Service
-class BaseBuildRecordService(
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount")
+open class BaseBuildRecordService(
     private val dslContext: DSLContext,
     private val buildRecordModelDao: BuildRecordModelDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -147,7 +145,7 @@ class BaseBuildRecordService(
         }
     }
 
-    protected fun pipelineDetailChangeEvent(
+    private fun pipelineDetailChangeEvent(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -173,8 +171,9 @@ class BaseBuildRecordService(
         errorMsg: String? = null,
         cancelUser: String? = null
     ): List<BuildStageStatus> {
-        val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
+        val stageTagMap: Map<String, String> by lazy {
+            stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName }
+        }
         // 更新Stage状态至BuildHistory
         val (statusMessage, reason) = if (buildStatus == BuildStatus.REVIEWING) {
             Pair(BUILD_REVIEWING, reviewers?.joinToString(","))

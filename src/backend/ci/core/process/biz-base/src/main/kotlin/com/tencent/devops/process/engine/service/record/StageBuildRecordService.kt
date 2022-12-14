@@ -223,7 +223,8 @@ class StageBuildRecordService(
             BuildTimestampType.STAGE_CHECK_OUT_WAITING
         }
         val (oldBuildStatus, newBuildStatus) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
-            checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+            checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name
+        ) {
             // 即将卡审核
             timestamps[timestampType] = BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
             Pair(BuildStatus.RUNNING, BuildStatus.REVIEWING)

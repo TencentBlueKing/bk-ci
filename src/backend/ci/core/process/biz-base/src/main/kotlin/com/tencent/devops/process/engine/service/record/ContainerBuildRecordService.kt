@@ -32,20 +32,20 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
-import com.tencent.devops.process.engine.utils.ContainerUtils
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
-import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
-import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-@Suppress("LongParameterList", "MagicNumber")
+@Suppress("LongParameterList", "MagicNumber", "LongMethod")
 @Service
 class ContainerBuildRecordService(
     private val dslContext: DSLContext,
@@ -279,7 +279,8 @@ class ContainerBuildRecordService(
             updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 containerId = containerId, executeCount = executeCount,
-                buildStatus = BuildStatus.SKIP, containerVar = mapOf(
+                buildStatus = BuildStatus.SKIP,
+                containerVar = mapOf(
                     Container::startVMStatus.name to BuildStatus.SKIP.name
                 )
             )

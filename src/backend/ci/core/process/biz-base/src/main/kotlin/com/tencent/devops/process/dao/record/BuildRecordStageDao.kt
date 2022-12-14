@@ -30,17 +30,18 @@ package com.tencent.devops.process.dao.record
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordStage
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordStageRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
-import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
-import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
 
 @Repository
+@Suppress("LongParameterList")
 class BuildRecordStageDao {
 
     fun batchSave(dslContext: DSLContext, records: List<BuildRecordStage>) {
