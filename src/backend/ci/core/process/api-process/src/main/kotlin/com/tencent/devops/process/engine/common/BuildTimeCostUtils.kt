@@ -27,6 +27,9 @@
 
 package com.tencent.devops.process.engine.common
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
@@ -63,12 +66,25 @@ object BuildTimeCostUtils {
 
     fun generateStageTimeCost(
         buildStage: PipelineBuildStage,
+        recordStage: BuildRecordStage,
         containerPairs: List<Pair<BuildRecordContainer, PipelineBuildContainer?>>
     ): BuildRecordTimeCost {
         val startTime = buildStage.startTime
         val endTime = buildStage.endTime
+        val totalCost = Duration.between(startTime, endTime).toMillis()
+        var executeCost = 0L
+        val waitCost = recordStage.timestamps.toList().sumOf { (type, time) ->
+            if (!type.stageCheckWait()) return@sumOf 0L
+            logWhenNull(
+                time, "${buildStage.buildId}|STAGE|${buildStage.stageId}|${type.name}"
+            )
+            return@sumOf time.between()
+        }
 
         containerPairs.forEach { (record, build) ->
+            val containerTimeCost = JsonUtil.anyTo(
+                record.containerVar[Container::timeCost.name],
+                object : TypeReference<BuildRecordTimeCost>() {})
             val start = build?.startTime
             val end = build?.endTime
             val timestamps = record.timestamps
@@ -76,6 +92,10 @@ object BuildTimeCostUtils {
         return BuildRecordTimeCost()
     }
 
+    /**
+     * 计算Container级别的所有时间消耗
+     * queueCost、 systemCost 保持为 0
+     */
     fun generateContainerTimeCost(
         buildContainer: PipelineBuildContainer,
         recordContainer: BuildRecordContainer,
@@ -87,9 +107,9 @@ object BuildTimeCostUtils {
         var executeCost = 0L
         var waitCost = 0L
         val queueCost = recordContainer.timestamps.toList().sumOf { (type, time) ->
-            if (!type.containerCheckWait()) return@sumOf 0
-            logTimeWhenNull(
-                time, "${buildContainer.buildId}|${buildContainer.containerId}|${type.name}"
+            if (!type.containerCheckQueue()) return@sumOf 0L
+            logWhenNull(
+                time, "${buildContainer.buildId}|CONTAINER|${buildContainer.containerId}|${type.name}"
             )
             return@sumOf time.between()
         }
@@ -100,15 +120,17 @@ object BuildTimeCostUtils {
             waitCost += cost.waitCost
         }
         val systemCost = totalCost - executeCost - waitCost - queueCost
-        return BuildRecordTimeCost(totalCost = totalCost,
+        return BuildRecordTimeCost(
+            totalCost = totalCost,
             executeCost = executeCost,
             waitCost = waitCost,
             queueCost = queueCost,
-            systemCost = systemCost)
+            systemCost = systemCost.notNegative()
+        )
     }
 
     /**
-     * 计算task级别的所有时间消耗
+     * 计算Task级别的所有时间消耗
      * queueCost、 systemCost 保持为 0
      */
     fun generateTaskTimeCost(
@@ -119,9 +141,9 @@ object BuildTimeCostUtils {
         val end = buildTask.endTime
         val totalCost = Duration.between(start, end).toMillis()
         val waitCost = timestamps.toList().sumOf { (type, time) ->
-            if (!type.taskCheckWait()) return@sumOf 0
-            logTimeWhenNull(
-                time, "${buildTask.buildId}|${buildTask.taskId}|${type.name}"
+            if (!type.taskCheckWait()) return@sumOf 0L
+            logWhenNull(
+                time, "${buildTask.buildId}|TASK|${buildTask.taskId}|${type.name}"
             )
             return@sumOf time.between()
         }
@@ -130,11 +152,11 @@ object BuildTimeCostUtils {
         return BuildRecordTimeCost(
             totalCost = totalCost,
             waitCost = waitCost,
-            executeCost = executeCost
+            executeCost = executeCost.notNegative()
         )
     }
 
-    private fun logTimeWhenNull(time: BuildRecordTimeStamp, logInfo: String) {
+    private fun logWhenNull(time: BuildRecordTimeStamp, logInfo: String) {
         if (time.startTime == null) {
             logger.warn("$logInfo|warning! start time is null.")
         }
@@ -142,4 +164,6 @@ object BuildTimeCostUtils {
             logger.warn("$logInfo|warning! end time is null.")
         }
     }
+
+    private fun Long.notNegative() = if (this < 0) 0 else this
 }
