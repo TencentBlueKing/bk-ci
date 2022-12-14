@@ -38,7 +38,10 @@ import org.springframework.beans.factory.annotation.Autowired
 class ProjectCallBackResourceImpl @Autowired constructor(
     private val projectCallBackSevice: ProjectCallBackSevice
 ) : ProjectCallBackResource {
-    override fun handleItsmProjectCreateCallBack(itsmCallBackInfo: ItsmCallBackInfo): Result<Boolean> {
+    override fun handleItsmProjectCreateCallBack(
+        itsmCallBackInfo: ItsmCallBackInfo,
+        projectId: String
+    ): Result<Boolean> {
         projectCallBackSevice.createProjectCallBack(itsmCallBackInfo)
         return Result(true)
     }

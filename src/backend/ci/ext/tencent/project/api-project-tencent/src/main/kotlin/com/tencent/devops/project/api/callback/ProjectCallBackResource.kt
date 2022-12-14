@@ -36,6 +36,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["PROJECT_CALLBACK"], description = "项目-itsm-回调")
@@ -49,7 +50,10 @@ interface ProjectCallBackResource {
     @ApiOperation("处理Itsm项目创建回调")
     fun handleItsmProjectCreateCallBack(
         @ApiParam(value = "itsm回调内容", required = true)
-        itsmCallBackInfo: ItsmCallBackInfo
+        itsmCallBackInfo: ItsmCallBackInfo,
+        @ApiParam(value = "itsm回调内容", required = true)
+        @QueryParam("x-devops-project-id")
+        projectId: String
     ): Result<Boolean>
 
     @Path("/update_callback")
