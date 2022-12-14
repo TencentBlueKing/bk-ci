@@ -1308,6 +1308,26 @@ class PipelineBuildFacadeService(
     }
 
     fun getBuildRecord(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?,
+        channelCode: ChannelCode
+    ): ModelRecord {
+        return buildRecordService.get(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            defaultMessage = "构建任务${buildId}不存在",
+            params = arrayOf(buildId)
+        )
+    }
+
+    fun getBuildRecord(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -1327,16 +1347,12 @@ class PipelineBuildFacadeService(
             )
         }
 
-        return buildRecordService.get(
+        return getBuildRecord(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            executeCount = executeCount
-        ) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-            defaultMessage = "构建任务${buildId}不存在",
-            params = arrayOf(buildId)
+            executeCount = executeCount,
+            channelCode = channelCode
         )
     }
 

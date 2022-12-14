@@ -131,6 +131,22 @@ class BuildRecordModelDao {
         }
     }
 
+    fun getRecordStartUserList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<String> {
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
+            return dslContext.selectFrom(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                ).fetch(START_USER)
+        }
+    }
+
     class BuildRecordPipelineJooqMapper : RecordMapper<TPipelineBuildRecordModelRecord, BuildRecordModel> {
         override fun map(record: TPipelineBuildRecordModelRecord?): BuildRecordModel? {
             return record?.run {

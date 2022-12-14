@@ -55,6 +55,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
@@ -71,6 +72,7 @@ import java.util.concurrent.TimeUnit
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount")
 @Service
 class PipelineBuildRecordService @Autowired constructor(
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineTriggerReviewDao: PipelineTriggerReviewDao,
@@ -122,7 +124,7 @@ class PipelineBuildRecordService @Autowired constructor(
     }
 
     /**
-     * 查询ModelDetail
+     * 查询ModelRecord
      * @param projectId: 项目Id
      * @param buildId: 构建Id
      * @param refreshStatus: 是否刷新状态
@@ -157,14 +159,19 @@ class PipelineBuildRecordService @Autowired constructor(
         val recordMap = recordModelService.generateFieldRecordModelMap(
             projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline
         )
-        val resourceStr = pipelineResDao.getVersionModelString(
-            dslContext, projectId, pipelineId, buildInfo.version
-        ) ?: return null
 
-        val model = ModelUtils.generatePipelineBuildModel(
-            baseModelMap = JsonUtil.getObjectMapper().readValue(resourceStr),
-            modelFieldRecordMap = recordMap
-        )
+        // TODO 当不传executeCount时使用原detail接口暂时兼容，后续全部切换到record进行
+        val model = if (executeCount != null) {
+            val resourceStr = pipelineResDao.getVersionModelString(
+                dslContext, projectId, pipelineId, buildInfo.version
+            ) ?: return null
+            ModelUtils.generatePipelineBuildModel(
+                baseModelMap = JsonUtil.getObjectMapper().readValue(resourceStr),
+                modelFieldRecordMap = recordMap
+            )
+        } else {
+            pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return null
+        }
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId, buildInfo.pipelineId
@@ -210,6 +217,14 @@ class PipelineBuildRecordService @Autowired constructor(
             pipelineId = pipelineInfo.pipelineId,
             buildId = buildId
         )
+
+        val startUserList = recordModelDao.getRecordStartUserList(
+            dslContext = dslContext,
+            pipelineId = pipelineInfo.pipelineId,
+            projectId = projectId,
+            buildId = buildId
+        )
+
         return ModelRecord(
             id = buildInfo.buildId,
             pipelineId = buildInfo.pipelineId,
@@ -233,6 +248,7 @@ class PipelineBuildRecordService @Autowired constructor(
             errorInfoList = buildInfo.errorInfoList,
             triggerReviewers = triggerReviewers,
             executeCount = fixedExecuteCount,
+            startUserList = startUserList,
             buildMsg = buildInfo.buildMsg,
             material = buildInfo.material,
             remark = buildInfo.remark,

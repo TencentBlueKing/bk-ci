@@ -86,10 +86,11 @@ data class DetailWebsocketPush(
 
     override fun buildNotifyMessage(message: SendMessage) {
         try {
-            val modelDetail = pipelineBuildService.getBuildDetail(
+            val modelDetail = pipelineBuildService.getBuildRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId!!,
+                executeCount = null,
                 channelCode = ChannelCode.BS
             )
             message.notifyPost.message = JsonUtil.toJson(modelDetail, formatted = false)

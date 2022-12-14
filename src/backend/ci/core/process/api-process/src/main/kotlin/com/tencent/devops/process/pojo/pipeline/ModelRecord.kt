@@ -77,8 +77,10 @@ data class ModelRecord(
     var errorInfoList: List<ErrorInfo>?,
     @ApiModelProperty("触发审核人列表", required = false)
     val triggerReviewers: List<String>? = null,
-    @ApiModelProperty("查询的执行次数", required = false)
+    @ApiModelProperty("当前查询的执行次数", required = false)
     val executeCount: Int,
+    @ApiModelProperty("历史重试执行人列表（有序）", required = false)
+    val startUserList: List<String>,
     @ApiModelProperty("构建信息", required = false)
     var buildMsg: String?,
     @ApiModelProperty("原材料", required = false)
