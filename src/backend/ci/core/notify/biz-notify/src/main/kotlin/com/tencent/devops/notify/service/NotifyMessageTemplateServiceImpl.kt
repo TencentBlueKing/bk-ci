@@ -233,6 +233,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             if (it.notifyTypeScope.contains(NotifyType.WECHAT.name)) {
                 notifyTypeScopeSet.add(NotifyType.WECHAT.name)
             }
+            if (it.notifyTypeScope.contains(NotifyType.WEWORK_GROUP.name)) {
+                notifyTypeScopeSet.add(NotifyType.WEWORK_GROUP.name)
+            }
             if (it.notifyTypeScope.contains(NotifyType.EMAIL.name)) {
                 if (it.emailType == null || it.bodyFormat == null) {
                     return MessageCodeUtil.generateResponseDataObject(
@@ -370,6 +373,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     params = arrayOf("notifyType"),
                     data = false
                 )
+            }
+
+            if (it.notifyTypeScope.contains(NotifyType.WEWORK_GROUP.name)) {
+                notifyTypeScopeSet.add(NotifyType.WEWORK_GROUP.name)
             }
         }
 
