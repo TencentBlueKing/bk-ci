@@ -381,7 +381,7 @@ class PipelineBuildRecordService @Autowired constructor(
             }
             val buildInfo = pipelineBuildDao.convert(
                 pipelineBuildDao.getBuildInfo(
-                    dslContext = dslContext,
+                    dslContext = context,
                     projectId = projectId,
                     buildId = buildId
                 )
@@ -405,7 +405,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 buildInfo, stagePairs
             )
             recordModelDao.updateRecord(
-                context, projectId, pipelineId, buildId, null, buildStatus,
+                context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, null, LocalDateTime.now(), null
             )
         }

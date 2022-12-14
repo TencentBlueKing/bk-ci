@@ -69,7 +69,7 @@ class BuildRecordModelDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int?,
+        executeCount: Int,
         buildStatus: BuildStatus,
         modelVar: Map<String, Any>,
         cancelUser: String?,
@@ -83,16 +83,11 @@ class BuildRecordModelDao {
                 .set(MODEL_VAR, JsonUtil.toJson(modelVar, false))
             cancelUser?.let { update.set(CANCEL_USER, cancelUser) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
-            val exeCount = executeCount ?: dslContext.select(DSL.max(EXECUTE_COUNT)).where(
-                BUILD_ID.eq(buildId)
-                    .and(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-            ).fetchAny()?.value1()!!
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
-                    .and(EXECUTE_COUNT.eq(exeCount))
+                    .and(EXECUTE_COUNT.eq(executeCount))
             ).execute()
         }
     }
