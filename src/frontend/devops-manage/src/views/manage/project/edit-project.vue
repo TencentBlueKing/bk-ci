@@ -10,10 +10,8 @@ import {
 } from 'vue-router';
 import http from '@/http/api';
 import { useI18n } from 'vue-i18n';
-import { InfoBox, Message } from 'bkui-vue';
-
+import { InfoBox, Message, Popover } from 'bkui-vue';
 import ProjectForm from '@/components/project-form.vue';
-
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
@@ -23,6 +21,10 @@ const projectData = ref<any>({});
 const isLoading = ref(false);
 const isChange = ref(false);
 const btnLoading = ref(false);
+const statusDisabledTips = {
+  1: t('新建项目申请审批中，暂不可修改'),
+  4: t('编辑项目申请审批中，暂不可修改'),
+};
 
 const fetchProjectData = async () => {
   isLoading.value = true;
@@ -106,15 +108,21 @@ onMounted(() => {
         :data="projectData"
         @change="handleFormChange">
         <bk-form-item>
-          <bk-button
-            class="btn mr10"
-            :disabled="[1, 4].includes(projectData.approvalStatus)"
-            theme="primary"
-            :loading="btnLoading"
-            @click="handleUpdate"
-          >
-            {{ t('提交更新') }}
-          </bk-button>
+          <Popover
+            :content="statusDisabledTips[projectData.approvalStatus]"
+            :disabled="![1, 4].includes(projectData.approvalStatus)">
+            <span>
+              <bk-button
+                class="btn mr10"
+                :disabled="[1, 4].includes(projectData.approvalStatus)"
+                theme="primary"
+                :loading="btnLoading"
+                @click="handleUpdate"
+              >
+                {{ t('提交更新') }}
+              </bk-button>
+            </span>
+          </Popover>
           <bk-button
             class="btn"
             :loading="btnLoading"

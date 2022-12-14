@@ -10,7 +10,7 @@ import {
 } from 'bkui-vue/lib/icon';
 import IAMIframe from './IAM-Iframe';
 import { useI18n } from 'vue-i18n';
-import { Message } from 'bkui-vue';
+import { Message, Popover } from 'bkui-vue';
 import http from '@/http/api';
 const {
   t,
@@ -330,8 +330,16 @@ onBeforeUnmount(() => {
         v-model="projectData.authSecrecy"
         @change="handleChangeForm"
       >
-        <bk-radio :label="false">{{ t('私有项目') }}</bk-radio>
-        <bk-radio :label="true">{{ t('保密项目') }}</bk-radio>
+        <bk-radio class="mr10" :label="false">
+          <Popover :content="t('非项目成员可通过`申请加入项目`申请加入')">
+           <span class="authSecrecy-item">{{ t('私有项目') }}</span>
+          </Popover>
+        </bk-radio>
+        <bk-radio :label="true">
+          <Popover :content="t('非项目成员不可通过`申请加入项目`申请加入')">
+            <span class="authSecrecy-item">{{ t('保密项目') }}</span>
+          </Popover>
+        </bk-radio>
       </bk-radio-group>
     </bk-form-item>
      <bk-form-item
@@ -388,5 +396,8 @@ onBeforeUnmount(() => {
     margin-right: 12px;
     display: inline-block;
     vertical-align: middle;
+  }
+  .authSecrecy-item {
+    border-bottom: 1px dashed #979ba5;
   }
 </style>
