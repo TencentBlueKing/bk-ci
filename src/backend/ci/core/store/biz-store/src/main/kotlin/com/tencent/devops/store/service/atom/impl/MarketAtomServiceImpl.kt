@@ -1111,7 +1111,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val outputDataObj = outputDataMap[outputKey]
             AtomOutput(
                 name = outputKey,
-                desc = when(outputDataObj) {
+                desc = when (outputDataObj) {
                     is Map<*, *> -> {
                         if (outputDataObj[OUTPUT_DESC] == null) null
                         else {
