@@ -19,7 +19,6 @@
 
 import { mapActions, mapGetters, mapState } from 'vuex'
 import {
-    navConfirm,
     HttpError
 } from '@/utils/util'
 import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '../store/constants'
@@ -53,8 +52,6 @@ export default {
         ...mapActions('pipelines', {
             requestExecPipeline: 'requestExecPipeline',
             requestToggleCollect: 'requestToggleCollect',
-            removePipeline: 'deletePipeline',
-            copyPipelineAction: 'copyPipeline',
             updatePipelineSetting: 'updatePipelineSetting',
             requestTerminatePipeline: 'requestTerminatePipeline',
             requestRetryPipeline: 'requestRetryPipeline',
@@ -82,7 +79,7 @@ export default {
                         pipelineId
                     })
                 ])
-                
+
                 this.setBreadCrumbPipelineList(list, curPipeline)
             } catch (err) {
                 console.log(err)
@@ -111,30 +108,6 @@ export default {
             })
             this.$store.commit('pipelines/updateCurPipeline', curPipeline)
             return curPipeline
-        },
-        /**
-         *  处理收藏和取消收藏
-         */
-        async togglePipelineCollect (pipelineId, isCollect = false) {
-            try {
-                const { projectId } = this.$route.params
-                await this.requestToggleCollect({
-                    projectId,
-                    pipelineId,
-                    isCollect
-                })
-
-                this.$showTips({
-                    message: isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc'),
-                    theme: 'success'
-                })
-                this.updateCurPipelineByKeyValue('hasCollect', isCollect)
-            } catch (err) {
-                this.$showTips({
-                    message: err.message || err,
-                    theme: 'error'
-                })
-            }
         },
         /**
              *  终止任务
@@ -170,138 +143,6 @@ export default {
                 }])
             } finally {
                 feConfig.buttonAllow.terminatePipeline = true
-            }
-        },
-        /**
-         *  删除流水线
-         */
-        async delete ({ pipelineId, pipelineName }) {
-            let message, theme
-            const content = `${this.$t('newlist.deletePipeline')}: ${pipelineName}`
-            const { projectId } = this.$route.params
-            try {
-                await navConfirm({ type: 'warning', content })
-
-                this.isLoading = true
-                await this.removePipeline({
-                    projectId,
-                    pipelineId
-                })
-
-                this.$router.push({
-                    name: 'pipelinesList'
-                })
-
-                message = this.$t('deleteSuc')
-                theme = 'success'
-            } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.delete,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }],
-                    projectId
-                }])
-            } finally {
-                message && this.$showTips({
-                    message,
-                    theme
-                })
-                this.isLoading = false
-            }
-        },
-        /**
-         *  复制流水线弹窗的确认回调函数
-         */
-        async copy (tempPipeline, pipelineId) {
-            const { copyPipelineAction, pipelineList } = this
-            const { projectId } = this.$route.params
-            let message = ''
-            let theme = ''
-            const prePipeline = pipelineList.find(item => item.pipelineId === pipelineId)
-
-            try {
-                if (!tempPipeline.name) {
-                    throw new Error(this.$t('subpage.nameNullTips'))
-                }
-                await copyPipelineAction({
-                    projectId,
-                    pipelineId,
-                    args: {
-                        ...tempPipeline,
-                        group: prePipeline.group,
-                        hasCollect: false
-                    }
-                })
-
-                message = this.$t('copySuc')
-                theme = 'success'
-            } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.create,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: prePipeline.pipelineId,
-                        name: prePipeline.pipelineName
-                    }]
-                }, {
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: prePipeline.pipelineId,
-                        name: prePipeline.pipelineName
-                    }],
-                    projectId
-                }])
-            } finally {
-                message && this.$showTips({
-                    message,
-                    theme
-                })
-            }
-        },
-        /**
-         *  复制流水线弹窗的取消回调
-         */
-        async rename ({ name }, projectId, pipelineId) {
-            let message = ''
-            let theme = ''
-            try {
-                if (!name) {
-                    throw new Error(this.$t('subpage.nameNullTips'))
-                }
-                await this.$ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`, {
-                    name
-                })
-                this.$nextTick(() => {
-                    this.updateCurPipelineByKeyValue('pipelineName', name)
-                    
-                    this.pipelineSetting && Object.keys(this.pipelineSetting).length && this.updatePipelineSetting({
-                        container: this.pipelineSetting,
-                        param: {
-                            pipelineName: name
-                        }
-                    })
-                })
-                message = this.$t('updateSuc')
-                theme = 'success'
-            } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: this.curPipeline.pipelineId,
-                        name: this.curPipeline.pipelineName
-                    }],
-                    projectId
-                }])
-            } finally {
-                message && this.$showTips({
-                    message,
-                    theme
-                })
             }
         },
         async executePipeline (params, goDetail = false) {
@@ -540,16 +381,16 @@ export default {
                     message: this.$t('saveSuc'),
                     theme: 'success'
                 })
-                
+
                 if (!this.isTemplatePipeline && this.pipeline.latestVersion && !isNaN(this.pipeline.latestVersion)) {
                     ++this.pipeline.latestVersion
                     this.updateCurPipelineByKeyValue('pipelineVersion', this.pipeline.latestVersion)
                 }
-                
+
                 if (this.pipelineSetting && this.pipelineSetting.pipelineName !== this.curPipeline.pipelineName) {
                     this.updateCurPipelineByKeyValue('pipelineName', this.pipelineSetting.pipelineName)
                 }
-                
+
                 return {
                     code: 0,
                     data: responses
@@ -623,7 +464,6 @@ export default {
                         ...pipeline
                     }]
                 }])
-                console.log('redirectUrl', redirectUrl)
                 window.open(redirectUrl, '_blank')
                 this.$bkInfo({
                     title: this.$t('permissionRefreshtitle'),

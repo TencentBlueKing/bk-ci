@@ -4,18 +4,18 @@ const rename = require('gulp-rename')
 const Ora = require('ora')
 const yargs = require('yargs')
 const argv = yargs.alias({
-    'dist': 'd',
-    'env': 'e',
-    'lsVersion': 'l',
-    'scope': 's'
+    dist: 'd',
+    env: 'e',
+    lsVersion: 'l',
+    scope: 's'
 }).default({
-    'dist': 'frontend',
-    'env': 'master',
-    'lsVersion': 'dev'
+    dist: 'frontend',
+    env: 'master',
+    lsVersion: 'dev'
 }).describe({
-    'dist': 'build output dist directory',
-    'env': 'environment [dev, test, master, external]',
-    'lsVersion': 'localStorage version'
+    dist: 'build output dist directory',
+    env: 'environment [dev, test, master, external]',
+    lsVersion: 'localStorage version'
 }).argv
 const { dist, env, lsVersion, scope } = argv
 const svgSpriteConfig = {
@@ -61,24 +61,34 @@ function getScopeStr (scope) {
 
 task('devops', series([taskGenerator('devops'), renameSvg('devops')]))
 task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline')]))
-task('copy', () => src(['common-lib/**'], { 'base': '.' }).pipe(dest(`${dist}/`)))
+task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 
 task('build', cb => {
     const spinner = new Ora('building bk-ci frontend project').start()
     const scopeStr = getScopeStr(scope)
-    process.env = {
-        ...process.env,
+    const envConfMap = {
         dist,
+        // version: type,
         lsVersion
     }
-    require('child_process').exec(`lerna run public:${env} ${scopeStr}`, {
-        maxBuffer: 5000 * 1024
+    const envQueryStr = Object.keys(envConfMap).reduce((acc, key) => {
+        acc += ` --env ${key}=${envConfMap[key]}`
+        return acc
+    }, '')
+    console.log(envQueryStr)
+    require('child_process').exec(`lerna run public:${env} ${scopeStr} `, {
+        maxBuffer: 5000 * 1024,
+        env: {
+            ...process.env,
+            dist,
+            lsVersion
+        }
     }, (err, res) => {
         if (err) {
             console.log(err)
             process.exit(1)
         }
-        spinner.succeed(`Finished building bk-ci frontend project`)
+        spinner.succeed('Finished building bk-ci frontend project')
         cb()
     })
 })

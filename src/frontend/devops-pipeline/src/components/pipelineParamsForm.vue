@@ -90,7 +90,7 @@
                             settingKey: 'key',
                             list: this.getParamOpt(param)
                         }
-                        
+
                         // codeLib 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
                         if (param.type === CODE_LIB) {
                             const value = this.paramValues[param.id]
@@ -186,6 +186,7 @@
 <style lang="scss" scoped>
     @import '@/scss/conf';
     @import '@/scss/mixins/ellipsis';
+
     .component-row {
         display: flex;
         .metadata-box {
