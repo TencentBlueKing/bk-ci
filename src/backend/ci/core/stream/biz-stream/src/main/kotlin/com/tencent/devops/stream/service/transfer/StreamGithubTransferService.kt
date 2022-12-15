@@ -255,6 +255,11 @@ class StreamGithubTransferService @Autowired constructor(
         return Result(AuthorizeResult(HTTP_200))
     }
 
+    override fun enableCi(userId: String, projectName: String, enable: Boolean?): Result<Boolean> {
+        // github 不支持
+        return Result(true)
+    }
+
     override fun getCommits(
         userId: String,
         gitProjectId: Long,

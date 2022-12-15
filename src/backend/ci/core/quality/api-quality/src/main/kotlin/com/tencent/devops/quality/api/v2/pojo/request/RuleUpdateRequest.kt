@@ -60,7 +60,7 @@ data class RuleUpdateRequest(
     val auditUserList: List<String>?,
     @ApiModelProperty("审核超时时间", required = false)
     val auditTimeoutMinutes: Int?,
-    @ApiModelProperty("红线匹配的id", required = false)
+    @ApiModelProperty("红线匹配的id(必填)", required = true)
     val gatewayId: String?
 ) {
     data class CreateRequestIndicator(

@@ -65,6 +65,8 @@ data class ThirdPartyAgentDetail(
     val maxParallelTaskCount: String,
     @ApiModelProperty("通道数量", required = true)
     val parallelTaskCount: String,
+    @ApiModelProperty("docker构建机通道数量", required = true)
+    val dockerParallelTaskCount: String,
     @ApiModelProperty("启动用户", required = true)
     val startedUser: String,
     @ApiModelProperty("agent链接", required = true)
