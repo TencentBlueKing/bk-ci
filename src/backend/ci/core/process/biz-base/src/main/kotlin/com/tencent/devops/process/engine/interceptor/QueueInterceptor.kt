@@ -268,11 +268,22 @@ class QueueInterceptor @Autowired constructor(
                     // cancel-in-progress: true时， 若有相同 group 的流水线正在执行，则取消正在执行的流水线，新来的触发开始执行
                     // status 取所有没有完成的状态
                     val status = BuildStatus.values().filterNot { it.isFinish() }
-                    pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+                    val builds = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                         projectId = projectId,
                         concurrencyGroup = concurrencyGroup,
                         status = status
-                    ).forEach { (pipelineId, buildId) ->
+                    ).toMutableList()
+                    // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 # 8143
+                    if (concurrencyGroup == task.pipelineInfo.pipelineId) {
+                        builds.addAll(
+                            0,
+                            pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
+                                projectId = projectId,
+                                status = status
+                            )
+                        )
+                    }
+                    builds.forEach { (pipelineId, buildId) ->
                         cancelBuildPipeline(
                             projectId = projectId,
                             pipelineId = pipelineId,
