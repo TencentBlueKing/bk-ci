@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.view
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -66,6 +67,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @SuppressWarnings("LoopWithTooManyJumpStatements", "LongParameterList", "TooManyFunctions", "ReturnCount")
@@ -80,6 +82,11 @@ class PipelineViewGroupService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client
 ) {
+    private val allPipelineInfoCache = Caffeine.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(10, TimeUnit.SECONDS)
+        .build<String, List<TPipelineInfoRecord>>()
+
     fun getViewNameMap(
         projectId: String,
         pipelineIds: MutableSet<String>
@@ -529,27 +536,29 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     private fun allPipelineInfos(projectId: String, includeDelete: Boolean): List<TPipelineInfoRecord> {
-        val pipelineInfos = mutableListOf<TPipelineInfoRecord>()
-        val step = 200
-        var offset = 0
-        var hasNext = true
-        while (hasNext) {
-            val subPipelineInfos = pipelineInfoDao.listPipelineInfoByProject(
-                dslContext = dslContext,
-                projectId = projectId,
-                offset = offset,
-                limit = step,
-                deleteFlag = if (includeDelete) null else false,
-                channelCode = ChannelCode.BS
-            ) ?: emptyList<TPipelineInfoRecord>()
-            if (subPipelineInfos.isEmpty()) {
-                break
+        return allPipelineInfoCache.get("$projectId-$includeDelete") {
+            val pipelineInfos = mutableListOf<TPipelineInfoRecord>()
+            val step = 200
+            var offset = 0
+            var hasNext = true
+            while (hasNext) {
+                val subPipelineInfos = pipelineInfoDao.listPipelineInfoByProject(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    offset = offset,
+                    limit = step,
+                    deleteFlag = if (includeDelete) null else false,
+                    channelCode = ChannelCode.BS
+                ) ?: emptyList<TPipelineInfoRecord>()
+                if (subPipelineInfos.isEmpty()) {
+                    break
+                }
+                pipelineInfos.addAll(subPipelineInfos)
+                offset += step
+                hasNext = subPipelineInfos.size == step
             }
-            pipelineInfos.addAll(subPipelineInfos)
-            offset += step
-            hasNext = subPipelineInfos.size == step
-        }
-        return pipelineInfos
+            pipelineInfos
+        } ?: emptyList()
     }
 
     fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Boolean {
@@ -729,6 +738,21 @@ class PipelineViewGroupService @Autowired constructor(
             normalCount = pipelineInfos.size - deleteCount,
             deleteCount = deleteCount
         )
+    }
+
+    fun initAllView() {
+        val limit = 200
+        var offset = 0
+        var hasNext = true
+        while (hasNext) {
+            val listAllDynamic = pipelineViewDao.listAllDynamic(dslContext, offset, limit)
+            listAllDynamic.forEach {
+                redisOperation.delete(firstInitMark(it.projectId, it.id))
+                initDynamicViewGroup(it, "admin")
+            }
+            offset += limit
+            hasNext = listAllDynamic.size == limit
+        }
     }
 
     companion object {

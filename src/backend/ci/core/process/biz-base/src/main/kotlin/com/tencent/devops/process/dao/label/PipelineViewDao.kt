@@ -302,6 +302,21 @@ class PipelineViewDao {
         }
     }
 
+    fun listAllDynamic(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int
+    ): Result<TPipelineViewRecord> {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectFrom(this)
+                .where(VIEW_TYPE.eq(PipelineViewType.DYNAMIC))
+                .orderBy(ID)
+                .offset(offset)
+                .limit(limit)
+                .fetch()
+        }
+    }
+
     fun listProjectOrUser(
         dslContext: DSLContext,
         projectId: String,
