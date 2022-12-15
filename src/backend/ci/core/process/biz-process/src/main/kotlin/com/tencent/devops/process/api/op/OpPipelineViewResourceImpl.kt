@@ -10,7 +10,7 @@ class OpPipelineViewResourceImpl @Autowired constructor(
     private val pipelineViewGroupService: PipelineViewGroupService
 ) : OpPipelineViewResource {
     override fun initAllView(userId: String): Result<Boolean> {
-        pipelineViewGroupService.initAllView()
+        Thread { pipelineViewGroupService.initAllView() }.start()
         return Result(true)
     }
 }

@@ -309,6 +309,7 @@ class PipelineViewDao {
             return dslContext.select(PROJECT_ID).from(this)
                 .where(VIEW_TYPE.eq(PipelineViewType.DYNAMIC))
                 .fetch(0, String::class.java)
+                .distinct()
         }
     }
 
