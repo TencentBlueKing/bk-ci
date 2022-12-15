@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -64,7 +65,9 @@ import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailServ
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -88,6 +91,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeParser: DispatchTypeParser,
+    private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineContextService: PipelineContextService
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
@@ -110,7 +114,16 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         val fixParam = param.copy(customBuildEnv = buildEnv)
 
         try {
-            atomResponse = execute(task, fixParam)
+            atomResponse = if (!checkBeforeStart(task, param, context)) {
+                AtomResponse(
+                    BuildStatus.FAILED,
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
+                    errorMsg = "check job start fail"
+                )
+            } else {
+                execute(task, fixParam)
+            }
             buildLogPrinter.stopLog(
                 buildId = task.buildId,
                 tag = task.taskId,
@@ -247,6 +260,53 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         )
     }
 
+    /**
+     * job启动做一些特别参数的检查，检查失败时直接不启动容器
+     */
+    private fun checkBeforeStart(
+        task: PipelineBuildTask,
+        param: VMBuildContainer,
+        variables: Map<String, String>
+    ): Boolean {
+        param.buildEnv?.let { buildEnv ->
+            val asCode by lazy {
+                val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(task.projectId, task.pipelineId)
+                val asCodeEnabled = asCodeSettings?.enable == true
+                val contextPair = if (asCodeEnabled) {
+                    EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                } else null
+                Pair(asCodeEnabled, contextPair)
+            }
+            buildEnv.forEach { env ->
+                if (!env.value.startsWith("$")) {
+                    return@forEach
+                }
+                val version = EnvReplacementParser.parse(
+                    value = env.value,
+                    contextMap = variables,
+                    onlyExpression = asCode.first,
+                    contextPair = asCode.second
+                )
+                val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
+                    name = env.key,
+                    version = version,
+                    os = param.baseOS.name.toLowerCase()
+                ).data
+                if (res == null) {
+                    buildLogPrinter.addRedLine(
+                        buildId = task.buildId,
+                        message = "尚未支持 ${env.key} $version，请联系 DevOps-helper 添加对应版本",
+                        tag = task.taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
     private fun getDispatchType(task: PipelineBuildTask, param: VMBuildContainer): DispatchType {
 
         val dispatchType: DispatchType
@@ -262,13 +322,19 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             val envId = param.thirdPartyAgentEnvId ?: ""
             val workspace = param.thirdPartyWorkspace ?: ""
             dispatchType = if (agentId.isNotBlank()) {
-                ThirdPartyAgentIDDispatchType(displayName = agentId, workspace = workspace, agentType = AgentType.ID)
+                ThirdPartyAgentIDDispatchType(
+                    displayName = agentId,
+                    workspace = workspace,
+                    agentType = AgentType.ID,
+                    dockerInfo = null
+                )
             } else if (envId.isNotBlank()) {
                 ThirdPartyAgentEnvDispatchType(
                     envName = envId,
                     envProjectId = null,
                     workspace = workspace,
-                    agentType = AgentType.ID
+                    agentType = AgentType.ID,
+                    dockerInfo = null
                 )
             } // docker建机指定版本(旧)
             else if (!param.dockerBuildVersion.isNullOrBlank()) {

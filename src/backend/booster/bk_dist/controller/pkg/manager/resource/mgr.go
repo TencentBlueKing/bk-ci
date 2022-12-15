@@ -135,9 +135,12 @@ func (m *Mgr) SetServerHost(serverHost string) {
 
 // GetStatus return the resource task status
 func (m *Mgr) GetStatus() *v2.RespTaskInfo {
-	// to compatible with old, just return the first resoure info
+	m.reslock.Lock()
+	defer m.reslock.Unlock()
+
+	// return the latest task
 	if len(m.resources) > 0 {
-		return m.resources[0].taskInfo
+		return m.resources[len(m.resources)-1].taskInfo
 	}
 
 	return nil
@@ -151,7 +154,10 @@ func (m *Mgr) GetNewlyTaskID() string {
 // SetSpecificHosts set the specific worker list instead of applying
 func (m *Mgr) SetSpecificHosts(hostList []string) {
 	m.reslock.Lock()
-	defer m.reslock.Unlock()
+	defer func() {
+		m.reslock.Unlock()
+		m.onResChanged()
+	}()
 	m.resources = append(m.resources, &Res{
 		taskid: "",
 		status: ResourceSpecified,
@@ -166,7 +172,7 @@ func (m *Mgr) SetSpecificHosts(hostList []string) {
 		info.ResourceApplied()
 	}
 
-	m.onResChanged()
+	// m.onResChanged()
 }
 
 // GetHosts return the worker list
@@ -270,7 +276,7 @@ func (m *Mgr) Apply(req *v2.ParamApply, force bool) (*v2.RespTaskInfo, error) {
 		}
 		err := fmt.Errorf("in apply failed cool time")
 		blog.Infof("resource: apply dist-resource failed for work(%s) error:%v", m.work.ID(), err)
-		return nil, err
+		return nil, nil
 	}
 
 	var data []byte
@@ -296,6 +302,7 @@ func (m *Mgr) Apply(req *v2.ParamApply, force bool) (*v2.RespTaskInfo, error) {
 		status:        ResourceApplying,
 		taskInfo:      nil,
 		heartbeatInfo: nil,
+		applyTime:     time.Now(),
 	})
 	m.reslock.Unlock()
 
@@ -444,23 +451,31 @@ func (m *Mgr) releaseTimer(req *v2.ParamRelease, r *Res) {
 
 // SendStats do then stats sending to tbs-server
 func (m *Mgr) SendStats(brief bool) error {
+	// TODO : should lock work here, but locked before call this
 	info := m.work.Basic().Info()
 	cs := info.CommonStatus()
 	as := m.work.Basic().AnalysisStatus()
 	jobs := disttask.EmptyJobs
 
+	jobbytes := []byte{}
 	if !brief {
-		jobs = compress.ToBase64String(as.DumpJobs())
+		jobbytes = as.DumpJobs()
 	}
+
+	scene := info.Scene()
+	success := info.Success()
+	projectID := info.ProjectID()
+	// taskID := info.TaskID()
+	taskID := m.newlyTaskID
+	workID := info.WorkID()
 
 	messageExtra := &disttask.Message{
 		Type: disttask.MessageTypeTaskStats,
 		MessageTaskStats: disttask.MessageTaskStats{
-			WorkID: info.WorkID(),
-			// TaskID:           info.TaskID(),
-			TaskID:           m.newlyTaskID,
-			Scene:            info.Scene(),
-			Success:          info.Success(),
+			WorkID:           workID,
+			TaskID:           taskID,
+			Scene:            scene,
+			Success:          success,
 			StartTime:        cs.StartTime.Local().UnixNano(),
 			EndTime:          cs.EndTime.Local().UnixNano(),
 			RegisteredTime:   cs.RegisteredTime.Local().UnixNano(),
@@ -474,13 +489,18 @@ func (m *Mgr) SendStats(brief bool) error {
 		messageExtra.MessageTaskStats.JobLocalOK,
 		messageExtra.MessageTaskStats.JobLocalError = as.BasicCount()
 
+	if !brief {
+		jobs = compress.ToBase64String(jobbytes)
+		messageExtra.MessageTaskStats.Jobs = jobs
+	}
+
 	var tmp []byte
 	_ = codec.EncJSON(messageExtra, &tmp)
 
 	message := &v2.ParamMessage{
 		Type:      v2.MessageProject,
-		ProjectID: info.ProjectID(),
-		Scene:     info.Scene(),
+		ProjectID: projectID,
+		Scene:     scene,
 		Extra:     string(tmp),
 	}
 
@@ -489,12 +509,115 @@ func (m *Mgr) SendStats(brief bool) error {
 
 	if _, _, err := m.request("POST", m.serverHost, messageURI, data); err != nil {
 		blog.Errorf("resource: send stats(detail %v) to server for task(%s) work(%s) failed: %v",
-			brief, info.TaskID(), info.WorkID(), err)
+			brief, taskID, workID, err)
 		return err
 	}
 
-	blog.Infof("resource: success to send statsdetail %v to server for task(%s) work(%s)",
-		brief, info.TaskID(), info.WorkID())
+	blog.Infof("resource: success to send stats detail %v to server for task(%s) work(%s)",
+		brief, taskID, workID)
+	return nil
+}
+
+// send stats and reset after sent, if brief true, then will not send the job stats
+// !! this will call m.work.Lock() , to avoid dead lock
+func (m *Mgr) SendAndResetStats(brief bool, resapplytimes []int64) error {
+
+	for _, t := range resapplytimes {
+		data, _ := m.getSendStatsData(brief, t)
+		go m.sendStatsData(data)
+
+		// reset stat
+		m.work.Lock()
+		m.work.Basic().ResetStat()
+		m.work.Unlock()
+	}
+
+	return nil
+}
+
+// get stat data which ready to send
+func (m *Mgr) getSendStatsData(brief bool, t int64) (*[]byte, error) {
+	m.work.Lock()
+	info := m.work.Basic().Info()
+	cs := info.CommonStatus()
+	as := m.work.Basic().AnalysisStatus()
+	jobs := disttask.EmptyJobs
+
+	jobbytes := []byte{}
+	if !brief {
+		jobbytes = as.DumpJobs()
+	}
+
+	scene := info.Scene()
+	success := info.Success()
+	projectID := info.ProjectID()
+	// taskID := info.TaskID()
+	taskID := m.newlyTaskID
+	workID := info.WorkID()
+
+	endTime := cs.EndTime.Local().UnixNano()
+	if endTime <= 0 {
+		endTime = time.Now().UnixNano()
+	}
+	registeredTime := cs.RegisteredTime.Local().UnixNano()
+	if registeredTime <= 0 {
+		registeredTime = t
+	}
+	unregisteredTime := cs.UnregisteredTime.Local().UnixNano()
+	if unregisteredTime <= 0 {
+		unregisteredTime = time.Now().UnixNano()
+	}
+
+	messageExtra := &disttask.Message{
+		Type: disttask.MessageTypeTaskStats,
+		MessageTaskStats: disttask.MessageTaskStats{
+			WorkID:           workID,
+			TaskID:           taskID,
+			Scene:            scene,
+			Success:          success,
+			StartTime:        cs.StartTime.Local().UnixNano(),
+			EndTime:          endTime,
+			RegisteredTime:   registeredTime,
+			UnregisteredTime: unregisteredTime,
+			Jobs:             jobs,
+		},
+	}
+
+	messageExtra.MessageTaskStats.JobRemoteOK,
+		messageExtra.MessageTaskStats.JobRemoteError,
+		messageExtra.MessageTaskStats.JobLocalOK,
+		messageExtra.MessageTaskStats.JobLocalError = as.BasicCount()
+
+	m.work.Unlock()
+
+	if !brief {
+		jobs = compress.ToBase64String(jobbytes)
+		messageExtra.MessageTaskStats.Jobs = jobs
+	}
+
+	var tmp []byte
+	_ = codec.EncJSON(messageExtra, &tmp)
+
+	message := &v2.ParamMessage{
+		Type:      v2.MessageProject,
+		ProjectID: projectID,
+		Scene:     scene,
+		Extra:     string(tmp),
+	}
+
+	var data []byte
+	_ = codec.EncJSON(message, &data)
+
+	return &data, nil
+}
+
+func (m *Mgr) sendStatsData(data *[]byte) error {
+	if _, _, err := m.request("POST", m.serverHost, messageURI, *data); err != nil {
+		blog.Errorf("resource: send stats server failed: %v", err)
+		return err
+	}
+
+	blog.Infof("resource: success to send stat data")
 	return nil
 }
 
@@ -566,16 +689,11 @@ func (m *Mgr) inspectInfo(taskID string) {
 					s = ResourceApplyFailed
 				}
 
-				m.clearOldInvalidRes(&info)
-				m.addRes(&info, s)
-
-				// 更新work info状态
-				m.work.Lock()
-				workinfo := m.work.Basic().Info()
-				if workinfo.CanBeResourceApplied() {
-					workinfo.ResourceApplied()
+				resapplytimes, err := m.clearOldInvalidRes(&info)
+				if err == nil {
+					m.SendAndResetStats(false, resapplytimes)
 				}
-				m.work.Unlock()
+				m.addRes(&info, s)
 
 				m.updateApplyEndStatus(s == ResourceApplySucceed)
 				blog.Infof("resource: success to apply resources and get host(%d): %v",
@@ -583,16 +701,11 @@ func (m *Mgr) inspectInfo(taskID string) {
 				return
 
 			case engine.TaskStatusFinish, engine.TaskStatusFailed:
-				m.clearOldInvalidRes(&info)
-				m.addRes(&info, ResourceApplyFailed)
-
-				// 更新work info状态
-				m.work.Lock()
-				workinfo := m.work.Basic().Info()
-				if workinfo.CanBeResourceApplyFailed() {
-					workinfo.ResourceApplyFailed()
+				resapplytimes, err := m.clearOldInvalidRes(&info)
+				if err == nil {
+					m.SendAndResetStats(false, resapplytimes)
 				}
-				m.work.Unlock()
+				m.addRes(&info, ResourceApplyFailed)
 
 				m.updateApplyEndStatus(false)
 				blog.Infof("resource: get task terminated in %s, %s", info.Status, info.Message)
@@ -603,14 +716,14 @@ func (m *Mgr) inspectInfo(taskID string) {
 }
 
 // clean old resources which host list is empty, and notify server to terminate these resources
-func (m *Mgr) clearOldInvalidRes(info *v2.RespTaskInfo) error {
+func (m *Mgr) clearOldInvalidRes(info *v2.RespTaskInfo) ([]int64, error) {
 	blog.Infof("resource: ready check and clean old invalid resource")
 
 	m.reslock.Lock()
 	defer m.reslock.Unlock()
 
 	if len(m.resources) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	needrelease := false
@@ -625,9 +738,10 @@ func (m *Mgr) clearOldInvalidRes(info *v2.RespTaskInfo) error {
 	}
 
 	if !needrelease {
-		return nil
+		return nil, nil
 	}
 
+	resapplytimes := []int64{}
 	newres := []*Res{}
 	for _, r := range m.resources {
 		// do nothing with current task info, it mabye need by others
@@ -638,19 +752,47 @@ func (m *Mgr) clearOldInvalidRes(info *v2.RespTaskInfo) error {
 
 		if len(r.taskInfo.HostList) == 0 {
 			m.releaseOne(nil, r)
+			// 确保 m.reslock.Lock() 和 m.work.Lock() 不要相互包含，避免死锁
+			// TODO : send detail stat data and reset stat data
+			// m.SendAndResetStats(false, r.applyTime.UnixNano())
+			resapplytimes = append(resapplytimes, r.applyTime.UnixNano())
+
 		} else {
 			newres = append(newres, r)
 		}
 	}
 	m.resources = newres
 
-	return nil
+	return resapplytimes, nil
 }
 
 func (m *Mgr) addRes(info *v2.RespTaskInfo, status Status) error {
 	if info == nil {
 		return nil
 	}
+
+	// TODO : reset stat data to new status
+	// 更新work info状态
+	m.work.Lock()
+	workinfo := m.work.Basic().Info()
+	if status == ResourceApplySucceed {
+		if workinfo.CanBeResourceApplied() {
+			workinfo.ResourceApplied()
+		}
+	} else {
+		if workinfo.CanBeResourceApplyFailed() {
+			workinfo.ResourceApplyFailed()
+		}
+	}
+	// update start time
+	workinfo.StartTime(time.Now())
+	for _, r := range m.resources {
+		if r.taskid == info.TaskID {
+			workinfo.RegisterTime(r.applyTime)
+			break
+		}
+	}
+	m.work.Unlock()
 
 	changed := false
 	m.reslock.Lock()

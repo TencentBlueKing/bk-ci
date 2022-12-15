@@ -63,7 +63,7 @@ interface ApigwPipelineGroupResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<PipelineGroup>>
@@ -97,7 +97,7 @@ interface ApigwPipelineGroupResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("分组ID", required = true)
@@ -112,7 +112,7 @@ interface ApigwPipelineGroupResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "流水线标签创建请求", required = true)
@@ -126,7 +126,7 @@ interface ApigwPipelineGroupResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("标签ID", required = true)
@@ -141,7 +141,7 @@ interface ApigwPipelineGroupResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "流水线标签更新请求", required = true)

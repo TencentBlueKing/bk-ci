@@ -116,6 +116,15 @@ class PipelineFavorDao {
         }
     }
 
+    fun countByUserId(dslContext: DSLContext, projectId: String, userId: String): Int {
+        with(TPipelineFavor.T_PIPELINE_FAVOR) {
+            return dslContext.selectCount().from(this)
+                .where(CREATE_USER.eq(userId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetchOne()?.value1() ?: 0
+        }
+    }
+
     fun listByPipelineId(
         dslContext: DSLContext,
         userId: String,

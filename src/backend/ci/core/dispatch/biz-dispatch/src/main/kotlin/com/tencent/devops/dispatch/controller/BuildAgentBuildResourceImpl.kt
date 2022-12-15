@@ -74,10 +74,10 @@ class BuildAgentBuildResourceImpl constructor(
     ): AgentResult<UpgradeItem> {
         checkParam(projectId, agentId, secretKey)
         return thirdPartyAgentBuildService.checkIfCanUpgradeByVersionNew(
-            projectId,
-            agentId,
-            secretKey,
-            info
+            projectId = projectId,
+            agentId = agentId,
+            secretKey = secretKey,
+            info = info
         )
     }
 

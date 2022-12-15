@@ -232,10 +232,14 @@ class TriggerMatcher @Autowired constructor(
                 return TriggerBody().triggerFail("on.push.branches-ignore", "branch($eventBranch) match")
             }
 
-            // 2、check pathIgnore，满足屏蔽条件直接返回不匹配
-            if (PathMatchUtils.isIgnorePathMatch(pushRule.pathsIgnore, changeSet)) {
-                val path = changeSet?.find { it in (pushRule.pathsIgnore ?: emptyList()) }
-                return TriggerBody().triggerFail("on.push.paths-ignore", "change path($path) match")
+            // 2. 判断路径是否匹配,路径包含和过滤是一起匹配的
+            val pathTriggerBody = PathMatchUtils.isPathMatch(
+                fileChangeSet = changeSet ?: emptySet(),
+                pathList = pushRule.paths ?: emptyList(),
+                pathIgnoreList = pushRule.pathsIgnore ?: emptyList()
+            )
+            if (!pathTriggerBody.trigger) {
+                return pathTriggerBody
             }
 
             // 3、check userIgnore,满足屏蔽条件直接返回不匹配
@@ -246,10 +250,6 @@ class TriggerMatcher @Autowired constructor(
             // include
             if (!BranchMatchUtils.isBranchMatch(pushRule.branches, eventBranch)) {
                 return TriggerBody().triggerFail("on.push.branches", "branch($eventBranch) not match")
-            }
-            // include
-            if (!PathMatchUtils.isIncludePathMatch(pushRule.paths, changeSet)) {
-                return TriggerBody().triggerFail("on.push.paths", "change path($changeSet) not match")
             }
             // include
             if (!UserMatchUtils.isUserMatch(pushRule.users, userId)) {
@@ -289,10 +289,14 @@ class TriggerMatcher @Autowired constructor(
                 )
             }
 
-            // 2、check pathIgnore，满足屏蔽条件直接返回不匹配
-            if (PathMatchUtils.isIgnorePathMatch(mrRule.pathsIgnore, changeSet)) {
-                val path = changeSet?.find { it in (mrRule.pathsIgnore ?: emptyList()) }
-                return TriggerBody().triggerFail("on.mr.paths-ignore", "change path($path) match")
+            // 2. 判断路径是否匹配,路径包含和过滤是一起匹配的
+            val pathTriggerBody = PathMatchUtils.isPathMatch(
+                fileChangeSet = changeSet ?: emptySet(),
+                pathList = mrRule.paths ?: emptyList(),
+                pathIgnoreList = mrRule.pathsIgnore ?: emptyList()
+            )
+            if (!pathTriggerBody.trigger) {
+                return pathTriggerBody
             }
 
             // 3、check userIgnore,满足屏蔽条件直接返回不匹配
@@ -306,10 +310,6 @@ class TriggerMatcher @Autowired constructor(
                     "on.mr.target-branches",
                     "target branch($targetBranch) not match"
                 )
-            }
-            // include
-            if (!PathMatchUtils.isIncludePathMatch(mrRule.paths, changeSet)) {
-                return TriggerBody().triggerFail("on.mr.paths", "change path($changeSet) not match")
             }
             // include
             if (!UserMatchUtils.isUserMatch(mrRule.users, userId)) {
@@ -340,6 +340,13 @@ class TriggerMatcher @Autowired constructor(
 
             if (UserMatchUtils.isIgnoreUserMatch(tagRule.usersIgnore, userId)) {
                 return TriggerBody().triggerFail("on.tag.users-ignore", "trigger user($userId) match")
+            }
+
+            if (fromBranch == null && !tagRule.fromBranches.isNullOrEmpty()) {
+                return TriggerBody().triggerFail(
+                    "on.tag.from-branches",
+                    "client push tag not support from-branches"
+                )
             }
 
             if (fromBranch != null && !BranchMatchUtils.isBranchMatch(tagRule.fromBranches, fromBranch)) {

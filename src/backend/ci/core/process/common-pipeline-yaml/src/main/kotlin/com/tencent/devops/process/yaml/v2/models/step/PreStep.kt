@@ -39,6 +39,7 @@ import io.swagger.annotations.ApiModelProperty
  */
 @JsonFilter(YAME_META_DATA_JSON_FILTER)
 data class PreStep(
+    val checkout: String?,
     val name: String?,
     val id: String?,
     @ApiModelProperty(name = "if")
@@ -61,6 +62,5 @@ data class PreStep(
     val env: Map<String, Any?>? = emptyMap(),
     val run: String?,
     val shell: String?,
-    val checkout: String?,
     override val yamlMetaData: MetaData? = null
 ) : YamlMetaData

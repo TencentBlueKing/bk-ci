@@ -30,8 +30,10 @@ package com.tencent.devops.stream.resources.user
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamHistoryResource
+import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamBuildBranch
 import com.tencent.devops.stream.pojo.StreamBuildHistory
 import com.tencent.devops.stream.pojo.StreamBuildHistorySearch
@@ -41,7 +43,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserStreamHistoryResourceImpl @Autowired constructor(
-    private val streamHistoryService: StreamHistoryService
+    private val streamHistoryService: StreamHistoryService,
+    private val permissionService: StreamPermissionService
 ) : UserStreamHistoryResource {
     override fun getHistoryBuildList(
         userId: String,
@@ -49,6 +52,11 @@ class UserStreamHistoryResourceImpl @Autowired constructor(
         search: StreamBuildHistorySearch?
     ): Result<Page<StreamBuildHistory>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         checkParam(userId)
         return Result(
             streamHistoryService.getHistoryBuildList(
@@ -68,6 +76,11 @@ class UserStreamHistoryResourceImpl @Autowired constructor(
     ): Result<Page<StreamBuildBranch>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(
             streamHistoryService.getAllBuildBranchList(
                 userId = userId,

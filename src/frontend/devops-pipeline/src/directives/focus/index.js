@@ -18,12 +18,18 @@
  */
 
 const install = Vue => {
-    Vue.directive('bk-focus', {
-        inserted: function (el) {
+    function focus (el) {
+        if (el.tagName.toLowerCase() === 'input') {
             el.focus()
-        },
+        } else {
+            el.querySelector('input').focus()
+        }
+    }
+
+    Vue.directive('bk-focus', {
+        inserted: focus,
         update (el, binding) {
-            binding.value && el.focus()
+            binding.value && focus(el)
         }
     })
 }

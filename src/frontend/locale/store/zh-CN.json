@@ -499,7 +499,7 @@
     "Devnet 物理机": "Devnet 物理机",
     "imageTag": "请输入源镜像Tag，如 enterprise-6.0.3",
     "请输入源镜像名称，如 XXX/XXXX": "请输入源镜像名称，如 XXX/XXXX",
-    "imageRepoUrl": "请输入源镜像库地址，如 csighub.tencentyun.com",
+    "imageRepoUrl": "请输入源镜像库地址，如 registry.tencentcloudcr.com",
     "镜像名称": "镜像名称",
     "请输入镜像名称，不超过20个字符": "请输入镜像名称，不超过20个字符",
     "标签": "标签",

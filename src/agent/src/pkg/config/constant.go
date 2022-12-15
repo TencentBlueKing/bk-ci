@@ -68,6 +68,8 @@ const (
 	WorkAgentFile = "worker-agent.jar"
 
 	JdkClientFile = "jdk.zip"
+
+	DockerInitFile = "agent_docker_init.sh"
 )
 
 // Auth Header

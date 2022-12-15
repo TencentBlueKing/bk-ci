@@ -35,5 +35,14 @@ data class SimpleResult(
     @ApiModelProperty("是否成功", required = true)
     val success: Boolean,
     @ApiModelProperty("错误信息", required = false)
-    val message: String? = null
+    val message: String? = null,
+    @ApiModelProperty("错误码信息", required = false)
+    val error: Error? = null
+)
+
+@ApiModel("第三方构建信息模型-错误信息")
+data class Error(
+    val errorType: String,
+    val errorMessage: String,
+    val errorCode: Int
 )

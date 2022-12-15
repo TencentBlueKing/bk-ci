@@ -109,10 +109,10 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 90
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           readinessProbe:
             httpGet:
@@ -121,7 +121,7 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           volumeMounts:
             - name: storage
@@ -129,6 +129,13 @@ spec:
             - mountPath: /data/workspace/dispatch/jvm
               name: log-volume
               subPathExpr: bkci/jvm/$(POD_NAME)
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
       volumes:
         - name: storage
           {{- if and .Values.persistence.enabled (eq .Values.config.bkCiArtifactoryRealm "local") }}

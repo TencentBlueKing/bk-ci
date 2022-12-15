@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
+import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -10,5 +11,7 @@ data class ThirdPartyAgentUpgradeByVersionInfo(
     @ApiModelProperty("go agent 版本")
     val goAgentVersion: String?,
     @ApiModelProperty("jdk版本")
-    val jdkVersion: List<String>?
+    val jdkVersion: List<String>?,
+    @ApiModelProperty("docker init 文件升级信息")
+    val dockerInitFileInfo: DockerInitFileInfo?
 )

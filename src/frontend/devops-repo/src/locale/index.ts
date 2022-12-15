@@ -77,6 +77,7 @@ export default () => {
   const i18n = createI18n({
     locale: initLocale,
     fallbackLocale: DEFAULT_LOCALE,
+    legacy: false,
     messages: {
       'zh-CN': cnMessages,
       'en-US': enMessages,

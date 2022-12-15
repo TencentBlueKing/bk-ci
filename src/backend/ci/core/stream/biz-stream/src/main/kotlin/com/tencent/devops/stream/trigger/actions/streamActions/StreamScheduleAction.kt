@@ -173,6 +173,8 @@ class StreamScheduleAction(
 
     override fun needSendCommitCheck() = true
 
+    override fun needUpdateLastModifyUser(filePath: String) = false
+
     override fun sendCommitCheck(
         buildId: String,
         gitProjectName: String,

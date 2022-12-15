@@ -524,17 +524,49 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_VIEW` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `PROJECT_ID` varchar(32) NOT NULL COMMENT '项目ID',
   `NAME` varchar(64) NOT NULL COMMENT '名称',
-  `FILTER_BY_PIPEINE_NAME` varchar(128) DEFAULT '' COMMENT '流水线名称过滤器',
-  `FILTER_BY_CREATOR` varchar(64) DEFAULT '' COMMENT '创建者过滤器',
+  `FILTER_BY_PIPEINE_NAME` varchar(128) DEFAULT '' COMMENT '流水线名称过滤器,已废弃,统一到filters管理',
+  `FILTER_BY_CREATOR` varchar(64) DEFAULT '' COMMENT '创建者过滤器,已废弃,统一到filters管理',
   `CREATE_TIME` datetime NOT NULL COMMENT '创建时间',
   `UPDATE_TIME` datetime NOT NULL COMMENT '更新时间',
   `CREATE_USER` varchar(64) NOT NULL COMMENT '创建者',
   `IS_PROJECT` bit(1) DEFAULT b'0' COMMENT '是否项目',
   `LOGIC` varchar(32) DEFAULT 'AND' COMMENT '逻辑符',
   `FILTERS` mediumtext COMMENT '过滤器',
+  `VIEW_TYPE` int NOT NULL DEFAULT '1' COMMENT '1:动态流水线组 , 2:静态流水线组',
   PRIMARY KEY (`ID`),
-  UNIQUE KEY `PROJECT_NAME` (`PROJECT_ID`,`NAME`,`CREATE_USER`)
+  KEY `IDX_PROJECT_ID` (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
+
+-- ----------------------------
+-- Table structure for T_PIPELINE_VIEW_GROUP
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_VIEW_GROUP` (
+  `ID` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+  `VIEW_ID` bigint NOT NULL COMMENT '流水线组ID',
+  `PIPELINE_ID` varchar(34) NOT NULL COMMENT '流水线ID',
+  `CREATE_TIME` datetime NOT NULL COMMENT '创建时间',
+  `CREATOR` varchar(64) NOT NULL COMMENT '创建者',
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `UNI_PROJECT_VIEW_PIPELINE` (`PROJECT_ID` , `VIEW_ID` , `PIPELINE_ID`),
+  KEY `IDX_PIPELINE` (`PIPELINE_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线组关系表';
+
+-- ----------------------------
+-- Table structure for T_PIPELINE_VIEW_TOP
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_VIEW_TOP` (
+  `ID` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+  `VIEW_ID` bigint NOT NULL COMMENT '流水线组ID',
+  `CREATOR` varchar(64) NOT NULL COMMENT '创建者',
+  `CREATE_TIME` datetime NOT NULL COMMENT '创建时间',
+  `UPDATE_TIME` datetime NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `UNI_PROJECT_CREATOR_VIEW` (`PROJECT_ID`, `CREATOR` , `VIEW_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线组置顶表';
 
 -- ----------------------------
 -- Table structure for T_PIPELINE_VIEW_LABEL
@@ -624,6 +656,8 @@ CREATE TABLE IF NOT EXISTS `T_REPORT` (
   `NAME` text NOT NULL COMMENT '名称',
   `CREATE_TIME` datetime NOT NULL COMMENT '创建时间',
   `UPDATE_TIME` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `TASK_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '任务名称',
+  `ATOM_CODE` varchar(128) NOT NULL DEFAULT '' COMMENT '插件的唯一标识',
   PRIMARY KEY (`ID`),
   KEY `PROJECT_PIPELINE_BUILD_IDX` (`PROJECT_ID`,`PIPELINE_ID`,`BUILD_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线产物表';

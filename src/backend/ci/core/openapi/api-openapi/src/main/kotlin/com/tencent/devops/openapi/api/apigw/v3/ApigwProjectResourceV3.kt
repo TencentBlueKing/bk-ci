@@ -90,7 +90,7 @@ interface ApigwProjectResourceV3 {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "项目信息", required = true)
@@ -158,7 +158,7 @@ interface ApigwProjectResourceV3 {
         @ApiParam("项目名称或者项目英文名")
         @QueryParam("name")
         name: String,
-        @ApiParam("项目ID")
+        @ApiParam("项目ID(项目英文名)")
         @QueryParam("english_name")
         projectId: String?
     ): Result<Boolean>

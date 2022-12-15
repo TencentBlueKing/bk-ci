@@ -264,7 +264,6 @@ class TemplatePipelineDao {
                 dslContext.select(PIPELINE_ID)
                     .from(this)
                     .where(PROJECT_ID.eq(projectId))
-                    .and(IS_TEMPLATE.eq(false))
                     .and(NAME.like("%$searchKey%"))
                     .groupBy(PIPELINE_ID)
                     .fetch()

@@ -498,7 +498,7 @@
     "Devnet 物理机": "Devnet Physical Machine",
     "imageTag": "Please enter the source image tag, such as enterprise-6.0.3",
     "请输入源镜像名称，如 XXX/XXXX": "Please enter a image name, such as XXX/XXXX",
-    "imageRepoUrl": "Please enter the Image library address, such as csighub.tencentyun.com",
+    "imageRepoUrl": "Please enter the Image library address, such as registry.tencentcloudcr.com",
     "镜像名称": "Name",
     "请输入镜像名称，不超过20个字符": "Please enter the mirror name, no more than 20 characters",
     "标签": "Label",

@@ -35,6 +35,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient
 import org.springframework.cloud.consul.ConsulAutoConfiguration
 import org.springframework.context.annotation.Bean
@@ -63,6 +64,7 @@ class ServiceAutoConfiguration {
     fun gray() = Gray()
 
     @Bean
+    @ConditionalOnMissingBean(CommonConfig::class)
     fun commonConfig() = CommonConfig()
 
     @Bean

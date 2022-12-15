@@ -68,6 +68,8 @@ class StreamTGitTransferService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamTGitTransferService::class.java)
+        private const val DEFAULT_PAGE = 1
+        private const val DEFAULT_PAGE_SIZE = 20
     }
 
     fun getAndCheckOauthToken(
@@ -183,8 +185,8 @@ class StreamTGitTransferService @Autowired constructor(
         return client.get(ServiceGitResource::class).getMembers(
             token = getAndCheckOauthToken(userId).accessToken,
             gitProjectId = gitProjectId,
-            page = page ?: 1,
-            pageSize = pageSize ?: 20,
+            page = page ?: DEFAULT_PAGE,
+            pageSize = pageSize ?: DEFAULT_PAGE_SIZE,
             search = search,
             tokenType = TokenTypeEnum.OAUTH
         ).data?.map {
@@ -200,15 +202,25 @@ class StreamTGitTransferService @Autowired constructor(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long?,
+        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
+        // 更改为每次都进行重定向授权
         return client.get(ServiceOauthResource::class).isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
             redirectUrl = redirectUrl,
             gitProjectId = gitProjectId,
-            refreshToken = refreshToken
+            refreshToken = true
+        )
+    }
+
+    override fun enableCi(userId: String, projectName: String, enable: Boolean?): Result<Boolean> {
+        return client.get(ServiceGitResource::class).enableCi(
+            projectName = projectName,
+            token = getAndCheckOauthToken(userId).accessToken,
+            tokenType = TokenTypeEnum.OAUTH,
+            enable = enable
         )
     }
 
