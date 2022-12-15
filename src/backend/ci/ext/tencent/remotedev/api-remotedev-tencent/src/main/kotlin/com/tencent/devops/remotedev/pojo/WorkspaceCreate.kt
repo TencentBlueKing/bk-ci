@@ -32,8 +32,6 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("工作空间信息-创建")
 data class WorkspaceCreate(
-    @ApiModelProperty("工作空间名称")
-    val name: String,
     @ApiModelProperty("远程开发仓库地址")
     val repositoryUrl: String,
     @ApiModelProperty("仓库分支")

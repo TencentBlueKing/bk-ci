@@ -29,7 +29,11 @@ package com.tencent.devops.remotedev.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -40,10 +44,12 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResour
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -64,6 +70,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
@@ -79,9 +86,9 @@ class WorkspaceService @Autowired constructor(
     private val client: Client
 ) {
 
-    private val devfileCache = CacheBuilder.newBuilder()
-        .maximumSize(10)
-        .expireAfterWrite(5, TimeUnit.MINUTES)
+    private val redisCache = CacheBuilder.newBuilder()
+        .maximumSize(20)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(
             object : CacheLoader<String, String>() {
                 override fun load(key: String): String {
@@ -92,8 +99,10 @@ class WorkspaceService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
-        private const val REDIS_CALL_LIMIT_KEY = "remotedev:calllimit"
-        private const val REDIS_OFFICIAL_DEVFILE = "remotedev:devfile"
+        private const val REDIS_CALL_LIMIT_KEY = "remotedev:callLimit"
+        private const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime"
+        private const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
+        private const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(1)
     }
 
@@ -106,14 +115,16 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get user git repository|$search|$page|$pageSize")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        return gitTransferService.getProjectList(
-            userId = userId,
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
-            search = search,
-            owned = false,
-            minAccessLevel = GitAccessLevelEnum.DEVELOPER
-        )
+        return checkOauthIllegal(userId) {
+            gitTransferService.getProjectList(
+                userId = userId,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                search = search,
+                owned = false,
+                minAccessLevel = GitAccessLevelEnum.DEVELOPER
+            )
+        }
     }
 
     fun getRepositoryBranch(
@@ -126,23 +137,27 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get git repository branch list|$pathWithNamespace|$search|$page|$pageSize")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        return gitTransferService.getProjectBranches(
-            userId = userId,
-            pathWithNamespace = pathWithNamespace,
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
-            search = search
-        ) ?: emptyList()
+        return checkOauthIllegal(userId) {
+            gitTransferService.getProjectBranches(
+                userId = userId,
+                pathWithNamespace = pathWithNamespace,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                search = search
+            ) ?: emptyList()
+        }
     }
 
     fun createWorkspace(userId: String, workspaceCreate: WorkspaceCreate): String {
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
 
+        val pathWithNamespace = GitUtils.getDomainAndRepoName(workspaceCreate.repositoryUrl).second
+        val projectName = pathWithNamespace.substring(pathWithNamespace.lastIndexOf("/") + 1)
         val yaml = if (workspaceCreate.useOfficialDevfile == false) {
             kotlin.runCatching {
                 gitTransferService.getFileContent(
                     userId = userId,
-                    pathWithNamespace = GitUtils.getDomainAndRepoName(workspaceCreate.repositoryUrl).second,
+                    pathWithNamespace = pathWithNamespace,
                     filePath = workspaceCreate.devFilePath!!,
                     ref = workspaceCreate.branch
                 )
@@ -150,11 +165,13 @@ class WorkspaceService @Autowired constructor(
                 logger.warn("get yaml failed ${it.message}")
                 throw CustomException(Response.Status.BAD_REQUEST, "获取 devfile 异常 ${it.message}")
             }
-        } else devfileCache.get(REDIS_OFFICIAL_DEVFILE)
+        } else redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY)
 
         if (yaml.isBlank()) {
-            logger.warn("create workspace get devfile blank,return." +
-                "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}")
+            logger.warn(
+                "create workspace get devfile blank,return." +
+                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+            )
             throw CustomException(Response.Status.BAD_REQUEST, "devfile 为空，请确认。")
         }
 
@@ -165,7 +182,7 @@ class WorkspaceService @Autowired constructor(
         val workspace = with(workspaceCreate) {
             Workspace(
                 workspaceId = null,
-                name = name,
+                name = UUID.randomUUID().toString(), // 先临时生成一个，后面拿k8s返回的name替换掉
                 repositoryUrl = repositoryUrl,
                 branch = branch,
                 devFilePath = devFilePath,
@@ -174,7 +191,9 @@ class WorkspaceService @Autowired constructor(
                 status = null,
                 lastStatusUpdateTime = null,
                 sleepingTime = null,
-                createUserId = userId
+                createUserId = userId,
+                workPath = Constansts.prefixWorkPath.plus(projectName),
+                hostName = ""
             )
         }
 
@@ -201,11 +220,11 @@ class WorkspaceService @Autowired constructor(
                 )
             ).data!!
         }.fold(
-            {
+            { workspaceName ->
                 dslContext.transaction { configuration ->
                     val transactionContext = DSL.using(configuration)
                     // 创建成功后，更新name
-                    workspaceDao.updateWorkspaceName(workspaceId, it, transactionContext)
+                    workspaceDao.updateWorkspaceName(workspaceId, workspaceName, transactionContext)
                     workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.RUNNING, transactionContext)
                     workspaceHistoryDao.createWorkspaceHistory(
                         dslContext = transactionContext,
@@ -218,23 +237,26 @@ class WorkspaceService @Autowired constructor(
                         workspaceId = workspaceId,
                         operator = userId,
                         action = WorkspaceAction.CREATE,
-                        // todo 内容待确定
-                        actionMessage = ""
+                        actionMessage = String.format(
+                            getOpHistory(OpHistoryCopyWriting.CREATE),
+                            pathWithNamespace,
+                            workspace.branch,
+                            workspaceName
+                        )
                     )
                     workspaceOpHistoryDao.createWorkspaceHistory(
                         dslContext = transactionContext,
                         workspaceId = workspaceId,
                         operator = userId,
                         action = WorkspaceAction.START,
-                        // todo 内容待确定
-                        actionMessage = ""
+                        actionMessage = getOpHistory(OpHistoryCopyWriting.FIRST_START)
                     )
                 }
 
                 // 获取远程登录url
                 val workspaceUrl = client.get(ServiceRemoteDevResource::class).getWorkspaceUrl(
                     userId,
-                    it
+                    workspaceName
                 ).data
 
                 return workspaceUrl!!
@@ -242,10 +264,10 @@ class WorkspaceService @Autowired constructor(
             {
                 // 创建失败
                 logger.warn("create workspace $workspaceId failed|${it.message}", it)
+                workspaceDao.deleteWorkspace(workspaceId, dslContext)
+                throw CustomException(Response.Status.BAD_REQUEST, "工作空间创建失败，参考原因:${it.message}")
             }
         )
-
-        return ""
     }
 
     fun startWorkspace(userId: String, workspaceId: Long): Boolean {
@@ -258,10 +280,18 @@ class WorkspaceService @Autowired constructor(
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
                 ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
             // 校验状态
-            if (WorkspaceStatus.values()[workspace.status].isRunning()) {
+            val status = WorkspaceStatus.values()[workspace.status]
+            if (status.isRunning()) {
                 logger.info("$workspace has been started, return error.")
                 throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been started")
             }
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceId = workspaceId,
+                operator = userId,
+                action = WorkspaceAction.START,
+                actionMessage = getOpHistory(OpHistoryCopyWriting.NOT_FIRST_START)
+            )
             val res = kotlin.runCatching {
                 client.get(ServiceRemoteDevResource::class).startWorkspace(
                     userId,
@@ -302,8 +332,11 @@ class WorkspaceService @Autowired constructor(
                         workspaceId = workspaceId,
                         operator = userId,
                         action = WorkspaceAction.START,
-                        // todo 内容待确定
-                        actionMessage = ""
+                        actionMessage = String.format(
+                            getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                            status.name,
+                            WorkspaceStatus.RUNNING.name
+                        )
                     )
                 }
             }
@@ -322,10 +355,19 @@ class WorkspaceService @Autowired constructor(
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
                 ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
             // 校验状态
-            if (WorkspaceStatus.values()[workspace.status].isSleeping()) {
+            val status = WorkspaceStatus.values()[workspace.status]
+            if (status.isSleeping()) {
                 logger.info("$workspace has been stopped, return error.")
                 throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been stopped")
             }
+
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceId = workspaceId,
+                operator = userId,
+                action = WorkspaceAction.SLEEP,
+                actionMessage = getOpHistory(OpHistoryCopyWriting.MANUAL_STOP)
+            )
             val res = kotlin.runCatching {
                 client.get(ServiceRemoteDevResource::class).stopWorkspace(
                     userId,
@@ -363,8 +405,11 @@ class WorkspaceService @Autowired constructor(
                         workspaceId = workspaceId,
                         operator = userId,
                         action = WorkspaceAction.SLEEP,
-                        // todo 内容待确定
-                        actionMessage = ""
+                        actionMessage = String.format(
+                            getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                            status.name,
+                            WorkspaceStatus.SLEEP.name
+                        )
                     )
                 }
             }
@@ -382,11 +427,18 @@ class WorkspaceService @Autowired constructor(
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
                 ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
             // 校验状态
-            if (WorkspaceStatus.values()[workspace.status].isDeleted()) {
+            val status = WorkspaceStatus.values()[workspace.status]
+            if (status.isDeleted()) {
                 logger.info("$workspace has been deleted, return error.")
                 throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been deleted")
             }
-
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceId = workspaceId,
+                operator = userId,
+                action = WorkspaceAction.DELETE,
+                actionMessage = getOpHistory(OpHistoryCopyWriting.DELETE)
+            )
             val res = kotlin.runCatching {
                 client.get(ServiceRemoteDevResource::class).deleteWorkspace(
                     userId,
@@ -406,8 +458,11 @@ class WorkspaceService @Autowired constructor(
                         workspaceId = workspaceId,
                         operator = userId,
                         action = WorkspaceAction.DELETE,
-                        // todo 内容待确定
-                        actionMessage = ""
+                        actionMessage = String.format(
+                            getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                            status.name,
+                            WorkspaceStatus.DELETED.name
+                        )
                     )
                 }
             }
@@ -422,6 +477,9 @@ class WorkspaceService @Autowired constructor(
             "$REDIS_CALL_LIMIT_KEY:shareWorkspace:${workspaceId}_$sharedUser",
             expiredTimeInSeconds
         ).lock().use {
+            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
+                ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
+            if (userId != workspace.creator) throw CustomException(Response.Status.FORBIDDEN, "你没有权限操作")
             val shareInfo = WorkspaceShared(workspaceId, userId, sharedUser)
             if (workspaceSharedDao.exsitWorkspaceSharedInfo(shareInfo, dslContext)) {
                 logger.info("$workspaceId has already shared to $sharedUser")
@@ -436,8 +494,7 @@ class WorkspaceService @Autowired constructor(
                     workspaceId = workspaceId,
                     operator = userId,
                     action = WorkspaceAction.SHARE,
-                    // todo 内容待确定
-                    actionMessage = ""
+                    actionMessage = getOpHistory(OpHistoryCopyWriting.SHARE)
                 )
             }
             return true
@@ -470,7 +527,9 @@ class WorkspaceService @Autowired constructor(
                     status = status,
                     lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp(),
                     sleepingTime = if (status.isSleeping()) it.lastStatusUpdateTime.timestamp() else null,
-                    createUserId = it.creator
+                    createUserId = it.creator,
+                    workPath = it.workPath,
+                    hostName = it.hostName
                 )
             }
         )
@@ -482,8 +541,7 @@ class WorkspaceService @Autowired constructor(
         val status = workspaces.map { WorkspaceStatus.values()[it.status] }
         val usageTime = workspaces.sumOf { it.usageTime }
 
-        // TODO: 2022/11/24 优惠时间需后续配置
-        val discountTime = 0
+        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY).toInt()
         return WorkspaceUserDetail(
             runningCount = status.count { it.isRunning() },
             sleepingCount = status.count { it.isSleeping() },
@@ -505,8 +563,7 @@ class WorkspaceService @Autowired constructor(
 
         val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceId) ?: return null
 
-        // TODO: 2022/11/24 优惠时间需后续配置
-        val discountTime = 0
+        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY).toInt()
 
         val usageTime = workspace.usageTime + if (workspaceStatus.isRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
@@ -568,12 +625,37 @@ class WorkspaceService @Autowired constructor(
 
     fun checkDevfile(userId: String, pathWithNamespace: String, branch: String): List<String> {
         logger.info("$userId get devfile list from git. $pathWithNamespace|$branch")
-        return gitTransferService.getFileNameTree(
-            userId = userId,
-            pathWithNamespace = pathWithNamespace,
-            path = Constansts.devFileDirectoryName, // 根目录
-            ref = branch,
-            recursive = false // 不递归
-        )
+        return checkOauthIllegal(userId) {
+            gitTransferService.getFileNameTree(
+                userId = userId,
+                pathWithNamespace = pathWithNamespace,
+                path = Constansts.devFileDirectoryName, // 根目录
+                ref = branch,
+                recursive = false // 不递归
+            )
+        }
     }
+
+    /**
+     * 检查工蜂接口是否返回401，针对这种情况，抛出OAUTH_ILLEGAL 让前端跳转去重新授权
+     */
+    private fun <T> checkOauthIllegal(userId: String, action: () -> T): T {
+        return kotlin.runCatching {
+            action()
+        }.onFailure {
+            if (it is RemoteServiceException && it.httpStatus == HTTP_401 || it is OauthForbiddenException) {
+                throw ErrorCodeException(
+                    statusCode = 400,
+                    errorCode = ErrorCodeEnum.OAUTH_ILLEGAL.errorCode.toString(),
+                    defaultMessage = ErrorCodeEnum.OAUTH_ILLEGAL.formatErrorMessage.format(userId),
+                    params = arrayOf(userId)
+                )
+            }
+        }.getOrThrow()
+    }
+
+    private fun getOpHistory(key: OpHistoryCopyWriting) =
+        redisCache.get(REDIS_OP_HISTORY_KEY_PREFIX + key.name).ifBlank {
+            key.default
+        }
 }

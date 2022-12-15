@@ -53,5 +53,9 @@ data class Workspace(
     @ApiModelProperty("休眠时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     val sleepingTime: Long?,
     @ApiModelProperty("工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    val createUserId: String
+    val createUserId: String,
+    @ApiModelProperty("工作空间操作路径")
+    val workPath: String?,
+    @ApiModelProperty("工作空间对应的IP")
+    val hostName: String?
 )

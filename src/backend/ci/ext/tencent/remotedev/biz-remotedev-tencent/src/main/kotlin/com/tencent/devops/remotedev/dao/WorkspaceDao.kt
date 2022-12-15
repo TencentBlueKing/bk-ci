@@ -54,46 +54,48 @@ class WorkspaceDao {
         return with(TWorkspace.T_WORKSPACE) {
             dslContext.insertInto(
                 /* into = */ this,
-                /* field1 = */ USER_ID,
-                /* field2 = */ PROJECT_ID,
-                /* field3 = */ NAME,
-                /* field4 = */ TEMPLATE_ID,
-                /* field5 = */ URL,
-                /* field6 = */ BRANCH,
-                /* field7 = */ YAML_PATH,
-                /* field8 = */ IMAGE_PATH,
-                /* field9 = */ CPU,
-                /* field10 = */ MEMORY,
-                /* field11 = */ DISK,
-                /* field12 = */ STATUS,
-                /* field13 = */ LAST_STATUS_UPDATE_TIME,
-                /* field14 = */ YAML,
-                /* field15 = */ DOCKERFILE,
-                /* field16 = */ CREATOR,
-                /* field17 = */ CREATOR_BG_NAME,
-                /* field18 = */ CREATOR_DEPT_NAME,
-                /* field19 = */ CREATOR_CENTER_NAME
+                /* field1 = */ PROJECT_ID,
+                /* field2 = */ NAME,
+                /* field3 = */ TEMPLATE_ID,
+                /* field4 = */ URL,
+                /* field5 = */ BRANCH,
+                /* field6 = */ YAML_PATH,
+                /* field7 = */ IMAGE_PATH,
+                /* field8 = */ WORK_PATH,
+                /* field9 = */ HOST_NAME,
+                /* field10 = */ CPU,
+                /* field11 = */ MEMORY,
+                /* field12 = */ DISK,
+                /* field13 = */ STATUS,
+                /* field14 = */ LAST_STATUS_UPDATE_TIME,
+                /* field15 = */ YAML,
+                /* field16 = */ DOCKERFILE,
+                /* field17 = */ CREATOR,
+                /* field18 = */ CREATOR_BG_NAME,
+                /* field19 = */ CREATOR_DEPT_NAME,
+                /* field20 = */ CREATOR_CENTER_NAME
             )
                 .values(
-                    /* value1 = */ userId,
-                    /* value2 = */ "",
-                    /* value3 = */ workspace.name,
-                    /* value4 = */ workspace.wsTemplateId,
-                    /* value5 = */ workspace.repositoryUrl,
-                    /* value6 = */ workspace.branch,
-                    /* value7 = */ workspace.devFilePath,
-                    /* value8 = */ "",
-                    /* value9 = */ 8,
-                    /* value10 = */ 16,
-                    /* value11 = */ 100,
-                    /* value12 = */ workspaceStatus.ordinal,
-                    /* value13 = */ LocalDateTime.now(),
-                    /* value14 = */ workspace.yaml,
-                    /* value15 = */ "",
-                    /* value16 = */ workspace.createUserId,
-                    /* value17 = */ userInfo?.bgName ?: "",
-                    /* value18 = */ userInfo?.deptName ?: "",
-                    /* value19 = */ userInfo?.centerName ?: ""
+                    /* value1 = */ "",
+                    /* value2 = */ workspace.name,
+                    /* value3 = */ workspace.wsTemplateId,
+                    /* value4 = */ workspace.repositoryUrl,
+                    /* value5 = */ workspace.branch,
+                    /* value6 = */ workspace.devFilePath,
+                    /* value7 = */ "",
+                    /* value8 = */ workspace.workPath,
+                    /* value9 = */ workspace.hostName,
+                    /* value10 = */ 8,
+                    /* value11 = */ 16,
+                    /* value12 = */ 100,
+                    /* value13 = */ workspaceStatus.ordinal,
+                    /* value14 = */ LocalDateTime.now(),
+                    /* value15 = */ workspace.yaml,
+                    /* value16 = */ "",
+                    /* value17 = */ workspace.createUserId,
+                    /* value18 = */ userInfo?.bgName ?: "",
+                    /* value19 = */ userInfo?.deptName ?: "",
+                    /* value20 = */ userInfo?.centerName ?: ""
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -129,7 +131,7 @@ class WorkspaceDao {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectCount().from(this)
-                .where(USER_ID.eq(userId)).unionAll(
+                .where(CREATOR.eq(userId)).unionAll(
                     DSL.selectCount().from(this).where(
                         ID.`in`(
                             DSL.select(shared.WORKSPACE_ID).from(shared).where(
@@ -155,7 +157,7 @@ class WorkspaceDao {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
-                .where(USER_ID.eq(userId)).unionAll(
+                .where(CREATOR.eq(userId)).unionAll(
                     DSL.selectFrom(this).where(
                         ID.`in`(
                             DSL.select(shared.WORKSPACE_ID).from(shared).where(
@@ -227,7 +229,7 @@ class WorkspaceDao {
         val condition = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
             if (!userId.isNullOrBlank()) {
-                condition.add(USER_ID.eq(userId))
+                condition.add(CREATOR.eq(userId))
             }
             if (workspaceId != null) {
                 condition.add(ID.eq(workspaceId))
@@ -272,6 +274,17 @@ class WorkspaceDao {
         with(TWorkspace.T_WORKSPACE) {
             dslContext.update(this)
                 .set(SLEEPING_TIME, SLEEPING_TIME + sleepTime)
+                .where(ID.eq(workspaceId))
+                .execute()
+        }
+    }
+
+    fun deleteWorkspace(
+        workspaceId: Long,
+        dslContext: DSLContext
+    ): Int {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.delete(this)
                 .where(ID.eq(workspaceId))
                 .execute()
         }
