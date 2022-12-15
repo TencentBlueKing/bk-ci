@@ -92,6 +92,30 @@ BEGIN
         alter table T_REPORT add column `ATOM_CODE` varchar(128) NOT NULL DEFAULT '' COMMENT '插件的唯一标识';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_VIEW'
+                    AND INDEX_NAME = 'IDX_PROJECT_ID') THEN
+        ALTER TABLE T_PIPELINE_VIEW ADD INDEX `IDX_PROJECT_ID` (`PROJECT_ID`);
+    END IF;
+
+    IF EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_VIEW'
+                    AND INDEX_NAME = 'PROJECT_NAME') THEN
+        ALTER TABLE T_PIPELINE_VIEW DROP INDEX `PROJECT_NAME`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_VIEW'
+                        AND COLUMN_NAME = 'VIEW_TYPE') THEN
+        ALTER TABLE T_PIPELINE_VIEW ADD COLUMN `VIEW_TYPE` int NOT NULL DEFAULT '1' COMMENT '1:动态流水线组 , 2:静态流水线组';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

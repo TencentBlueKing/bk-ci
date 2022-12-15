@@ -29,12 +29,12 @@ package com.tencent.devops.process.service.label
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.event.enums.PipelineLabelChangeTypeEnum
-import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.enums.PipelineLabelChangeTypeEnum
 import com.tencent.devops.common.event.pojo.measure.LabelChangeMetricsBroadCastEvent
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.model.process.tables.records.TPipelineFavorRecord
 import com.tencent.devops.model.process.tables.records.TPipelineGroupRecord
 import com.tencent.devops.model.process.tables.records.TPipelineLabelRecord
@@ -330,18 +330,14 @@ class PipelineGroupService @Autowired constructor(
         }
         try {
             val labelIdArr = labelIds.map { decode(it) }.toSet()
-            val pipelineLabelRels = mutableListOf<Pair<Long, Long?>>()
-            labelIdArr.forEach { labelId ->
-                val id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId(PIPELINE_LABEL_PIPELINE_BIZ_TAG_NAME).data
-                pipelineLabelRels.add(Pair(labelId, id))
-            }
+            val pipelineLabelSegmentIdPairs = pipelineLabelSegmentIdPairs(labelIdArr)
             pipelineLabelPipelineDao.batchCreate(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                pipelineLabelRels = pipelineLabelRels,
-                userId = userId)
+                pipelineLabelRels = pipelineLabelSegmentIdPairs,
+                userId = userId
+            )
 
             val createData = pipelineLabelDao.getByIds(dslContext, projectId, labelIdArr)
             measureEventDispatcher.dispatch(
@@ -371,12 +367,7 @@ class PipelineGroupService @Autowired constructor(
 
     fun updatePipelineLabel(userId: String, projectId: String, pipelineId: String, labelIds: List<String>) {
         val labelIdArr = labelIds.map { decode(it) }.toSet()
-        val pipelineLabelRels = mutableListOf<Pair<Long, Long?>>()
-        labelIdArr.forEach { labelId ->
-            val id =
-                client.get(ServiceAllocIdResource::class).generateSegmentId(PIPELINE_LABEL_PIPELINE_BIZ_TAG_NAME).data
-            pipelineLabelRels.add(Pair(labelId, id))
-        }
+        val pipelineLabelSegmentIdPairs = pipelineLabelSegmentIdPairs(labelIdArr)
         try {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -390,7 +381,7 @@ class PipelineGroupService @Autowired constructor(
                     dslContext = context,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    pipelineLabelRels = pipelineLabelRels,
+                    pipelineLabelRels = pipelineLabelSegmentIdPairs,
                     userId = userId
                 )
             }
@@ -430,7 +421,17 @@ class PipelineGroupService @Autowired constructor(
                 }
             )
         )
-        logger.info("LableChangeMetricsBroadCastEvent： updatePipelineLabel-create $projectId|$pipelineId|$labelIdArr|$labelIds")
+        logger.info("LableChangeMetricsBroadCastEvent： " +
+                "updatePipelineLabel-create $projectId|$pipelineId|$labelIdArr|$labelIds")
+    }
+
+    private fun pipelineLabelSegmentIdPairs(labelIdArr: Set<Long>): MutableList<Pair<Long, Long?>> {
+        val generateSegmentIds = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId(PIPELINE_LABEL_PIPELINE_BIZ_TAG_NAME, labelIdArr.size)
+        val pairs = mutableListOf<Pair<Long, Long?>>()
+        var index = 0
+        labelIdArr.forEach { pairs.add(Pair(it, generateSegmentIds.data!![index++])) }
+        return pairs
     }
 
     fun getViewLabelToPipelinesMap(projectId: String, labels: List<String>): Map<String, List<String>> {

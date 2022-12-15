@@ -36,8 +36,8 @@ data class PipelineCopy(
     val name: String,
     @ApiModelProperty("描述", required = false)
     val desc: String?,
-    @ApiModelProperty("分组名称", required = false)
-    val group: String = "",
-    @ApiModelProperty("是否收藏", required = false)
-    val hasCollect: Boolean? = false
+    @ApiModelProperty("标签", required = false)
+    var labels: List<String> = emptyList(),
+    @ApiModelProperty("静态流水线组", required = false)
+    var staticViews: List<String> = emptyList()
 )

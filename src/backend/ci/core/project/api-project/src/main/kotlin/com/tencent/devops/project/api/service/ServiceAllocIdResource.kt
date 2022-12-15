@@ -37,6 +37,7 @@ import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_ALLOC_ID"], description = "ID分配")
@@ -54,4 +55,17 @@ interface ServiceAllocIdResource {
         @BkField(minLength = 1, maxLength = 128)
         bizTag: String
     ): Result<Long?>
+
+    @GET
+    @Path("/types/segment/tags/{bizTag}/batchGenerate")
+    @ApiOperation("按号段模式批量生成Id(本质是for循环实现,减少远程调用)")
+    fun batchGenerateSegmentId(
+        @ApiParam("业务标签", required = true)
+        @PathParam("bizTag")
+        @BkField(minLength = 1, maxLength = 128)
+        bizTag: String,
+        @ApiParam("个数", required = true)
+        @QueryParam("number")
+        number: Int
+    ): Result<List<Long?>>
 }

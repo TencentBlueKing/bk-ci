@@ -39,6 +39,8 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.view.PipelineViewService
+import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_LIST_PIPELINES
+import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.stream.api.service.ServiceGitForAppResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -98,6 +100,11 @@ class AppPipelineViewResourceImpl @Autowired constructor(
     ): Result<Pagination<Pipeline>> {
         val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
 
+        // 兼容我的流水线
+        val finalViewId = if (viewId == PIPELINE_VIEW_MY_PIPELINES) {
+            PIPELINE_VIEW_MY_LIST_PIPELINES
+        } else viewId
+
         val listViewPipelines = pipelineListFacadeService.listViewPipelines(
             userId = userId,
             projectId = projectId,
@@ -105,7 +112,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
             pageSize = pageSize,
             sortType = sortType ?: PipelineSortType.CREATE_TIME,
             channelCode = channelCode,
-            viewId = viewId,
+            viewId = finalViewId,
             checkPermission = true,
             filterByPipelineName = if (channelCode == ChannelCode.GIT) null else filterByPipelineName,
             filterByCreator = filterByCreator, filterByLabels = filterByLabels,
