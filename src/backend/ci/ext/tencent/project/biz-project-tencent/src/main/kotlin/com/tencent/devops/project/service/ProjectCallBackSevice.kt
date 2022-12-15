@@ -74,7 +74,7 @@ class ProjectCallBackSevice @Autowired constructor(
         logger.info("走到dev-rbac分支的代码来了！！！！")
         val sn = itsmCallBackInfo.sn
         // 校验token
-        checkItsmToken(itsmCallBackInfo.token, sn)
+        // checkItsmToken(itsmCallBackInfo.token, sn)
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         // 蓝盾数据库存储的回调信息
         val callBackInfo = projectApprovalCallbackDao.getCallbackBySn(dslContext, sn)
@@ -168,7 +168,7 @@ class ProjectCallBackSevice @Autowired constructor(
 
     fun updateProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         val sn = itsmCallBackInfo.sn
-        checkItsmToken(itsmCallBackInfo.token, sn)
+        // checkItsmToken(itsmCallBackInfo.token, sn)
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         // 蓝盾数据库存储的回调信息
         val dbCallBackInfo = projectApprovalCallbackDao.getCallbackBySn(dslContext, sn)

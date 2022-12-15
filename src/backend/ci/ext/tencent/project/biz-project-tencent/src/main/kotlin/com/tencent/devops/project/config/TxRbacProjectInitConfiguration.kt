@@ -34,9 +34,6 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
-import com.tencent.devops.common.auth.api.RbacAuthPermissionApi
-import com.tencent.devops.common.auth.api.RbacAuthProjectApi
-import com.tencent.devops.common.auth.api.RbacResourceApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
@@ -82,18 +79,6 @@ class TxRbacProjectInitConfiguration {
         redisOperation: RedisOperation
     ) =
         BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
-
-    @Bean
-    fun authResourceApi(
-        client: Client,
-        tokenService: ClientTokenService
-    ) = RbacResourceApi(client = client, tokenService = tokenService)
-
-    @Bean
-    fun authProjectApi() = RbacAuthProjectApi()
-
-    @Bean
-    fun authPermissionApi() = RbacAuthPermissionApi()
 
     @Bean
     fun projectPermissionService(
