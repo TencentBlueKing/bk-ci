@@ -182,8 +182,8 @@ class TemplateFacadeService @Autowired constructor(
     @Value("\${template.instanceListUrl}")
     private val instanceListUrl: String = ""
 
-    @Value("\${template.maxErrorReasonLength:400}")
-    private val maxErrorReasonLength: Int = 400
+    @Value("\${template.maxErrorReasonLength:200}")
+    private val maxErrorReasonLength: Int = 200
 
     fun createTemplate(projectId: String, userId: String, template: Model): String {
         logger.info("Start to create the template ${template.name} by user $userId")

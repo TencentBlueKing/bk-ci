@@ -27,7 +27,7 @@ template:
   maxSaveVersionNum: 300
   maxSaveVersionRecordNum: 2
   maxUpdateInstanceNum: 100
-  maxErrorReasonLength: 400
+  maxErrorReasonLength: 200
   
 
 build:
