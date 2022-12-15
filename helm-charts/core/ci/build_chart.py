@@ -57,6 +57,8 @@ default_value_dict = {
     'bkCiBcsMemory':'16048',
     'bkCiKubernetesCpu':'8',
     'bkCiKubernetesMemory':'16048',
+    'bkCiKubernetesHost': "http://kubernetes-manager"
+    'bkCiKubernetesToken': "landun"
 }
 
 if os.path.isfile(default_value_json):
@@ -85,7 +87,8 @@ include_dict = {
     '__BK_CI_INFLUXDB_ADDR__': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . }}',
     '__BK_CI_VERSION__': '{{ .Chart.AppVersion }}',
     '__BK_CI_DISPATCH_KUBERNETES_NS__': '{{ .Release.Namespace }}',
-    '__BK_CI_CONSUL_DISCOVERY_TAG__': '{{ .Release.Namespace }}'
+    '__BK_CI_CONSUL_DISCOVERY_TAG__': '{{ .Release.Namespace }}',
+    '__BK_CI_PRIVATE_URL__': '{{ .Release.Name }}-bk-ci-gateway'
 }
 
 # 读取变量映射
