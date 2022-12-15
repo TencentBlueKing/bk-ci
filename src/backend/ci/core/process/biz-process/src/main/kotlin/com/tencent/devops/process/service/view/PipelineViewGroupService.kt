@@ -741,11 +741,14 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun initAllView() {
-        val listAllDynamic = pipelineViewDao.listDynamicProjectId(dslContext)
-        listAllDynamic.forEach { projectId ->
+        val dynamicProjectIds = pipelineViewDao.listDynamicProjectId(dslContext)
+        logger.info("dynamicProjectIds : $dynamicProjectIds")
+        dynamicProjectIds.forEach { projectId ->
             pipelineViewDao.listDynamicViewByProjectId(dslContext, projectId).forEach { view ->
                 redisOperation.delete(firstInitMark(view.projectId, view.id))
+                logger.info("init start , ${view.projectId} , ${view.id}")
                 initDynamicViewGroup(view, "admin")
+                logger.info("init finish , ${view.projectId} , ${view.id}")
             }
         }
     }
