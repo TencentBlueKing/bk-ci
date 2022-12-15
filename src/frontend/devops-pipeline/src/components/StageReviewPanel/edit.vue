@@ -151,7 +151,11 @@
         },
         watch: {
             manualTrigger (val) {
-                !val && this.handleUpdateStageControl('reviewGroups', [])
+                if (!val) {
+                    this.stageControl.notifyGroup = []
+                    this.stageControl.notifyType = []
+                    this.stageControl.reviewGroups = []
+                }
                 this.handleUpdateStageControl('isReviewError', !this.validateStageControl())
             },
             hasTriggerMember (hasTriggerMember) {

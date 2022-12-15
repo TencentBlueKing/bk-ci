@@ -130,7 +130,7 @@ export default {
             stages.forEach((stage, index) => {
                 if (index !== 0) {
                     const { notifyType = [], notifyGroup = [] } = stage && stage.checkIn
-                    if (notifyType && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
+                    if (notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
                         throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
                     }
                 }
