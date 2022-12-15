@@ -29,6 +29,8 @@ import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import io.swagger.annotations.Example
+import io.swagger.annotations.ExampleProperty
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -117,7 +119,61 @@ interface ApigwStreamResourceV4 {
         @ApiParam(value = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @ApiParam("TriggerBuild请求", required = true)
+        @ApiParam(
+            "TriggerBuild请求", required = true, examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "当仅需要手动触发，无传入参数时",
+                        value = """
+                    {
+                        "branch": "master //指定分支",
+                        "useCommitId": false,
+                        "customCommitMsg": "123 //指定构建信息",
+                        "path": ".ci/openapi.yml",
+                        "projectId": "git_123456 //注意是带前缀的项目id"
+                    }
+                """
+                    ),
+                    ExampleProperty(
+                        mediaType = "当需要手动触发，并指定某一次具体的commit时",
+                        value = """
+                    {
+                        "branch": "master //指定分支",
+                        "useCommitId": true,
+                        "commitId": "536cf801fe2d29b5be2bbaf7478183b491e8a622",
+                        "customCommitMsg": "123 //指定构建信息",
+                        "path": ".ci/openapi.yml",
+                        "projectId": "git_123456 //注意是带前缀的项目id"
+                    }
+                """
+                    ),
+                    ExampleProperty(
+                        mediaType = "当需要手动触发并传入参数时，注意inputs的参数类型根据yaml中配置的类型填入。",
+                        value = """
+                    {
+                        "branch": "master //指定分支",
+                        "useCommitId": false,
+                        "customCommitMsg": "123 //指定构建信息",
+                        "path": ".ci/openapi.yml",
+                        "inputs": {
+                            "a": "123",
+                            "my_val_3": false,
+                            "my_val_4": [
+                                "1",
+                                "222"
+                            ],
+                            "my_val_5": "这是个tips,说明下怎么使用",
+                            "my_val_6": [
+                                "tiantian"
+                            ]
+                        },
+                        "projectId": "git_123456 //注意是带前缀的项目id"
+                    }
+                """
+                    )
+                ]
+            )
+        )
         triggerBuildReq: OpenapiTriggerReq
     ): Result<TriggerBuildResult>
 

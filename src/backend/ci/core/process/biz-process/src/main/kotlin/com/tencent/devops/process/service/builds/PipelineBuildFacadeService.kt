@@ -1354,6 +1354,9 @@ class PipelineBuildFacadeService(
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
+        val currentQueuePosition = if (BuildStatus.valueOf(buildHistory.status).isReadyToRun()) {
+            getCurrentQueuePosition(buildHistory, projectId, pipelineId)
+        } else 0
 
         val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         return BuildHistoryWithVars(
@@ -1370,6 +1373,7 @@ class PipelineBuildFacadeService(
             isMobileStart = buildHistory.isMobileStart,
             material = buildHistory.material,
             queueTime = buildHistory.queueTime,
+            currentQueuePosition = currentQueuePosition,
             artifactList = buildHistory.artifactList,
             remark = buildHistory.remark,
             totalTime = buildHistory.totalTime,
@@ -1384,6 +1388,28 @@ class PipelineBuildFacadeService(
             errorInfoList = buildHistory.errorInfoList,
             buildNumAlias = buildHistory.buildNumAlias,
             webhookInfo = buildHistory.webhookInfo
+        )
+    }
+
+    /**
+     * 拿排队位置，分两种排队。GROUP_LOCK 排队只算当前并发组、 LOCK排队只算当前流水线。
+     */
+    private fun getCurrentQueuePosition(
+        buildHistory: BuildHistory,
+        projectId: String,
+        pipelineId: String
+    ) = if (!buildHistory.concurrencyGroup.isNullOrBlank()) {
+        pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            projectId = projectId,
+            concurrencyGroup = buildHistory.concurrencyGroup!!,
+            status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE)
+        ).indexOfFirst { it.second == buildHistory.id } + 1
+    } else {
+        pipelineRuntimeService.getPipelineBuildHistoryCount(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            status = listOf(BuildStatus.QUEUE, BuildStatus.QUEUE_CACHE),
+            startTimeEndTime = buildHistory.startTime
         )
     }
 

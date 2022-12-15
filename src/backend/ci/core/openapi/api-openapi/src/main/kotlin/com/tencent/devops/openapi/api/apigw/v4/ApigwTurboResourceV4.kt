@@ -57,7 +57,7 @@ interface ApigwTurboResourceV4 {
     @ApiOperation("获取方案列表", tags = ["v4_app_turbo_plan_list", "v4_user_turbo_plan_list"])
     @Path("/projectId/{projectId}/turbo_plan_list")
     fun getTurboPlanByProjectIdAndCreatedDate(
-        @ApiParam(value = "项目id", required = true)
+        @ApiParam(value = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "开始日期", required = false)
@@ -95,7 +95,7 @@ interface ApigwTurboResourceV4 {
         sortType: String?,
         @ApiParam(value = "编译加速历史请求数据信息", required = true)
         turboRecordModel: TurboRecordModel,
-        @ApiParam(value = "蓝盾项目id", required = true)
+        @ApiParam(value = "蓝盾项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "用户信息", required = true)
@@ -110,7 +110,7 @@ interface ApigwTurboResourceV4 {
         @ApiParam(value = "方案id", required = true)
         @QueryParam("planId")
         planId: String,
-        @ApiParam(value = "蓝盾项目id", required = true)
+        @ApiParam(value = "蓝盾项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "用户信息", required = true)
