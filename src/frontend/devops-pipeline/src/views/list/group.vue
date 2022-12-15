@@ -7,14 +7,15 @@
             }">
             <div class="group-list-wrapper">
                 <section v-show="showContent" :class="['group-list-content','clearfix',{ 'group-list-center': hasGroup }]">
-                  
-                    <div class="group-list-hint" v-if="tagGroupList.length > 0">
+                    <div class="group-list-hint" v-if="tagList.length > 0">
                         <logo size="12" name="warning-circle" />
                         <span>{{ $t('group.groupNotice') }}</span>
                     </div>
                     <div class="group-list-cards"
-                        v-for="(group, groupIndex) in tagGroupList" :key="groupIndex"
-                        v-bkloading="{ isLoading: loading.isLoading }">
+                        v-for="(group, groupIndex) in tagList"
+                        :key="groupIndex"
+                        v-bkloading="{ isLoading: loading.isLoading }"
+                    >
                         <div class="group-list-title">
                             <div class="title-text">
                                 <span>
@@ -29,18 +30,18 @@
                                 </span>
                                 <span v-else class="group-title-input">
                                     <span class="bk-form-content">
-                                        <input
+                                        <bk-input
                                             ref="labelInput"
-                                            type="text"
-                                            class="bk-form-input"
                                             style="width: 95%; margin-right: 10px;"
                                             :placeholder="$t('group.groupInputTips')"
                                             v-model="labelValue"
+                                            v-validate="'required|max:20'"
                                             name="groupName"
                                             @blur="labelInputBlur(groupIndex, group.name)"
                                             @keyup.enter="handleSave(groupIndex)"
                                             maxlength="20"
-                                            id="changeGroup" />
+                                            v-focus="1"
+                                        />
                                     </span>
                                     <span>
                                         <a class="entry-link" @click="handleSave(groupIndex)">{{ $t('save') }}</a>
@@ -58,18 +59,18 @@
                                 <span class="tag-text">{{ item.name }}</span>
                                 <input
                                     ref="tagInput"
-                                    type="text"
                                     class="tag-input"
                                     v-model="tagValue"
                                     v-focus="isFocus(groupIndex, tagIndex)"
                                     maxlength="20"
                                     @blur="tagInputBlur($event, groupIndex, tagIndex)"
                                     @keyup.enter="tagModify(groupIndex, tagIndex)"
-                                    :placeholder="$t('group.labelLimitTips')">
+                                    :placeholder="$t('group.labelLimitTips')"
+                                />
                             </div>
                             <div class="group-card-tools">
                                 <i class="devops-icon icon-edit2 group-card-icon" v-bk-tooltips="toolTips.rename" @click="tagEdit($event, groupIndex, tagIndex)"></i>
-                                <i class="group-card-icon devops-icon icon-delete" v-bk-tooltips="toolTips.delete" @click="tagRemove(groupIndex, tagIndex)"></i>
+                                <i class="group-card-icon devops-icon icon-delete" v-bk-tooltips="toolTips.delete" @click="deleteTag(groupIndex, tagIndex)"></i>
                             </div>
                             <div v-show="active.isGroupEdit" class="group-card-edit-tools">
                                 <i class="devops-icon icon-check-1 group-card-edit-icon" v-bk-tooltips="toolTips.save" @click="tagSave(groupIndex, tagIndex)"></i>
@@ -97,7 +98,7 @@
                             {{ $t('group.addGroup') }}
                         </bk-button>
                     </div>
-                    <div v-show="tagGroupList.length < 1">
+                    <div v-show="tagList.length < 1">
                         <empty-tips
                             :title="emptyTipsConfig.title"
                             :desc="emptyTipsConfig.desc"
@@ -125,15 +126,14 @@
                         <div class="bk-form-item">
                             <label class="bk-label">{{ $t('group.groupName') }}</label>
                             <div class="bk-form-content">
-                                <input type="text"
-                                    class="bk-form-input"
+                                <bk-input
                                     :placeholder="$t('group.groupInputTips')"
                                     v-model="groupSetting.value"
                                     name="groupName"
-                                    v-validate="&quot;required|max:20&quot;"
+                                    v-validate="'required|max:20'"
                                     maxlength="20"
                                     id="newGroup"
-                                >
+                                />
                             </div>
                             <div :class="errors.has('groupName') ? 'error-tips' : 'normal-tips'">{{ errors.first("groupName") }}</div>
                         </div>
@@ -148,7 +148,6 @@
     import { mapGetters } from 'vuex'
     import Logo from '@/components/Logo'
     import imgemptyTips from '@/components/pipelineList/imgEmptyTips'
-    // import { navConfirm } from '@/utils/util'
 
     export default {
         directives: {
@@ -200,27 +199,19 @@
                 addTagGroupIndex: null,
                 addTagIndex: null,
                 toolTips: {
-                    rename: {
-                        content: '重命名'
-                    },
-                    delete: {
-                        content: '删除'
-                    },
-                    save: {
-                        content: '保存'
-                    },
-                    cancel: {
-                        content: '取消'
-                    }
+                    rename: this.$t('rename'),
+                    delete: this.$t('delete'),
+                    save: this.$t('save'),
+                    cancel: this.$t('cancel')
                 }
             }
         },
         computed: {
             ...mapGetters({
-                tagGroupList: 'pipelines/getTagGroupList'
+                tagList: 'pipelines/getTagList'
             }),
             hasGroup () {
-                return (!this.tagGroupList.length || this.tagGroupList.length < 1)
+                return (!this.tagList.length || this.tagList.length < 1)
             },
             projectId () {
                 return this.$route.params.projectId
@@ -235,9 +226,9 @@
         },
         methods: {
             isShowGroupBtn () {
-                if (this.tagGroupList.length > 0 && this.tagGroupList.length < 10) {
+                if (this.tagList.length > 0 && this.tagList.length < 10) {
                     let boolean = true
-                    this.tagGroupList.forEach((item, index) => {
+                    this.tagList.forEach((item, index) => {
                         if (!item.labels.length) {
                             boolean = false
                             return false
@@ -281,32 +272,21 @@
             async handleSave (groupIndex) {
                 this.btnIsdisable = false
 
-                const { $store } = this
                 const params = {
                     projectId: this.projectId,
                     name: this.labelValue
                 }
-                
-                let theme, message
-
-                if (!params.name.length) {
-                    const valid = await this.$validator.validate()
-                    
-                    if (!valid) {
-                        return false
-                    }
-                }
+                if (!params.name) return
                 try {
-                    params.id = this.tagGroupList[groupIndex].id
-                    await $store.dispatch('pipelines/modifyGroup', params).then(res => {
-                        if (res) $store.commit('pipelines/modifyTagGroupById', params)
-                        message = res ? '标签组名称保存成功。' : '标签组名称保存失败。'
-                        theme = res ? 'success' : 'error'
-                    })
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
+                    params.id = this.tagList[groupIndex].id
+                    const res = await this.$store.dispatch('pipelines/modifyGroup', params)
+                    if (res) {
+                        this.$store.commit('pipelines/modifyTagGroupById', params)
+                        this.$showTips({
+                            message: this.$t('labelGroupNameSuc'),
+                            theme: 'success'
+                        })
+                    }
                 } catch (err) {
                     this.errShowTips(err)
                 }
@@ -319,24 +299,17 @@
                 this.labelValue = val
                 this.isShowInputIndex = index
                 this.btnIsdisable = true
-                this.$nextTick(function () {
-                    document.getElementById('changeGroup').focus()
-                })
             },
 
             showDialog (event, groupIndex) {
                 const setting = {
                     isShow: true
                 }
-                // if (groupIndex || groupIndex === 0) {
-                //     setting.title = this.$t('rename')
-                //     setting.groupIndex = groupIndex
-                //     setting.value = this.tagGroupList[groupIndex].name
-                // } else {
+
                 setting.title = this.$t('group.addGroup')
                 setting.groupIndex = null
                 setting.value = ''
-                // }
+
                 this.groupSetting = Object.assign({}, this.groupSetting, setting)
 
                 this.$nextTick(function () {
@@ -356,13 +329,13 @@
                     return false
                 }
                 if (groups.title === this.$t('group.addGroup')) {
-                    this.REQUEST('addGroup', {
+                    this.commonAction('addGroup', {
                         name: groups.value,
                         projectId: this.projectId
                     })
                 } else {
                     try {
-                        params.id = this.tagGroupList[groups.groupIndex].id
+                        params.id = this.tagList[groups.groupIndex].id
                         await $store.dispatch('pipelines/modifyGroup', params).then(res => {
                             if (res) $store.commit('pipelines/modifyTagGroupById', params)
                         })
@@ -373,52 +346,26 @@
                 groups.isShow = false
             },
             deleteGroup (groupIndex) {
-                // const name = this.tagGroupList[groupIndex].name
-                // const content = this.$t('deleteReason')
-                // navConfirm({ type: 'warning', content })
-                //     .then(async () => {
-                //         try {
-                //             await $store.dispatch('pipelines/deleteGroup', {
-                //                 groupId: this.tagGroupList[groupIndex].id
-                //             }).then(res => {
-                //                 if (res) {
-                //                     $store.commit('pipelines/removeTagGroupById', {
-                //                         groupId: this.tagGroupList[groupIndex].id
-                //                     })
-                //                 }
-                //             })
-                //         } catch (err) {
-                //             this.errShowTips(err)
-                //         }
-                //     }).catch(() => {})
-
                 this.addTagIndex = null
                 this.addTagGroupIndex = null
                 this.btnIsdisable = false
                 this.resetTag()
-                const { $store } = this
-
-                let theme, message
-
                 this.$bkInfo({
-                    title: '确认删除该标签组?',
+                    title: this.$t('labelGroupDeleteConfirm'),
                     confirmFn: async () => {
                         try {
-                            await $store.dispatch('pipelines/deleteGroup', {
+                            const res = await this.$store.dispatch('pipelines/deleteGroup', {
                                 projectId: this.projectId,
-                                groupId: this.tagGroupList[groupIndex].id
-                            }).then(res => {
-                                theme = res ? 'success' : 'error'
-                                message = res ? '删除标签组成功。' : '删除标签组失败。'
-                                if (res) {
-                                    $store.commit('pipelines/removeTagGroupById', {
-                                        groupId: this.tagGroupList[groupIndex].id
-                                    })
-                                }
-                                this.$bkMessage({
-                                    message,
-                                    theme
+                                groupId: this.tagList[groupIndex].id
+                            })
+                            if (res) {
+                                this.$store.commit('pipelines/removeTagGroupById', {
+                                    groupId: this.tagList[groupIndex].id
                                 })
+                            }
+                            this.$showTips({
+                                message: this.$t('labelDeleteSuc'),
+                                theme: 'success'
                             })
                         } catch (err) {
                             this.errShowTips(err)
@@ -427,27 +374,21 @@
                 })
             },
 
-            tagRemove (groupIndex, tagIndex) { // 标签删除
+            deleteTag (groupIndex, tagIndex) { // 标签删除
                 this.resetTag()
                 this.active.isGroupEdit = false
                 this.addTagGroupIndex = null
                 this.addTagIndex = null
 
                 this.$bkInfo({
-                    title: '确认删除该标签?',
+                    title: this.$t('labelDeleteConfirm'),
                     confirmFn: () => {
-                        this.REQUEST('deleteTag', {
+                        this.commonAction('deleteTag', {
                             projectId: this.projectId,
-                            labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
+                            labelId: this.tagList[groupIndex].labels[tagIndex].id
                         })
                     }
                 })
-                // this.REQUEST('deleteTag', {
-                //     labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
-                // })
-                // if (this.toolsConfigInstance) {
-                //     this.toolsConfigInstance.hide()
-                // }
             },
             toggleTools (groupIndex, tagIndex) { // 删除提示toggle
                 const active = this.active
@@ -471,7 +412,7 @@
             tagEdit (e, groupIndex, tagIndex) {
                 this.resetTag()
                 this.handleCancel()
-                const tagList = this.tagGroupList[groupIndex].labels
+                const tagList = this.tagList[groupIndex].labels
                 this.tagOriginalValue = tagList[tagIndex].name
                 this.tagOriginalGroupIndex = groupIndex
                 this.tagOriginalTagIndex = tagIndex
@@ -494,7 +435,7 @@
                 this.isShowInputIndex = -1
                 this.tagOriginalGroupIndex = null
                 this.tagOriginalTagIndex = null
-                const group = this.tagGroupList[groupIndex]
+                const group = this.tagList[groupIndex]
                 this.addTagGroupIndex = groupIndex
                 this.addTagIndex = group.labels.length
                 this.tagValue = ''
@@ -511,7 +452,7 @@
                 this.tagModify(groupIndex, tagIndex)
             },
             tagCancel (e, groupIndex, tagIndex) {
-                const group = this.tagGroupList[groupIndex]
+                const group = this.tagList[groupIndex]
                 if (this.tagOriginalValue) group.labels[tagIndex].name = this.tagOriginalValue
                 this.btnIsdisable = false
                 this.active.isGroupEdit = false
@@ -531,7 +472,7 @@
             },
             async tagModify (groupIndex, tagIndex) { // 标签input回车
                 const { $store } = this
-                const group = this.tagGroupList[groupIndex]
+                const group = this.tagList[groupIndex]
                 let path, params
                 this.tagOriginalValue = group.labels[tagIndex].name
                 this.isAddTagEnter = false
@@ -554,7 +495,7 @@
                         }
                         this.isAddTagEnter = true
                     }
-                    this.REQUEST(path, {
+                    this.commonAction(path, {
                         ...params,
                         projectId: this.projectId
                     }, () => {
@@ -567,7 +508,7 @@
             },
             resetTag () {
                 if (typeof this.addTagGroupIndex === 'number' && this.addTagGroupIndex !== null && this.addTagIndex !== null) {
-                    const group = this.tagGroupList[this.addTagGroupIndex]
+                    const group = this.tagList[this.addTagGroupIndex]
                     this.btnIsdisable = false
                     this.active.isGroupEdit = false
                     if (!Object.prototype.hasOwnProperty.call(group.labels[this.addTagIndex], 'groupId')) {
@@ -585,7 +526,7 @@
                 let newTagIndex = tagIndex
                 if (groupIndex) {
                     for (let index = 0; index < groupIndex; index++) {
-                        newTagIndex += this.tagGroupList[index].labels.length
+                        newTagIndex += this.tagList[index].labels.length
                     }
                 }
                 if (this.$refs.tagInput[newTagIndex]) {
@@ -597,7 +538,7 @@
             },
             reset (groupIndex, tagIndex) {
                 this.tagValue = ''
-                this.active.isActiveGroup = 's' + groupIndex + (tagIndex || this.tagGroupList[groupIndex].labels.length - 1)
+                this.active.isActiveGroup = 's' + groupIndex + (tagIndex || this.tagList[groupIndex].labels.length - 1)
                 this.active.isGroupEdit = false
             },
 
@@ -605,7 +546,7 @@
                 const { $store } = this
                 let res
                 try {
-                    res = await $store.dispatch('pipelines/requestGetGroupLists', {
+                    res = await $store.dispatch('pipelines/requestTagList', {
                         projectId: this.projectId
                     })
                     $store.commit('pipelines/updateGroupLists', res)
@@ -619,39 +560,28 @@
                     theme: 'error'
                 })
             },
-            async REQUEST (method, params, call) {
-                // method
-                // modifyTag 修改标签
-                // deleteTag 删除标签
-                // addTag 新增标签
-                // addGroup 新增标签组
-                const { $store } = this
-                let theme, message
-
+            async commonAction (method, params, done) {
+                const messageMap = {
+                    modifyTag: 'labelNameSuc',
+                    deleteTag: 'deleteLabelSuc',
+                    addTag: 'addLabelSuc',
+                    addGroup: 'addLabelGroupSuc'
+                }
                 try {
-                    const res = await $store.dispatch('pipelines/' + method, params)
+                    const res = await this.$store.dispatch('pipelines/' + method, params)
                     if (res) {
                         this.requestGrouptLists()
-                        theme = res ? 'success' : 'error'
-                        if (method === 'modifyTag') message = res ? '标签名称保存成功。' : '标签名称保存失败。'
-                        if (method === 'deleteTag') message = res ? '删除标签成功。' : '删除标签失败。'
-                        if (method === 'addTag') message = res ? '新增标签成功。' : '新增标签失败。'
-                        if (method === 'addGroup') message = res ? '新增标签组成功。' : '新增标签组失败。'
-                        if (call) {
-                            call()
-                        }
-                    }
-                    this.btnIsdisable = false
-                    if (!this.btnIsdisable) {
-                        this.$bkMessage({
-                            theme,
-                            message
+                        done?.()
+                        this.$showTips({
+                            message: messageMap[method],
+                            theme: 'success'
                         })
                     }
+                    this.btnIsdisable = false
                 } catch (err) {
                     this.errShowTips(err)
                     if (this.tagOriginalGroupIndex && this.tagOriginalTagIndex) {
-                        this.tagGroupList[this.tagOriginalGroupIndex].labels[this.tagOriginalTagIndex].name = this.tagOriginalValue
+                        this.tagList[this.tagOriginalGroupIndex].labels[this.tagOriginalTagIndex].name = this.tagOriginalValue
                     }
                 }
             }

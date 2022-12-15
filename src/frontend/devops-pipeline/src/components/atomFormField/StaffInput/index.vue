@@ -1,12 +1,15 @@
 <template>
-    <custom-selector name="value" type="text"
+    <custom-selector
+        name="value"
+        type="text"
         :value="curInsertVal"
         :disabled="disabled"
         :placeholder="placeholder"
         :config="dataInputConfig"
         :selected-list="value"
         :set-value="setValue"
-        :delete-item="deleteItem" />
+        :delete-item="deleteItem"
+    />
 </template>
 
 <script>

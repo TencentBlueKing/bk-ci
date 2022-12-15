@@ -1,5 +1,5 @@
 <template>
-    <svg :width="size" :height="size">
+    <svg :width="size" :height="size" style="fill: currentColor">
         <title v-if="title">{{ title }}</title>
         <use v-bind="{ 'xlink:href': `#${name}` }"></use>
     </svg>

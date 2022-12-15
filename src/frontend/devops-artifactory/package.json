@@ -2,6 +2,7 @@
   "name": "devops-artifactory",
   "version": "1.0.1",
   "description": "",
+  "private": true,
   "dependencies": {
     "clipboard": "^1.7.1",
     "js-cookie": "^3.0.1",
@@ -10,6 +11,7 @@
     "vue-file-upload": "^0.1.12",
     "vue-property-decorator": "^6.0.0",
     "vue-template-compiler": "2.6.12",
+    "vue": "2.6.12",
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
@@ -34,6 +36,7 @@
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-vue-jsx": "^4.0.1",
     "css-loader": "^6.4.0",
+    "css-minimizer-webpack-plugin": "^4.2.1",
     "eslint": "^7.3.1",
     "eslint-config-standard": "^16.0.3",
     "eslint-friendly-formatter": "~4.0.1",
@@ -48,6 +51,7 @@
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",
     "style-loader": "^3.3.1",
+    "terser-webpack-plugin": "^5.3.6",
     "vue-loader": "^15.9.8",
     "vue-property-decorator": "^6.0.0",
     "vue-template-compiler": "2.6.12",
