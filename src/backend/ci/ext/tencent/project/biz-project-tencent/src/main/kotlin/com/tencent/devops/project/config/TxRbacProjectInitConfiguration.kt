@@ -45,6 +45,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.IamRbacService
+import com.tencent.devops.project.service.impl.RbacProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.impl.TxRbacProjectPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -118,4 +119,7 @@ class TxRbacProjectInitConfiguration {
         projectDao = projectDao,
         iamRbacService = iamRbacService
     )
+
+    @Bean
+    fun rbacProjectExtPermissionServiceImpl() = RbacProjectExtPermissionServiceImpl()
 }
