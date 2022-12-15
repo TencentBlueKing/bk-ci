@@ -25,20 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.classify
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.process.pojo.classify.enums.Logic
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+/**
+ * 流水线排序规则
+ */
+enum class PipelineCollation {
+    DEFAULT,
 
-@ApiModel("流水线视图创建模型")
-data class PipelineNewViewCreate(
-    @ApiModelProperty("视图名称", required = false)
-    val name: String,
-    @ApiModelProperty("是否项目", required = false)
-    val projected: Boolean,
-    @ApiModelProperty("逻辑符", required = false)
-    val logic: Logic,
-    @ApiModelProperty("流水线视图过滤器列表", required = false)
-    val filters: List<PipelineViewFilter>
-)
+    ASC,
+
+    DESC,
+
+    ;
+}
