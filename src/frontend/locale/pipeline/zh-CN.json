@@ -118,7 +118,7 @@
   "weChatGroupID": "企业微信群ID",
   "notifyGroupDesc": "多个群以英文逗号隔开",
   "stageWeChatGroupIDError": "请输入企业微信群ID",
-  "markdownContentLabel": "企业微信消息以markdown格式发送",
+  "markdownContentLabel": "企业微信消息以Markdown格式发送",
   "stageReviewInputDescTip": "可以在此填写审核的标准或者各参数的含义等介绍",
   "stageReviewParams": "自定义参数",
   "none": "无",
