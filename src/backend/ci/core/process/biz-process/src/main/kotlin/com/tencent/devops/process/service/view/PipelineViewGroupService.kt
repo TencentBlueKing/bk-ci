@@ -749,8 +749,8 @@ class PipelineViewGroupService @Autowired constructor(
             }
         }
     }
-}
 
-companion object {
-    private val logger = LoggerFactory.getLogger(PipelineViewGroupService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineViewGroupService::class.java)
+    }
 }
