@@ -94,6 +94,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             dslContext = dslContext,
             templateId = templateId
         )
+        logger.info("common template notify type is $common")
         val subTemplateList = mutableListOf<SubNotifyMessageTemplate>()
         if (null != email) {
             subTemplateList.add(
@@ -111,9 +112,13 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             )
         }
         if (null != rtx) {
+            val notifyTypeScope = mutableListOf(NotifyType.RTX.name)
+            if (common?.contains(NotifyType.WEWORK_GROUP.name) == true) {
+                notifyTypeScope.add(NotifyType.WEWORK_GROUP.name)
+            }
             subTemplateList.add(
                 SubNotifyMessageTemplate(
-                    notifyTypeScope = listOf(NotifyType.RTX.name),
+                    notifyTypeScope = notifyTypeScope,
                     title = rtx.title,
                     body = rtx.body,
                     creator = rtx.creator,
@@ -122,20 +127,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     updateTime = (rtx.updateTime as LocalDateTime).timestampmilli()
                 )
             )
-
-            if (common?.contains(NotifyType.WEWORK_GROUP.name) == true) {
-                subTemplateList.add(
-                    SubNotifyMessageTemplate(
-                        notifyTypeScope = listOf(NotifyType.WEWORK_GROUP.name),
-                        title = rtx.title,
-                        body = rtx.body,
-                        creator = rtx.creator,
-                        modifier = rtx.modifior,
-                        createTime = (rtx.createTime as LocalDateTime).timestampmilli(),
-                        updateTime = (rtx.updateTime as LocalDateTime).timestampmilli()
-                    )
-                )
-            }
         }
         if (null != wechat) {
             subTemplateList.add(
