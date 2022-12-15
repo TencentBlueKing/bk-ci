@@ -302,17 +302,24 @@ class PipelineViewDao {
         }
     }
 
-    fun listAllDynamic(
+    fun listDynamicProjectId(
+        dslContext: DSLContext
+    ): List<String> {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.select(PROJECT_ID).from(this)
+                .where(VIEW_TYPE.eq(PipelineViewType.DYNAMIC))
+                .fetch(0, String::class.java)
+        }
+    }
+
+    fun listDynamicViewByProjectId(
         dslContext: DSLContext,
-        offset: Int,
-        limit: Int
+        projectId: String
     ): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
-                .where(VIEW_TYPE.eq(PipelineViewType.DYNAMIC))
-                .orderBy(ID)
-                .offset(offset)
-                .limit(limit)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_TYPE.eq(PipelineViewType.DYNAMIC))
                 .fetch()
         }
     }

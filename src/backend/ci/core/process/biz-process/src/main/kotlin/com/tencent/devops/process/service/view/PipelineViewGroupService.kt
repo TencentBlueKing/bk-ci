@@ -741,21 +741,17 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun initAllView() {
-        val limit = 200
-        var offset = 0
-        var hasNext = true
-        while (hasNext) {
-            val listAllDynamic = pipelineViewDao.listAllDynamic(dslContext, offset, limit)
-            listAllDynamic.forEach {
-                redisOperation.delete(firstInitMark(it.projectId, it.id))
-                initDynamicViewGroup(it, "admin")
+        val listAllDynamic = pipelineViewDao.listDynamicProjectId(dslContext)
+        listAllDynamic.forEach { projectId ->
+            pipelineViewDao.listDynamicViewByProjectId(dslContext, projectId).forEach { view ->
+                redisOperation.delete(firstInitMark(view.projectId, view.id))
+                initDynamicViewGroup(view, "admin")
             }
-            offset += limit
-            hasNext = listAllDynamic.size == limit
         }
     }
+}
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineViewGroupService::class.java)
-    }
+companion object {
+    private val logger = LoggerFactory.getLogger(PipelineViewGroupService::class.java)
+}
 }
