@@ -97,7 +97,6 @@
     import ProjectDialog from '../ProjectDialog/index.vue'
     import eventBus from '../../utils/eventBus'
     import { urlJoin } from '../../utils/util'
-    import { Project } from '../../typings/type'
 
     @Component({
         components: {
