@@ -75,7 +75,8 @@ task('build', cb => {
         acc += ` --env ${key}=${envConfMap[key]}`
         return acc
     }, '')
-    require('child_process').exec(`lerna run public:${env} ${scopeStr} --${envQueryStr}`, {
+    console.log(envQueryStr)
+    require('child_process').exec(`lerna run public:${env} ${scopeStr} `, {
         maxBuffer: 5000 * 1024,
         env: {
             ...process.env,
