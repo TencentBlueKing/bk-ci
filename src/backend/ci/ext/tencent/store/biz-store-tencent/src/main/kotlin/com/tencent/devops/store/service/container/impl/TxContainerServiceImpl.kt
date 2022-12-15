@@ -40,7 +40,6 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.image.api.ServiceDevCloudImageResource
 import com.tencent.devops.image.api.ServiceImageResource
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.pojo.app.ContainerResourceItem
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
@@ -73,19 +72,7 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
     }
 
     override fun clickable(buildType: BuildType, projectCode: String, enableFlag: Boolean?): Boolean {
-        return when (buildType) {
-            BuildType.IDC -> {
-                val projectVO = client.get(ServiceProjectResource::class).get(projectCode).data
-                if (projectVO?.enableIdc != null) {
-                    projectVO.enableIdc ?: false
-                } else {
-                    false
-                }
-            }
-            else -> {
-                enableFlag ?: buildType.clickable
-            }
-        }
+        return enableFlag ?: buildType.clickable
     }
 
     override fun getResource(
@@ -232,41 +219,6 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                     val image = it.image
                     if (null != image) {
                         val array = image.split("/devcloud/")
-                        dockerList.add(ContainerResourceItem(id = array[1], name = array[1]))
-                    }
-                }
-                containerResourceValue = dockerList.map {
-                    it.name
-                }.toList()
-                dockerList
-            }
-            BuildType.IDC -> {
-                val buildResourceRecord = buildResourceDao.getBuildResourceByContainerId(dslContext, containerId, null)
-                var containerResourceList: Set<ContainerResourceItem>? = null
-                if (buildResourceRecord != null && buildResourceRecord.size > 0) {
-                    containerResourceList = HashSet()
-                    for (buildResourceItem in buildResourceRecord) {
-                        val buildResourceCode = buildResourceItem["buildResourceCode"] as String
-                        containerResourceList.add(
-                            ContainerResourceItem(
-                                id = buildResourceCode,
-                                name = buildResourceCode
-                            )
-                        )
-                    }
-                }
-                val dockerList = mutableListOf<ContainerResourceItem>()
-                if (null != containerResourceList) {
-                    dockerList.addAll(containerResourceList.sortedBy { it.name })
-                }
-                val dockerBuildImageList =
-                    client.get(ServiceImageResource::class).listDockerBuildImages(userId, projectCode)
-                        .data // linux环境第三方镜像
-                logger.info("the dockerBuildImageList is :$dockerBuildImageList")
-                dockerBuildImageList?.forEach {
-                    val image = it.image
-                    if (null != image) {
-                        val array = image.split("/paas/bkdevops/")
                         dockerList.add(ContainerResourceItem(id = array[1], name = array[1]))
                     }
                 }
