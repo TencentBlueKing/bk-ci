@@ -91,7 +91,7 @@
   "pipelineNameTips": "请输入流水线名称",
   "pipelineNameInputTips": "请输入流水线名称,不超过40个字符",
   "pipelineDescInputTips": "请输入100字符以内的描述内容",
-  "pipelineDynamicMatchPlaceholder": "将根据流水线的标签自动匹配",
+  "pipelineDynamicMatchPlaceholder": "将根据流水线的名称、标签等属性自动匹配",
   "buildDescInputTips": "${{DATE:\"yyyyMMdd\"}}.${{BUILD_NO_OF_DAY}}",
   "buildNumRuleWarn": "超出长度限制的部分会被截断",
   "jobIdTips": "非必填，整个流水线下唯一，由字母、数字、下划线组成",

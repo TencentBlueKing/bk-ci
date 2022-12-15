@@ -51,17 +51,34 @@
                         :ref="`groupName_${props.$index}`"
                         v-for="(viewName, index) in pipelineGroups[props.$index].visibleGroups"
                         :key="index"
+                        v-bk-tooltips="viewName"
                         @click="goGroup(viewName)"
                     >
                         {{viewName}}
                     </bk-tag>
-                    <bk-tag
-                        :ref="`groupNameMore_${props.$index}`"
+                    <bk-popover
+                        theme="light"
+                        placement="bottom-end"
+                        max-width="250"
                         v-if="pipelineGroups[props.$index].showMore"
-                        v-bk-tooltips="pipelineGroups[props.$index].hiddenGroups.join(',')"
                     >
-                        +{{ pipelineGroups[props.$index].showMore }}
-                    </bk-tag>
+                        <bk-tag
+                            :ref="`groupNameMore_${props.$index}`"
+                        >
+                            +{{ pipelineGroups[props.$index].showMore }}
+                        </bk-tag>
+                        <div slot="content">
+                            <bk-tag
+                                v-for="hiddenGroup in pipelineGroups[props.$index].hiddenGroups"
+                                ext-cls="pipeline-group-name-tag"
+                                :key="hiddenGroup"
+                                v-bk-tooltips="hiddenGroup"
+                                @click="goGroup(hiddenGroup)"
+                            >
+                                {{hiddenGroup}}
+                            </bk-tag>
+                        </div>
+                    </bk-popover>
                 </template>
             </div>
         </bk-table-column>
@@ -210,8 +227,8 @@
                 pipelineList: [],
                 selectionLength: 0,
                 pagination: {
-                    current: 1,
-                    limit: 20,
+                    current: this.$route.query.page ?? 1,
+                    limit: this.$route.query.pageSize ?? 20,
                     count: 0
                 },
                 visibleTagCountList: {}
@@ -237,6 +254,7 @@
                 const res = this.pipelineList.map((pipeline, index) => {
                     const { viewNames } = pipeline
                     const visibleCount = this.visibleTagCountList[index]
+                                        
                     if (visibleCount >= 1) {
                         return {
                             visibleGroups: viewNames.slice(0, visibleCount),
@@ -244,6 +262,7 @@
                             showMore: viewNames.length - visibleCount
                         }
                     }
+                    
                     return {
                         visibleGroups: viewNames,
                         hiddenGroups: [],
@@ -268,8 +287,10 @@
                     page: 1
                 })
             },
-            sortField: function () {
-                this.$nextTick(this.requestList)
+            sortField: function (newSortField, oldSortField) {
+                if (!isShallowEqual(newSortField, oldSortField)) {
+                    this.$nextTick(this.requestList)
+                }
             },
             filterParams: function (filterMap, oldFilterMap) {
                 if (!isShallowEqual(filterMap, oldFilterMap)) {
@@ -345,7 +366,7 @@
                         current: page
                     })
                     this.pipelineList = records
-                    if (this.isAllPipelineView || this.isDeleteView) {
+                    if (this.isAllPipelineView || this.isPatchView || this.isDeleteView) {
                         this.visibleTagCountList = {}
                         setTimeout(this.calcOverPos, 100)
                     }

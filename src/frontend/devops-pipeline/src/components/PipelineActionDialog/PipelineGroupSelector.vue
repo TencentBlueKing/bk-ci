@@ -139,6 +139,11 @@
             '$route.params.projectId': function () {
                 this.reset()
                 this.refreshLabel()
+            },
+            pipelineName () {
+                this.$nextTick(() => {
+                    this.updateDynamicGroup(this.initTags)
+                })
             }
         },
         created () {

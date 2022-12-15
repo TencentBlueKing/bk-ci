@@ -14,6 +14,10 @@ allprojects {
     version = (System.getProperty("ci_version") ?: "1.9.0") +
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
+    // TODO bkrepo依赖到 , 后续加到framework后可以删掉
+    repositories {
+        maven(url = "https://repo.spring.io/milestone")
+    }
     // 版本管理
     dependencyManagement {
         setApplyMavenExclusions(false)
@@ -103,6 +107,11 @@ allprojects {
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
             }
+            // TODO 等后面spring cloud版本升级上来就可以去掉
+            dependency(
+                "org.springframework.cloud:spring-cloud-kubernetes-client-discovery:" +
+                        "${Versions.KubernetesDiscovery}"
+            )
         }
     }
 

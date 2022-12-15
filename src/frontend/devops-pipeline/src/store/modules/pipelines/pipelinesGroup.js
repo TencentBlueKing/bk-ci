@@ -162,7 +162,7 @@ const mutations = {
     [UPDATE_PIPELINE_GROUP]: (state, { id, body }) => {
         const group = state.allPipelineGroup.find(group => group.id === id)
         if (group) {
-            Vue.set(group, body)
+            Object.assign(group, body)
         }
     }
 }

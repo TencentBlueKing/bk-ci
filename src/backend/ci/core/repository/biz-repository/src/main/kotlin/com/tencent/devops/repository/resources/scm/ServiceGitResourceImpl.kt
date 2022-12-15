@@ -541,6 +541,17 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
+    override fun enableCi(
+        projectName: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        enable: Boolean?
+    ): Result<Boolean> {
+        return gitService.enableCi(
+            projectName = projectName, token = token, tokenType = tokenType, enable = enable
+        )
+    }
+
     override fun gitCreateFile(
         gitProjectId: String,
         token: String,

@@ -1110,10 +1110,10 @@ class GitService @Autowired constructor(
     ): GitMrChangeInfo {
         val url = StringBuilder(
             "${getApiUrl(repoUrl)}/projects/${
-            URLEncoder.encode(
-                id,
-                "UTF-8"
-            )
+                URLEncoder.encode(
+                    id,
+                    "UTF-8"
+                )
             }/merge_request/$mrId/changes"
         )
         logger.info("get mr changes info url: $url")
@@ -1747,6 +1747,45 @@ class GitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git commits")
+        }
+    }
+
+    @BkTimed(extraTags = ["operation", "enableCi"], value = "bk_tgit_api_time")
+    override fun enableCi(
+        projectName: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        enable: Boolean?
+    ): Result<Boolean> {
+        logger.info(
+            "enableCi projectName:$projectName," +
+                "enable:$enable,tokenType:$tokenType"
+        )
+        val encodeProjectName = URLEncoder.encode(projectName, "utf-8")
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/ci/enable")
+        setToken(tokenType, url, token)
+        url.append("&enable_ci=$enable")
+        val request = Request.Builder()
+            .url(url.toString())
+            .put(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"), "{}"
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                return Result(it.code(), "enableCi fail ${it.message()}")
+            }
+            val data = it.body()!!.string()
+            logger.info("enableCi response>> $data")
+            val dataMap = JsonUtil.toMap(data)
+            val code = dataMap["code"]
+            if (code != 200) {
+                // 把工蜂的错误提示抛出去
+                return Result(code as Int, "${dataMap["message"]}")
+            }
+            return Result(true)
         }
     }
 
