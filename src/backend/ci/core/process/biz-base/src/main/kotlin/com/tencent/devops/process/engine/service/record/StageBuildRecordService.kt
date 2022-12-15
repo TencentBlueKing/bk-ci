@@ -344,12 +344,12 @@ class StageBuildRecordService(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = stageId,
+                buildId = buildId,
                 executeCount = executeCount
             )
             val recordStage = recordStages.find { it.stageId == stageId } ?: run {
                 logger.warn(
-                    "ENGINE|$buildId|updateStageStatus| get stage($stageId) record failed."
+                    "ENGINE|$buildId|updateStageStatus|cannot get stage($stageId) record."
                 )
                 return@transaction
             }
