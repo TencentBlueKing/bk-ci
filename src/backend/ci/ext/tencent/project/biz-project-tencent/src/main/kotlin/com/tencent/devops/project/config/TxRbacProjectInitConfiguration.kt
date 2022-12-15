@@ -32,9 +32,14 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
+import com.tencent.devops.common.auth.api.BSAuthTokenApi
+import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.RbacAuthPermissionApi
 import com.tencent.devops.common.auth.api.RbacAuthProjectApi
+import com.tencent.devops.common.auth.api.RbacResourceApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -49,6 +54,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Configuration
@@ -69,7 +75,25 @@ class TxRbacProjectInitConfiguration {
     ) = V2ManagerServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
 
     @Bean
+    @Primary
+    fun authTokenApi(
+        bkAuthProperties: BkAuthProperties,
+        objectMapper: ObjectMapper,
+        redisOperation: RedisOperation
+    ) =
+        BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
+
+    @Bean
+    fun authResourceApi(
+        client: Client,
+        tokenService: ClientTokenService
+    ) = RbacResourceApi(client = client, tokenService = tokenService)
+
+    @Bean
     fun authProjectApi() = RbacAuthProjectApi()
+
+    @Bean
+    fun authPermissionApi() = RbacAuthPermissionApi()
 
     @Bean
     fun projectPermissionService(
