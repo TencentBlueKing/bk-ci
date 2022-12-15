@@ -325,7 +325,7 @@ class StageBuildRecordService(
         return allStageStatus ?: emptyList()
     }
 
-    private fun updateStageRecord(
+    fun updateStageRecord(
         projectId: String,
         pipelineId: String,
         buildId: String,

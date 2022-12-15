@@ -119,7 +119,7 @@ open class BaseBuildRecordService(
             )
 
             watcher.start("dispatchEvent")
-            // TODO 暂时不在record进行推送，避免和detail重复
+            // TODO #7983 暂时不在record进行推送，避免和detail重复
 //            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser)
             message = "Will not update"
         } catch (ignored: Throwable) {

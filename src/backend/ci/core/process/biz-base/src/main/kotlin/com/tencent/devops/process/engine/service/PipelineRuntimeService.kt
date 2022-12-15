@@ -44,6 +44,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCast
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -1218,35 +1219,43 @@ class PipelineRuntimeService @Autowired constructor(
                     stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
                     taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
                     executeCount = it.executeCount ?: 1, originClassType = null,
-                    resourceVersion = resourceVersion, status = null,
+                    resourceVersion = resourceVersion, status = it.status.name,
                     timestamps = mapOf(), taskVar = mutableMapOf()
                 )
             )
         }
     }
 
-    private fun saveContainerRecords(buildContainers: MutableList<PipelineBuildContainer>, containerBuildRecords: MutableList<BuildRecordContainer>, resourceVersion: Int) {
+    private fun saveContainerRecords(
+        buildContainers: MutableList<PipelineBuildContainer>,
+        containerBuildRecords: MutableList<BuildRecordContainer>,
+        resourceVersion: Int
+    ) {
         buildContainers.forEach {
             containerBuildRecords.add(
                 BuildRecordContainer(
                     projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
                     buildId = it.buildId, stageId = it.stageId, containerId = it.containerId,
                     containerType = it.containerType, executeCount = it.executeCount,
-                    matrixGroupFlag = null, matrixGroupId = null, containerVar = mutableMapOf(),
-                    status = null, timestamps = mapOf()
+                    matrixGroupFlag = it.matrixGroupFlag, matrixGroupId = it.matrixGroupId,
+                    containerVar = mutableMapOf(), status = it.status.name, timestamps = mapOf()
                 )
             )
         }
     }
 
-    private fun saveStageRecords(updateStageExistsRecord: MutableList<PipelineBuildStage>, stageBuildRecords: MutableList<BuildRecordStage>, resourceVersion: Int) {
+    private fun saveStageRecords(
+        updateStageExistsRecord: MutableList<PipelineBuildStage>,
+        stageBuildRecords: MutableList<BuildRecordStage>,
+        resourceVersion: Int
+    ) {
         updateStageExistsRecord.forEach {
             stageBuildRecords.add(
                 BuildRecordStage(
                     projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
                     buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
                     executeCount = it.executeCount, stageVar = mutableMapOf(),
-                    status = null, timestamps = mapOf()
+                    status = it.status.name, timestamps = mapOf()
                 )
             )
         }

@@ -104,7 +104,7 @@ class TaskBuildRecordService(
         }
     }
 
-    // TODO 暂时保留和detail一致的方法，后续简化为updateTaskStatus
+    // TODO #7983 暂时保留和detail一致的方法，后续简化为updateTaskStatus
     fun taskPause(
         projectId: String,
         pipelineId: String,
@@ -229,7 +229,7 @@ class TaskBuildRecordService(
         }
     }
 
-    // TODO 暂时保留和detail一致的方法，后续简化为updateTaskStatus
+    // TODO #7983 暂时保留和detail一致的方法，后续简化为updateTaskStatus
     fun taskCancel(
         projectId: String,
         pipelineId: String,
@@ -351,7 +351,7 @@ class TaskBuildRecordService(
             buildStatus = BuildStatus.QUEUE,
             operation = "updateElementWhenPauseContinue#$taskId"
         )
-        // TODO 重写同container下的插件input
+        // TODO #7983 重写同container下的插件input
         updateTaskStatus(
             projectId = projectId,
             pipelineId = pipelineId,
