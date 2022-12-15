@@ -2,7 +2,6 @@ package com.tencent.devops.process.service.view
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW
@@ -26,6 +25,8 @@ import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.Result
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -45,7 +46,6 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val pipelineViewGroupDao: PipelineViewGroupDao = mockk()
     private val pipelineViewTopDao: PipelineViewTopDao = mockk()
     private val pipelineInfoDao: PipelineInfoDao = mockk()
-    private val client: Client = mockk()
 
     private val self: PipelineViewGroupService = spyk(
         PipelineViewGroupService(
@@ -498,7 +498,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @Test
         @DisplayName("项目流水线组 & 校验不通过")
         fun test_1() {
-            every { self["checkPermission"](any() as String, any() as String) } returns false
+            every { self["hasPermission"](any() as String, any() as String) } returns false
             try {
                 self.invokePrivate<Unit>("checkPermission", "test", "test", true, "test")
             } catch (e: Throwable) {
@@ -691,8 +691,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     inner class BulkAdd {
         @BeforeEach
         fun permissionFalse() {
-            every { self["checkPermission"]("false", any() as String) } returns false
-            every { self["checkPermission"]("true", any() as String) } returns true
+            every { self["hasPermission"]("false", any() as String) } returns false
+            every { self["hasPermission"]("true", any() as String) } returns true
         }
 
         private val ba = PipelineViewBulkAdd(
@@ -760,8 +760,8 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
 
         @BeforeEach
         fun permissionFalse() {
-            every { self["checkPermission"]("false", any() as String) } returns false
-            every { self["checkPermission"]("true", any() as String) } returns true
+            every { self["hasPermission"]("false", any() as String) } returns false
+            every { self["hasPermission"]("true", any() as String) } returns true
         }
 
         @Test
@@ -822,6 +822,31 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every { pipelineViewGroupDao.batchRemove(anyDslContext(), any(), any(), any()) } returns Unit
             self.bulkRemove("true", "test", br).let {
                 Assertions.assertEquals(it, true)
+            }
+        }
+    }
+
+    @Nested
+    inner class HasPermission {
+        @Test
+        @DisplayName("返回值测试1")
+        fun test_1() {
+            every {
+                client.mockGet(ServiceProjectResource::class).hasPermission(any(), any(), any())
+            } returns Result(true)
+            self.hasPermission("test", "test").let {
+                Assertions.assertEquals(true, it)
+            }
+        }
+
+        @Test
+        @DisplayName("返回值测试2")
+        fun test_2() {
+            every {
+                client.mockGet(ServiceProjectResource::class).hasPermission(any(), any(), any())
+            } returns Result(false)
+            self.hasPermission("test", "test").let {
+                Assertions.assertEquals(false, it)
             }
         }
     }

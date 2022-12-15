@@ -29,7 +29,6 @@
     import { urlJoin, queryStringify, getServiceAliasByPath } from '../utils/util'
     import { State, Getter } from 'vuex-class'
     import cookie from 'js-cookie'
-    import { ObjectMap } from '../typings/type'
 
     Component.registerHooks([
         'beforeRouteEnter',
