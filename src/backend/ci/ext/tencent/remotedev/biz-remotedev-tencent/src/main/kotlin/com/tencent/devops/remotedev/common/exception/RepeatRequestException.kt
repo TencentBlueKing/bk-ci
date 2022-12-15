@@ -25,56 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service.redis
+package com.tencent.devops.remotedev.common.exception
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.remotedev.common.exception.RepeatRequestException
-import org.slf4j.LoggerFactory
-import java.util.UUID
+import javax.ws.rs.core.Response
 
-/**
- * 主要用于一些同一时间只允许有一个实例运行的地方。
- */
-open class RedisCallLimit(
-    private val redisOperation: RedisOperation,
-    private val lockKey: String,
-    private val expiredTimeInSeconds: Long
-) : AutoCloseable {
-    companion object {
-        /**
-         * 调用set后的返回值
-         */
-        private const val OK = "OK"
-
-        private val logger = LoggerFactory.getLogger(RedisCallLimit::class.java)
-    }
-
-    private val lockValue = UUID.randomUUID().toString()
-
-    private var locked = false
-
-    private val redisLock = RedisLock(redisOperation, lockKey, expiredTimeInSeconds)
-
-    /**
-     *
-     *
-     * @return 该 lock 需要放在 finally 外
-     * @throws CustomException 已经存在 key ，说明是重复请求
-     */
-    fun lock(): RedisCallLimit {
-        val result = redisLock.set(lockKey, lockValue, expiredTimeInSeconds)
-        val l = OK.equals(result, true)
-        if (!l) {
-            logger.warn("$lockKey call duplicate, reject it.")
-            throw RepeatRequestException(lockKey)
-        }
-        locked = true
-        return this
-    }
-
-    override fun close() {
-        redisLock.close()
-    }
-}
+open class RepeatRequestException(lockKey: String) : CustomException(Response.Status.BAD_REQUEST, "重复请求！请稍后重试")
