@@ -90,6 +90,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         val email = notifyMessageTemplateDao.getEmailNotifyMessageTemplate(dslContext, templateId)
         val wechat = notifyMessageTemplateDao.getWechatNotifyMessageTemplate(dslContext, templateId)
         val rtx = notifyMessageTemplateDao.getRtxNotifyMessageTemplate(dslContext, templateId)
+        val common = notifyMessageTemplateDao.getCommonNotifyMessageTemplatesNotifyType(
+            dslContext = dslContext,
+            templateId = templateId
+        )
         val subTemplateList = mutableListOf<SubNotifyMessageTemplate>()
         if (null != email) {
             subTemplateList.add(
@@ -118,6 +122,20 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     updateTime = (rtx.updateTime as LocalDateTime).timestampmilli()
                 )
             )
+
+            if (common?.contains(NotifyType.WEWORK_GROUP.name) == true) {
+                subTemplateList.add(
+                    SubNotifyMessageTemplate(
+                        notifyTypeScope = listOf(NotifyType.WEWORK_GROUP.name),
+                        title = rtx.title,
+                        body = rtx.body,
+                        creator = rtx.creator,
+                        modifier = rtx.modifior,
+                        createTime = (rtx.createTime as LocalDateTime).timestampmilli(),
+                        updateTime = (rtx.updateTime as LocalDateTime).timestampmilli()
+                    )
+                )
+            }
         }
         if (null != wechat) {
             subTemplateList.add(
@@ -489,10 +507,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val record = notifyMessageTemplateDao.getCommonNotifyMessageTemplatesNotifyType(context, templateId)
-            logger.info("获取消息类型：${record?.get("NOTIFY_TYPE_SCOPE") as String}")
-            val notifyTypeStr = record["NOTIFY_TYPE_SCOPE"] as String
+            logger.info("获取消息类型：$record")
             val existsNotifyType =
-                JsonUtil.getObjectMapper().readValue(notifyTypeStr, List::class.java) as ArrayList<String>
+                JsonUtil.getObjectMapper().readValue(record, List::class.java) as ArrayList<String>
             logger.info("删除消息模板子表信息：$notifyType ${NotifyType.EMAIL} ${notifyType == NotifyType.EMAIL.name}")
             when (notifyType) {
                 NotifyType.EMAIL.name -> {

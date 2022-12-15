@@ -81,13 +81,13 @@ class NotifyMessageTemplateDao {
         }
     }
 
-    fun getCommonNotifyMessageTemplatesNotifyType(dslContext: DSLContext, templateId: String): Record1<String>? {
+    fun getCommonNotifyMessageTemplatesNotifyType(dslContext: DSLContext, templateId: String): String? {
         with(TCommonNotifyMessageTemplate.T_COMMON_NOTIFY_MESSAGE_TEMPLATE) {
             val baseStep = dslContext.select(NOTIFY_TYPE_SCOPE)
                 .from(this)
                 .where(ID.eq(templateId))
 
-            return baseStep.fetchOne()
+            return baseStep.fetchOne(NOTIFY_TYPE_SCOPE)
         }
     }
 
