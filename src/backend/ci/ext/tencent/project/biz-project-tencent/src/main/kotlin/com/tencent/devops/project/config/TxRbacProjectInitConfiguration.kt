@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
+import com.tencent.devops.common.auth.api.RbacAuthProjectApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
@@ -65,6 +66,9 @@ class TxRbacProjectInitConfiguration {
         iamConfiguration: IamConfiguration,
         apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl
     ) = V2ManagerServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
+
+    @Bean
+    fun authProjectApi() = RbacAuthProjectApi()
 
     @Bean
     fun projectPermissionService(
