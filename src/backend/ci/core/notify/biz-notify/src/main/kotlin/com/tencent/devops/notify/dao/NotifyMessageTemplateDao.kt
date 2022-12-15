@@ -41,7 +41,6 @@ import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
