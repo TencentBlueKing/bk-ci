@@ -75,6 +75,8 @@ enum class BuildStatus(val statusName: String, val visible: Boolean) {
 
     fun isSkip(): Boolean = this == SKIP
 
+    fun isTerminate(): Boolean = this == TERMINATE
+
     fun isRunning(): Boolean =
         this == RUNNING ||
             this == LOOP_WAITING ||
