@@ -139,7 +139,7 @@ class BuildRecordModelDao {
                     BUILD_ID.eq(buildId)
                         .and(PROJECT_ID.eq(projectId))
                         .and(PIPELINE_ID.eq(pipelineId))
-                ).orderBy(EXECUTE_COUNT.asc()).fetch(START_USER)
+                ).orderBy(EXECUTE_COUNT.desc()).fetch(START_USER)
         }
     }
 

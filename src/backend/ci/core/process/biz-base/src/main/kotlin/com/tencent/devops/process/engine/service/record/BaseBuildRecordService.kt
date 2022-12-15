@@ -192,8 +192,8 @@ open class BaseBuildRecordService(
                 stageId = it.stageId,
                 name = it.stageVar[Stage::name.name]?.toString() ?: it.stageId,
                 status = it.status,
-                startEpoch = it.stageVar[Stage::startEpoch.name].toString().toLong(),
-                elapsed = it.stageVar[Stage::elapsed.name].toString().toLong(),
+                startEpoch = it.stageVar[Stage::startEpoch.name]?.toString()?.toLong(),
+                elapsed = it.stageVar[Stage::elapsed.name]?.toString()?.toLong(),
                 timeCost = timeCost,
                 tag = it.stageVar[Stage::tag.name]?.let { tags ->
                     JsonUtil.anyTo(tags, object : TypeReference<List<String>>() {})
