@@ -38,5 +38,4 @@ dependencies {
     api(project(":ext:tencent:auth:api-auth-tencent"))
     api(project(":ext:tencent:stream:api-stream-tencent"))
     api(project(":ext:tencent:support:api-support-tencent"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
 }
