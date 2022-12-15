@@ -68,7 +68,7 @@ interface ApigwRepositoryResourceV2 {
         @ApiParam(value = "组织ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Int,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("仓库类型", required = false)

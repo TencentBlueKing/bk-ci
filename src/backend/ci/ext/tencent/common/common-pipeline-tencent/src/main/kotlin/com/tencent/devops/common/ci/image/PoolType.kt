@@ -30,6 +30,7 @@ package com.tencent.devops.common.ci.image
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispatchType
@@ -41,6 +42,7 @@ import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 enum class PoolType {
     DockerOnVm {
         override fun transfer(pool: Pool): DispatchType {
@@ -142,26 +144,46 @@ enum class PoolType {
                     envName = pool.envName,
                     envProjectId = pool.envProjectId,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME
+                    agentType = AgentType.NAME,
+                    dockerInfo = ThirdPartyAgentDockerInfo(
+                        image = pool.container ?: "",
+                        credential = null,
+                        envs = pool.env
+                    )
                 )
             } else if (!pool.envId.isNullOrBlank()) {
                 return ThirdPartyAgentEnvDispatchType(
                     envName = pool.envId,
                     envProjectId = pool.envProjectId,
                     workspace = pool.workspace,
-                    agentType = AgentType.ID
+                    agentType = AgentType.ID,
+                    dockerInfo = ThirdPartyAgentDockerInfo(
+                        image = pool.container ?: "",
+                        credential = null,
+                        envs = pool.env
+                    )
                 )
             } else if (!pool.agentId.isNullOrBlank()) {
                 return ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentId!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.ID
+                    agentType = AgentType.ID,
+                    dockerInfo = ThirdPartyAgentDockerInfo(
+                        image = pool.container ?: "",
+                        credential = null,
+                        envs = pool.env
+                    )
                 )
             } else {
                 return ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentName!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME
+                    agentType = AgentType.NAME,
+                    dockerInfo = ThirdPartyAgentDockerInfo(
+                        image = pool.container ?: "",
+                        credential = null,
+                        envs = pool.env
+                    )
                 )
             }
         }

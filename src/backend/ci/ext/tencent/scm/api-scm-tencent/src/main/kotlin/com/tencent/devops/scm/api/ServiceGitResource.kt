@@ -1021,6 +1021,21 @@ interface ServiceGitResource {
         minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeProjectInfo>>
 
+    @ApiOperation("开启git仓库ci")
+    @GET
+    @Path("/gitcode/gitEnableCi")
+    fun enableCi(
+        @ApiParam(value = "仓库id或编码过的仓库path")
+        @QueryParam("projectName")
+        projectName: String,
+        @QueryParam("token")
+        token: String,
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @QueryParam("enable")
+        enable: Boolean? = true
+    ): Result<Boolean>
+
     @ApiOperation("工蜂创建文件")
     @POST
     @Path("/gitcode/create/file")
