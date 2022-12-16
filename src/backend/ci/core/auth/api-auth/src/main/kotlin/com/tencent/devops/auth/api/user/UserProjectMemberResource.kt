@@ -33,6 +33,8 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -144,4 +146,16 @@ interface UserProjectMemberResource {
         @ApiParam(name = "待搜用户", required = true)
         searchUserId: String
     ): Result<List<ManagerRoleGroupInfo>?>
+
+    @GET
+    @Path("/projectIds/{projectId}/checkManager")
+    @ApiOperation("判断是否是项目管理员或CI管理员")
+    fun checkProjectManager(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        @ApiParam("项目Id", required = true)
+        projectId: String
+    ): Result<Boolean>
 }
