@@ -5,23 +5,30 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.devcloud.pojo.Environment
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListReq
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListRsp
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRsp
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRspData
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatus
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatusRsp
+import com.tencent.devops.dispatch.devcloud.pojo.TaskStatusEnum
+import com.tencent.devops.dispatch.devcloud.pojo.TaskStatusRsp
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.json.JSONArray
-import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
 
 @Component
-class DispatchDevCloudClient {
-    private val logger = LoggerFactory.getLogger(DispatchDevCloudClient::class.java)
+class DevCloudClient {
+    private val logger = LoggerFactory.getLogger(DevCloudClient::class.java)
 
     @Value("\${devCloud.appId}")
     val devCloudAppId: String = ""
@@ -41,11 +48,10 @@ class DispatchDevCloudClient {
     @Value("\${devCloud.memory}")
     var memory: String = "65535M"
 
-    fun createWorkspace(dispatchMessage: DispatchMessage, devCloudContainer: DevCloudContainer): Pair<String, String> {
-        val url = devCloudUrl + "/api/v2.1/containers"
-        val body = ObjectMapper().writeValueAsString(devCloudContainer)
-        logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] request url: $url")
-        logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] request body: $body")
+    fun createWorkspace(userId: String, environment: Environment): EnvironmentOpRspData {
+        val url = devCloudUrl + "/environment/create"
+        val body = ObjectMapper().writeValueAsString(environment)
+        logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -53,10 +59,10 @@ class DispatchDevCloudClient {
                     SmartProxyUtil.makeHeaders(
                         devCloudAppId,
                         devCloudToken,
-                        dispatchMessage.userId,
+                        userId,
                         smartProxyToken,
-                        dispatchMessage.projectId,
-                        dispatchMessage.pipelineId
+                        "",
+                        ""
                     )
                 )
             )
@@ -66,68 +72,46 @@ class DispatchDevCloudClient {
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
-                logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] http code is ${response.code()}, $responseContent")
+                logger.info("User $userId create environment response: ${response.code()} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口异常: Fail to createContainer, http response code: ${response.code()}"
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口异常: ${response.code()}"
                     )
                 }
 
-                val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
-                val code = responseData["actionCode"] as Int
-                if (200 == code) {
-                    val dataMap = responseData["data"] as Map<String, Any>
-                    return Pair((dataMap["taskId"] as Int).toString(), dataMap["name"] as String)
+                val environmentOpRsp: EnvironmentOpRsp = jacksonObjectMapper().readValue(responseContent)
+                if (200 == environmentOpRsp.code) {
+                    return environmentOpRsp.data
                 } else {
-                    val msg = responseData["actionMessage"] as String
                     throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口返回失败: $msg"
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口返回失败: ${environmentOpRsp.message}"
                     )
                 }
             }
         } catch (e: SocketTimeoutException) {
-            logger.error(
-                "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] create container get SocketTimeoutException",
-                e
-            )
+            logger.error("User $userId create environment get SocketTimeoutException", e)
             throw BuildFailureException(
-                errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口超时, url: $url"
+                errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口超时, url: $url"
             )
         }
     }
 
-    fun stopWorkspace(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
+    fun operatorWorkspace(
         userId: String,
-        name: String,
-        action: Action,
-        param: Params? = null
-    ): String {
-        val url = devCloudUrl + "/api/v2.1/containers/" + name
-        val body = when (action) {
-            Action.DELETE -> "{\"action\":\"delete\",\"params\":{}}"
-            Action.STOP -> "{\"action\":\"stop\",\"params\":{}}"
-            Action.START -> if (null != param) {
-                "{\"action\":\"start\",\"params\": ${jacksonObjectMapper().writeValueAsString(param)}}"
-            } else {
-                "{\"action\":\"start\",\"params\":{}}"
-            }
-            else -> ""
-        }
-        logger.info("[$buildId]|[$vmSeqId] request url: $url")
-        logger.info("[$buildId]|[$vmSeqId] request body: $body")
+        enviromentUid: String,
+        environmentAction: EnvironmentAction
+    ): EnvironmentOpRspData {
+        val url = devCloudUrl + "/environment/{${environmentAction.getValue()}}"
+        logger.info("User $userId request url: $url, enviromentUid: $enviromentUid")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -137,8 +121,139 @@ class DispatchDevCloudClient {
                         devCloudToken,
                         userId,
                         smartProxyToken,
-                        projectId,
-                        pipelineId
+                        "",
+                        ""
+                    )
+                )
+            )
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), enviromentUid))
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body()!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口异常：${response.code()}"
+                    )
+                }
+                logger.info("User $userId ${environmentAction.getValue()} environment response: $responseContent")
+                val environmentOpRsp: EnvironmentOpRsp = jacksonObjectMapper().readValue(responseContent)
+                if (200 == environmentOpRsp.code) {
+                    return environmentOpRsp.data
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口返回失败：${environmentOpRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId ${environmentAction.getValue()} environment get SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口超时, url: $url"
+            )
+        }
+    }
+
+    fun getWorkspaceStatus(
+        userId: String,
+        enviromentUid: String,
+        retryTime: Int = 3
+    ): EnvironmentStatus {
+        val url = devCloudUrl + "/environment/status"
+        logger.info("User $userId get environment status: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(
+                Headers.of(
+                    SmartProxyUtil.makeHeaders(
+                        devCloudAppId,
+                        devCloudToken,
+                        userId,
+                        smartProxyToken,
+                        "",
+                        ""
+                    )
+                )
+            )
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), enviromentUid))
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body()!!.string()
+                logger.info("User $userId get environment status $enviromentUid response: $responseContent")
+                if (!response.isSuccessful) {
+                    if (retryTime > 0) {
+                        val retryTimeLocal = retryTime - 1
+                        return getWorkspaceStatus(userId, enviromentUid, retryTimeLocal)
+                    }
+                    throw BuildFailureException(
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 获取环境状态接口异常: ${response.code()}"
+                    )
+                }
+
+                val environmentStatusRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
+                if (200 == environmentStatusRsp.code) {
+                    return environmentStatusRsp.data
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口返回失败：${environmentStatusRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            // 接口超时失败，重试三次
+            if (retryTime > 0) {
+                logger.info(
+                    "User $userId get environment status SocketTimeoutException. " +
+                        "retry: $retryTime"
+                )
+                return getWorkspaceStatus(userId, enviromentUid, retryTime - 1)
+            } else {
+                logger.error("User $userId get environment status failed.", e)
+                throw BuildFailureException(
+                    errorType = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                    formatErrorMessage = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    errorMessage = "获取环境状态接口超时, url: $url"
+                )
+            }
+        }
+    }
+
+    fun getWorkspaceList(
+        userId: String,
+        label: String,
+        retryTime: Int = 3
+    ): List<Environment> {
+        val url = devCloudUrl + "/environment/query"
+        logger.info("User $userId get environment list: $url")
+        val body = ObjectMapper().writeValueAsString(EnvironmentListReq(userId, 0, 0))
+        val request = Request.Builder()
+            .url(url)
+            .headers(
+                Headers.of(
+                    SmartProxyUtil.makeHeaders(
+                        devCloudAppId,
+                        devCloudToken,
+                        userId,
+                        smartProxyToken,
+                        "",
+                        ""
                     )
                 )
             )
@@ -147,56 +262,58 @@ class DispatchDevCloudClient {
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
+                logger.info("User $userId get environment list response: $responseContent")
                 if (!response.isSuccessful) {
+                    if (retryTime > 0) {
+                        val retryTimeLocal = retryTime - 1
+                        return getWorkspaceList(userId, label, retryTimeLocal)
+                    }
                     throw BuildFailureException(
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口异常（Fail to $action docker, http response code: ${response.code()}"
+                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 获取环境列表接口异常: ${response.code()}"
                     )
                 }
-                logger.info("[$buildId]|[$vmSeqId] response: $responseContent")
-                val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
-                val code = responseData["actionCode"] as Int
-                if (200 == code) {
-                    val dataMap = responseData["data"] as Map<String, Any>
-                    return (dataMap["taskId"] as Int).toString()
+
+                val environmentListRsp: EnvironmentListRsp = jacksonObjectMapper().readValue(responseContent)
+                if (200 == environmentListRsp.code) {
+                    return environmentListRsp.data
                 } else {
-                    val msg = responseData["actionMessage"] as String
                     throw BuildFailureException(
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口返回失败：$msg"
+                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境列表返回失败：${environmentListRsp.message}"
                     )
                 }
             }
         } catch (e: SocketTimeoutException) {
-            logger.error("[$buildId]|[$vmSeqId] operateContainer get SocketTimeoutException.", e)
-            throw BuildFailureException(
-                errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
-                errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口超时, url: $url"
-            )
+            // 接口超时失败，重试三次
+            if (retryTime > 0) {
+                logger.info(
+                    "User $userId get environment list SocketTimeoutException. " +
+                        "retry: $retryTime"
+                )
+                return getWorkspaceList(userId, label, retryTime - 1)
+            } else {
+                logger.error("User $userId get environment list failed.", e)
+                throw BuildFailureException(
+                    errorType = ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
+                    formatErrorMessage = ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.formatErrorMessage,
+                    errorMessage = "获取环境列表接口超时, url: $url"
+                )
+            }
         }
     }
 
-    fun deleteWorkspace() {
-
-    }
-
-    fun getWorkspaceStatus(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
+    fun getTasks(
         userId: String,
-        name: String,
-        retryTime: Int = 3
-    ): JSONObject {
-        val url = devCloudUrl + "/api/v2.1/containers/" + name + "/status"
-        logger.info("[$buildId]|[$vmSeqId] request url: $url")
+        taskUid: String,
+        retryFlag: Int = 3
+    ): TaskStatusRsp {
+        val url = "$devCloudUrl/task/status?uid=$taskUid"
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -206,76 +323,8 @@ class DispatchDevCloudClient {
                         devCloudToken,
                         userId,
                         smartProxyToken,
-                        projectId,
-                        pipelineId
-                    )
-                )
-            )
-            .get()
-            .build()
-        try {
-            OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
-                logger.info("[$buildId]|[$vmSeqId] containerName: $name response: $responseContent")
-                if (!response.isSuccessful) {
-                    if (retryTime > 0) {
-                        val retryTimeLocal = retryTime - 1
-                        return getContainerStatus(projectId, pipelineId, buildId, vmSeqId, userId, name, retryTimeLocal)
-                    }
-                    // throw RuntimeException("Fail to get container status")
-                    throw BuildFailureException(
-                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取容器状态接口异常（Fail to get container" +
-                            " status, http response code: ${response.code()}"
-                    )
-                }
-                return JSONObject(responseContent)
-            }
-        } catch (e: SocketTimeoutException) {
-            // 接口超时失败，重试三次
-            if (retryTime > 0) {
-                logger.info(
-                    "[$buildId]|[$vmSeqId] containerName: $name getContainerStatus SocketTimeoutException. " +
-                        "retry: $retryTime"
-                )
-                return getContainerStatus(projectId, pipelineId, buildId, vmSeqId, userId, name, retryTime - 1)
-            } else {
-                logger.error("[$buildId]|[$vmSeqId] containerName: $name getContainerStatus failed.", e)
-                throw BuildFailureException(
-                    errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "获取容器状态接口超时, url: $url"
-                )
-            }
-        }
-    }
-
-    fun getWorkspaceList() {
-
-    }
-
-    fun getTasks(
-        projectId: String,
-        pipelineId: String,
-        staffName: String,
-        taskId: String,
-        retryFlag: Int = 3
-    ): JSONObject {
-        val url = devCloudUrl + "/api/v2.1/tasks/" + taskId
-        val request = Request.Builder()
-            .url(url)
-            .headers(
-                Headers.of(
-                    SmartProxyUtil.makeHeaders(
-                        devCloudAppId,
-                        devCloudToken,
-                        staffName,
-                        smartProxyToken,
-                        projectId,
-                        pipelineId
+                        "",
+                        ""
                     )
                 )
             )
@@ -286,37 +335,23 @@ class DispatchDevCloudClient {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("Get task status failed, responseCode: ${response.code()}")
+                    logger.error("Get task status $taskUid failed, responseCode: ${response.code()}")
 
                     // 接口请求失败时，sleep 5s，再查一次
                     Thread.sleep(5 * 1000)
-                    OkhttpUtils.doHttp(request).use {
-                        val retryResponseContent = it.body()!!.string()
-                        if (!it.isSuccessful) {
-                            // 没机会了，只能失败
-                            logger.error("$taskId retry get task status failed, retry responseCode: ${it.code()}")
-                            throw BuildFailureException(
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                                "获取TASK状态接口异常：http response code: ${response.code()}"
-                            )
-                        }
-
-                        logger.info("retry response: $retryResponseContent")
-                        return JSONObject(retryResponseContent)
-                    }
+                    return getTasks(userId, taskUid, retryFlag - 1)
                 }
 
-                return JSONObject(responseContent)
+                logger.info("Get task status $taskUid response: $responseContent")
+                return jacksonObjectMapper().readValue(responseContent)
             }
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次
             if (retryFlag > 0) {
-                logger.info("$taskId get task SocketTimeoutException. retry: $retryFlag")
-                return getTasks(projectId, pipelineId, staffName, taskId, retryFlag - 1)
+                logger.info("$taskUid get task SocketTimeoutException. retry: $retryFlag")
+                return getTasks(userId, taskUid, retryFlag - 1)
             } else {
-                logger.error("$taskId get task status failed.", e)
+                logger.error("$taskUid get task status failed.", e)
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
@@ -333,77 +368,49 @@ class DispatchDevCloudClient {
      */
     fun waitTaskFinish(
         userId: String,
-        projectId: String,
-        pipelineId: String,
         taskId: String
-    ): Triple<TaskStatus, String, ErrorCodeEnum> {
+    ): Triple<TaskStatusEnum, String, ErrorCodeEnum> {
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("Wait task: $taskId finish timeout(10min)")
-                return Triple(TaskStatus.TIMEOUT, "创建容器超时（10min）", ErrorCodeEnum.CREATE_VM_ERROR)
+                return Triple(TaskStatusEnum.Abort, "创建环境超时（10min）", ErrorCodeEnum.CREATE_VM_ERROR)
             }
             Thread.sleep(1 * 1000)
             val (isFinish, success, msg, errorCodeEnum) = getTaskResult(
                 userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
                 taskId = taskId
             )
             return when {
                 !isFinish -> continue@loop
                 !success -> {
-                    Triple(TaskStatus.FAILED, msg, errorCodeEnum)
+                    Triple(TaskStatusEnum.Fail, msg, errorCodeEnum)
                 }
-                else -> Triple(TaskStatus.SUCCEEDED, msg, errorCodeEnum)
+                else -> Triple(TaskStatusEnum.Success, msg, errorCodeEnum)
             }
         }
     }
 
     private fun getTaskResult(
         userId: String,
-        projectId: String,
-        pipelineId: String,
         taskId: String
     ): TaskResult {
         try {
-            val taskResponse = getTasks(projectId, pipelineId, userId, taskId)
-            val actionCode = taskResponse.optString("actionCode")
-            return if ("200" != actionCode) {
+            val taskResponse = getTasks(userId, taskId)
+            val actionCode = taskResponse.code
+            return if (200 != actionCode) {
                 // 创建失败
-                val msg = taskResponse.optString("actionMessage")
+                val msg = taskResponse.message
                 logger.error("Execute task: $taskId failed, actionCode is $actionCode, msg: $msg")
-
-                val errorInfo = taskResponse.optJSONObject("errorInfo")
-
-                when {
-                    // 5000200表示agent执行完关机导致的启动异常，这里忽略异常
-                    errorInfo.optInt("code") == 5000200 -> {
-                        TaskResult(isFinish = true, success = true, msg = msg)
-                    }
-                    errorInfo.optInt("type") == 0 -> {
-                        TaskResult(
-                            isFinish = true,
-                            success = false,
-                            msg = msg,
-                            errorCodeEnum = ErrorCodeEnum.CREATE_VM_USER_ERROR
-                        )
-                    }
-                    else -> {
-                        TaskResult(isFinish = true, success = false, msg = msg)
-                    }
-                }
+                TaskResult(isFinish = true, success = false, msg = msg)
             } else {
-                when (taskResponse.optJSONObject("data").optString("status")) {
-                    "succeeded" -> {
-                        val containerName = taskResponse.optJSONObject("data").optString("name")
-                        logger.info("Task: $taskId success, containerName: $containerName, taskResponse: $taskResponse")
-                        TaskResult(isFinish = true, success = true, msg = containerName)
+                when (taskResponse.data.status) {
+                    TaskStatusEnum.Success -> {
+                        logger.info("Task: $taskId success taskResponse: $taskResponse")
+                        TaskResult(isFinish = true, success = true, msg = "")
                     }
-                    "failed" -> {
-                        val resultDisplay = taskResponse.optJSONObject("data")
-                            .optJSONObject("result")
-                            .optJSONArray("logs")
+                    TaskStatusEnum.Fail -> {
+                        val resultDisplay = taskResponse.data.logs
                         logger.error("Task: $taskId failed, taskResponse: $taskResponse")
                         TaskResult(isFinish = true, success = false, msg = formatDevcloudLogList(resultDisplay))
                     }
@@ -416,19 +423,8 @@ class DispatchDevCloudClient {
         }
     }
 
-    private fun formatDevcloudLogList(jsonArray: JSONArray): String {
-        return try {
-            val logFormat = StringBuilder("\n")
-            for (i in 0 until jsonArray.length()) {
-                val log = jsonArray.get(i) as String
-                logFormat.append(log + "\n")
-            }
-
-            logFormat.toString()
-        } catch (e: Exception) {
-            logger.error("formatDevcloudLogList error.", e)
-            jsonArray.toString()
-        }
+    private fun formatDevcloudLogList(resultDisplay: String): String {
+        return resultDisplay
     }
 }
 data class TaskResult(
