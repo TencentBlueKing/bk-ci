@@ -55,7 +55,7 @@
                     http
                         .get(url)
                         .then((res) => {
-                            this.renderList = res.data || []
+                            this.renderList = res || []
                         })
                         .catch((err) => {
                             console.error(err.message || err)
