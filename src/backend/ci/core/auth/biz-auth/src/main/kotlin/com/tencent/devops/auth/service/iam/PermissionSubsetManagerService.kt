@@ -26,18 +26,24 @@
  *
  */
 
-package com.tencent.devops.common.auth.enums
+package com.tencent.devops.auth.service.iam
 
 /**
- * 二级管理员用户组类型
+ * 二级分级管理员操作
  */
-enum class SubsetGroupType(val value: String) {
-    // 拥有者
-    OWNER("owner"),
-    // 编辑执行者
-    EDIT_EXECUTOR("edit_executor"),
-    // 执行者
-    EXECUTOR("executor"),
-    // 查看者
-    VIEWER("viewer")
+interface PermissionSubsetManagerService {
+
+    /**
+     * 创建二级管理员
+     */
+    @SuppressWarnings("LongParameterList")
+    fun createSubsetManager(
+        gradeManagerId: String,
+        userId: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Int
 }

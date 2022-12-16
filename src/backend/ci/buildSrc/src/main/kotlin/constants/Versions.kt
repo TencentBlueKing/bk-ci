@@ -48,5 +48,5 @@ object Versions {
     const val Resilience4j = "1.7.1"
     const val jjwt = "0.11.5"
     const val KubernetesDiscovery = "2.0.6"
-    const val iam = "1.0.0-SNAPSHOT"
+    const val iam = "1.0.1-SNAPSHOT"
 }

@@ -36,7 +36,9 @@ import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.RbacPermissionExtService
-import com.tencent.devops.auth.service.StrategyService
+import com.tencent.devops.auth.service.RbacPermissionSubsetManagerService
+import com.tencent.devops.auth.service.iam.PermissionScopesService
+import com.tencent.devops.auth.service.iam.PermissionSubsetManagerService
 import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -80,17 +82,19 @@ class RbacAuthConfiguration {
     fun grantV2Service() = V2GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
     @Bean
+    fun permissionSubsetManagerService(
+        permissionScopesService: PermissionScopesService,
+        iamV2ManagerService: V2ManagerService
+    ) = RbacPermissionSubsetManagerService(permissionScopesService, iamV2ManagerService)
+
+    @Bean
     fun rbacPermissionExtService(
         client: Client,
-        iamConfiguration: IamConfiguration,
-        v2ManagerService: V2ManagerService,
-        strategyService: StrategyService,
+        permissionSubsetManagerService: PermissionSubsetManagerService,
         authResourceService: AuthResourceService
     ) = RbacPermissionExtService(
         client = client,
-        iamConfiguration = iamConfiguration,
-        v2ManagerService = v2ManagerService,
-        strategyService = strategyService,
+        permissionSubsetManagerService = permissionSubsetManagerService,
         authResourceService = authResourceService
     )
 }

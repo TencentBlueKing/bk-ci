@@ -34,6 +34,8 @@ import java.time.LocalDateTime
 
 object IamGroupUtils {
 
+    private const val SYSTEM_DEFAULT_NAME = "蓝盾"
+
     fun buildIamGroup(projectName: String, groupName: String): String {
         return "$projectName-$groupName"
     }
@@ -68,5 +70,13 @@ object IamGroupUtils {
             return true
         }
         return false
+    }
+
+    fun buildSubsetManagerGroupName(resourceName: String, groupDisplayName: String) =
+        "${SYSTEM_DEFAULT_NAME}_${resourceName}_${groupDisplayName}"
+
+    fun buildSubsetManagerDescription(resourceName: String, userId: String): String {
+        return "$resourceName 二级管理员, 由$userId 创建于" +
+            DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
     }
 }
