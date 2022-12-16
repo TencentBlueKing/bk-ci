@@ -151,7 +151,8 @@ class ContainerBuildRecordService(
                     BuildStatus.RUNNING
                 },
                 containerVar = mapOf(
-                    Container::startVMStatus.name to containerBuildStatus.name
+                    Container::startVMStatus.name to containerBuildStatus.name,
+                    Container::startEpoch.name to System.currentTimeMillis()
                 ),
                 timestamps = mapOf(
                     BuildTimestampType.JOB_CONTAINER_STARTUP to

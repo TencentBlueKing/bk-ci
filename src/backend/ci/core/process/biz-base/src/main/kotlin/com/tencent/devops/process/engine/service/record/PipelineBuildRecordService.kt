@@ -209,7 +209,17 @@ class PipelineBuildRecordService @Autowired constructor(
             stage.containers.forEach { container ->
                 container.containerHashId = container.containerHashId ?: container.containerId
                 container.containerId = container.id
+                var elementElapsed = 0L
+                container.elements.forEach { element ->
+                    element.timeCost?.executeCost?.let {
+                        element.elapsed = it
+                        elementElapsed += it
+                    }
+                }
+                container.elementElapsed = container.elementElapsed ?: elementElapsed
+                container.systemElapsed = container.systemElapsed ?: container.timeCost?.systemCost
             }
+            stage.elapsed = stage.elapsed ?: stage.timeCost?.totalCost
         }
         val triggerReviewers = pipelineTriggerReviewDao.getTriggerReviewers(
             dslContext = dslContext,

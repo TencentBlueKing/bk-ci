@@ -291,7 +291,7 @@ class StageBuildRecordService(
         return allStageStatus ?: emptyList()
     }
 
-    fun stageStart(
+    fun stageManualStart(
         projectId: String,
         pipelineId: String,
         buildId: String,
