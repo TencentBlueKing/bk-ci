@@ -52,5 +52,9 @@ data class FileDetail(
     @ApiModelProperty("meta数据", required = true)
     val meta: Map<String, String>,
     @ApiModelProperty("nodeMetadata数据", required = true)
-    val nodeMetadata: List<MetadataModel> = emptyList()
+    val nodeMetadata: List<MetadataModel> = emptyList(),
+    @ApiModelProperty("下载链接", required = false)
+    val url: String? = null,
+    @ApiModelProperty("移动客户端下载链接", required = false)
+    val shortUrl: String? = null
 )
