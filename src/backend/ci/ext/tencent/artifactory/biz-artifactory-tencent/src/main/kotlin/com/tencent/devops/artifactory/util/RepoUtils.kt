@@ -103,7 +103,7 @@ object RepoUtils {
         )
     }
 
-    fun toFileDetail(nodeDetail: NodeDetail): FileDetail {
+    fun toFileDetail(nodeDetail: NodeDetail, shortUrl: String? = null): FileDetail {
         with(nodeDetail) {
             return FileDetail(
                 name = name,
@@ -115,7 +115,9 @@ object RepoUtils {
                 modifiedTime = LocalDateTime.parse(lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 checksums = FileChecksums(sha256, "", md5 ?: ""),
                 meta = metadata.entries.associate { Pair(it.key, it.value.toString()) },
-                nodeMetadata = nodeMetadata
+                nodeMetadata = nodeMetadata,
+                url = "/bkrepo/api/user/generic/$projectId/$repoName$fullPath?download=true",
+                shortUrl = shortUrl
             )
         }
     }

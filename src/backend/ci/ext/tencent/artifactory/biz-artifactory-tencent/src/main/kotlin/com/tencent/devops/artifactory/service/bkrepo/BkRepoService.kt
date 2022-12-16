@@ -76,6 +76,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
@@ -136,7 +137,19 @@ class BkRepoService @Autowired constructor(
             val fileDetail =
                 bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                     ?: throw NotFoundException("文件不存在")
-            RepoUtils.toFileDetail(fileDetail)
+            val shortUrl = if (fileDetail.name.endsWith(".ipa") || fileDetail.name.endsWith(".apk")) {
+                externalDownloadUrl(
+                    creatorId = userId,
+                    userId = userId,
+                    projectId = projectId,
+                    artifactoryType = artifactoryType,
+                    fullPath = fileDetail.fullPath,
+                    ttl = TimeUnit.DAYS.toSeconds(1).toInt()
+                )
+            } else {
+                null
+            }
+            RepoUtils.toFileDetail(fileDetail, shortUrl)
         }
     }
 
