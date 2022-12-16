@@ -114,8 +114,8 @@ class UserProjectMemberResourceImpl @Autowired constructor(
     }
 
     override fun checkProjectManager(userId: String, projectId: String): Result<Boolean> {
-        val result = permissionProjectService.checkProjectManager(userId, projectId)
-                || permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CIADMIN)
+        val result = permissionProjectService.checkProjectManager(userId, projectId) ||
+                permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CIADMIN)
         return Result(result)
     }
 }
