@@ -186,6 +186,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                             logger.warn("fail to update errorCodeInfo:$saveErrorCodeInfoPO", ignored)
                             metricsDataReportDao.updateErrorCodeInfo(
                                 dslContext = dslContext,
+                                atomCode = saveErrorCodeInfoPO.atomCode!!,
                                 updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
                                     errorType = saveErrorCodeInfoPO.errorType,
                                     errorCode = saveErrorCodeInfoPO.errorCode,
