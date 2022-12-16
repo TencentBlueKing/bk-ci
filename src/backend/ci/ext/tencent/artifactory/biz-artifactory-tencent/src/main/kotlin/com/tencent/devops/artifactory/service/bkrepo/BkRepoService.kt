@@ -138,13 +138,10 @@ class BkRepoService @Autowired constructor(
                 bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                     ?: throw NotFoundException("文件不存在")
             val shortUrl = if (fileDetail.name.endsWith(".ipa") || fileDetail.name.endsWith(".apk")) {
-                externalDownloadUrl(
-                    creatorId = userId,
-                    userId = userId,
-                    projectId = projectId,
-                    artifactoryType = artifactoryType,
-                    fullPath = fileDetail.fullPath,
-                    ttl = TimeUnit.DAYS.toSeconds(1).toInt()
+                val ttl = TimeUnit.DAYS.toSeconds(1).toInt()
+                shortUrlService.createShortUrl(
+                    url = externalDownloadUrl(userId, userId, projectId, artifactoryType, fileDetail.fullPath, ttl),
+                    ttl = ttl
                 )
             } else {
                 null
