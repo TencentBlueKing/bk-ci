@@ -221,7 +221,7 @@ class PipelineRuntimeService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
-        private const val STATUS_STAGE = "stage-1"
+        private const val TRIGGER_STAGE = "stage-1"
         private const val TAG = "startVM-0"
         private const val JOB_ID = "0"
     }
@@ -1217,7 +1217,7 @@ class PipelineRuntimeService @Autowired constructor(
             saveStageRecords(updateExistsStage, stageBuildRecords, resourceVersion)
             val updateSet = updateExistsStage.map { it.stageId }
             lastTimeBuildStages.forEach { stage ->
-                if (updateSet.contains(stage.stageId)) return@forEach
+                if (updateSet.contains(stage.stageId) || stage.stageId == TRIGGER_STAGE) return@forEach
                 stageBuildRecords.add(stage.copy(executeCount = context.executeCount))
             }
         }
@@ -1233,7 +1233,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             lastTimeBuildContainers.forEach { container ->
                 // 待更新或属于待更新矩阵的记录，直接跳过
-                if (updateContainerSet.contains(container.containerId)) return@forEach
+                if (updateContainerSet.contains(container.containerId) || container.stageId == TRIGGER_STAGE) return@forEach
                 if (container.matrixGroupId?.let { updateMatrixSet.contains(it) } == true) {
                     updateGroupContainerSet.add(container.containerId)
                     return@forEach
@@ -1247,7 +1247,11 @@ class PipelineRuntimeService @Autowired constructor(
             val updateSet = updateExistsTask.map { it.taskId }
             lastTimeBuildTasks.forEach {
                 // 待更新或属于待更新矩阵的记录，直接跳过
-                if (updateSet.contains(it.taskId) || updateGroupContainerSet.contains(it.containerId)) return@forEach
+                if (
+                    updateSet.contains(it.taskId) ||
+                    updateGroupContainerSet.contains(it.containerId) ||
+                    it.stageId == TRIGGER_STAGE
+                ) return@forEach
                 taskBuildRecords.add(it.copy(executeCount = context.executeCount))
             }
         }
@@ -2001,8 +2005,8 @@ class PipelineRuntimeService @Autowired constructor(
             buildId = buildId,
             stageStatus = listOf(
                 BuildStageStatus(
-                    stageId = STATUS_STAGE,
-                    name = STATUS_STAGE,
+                    stageId = TRIGGER_STAGE,
+                    name = TRIGGER_STAGE,
                     status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE)
                 )
             ),

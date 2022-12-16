@@ -198,7 +198,7 @@ open class BaseBuildRecordService(
                         .map { tag -> stageTagMap.getOrDefault(tag, "null") }
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
-                showMsg = if (it.stageId == StageBuildRecordService.STATUS_STAGE) {
+                showMsg = if (it.stageId == StageBuildRecordService.TRIGGER_STAGE) {
                     MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )

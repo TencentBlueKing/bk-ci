@@ -397,7 +397,7 @@ class StageBuildRecordService(
     }
 
     companion object {
-        const val STATUS_STAGE = "stage-1"
+        const val TRIGGER_STAGE = "stage-1"
         private val logger = LoggerFactory.getLogger(StageBuildRecordService::class.java)
     }
 }
