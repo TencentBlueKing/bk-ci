@@ -3,6 +3,7 @@
         :key="atom.id"
         :class="atomCls"
         @click.stop="handleAtomClick"
+        :id="atom.id"
     >
         <template
             v-if="isQualityGateAtom"
@@ -370,6 +371,15 @@
                     this.executeCounter()
                 } else {
                     clearInterval(this.timer)
+                }
+            },
+            'atom.locateActive': function (val) {
+                if (val) {
+                    const ele = document.getElementById(this.atom.id)
+                    ele?.scrollIntoView?.({
+                        block: 'center',
+                        behavior: 'smooth'
+                    })
                 }
             }
         },

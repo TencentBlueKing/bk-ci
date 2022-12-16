@@ -549,9 +549,9 @@
                 }
                 this.locateAtom(row, true)
                 this.activeErrorAtom = row
+                this.hideErrorPopup()
             },
             handleExecuteCountChange (executeCount) {
-                console.log(executeCount)
                 this.requestPipelineExecDetail({
                     ...this.routerParams,
                     executeCount
