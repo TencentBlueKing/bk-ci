@@ -266,7 +266,9 @@ class TurboEngineConfigService @Autowired constructor(
                         tips = it.tips,
                         displayed = it.displayed,
                         defaultValue = it.defaultValue,
-                        required = it.required
+                        required = it.required,
+                        dataType = it.dataType,
+                        paramUrl = it.paramUrl
                     )
                 },
                 displayFields = displayFields?.map {
@@ -561,7 +563,9 @@ class TurboEngineConfigService @Autowired constructor(
                         tips = param.tips,
                         displayed = param.displayed,
                         defaultValue = param.defaultValue,
-                        required = param.required
+                        required = param.required,
+                        dataType = param.dataType,
+                        paramUrl = param.paramUrl
                     )
                 },
                 recommend = it.recommend,
