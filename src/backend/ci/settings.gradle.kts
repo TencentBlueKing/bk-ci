@@ -412,6 +412,7 @@ include(":ext:tencent:dispatch-kubernetes:biz-dispatch-kubernetes-tencent")
 include(":ext:tencent:dispatch-kubernetes:boot-dispatch-kubernetes-tencent")
 include(":ext:tencent:dispatch-kubernetes:api-dispatch-kubernetes-tencent")
 include(":ext:tencent:dispatch-kubernetes:biz-dispatch-kubernetes-bcs-tencent")
+include(":ext:tencent:dispatch-kubernetes:biz-dispatch-kubernetes-devcloud-tencent")
 include(":ext:tencent:dispatch-kubernetes:common-dispatch-kubernetes-tencent")
 
 include(":ext:tencent:plugin")
