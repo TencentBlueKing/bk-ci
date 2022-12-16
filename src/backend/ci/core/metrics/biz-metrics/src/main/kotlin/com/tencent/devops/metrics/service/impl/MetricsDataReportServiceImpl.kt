@@ -805,7 +805,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     creator = startUser,
                     modifier = startUser,
                     createTime = currentTime,
-                    updateTime = currentTime
+                    updateTime = currentTime,
+                    atomCode = atomCode
                 )
             )
             // 将错误码信息放入缓存中
