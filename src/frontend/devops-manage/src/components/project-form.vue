@@ -10,13 +10,11 @@ import {
 } from 'bkui-vue/lib/icon';
 import IAMIframe from './IAM-Iframe';
 import { useI18n } from 'vue-i18n';
-import { Message } from 'bkui-vue';
+import { Message, Popover } from 'bkui-vue';
 import http from '@/http/api';
-
 const {
   t,
 } = useI18n();
-
 const emits = defineEmits(['change']);
 
 const props = defineProps({
@@ -35,6 +33,46 @@ const logoFiles = computed(() => {
   }
   return files;
 });
+const projectFrom = ref();
+const rules = {
+  projectName: [
+    {
+      required: true,
+      message: t('请填写项目名称'),
+      trigger: 'blur',
+    },
+  ],
+  englishName: [
+    {
+      required: true,
+      message: t('请填写项目ID'),
+      trigger: 'blur',
+    },
+  ],
+  description: [
+    {
+      required: true,
+      message: t('请填写项目描述'),
+      trigger: 'blur',
+    },
+  ],
+  bgId: [
+    {
+      required: true,
+      message: t('请选择项目所属组织'),
+      trigger: 'blur',
+    },
+  ],
+  subjectScopes: [
+    {
+      validator: (val) => {
+        return projectData.value.subjectScopes.length >= 1
+      },
+      message: t('请选择项目项目最大可授权人员范围'),
+      trigger: 'change',
+    }
+  ]
+};
 
 const projectData = ref<any>(props.data);
 
@@ -51,10 +89,6 @@ const curDepartmentInfo = ref({
 });
 
 const showDialog = ref(false);
-
-const query = {
-  role_id: 1,
-};
 
 const getDepartment = async (type: string, id: any) => {
   deptLoading.value[type] = true;
@@ -114,6 +148,10 @@ const handleChangeCenter = (type: string, id: any) => {
   };
 };
 
+const formValidate = () => {
+  return projectFrom.value.validate();
+};
+
 const fetchDepartmentList = () => {
   const { bgId, deptId } = projectData.value;
   getDepartment('bg', 0);
@@ -152,7 +190,11 @@ const handleUploadLogo = async (res: any) => {
     }
     const formData = new FormData();
     formData.append('logo', file);
-    // projectData.value.logo = formData;
+    await http.uploadProjectLogo({
+      formData,
+    }).then(res => {
+      projectData.value.logoAddress = res
+    })
   }
 };
 
@@ -161,6 +203,7 @@ const handleMessage = (event: any) => {
   if (data.type === 'IAM') {
     switch (data.code) {
       case 'success':
+        handleChangeForm();
         projectData.value.subjectScopes = [
           ...data.data.departments,
           ...data.data.users,
@@ -169,6 +212,7 @@ const handleMessage = (event: any) => {
           type: item.type,
           name: item.name,
         }));
+        showDialog.value = false;
         break;
       case 'cancel':
         showDialog.value = false;
@@ -188,22 +232,26 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <bk-form :label-width="160">
-    <bk-form-item :label="t('项目名称')" :required="true">
+  <bk-form
+    ref="projectFrom"
+    :model="projectData"
+    :label-width="160"
+  >
+    <bk-form-item :label="t('项目名称')" property="projectName" :required="true">
       <bk-input
         v-model="projectData.projectName"
         :placeholder="t('请输入1-32字符的项目名称')"
         @change="handleChangeForm"
       ></bk-input>
     </bk-form-item>
-    <bk-form-item :label="t('项目ID')" :required="true">
+    <bk-form-item :label="t('项目ID')" property="englishName" :required="true">
       <bk-input
         v-model="projectData.englishName"
         :disabled="type === 'edit'"
         :placeholder="t('请输入2-32 字符的项目ID，由小写字母、数字、中划线组成，以小写字母开头。提交后不可修改。')"
       ></bk-input>
     </bk-form-item>
-    <bk-form-item :label="t('项目描述')" :required="true">
+    <bk-form-item :label="t('项目描述')" property="description" :required="true">
       <bk-input
         v-model="projectData.description"
         class="textarea"
@@ -224,7 +272,7 @@ onBeforeUnmount(() => {
       />
       <span class="logo-upload-tip">{{ t('只允许上传png、jpg，大小不超过 2M')}}</span>
     </bk-form-item>
-    <bk-form-item :label="t('项目所属组织')" :required="true">
+    <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
       <div class="bk-dropdown-box">
         <bk-select
           v-model="projectData.bgId"
@@ -277,16 +325,28 @@ onBeforeUnmount(() => {
         </bk-select>
       </div>
     </bk-form-item>
-    <bk-form-item :label="t('项目性质')" :required="true">
+    <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
       <bk-radio-group
         v-model="projectData.authSecrecy"
         @change="handleChangeForm"
       >
-        <bk-radio :label="false">{{ t('私有项目') }}</bk-radio>
-        <bk-radio :label="true">{{ t('保密项目') }}</bk-radio>
+        <bk-radio class="mr10" :label="false">
+          <Popover :content="t('非项目成员可通过`申请加入项目`申请加入')">
+           <span class="authSecrecy-item">{{ t('私有项目') }}</span>
+          </Popover>
+        </bk-radio>
+        <bk-radio :label="true">
+          <Popover :content="t('非项目成员不可通过`申请加入项目`申请加入')">
+            <span class="authSecrecy-item">{{ t('保密项目') }}</span>
+          </Popover>
+        </bk-radio>
       </bk-radio-group>
     </bk-form-item>
-    <bk-form-item :label="t('项目最大可授权人员范围')" :required="true" :property="'name'">
+     <bk-form-item
+      :label="t('项目最大可授权人员范围')"
+      :description="t('该范围表示您可以给哪些人员分配权限，同时也只有他们才能申请到您创建的用户组')"
+      property="subjectScopes"
+      :required="true">
       <edit-line
         class="edit-line"
         @click="(showDialog = true)"
@@ -308,7 +368,6 @@ onBeforeUnmount(() => {
     <IAMIframe
       class="member-iframe"
       path="add-member-boundary"
-      :query="query"
     />
   </bk-dialog>
 </template>
@@ -337,5 +396,8 @@ onBeforeUnmount(() => {
     margin-right: 12px;
     display: inline-block;
     vertical-align: middle;
+  }
+  .authSecrecy-item {
+    border-bottom: 1px dashed #979ba5;
   }
 </style>

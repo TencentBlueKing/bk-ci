@@ -2,18 +2,19 @@
   <article class="group-manage">
     <!-- 管理员 -->
     <template v-if="hasPermission">
-      <group-aside
-        @choose-group="handleChooseGroup"
-        @create-group="handleCreateGroup"
-      ></group-aside>
-      <IAMIframe
-        class="group-frame"
-        :path="path"
-        :query="query"
-      />
+      <div v-if="!false">
+        <group-aside
+          @choose-group="handleChooseGroup"
+          @create-group="handleCreateGroup"
+        ></group-aside>
+        <IAMIframe
+          class="group-frame"
+          :path="path"
+        />
+      </div>
+      <!-- 未开启权限管理 -->
+      <not-open-manage v-else></not-open-manage>
     </template>
-    <!-- 为开启权限管理 -->
-    <not-open-manage v-else-if="hasPermission && true"></not-open-manage>
     <!-- 普通成员 -->
     <template v-else-if="!hasPermission">
       <group-table></group-table>
@@ -41,9 +42,6 @@ export default {
     return {
       hasPermission: true,
       path: 'user-group-detail/10137',
-      query: {
-        role_id: 1,
-      },
     };
   },
   mounted() {

@@ -133,6 +133,26 @@ const actions: ActionTree<RootState, any> = {
     },
     hasCreateProjectPermission () {
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/hasCreatePermission`)
+    },
+    /**
+     * 项目列表 (项目管理界面)
+     */
+    fetchProjectList () {
+        return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects?unApproved=true`)
+    },
+    /**
+     * 申请加入项目
+     */
+    applyToJoinProject (_, payload) {
+        const { englishName, ApplicationInfo } = payload
+        return Request.post(`${PROJECT_API_URL_PREFIX}/user/projects/${englishName}/applyToJoinProject`, ApplicationInfo)
+    },
+    /**
+     * 项目列表 (申请加入项目弹窗，分页加载)
+     */
+    fetchWithoutPermissionsProjects (_, payload) {
+        const { pageSize, page, projectName } = payload
+        return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/listProjectsWithoutPermissions?page=${page}&pageSize=${pageSize}&projectName=${projectName}`)
     }
 }
 

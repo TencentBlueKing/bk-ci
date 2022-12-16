@@ -25,9 +25,6 @@ export default {
   name: 'UserTable',
   components: {
   },
-  props: {
-
-  },
   data() {
     const { t } = useI18n();
     return {

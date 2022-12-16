@@ -4,14 +4,15 @@ import {
   ref,
 } from 'vue';
 import http from '@/http/api';
+import { Message } from 'bkui-vue';
 import ManageHeader from '@/components/manage-header.vue';
 import ProjectForm from '@/components/project-form.vue';
-import { Message } from 'bkui-vue';
 import {
   useRouter,
 } from 'vue-router';
 const { t } = useI18n();
 const router = useRouter();
+
 const projectData = ref({
   projectName: '',
   englishName: '',
@@ -28,15 +29,12 @@ const projectData = ref({
   authSecrecy: false,
 });
 const btnLoading = ref(false);
-
 const handleConfirm = async () => {
   btnLoading.value = true;
-  projectData.value.subjectScopes  = [{ type: '*', id: '*' }];
   const result = await http.requestCreateProject({
     projectData: projectData.value,
-  });
+  }).catch(() => false);
   if (result) {
-    btnLoading.value = false;
     Message({
       theme: 'success',
       message: t('保存成功'),
@@ -45,10 +43,11 @@ const handleConfirm = async () => {
       path: `${projectData.value.englishName}/show`,
     });
   }
+  btnLoading.value = false;
 };
 
 const handleCancel = () => {
-
+  router.back();
 };
 </script>
 
@@ -60,10 +59,27 @@ const handleCancel = () => {
     />
     <article class="apply-project-content">
       <section class="create-project-form">
-        <project-form :data="projectData">
+        <project-form
+          ref="projectForm"
+          :data="projectData"
+        >
           <bk-form-item>
-            <bk-button class="btn mr10" theme="primary" @click="handleConfirm">{{ t('提交') }}</bk-button>
-            <bk-button class="btn" theme="default" @click="handleCancel">{{ t('取消') }}</bk-button>
+            <bk-button
+              class="btn mr10"
+              theme="primary"
+              :loading="btnLoading"
+              @click="handleConfirm"
+            >
+              {{ t('提交') }}
+            </bk-button>
+            <bk-button
+              class="btn"
+              theme="default"
+              :loading="btnLoading"
+              @click="handleCancel"
+            >
+              {{ t('取消') }}
+            </bk-button>
           </bk-form-item>
         </project-form>
       </section>

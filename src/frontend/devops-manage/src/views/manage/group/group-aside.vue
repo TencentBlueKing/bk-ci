@@ -54,11 +54,10 @@
 <script lang="ts">
 import { InfoBox } from 'bkui-vue';
 import { useI18n } from 'vue-i18n';
+import http from '@/http/api';
 
 export default {
   name: 'GroupAside',
-  props: {
-  },
   emits: ['create-group', 'choose-group'],
   data() {
     const { t } = useI18n();

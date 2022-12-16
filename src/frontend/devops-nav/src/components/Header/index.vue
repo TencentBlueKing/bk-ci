@@ -25,6 +25,7 @@
                     :list="selectProjectList"
                     id-key="projectCode"
                     display-key="projectName"
+                    :popover-width="328"
                 >
                     <bk-option
                         v-for="item in selectProjectList"
@@ -34,19 +35,30 @@
                     >
                     </bk-option>
                     <template slot="extension">
-                        <div
-                            class="bk-selector-create-item"
-                            @click.stop.prevent="popProjectDialog()"
-                        >
-                            <i class="devops-icon icon-plus-circle" />
-                            <span class="text">{{ $t('newProject') }}</span>
-                        </div>
-                        <div
-                            class="bk-selector-create-item"
-                            @click.stop.prevent="goToPm"
-                        >
-                            <i class="devops-icon icon-apps" />
-                            <span class="text">{{ $t('projectManage') }}</span>
+                        <div class="extension-wrapper">
+                            <span
+                                class="bk-selector-create-item"
+                                @click.stop.prevent="popProjectDialog()"
+                            >
+                                <i class="devops-icon icon-plus-circle" />
+                                <span class="text">{{ $t('newProject') }}</span>
+                            </span>
+                            <span class="extension-line" />
+                            <span
+                                class="bk-selector-create-item"
+                                @click.stop.prevent="handleApplyProject"
+                            >
+                                <i class="devops-icon icon-apps" />
+                                <span class="text">{{ $t('applyProject') }}</span>
+                            </span>
+                            <span class="extension-line" />
+                            <span
+                                class="bk-selector-create-item"
+                                @click.stop.prevent="goToPm"
+                            >
+                                <i class="devops-icon icon-apps" />
+                                <span class="text">{{ $t('projectManage') }}</span>
+                            </span>
                         </div>
                     </template>
                 </bk-select>
@@ -82,6 +94,7 @@
             :init-show-dialog="showProjectDialog"
             :title="projectDialogTitle"
         />
+        <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
     </div>
 </template>
 
@@ -95,6 +108,7 @@
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
+    import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
     import eventBus from '../../utils/eventBus'
     import { urlJoin } from '../../utils/util'
 
@@ -103,6 +117,7 @@
             User,
             NavMenu,
             ProjectDialog,
+            ApplyProjectDialog,
             Logo,
             DevopsSelect,
             LocaleSwitcher
@@ -265,6 +280,10 @@
             }
         }
 
+        handleApplyProject () {
+            this.$refs.applyProjectDialog.isShow = true
+        }
+
         closeTooltip (): void {
             this.isShowTooltip = false
         }
@@ -275,7 +294,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import '../../assets/scss/conf';
 
     $headerBgColor: #191929;
@@ -403,5 +422,17 @@
         &:first-child {
             border-top: 0
         }
+    }
+
+    .extension-wrapper {
+        display: flex;
+        align-items: center;
+    }
+    .extension-line {
+        display: inline-block;
+        width: 1px;
+        height: 16px;
+        margin: 0 10px;
+        background: #DCDEE5;
     }
 </style>

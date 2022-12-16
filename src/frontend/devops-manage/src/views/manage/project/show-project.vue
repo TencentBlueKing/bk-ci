@@ -17,7 +17,6 @@ const route = useRoute();
 const { projectCode } = route.params;
 const projectData = ref<any>({});
 const isLoading = ref(false);
-
 const showStatusTips = computed(() => [1, 3, 4, 6].includes(projectData.value.approvalStatus));
 const showCancelCreationBtn = computed(() => projectData.value.approvalStatus === 1);
 const fetchProjectData = async () => {
@@ -42,14 +41,15 @@ const handleEdit = () => {
 const handleCancelCreation = () => {
   const onConfirm = async () => {
     const result = await http.cancelCreateProject({
-      projectId: projectData.value.id,
+      projectId: projectData.value.project_id,
     });
     if (result) {
       Message({
         theme: 'success',
         message: t('取消创建成功'),
       });
-      // doing...
+      const { origin } = window.location;
+      window.location.href = `${origin}/console/pm`
     }
   };
 
@@ -136,7 +136,7 @@ onMounted(() => {
               {{ t('编辑') }}
             </bk-button>
             <bk-button
-              v-if="projectData.approvalStatus === 1"
+              v-if="[1, 3].includes(projectData.approvalStatus)"
               class="btn"
               theme="default"
               @click="handleCancelCreation"
