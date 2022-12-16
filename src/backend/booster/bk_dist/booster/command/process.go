@@ -155,6 +155,7 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 	usr, err := user.Current()
 	if err != nil {
 		blog.Warnf("booster-command: get current user failed: %v", err)
+		return nil, err
 	}
 
 	// decide which server to connect to.
