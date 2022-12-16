@@ -57,6 +57,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.service.StageTagService
@@ -147,20 +148,14 @@ class PipelineBuildRecordService @Autowired constructor(
      * @param refreshStatus: 是否刷新状态
      */
     fun get(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
+        buildInfo: BuildInfo,
         executeCount: Int?,
         refreshStatus: Boolean = true
     ): ModelRecord? {
-
-        val buildInfo = pipelineBuildDao.convert(
-            pipelineBuildDao.getBuildInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId
-            )
-        ) ?: return null
+        // 直接取构建记录数据，防止接口传错
+        val projectId = buildInfo.projectId
+        val pipelineId = buildInfo.pipelineId
+        val buildId = buildInfo.buildId
 
         // 获取流水线级别变量数据
         var fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1

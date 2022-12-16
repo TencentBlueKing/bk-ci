@@ -139,7 +139,6 @@ class PipelineBuildFacadeService(
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
     private val buildRecordService: PipelineBuildRecordService,
-    private val containerRecordService: ContainerBuildRecordService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val jmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
@@ -1314,10 +1313,25 @@ class PipelineBuildFacadeService(
         executeCount: Int?,
         channelCode: ChannelCode
     ): ModelRecord {
-        return buildRecordService.get(
+        val buildInfo = pipelineRuntimeService.getBuildInfo(
             projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
+            buildId = buildId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            defaultMessage = "构建任务${buildId}不存在",
+            params = arrayOf(buildId)
+        )
+        if (projectId != buildInfo.projectId || pipelineId != buildInfo.pipelineId) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+                defaultMessage = "构建任务${buildId}查找失败，请核对参数",
+                params = arrayOf(buildId)
+            )
+        }
+        return buildRecordService.get(
+            buildInfo = buildInfo,
             executeCount = executeCount
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,

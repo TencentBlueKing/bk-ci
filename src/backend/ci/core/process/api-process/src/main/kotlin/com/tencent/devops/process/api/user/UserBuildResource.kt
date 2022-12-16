@@ -253,7 +253,7 @@ interface UserBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("构建ID", required = false)
+        @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<ModelRecord>
