@@ -29,9 +29,10 @@ package com.tencent.devops.process.engine.common
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -43,6 +44,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
+
 
 object BuildTimeCostUtils {
     private val logger = LoggerFactory.getLogger(BuildTimeCostUtils::class.java)
@@ -81,14 +83,20 @@ object BuildTimeCostUtils {
             )
             return@sumOf time.between()
         }
-
+        var containerExecuteCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
+        var containerWaitCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
+        var containerQueueCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
         containerPairs.forEach { (record, build) ->
-            val containerTimeCost = JsonUtil.anyTo(
-                record.containerVar[Container::timeCost.name],
-                object : TypeReference<BuildRecordTimeCost>() {})
-            val start = build?.startTime
-            val end = build?.endTime
-            val timestamps = record.timestamps
+            val containerTimeLine = JsonUtil.anyTo(
+                record.containerVar[BuildRecordTimeLine::class.java.name],
+                object : TypeReference<BuildRecordTimeLine>() {}
+            )
+            // 执行时间取并集
+            containerExecuteCost = mergeTimeLine(containerExecuteCost, containerTimeLine.executeCostMoments)
+            // 等待时间取交集
+            containerWaitCost = intersectionTimeLine(containerWaitCost, containerTimeLine.waitCostMoments)
+            // 排队时间取交集
+            containerQueueCost = intersectionTimeLine(containerQueueCost, containerTimeLine.queueCostMoments)
         }
         return BuildRecordTimeCost()
     }
@@ -96,13 +104,15 @@ object BuildTimeCostUtils {
     /**
      * 计算Container级别的所有时间消耗
      * queueCost、 systemCost 保持为 0
+     * @return Pair(该Container耗时概览, 该Container耗时细则)
      */
     fun generateContainerTimeCost(
         buildContainer: PipelineBuildContainer,
         recordContainer: BuildRecordContainer,
         taskPairs: List<Pair<BuildRecordTask, PipelineBuildTask?>>
-    ): BuildRecordTimeCost {
-        val startTime = buildContainer.startTime ?: return BuildRecordTimeCost()
+    ): Pair<BuildRecordTimeCost, BuildRecordTimeLine> {
+        val containerTimeLine = BuildRecordTimeLine()
+        val startTime = buildContainer.startTime ?: return Pair(BuildRecordTimeCost(), containerTimeLine)
         val endTime = buildContainer.endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
         var executeCost = 0L
@@ -112,31 +122,41 @@ object BuildTimeCostUtils {
             logWhenNull(
                 time, "${buildContainer.buildId}|CONTAINER|${buildContainer.containerId}|${type.name}"
             )
+            time.insert2TimeLine(containerTimeLine.queueCostMoments)
             return@sumOf time.between()
         }
         taskPairs.forEach { (record, build) ->
             if (build == null) return@forEach
-            val cost = generateTaskTimeCost(build, record.timestamps)
+            val taskTimeLine = BuildRecordTimeLine()
+            val cost = generateTaskTimeCost(build, record.timestamps, taskTimeLine)
+            containerTimeLine.queueCostMoments.addAll(taskTimeLine.queueCostMoments)
+            containerTimeLine.waitCostMoments.addAll(taskTimeLine.waitCostMoments)
+            containerTimeLine.executeCostMoments.addAll(taskTimeLine.executeCostMoments)
             executeCost += cost.executeCost
             waitCost += cost.waitCost
         }
         val systemCost = totalCost - executeCost - waitCost - queueCost
-        return BuildRecordTimeCost(
-            totalCost = totalCost,
-            executeCost = executeCost,
-            waitCost = waitCost,
-            queueCost = queueCost,
-            systemCost = systemCost.notNegative()
+        return Pair(
+            BuildRecordTimeCost(
+                totalCost = totalCost,
+                executeCost = executeCost,
+                waitCost = waitCost,
+                queueCost = queueCost,
+                systemCost = systemCost.notNegative()
+            ),
+            containerTimeLine
         )
     }
 
     /**
      * 计算Task级别的所有时间消耗
      * queueCost、 systemCost 保持为 0
+     * @param timeLine 计算task时为null, 计算container时会传入以记录具体时刻
      */
     fun generateTaskTimeCost(
         buildTask: PipelineBuildTask,
-        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>,
+        timeLine: BuildRecordTimeLine? = null
     ): BuildRecordTimeCost {
         val startTime = buildTask.startTime ?: return BuildRecordTimeCost()
         val endTime = buildTask.endTime ?: LocalDateTime.now()
@@ -146,15 +166,95 @@ object BuildTimeCostUtils {
             logWhenNull(
                 time, "${buildTask.buildId}|TASK|${buildTask.taskId}|${type.name}"
             )
+            timeLine?.let {
+                time.insert2TimeLine(timeLine.waitCostMoments)
+            }
             return@sumOf time.between()
         }
         val executeCost = totalCost - waitCost
+        timeLine?.let {
+            timeLine.executeCostMoments.addAll(
+                differenceTimeLine(
+                    listOf(
+                        Pair(
+                            startTime.timestampmilli(),
+                            endTime.timestampmilli()
+                        )
+                    ),
+                    timeLine.waitCostMoments
+                )
+            )
+        }
 
         return BuildRecordTimeCost(
             totalCost = totalCost,
             waitCost = waitCost,
             executeCost = executeCost.notNegative()
         )
+    }
+
+    /**
+     * 区间求差集 left - right
+     */
+    fun differenceTimeLine(left: List<Pair<Long, Long>>, right: List<Pair<Long, Long>>): List<Pair<Long, Long>> {
+        val line: MutableList<Pair<Long, Char>> = mutableListOf()
+        val ans: MutableList<Pair<Long, Long>> = mutableListOf()
+        left.forEach {
+            line.add(Pair(it.first, 'L'))
+            line.add(Pair(it.second, 'L'))
+        }
+        right.forEach {
+            line.add(Pair(it.first, 'R'))
+            line.add(Pair(it.second, 'R'))
+        }
+        line.sortBy { it.first }
+        var cnt = true
+        var index = 0
+        while (index < line.size) {
+            if (line[index].second == 'R') cnt = !cnt
+            if (cnt && index < line.size - 1) ans.add(Pair(line[index].first, line[index + 1].first))
+            index++
+        }
+        return ans
+    }
+
+    /**
+     * 区间求交集 left ∩ right
+     */
+    fun intersectionTimeLine(left: List<Pair<Long, Long>>, right: List<Pair<Long, Long>>): List<Pair<Long, Long>> {
+        val ans: MutableList<Pair<Long, Long>> = mutableListOf()
+        var i = 0
+        var j = 0
+        while (i < left.size && j < right.size) {
+            // 我们来检查A[i]是否与B[j]相交。
+            // lo -- 相交的起始点
+            // hi -- 交点的端点
+            val lo = left[i].first.coerceAtLeast(right[j].first)
+            val hi = left[i].second.coerceAtMost(right[j].second)
+            if (lo <= hi) ans.add(Pair(lo, hi))
+            // 移除具有最小端点的区间
+            if (left[i].second < right[j].second) i++ else j++
+        }
+        return ans
+    }
+
+    /**
+     * 区间求并集 left ∪ right
+     */
+    fun mergeTimeLine(left: List<Pair<Long, Long>>, right: List<Pair<Long, Long>>): List<Pair<Long, Long>> {
+        val intervals = left.plus(right).sortedBy { it.first }
+        val res = mutableListOf<Pair<Long, Long>>()
+        for (interval in intervals) {
+            // 如果列表为空,或者当前区间与上一区间不重合,直接添加
+            if (res.size == 0 || res[res.size - 1].second < interval.first) {
+                res.add(interval)
+            } else {
+                // 否则的话,我们就可以与上一区间进行合并
+                val m = res.removeLast()
+                res.add(Pair(m.first, m.second.coerceAtLeast(interval.second)))
+            }
+        }
+        return res
     }
 
     private fun logWhenNull(time: BuildRecordTimeStamp, logInfo: String) {

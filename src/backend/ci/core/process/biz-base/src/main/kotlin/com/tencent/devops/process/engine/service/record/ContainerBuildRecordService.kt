@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
@@ -219,9 +220,11 @@ class ContainerBuildRecordService(
                             val buildTaskPairs = recordTasks.map { task ->
                                 task to buildTaskMap[task.taskId]
                             }
-                            containerVar[Container::timeCost.name] = BuildTimeCostUtils.generateContainerTimeCost(
+                            val (cost, timeLine) = BuildTimeCostUtils.generateContainerTimeCost(
                                 buildContainer, recordContainer, buildTaskPairs
                             )
+                            containerVar[Container::timeCost.name] = cost
+                            containerVar[BuildRecordTimeLine::class.java.name] = timeLine
                         }
                 }
                 recordContainerDao.updateRecord(

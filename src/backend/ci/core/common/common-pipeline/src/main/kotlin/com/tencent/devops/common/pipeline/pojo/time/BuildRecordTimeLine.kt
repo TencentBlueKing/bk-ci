@@ -25,23 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.common.pipeline.pojo.time
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("构建详情记录-事件时间戳")
-data class BuildRecordTimeStamp(
-    @ApiModelProperty("开始时间", required = true)
-    val startTime: Long?,
-    @ApiModelProperty("结束时间", required = true)
-    val endTime: Long?
-) {
-    fun between() = (endTime ?: startTime ?: 0) - (startTime ?: 0)
-
-    fun insert2TimeLine(timeline: MutableList<Pair<Long, Long>>) {
-        if (startTime != null && endTime != null) {
-            timeline.add(Pair(startTime, endTime))
-        }
-    }
-}
+@ApiModel("各项执行耗时时刻")
+data class BuildRecordTimeLine(
+    @ApiModelProperty("执行耗时时刻，计算结果需成对", required = false)
+    var executeCostMoments: MutableList<Pair<Long, Long>> = mutableListOf(),
+    @ApiModelProperty("等待耗时时刻，计算结果需成对", required = false)
+    var waitCostMoments: MutableList<Pair<Long, Long>> = mutableListOf(),
+    @ApiModelProperty("排队耗时（流水线并发和Job互斥）时刻，计算结果需成对", required = false)
+    var queueCostMoments: MutableList<Pair<Long, Long>> = mutableListOf()
+)
