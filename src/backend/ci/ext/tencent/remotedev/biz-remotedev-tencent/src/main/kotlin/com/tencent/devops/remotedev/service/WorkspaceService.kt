@@ -658,4 +658,14 @@ class WorkspaceService @Autowired constructor(
         redisCache.get(REDIS_OP_HISTORY_KEY_PREFIX + key.name).ifBlank {
             key.default
         }
+
+    // 获取已休眠(status:3)且过期14天的工作空间
+    fun getTimeOutInactivityWorkspace (
+        userId: String
+    ): List<String> {
+        logger.info("$userId getTimeOutInactivityWorkspace")
+        return workspaceDao.getTimeOutInactivityWorkspace(
+            Constansts.timeoutDays, dslContext)?.map { it.name } ?: emptyList()
+    }
+
 }
