@@ -34,10 +34,12 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
@@ -434,7 +436,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
-                recordModel.modelVar.plus(modelVar), null, null, LocalDateTime.now(), null
+                recordModel.modelVar.plus(modelVar), null, null
             )
         }
 
@@ -448,6 +450,36 @@ class PipelineBuildRecordService @Autowired constructor(
             buildId = buildId,
             cancelUser = cancelUserId
         )
+    }
+
+    fun updateModelRecord(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        modelVar: Map<String, Any>,
+        buildStatus: BuildStatus?,
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
+    ) {
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val recordModel = recordModelDao.getRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount
+            ) ?: run {
+                logger.warn(
+                    "ENGINE|$buildId|updateModelByMap| get record failed."
+                )
+                return@transaction
+            }
+
+            recordModelDao.updateRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount, cancelUser = null,
+                modelVar = recordModel.modelVar.plus(modelVar), buildStatus = buildStatus,
+                timestamps = timestamps?.let { mergeTimestamps(timestamps, recordModel.timestamps) }
+            )
+        }
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {

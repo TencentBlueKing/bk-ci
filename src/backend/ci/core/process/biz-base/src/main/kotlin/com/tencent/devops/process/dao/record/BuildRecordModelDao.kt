@@ -38,7 +38,6 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class BuildRecordModelDao {
@@ -68,17 +67,15 @@ class BuildRecordModelDao {
         pipelineId: String,
         buildId: String,
         executeCount: Int,
-        buildStatus: BuildStatus,
+        buildStatus: BuildStatus?,
         modelVar: Map<String, Any>,
         cancelUser: String?,
-        startTime: LocalDateTime?,
-        endTime: LocalDateTime?,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>?
     ) {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
             val update = dslContext.update(this)
-                .set(STATUS, buildStatus.name)
                 .set(MODEL_VAR, JsonUtil.toJson(modelVar, false))
+            buildStatus?.let { update.set(STATUS, buildStatus.name) }
             cancelUser?.let { update.set(CANCEL_USER, cancelUser) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
             update.where(

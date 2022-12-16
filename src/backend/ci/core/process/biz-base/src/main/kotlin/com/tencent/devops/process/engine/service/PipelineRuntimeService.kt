@@ -750,6 +750,10 @@ class PipelineRuntimeService @Autowired constructor(
         val updateExistsStage: MutableList<PipelineBuildStage> = ArrayList(fullModel.stages.size)
         val updateExistsContainer: MutableList<PipelineBuildContainer> = mutableListOf()
 
+        val stageBuildRecords = mutableListOf<BuildRecordStage>()
+        val containerBuildRecords = mutableListOf<BuildRecordContainer>()
+        val taskBuildRecords = mutableListOf<BuildRecordTask>()
+
         context.currentBuildNo = buildNo
 //        var buildNoType: BuildNoType? = null
         // --- 第1层循环：Stage遍历处理 ---
@@ -775,7 +779,10 @@ class PipelineRuntimeService @Autowired constructor(
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
                 if (container is TriggerContainer) { // 寻找触发点
-                    pipelineContainerService.setUpTriggerContainer(container, context, startBuildStatus)
+                    pipelineContainerService.setUpTriggerContainer(
+                        version, stage, container, context, startBuildStatus,
+                        containerBuildRecords, taskBuildRecords
+                    )
                     context.containerSeq++
                     return@nextContainer
                 } else if (container is NormalContainer) {
@@ -1105,6 +1112,9 @@ class PipelineRuntimeService @Autowired constructor(
                     buildNum = buildNum,
                     resourceVersion = version,
                     transactionContext = transactionContext,
+                    stageBuildRecords = stageBuildRecords,
+                    containerBuildRecords = containerBuildRecords,
+                    taskBuildRecords = taskBuildRecords,
                     buildStages = buildStages,
                     buildContainers = buildContainers,
                     buildTasks = buildTasks,
@@ -1157,6 +1167,9 @@ class PipelineRuntimeService @Autowired constructor(
         buildNum: Int,
         resourceVersion: Int,
         transactionContext: DSLContext,
+        stageBuildRecords: MutableList<BuildRecordStage>,
+        containerBuildRecords: MutableList<BuildRecordContainer>,
+        taskBuildRecords: MutableList<BuildRecordTask>,
         buildStages: ArrayList<PipelineBuildStage>,
         buildContainers: MutableList<PipelineBuildContainer>,
         buildTasks: MutableList<PipelineBuildTask>,
@@ -1169,8 +1182,11 @@ class PipelineRuntimeService @Autowired constructor(
             startType = context.startType.name, buildNum = buildNum,
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
-            cancelUser = null, modelVar = mutableMapOf(),
-            status = startBuildStatus.name, timestamps = mapOf()
+            cancelUser = null, modelVar = mutableMapOf(), status = startBuildStatus.name,
+            timestamps = mapOf(
+                BuildTimestampType.PIPELINE_CONCURRENCY_WAITING to
+                    BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+            )
         )
         val (lastTimeBuildStages, lastTimeBuildContainers, lastTimeBuildTasks) =
             pipelineBuildRecordService.batchGet(
@@ -1180,9 +1196,6 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = context.buildId,
                 executeCount = context.executeCount - 1
             )
-        val stageBuildRecords = mutableListOf<BuildRecordStage>()
-        val containerBuildRecords = mutableListOf<BuildRecordContainer>()
-        val taskBuildRecords = mutableListOf<BuildRecordTask>()
 
         // 首次执行时所有记录直接新增
         if (buildStages.isNotEmpty()) {

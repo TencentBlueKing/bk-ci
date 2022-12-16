@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
@@ -47,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -69,6 +71,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
@@ -101,6 +104,7 @@ class BuildStartControl @Autowired constructor(
     private val pipelineStageService: PipelineStageService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildDetailService: PipelineBuildDetailService,
+    private val pipelineRecordService: PipelineBuildRecordService,
     private val stageRecordService: StageBuildRecordService,
     private val containerRecordService: ContainerBuildRecordService,
     private val taskRecordService: TaskBuildRecordService,
@@ -426,32 +430,32 @@ class BuildStartControl @Autowired constructor(
             checkIn = stage.checkIn,
             checkOut = stage.checkOut
         )
+        pipelineRecordService.updateModelRecord(
+            projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
+            executeCount = executeCount, buildStatus = null, modelVar = mutableMapOf(),
+            timestamps = mapOf(
+                BuildTimestampType.PIPELINE_CONCURRENCY_WAITING to
+                    BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+            )
+        )
         stageRecordService.updateStageRecord(
-            projectId = buildInfo.projectId,
-            pipelineId = buildInfo.pipelineId,
-            buildId = buildInfo.buildId,
-            stageId = stage.id!!,
-            executeCount = executeCount,
-            buildStatus = BuildStatus.SUCCEED,
+            projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
+            stageId = stage.id!!, executeCount = executeCount, buildStatus = BuildStatus.SUCCEED,
             stageVar = mutableMapOf(
                 Stage::elapsed.name to max(0, System.currentTimeMillis() - buildInfo.queueTime)
             )
         )
         containerRecordService.updateContainerRecord(
-            projectId = buildInfo.projectId,
-            pipelineId = buildInfo.pipelineId,
-            buildId = buildInfo.buildId,
-            executeCount = executeCount,
-            containerId = container.containerId!!,
-            buildStatus = BuildStatus.SUCCEED,
+            projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
+            executeCount = executeCount, containerId = container.containerId!!, buildStatus = BuildStatus.SUCCEED,
             containerVar = mutableMapOf(
                 Container::startEpoch.name to now.timestampmilli(),
                 Container::systemElapsed.name to (stage.elapsed ?: 0),
                 Container::elementElapsed.name to 0,
-                Container::startVMStatus.name to BuildStatus.SUCCEED.name
+                Container::startVMStatus.name to BuildStatus.SUCCEED.name,
+                Container::name.name to container.name // 名字刷新成非队列中
             )
         )
-
         stage.status = BuildStatus.SUCCEED.name
         stage.elapsed = max(0, System.currentTimeMillis() - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
