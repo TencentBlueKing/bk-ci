@@ -53,7 +53,7 @@ class RbacPermissionExtService(
     private val iamConfiguration: IamConfiguration,
     private val v2ManagerService: V2ManagerService,
     private val strategyService: StrategyService,
-    private val authIamResourceService: AuthIamResourceService
+    private val authResourceService: AuthResourceService
 ) : PermissionExtService {
 
     companion object {
@@ -79,7 +79,7 @@ class RbacPermissionExtService(
             params = arrayOf(projectCode),
             defaultMessage = "项目${projectCode}没有关联系统分级管理员"
         )
-        val createSubSetManagerDTO = buildCreateSubSetManagerDTO(
+       /* val createSubSetManagerDTO = buildCreateSubSetManagerDTO(
             userId = userId,
             projectCode = projectCode,
             resourceType = resourceType,
@@ -90,15 +90,14 @@ class RbacPermissionExtService(
         val subsetGradeManagerId = v2ManagerService.createSubsetManager(
             gradeManagerId,
             createSubSetManagerDTO
-        )
-        authIamResourceService.create(
+        )*/
+        authResourceService.create(
             userId = userId,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName,
-            gradeManagerId = gradeManagerId,
-            subsetGradeManagerId = subsetGradeManagerId.toString()
+            relationId = "0"
         )
         return true
     }

@@ -76,6 +76,14 @@ class RbacResourceApi(
         resourceName: String,
         authGroupList: List<BkAuthGroup>?
     ) {
+        client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
+            resourceCode = resourceCode,
+            resourceName = resourceName,
+            projectCode = projectCode
+        )
     }
 
     override fun modifyResource(

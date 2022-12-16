@@ -28,15 +28,15 @@
 
 package com.tencent.devops.auth.dao
 
-import com.tencent.devops.auth.entity.AuthIamResourceInfo
-import com.tencent.devops.model.auth.tables.TAuthIamResource
-import com.tencent.devops.model.auth.tables.records.TAuthIamResourceRecord
+import com.tencent.devops.auth.entity.AuthResourceInfo
+import com.tencent.devops.model.auth.tables.TAuthResource
+import com.tencent.devops.model.auth.tables.records.TAuthResourceRecord
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class AuthIamResourceDao {
+class AuthResourceDao {
 
     @SuppressWarnings("LongParameterList")
     fun create(
@@ -46,19 +46,17 @@ class AuthIamResourceDao {
         resourceType: String,
         resourceCode: String,
         resourceName: String,
-        gradeManagerId: String,
-        subsetGradeManagerId: String
+        relationId: String
     ): Int {
         val now = LocalDateTime.now()
-        with(TAuthIamResource.T_AUTH_IAM_RESOURCE) {
+        with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.insertInto(
                 this,
                 PROJECT_CODE,
                 RESOURCE_TYPE,
                 RESOURCE_CODE,
                 RESOURCE_NAME,
-                GRADE_MANAGER_ID,
-                SUBSET_GRADE_MANAGER_ID,
+                RELATION_ID,
                 CREATE_TIME,
                 CREATE_USER,
                 UPDATE_TIME,
@@ -68,8 +66,7 @@ class AuthIamResourceDao {
                 resourceType,
                 resourceCode,
                 resourceName,
-                gradeManagerId,
-                subsetGradeManagerId,
+                relationId,
                 now,
                 userId,
                 now,
@@ -83,8 +80,8 @@ class AuthIamResourceDao {
         projectCode: String,
         resourceType: String,
         resourceCode: String
-    ): TAuthIamResourceRecord? {
-        with(TAuthIamResource.T_AUTH_IAM_RESOURCE) {
+    ): TAuthResourceRecord? {
+        with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
@@ -100,7 +97,7 @@ class AuthIamResourceDao {
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        with(TAuthIamResource.T_AUTH_IAM_RESOURCE) {
+        with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.update(this)
                 .set(ENABLE, true)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -119,7 +116,7 @@ class AuthIamResourceDao {
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        with(TAuthIamResource.T_AUTH_IAM_RESOURCE) {
+        with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.update(this)
                 .set(ENABLE, false)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -131,16 +128,15 @@ class AuthIamResourceDao {
         }
     }
 
-    fun convert(recode: TAuthIamResourceRecord): AuthIamResourceInfo {
+    fun convert(recode: TAuthResourceRecord): AuthResourceInfo {
         with(recode) {
-            return AuthIamResourceInfo(
+            return AuthResourceInfo(
                 id = id,
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName,
-                gradeManagerId = gradeManagerId,
-                subsetGradeManagerId = subsetGradeManagerId
+                relationId = relationId
             )
         }
     }

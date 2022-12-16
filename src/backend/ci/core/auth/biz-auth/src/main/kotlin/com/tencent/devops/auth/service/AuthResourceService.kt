@@ -28,21 +28,21 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.devops.auth.dao.AuthIamResourceDao
-import com.tencent.devops.auth.entity.AuthIamResourceInfo
+import com.tencent.devops.auth.dao.AuthResourceDao
+import com.tencent.devops.auth.entity.AuthResourceInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class AuthIamResourceService @Autowired constructor(
+class AuthResourceService @Autowired constructor(
     val dslContext: DSLContext,
-    val authIamResourceDao: AuthIamResourceDao
+    val authResourceDao: AuthResourceDao
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AuthIamResourceService::class.java)
+        private val logger = LoggerFactory.getLogger(AuthResourceService::class.java)
     }
 
     @SuppressWarnings("LongParameterList")
@@ -52,18 +52,16 @@ class AuthIamResourceService @Autowired constructor(
         resourceType: String,
         resourceCode: String,
         resourceName: String,
-        gradeManagerId: String,
-        subsetGradeManagerId: String
+        relationId: String
     ): Int {
-        return authIamResourceDao.create(
+        return authResourceDao.create(
             dslContext = dslContext,
             userId = userId,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName,
-            gradeManagerId = gradeManagerId,
-            subsetGradeManagerId = subsetGradeManagerId
+            relationId = relationId
         )
     }
 
@@ -71,13 +69,13 @@ class AuthIamResourceService @Autowired constructor(
         projectCode: String,
         resourceType: String,
         resourceCode: String
-    ): AuthIamResourceInfo? {
-        val record = authIamResourceDao.get(
+    ): AuthResourceInfo? {
+        val record = authResourceDao.get(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode
         ) ?: return null
-        return authIamResourceDao.convert(record)
+        return authResourceDao.convert(record)
     }
 }
