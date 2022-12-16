@@ -3,7 +3,24 @@
         <div class="pipeline-exec-summary">
             <div class="pipeline-exec-count">
                 <span>{{$t('details.num')}}</span>
-                <bk-select ext-cls="pipeline-exec-count-select" :list="executeCounts"></bk-select>
+                <bk-select
+                    ext-cls="pipeline-exec-count-select"
+                    v-model="executeCount"
+                    :popover-width="200"
+                    @selected="handleExecuteCountChange"
+                >
+                    <bk-option
+                        v-for="item in executeCounts"
+                        :key="item.id"
+                        :id="item.id"
+                        :name="item.name"
+                    >
+                        <p class="exec-count-select-option">
+                            <span>{{ item.name }}</span>
+                            <span>{{ item.user }}</span>
+                        </p>
+                    </bk-option>
+                </bk-select>
                 <span>{{$t('details.times')}}，{{statusLabel}}</span>
             </div>
             <ul class="pipeline-exec-timeline">
@@ -11,7 +28,7 @@
                     <span>
                         {{step.title}}
                     </span>
-                    <p v-bk-tooltips="timeDetailConf" class="time-step-divider"></p>
+                    <p v-bk-tooltips="step.popup" class="time-step-divider"></p>
                     <p>
                         {{step.description}}
                     </p>
@@ -42,21 +59,23 @@
                     {{$t('history.viewLog')}}
                 </bk-button>
             </header>
-            <bk-pipeline
-                :editable="false"
-                is-exec-detail
-                :hide-skip-task="hideSkipTask"
-                :cancel-user-id="cancelUserId"
-                :pipeline="curPipeline"
-                v-bind="$attrs"
-                @click="handlePiplineClick"
-                @stage-check="handleStageCheck"
-                @stage-retry="handleRetry"
-                @atom-quality-check="qualityCheck"
-                @atom-review="reviewAtom"
-                @atom-continue="handleContinue"
-                @atom-exec="handleExec"
-            />
+            <div class="exec-pipeline-ui-wrapper">
+                <bk-pipeline
+                    :editable="false"
+                    is-exec-detail
+                    :hide-skip-task="hideSkipTask"
+                    :cancel-user-id="cancelUserId"
+                    :pipeline="curPipeline"
+                    v-bind="$attrs"
+                    @click="handlePiplineClick"
+                    @stage-check="handleStageCheck"
+                    @stage-retry="handleRetry"
+                    @atom-quality-check="qualityCheck"
+                    @atom-review="reviewAtom"
+                    @atom-continue="handleContinue"
+                    @atom-exec="handleExec"
+                />
+            </div>
         </section>
         <bk-dialog
             v-model="showRetryStageDialog"
@@ -77,6 +96,7 @@
             :element="currentAtom"
         />
         <footer
+            v-if="showErrorPopup"
             :class="{
                 'exec-errors-popup': true,
                 'visible': showErrors
@@ -135,6 +155,24 @@
                 </bk-tab-panel>
             </bk-tab>
         </footer>
+        <div class="queue-time-detail-popup">
+            <div class="pipeline-time-detail-sum">
+                <span>{{$t('details.queueCost')}}</span>
+                <span>{{queueCost}}</span>
+            </div>
+        </div>
+        <div class="time-detail-popup">
+            <div class="pipeline-time-detail-sum">
+                <span>{{$t('details.totalCost')}}</span>
+                <span>{{totalCost}}</span>
+            </div>
+            <ul class="pipeline-time-detail-sum-list">
+                <li v-for="cost in timeDetailRows" :key="cost.field">
+                    <span>{{cost.label}}:</span>
+                    <span>{{cost.value}}</span>
+                </li>
+            </ul>
+        </div>
         <template v-if="execDetail && showLog">
             <complete-log @close="toggleCompleteLog"></complete-log>
         </template>
@@ -161,10 +199,10 @@
             }
         },
         data () {
-            console.log(this)
             return {
                 showRetryStageDialog: false,
                 showLog: false,
+                executeCount: 0,
                 retryTaskId: '',
                 skipTask: false,
                 failedContainer: false,
@@ -192,7 +230,6 @@
                 return {
                     allowHtml: true,
                     theme: 'light',
-                    content: '.time-detail-popup',
                     placement: 'bottom'
                 }
             },
@@ -202,20 +239,25 @@
                     errorTypeConf: errorTypeMap[error.errorType]
                 }))
             },
+            showErrorPopup () {
+                return Array.isArray(this.errorList) && this.errorList.length > 0
+            },
             timeDetailRows () {
-                console.log(Object.keys(this.execDetail?.timeCost ?? {}).map(key => ({
+                return [
+                    'executeCost',
+                    'systemCost',
+                    'waitCost'
+                ].map(key => ({
                     field: key,
                     label: this.$t(`details.${key}`),
-                    value: convertMStoString(this.execDetail?.timeCost[key])
-                })))
-                return Object.keys(this.execDetail?.timeCost ?? {}).map(key => ({
-                    field: key,
-                    label: this.$t(`details.${key}`),
-                    value: convertMStoString(this.execDetail?.timeCost[key])
+                    value: this.execDetail?.model?.timeCost?.[key] ? convertMStoString(this.execDetail.model.timeCost[key]) : '--'
                 }))
             },
+            queueCost () {
+                return this.execDetail?.model?.timeCost?.queueCost ? convertMStoString(this.execDetail.model.timeCost.queueCost) : '--'
+            },
             totalCost () {
-                return convertMStoString(this.execDetail.endTime - this.execDetail.startTime)
+                return this.execDetail?.model?.timeCost?.totalCost ? convertMStoString(this.execDetail.model.timeCost.totalCost) : '--'
             },
             errorsTableColumns () {
                 return [
@@ -275,17 +317,32 @@
                 return [
                     {
                         title: this.$t('details.triggerTime'),
-                        description: convertTime(this.execDetail?.startTime)
+                        description: convertTime(this.execDetail?.queueTime ?? 0),
+                        popup: {
+                            ...this.timeDetailConf,
+                            content: '.queue-time-detail-popup'
+                        }
                     },
                     {
                         title: this.$t('details.startTime'),
-                        description: convertTime(this.execDetail?.startTime)
+                        description: convertTime(this.execDetail?.startTime),
+                        popup: {
+                            ...this.timeDetailConf,
+                            content: '.time-detail-popup'
+                        }
                     },
                     {
                         title: this.$t('details.endTime'),
-                        description: convertTime(this.execDetail?.endTime)
+                        description: convertTime(this.execDetail?.endTime ?? 0)
                     }
                 ]
+            },
+            executeCounts () {
+                return this.execDetail?.startUserList.map((user, index) => ({
+                    id: index,
+                    name: `${(index + 1)} / ${this.execDetail.startUserList.length}`,
+                    user
+                }))
             },
             routerParams () {
                 return this.$route.params
@@ -492,6 +549,13 @@
                 }
                 this.locateAtom(row, true)
                 this.activeErrorAtom = row
+            },
+            handleExecuteCountChange (executeCount) {
+                console.log(executeCount)
+                this.requestPipelineExecDetail({
+                    ...this.routerParams,
+                    executeCount
+                })
             }
         }
     }
@@ -516,7 +580,7 @@
             font-size: 12px;
             font-weight: bold;
             .pipeline-exec-count-select {
-                width: 120px;
+                width: 88px;
                 flex-shrink: 0;
                 margin: 0 8px;
             }
@@ -580,11 +644,15 @@
         padding: 16px 24px;
         flex: 1;
         background: #FAFBFD;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
         .pipeline-style-setting-header {
             display: flex;
             align-items: center;
             font-size: 12px;
             margin-bottom: 16px;
+            flex-shrink: 0;
             .hide-skip-pipeline-task {
                 padding: 0 16px 0 24px;
                 position: relative;
@@ -598,6 +666,10 @@
                     background: #DCDEE5;
                 }
             }
+        }
+        .exec-pipeline-ui-wrapper {
+            flex: 1;
+            overflow: auto;
         }
     }
     .exec-errors-popup {
@@ -655,17 +727,24 @@
             }
         }
     }
-    .time-detail-popup {
+    .time-detail-popup,
+    .queue-time-detail-popup {
         font-size: 12px;
         width: 160px;
         .pipeline-time-detail-sum {
             display: flex;
             justify-content: space-between;
             font-weight: bold;
+            
             >span:first-child {
                 color: #979BA5;
                 font-weight: normal;
             }
+        }
+        &.time-detail-popup .pipeline-time-detail-sum {
+            border-bottom: 1px solid #DCDEE5;
+            padding: 0 0 6px 0;
+            margin-bottom: 6px;
         }
         .pipeline-time-detail-sum-list {
             > li {
@@ -680,5 +759,10 @@
                 }
             }
         }
+    }
+    .exec-count-select-option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 </style>

@@ -9,7 +9,7 @@
                 <template slot-scope="props">
                     <div class="table-part-item part-item-name">
                         <Logo v-if="props.row.artifactoryType === 'IMAGE'" class="image-icon" name="docker-svgrepo-com" size="30" />
-                        <i v-else :class="['devops-icon', `icon-${extForFile(props.row.name)}`]"></i>
+                        <i v-else :class="['devops-icon', `icon-${props.row.icon}`]"></i>
                         <span class="ml5" :title="props.row.name">{{ props.row.name }}</span>
                     </div>
                 </template>
@@ -34,6 +34,7 @@
 <script>
     import Logo from '@/components/Logo'
     import { convertFileSize } from '@/utils/util'
+    import { extForFile } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -48,13 +49,7 @@
             return {
                 hasPermission: true,
                 isLoading: true,
-                artifactories: [],
-                iconExts: {
-                    txt: ['.json', '.txt', '.md'],
-                    zip: ['.zip', '.tar', '.tar.gz', '.tgz', '.jar'],
-                    apkfile: ['.apk'],
-                    ipafile: ['.ipa']
-                }
+                artifactories: []
             }
         },
 
@@ -85,7 +80,10 @@
                     this.$store.dispatch('common/requestPartFile', postData),
                     this.$store.dispatch('common/requestExecPipPermission', permissionData)
                 ]).then(([res, permission]) => {
-                    this.artifactories = res.records || []
+                    this.artifactories = res.records.map(item => ({
+                        ...item,
+                        icon: extForFile(item.name)
+                    })) || []
                     this.hasPermission = permission
                     if (this.artifactories.length <= 0) {
                         this.$emit('hidden')
@@ -122,29 +120,6 @@
 
             sizeFormatter (row, column, cellValue, index) {
                 return (cellValue >= 0 && convertFileSize(cellValue, 'B')) || ''
-            },
-
-            /**
-             * 判断文件类型
-             */
-            extForFile (name) {
-                const { iconExts } = this
-                let icon
-                const names = name.split('.')
-                if (names.length > 1) {
-                    const ext = `.${names[names.length - 1]}`
-                    const ext2 = names.length > 2 ? `.${names[names.length - 2]}.${names[names.length - 1]}` : ''
-                    Object.keys(iconExts).forEach(key => {
-                        if (!icon) {
-                            iconExts[key].forEach(item => {
-                                if (ext === item || ext2 === item) {
-                                    icon = key
-                                }
-                            })
-                        }
-                    })
-                }
-                return icon || 'file'
             }
         }
     }

@@ -18,7 +18,6 @@
             <aside class="exec-detail-summary-trigger">
                 <img
                     class="exec-trigger-profile"
-
                 />
                 <span v-if="execDetail.triggerUser">
                     {{$t('details.executorInfo', [execDetail.triggerUser, execDetail.trigger, execFormatStartTime])}}
@@ -283,7 +282,7 @@
                         width: 100%;
                         .all-exec-material-list {
                             position: absolute;
-                            z-index: 2;
+                            z-index: 6;
                             width: 100%;
                             border: 1px solid #DCDEE5;
                             border-radius: 2px;

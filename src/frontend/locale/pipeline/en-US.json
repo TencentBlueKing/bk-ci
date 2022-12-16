@@ -649,7 +649,7 @@
     "executeCost": "执行耗时",
     "systemCost": "系统耗时",
     "waitCost": "等待耗时",
-    "queueCost": "排除耗时",
+    "queueCost": "排队耗时",
     "checkSum": "校验和",
     "shareOutput": "分享产出物",
     "goRepo": "去制品库",

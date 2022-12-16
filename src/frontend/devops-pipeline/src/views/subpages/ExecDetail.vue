@@ -46,13 +46,13 @@
                 />
             </template>
             <template v-else-if="showLog">
-                <plugin :exec-detail="execDetail" :editing-element-pos="editingElementPos" @close="showLog = false" />
+                <plugin :exec-detail="execDetail" :editing-element-pos="editingElementPos" @close="hideSidePanel" />
             </template>
             <template v-else-if="showContainerPanel">
-                <job :exec-detail="execDetail" :editing-element-pos="editingElementPos" @close="showLog = false" />
+                <job :exec-detail="execDetail" :editing-element-pos="editingElementPos" @close="hideSidePanel" />
             </template>
             <template v-else-if="showStagePanel">
-                <stage :exec-detail="execDetail" :editing-element-pos="editingElementPos" @close="showLog = false" />
+                <stage :exec-detail="execDetail" :editing-element-pos="editingElementPos" @close="hideSidePanel" />
             </template>
             <template v-else-if="showStageReviewPanel.isShow">
                 <stage-review-panel :stage="stage" @approve="requestPipelineExecDetail(routerParams)" />
@@ -173,6 +173,17 @@
                     component: 'start-params',
                     bindData: {}
                 }]
+            },
+            showLog: {
+                get () {
+                    const { editingElementPos, isPropertyPanelVisible, $route: { params } } = this
+                    return typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo && isPropertyPanelVisible
+                },
+                set (value) {
+                    this.togglePropertyPanel({
+                        isShow: value
+                    })
+                }
             },
             showStagePanel () {
                 return typeof this.editingElementPos.stageIndex !== 'undefined' && this.isPropertyPanelVisible
@@ -299,6 +310,9 @@
             ...mapActions('common', [
                 'requestInterceptAtom'
             ]),
+            hideSidePanel () {
+                this.showLog = false
+            },
             handlePiplineClick (args) {
                 this.togglePropertyPanel({
                     isShow: true,
@@ -366,6 +380,7 @@
             padding: 16px 24px;
             background: #F5F7FA;
             flex: 1;
+            overflow: hidden;
         }
         .pipeline-detail-tab-card {
             height: 100%;

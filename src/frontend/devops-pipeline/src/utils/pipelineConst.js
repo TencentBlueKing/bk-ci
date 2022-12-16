@@ -97,3 +97,27 @@ export const errorTypeMap = [
         icon: 'plugin'
     }
 ]
+
+export const repoTypeMap = {
+    CUSTOM_DIR: 'details.customRepo',
+    PIPELINE: 'details.pipelineRepo',
+    IMAGE: 'details.imageRepo'
+}
+export const fileExtIconMap = {
+    txt: ['.json', '.txt', '.md'],
+    zip: ['.zip', '.tar', '.tar.gz', '.tgz', '.jar', '.gz'],
+    apkfile: ['.apk'],
+    ipafile: ['.ipa']
+}
+export function extForFile (name) {
+    const defaultIcon = 'file'
+    const pos = name.lastIndexOf('.')
+    if (pos > -1) {
+        const ext = name.substring(pos)
+        return Object.keys(fileExtIconMap).find(key => {
+            const arr = fileExtIconMap[key]
+            return arr.includes(ext)
+        }) ?? defaultIcon
+    }
+    return defaultIcon
+}

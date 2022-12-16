@@ -13,27 +13,29 @@
                     {{ classify.label }}
                 </li>
             </ul>
-            <div class="pipeline-exec-outputs-filter">
+            <!-- <div class="pipeline-exec-outputs-filter">
                 <i class="devops-icon icon-filter"></i>
                 {{ $t('条件查询') }}
                 <bk-tag class="output-filter-condition-count">2</bk-tag>
-            </div>
+            </div> -->
             <ul class="pipeline-exec-outputs-list">
                 <li
                     v-for="output in outputs"
-                    :key="output.fullPath"
+                    :key="output.id"
                     :class="{
-                        active: output.fullPath === activeOutputFullPath
+                        active: output.id === activeOutput.id
                     }"
-                    @click="activeOutput(output)"
+                    @click="setActiveOutput(output)"
                 >
                     <i :class="['devops-icon', `icon-${output.icon}`]"></i>
                     <span>{{output.name}}</span>
                 </li>
             </ul>
         </aside>
-        <section class="pipeline-exec-outputs-section">
-            <template v-if="activeOutputDetail">
+        <section v-bkloading="{ isLoading }" class="pipeline-exec-outputs-section">
+            <iframe-report v-if="isCustomizeReport" :index-file-url="activeOutput.indexFileUrl" />
+            <third-party-report v-else-if="isThirdReport" :report-list="thirdPartyReportList" />
+            <template v-else-if="activeOutputDetail">
                 <div
                     class="pipeline-exec-output-header"
                 >
@@ -41,16 +43,18 @@
                         <i :class="`devops-icon icon-${activeOutputDetail.icon}`" />
                         {{ activeOutputDetail.name }}
                     </span>
-                    <bk-tag theme="info">{{ $t('流水线仓库') }}</bk-tag>
+                    <bk-tag theme="info">{{ $t(activeOutputDetail.artifactoryTypeTxt) }}</bk-tag>
                     <p class="pipeline-exec-output-actions">
                         <bk-button
                             text
                             theme="primary"
                             v-for="btn in btns"
                             :key="btn.text"
+                            @click="btn.handler"
                         >
                             {{btn.text}}
                         </bk-button>
+                        <qrcode v-if="activeOutputDetail.externalUrl" :text="activeOutputDetail.externalUrl" :size="100" />
                     </p>
                 </div>
                 <div
@@ -83,24 +87,27 @@
 
 <script>
     // import Logo from '@/components/Logo'
+    import qrcode from '@/components/devops/qrcode'
     import { mapActions } from 'vuex'
+    import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
+    import IframeReport from '@/components/Outputs/IframeReport'
     import { convertTime, convertFileSize } from '@/utils/util'
-    const fileExtIconMap = {
-        txt: ['.json', '.txt', '.md'],
-        zip: ['.zip', '.tar', '.tar.gz', '.tgz', '.jar', '.gz'],
-        apkfile: ['.apk'],
-        ipafile: ['.ipa']
-    }
+    import { extForFile, repoTypeMap } from '@/utils/pipelineConst'
+    
     export default {
         components: {
-            // Logo
+            ThirdPartyReport,
+            IframeReport,
+            qrcode
         },
         data () {
             return {
                 currentTab: 'all',
-                outputs: [],
-                activeOutputFullPath: '',
+                reports: [],
+                artifacts: [],
+                activeOutput: '',
                 activeOutputDetail: null,
+                hasPermission: false,
                 isLoading: false
             }
         },
@@ -117,56 +124,60 @@
                     label: this.$t('execDetail.report')
                 }]
             },
-            outputList () {
-                return [
-                    {
-                        id: 1,
-                        name: 'docker',
-                        icon: 'docker-shape'
-                    },
-                    {
-                        id: 2,
-                        name: 'test.log',
-                        icon: this.extForFile('test.log')
-                    },
-                    {
-                        id: 3,
-                        name: 'devops.apk',
-                        icon: this.extForFile('devops.apk')
-                    },
-                    {
-                        id: 7,
-                        name: 'devops.ipa',
-                        icon: this.extForFile('devops.ipa')
-                    },
-                    {
-                        id: 4,
-                        name: 'dist.tar.gz',
-                        icon: this.extForFile('dist.tar.gz')
-                    },
-                    {
-                        id: 5,
-                        name: 'output.tar',
-                        icon: this.extForFile('output.tar')
-                    },
-                    {
-                        id: 6,
-                        name: '代码分析报告',
-                        icon: 'order'
-                    }
-                ]
+            outputs () {
+                switch (this.currentTab) {
+                    case 'artifact':
+                        return this.artifacts
+                    case 'report':
+                        return this.reports
+                    default:
+                        return [
+                            ...this.artifacts,
+                            ...this.customizeReportList,
+                            ...(this.thirdPartyReportList.length > 0
+                                ? [{
+                                    id: 'THIRDPARTY',
+                                    type: 'THIRDPARTY',
+                                    name: this.$t('details.thirdReport'),
+                                    icon: 'bar-chart'
+                                }]
+                                : [])
+                        ]
+                }
+            },
+            isThirdReport () {
+                return this.activeOutput?.type === 'THIRDPARTY'
+            },
+            isCustomizeReport () {
+                return this.activeOutput?.type === 'INTERNAL'
+            },
+            thirdPartyReportList () {
+                return this.reports.filter(report => report.type === 'THIRDPARTY')
+            },
+            customizeReportList () {
+                return this.reports.filter(report => report.type === 'INTERNAL')
             },
             btns () {
-                return [{
-                    text: this.$t('download'),
-                    handler: () => {}
-                }, {
-                    text: this.$t('details.shareOutput'),
-                    handler: () => {}
-                }, {
+                const defaultBtns = [{
                     text: this.$t('details.goRepo'),
                     handler: () => {}
                 }]
+                if (this.hasPermission && this.activeOutput.type === 'ARTIFACT') {
+                    switch (true) {
+                        case this.activeOutput.artifactoryType !== 'IMAGE':
+                            defaultBtns.unshift({
+                                text: this.$t('download'),
+                                handler: () => window.open(this.activeOutputDetail.downloadUrl, '_blank')
+                            })
+                            break
+                        case this.activeOutput.isApp:
+                            defaultBtns.unshift({
+                                text: this.$t('qrcode')
+                            })
+                            break
+                    }
+                }
+                return defaultBtns
             },
             infoBlocks () {
                 return [
@@ -215,29 +226,42 @@
         },
         methods: {
             ...mapActions('common', [
-                'requestPartFile',
-                'requestFileInfo'
+                'requestFileInfo',
+                'requestOutputs',
+                'requestExecPipPermission',
+                'requestExternalUrl',
+                'requestDownloadUrl'
             ]),
             async init () {
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
 
                 try {
                     this.isLoading = true
-                    const res = await this.requestPartFile({
-                        projectId,
-                        params: {
-                            props: {
-                                pipelineId,
-                                buildId
-                            }
+                    const [, res] = await Promise.all([
+                        this.requestHasPermission(),
+                        this.requestOutputs({
+                            projectId,
+                            pipelineId,
+                            buildId
+                        })
+                    ])
+                    
+                    this.artifacts = res.artifacts.map((item) => {
+                        const icon = extForFile(item.name)
+                        return {
+                            ...item,
+                            id: item.fullPath,
+                            type: 'ARTIFACT',
+                            icon,
+                            isApp: ['ipafile', 'apkfile'].includes(icon)
                         }
                     })
 
-                    this.outputs = res.records.map((item) => ({
+                    this.reports = res.reports.map((item) => ({
                         ...item,
-                        icon: this.extForFile(item.name)
+                        id: item.taskId,
+                        icon: 'order'
                     }))
-                    console.log(this.outputs, 'this.outputs')
                 } catch (err) {
                     this.$showTips({
                         message: err.message ? err.message : err,
@@ -247,21 +271,77 @@
                     this.isLoading = false
                 }
             },
+            async requestHasPermission () {
+                try {
+                    const res = await this.requestExecPipPermission({
+                        ...this.$route.params,
+                        permission: 'DOWNLOAD'
+                    })
+
+                    this.hasPermission = res
+                } catch (err) {
+                    const message = err.message ? err.message : err
+                    const theme = 'error'
+
+                    this.$showTips({
+                        message,
+                        theme
+                    })
+                }
+            },
+            async getDownloadUrl () {
+                try {
+                    const params = {
+                        projectId: this.$route.params.projectId,
+                        ...this.activeOutput
+                    }
+                    const [download, external] = await Promise.all([
+                        this.requestDownloadUrl(params),
+                        ...(this.activeOutput.isApp
+                            ? [
+                                this.requestExternalUrl(params)
+                            ]
+                            : [])
+                    ])
+                    return [
+                        download.url,
+                        external?.url2
+                    ]
+                } catch (err) {
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.download,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.$route.params.pipelineId,
+                            name: this.$route.params.pipelineId
+                        }],
+                        projectId: this.$route.params.projectId
+                    }])
+                    return []
+                }
+            },
             async showDetail (output) {
                 const { projectId } = this.$route.params
                 try {
                     this.isLoading = true
-                    const res = await this.requestFileInfo({
-                        projectId,
-                        type: output.artifactoryType,
-                        path: `${output.fullPath}`
-                    })
+                    const [res, [downloadUrl, externalUrl]] = await Promise.all([
+                        this.requestFileInfo({
+                            projectId,
+                            type: output.artifactoryType,
+                            path: `${output.fullPath}`
+                        }),
+                        this.getDownloadUrl()
+                    ])
                     this.activeOutputDetail = {
+                        ...output,
                         ...res,
+                        artifactoryTypeTxt: repoTypeMap[output.artifactoryType] ?? '--',
                         size: res.size > 0 ? convertFileSize(res.size, 'B') : '--',
                         createdTime: convertTime(res.createdTime * 1000),
                         modifiedTime: convertTime(res.modifiedTime * 1000),
-                        icon: this.extForFile(res.name)
+                        icon: extForFile(res.name),
+                        downloadUrl,
+                        externalUrl
                     }
                     this.isLoading = false
                 } catch (err) {
@@ -273,27 +353,19 @@
                     }])
                 }
             },
-            activeOutput (output) {
-                this.activeOutputFullPath = output.fullPath
-                this.showDetail(output)
+            setActiveOutput (output) {
+                this.activeOutput = output
+                switch (output.type) {
+                    case 'THIRDPARTY':
+                    case 'INTERNAL':
+                        break
+                    case 'ARTIFACT':
+                        this.showDetail(output)
+                        break
+                }
             },
             switchTab (tab) {
                 this.currentTab = tab
-            },
-            /**
-             * 判断文件类型
-             */
-            extForFile (name) {
-                const defaultIcon = 'file'
-                const pos = name.lastIndexOf('.')
-                if (pos > -1) {
-                    const ext = name.substring(pos)
-                    return Object.keys(fileExtIconMap).find(key => {
-                        const arr = fileExtIconMap[key]
-                        return arr.includes(ext)
-                    }) ?? defaultIcon
-                }
-                return defaultIcon
             }
         }
     }
@@ -368,6 +440,7 @@
             .pipeline-exec-outputs-list {
                 overflow: auto;
                 flex: 1;
+                padding-top: 10px;
                 > li {
                     height: 32px;
                     display: flex;
@@ -392,6 +465,7 @@
         }
         .pipeline-exec-outputs-section {
             flex: 1;
+            overflow: auto;
             .pipeline-exec-output-header {
                 display: flex;
                 align-items: center;

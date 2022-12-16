@@ -1,9 +1,9 @@
 <template>
-    <div class="report-iframe-content">
-        <div :style="{ height: &quot;100%&quot; }">
-            <iframe id="iframe-box" allowfullscreen ref="iframeEle" :src="indexFileUrl"></iframe>
-        </div>
-    </div>
+    <iframe
+        class="exec-third-party-report"
+        allowfullscreen ref="iframeEle"
+        :src="indexFileUrl"
+    />
 </template>
 
 <script>
@@ -17,3 +17,10 @@
         }
     }
 </script>
+<style lang="scss">
+    .exec-third-party-report {
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+</style>

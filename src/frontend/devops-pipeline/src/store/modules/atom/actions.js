@@ -470,9 +470,11 @@ export default {
         // }
         commit(PROPERTY_PANEL_VISIBLE, payload)
     },
-    requestPipelineExecDetail: async ({ commit, dispatch }, { projectId, buildNo, pipelineId }) => {
+    requestPipelineExecDetail: async ({ commit, dispatch }, { projectId, buildNo, pipelineId, ...query }) => {
         try {
-            const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildNo}/detail`)
+            const response = await request.get(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`, {
+                params: query
+            })
             dispatch('setPipelineDetail', response.data)
         } catch (e) {
             if (e.code === 403) {

@@ -222,10 +222,15 @@ export const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+    
     requestPartFile: async ({ commit }, { projectId, params }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/search`, params).then(response => {
             return response.data
         })
+    },
+    requestOutputs: async ({ commit }, { projectId, pipelineId, buildId, ...params }) => {
+        const res = await request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/pipeline/output/${projectId}/${pipelineId}/${buildId}/search`, params)
+        return res.data
     },
     requestExternalUrl: async ({ commit }, { projectId, artifactoryType, path }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/externalUrl?path=${encodeURIComponent(path)}`).then(response => {
