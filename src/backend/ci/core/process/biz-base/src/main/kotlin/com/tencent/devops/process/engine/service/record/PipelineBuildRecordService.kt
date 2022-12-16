@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.service.record
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -39,7 +38,6 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
@@ -70,7 +68,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount")
 @Service
@@ -104,6 +101,21 @@ class PipelineBuildRecordService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(PipelineBuildRecordService::class.java)!!
+    }
+
+    fun batchGet(
+        transactionContext: DSLContext?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ): Triple<List<BuildRecordStage>, List<BuildRecordContainer>, List<BuildRecordTask>> {
+        val context = transactionContext ?: dslContext
+        return Triple(
+            recordStageDao.getRecords(context, projectId, pipelineId, buildId, executeCount),
+            recordContainerDao.getRecords(context, projectId, pipelineId, buildId, executeCount, null),
+            recordTaskDao.getRecords(context, projectId, pipelineId, buildId, executeCount)
+        )
     }
 
     fun batchSave(
@@ -148,42 +160,34 @@ class PipelineBuildRecordService @Autowired constructor(
             )
         ) ?: return null
 
-        val fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
-
-        // 获取流水线级别变量数据
-        val buildRecordPipeline = recordModelDao.getRecord(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            executeCount = fixedExecuteCount
-        ) ?: return null
-
-        val recordMap = recordModelService.generateFieldRecordModelMap(
-            projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline
-        )
+        var fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
+        var cancelUser: String? = null
 
         // TODO #7983 当不传executeCount时使用原detail接口暂时兼容，后续全部切换到record进行
-        val model = if (executeCount != null) {
+        val model = executeCount?.let {
+            // 获取流水线级别变量数据
+            val buildRecordPipeline = recordModelDao.getRecord(
+                dslContext, projectId, pipelineId, buildId, fixedExecuteCount
+            )
+            cancelUser = buildRecordPipeline?.cancelUser
             val resourceStr = pipelineResDao.getVersionModelString(
                 dslContext, projectId, pipelineId, buildInfo.version
-            ) ?: return null
+            )
             try {
+                val recordMap = recordModelService.generateFieldRecordModelMap(
+                    projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline!!
+                )
                 ModelUtils.generatePipelineBuildModel(
-                    baseModelMap = JsonUtil.getObjectMapper().readValue(resourceStr),
+                    baseModelMap = JsonUtil.getObjectMapper().readValue(resourceStr!!),
                     modelFieldRecordMap = recordMap
                 )
             } catch (t: Throwable) {
-                logger.error("RECORD|parse record($buildId)-$executeCount with error: ", t)
-                throw ErrorCodeException(
-                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_RECORD_PARSE_FAILED,
-                    defaultMessage = "解析构建记录出错"
-                )
+                logger.warn("RECORD|parse record($buildId)-$executeCount with error: ", t)
+                // 遇到解析问题直接返回最新记录，表现为前端无法切换
+                fixedExecuteCount = buildInfo.executeCount ?: executeCount
+                null
             }
-        } else {
-            pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return null
-        }
+        } ?: pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return null
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId, buildInfo.pipelineId
@@ -261,7 +265,7 @@ class PipelineBuildRecordService @Autowired constructor(
             model = model,
             currentTimestamp = System.currentTimeMillis(),
             buildNum = buildInfo.buildNum,
-            cancelUserId = buildRecordPipeline.cancelUser ?: "",
+            cancelUserId = cancelUser,
             curVersion = buildInfo.version,
             latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
