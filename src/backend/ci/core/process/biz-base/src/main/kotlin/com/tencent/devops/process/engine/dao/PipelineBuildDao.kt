@@ -46,7 +46,6 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import com.tencent.devops.process.pojo.pipeline.RepositoryTriggerInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -525,10 +524,7 @@ class PipelineBuildDao {
                 material = t.material?.let {
                     JsonUtil.getObjectMapper().readValue(it) as List<PipelineBuildMaterial>
                 },
-                remark = t.remark,
-                repositoryTriggerInfo = t.repoTriggerInfo?.let {
-                    JsonUtil.to(it, RepositoryTriggerInfo::class.java)
-                }
+                remark = t.remark
             )
         }
     }

@@ -30,6 +30,7 @@ package com.tencent.devops.process.pojo.pipeline
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -87,6 +88,6 @@ data class ModelRecord(
     val material: List<PipelineBuildMaterial>?,
     @ApiModelProperty("备注", required = false)
     val remark: String?,
-    @ApiModelProperty("代码库触发信息", required = false)
-    val repositoryTriggerInfo: RepositoryTriggerInfo?
+    @ApiModelProperty("触发信息（包括代码库等）", required = false)
+    val webhookInfo: WebhookInfo?
 )

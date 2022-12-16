@@ -393,8 +393,8 @@ class PipelineContainerService @Autowired constructor(
         context: StartBuildContext,
         buildTaskList: MutableList<PipelineBuildTask>,
         buildContainers: MutableList<PipelineBuildContainer>,
-        updateTaskExistsRecord: MutableList<PipelineBuildTask>,
-        updateContainerExistsRecord: MutableList<PipelineBuildContainer>,
+        updateExistsTask: MutableList<PipelineBuildTask>,
+        updateExistsContainer: MutableList<PipelineBuildContainer>,
         lastTimeBuildContainerRecords: Collection<PipelineBuildContainer>,
         lastTimeBuildTaskRecords: Collection<PipelineBuildTask>
     ) {
@@ -477,7 +477,7 @@ class PipelineContainerService @Autowired constructor(
                 )
 
                 if (taskRecord != null) {
-                    updateTaskExistsRecord.add(taskRecord)
+                    updateExistsTask.add(taskRecord)
                     // 新插件重试需要判断其是否有post操作,如果有那么post操作也需要重试
                     if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
                         val pair = findPostTask(lastTimeBuildTaskRecords, atomElement, containerElements)
@@ -487,7 +487,7 @@ class PipelineContainerService @Autowired constructor(
                                 executeCount = context.executeCount,
                                 atomElement = pair.second
                             )
-                            updateTaskExistsRecord.add(pair.first)
+                            updateExistsTask.add(pair.first)
                         }
                     }
                     needUpdateContainer = true
@@ -514,7 +514,7 @@ class PipelineContainerService @Autowired constructor(
                 containerSeq = context.containerSeq,
                 startVMTaskSeq = startVMTaskSeq,
                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                updateExistsRecord = updateTaskExistsRecord,
+                updateExistsRecord = updateExistsTask,
                 buildTaskList = buildTaskList,
                 executeCount = context.executeCount
             )
@@ -530,7 +530,7 @@ class PipelineContainerService @Autowired constructor(
                                 startTime = null
                                 endTime = null
                                 executeCount = context.executeCount
-                                updateContainerExistsRecord.add(this)
+                                updateExistsContainer.add(this)
                             }
                             return@findHistoryContainer
                         }

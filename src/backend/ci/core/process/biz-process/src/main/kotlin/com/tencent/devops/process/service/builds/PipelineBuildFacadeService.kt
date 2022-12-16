@@ -1322,7 +1322,7 @@ class PipelineBuildFacadeService(
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-            defaultMessage = "构建任务${buildId}不存在",
+            defaultMessage = "构建任务${buildId}不存在第${executeCount}次执行",
             params = arrayOf(buildId)
         )
     }

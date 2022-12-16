@@ -274,7 +274,7 @@ class PipelineBuildRecordService @Autowired constructor(
             buildMsg = buildInfo.buildMsg,
             material = buildInfo.material,
             remark = buildInfo.remark,
-            repositoryTriggerInfo = buildInfo.repositoryTriggerInfo
+            webhookInfo = buildInfo.webhookInfo
         )
     }
 
