@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service.record
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -38,6 +39,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
@@ -68,6 +70,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount")
 @Service
@@ -165,10 +168,19 @@ class PipelineBuildRecordService @Autowired constructor(
             val resourceStr = pipelineResDao.getVersionModelString(
                 dslContext, projectId, pipelineId, buildInfo.version
             ) ?: return null
-            ModelUtils.generatePipelineBuildModel(
-                baseModelMap = JsonUtil.getObjectMapper().readValue(resourceStr),
-                modelFieldRecordMap = recordMap
-            )
+            try {
+                ModelUtils.generatePipelineBuildModel(
+                    baseModelMap = JsonUtil.getObjectMapper().readValue(resourceStr),
+                    modelFieldRecordMap = recordMap
+                )
+            } catch (t: Throwable) {
+                logger.error("RECORD|parse record($buildId)-$executeCount with error: ", t)
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_RECORD_PARSE_FAILED,
+                    defaultMessage = "解析构建记录出错"
+                )
+            }
         } else {
             pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return null
         }
