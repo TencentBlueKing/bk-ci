@@ -75,18 +75,10 @@ object BuildTimeCostUtils {
         val startTime = buildStage.startTime ?: return BuildRecordTimeCost()
         val endTime = buildStage.endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
-        var executeCost = 0L
-        val waitCost = recordStage.timestamps.toList().sumOf { (type, time) ->
-            if (!type.stageCheckWait()) return@sumOf 0L
-            logWhenNull(
-                time, "${buildStage.buildId}|STAGE|${buildStage.stageId}|${type.name}"
-            )
-            return@sumOf time.between()
-        }
         var containerExecuteCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
         var containerWaitCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
         var containerQueueCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
-        containerPairs.forEach { (record, build) ->
+        containerPairs.forEach { (record, _) ->
             val containerTimeLine = JsonUtil.anyTo(
                 record.containerVar[BuildRecordTimeLine::class.java.name],
                 object : TypeReference<BuildRecordTimeLine>() {}
@@ -98,7 +90,23 @@ object BuildTimeCostUtils {
             // 排队时间取交集
             containerQueueCost = intersectionTimeLine(containerQueueCost, containerTimeLine.queueCostMoments)
         }
-        return BuildRecordTimeCost()
+        val executeCost = containerExecuteCost.sumOf { it.second - it.first }
+        val queueCost = containerQueueCost.sumOf { it.second - it.first }
+        val waitCost = recordStage.timestamps.toList().sumOf { (type, time) ->
+            if (!type.stageCheckWait()) return@sumOf 0L
+            logWhenNull(
+                time, "${buildStage.buildId}|STAGE|${buildStage.stageId}|${type.name}"
+            )
+            return@sumOf time.between()
+        } + containerWaitCost.sumOf { it.second - it.first }
+        val systemCost = totalCost - executeCost - queueCost - waitCost
+        return BuildRecordTimeCost(
+            totalCost = totalCost,
+            executeCost = executeCost,
+            waitCost = waitCost,
+            queueCost = queueCost,
+            systemCost = systemCost.notNegative()
+        )
     }
 
     /**
