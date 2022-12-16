@@ -98,11 +98,12 @@ class ManualReviewTaskAtom(
             logger.warn("[$buildId]|taskId=$taskId|Review user is empty")
             return AtomResponse(BuildStatus.FAILED)
         }
+        val reviewUsersList = reviewUsers.split(",")
 
         taskBuildRecordService.updateTaskRecord(
             projectId = projectCode, pipelineId = pipelineId, buildId = buildId,
             taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
-            taskVar = mapOf(ManualReviewUserTaskElement::reviewUsers.name to reviewUsers),
+            taskVar = mapOf(ManualReviewUserTaskElement::reviewUsers.name to reviewUsersList),
             timestamps = mapOf(
                 BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
                     BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
@@ -142,7 +143,7 @@ class ManualReviewTaskAtom(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE.name,
                 source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
                 userId = task.starter, buildId = buildId,
-                receivers = reviewUsers.split(","),
+                receivers = reviewUsersList,
                 notifyType = checkNotifyType(param.notifyType),
                 titleParams = mutableMapOf(
                     "content" to notifyTitle
