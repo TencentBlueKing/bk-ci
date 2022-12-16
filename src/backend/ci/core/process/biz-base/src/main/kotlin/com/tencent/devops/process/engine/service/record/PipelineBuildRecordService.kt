@@ -160,7 +160,7 @@ class PipelineBuildRecordService @Autowired constructor(
             projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline
         )
 
-        // TODO 当不传executeCount时使用原detail接口暂时兼容，后续全部切换到record进行
+        // TODO #7983 当不传executeCount时使用原detail接口暂时兼容，后续全部切换到record进行
         val model = if (executeCount != null) {
             val resourceStr = pipelineResDao.getVersionModelString(
                 dslContext, projectId, pipelineId, buildInfo.version
@@ -209,7 +209,17 @@ class PipelineBuildRecordService @Autowired constructor(
             stage.containers.forEach { container ->
                 container.containerHashId = container.containerHashId ?: container.containerId
                 container.containerId = container.id
+                var elementElapsed = 0L
+                container.elements.forEach { element ->
+                    element.timeCost?.executeCost?.let {
+                        element.elapsed = it
+                        elementElapsed += it
+                    }
+                }
+                container.elementElapsed = container.elementElapsed ?: elementElapsed
+                container.systemElapsed = container.systemElapsed ?: container.timeCost?.systemCost
             }
+            stage.elapsed = stage.elapsed ?: stage.timeCost?.totalCost
         }
         val triggerReviewers = pipelineTriggerReviewDao.getTriggerReviewers(
             dslContext = dslContext,
@@ -256,7 +266,7 @@ class PipelineBuildRecordService @Autowired constructor(
         )
     }
 
-    // TODO 代替detail能力
+    // TODO #7983 代替detail能力
     fun updateModel(projectId: String, buildId: String, model: Model) {
 //        buildDetailDao.update(
 //            dslContext = dslContext,
@@ -275,7 +285,7 @@ class PipelineBuildRecordService @Autowired constructor(
         buildStatus: BuildStatus,
         cancelUser: String
     ) {
-        // TODO 修正所有Record状态，自行获取最新executeCount
+        // TODO #7983 修正所有Record状态，自行获取最新executeCount
         logger.info("Cancel the build $buildId by $cancelUser")
 //        update(
 //            projectId = projectId, buildId = buildId,

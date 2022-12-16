@@ -1027,7 +1027,7 @@ class PipelineBuildFacadeService(
                     reviewRequest = reviewRequest
                 )
             } else {
-                pipelineStageService.startStage(
+                pipelineStageService.stageManualStart(
                     userId = userId,
                     buildStage = buildStage,
                     reviewRequest = reviewRequest

@@ -104,7 +104,7 @@ class TaskBuildRecordService(
         }
     }
 
-    // TODO 暂时保留和detail一致的方法，后续简化为updateTaskStatus
+    // TODO #7983 暂时保留和detail一致的方法，后续简化为updateTaskStatus
     fun taskPause(
         projectId: String,
         pipelineId: String,
@@ -214,6 +214,16 @@ class TaskBuildRecordService(
                         operation = "taskStart#$taskId"
                     )
                 }
+
+                // TODO #7983 即将废除的旧数据兼容
+                if (taskVar[Element::startEpoch.name] == null) { // 自动重试，startEpoch 不会为null，所以不需要查redis来确认
+                    taskVar[Element::startEpoch.name] = System.currentTimeMillis()
+                }
+                taskVar.remove(Element::elapsed.name)
+                taskVar.remove(Element::errorType.name)
+                taskVar.remove(Element::errorCode.name)
+                taskVar.remove(Element::errorMsg.name)
+
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -229,7 +239,7 @@ class TaskBuildRecordService(
         }
     }
 
-    // TODO 暂时保留和detail一致的方法，后续简化为updateTaskStatus
+    // TODO #7983 暂时保留和detail一致的方法，后续简化为updateTaskStatus
     fun taskCancel(
         projectId: String,
         pipelineId: String,
@@ -351,7 +361,7 @@ class TaskBuildRecordService(
             buildStatus = BuildStatus.QUEUE,
             operation = "updateElementWhenPauseContinue#$taskId"
         )
-        // TODO 重写同container下的插件input
+        // TODO #7983 重写同container下的插件input
         updateTaskStatus(
             projectId = projectId,
             pipelineId = pipelineId,

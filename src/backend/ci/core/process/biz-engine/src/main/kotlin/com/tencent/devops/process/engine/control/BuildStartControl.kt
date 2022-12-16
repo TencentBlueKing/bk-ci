@@ -37,6 +37,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCast
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -67,6 +68,9 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.StageBuildRecordService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -97,6 +101,9 @@ class BuildStartControl @Autowired constructor(
     private val pipelineStageService: PipelineStageService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildDetailService: PipelineBuildDetailService,
+    private val stageRecordService: StageBuildRecordService,
+    private val containerRecordService: ContainerBuildRecordService,
+    private val taskRecordService: TaskBuildRecordService,
     private val buildVariableService: BuildVariableService,
     private val scmProxyService: ScmProxyService,
     private val buildLogPrinter: BuildLogPrinter,
@@ -393,6 +400,17 @@ class BuildStartControl @Autowired constructor(
                         endTime = now,
                         buildStatus = BuildStatus.SUCCEED
                     )
+                    taskRecordService.updateTaskStatus(
+                        projectId = buildInfo.projectId,
+                        pipelineId = buildInfo.pipelineId,
+                        buildId = buildInfo.buildId,
+                        stageId = stage.id!!,
+                        containerId = container.containerId!!,
+                        taskId = taskId,
+                        buildStatus = BuildStatus.SUCCEED,
+                        executeCount = executeCount,
+                        operation = "updateTriggerElement#$taskId"
+                    )
                     it.status = BuildStatus.SUCCEED.name
                     buildLogPrinter.stopLog(buildInfo.buildId, taskId, jobId = JOB_ID, executeCount)
                     return@lit
@@ -407,6 +425,31 @@ class BuildStartControl @Autowired constructor(
             buildStatus = BuildStatus.SUCCEED,
             checkIn = stage.checkIn,
             checkOut = stage.checkOut
+        )
+        stageRecordService.updateStageRecord(
+            projectId = buildInfo.projectId,
+            pipelineId = buildInfo.pipelineId,
+            buildId = buildInfo.buildId,
+            stageId = stage.id!!,
+            executeCount = executeCount,
+            buildStatus = BuildStatus.SUCCEED,
+            stageVar = mutableMapOf(
+                Stage::elapsed.name to max(0, System.currentTimeMillis() - buildInfo.queueTime)
+            )
+        )
+        containerRecordService.updateContainerRecord(
+            projectId = buildInfo.projectId,
+            pipelineId = buildInfo.pipelineId,
+            buildId = buildInfo.buildId,
+            executeCount = executeCount,
+            containerId = container.containerId!!,
+            buildStatus = BuildStatus.SUCCEED,
+            containerVar = mutableMapOf(
+                Container::startEpoch.name to now.timestampmilli(),
+                Container::systemElapsed.name to (stage.elapsed ?: 0),
+                Container::elementElapsed.name to 0,
+                Container::startVMStatus.name to BuildStatus.SUCCEED.name
+            )
         )
 
         stage.status = BuildStatus.SUCCEED.name
@@ -425,6 +468,7 @@ class BuildStartControl @Autowired constructor(
         )
     }
 
+    // TODO #7983 统一改为使用record修改
     @Suppress("ALL")
     private fun supplementModel(
         projectId: String,

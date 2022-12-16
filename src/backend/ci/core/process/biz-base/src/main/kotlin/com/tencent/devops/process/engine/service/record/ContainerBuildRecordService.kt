@@ -152,7 +152,8 @@ class ContainerBuildRecordService(
                     BuildStatus.RUNNING
                 },
                 containerVar = mapOf(
-                    Container::startVMStatus.name to containerBuildStatus.name
+                    Container::startVMStatus.name to containerBuildStatus.name,
+                    Container::startEpoch.name to System.currentTimeMillis()
                 ),
                 timestamps = mapOf(
                     BuildTimestampType.JOB_CONTAINER_STARTUP to
@@ -189,7 +190,8 @@ class ContainerBuildRecordService(
                 val containerVar = mutableMapOf<String, Any>()
                 containerVar.putAll(recordContainer.containerVar)
                 val containerName = containerVar[Container::name.name]?.toString() ?: ""
-                containerVar[Container::name.name] = if (buildStatus.isReadyToRun()) {
+                // 存在互斥组的先将名字修改
+                if (buildStatus.isReadyToRun()) {
                     when (recordContainer.containerType) {
                         VMBuildContainer.classType -> containerVar[VMBuildContainer::mutexGroup.name]
                         NormalContainer.classType -> containerVar[NormalContainer::mutexGroup.name]
@@ -198,8 +200,8 @@ class ContainerBuildRecordService(
                         containerVar[Container::name.name] = ContainerUtils.getMutexWaitName(containerName)
                     }
                 } else {
-                    ContainerUtils.getMutexFixedContainerName(containerName)
-                } ?: containerName
+                    containerVar[Container::name.name] = ContainerUtils.getMutexFixedContainerName(containerName)
+                }
 
                 // 结束时进行启动状态校准，并计算所有耗时
                 val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()

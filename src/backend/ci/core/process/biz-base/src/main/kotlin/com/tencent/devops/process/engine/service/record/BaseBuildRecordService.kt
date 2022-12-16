@@ -119,7 +119,8 @@ open class BaseBuildRecordService(
             )
 
             watcher.start("dispatchEvent")
-            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser)
+            // TODO #7983 暂时不在record进行推送，避免和detail重复
+//            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser)
             message = "Will not update"
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
@@ -191,11 +192,13 @@ open class BaseBuildRecordService(
                 stageId = it.stageId,
                 name = it.stageVar[Stage::name.name]?.toString() ?: it.stageId,
                 status = it.status,
-                startEpoch = it.stageVar[Stage::startEpoch.name].toString().toLong(),
-                elapsed = it.stageVar[Stage::elapsed.name].toString().toLong(),
+                startEpoch = it.stageVar[Stage::startEpoch.name]?.toString()?.toLong(),
+                elapsed = it.stageVar[Stage::elapsed.name]?.toString()?.toLong(),
                 timeCost = timeCost,
-                tag = JsonUtil.anyTo(it.stageVar[Stage::tag.name], object : TypeReference<List<String>>() {})
-                    .map { tag -> stageTagMap.getOrDefault(tag, "null") },
+                tag = it.stageVar[Stage::tag.name]?.let { tags ->
+                    JsonUtil.anyTo(tags, object : TypeReference<List<String>>() {})
+                        .map { tag -> stageTagMap.getOrDefault(tag, "null") }
+                },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
                 showMsg = if (it.stageId == StageBuildRecordService.STATUS_STAGE) {
                     MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")

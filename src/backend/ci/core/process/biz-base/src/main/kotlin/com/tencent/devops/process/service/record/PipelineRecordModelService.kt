@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.record
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.EXECUTE_COUNT
 import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.STATUS
@@ -126,6 +127,7 @@ class PipelineRecordModelService @Autowired constructor(
             val stageId = buildRecordStage.stageId
             stageVarMap[ID] = stageId
             stageVarMap[STATUS] = buildRecordStage.status ?: ""
+            stageVarMap[EXECUTE_COUNT] = buildRecordStage.executeCount
             handleStageRecordContainer(
                 buildRecordContainers = buildRecordContainers,
                 stageId = stageId,
@@ -155,6 +157,7 @@ class PipelineRecordModelService @Autowired constructor(
             val containerId = stageRecordContainer.containerId
             containerVarMap[ID] = containerId
             containerVarMap[STATUS] = stageRecordContainer.status ?: ""
+            containerVarMap[EXECUTE_COUNT] = stageRecordContainer.executeCount
             handleContainerRecordTask(stageRecordTasks, containerId, containerVarMap)
             val matrixGroupFlag = stageRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
@@ -171,6 +174,7 @@ class PipelineRecordModelService @Autowired constructor(
                     val matrixContainerId = matrixRecordContainer.containerId
                     matrixContainerVarMap[ID] = matrixContainerId
                     matrixContainerVarMap[STATUS] = matrixRecordContainer.status ?: ""
+                    matrixContainerVarMap[EXECUTE_COUNT] = matrixRecordContainer.executeCount
                     handleContainerRecordTask(
                         stageRecordTasks = stageRecordTasks,
                         containerId = matrixContainerId,
@@ -204,6 +208,7 @@ class PipelineRecordModelService @Autowired constructor(
             val taskId = containerRecordTask.taskId
             taskVarMap[ID] = taskId
             taskVarMap[STATUS] = containerRecordTask.status ?: ""
+            taskVarMap[EXECUTE_COUNT] = containerRecordTask.executeCount
             containerBaseMap?.let {
                 // 生成矩阵task的变量模型
                 val taskBaseMap = (it[KEY_ELEMENTS] as List<Map<String, Any>>)[index].toMutableMap()
