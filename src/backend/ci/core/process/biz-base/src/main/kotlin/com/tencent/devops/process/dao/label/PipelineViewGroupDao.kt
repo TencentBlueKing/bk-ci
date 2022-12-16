@@ -57,7 +57,7 @@ class PipelineViewGroupDao {
                 pipelineId,
                 LocalDateTime.now(),
                 userId
-            ).execute()
+            ).onDuplicateKeyIgnore().execute()
         }
     }
 
