@@ -24,15 +24,15 @@
         data () {
             return {
                 renderList: [],
-                queryKey: [],
+                queryKey: {},
                 isLoading: false
             }
         },
 
         watch: {
             paramValue: {
-                handler (value, oldValue) {
-                    const index = this.queryKey.findIndex((key) => value[key] !== oldValue[key])
+                handler (value) {
+                    const index = Object.keys(this.queryKey).findIndex((key) => value[key] !== this.queryKey[key])
                     if (index > -1) {
                         this.initRenderList()
                     }
@@ -41,9 +41,10 @@
             }
         },
 
-        created () {
-            this.handleDefaultValue()
-            this.initRenderList()
+        mounted () {
+            this.$nextTick(() => {
+                this.initRenderList()
+            })
         },
 
         methods: {
@@ -71,7 +72,7 @@
                 this.queryKey = []
                 return url.replace(/\{(.+)\}/g, (all, key) => {
                     const val = this.paramValue[key]
-                    this.queryKey.push(key)
+                    this.queryKey[key] = val
                     return val
                 })
             }
