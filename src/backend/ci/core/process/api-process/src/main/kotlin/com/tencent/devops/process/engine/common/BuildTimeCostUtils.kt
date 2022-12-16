@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.common
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
@@ -45,7 +46,6 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.LocalDateTime
 
-
 object BuildTimeCostUtils {
     private val logger = LoggerFactory.getLogger(BuildTimeCostUtils::class.java)
 
@@ -55,16 +55,29 @@ object BuildTimeCostUtils {
         buildInfo: BuildInfo,
         stagePairs: List<Pair<BuildRecordStage, PipelineBuildStage?>>
     ): BuildRecordTimeCost {
-        val startTime = buildInfo.startTime
-        val endTime = buildInfo.endTime
-
-        stagePairs.forEach { (record, build) ->
-            val start = build?.startTime
-            val end = build?.endTime
-            val timestamps = record.timestamps
+        val startTime = buildInfo.startTime ?: return BuildRecordTimeCost()
+        val endTime = buildInfo.endTime ?: LocalDateTime.now().timestampmilli()
+        val totalCost = endTime - startTime
+        var executeCost = 0L
+        var waitCost = 0L
+        var queueCost = 0L
+        stagePairs.forEach { (record, _) ->
+            val stageCost = JsonUtil.anyTo(
+                record.stageVar[Stage::timeCost.name] ?: return@forEach,
+                object : TypeReference<BuildRecordTimeCost>() {}
+            )
+            executeCost += stageCost.executeCost
+            waitCost += stageCost.waitCost
+            queueCost += stageCost.queueCost
         }
-
-        return BuildRecordTimeCost()
+        val systemCost = totalCost - executeCost - queueCost - waitCost
+        return BuildRecordTimeCost(
+            totalCost = totalCost,
+            executeCost = executeCost,
+            waitCost = waitCost,
+            queueCost = queueCost,
+            systemCost = systemCost.notNegative()
+        )
     }
 
     fun generateStageTimeCost(
@@ -75,12 +88,12 @@ object BuildTimeCostUtils {
         val startTime = buildStage.startTime ?: return BuildRecordTimeCost()
         val endTime = buildStage.endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
-        var containerExecuteCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
+        var containerExecuteCost = emptyList<Pair<Long, Long>>()
         var containerWaitCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
         var containerQueueCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
         containerPairs.forEach { (record, _) ->
             val containerTimeLine = JsonUtil.anyTo(
-                record.containerVar[BuildRecordTimeLine::class.java.name],
+                record.containerVar[BuildRecordTimeLine::class.java.name] ?: return@forEach,
                 object : TypeReference<BuildRecordTimeLine>() {}
             )
             // 执行时间取并集
