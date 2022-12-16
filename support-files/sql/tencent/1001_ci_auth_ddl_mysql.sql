@@ -152,5 +152,41 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_MANAGER_APPROVAL`
 ) ENGINE = InnoDB
 DEFAULT CHARSET = utf8mb4 COMMENT '蓝盾超级管理员权限续期审核表';
 
+-- ----------------------------
+-- Table structure for T_AUTH_ACTION
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AUTH_ACTION` (
+    `actionId` varchar(64) NOT NULL COMMENT '操作ID',
+    `resourceType` varchar(64) NOT NULL COMMENT '资源类型',
+    `actionName` varchar(64) NOT NULL COMMENT '操作名称',
+    `creator` varchar(32) DEFAULT NULL  COMMENT '创建者',
+    `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+    `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '修改时间',
+    `delete` bit(1) DEFAULT NULL  COMMENT '是否删除',
+    `actionType` varchar(32) DEFAULT NULL  COMMENT '操作类型',
+    PRIMARY KEY (`actionId`),
+    UNIQUE INDEX `UNI_INX_RESOURCE_TYPE_ACTION_ID`(`resourceType`, `actionId`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限操作表';
+
+-- ----------------------------
+-- Table structure for T_AUTH_RESOURCE_TYPE
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AUTH_RESOURCE_TYPE` (
+    `resourceType` varchar(64) NOT NULL  COMMENT '资源类型',
+    `name` varchar(64) NOT NULL  COMMENT '资源名称',
+    `englishName` varchar(64) DEFAULT NULL  COMMENT '资源英文名称',
+    `desc` varchar(255) NOT NULL  COMMENT '资源描述',
+    `englishDesc` varchar(255) DEFAULT NULL  COMMENT '资源英文描述',
+    `parent` varchar(255) DEFAULT NULL  COMMENT '父类资源',
+    `system` varchar(255) NOT NULL  COMMENT '所属系统',
+    `creator` varchar(32) NOT NULL  COMMENT '创建者',
+    `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+    `updater` varchar(32) DEFAULT NULL  COMMENT '更新者',
+    `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '修改时间',
+    `delete` bit(1) DEFAULT NULL  COMMENT '是否删除',
+    PRIMARY KEY (`resourceType`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='权限资源类型表';
 
 SET FOREIGN_KEY_CHECKS = 1;

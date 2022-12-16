@@ -25,8 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:project:biz-project-tencent"))
-    api(project(":ext:tencent:project:biz-project-op"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+package com.tencent.devops.project.service.impl
+
+import com.tencent.devops.project.service.ProjectExtPermissionService
+
+class RbacProjectExtPermissionServiceImpl : ProjectExtPermissionService {
+    override fun verifyUserProjectPermission(
+        accessToken: String,
+        projectCode: String,
+        userId: String
+    ): Boolean {
+        return true
+    }
+
+    override fun createUser2Project(
+        createUser: String,
+        userIds: List<String>,
+        projectCode: String,
+        roleId: Int?, roleName: String?,
+        checkManager: Boolean
+    ): Boolean {
+        return true
+    }
+
+    override fun grantInstancePermission(
+        userId: String,
+        projectId: String,
+        action: String,
+        resourceType: String,
+        resourceCode: String,
+        userList: List<String>
+    ): Boolean {
+        return true
+    }
 }

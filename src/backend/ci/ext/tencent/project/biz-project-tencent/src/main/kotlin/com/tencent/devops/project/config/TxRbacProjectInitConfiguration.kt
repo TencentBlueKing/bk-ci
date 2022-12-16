@@ -29,22 +29,29 @@ package com.tencent.devops.project.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
+import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.IamRbacService
+import com.tencent.devops.project.service.impl.RbacProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.impl.TxRbacProjectPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Configuration
@@ -53,9 +60,29 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class TxRbacProjectInitConfiguration {
     @Bean
+    @ConditionalOnMissingBean
+    fun apigwHttpClientServiceImpl(
+        iamConfiguration: IamConfiguration
+    ) = ApigwHttpClientServiceImpl(iamConfiguration)
+
+    @Bean
+    fun iamV2ManagerService(
+        iamConfiguration: IamConfiguration,
+        apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl
+    ) = V2ManagerServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
+
+    @Bean
+    @Primary
+    fun authTokenApi(
+        bkAuthProperties: BkAuthProperties,
+        objectMapper: ObjectMapper,
+        redisOperation: RedisOperation
+    ) =
+        BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
+
+    @Bean
     fun projectPermissionService(
         objectMapper: ObjectMapper,
-        bkAuthProperties: BkAuthProperties,
         projectDispatcher: ProjectDispatcher,
         client: Client,
         tokenService: ClientTokenService,
@@ -67,7 +94,6 @@ class TxRbacProjectInitConfiguration {
         iamRbacService: IamRbacService
     ): ProjectPermissionService = TxRbacProjectPermissionServiceImpl(
         objectMapper = objectMapper,
-        authProperties = bkAuthProperties,
         projectDispatcher = projectDispatcher,
         client = client,
         tokenService = tokenService,
@@ -78,4 +104,7 @@ class TxRbacProjectInitConfiguration {
         projectDao = projectDao,
         iamRbacService = iamRbacService
     )
+
+    @Bean
+    fun rbacProjectExtPermissionServiceImpl() = RbacProjectExtPermissionServiceImpl()
 }
