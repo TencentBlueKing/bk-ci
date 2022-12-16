@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service.record
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -36,6 +37,7 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
@@ -160,16 +162,14 @@ class PipelineBuildRecordService @Autowired constructor(
             )
         ) ?: return null
 
+        // 获取流水线级别变量数据
         var fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
-        var cancelUser: String? = null
+        val buildRecordPipeline = recordModelDao.getRecord(
+            dslContext, projectId, pipelineId, buildId, fixedExecuteCount
+        )
 
         // TODO #7983 当不传executeCount时使用原detail接口暂时兼容，后续全部切换到record进行
         val model = executeCount?.let {
-            // 获取流水线级别变量数据
-            val buildRecordPipeline = recordModelDao.getRecord(
-                dslContext, projectId, pipelineId, buildId, fixedExecuteCount
-            )
-            cancelUser = buildRecordPipeline?.cancelUser
             val resourceStr = pipelineResDao.getVersionModelString(
                 dslContext, projectId, pipelineId, buildInfo.version
             )
@@ -187,7 +187,14 @@ class PipelineBuildRecordService @Autowired constructor(
                 fixedExecuteCount = buildInfo.executeCount ?: executeCount
                 null
             }
-        } ?: pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return null
+        } ?: run {
+            // TODO #7983 临时填充流水线级的timeCost
+            val detail = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return null
+            buildRecordPipeline?.modelVar?.get(Model::timeCost.name)?.let {
+                detail.timeCost = JsonUtil.anyTo(it, object : TypeReference<BuildRecordTimeCost>() {})
+            }
+            detail
+        }
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId, buildInfo.pipelineId
@@ -265,7 +272,7 @@ class PipelineBuildRecordService @Autowired constructor(
             model = model,
             currentTimestamp = System.currentTimeMillis(),
             buildNum = buildInfo.buildNum,
-            cancelUserId = cancelUser,
+            cancelUserId = buildRecordPipeline?.cancelUser,
             curVersion = buildInfo.version,
             latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
