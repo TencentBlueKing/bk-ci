@@ -54,7 +54,10 @@
                         >
                             {{btn.text}}
                         </bk-button>
-                        <qrcode v-if="activeOutputDetail.externalUrl" :text="activeOutputDetail.externalUrl" :size="100" />
+                        <bk-popover theme="light" placement="bottom-end" v-if="activeOutputDetail.isApp">
+                            <i class="devops-icon icon-qrcode" />
+                            <qrcode slot="content" :text="activeOutputDetail.shortUrl" :size="100" />
+                        </bk-popover>
                     </p>
                 </div>
                 <div
@@ -167,16 +170,12 @@
                         case this.activeOutput.artifactoryType !== 'IMAGE':
                             defaultBtns.unshift({
                                 text: this.$t('download'),
-                                handler: () => window.open(this.activeOutputDetail.downloadUrl, '_blank')
-                            })
-                            break
-                        case this.activeOutput.isApp:
-                            defaultBtns.unshift({
-                                text: this.$t('qrcode')
+                                handler: () => window.open(this.activeOutputDetail.url, '_blank')
                             })
                             break
                     }
                 }
+                console.log(defaultBtns)
                 return defaultBtns
             },
             infoBlocks () {
@@ -324,14 +323,11 @@
                 const { projectId } = this.$route.params
                 try {
                     this.isLoading = true
-                    const [res, [downloadUrl, externalUrl]] = await Promise.all([
-                        this.requestFileInfo({
-                            projectId,
-                            type: output.artifactoryType,
-                            path: `${output.fullPath}`
-                        }),
-                        this.getDownloadUrl()
-                    ])
+                    const res = await this.requestFileInfo({
+                        projectId,
+                        type: output.artifactoryType,
+                        path: `${output.fullPath}`
+                    })
                     this.activeOutputDetail = {
                         ...output,
                         ...res,
@@ -339,9 +335,7 @@
                         size: res.size > 0 ? convertFileSize(res.size, 'B') : '--',
                         createdTime: convertTime(res.createdTime * 1000),
                         modifiedTime: convertTime(res.modifiedTime * 1000),
-                        icon: extForFile(res.name),
-                        downloadUrl,
-                        externalUrl
+                        icon: extForFile(res.name)
                     }
                     this.isLoading = false
                 } catch (err) {
