@@ -56,6 +56,7 @@ class BuildRecordStageDao {
                     .set(EXECUTE_COUNT, record.executeCount)
                     .set(SEQ, record.stageSeq)
                     .set(STAGE_VAR, JsonUtil.toJson(record.stageVar, false))
+                    .set(STATUS, record.status)
                     .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
                     .execute()
             }

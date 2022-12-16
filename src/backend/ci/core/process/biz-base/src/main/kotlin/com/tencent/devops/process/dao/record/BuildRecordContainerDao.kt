@@ -60,6 +60,7 @@ class BuildRecordContainerDao {
                     .set(CONTAINER_TYPE, record.containerType)
                     .set(MATRIX_GROUP_FLAG, record.matrixGroupFlag)
                     .set(MATRIX_GROUP_ID, record.matrixGroupId)
+                    .set(STATUS, record.status)
                     .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
                     .execute()
             }

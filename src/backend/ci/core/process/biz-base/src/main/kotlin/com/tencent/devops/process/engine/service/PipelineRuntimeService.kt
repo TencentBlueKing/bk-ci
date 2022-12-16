@@ -1198,23 +1198,34 @@ class PipelineRuntimeService @Autowired constructor(
             saveTaskRecords(buildTasks, taskBuildRecords, resourceVersion)
         }
 
-        // 重试时将需要更新的记录按更新后的值保存，不更新的直接复制上一次结果
+        // 重试时将需要更新的记录按更新后的值保存（矩阵数据需要去掉），不更新的直接复制上一次结果
         if (updateExistsStage.isNotEmpty()) {
             pipelineStageService.batchUpdate(transactionContext, updateExistsStage)
             saveStageRecords(updateExistsStage, stageBuildRecords, resourceVersion)
             val updateSet = updateExistsStage.map { it.stageId }
-            lastTimeBuildStages.forEach {
-                if (updateSet.contains(it.stageId)) return@forEach
-                stageBuildRecords.add(it.copy(executeCount = context.executeCount))
+            lastTimeBuildStages.forEach { stage ->
+                if (updateSet.contains(stage.stageId)) return@forEach
+                stageBuildRecords.add(stage.copy(executeCount = context.executeCount))
             }
         }
+        val updateMatrixSet = mutableListOf<String>()
+        val updateGroupContainerSet = mutableListOf<String>()
         if (updateExistsContainer.isNotEmpty()) {
             pipelineContainerService.batchUpdate(transactionContext, updateExistsContainer)
             saveContainerRecords(updateExistsContainer, containerBuildRecords, resourceVersion)
-            val updateSet = updateExistsContainer.map { it.containerId }
-            lastTimeBuildContainers.forEach {
-                if (updateSet.contains(it.containerId)) return@forEach
-                containerBuildRecords.add(it.copy(executeCount = context.executeCount))
+            val updateContainerSet = mutableListOf<String>()
+            updateExistsContainer.forEach { container ->
+                if (container.matrixGroupFlag == true) updateMatrixSet.add(container.containerId)
+                updateContainerSet.add(container.containerId)
+            }
+            lastTimeBuildContainers.forEach { container ->
+                // 待更新或属于待更新矩阵的记录，直接跳过
+                if (updateContainerSet.contains(container.containerId)) return@forEach
+                if (container.matrixGroupId?.let { updateMatrixSet.contains(it) } == true) {
+                    updateGroupContainerSet.add(container.containerId)
+                    return@forEach
+                }
+                containerBuildRecords.add(container.copy(executeCount = context.executeCount))
             }
         }
         if (updateExistsTask.isNotEmpty()) {
@@ -1222,7 +1233,8 @@ class PipelineRuntimeService @Autowired constructor(
             saveTaskRecords(updateExistsTask, taskBuildRecords, resourceVersion)
             val updateSet = updateExistsTask.map { it.taskId }
             lastTimeBuildTasks.forEach {
-                if (updateSet.contains(it.taskId)) return@forEach
+                // 待更新或属于待更新矩阵的记录，直接跳过
+                if (updateSet.contains(it.taskId) || updateGroupContainerSet.contains(it.containerId)) return@forEach
                 taskBuildRecords.add(it.copy(executeCount = context.executeCount))
             }
         }

@@ -59,6 +59,7 @@ class BuildRecordTaskDao {
                     .set(CLASS_TYPE, record.classType)
                     .set(ORIGIN_CLASS_TYPE, record.originClassType)
                     .set(TASK_VAR, JsonUtil.toJson(record.taskVar, false))
+                    .set(STATUS, record.status)
                     .set(TASK_SEQ, record.taskSeq)
                     .set(ATOM_CODE, record.atomCode)
                     .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
