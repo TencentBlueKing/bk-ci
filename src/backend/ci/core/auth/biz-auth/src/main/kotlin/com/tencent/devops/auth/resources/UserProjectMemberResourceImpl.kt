@@ -44,7 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserProjectMemberResourceImpl @Autowired constructor(
     val permissionRoleMemberService: PermissionRoleMemberService,
-    val permissionProjectService: PermissionProjectService,
+    val permissionProjectService: PermissionProjectService
 ) : UserProjectMemberResource {
     override fun createRoleMember(
         userId: String,

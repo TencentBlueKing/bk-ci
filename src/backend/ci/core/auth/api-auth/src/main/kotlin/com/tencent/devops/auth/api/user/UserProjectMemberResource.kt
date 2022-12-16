@@ -33,8 +33,6 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
