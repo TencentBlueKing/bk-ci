@@ -34,7 +34,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
-import com.tencent.devops.auth.service.AuthIamResourceService
+import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.common.client.Client
@@ -85,12 +85,12 @@ class RbacAuthConfiguration {
         iamConfiguration: IamConfiguration,
         v2ManagerService: V2ManagerService,
         strategyService: StrategyService,
-        authIamResourceService: AuthIamResourceService
+        authResourceService: AuthResourceService
     ) = RbacPermissionExtService(
         client = client,
         iamConfiguration = iamConfiguration,
         v2ManagerService = v2ManagerService,
         strategyService = strategyService,
-        authIamResourceService = authIamResourceService
+        authResourceService = authResourceService
     )
 }
