@@ -97,6 +97,7 @@ import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
+import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_LIST_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
@@ -476,7 +477,10 @@ class PipelineListFacadeService @Autowired constructor(
 
             val pipelineIds = mutableSetOf<String>()
             val viewIdList = listOf(
-                PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES,
+                PIPELINE_VIEW_FAVORITE_PIPELINES,
+                PIPELINE_VIEW_MY_PIPELINES,
+                PIPELINE_VIEW_ALL_PIPELINES,
+                PIPELINE_VIEW_MY_LIST_PIPELINES,
                 PIPELINE_VIEW_UNCLASSIFIED
             )
             val includeDelete = showDelete && !viewIdList.contains(viewId)

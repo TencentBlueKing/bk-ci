@@ -302,6 +302,29 @@ class PipelineViewDao {
         }
     }
 
+    fun listDynamicProjectId(
+        dslContext: DSLContext
+    ): List<String> {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.select(PROJECT_ID).from(this)
+                .where(VIEW_TYPE.eq(PipelineViewType.DYNAMIC))
+                .fetch(0, String::class.java)
+                .distinct()
+        }
+    }
+
+    fun listDynamicViewByProjectId(
+        dslContext: DSLContext,
+        projectId: String
+    ): Result<TPipelineViewRecord> {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_TYPE.eq(PipelineViewType.DYNAMIC))
+                .fetch()
+        }
+    }
+
     fun listProjectOrUser(
         dslContext: DSLContext,
         projectId: String,
