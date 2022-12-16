@@ -946,8 +946,7 @@ class PipelineContainerService @Autowired constructor(
                 containerVar = mutableMapOf(
                     // 名字刷新成非队列中
                     Container::name.name to container.name,
-                    Container::startEpoch.name to System.currentTimeMillis(),
-                    "@type" to container.getClassType()
+                    Container::startEpoch.name to System.currentTimeMillis()
                 )
             )
         )
