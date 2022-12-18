@@ -26,72 +26,110 @@
  *
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.auth.api.user.UserAuthIamResourceResource
-import com.tencent.devops.auth.pojo.dto.ResourceEnablePermissionDTO
-import com.tencent.devops.auth.pojo.vo.IamSubSetGroupInfoVo
-import com.tencent.devops.auth.pojo.vo.ResourceTypeGroupPoliciesVo
-import com.tencent.devops.auth.pojo.vo.UserGroupBelongInfoVo
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
+import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
 
-@RestResource
-class UserAuthIamResourceResourceImpl : UserAuthIamResourceResource {
-    override fun isResourceManager(
+/**
+ * 权限资源操作
+ */
+interface PermissionResourceService {
+
+    /**
+     * 创建二级管理员
+     */
+    @SuppressWarnings("LongParameterList")
+    fun resourceCreateRelation(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Boolean
+
+    /**
+     * 是否有资源管理员权限
+     */
+    fun hasManagerPermission(
         userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Result<Boolean> {
-        return Result(true)
-    }
+    ): Boolean
 
-    override fun getSubSetGroupsInfo(
+    /**
+     * 资源是否开启权限管理
+     */
+    fun isEnablePermission(
+        projectId: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean
+
+    /**
+     * 资源关联的组列表
+     */
+    fun listGroup(
+        projectId: String,
+        resourceType: String,
+        resourceCode: String
+    ): List<GroupInfoVo>
+
+    /**
+     * 获取用户所属组
+     */
+    fun listUserBelongGroup(
         userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Result<IamSubSetGroupInfoVo> {
-        return Result(
-            IamSubSetGroupInfoVo(
-                enable = true,
-                subsetManagerId = 1,
-                groups = emptyList()
-            )
-        )
-    }
+    ): List<GroupMemberInfoVo>
 
-    override fun getUserGroupBelongInfo(
+    /**
+     * 获取组策略
+     */
+    fun getGroupPolicies(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int
+    ): List<String>
+
+    /**
+     * 启用资源权限
+     */
+    fun enableResourcePermission(
         userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Result<List<UserGroupBelongInfoVo>> {
-        return Result(emptyList())
-    }
+    ): Boolean
 
-    override fun getGroupPolicies(
+    /**
+     * 关闭资源权限
+     */
+    fun disableResourcePermission(
         userId: String,
         projectId: String,
-        resourceType: String
-    ): Result<List<ResourceTypeGroupPoliciesVo>> {
-        return Result(emptyList())
-    }
+        resourceType: String,
+        resourceCode: String
+    ): Boolean
 
-    override fun enable(
+    /**
+     * 用户续期
+     */
+    fun renewal(
         userId: String,
         projectId: String,
-        resourceEnablePermissionDTO: ResourceEnablePermissionDTO
-    ): Result<Boolean> {
-        return Result(true)
-    }
+        resourceType: String,
+        groupId: Int
+    ): Boolean
 
-    override fun disable(
+    fun delete(
         userId: String,
         projectId: String,
-        resourceEnablePermissionDTO: ResourceEnablePermissionDTO
-    ): Result<Boolean> {
-        return Result(true)
-    }
+        resourceType: String,
+        groupId: Int
+    ): Boolean
 }

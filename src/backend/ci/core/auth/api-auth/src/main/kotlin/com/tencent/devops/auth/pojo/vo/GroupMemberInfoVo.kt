@@ -31,18 +31,18 @@ package com.tencent.devops.auth.pojo.vo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("iam用户组信息")
-data class IamGroupInfoVo(
+@ApiModel("组成员信息")
+data class GroupMemberInfoVo(
+    @ApiModelProperty("成员名")
+    val userId: String,
     @ApiModelProperty("用户组ID")
-    val id: Int,
-    @ApiModelProperty("用户组名称")
-    val name: String,
-    @ApiModelProperty("用户组描述")
-    val description: String,
-    @ApiModelProperty("是否是只读用户组")
-    val readonly: Boolean,
-    @ApiModelProperty("用户组成员user数量")
-    val userCount:Int,
-    @ApiModelProperty("用户组成员department数量")
-    val departmentCount: Int
+    val groupId: Int,
+    @ApiModelProperty("用户组名")
+    val groupName: String,
+    @ApiModelProperty("加入时间")
+    val createdTime: String,
+    @ApiModelProperty("是否加入组")
+    val status: String,
+    @ApiModelProperty("过期时间")
+    val expiredTime: String
 )

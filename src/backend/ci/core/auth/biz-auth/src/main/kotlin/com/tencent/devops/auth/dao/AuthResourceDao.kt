@@ -136,6 +136,7 @@ class AuthResourceDao {
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName,
+                enable = enable,
                 relationId = relationId
             )
         }

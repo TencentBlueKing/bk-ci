@@ -34,11 +34,13 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.RbacPermissionExtService
-import com.tencent.devops.auth.service.RbacPermissionSubsetManagerService
+import com.tencent.devops.auth.service.RbacPermissionResourceService
+import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.auth.service.iam.PermissionScopesService
-import com.tencent.devops.auth.service.iam.PermissionSubsetManagerService
+import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -82,19 +84,26 @@ class RbacAuthConfiguration {
     fun grantV2Service() = V2GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
     @Bean
-    fun permissionSubsetManagerService(
+    fun permissionResourceService(
+        client: Client,
         permissionScopesService: PermissionScopesService,
-        iamV2ManagerService: V2ManagerService
-    ) = RbacPermissionSubsetManagerService(permissionScopesService, iamV2ManagerService)
+        iamV2ManagerService: V2ManagerService,
+        authResourceService: AuthResourceService,
+        groupService: AuthGroupService,
+        strategyService: StrategyService
+    ) = RbacPermissionResourceService(
+        client = client,
+        permissionScopesService = permissionScopesService,
+        iamV2ManagerService = iamV2ManagerService,
+        authResourceService = authResourceService,
+        groupService = groupService,
+        strategyService = strategyService
+    )
 
     @Bean
     fun rbacPermissionExtService(
-        client: Client,
-        permissionSubsetManagerService: PermissionSubsetManagerService,
-        authResourceService: AuthResourceService
+        permissionResourceService: PermissionResourceService
     ) = RbacPermissionExtService(
-        client = client,
-        permissionSubsetManagerService = permissionSubsetManagerService,
-        authResourceService = authResourceService
+        permissionResourceService = permissionResourceService,
     )
 }

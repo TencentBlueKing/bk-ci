@@ -28,19 +28,12 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.service.iam.PermissionExtService
-import com.tencent.devops.auth.service.iam.PermissionSubsetManagerService
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.auth.service.iam.PermissionResourceService
 import org.slf4j.LoggerFactory
 
 class RbacPermissionExtService(
-    private val client: Client,
-    private val permissionSubsetManagerService: PermissionSubsetManagerService,
-    private val authResourceService: AuthResourceService
+    private val permissionResourceService: PermissionResourceService
 ) : PermissionExtService {
 
     companion object {
@@ -55,34 +48,12 @@ class RbacPermissionExtService(
         resourceName: String
     ): Boolean {
         logger.info("resourceCreateRelation $userId $projectCode $resourceCode $resourceName $resourceType")
-        val projectInfo =
-            client.get(ServiceProjectResource::class).get(englishName = projectCode).data ?: throw ErrorCodeException(
-                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                params = arrayOf(projectCode),
-                defaultMessage = "项目[$projectCode]不存在"
-            )
-        val gradeManagerId = projectInfo.relationId ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.PROJECT_NOT_FIND_RELATION,
-            params = arrayOf(projectCode),
-            defaultMessage = "项目${projectCode}没有关联系统分级管理员"
-        )
-        val subsetManagerId = permissionSubsetManagerService.createSubsetManager(
-            gradeManagerId = gradeManagerId,
+        return permissionResourceService.resourceCreateRelation(
             userId = userId,
             projectCode = projectCode,
-            projectName = projectInfo.projectName,
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName
         )
-        authResourceService.create(
-            userId = userId,
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            resourceName = resourceName,
-            relationId = subsetManagerId.toString()
-        )
-        return true
     }
 }
