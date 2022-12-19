@@ -319,7 +319,7 @@
                 return [
                     {
                         title: this.$t('details.triggerTime'),
-                        description: convertTime(this.execDetail?.queueTime ?? 0),
+                        description: convertTime(this.execDetail?.queueTime),
                         popup: {
                             ...this.timeDetailConf,
                             content: '.queue-time-detail-popup'
@@ -335,7 +335,10 @@
                     },
                     {
                         title: this.$t('details.endTime'),
-                        description: convertTime(this.execDetail?.endTime ?? 0)
+                        description: convertTime(this.execDetail?.endTime),
+                        popup: {
+                            disabled: true
+                        }
                     }
                 ]
             },
@@ -349,6 +352,13 @@
             },
             routerParams () {
                 return this.$route.params
+            }
+        },
+        watch: {
+            executeCounts (list) {
+                if (list.length > 0) {
+                    this.executeCount = list[0].id
+                }
             }
         },
         mounted () {
