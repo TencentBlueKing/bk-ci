@@ -57,8 +57,8 @@ default_value_dict = {
     'bkCiBcsMemory':'16048',
     'bkCiKubernetesCpu':'8',
     'bkCiKubernetesMemory':'16048',
-    'bkCiKubernetesHost': "http://kubernetes-manager"
-    'bkCiKubernetesToken': "landun"
+    'bkCiKubernetesHost': 'http://kubernetes-manager'
+    'bkCiKubernetesToken': 'landun'
 }
 
 if os.path.isfile(default_value_json):
