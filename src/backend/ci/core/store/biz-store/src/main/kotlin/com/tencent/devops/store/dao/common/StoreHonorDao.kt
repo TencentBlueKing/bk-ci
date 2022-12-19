@@ -125,7 +125,7 @@ class StoreHonorDao {
         dslContext.batchInsert(tStoreHonorRelRecords).execute()
     }
 
-    fun addStoreHonorInfo(dslContext: DSLContext, userId: String, storeHonorInfo: StoreHonorInfo) {
+    fun createStoreHonorInfo(dslContext: DSLContext, userId: String, storeHonorInfo: StoreHonorInfo) {
         with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
             dslContext.insertInto(
                 this,

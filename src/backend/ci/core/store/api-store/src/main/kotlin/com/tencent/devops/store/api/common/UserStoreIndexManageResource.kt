@@ -29,16 +29,13 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.validation.Valid
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
+import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_STORE_INDEX_MANAGE"], description = "研发商店指标管理")
@@ -58,4 +55,35 @@ interface UserStoreIndexManageResource {
         @Valid
         storeIndexCreateRequest: StoreIndexCreateRequest
     ): Result<Boolean>
+
+    @ApiOperation("删除研发商店指标")
+    @DELETE
+    @Path("/delete/{indexId}")
+    fun delete(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("指标ID", required = true)
+        @PathParam("indexId")
+        indexId: String
+    )
+
+    @ApiOperation("删除研发商店指标")
+    @GET
+    @Path("/list")
+    fun list(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("查询关键字", required = false)
+        @QueryParam("keyWords")
+        keyWords: String?,
+        @ApiParam("页码", required = true, defaultValue = "1")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("页码大小", required = true, defaultValue = "10")
+        @QueryParam("pageSize")
+        @BkField(maxLength = 100)
+        pageSize: Int
+    )
 }

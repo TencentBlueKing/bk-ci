@@ -25,10 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.service.common
 
-enum class IndexExecuteTimeTypeEnum {
-    INDEX_CHANGE, // 指标变动
-    COMPONENT_UPGRADE, // 组件升级
-    CRON; // 定时
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+
+interface StoreIndexManageService {
+
+    fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Boolean
 }
