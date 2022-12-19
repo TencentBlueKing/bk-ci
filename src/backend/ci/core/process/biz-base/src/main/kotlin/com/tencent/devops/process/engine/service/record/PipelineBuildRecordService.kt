@@ -145,8 +145,8 @@ class PipelineBuildRecordService @Autowired constructor(
 
     /**
      * 查询ModelRecord
-     * @param projectId: 项目Id
-     * @param buildId: 构建Id
+     * @param buildInfo: 构建信息
+     * @param executeCount: 查询的执行次数
      * @param refreshStatus: 是否刷新状态
      */
     fun get(
@@ -159,7 +159,16 @@ class PipelineBuildRecordService @Autowired constructor(
         val pipelineId = buildInfo.pipelineId
         val buildId = buildInfo.buildId
 
-        // 获取流水线级别变量数据
+        // 如果请求的executeCount异常则直接返回错误，防止数据错乱
+        if (
+            executeCount?.let {
+                request -> request < 1  || buildInfo.executeCount?.let { request > it } == true
+            } == true
+        ) {
+            return null
+        }
+
+        // 如果请求的次数为空则填补为最新的次数，旧数据直接按第一次查询
         var fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
         val buildRecordPipeline = recordModelDao.getRecord(
             dslContext, projectId, pipelineId, buildId, fixedExecuteCount
