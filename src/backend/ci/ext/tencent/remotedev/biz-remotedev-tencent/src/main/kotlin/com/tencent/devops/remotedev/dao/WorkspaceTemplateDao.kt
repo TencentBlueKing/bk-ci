@@ -63,6 +63,7 @@ class WorkspaceTemplateDao {
             dslContext.delete(this)
                 .where(ID.eq(wsTemplateId))
                 .limit(1)
+                .execute()
         }
     }
 

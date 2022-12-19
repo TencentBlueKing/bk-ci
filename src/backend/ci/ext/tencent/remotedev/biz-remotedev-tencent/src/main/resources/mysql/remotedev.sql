@@ -133,3 +133,16 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_FILE` (
     KEY `idx_user` (`USER`),
     KEY `idx_user_md5` (`USER`, `md5`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '云开发文件存储';
+
+-- ----------------------------
+-- Table structure for T_SSH_PUBLIC_KEYS 用户SSH公钥存储
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_SSH_PUBLIC_KEYS` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+    `USER` varchar(64) NOT NULL DEFAULT '' COMMENT '用户',
+    `PUBLIC_KEY` varchar(1024) NOT NULL DEFAULT '' COMMENT 'Base64加密公钥',
+    `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`) USING BTREE,
+    KEY `idx_user` (`USER`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '用户SSH公钥存储';
