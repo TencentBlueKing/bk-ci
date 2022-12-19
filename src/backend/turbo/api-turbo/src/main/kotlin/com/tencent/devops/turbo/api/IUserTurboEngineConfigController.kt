@@ -1,6 +1,7 @@
 package com.tencent.devops.turbo.api
 
 import com.tencent.devops.api.pojo.Response
+import com.tencent.devops.common.util.constants.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.util.constants.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.turbo.pojo.ParamEnumModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigModel
@@ -129,7 +130,7 @@ interface IUserTurboEngineConfigController {
 
     @ApiOperation("根据区域队列名获取对应的编译器版本清单")
     @GetMapping(
-        "/{engineCode}/{projectId}/compilerVersions",
+        "/{engineCode}/compilerVersions",
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun getCompilerVersionListByQueueName(
@@ -137,7 +138,7 @@ interface IUserTurboEngineConfigController {
         @PathVariable("engineCode")
         engineCode: String,
         @ApiParam(value = "项目id", required = true)
-        @PathVariable("projectId")
+        @RequestHeader(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @ApiParam(value = "队列名称", required = false)
         @RequestParam("queueName")
