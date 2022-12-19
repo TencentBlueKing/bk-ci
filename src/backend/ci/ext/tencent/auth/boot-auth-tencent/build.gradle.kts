@@ -27,5 +27,6 @@
 
 dependencies {
     api(project(":core:auth:biz-auth"))
+    api(project(":core:auth:biz-auth-rbac"))
     api(project(":ext:tencent:auth:biz-auth-tencent"))
 }

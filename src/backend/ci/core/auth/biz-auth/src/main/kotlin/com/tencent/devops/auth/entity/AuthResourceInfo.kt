@@ -31,12 +31,11 @@ package com.tencent.devops.auth.entity
 import io.swagger.annotations.ApiModel
 
 @ApiModel("iam资源映射信息")
-data class AuthIamResourceInfo(
+data class AuthResourceInfo(
     val id: Long? = null,
-    val  projectCode: String,
-    val  resourceType: String,
-    val  resourceCode: String,
-    val  resourceName: String,
-    val  gradeManagerId: String,
-    val  subsetGradeManagerId: String
+    val projectCode: String,
+    val resourceType: String,
+    val resourceCode: String,
+    val resourceName: String,
+    val relationId: String
 )
