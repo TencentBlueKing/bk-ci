@@ -51,7 +51,7 @@
             return {
                 isLoading: false,
                 isPatchOperate: false,
-                defaultPageSize: 16,
+                defaultPageSize: 32,
                 activePipeline: null
             }
         },
