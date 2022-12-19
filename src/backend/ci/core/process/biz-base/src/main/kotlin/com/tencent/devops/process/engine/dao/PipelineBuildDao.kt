@@ -181,7 +181,7 @@ class PipelineBuildDao {
             dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
                 .fetch()
         }
     }

@@ -54,17 +54,15 @@
                         </div>
                     </show-tooltip>
                     <div class="more-operation-dropmenu">
-                        <ul>
-                            <li @click="renamePipeline">{{ $t('rename') }}</li>
-                            <li @click="toggleCollect">{{curPipeline.hasCollect ? $t('uncollect') : $t('collect')}}</li>
-                        </ul>
-                        <ul>
-                            <li @click="exportPipeline">{{ $t('newlist.exportPipelineJson') }}</li>
-                            <li v-if="!isTemplatePipeline" @click="importModifyPipeline">{{ $t('newlist.importModifyPipelineJson') }}</li>
-                            <li @click="copyPipeline">{{ $t('newlist.copyAs') }}</li>
-                            <li @click="showTemplateDialog">{{ $t('newlist.saveAsTemp') }}</li>
-                            <li v-if="isTemplatePipeline" @click="jumpToTemplate">{{ $t('newlist.jumpToTemp') }}</li>
-                            <li @click="deletePipeline">{{ $t('delete') }}</li>
+                        <ul v-for="(parent, index) in actionConfMenus" :key="index">
+                            <li
+                                v-for="action in parent"
+                                v-if="!action.hidden"
+                                :key="action.label"
+                                @click="action.handler"
+                            >
+                                {{ $t(action.label) }}
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -73,20 +71,32 @@
         <router-view class="biz-content" v-bkloading="{ isLoading }"></router-view>
         <portal-target name="artifactory-popup"></portal-target>
 
-        <bk-dialog width="500" :loading="dialogConfig.loading" header-position="left" :mask-close="false" v-model="isDialogShow" :title="dialogConfig.title" @confirm="dialogConfig.handleDialogConfirm" @cancel="dialogConfig.handleDialogCancel">
-            <bk-form :model="dialogConfig.formData" form-type="vertical" style="padding: 0 10px">
-                <bk-form-item v-for="item in dialogConfig.formConfig" :label="item.label" :required="item.required" :rules="item.rules" :property="item.name" :key="item.name">
-                    <bk-radio-group v-if="item.component === 'enum-input'" v-model="dialogConfig.formData[item.name]">
-                        <bk-radio style="margin-right: 10px;" :value="true">{{ $t('true') }}</bk-radio>
-                        <bk-radio :value="false">{{ $t('false') }}</bk-radio>
-                    </bk-radio-group>
-                    <component v-else :is="item.component" v-model="dialogConfig.formData[item.name]" v-bind="item.bindData"></component>
-                </bk-form-item>
-            </bk-form>
-        </bk-dialog>
         <export-dialog :is-show.sync="showExportDialog"></export-dialog>
+        <rename-dialog
+            :is-show="isRenameDialogShow"
+            :project-id="projectId"
+            v-bind="curPipeline"
+            @close="toggleRenameDialog"
+            @done="renameDone"
+        />
+        <copy-pipeline-dialog
+            :is-copy-dialog-show="pipelineActionState.isCopyDialogShow"
+            :pipeline="pipelineActionState.activePipeline"
+            @cancel="closeCopyDialog"
+        />
+        <save-as-template-dialog
+            :is-save-as-template-show="pipelineActionState.isSaveAsTemplateShow"
+            :pipeline="pipelineActionState.activePipeline"
+            @cancel="closeSaveAsDialog"
+        />
         <import-pipeline-popup :handle-import-success="handleImportModifyPipeline" :is-show.sync="showImportDialog"></import-pipeline-popup>
-        
+        <remove-confirm-dialog
+            :type="pipelineActionState.confirmType"
+            :is-show="pipelineActionState.isConfirmShow"
+            :pipeline-list="pipelineActionState.activePipelineList"
+            @close="closeRemoveConfirmDialog"
+            @done="goHome"
+        />
     </div>
 </template>
 
@@ -98,11 +108,17 @@
     import triggers from '@/components/pipeline/triggers'
     import { bus } from '@/utils/bus'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import showTooltip from '@/components/common/showTooltip'
     import exportDialog from '@/components/ExportDialog'
     import versionSideslider from '@/components/VersionSideslider'
     import { debounce, navConfirm } from '@/utils/util'
+    import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
+    import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
+    import RenameDialog from '@/components/PipelineActionDialog/RenameDialog'
+    import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+
     export default {
         components: {
             innerHeader,
@@ -112,45 +128,37 @@
             BreadCrumbItem,
             exportDialog,
             versionSideslider,
-            ImportPipelinePopup
+            CopyPipelineDialog,
+            ImportPipelinePopup,
+            SaveAsTemplateDialog,
+            RenameDialog,
+            RemoveConfirmDialog
         },
-        mixins: [pipelineOperateMixin],
+        mixins: [pipelineActionMixin, pipelineOperateMixin],
         data () {
             return {
                 tabMap: {
                     trendData: this.$t('history.trendData')
                 },
+                isRenameDialogShow: false,
                 pipelineListSearching: false,
                 breadCrumbPath: [],
                 isLoading: false,
                 hasNoPermission: false,
-                isDialogShow: false,
-                dialogConfig: {
-                    title: '',
-                    loading: false,
-                    formData: {},
-                    formConfig: [],
-                    handleDialogConfirm: () => {},
-                    handleDialogCancel: () => {}
-                },
-                pipelineFormData: {
-                    name: '',
-                    desc: ''
-                },
-                templateFormData: {
-                    isCopySetting: false,
-                    templateName: ''
-                },
                 showExportDialog: false,
                 showImportDialog: false
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'pipelineActionState'
+            ]),
             ...mapState('atom', [
                 'execDetail',
                 'editingElementPos',
                 'isPropertyPanelVisible',
-                'showReviewDialog']),
+                'showReviewDialog'
+            ]),
             ...mapGetters({
                 isEditing: 'atom/isEditing',
                 getAllElements: 'atom/getAllElements'
@@ -167,46 +175,52 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
-            templateFormConfig () {
-                return [{
-                    name: 'templateName',
-                    label: this.$t('template.name'),
-                    required: true,
-                    rules: [],
-                    component: 'bk-input',
-                    bindData: {
-                        placeholder: this.$t('template.nameInputTips'),
-                        maxlength: 30
-                    }
-                }, {
-                    name: 'isCopySetting',
-                    label: this.$t('template.applySetting'),
-                    required: true,
-                    rules: [],
-                    component: 'enum-input'
-                }]
-            },
-            renameFormConfig () {
-                return [{
-                    name: 'name',
-                    label: this.$t('pipelineName'),
-                    required: true,
-                    rules: [],
-                    component: 'bk-input',
-                    bindData: {
-                        placeholder: this.$t('pipelineNameInputTips'),
-                        maxlength: 40
-                    }
-                }, {
-                    name: 'desc',
-                    label: this.$t('pipelineDesc'),
-                    rules: [],
-                    component: 'bk-input',
-                    bindData: {
-                        placeholder: this.$t('pipelineDescInputTips'),
-                        maxlength: 100
-                    }
-                }]
+            actionConfMenus () {
+                const pipeline = {
+                    ...this.curPipeline,
+                    projectId: this.projectId
+                }
+                return [
+                    [
+                        {
+                            label: 'rename',
+                            handler: () => {
+                                this.toggleRenameDialog(true)
+                            }
+                        },
+                        {
+                            label: this.curPipeline.hasCollect ? 'uncollect' : 'collect',
+                            handler: this.toggleCollect
+                        }
+                    ],
+                    [
+                        {
+                            label: 'newlist.exportPipelineJson',
+                            handler: this.exportPipeline
+                        },
+                        {
+                            label: 'newlist.importModifyPipelineJson',
+                            handler: this.importModifyPipeline,
+                            hidden: this.isTemplatePipeline
+                        },
+                        {
+                            label: 'newlist.copyAs',
+                            handler: () => this.copyAs(pipeline)
+                        }, {
+                            label: 'newlist.saveAsTemp',
+                            handler: () => this.saveAsTempHandler(pipeline)
+                        },
+                        {
+                            label: 'newlist.jumpToTemp',
+                            handler: this.jumpToTemplate,
+                            hidden: !this.isTemplatePipeline
+                        },
+                        {
+                            label: 'delete',
+                            handler: () => this.deleteHandler(this.curPipeline)
+                        }
+                    ]
+                ]
             },
             btnDisabled () {
                 return this.saveStatus || this.executeStatus
@@ -223,15 +237,12 @@
             curItemTab () {
                 return this.$route.params.type || 'executeDetail'
             },
-            showRetryIcon () {
-                return this.execDetail && (this.execDetail.latestVersion === this.execDetail.curVersion) && ['RUNNING', 'QUEUE', 'SUCCEED'].indexOf(this.execDetail.status) < 0
-            },
             breadCrumbs () {
                 return [{
                     icon: 'pipeline',
                     selectedValue: this.$t('pipeline'),
                     to: {
-                        name: 'pipelinesList'
+                        name: 'pipelineListEntry'
                     }
                 }, {
                     paramId: 'pipelineId',
@@ -257,7 +268,7 @@
             }
 
         },
-        
+
         created () {
             this.fetchPipelineList()
             this.$store.dispatch('requestProjectDetail', { projectId: this.projectId })
@@ -272,6 +283,25 @@
                 'togglePropertyPanel',
                 'setEditFrom'
             ]),
+            toggleRenameDialog (show = false) {
+                this.isRenameDialogShow = show
+            },
+            goHome () {
+                this.$router.push({
+                    name: 'PipelineManageList'
+                })
+            },
+            renameDone (name) {
+                this.$nextTick(() => {
+                    this.updateCurPipelineByKeyValue('pipelineName', name)
+                    this.pipelineSetting && Object.keys(this.pipelineSetting).length && this.updatePipelineSetting({
+                        container: this.pipelineSetting,
+                        param: {
+                            pipelineName: name
+                        }
+                    })
+                })
+            },
             handleSelected (pipelineId, cur) {
                 if (this.isEditing) {
                     navConfirm({ content: this.$t('editPage.confirmMsg'), type: 'warning' }).then(() => {
@@ -348,29 +378,6 @@
             startExcuete () {
                 bus.$emit('start-execute')
             },
-            renamePipeline () {
-                this.isDialogShow = true
-                this.dialogConfig = {
-                    title: this.$t('subpage.renamePipeline'),
-                    formData: {
-                        ...this.pipelineFormData,
-                        name: this.curPipeline.pipelineName
-                    },
-                    loading: false,
-                    formConfig: this.renameFormConfig.slice(0, 1),
-                    handleDialogConfirm: async () => {
-                        try {
-                            this.dialogConfig.loading = true
-                            await this.rename(this.dialogConfig.formData, this.projectId, this.pipelineId)
-                            this.dialogConfig.loading = false
-                            this.resetDialog()
-                        } catch (e) {
-                            console.warn(e)
-                        }
-                    },
-                    handleDialogCancel: this.resetDialog
-                }
-            },
             exportPipeline () {
                 this.showExportDialog = true
             },
@@ -403,84 +410,13 @@
                     this.setPipelineEditing(true)
                 })
             },
-            
-            copyPipeline () {
-                this.isDialogShow = true
-                this.dialogConfig = {
-                    title: this.$t('newlist.copyPipeline'),
-                    formData: {
-                        ...this.pipelineFormData,
-                        name: `${this.curPipeline.pipelineName}_copy`
-                    },
-                    loading: false,
-                    formConfig: this.renameFormConfig,
-                    handleDialogConfirm: async () => {
-                        try {
-                            this.dialogConfig.loading = true
-                            await this.copy(this.dialogConfig.formData, this.curPipeline.pipelineId)
-                            this.dialogConfig.loading = false
-                            this.resetDialog()
-                        } catch (e) {
-                            console.warn(e)
-                        }
-                    },
-                    handleDialogCancel: this.resetDialog
+
+            async toggleCollect () {
+                const isCollect = !this.curPipeline.hasCollect
+                const res = await this.togglePipelineCollect(this.curPipeline.pipelineId, isCollect)
+                if (res) {
+                    this.updateCurPipelineByKeyValue('hasCollect', isCollect)
                 }
-            },
-            resetDialog () {
-                this.isDialogShow = false
-                setTimeout(() => {
-                    this.tempPipline = {
-                        name: '',
-                        desc: ''
-                    }
-                    this.dialogConfig = {
-                        title: '',
-                        formData: {},
-                        formConfig: [],
-                        handleDialogConfirm: () => {},
-                        handleDialogCancel: () => {}
-                    }
-                }, 200)
-            },
-            showTemplateDialog () {
-                this.isDialogShow = true
-                this.dialogConfig = {
-                    title: this.$t('newlist.saveAsTemp'),
-                    loading: false,
-                    formData: this.templateFormData,
-                    formConfig: this.templateFormConfig,
-                    handleDialogConfirm: async () => {
-                        try {
-                            const { projectId, pipelineId, dialogConfig } = this
-                            this.dialogConfig.loading = true
-                            await this.saveAsPipelineTemplate(projectId, pipelineId, dialogConfig.formData.templateName, dialogConfig.formData.isCopySetting)
-                            this.dialogConfig.loading = false
-                            this.resetDialog()
-                        } catch (e) {
-                            console.warn(e)
-                        }
-                    },
-                    handleDialogCancel: this.resetDialog
-                }
-            },
-            /**
-             * 跳转到模板详情
-             */
-            jumpToTemplate () {
-                const { templateId } = this.curPipeline
-                this.$router.push({
-                    name: 'templateEdit',
-                    params: {
-                        templateId: templateId
-                    }
-                })
-            },
-            toggleCollect () {
-                this.togglePipelineCollect(this.curPipeline.pipelineId, !this.curPipeline.hasCollect)
-            },
-            deletePipeline () {
-                this.delete(this.curPipeline)
             },
             toExecute (...args) {
                 const goDetail = ['pipelinesEdit', 'pipelinesDetail'].indexOf(this.$route.name) > -1

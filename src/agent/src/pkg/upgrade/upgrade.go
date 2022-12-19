@@ -131,7 +131,7 @@ func agentUpgrade() {
 
 	upgradeItem := new(api.UpgradeItem)
 	err = util.ParseJsonToData(checkResult.Data, &upgradeItem)
-	if !upgradeItem.Agent && !upgradeItem.Worker && !upgradeItem.Jdk {
+	if !upgradeItem.Agent && !upgradeItem.Worker && !upgradeItem.Jdk && !upgradeItem.DockerInitFile{
 		logs.Info("[agentUpgrade]|no need to upgrade agent, skip")
 		return
 	}
@@ -269,16 +269,39 @@ func trimJdkVersionList(versionOutputString string) []string {
 		openjdk version "1.8.0_352"
 		OpenJDK Runtime Environment (Tencent Kona 8.0.12) (build 1.8.0_352-b1)
 		OpenJDK 64-Bit Server VM (Tencent Kona 8.0.12) (build 25.352-b1, mixed mode)
+		Picked up _JAVA_OPTIONS: -Xmx8192m -Xms256m -Xss8m
 	*/
-	// 一个JVM版本只需要识别最后3行。
+	// 一个JVM版本只需要识别3行。
 	var jdkV = make([]string, 3)
-	lines := strings.Split(strings.TrimSuffix(versionOutputString, "\n"), "\n")
-	size := len(lines)
-	if 3 == size {
-		jdkV = lines
-	} else if size > 3 {
-		jdkV = lines[size-3 : size]
+
+	var sep = "\n"
+	if strings.HasSuffix(versionOutputString, "\r\n") {
+		sep = "\r\n"
 	}
+
+	lines := strings.Split(strings.TrimSuffix(versionOutputString, sep), sep)
+
+	var pos = 0
+	for i := range lines {
+
+		if pos == 0 {
+			if strings.Contains(lines[i], " version ") {
+				jdkV[pos] = lines[i]
+				pos++
+			}
+		} else if pos == 1 {
+			if strings.Contains(lines[i], " Runtime Environment ") {
+				jdkV[pos] = lines[i]
+				pos++
+			}
+		} else if pos == 2 {
+			if strings.Contains(lines[i], " Server VM ") {
+				jdkV[pos] = lines[i]
+				break
+			}
+		}
+	}
+
 	return jdkV
 }
 

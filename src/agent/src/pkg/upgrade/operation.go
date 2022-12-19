@@ -194,6 +194,12 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 			logs.Error("[agentUpgrade]|replace work docker init file failed: ", err.Error())
 			return errors.New("replace work docker init file failed")
 		}
+		// 授予文件可执行权限
+		if err = os.Chmod(config.GetDockerInitFilePath(), os.ModePerm); err != nil {
+			logs.Error("[agentUpgrade]|chmod work docker init file failed: ", err.Error())
+			return errors.New("chmod work docker init file failed")
+		}
+
 		logs.Info("[agentUpgrade]|replace docker init file done")
 	} else {
 		logs.Info("[agentUpgrade]|docker init file not changed, skip agent upgrade")

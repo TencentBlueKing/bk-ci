@@ -386,10 +386,10 @@ class TaskBuildDetailService(
                         message = endElement.errorMsg
                     )
                 )
-                return true
+                return false
             }
         }
-        return true
+        return false
     }
 
     private fun handleCancelTaskNormal(
