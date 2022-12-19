@@ -83,6 +83,7 @@ class WorkspaceService @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val gitTransferService: GitTransferService,
+    private val permissionService: PermissionService,
     private val client: Client
 ) {
 
@@ -272,6 +273,7 @@ class WorkspaceService @Autowired constructor(
 
     fun startWorkspace(userId: String, workspaceId: Long): Boolean {
         logger.info("$userId start workspace $workspaceId")
+        permissionService.checkPermission(userId, workspaceId)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY:startWorkspace:$workspaceId",
@@ -347,6 +349,7 @@ class WorkspaceService @Autowired constructor(
     fun stopWorkspace(userId: String, workspaceId: Long): Boolean {
         logger.info("$userId stop workspace $workspaceId")
 
+        permissionService.checkPermission(userId, workspaceId)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY:stopWorkspace:$workspaceId",
@@ -419,6 +422,7 @@ class WorkspaceService @Autowired constructor(
 
     fun deleteWorkspace(userId: String, workspaceId: Long): Boolean {
         logger.info("$userId delete workspace $workspaceId")
+        permissionService.checkPermission(userId, workspaceId)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY:deleteWorkspace:$workspaceId",
@@ -472,6 +476,7 @@ class WorkspaceService @Autowired constructor(
 
     fun shareWorkspace(userId: String, workspaceId: Long, sharedUser: String): Boolean {
         logger.info("$userId share workspace $workspaceId|$sharedUser")
+        permissionService.checkPermission(userId, workspaceId)
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY:shareWorkspace:${workspaceId}_$sharedUser",
@@ -481,7 +486,7 @@ class WorkspaceService @Autowired constructor(
                 ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
             if (userId != workspace.creator) throw CustomException(Response.Status.FORBIDDEN, "你没有权限操作")
             val shareInfo = WorkspaceShared(workspaceId, userId, sharedUser)
-            if (workspaceSharedDao.exsitWorkspaceSharedInfo(shareInfo, dslContext)) {
+            if (workspaceSharedDao.existWorkspaceSharedInfo(shareInfo, dslContext)) {
                 logger.info("$workspaceId has already shared to $sharedUser")
                 throw CustomException(Response.Status.BAD_REQUEST, "$workspaceId has already shared to $sharedUser")
             }
@@ -557,6 +562,7 @@ class WorkspaceService @Autowired constructor(
 
     fun getWorkspaceDetail(userId: String, workspaceId: Long): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceId")
+        permissionService.checkPermission(userId, workspaceId)
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId) ?: return null
 
         val workspaceStatus = WorkspaceStatus.values()[workspace.status]
@@ -601,6 +607,7 @@ class WorkspaceService @Autowired constructor(
         pageSize: Int?
     ): Page<WorkspaceOpHistory> {
         logger.info("$userId get workspace time line from id $workspaceId")
+        permissionService.checkPermission(userId, workspaceId)
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val count = workspaceOpHistoryDao.countOpHistory(dslContext, workspaceId)
@@ -660,12 +667,12 @@ class WorkspaceService @Autowired constructor(
         }
 
     // 获取已休眠(status:3)且过期14天的工作空间
-    fun getTimeOutInactivityWorkspace (
+    fun getTimeOutInactivityWorkspace(
         userId: String
     ): List<String> {
         logger.info("$userId getTimeOutInactivityWorkspace")
         return workspaceDao.getTimeOutInactivityWorkspace(
-            Constansts.timeoutDays, dslContext)?.map { it.name } ?: emptyList()
+            Constansts.timeoutDays, dslContext
+        )?.map { it.name } ?: emptyList()
     }
-
 }
