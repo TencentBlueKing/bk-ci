@@ -104,6 +104,14 @@ class PipelinePauseBuildFacadeService(
             )
         }
 
+        if (buildInfo.isFinish()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.OPERATE_PIPELINE_FAIL,
+                defaultMessage = "Fail to execute pause atom",
+                params = arrayOf("构建已结束，禁止暂停请求(Build Finished And Deny Pause)")
+            )
+        }
+
         val taskRecord = pipelineTaskService.getBuildTask(projectId, buildId, taskId)
 
         if (taskRecord?.status != BuildStatus.PAUSE) {
@@ -155,6 +163,11 @@ class PipelinePauseBuildFacadeService(
             return isDiff
         }
         val newInputData = ParameterUtils.getElementInput(newElement)
+
+        if (newInputData.isNullOrEmpty()) {
+            logger.info("newInputData is empty $buildId $taskId $newElement")
+            return isDiff
+        }
 
         // issues_6210 若原input为空,新input不为空。则直接返回有变化
         val oldInputData = ParameterUtils.getParamInputs(oldTask.taskParams) ?: emptyMap()

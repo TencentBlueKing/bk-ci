@@ -53,8 +53,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.util.RegexUtils
+import com.tencent.devops.model.store.tables.TAtom
+import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.model.store.tables.TAtomFeature
+import com.tencent.devops.model.store.tables.TAtomVersionLog
+import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -71,6 +77,7 @@ import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
+import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
@@ -93,10 +100,14 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
 import com.tencent.devops.store.pojo.common.HOTTEST
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -117,7 +128,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.util.StringUtils
+import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.concurrent.Callable
@@ -164,6 +175,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     lateinit var atomLabelRelDao: AtomLabelRelDao
 
     @Autowired
+    lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
+
+    @Autowired
     lateinit var storeTotalStatisticService: StoreTotalStatisticService
 
     @Autowired
@@ -205,6 +219,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Autowired
     lateinit var client: Client
 
+    @Value("\${store.defaultAtomErrorCodeLength:6}")
+    private var defaultAtomErrorCodeLength: Int = 6
+
+    @Value("\${store.defaultAtomErrorCodePrefix:8}")
+    private lateinit var defaultAtomErrorCodePrefix: String
+
     companion object {
         private val logger = LoggerFactory.getLogger(MarketAtomServiceImpl::class.java)
         private val executor = Executors.newFixedThreadPool(30)
@@ -231,7 +251,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return executor.submit(Callable<MarketAtomResp> {
             val results = mutableListOf<MarketItem>()
             // 获取插件
-            val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
+            val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
             val count = marketAtomDao.count(
                 dslContext = dslContext,
                 keyword = keyword,
@@ -259,9 +279,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 pageSize = pageSize
             )
                 ?: return@Callable MarketAtomResp(0, page, pageSize, results)
-
+            val tAtom = TAtom.T_ATOM
+            val tAtomFeature = TAtomFeature.T_ATOM_FEATURE
             val atomCodeList = atoms.map {
-                it["ATOM_CODE"] as String
+                it[tAtom.ATOM_CODE] as String
             }.toList()
             // 获取可见范围
             val storeType = StoreTypeEnum.ATOM
@@ -281,18 +302,18 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }
 
             atoms.forEach {
-                val atomCode = it["ATOM_CODE"] as String
+                val atomCode = it[tAtom.ATOM_CODE] as String
                 val visibleList = atomVisibleData?.get(atomCode)
                 val statistic = atomStatisticData[atomCode]
                 val members = memberData?.get(atomCode)
-                val defaultFlag = it["DEFAULT_FLAG"] as Boolean
+                val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
                 val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
                     members = members,
                     userId = userId,
                     visibleList = visibleList,
                     userDeptList = userDeptList)
-                val classifyId = it["CLASSIFY_ID"] as String
-                var logoUrl = it["LOGO_URL"] as? String
+                val classifyId = it[tAtom.CLASSIFY_ID] as String
+                var logoUrl = it[tAtom.LOGO_URL]
                 logoUrl = if (logoUrl?.contains("?") == true) {
                     logoUrl.plus("&logo=true")
                 } else {
@@ -301,34 +322,35 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
                     logoUrl = RegexUtils.trimProtocol(logoUrl)
                 }
+                val osStr = it[tAtom.OS]
                 results.add(
                     MarketItem(
-                        id = it["ID"] as String,
-                        name = it["NAME"] as String,
+                        id = it[tAtom.ID] as String,
+                        name = it[tAtom.NAME] as String,
                         code = atomCode,
-                        type = it["JOB_TYPE"] as String,
-                        rdType = AtomTypeEnum.getAtomType((it["ATOM_TYPE"] as Byte).toInt()),
+                        type = it[tAtom.JOB_TYPE] as String,
+                        rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
                         classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                        category = AtomCategoryEnum.getAtomCategory((it["CATEGROY"] as Byte).toInt()),
+                        category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
                         logoUrl = logoUrl,
-                        publisher = it["PUBLISHER"] as String,
-                        os = if (!StringUtils.isEmpty(it["OS"])) JsonUtil.getObjectMapper().readValue(
-                            it["OS"] as String,
+                        publisher = it[tAtom.PUBLISHER] as String,
+                        os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
+                            osStr,
                             List::class.java
                         ) as List<String> else null,
                         downloads = statistic?.downloads ?: 0,
                         score = statistic?.score ?: 0.toDouble(),
-                        summary = it["SUMMARY"] as? String,
+                        summary = it[tAtom.SUMMARY],
                         flag = flag,
-                        publicFlag = it["DEFAULT_FLAG"] as Boolean,
-                        buildLessRunFlag = if (it["BUILD_LESS_RUN_FLAG"] == null) {
+                        publicFlag = it[tAtom.DEFAULT_FLAG] as Boolean,
+                        buildLessRunFlag = if (it[tAtom.BUILD_LESS_RUN_FLAG] == null) {
                             false
-                        } else it["BUILD_LESS_RUN_FLAG"] as Boolean,
-                        docsLink = if (it["DOCS_LINK"] == null) "" else it["DOCS_LINK"] as String,
-                        modifier = it["MODIFIER"] as String,
-                        updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
-                        recommendFlag = it["RECOMMEND_FLAG"] as? Boolean,
-                        yamlFlag = it["YAML_FLAG"] as? Boolean,
+                        } else it[tAtom.BUILD_LESS_RUN_FLAG] as Boolean,
+                        docsLink = if (it[tAtom.DOCS_LINK] == null) "" else it[tAtom.DOCS_LINK] as String,
+                        modifier = it[tAtom.MODIFIER] as String,
+                        updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
+                        recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
+                        yamlFlag = it[tAtomFeature.YAML_FLAG],
                         recentExecuteNum = statistic?.recentExecuteNum ?: 0
                     )
                 )
@@ -341,6 +363,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 插件市场，首页
      */
+    @BkTimed(extraTags = ["web_operation", "mainPageList"], value = "store_web_operation")
     override fun mainPageList(
         userId: String,
         page: Int?,
@@ -395,9 +418,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
         val classifyList = marketAtomClassifyDao.getAllAtomClassify(dslContext)
         classifyList?.forEach {
-            val classifyCode = it["classifyCode"] as String
+            val classifyCode = it[KEY_CLASSIFY_CODE] as String
             if (classifyCode != "trigger") {
-                val classifyName = it["classifyName"] as String
+                val classifyName = it[KEY_CLASSIFY_NAME] as String
                 val classifyLanName = MessageCodeUtil.getCodeLanMessage(
                     messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                     defaultMessage = classifyName
@@ -440,6 +463,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 插件市场，查询插件列表
      */
+    @BkTimed(extraTags = ["web_operation", "getAtomList"], value = "store_web_operation")
     override fun list(
         userId: String,
         keyword: String?,
@@ -490,7 +514,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         page: Int,
         pageSize: Int
     ): Result<MyAtomResp?> {
-        logger.info("the getMyAtoms userId is :$userId,atomName is :$atomName")
+        logger.info("getMyAtoms params:[$userId|$atomName|$page|$pageSize]")
         // 获取有权限的插件代码列表
         val records = marketAtomDao.getMyAtoms(dslContext, userId, atomName, page, pageSize)
         val count = marketAtomDao.countMyAtoms(dslContext, userId, atomName)
@@ -498,8 +522,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val projectCodeList = mutableListOf<String>()
         val atomCodeList = mutableListOf<String>()
         val atomProjectMap = mutableMapOf<String, String>()
+        val tAtom = TAtom.T_ATOM
+        val tAtomEnvInfo = TAtomEnvInfo.T_ATOM_ENV_INFO
         records?.forEach {
-            val atomCode = it["atomCode"] as String
+            val atomCode = it[tAtom.ATOM_CODE] as String
             atomCodeList.add(atomCode)
             val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
                 dslContext = dslContext,
@@ -543,7 +569,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
         val myAtoms = mutableListOf<MyAtomRespItem?>()
         records?.forEach {
-            val atomCode = it["atomCode"] as String
+            val atomCode = it[tAtom.ATOM_CODE] as String
             var releaseFlag = false // 是否有处于上架状态的插件插件版本
             val releaseAtomNum = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
             if (releaseAtomNum > 0) {
@@ -551,20 +577,20 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }
             myAtoms.add(
                 MyAtomRespItem(
-                    atomId = it["atomId"] as String,
-                    name = it["name"] as String,
+                    atomId = it[tAtom.ID] as String,
+                    name = it[tAtom.NAME] as String,
                     atomCode = atomCode,
-                    language = it["language"] as? String,
-                    category = AtomCategoryEnum.getAtomCategory((it["category"] as Byte).toInt()),
-                    logoUrl = it["logoUrl"] as? String,
-                    version = it["version"] as String,
-                    atomStatus = AtomStatusEnum.getAtomStatus((it["atomStatus"] as Byte).toInt()),
+                    language = it[tAtomEnvInfo.LANGUAGE],
+                    category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
+                    logoUrl = it[tAtom.LOGO_URL],
+                    version = it[tAtom.VERSION] as String,
+                    atomStatus = AtomStatusEnum.getAtomStatus((it[tAtom.ATOM_STATUS] as Byte).toInt()),
                     projectName = projectMap?.get(atomProjectMap[atomCode]) ?: "",
                     releaseFlag = releaseFlag,
-                    creator = it["creator"] as String,
-                    modifier = it["modifier"] as String,
-                    createTime = DateTimeUtil.toDateTime(it["createTime"] as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(it["updateTime"] as LocalDateTime),
+                    creator = it[tAtom.CREATOR] as String,
+                    modifier = it[tAtom.MODIFIER] as String,
+                    createTime = DateTimeUtil.toDateTime(it[tAtom.CREATE_TIME] as LocalDateTime),
+                    updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
                     processingVersionInfos = processingVersionInfoMap?.get(atomCode)
                 )
             )
@@ -608,22 +634,107 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return Result(showVersionInfo)
     }
 
+    override fun updateAtomErrorCodeInfo(
+        userId: String,
+        projectCode: String,
+        storeErrorCodeInfo: StoreErrorCodeInfo
+    ): Result<Boolean> {
+        val atomCode = storeErrorCodeInfo.storeCode
+        val errorCodeInfoList = storeErrorCodeInfo.errorCodeInfos
+        val isStoreMember = storeMemberDao.isStoreMember(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = atomCode,
+            storeType = storeErrorCodeInfo.storeType.type.toByte()
+        )
+        if (!isStoreMember) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
+        if (errorCodeInfoList.isNotEmpty()) {
+            val errorCodes = errorCodeInfoList.map { "${it.errorCode}" }
+            val duplicateData = getDuplicateData(errorCodes)
+            // 存在重复code码则报错提示哪些code码重复
+            if (duplicateData.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE,
+                    params = arrayOf(duplicateData.joinToString(","))
+                )
+            }
+            // 校验code码是否符合插件自定义错误码规范
+            errorCodes.forEach {
+                if ((it.length != defaultAtomErrorCodeLength) || (!it.startsWith(defaultAtomErrorCodePrefix))) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
+                    )
+                }
+            }
+        }
+        val errorJsonStr = JsonUtil.toJson(storeErrorCodeInfo.errorCodeInfos)
+        // 修改插件error.json文件内容
+        val updateAtomFileContentResult = updateAtomFileContent(
+            userId = userId,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            content = errorJsonStr,
+            filePath = ERROR_JSON_NAME
+        )
+        if (updateAtomFileContentResult.isNotOk()) {
+            return updateAtomFileContentResult
+        }
+        // 文件内容修改成功，同步到数据库
+        storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(
+            dslContext = dslContext,
+            userId = userId,
+            storeErrorCodeInfo = storeErrorCodeInfo
+        )
+        val errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(
+            dslContext, storeErrorCodeInfo.storeCode, storeErrorCodeInfo.storeType
+        ).toMutableList()
+        val newErrorCodeInfos = storeErrorCodeInfo.errorCodeInfos
+        errorCodeInfos.removeAll(newErrorCodeInfos)
+        if (errorCodeInfos.isNotEmpty()) {
+            storeErrorCodeInfoDao.batchDeleteErrorCodeInfo(
+                dslContext = dslContext,
+                storeCode = storeErrorCodeInfo.storeCode,
+                storeType = storeErrorCodeInfo.storeType,
+                errorCodes = errorCodeInfos.map { it.errorCode }
+            )
+        }
+        return Result(true)
+    }
+
+    private fun getDuplicateData(strList: List<String>): List<String> {
+        val set = mutableSetOf<String>()
+        val duplicateData = mutableListOf<String>()
+        strList.forEach {
+            if (set.contains(it)) duplicateData.add(it) else set.add(it)
+        }
+        return duplicateData
+    }
+
     @Suppress("UNCHECKED_CAST")
+    @BkTimed(extraTags = ["web_operation", "getAtomVersion"], value = "store_web_operation")
     private fun getAtomVersion(atomId: String, userId: String): Result<AtomVersion?> {
         val record = marketAtomDao.getAtomById(dslContext, atomId)
         return if (null == record) {
             Result(data = null)
         } else {
-            val atomCode = record["atomCode"] as String
-            val defaultFlag = record["defaultFlag"] as Boolean
-            val htmlTemplateVersion = record["htmlTemplateVersion"] as String
-            val projectCode =
-                if (htmlTemplateVersion == "1.0") "" else storeProjectRelDao.getInitProjectCodeByStoreCode(
-                    dslContext,
-                    atomCode,
-                    StoreTypeEnum.ATOM.type.toByte()
+            val tAtom = TAtom.T_ATOM
+            val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+            val tClassify = TClassify.T_CLASSIFY
+            val atomCode = record[tAtom.ATOM_CODE] as String
+            val defaultFlag = record[tAtom.DEFAULT_FLAG] as Boolean
+            val htmlTemplateVersion = record[tAtom.HTML_TEMPLATE_VERSION] as String
+            val projectCode = if (htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion) {
+                ""
+            } else {
+                storeProjectRelDao.getInitProjectCodeByStoreCode(
+                    dslContext = dslContext,
+                    storeCode = atomCode,
+                    storeType = StoreTypeEnum.ATOM.type.toByte()
                 )
-            val repositoryHashId = record["repositoryHashId"] as? String
+            }
+            val repositoryHashId = record[tAtom.REPOSITORY_HASH_ID]
             val repositoryInfoResult = getRepositoryInfo(projectCode, repositoryHashId)
             if (repositoryInfoResult.isNotOk()) {
                 Result(repositoryInfoResult.status, repositoryInfoResult.message, null)
@@ -632,66 +743,66 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val flag = storeUserService.isCanInstallStoreComponent(defaultFlag, userId, atomCode, StoreTypeEnum.ATOM)
             val labelList = atomLabelService.getLabelsByAtomId(atomId) // 查找标签列表
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.ATOM)
-            val atomEnvInfoRecord = marketAtomEnvInfoDao.getMarketAtomEnvInfoByAtomId(dslContext, atomId)
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode)
-            val classifyCode = record["classifyCode"] as? String
-            val classifyName = record["classifyName"] as? String
+            val classifyCode = record[tClassify.CLASSIFY_CODE]
+            val classifyName = record[tClassify.CLASSIFY_NAME]
             val classifyLanName = if (classifyCode != null) {
                 MessageCodeUtil.getCodeLanMessage(
                     messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                     defaultMessage = classifyName
                 )
             } else classifyName
-            val releaseType = if (record["releaseType"] != null) {
-                ReleaseTypeEnum.getReleaseTypeObj((record["releaseType"] as Byte).toInt())
+            val releaseType = if (record[tAtomVersionLog.RELEASE_TYPE] != null) {
+                ReleaseTypeEnum.getReleaseTypeObj((record[tAtomVersionLog.RELEASE_TYPE] as Byte).toInt())
             } else null
-            val atomStatus = AtomStatusEnum.getAtomStatus((record["atomStatus"] as Byte).toInt())
-            val version = record["version"] as? String
+            val atomStatus = AtomStatusEnum.getAtomStatus((record[tAtom.ATOM_STATUS] as Byte).toInt())
+            val version = record[tAtom.VERSION]
+            val osStr = record[tAtom.OS]
+            val defaultAtomEnvRecord = marketAtomEnvInfoDao.getDefaultAtomEnvInfo(dslContext, atomId)
             Result(
                 AtomVersion(
                     atomId = atomId,
                     atomCode = atomCode,
-                    name = record["name"] as String,
-                    logoUrl = record["logoUrl"] as? String,
+                    name = record[tAtom.NAME] as String,
+                    logoUrl = record[tAtom.LOGO_URL],
                     classifyCode = classifyCode,
                     classifyName = classifyLanName,
-                    category = AtomCategoryEnum.getAtomCategory((record["category"] as Byte).toInt()),
-                    docsLink = record["docsLink"] as? String,
+                    category = AtomCategoryEnum.getAtomCategory((record[tAtom.CATEGROY] as Byte).toInt()),
+                    docsLink = record[tAtom.DOCS_LINK],
                     htmlTemplateVersion = htmlTemplateVersion,
-                    atomType = AtomTypeEnum.getAtomType((record["atomType"] as Byte).toInt()),
-                    jobType = record["jobType"] as? String,
-                    os = if (!StringUtils.isEmpty(record["os"])) JsonUtil.getObjectMapper().readValue(
-                        record["os"] as String,
+                    atomType = AtomTypeEnum.getAtomType((record[tAtom.ATOM_TYPE] as Byte).toInt()),
+                    jobType = record[tAtom.JOB_TYPE],
+                    os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
+                        osStr,
                         List::class.java
                     ) as List<String> else null,
-                    summary = record["summary"] as? String,
-                    description = record["description"] as? String,
+                    summary = record[tAtom.SUMMARY],
+                    description = record[tAtom.DESCRIPTION],
                     version = version,
                     atomStatus = atomStatus,
                     releaseType = releaseType?.name,
-                    versionContent = record["versionContent"] as? String,
-                    language = record["language"] as? String,
-                    codeSrc = record["codeSrc"] as? String,
-                    publisher = record["publisher"] as String,
-                    modifier = record["modifier"] as String,
-                    creator = record["creator"] as String,
-                    createTime = DateTimeUtil.toDateTime(record["createTime"] as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(record["updateTime"] as LocalDateTime),
+                    versionContent = record[tAtomVersionLog.CONTENT],
+                    language = defaultAtomEnvRecord?.language,
+                    codeSrc = record[tAtom.CODE_SRC],
+                    publisher = record[tAtom.PUBLISHER] as String,
+                    modifier = record[tAtom.MODIFIER] as String,
+                    creator = record[tAtom.CREATOR] as String,
+                    createTime = DateTimeUtil.toDateTime(record[tAtom.CREATE_TIME] as LocalDateTime),
+                    updateTime = DateTimeUtil.toDateTime(record[tAtom.UPDATE_TIME] as LocalDateTime),
                     flag = flag,
                     repositoryAuthorizer = repositoryInfo?.userName,
                     defaultFlag = defaultFlag,
                     projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
-                        dslContext,
-                        userId,
-                        atomCode,
-                        StoreTypeEnum.ATOM
+                        dslContext = dslContext,
+                        userId = userId,
+                        storeCode = atomCode,
+                        storeType = StoreTypeEnum.ATOM
                     ),
                     initProjectCode = projectCode,
                     labelList = labelList ?: emptyList(),
-                    pkgName = atomEnvInfoRecord?.pkgName,
                     userCommentInfo = userCommentInfo,
-                    visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record["visibilityLevel"] as Int),
-                    privateReason = record["privateReason"] as? String,
+                    visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record[tAtom.VISIBILITY_LEVEL] as Int),
+                    privateReason = record[tAtom.PRIVATE_REASON],
                     recommendFlag = feature?.recommendFlag,
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
                     // 开启插件yml显示
@@ -762,6 +873,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 安装插件到项目
      */
+    @BkTimed(extraTags = ["web_operation", "installAtom"], value = "store_web_operation")
     override fun installAtom(
         accessToken: String,
         userId: String,
@@ -769,8 +881,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
         // 判断插件标识是否合法
-        logger.info("installAtom accessToken is: $accessToken, userId is: $userId")
-        logger.info("installAtom channelCode is: $channelCode, installAtomReq is: $installAtomReq")
+        logger.info("installAtom params:[$accessToken|$userId|$channelCode|$installAtomReq]")
         val atom = marketAtomDao.getLatestAtomByCode(dslContext, installAtomReq.atomCode)
         if (null == atom || atom.deleteFlag == true) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID, false)
@@ -934,7 +1045,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val context = DSL.using(t)
             storeCommonService.deleteStoreInfo(context, atomCode, StoreTypeEnum.ATOM.type.toByte())
             atomApproveRelDao.deleteByAtomCode(context, atomCode)
-            marketAtomEnvInfoDao.deleteAtomEnvInfo(context, atomCode)
+            marketAtomEnvInfoDao.deleteAtomEnvInfoByCode(context, atomCode)
             marketAtomFeatureDao.deleteAtomFeature(context, atomCode)
             atomLabelRelDao.deleteByAtomCode(context, atomCode)
             marketAtomVersionLogDao.deleteByAtomCode(context, atomCode)
@@ -1016,7 +1127,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         )
         val getMap = getRelyAtom.thirdPartyElementList.map { it.atomCode to it.version }.toMap()
         val result = mutableMapOf<String, Map<String, Any>>()
-        logger.info("getAtomsRely atomList : $atomList")
         atomList.forEach lit@{
             if (it == null) return@lit
             var value = it
@@ -1277,6 +1387,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         tokenType: TokenTypeEnum
     ): Result<Boolean>
 
+    abstract fun updateAtomFileContent(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        content: String,
+        filePath: String
+    ): Result<Boolean>
+
     @Suppress("UNCHECKED_CAST")
     private fun addParamComment(
         builder: StringBuilder,
@@ -1299,30 +1417,18 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
         val rely = paramValueMap["rely"]
         if (null != rely) {
-            try {
-                parseRely(builder, rely as Map<String, Any>)
-            } catch (e: Exception) {
-                throw Exception("rely 配置解析错误")
-            }
+            parseRely(builder, rely as Map<String, Any>)
         }
         val options = paramValueMap["options"]
         if (null != options) {
             builder.append(", $selectorTypeName")
             builder.append(", $optionsName:")
-            try {
-                parseOptions(builder, options as List<Map<String, Any>>)
-            } catch (e: Exception) {
-                throw Exception("options 配置解析错误")
-            }
+            parseOptions(builder, options as List<Map<String, Any>>)
         }
         val list = paramValueMap["list"]
         if (null != list) {
             builder.append(", $optionsName:")
-            try {
-                parseList(builder, list as List<Map<String, Any>>)
-            } catch (e: Exception) {
-                throw Exception("list 配置解析错误")
-            }
+            parseList(builder, list as List<Map<String, Any>>)
         }
     }
 
@@ -1344,8 +1450,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 builder.append(timeToSelect)
             }
-        } catch (e: Exception) {
-            println("load atom input[rely] with error: ${e.message}")
+        } catch (ignored: Throwable) {
+            logger.warn("load atom input[rely] with error", ignored)
         }
     }
 
@@ -1356,8 +1462,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 else builder.append(" ${map["id"]}[${map["name"]}] |")
             }
             builder.removeSuffix("|")
-        } catch (e: Exception) {
-            println("load atom input[options] with error: ${e.message}")
+        } catch (ignored: Throwable) {
+            logger.warn("load atom input[options] with error", ignored)
         }
     }
 
@@ -1372,8 +1478,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 else builder.append(" $key[$value] |")
             }
             builder.removeSuffix("|")
-        } catch (e: Exception) {
-            println("load atom input[list] with error: ${e.message} ")
+        } catch (ignored: Throwable) {
+            logger.warn("load atom input[list] with error", ignored)
         }
     }
 }

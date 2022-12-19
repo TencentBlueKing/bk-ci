@@ -40,7 +40,10 @@ import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
 import org.jooq.Record1
+import org.jooq.Record3
+import org.jooq.RecordMapper
 import org.jooq.Result
+import org.jooq.impl.DSL.count
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.Duration
@@ -161,7 +164,7 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildTaskRecord>) {
+    fun batchUpdate(dslContext: DSLContext, taskList: List<PipelineBuildTask>) {
         with(T_PIPELINE_BUILD_TASK) {
             taskList.forEach {
                 dslContext.update(this)
@@ -170,23 +173,29 @@ class PipelineBuildTaskDao {
                     .set(CONTAINER_ID, it.containerId)
                     .set(TASK_NAME, it.taskName)
                     .set(STEP_ID, it.stepId)
-                    .set(TASK_PARAMS, it.taskParams)
+                    .set(TASK_PARAMS, JsonUtil.toJson(it.taskParams, formatted = false))
                     .set(TASK_TYPE, it.taskType)
                     .set(TASK_ATOM, it.taskAtom)
                     .set(START_TIME, it.startTime)
                     .set(END_TIME, it.endTime)
                     .set(STARTER, it.starter)
                     .set(APPROVER, it.approver)
-                    .set(STATUS, it.status)
+                    .set(STATUS, it.status.ordinal)
                     .set(EXECUTE_COUNT, it.executeCount)
                     .set(TASK_SEQ, it.taskSeq)
                     .set(SUB_PROJECT_ID, it.subProjectId)
                     .set(SUB_BUILD_ID, it.subBuildId)
                     .set(CONTAINER_TYPE, it.containerType)
-                    .set(ADDITIONAL_OPTIONS, it.additionalOptions)
+                    .set(
+                        ADDITIONAL_OPTIONS,
+                        it.additionalOptions?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                    )
                     .set(TOTAL_TIME, it.totalTime)
-                    .set(ERROR_TYPE, it.errorType)
-                    .set(ERROR_MSG, it.errorMsg)
+                    .set(ERROR_TYPE, it.errorType?.ordinal)
+                    .set(
+                        ERROR_MSG,
+                        CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX)
+                    )
                     .set(ERROR_CODE, it.errorCode)
                     .set(CONTAINER_HASH_ID, it.containerHashId)
                     .set(ATOM_CODE, it.atomCode)
@@ -196,20 +205,14 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun get(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
-        taskId: String?
-    ): TPipelineBuildTaskRecord? {
-
+    fun get(dslContext: DSLContext, projectId: String, buildId: String, taskId: String?): PipelineBuildTask? {
         return with(T_PIPELINE_BUILD_TASK) {
 
             val where = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             if (taskId != null) {
                 where.and(TASK_ID.eq(taskId))
             }
-            where.fetchAny()
+            where.fetchAny(mapper)
         }
     }
 
@@ -237,7 +240,7 @@ class PipelineBuildTaskDao {
         buildId: String,
         containerId: String?,
         statusSet: Collection<BuildStatus>?
-    ): List<TPipelineBuildTaskRecord> {
+    ): List<PipelineBuildTask> {
         return with(T_PIPELINE_BUILD_TASK) {
             val where = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
@@ -251,19 +254,15 @@ class PipelineBuildTaskDao {
                 }
                 where.and(STATUS.`in`(statusIntSet))
             }
-            where.orderBy(TASK_SEQ.asc()).fetch()
+            where.orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
 
-    fun getByBuildId(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String
-    ): Collection<TPipelineBuildTaskRecord> {
+    fun getByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Collection<PipelineBuildTask> {
         return with(T_PIPELINE_BUILD_TASK) {
             dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-                .orderBy(TASK_SEQ.asc()).fetch()
+                .orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
 
@@ -290,40 +289,6 @@ class PipelineBuildTaskDao {
                 .and(BUILD_ID.eq(buildId))
                 .and(CONTAINER_ID.eq(containerId))
                 .execute()
-        }
-    }
-
-    fun convert(tPipelineBuildTaskRecord: TPipelineBuildTaskRecord): PipelineBuildTask? {
-        return with(tPipelineBuildTaskRecord) {
-            PipelineBuildTask(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stageId,
-                containerId = containerId,
-                containerHashId = containerHashId,
-                containerType = containerType,
-                taskSeq = taskSeq,
-                taskId = taskId,
-                stepId = stepId,
-                taskName = taskName,
-                taskType = taskType,
-                taskAtom = taskAtom,
-                status = BuildStatus.values()[status],
-                taskParams = JsonUtil.toMutableMap(taskParams),
-                additionalOptions = JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
-                executeCount = executeCount ?: 1,
-                starter = starter,
-                approver = approver,
-                subProjectId = subProjectId,
-                subBuildId = subBuildId,
-                startTime = startTime,
-                endTime = endTime,
-                errorType = if (errorType == null) null else ErrorType.values()[errorType],
-                errorCode = errorCode,
-                errorMsg = errorMsg,
-                atomCode = atomCode
-            )
         }
     }
 
@@ -389,6 +354,21 @@ class PipelineBuildTaskDao {
         }
     }
 
+    fun countGroupByBuildId(
+        dslContext: DSLContext,
+        projectId: String,
+        buildIds: Collection<String>
+    ): Result<Record3<String/*BUILD_ID*/, Int/*STATUS*/, Int/*COUNT*/>> {
+        with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
+            return dslContext.select(BUILD_ID, STATUS, count())
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.`in`(buildIds))
+                .groupBy(BUILD_ID, STATUS)
+                .fetch()
+        }
+    }
+
     fun updateTaskParam(
         dslContext: DSLContext,
         projectId: String,
@@ -414,7 +394,45 @@ class PipelineBuildTaskDao {
         }
     }
 
+    class PipelineBuildTaskJooqMapper : RecordMapper<TPipelineBuildTaskRecord, PipelineBuildTask> {
+        override fun map(record: TPipelineBuildTaskRecord?): PipelineBuildTask? {
+            return record?.run {
+                PipelineBuildTask(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    containerHashId = containerHashId,
+                    containerType = containerType,
+                    taskSeq = taskSeq,
+                    taskId = taskId,
+                    stepId = stepId,
+                    taskName = taskName,
+                    taskType = taskType,
+                    taskAtom = taskAtom,
+                    status = BuildStatus.values()[status],
+                    taskParams = JsonUtil.toMutableMap(taskParams),
+                    additionalOptions = JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
+                    executeCount = executeCount ?: 1,
+                    starter = starter,
+                    approver = approver,
+                    subProjectId = subProjectId,
+                    subBuildId = subBuildId,
+                    startTime = startTime,
+                    endTime = endTime,
+                    totalTime = totalTime,
+                    errorType = if (errorType == null) null else ErrorType.values()[errorType],
+                    errorCode = errorCode,
+                    errorMsg = errorMsg,
+                    atomCode = atomCode
+                )
+            }
+        }
+    }
+
     companion object {
+        private val mapper = PipelineBuildTaskJooqMapper()
         private val logger = LoggerFactory.getLogger(PipelineBuildTaskDao::class.java)
     }
 }

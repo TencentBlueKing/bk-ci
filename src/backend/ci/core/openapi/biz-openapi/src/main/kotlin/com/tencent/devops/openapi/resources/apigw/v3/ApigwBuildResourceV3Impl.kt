@@ -56,7 +56,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): Result<BuildManualStartupInfo> {
-        logger.info("$pipelineId|manualStartupInfo|user($userId)")
+        logger.info("OPENAPI_BUILD_V3|$userId|manual startup info|$projectId|$pipelineId")
         return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
@@ -73,7 +73,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<ModelDetail> {
-        logger.info("$buildId|DETAIL|user($userId)")
+        logger.info("OPENAPI_BUILD_V3|$userId|detail|$projectId|$pipelineId|$buildId")
         return client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = projectId,
@@ -93,7 +93,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pageSize: Int?,
         updateTimeDesc: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
-        logger.info("$pipelineId|getHistoryBuild|user($userId)")
+        logger.info("OPENAPI_BUILD_V3|$userId|get history build|$projectId|$pipelineId|$page|$pageSize|$updateTimeDesc")
         return client.get(ServiceBuildResource::class).getHistoryBuild(
             userId = userId,
             projectId = projectId,
@@ -101,7 +101,27 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             page = page ?: 1,
             pageSize = pageSize ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
-            updateTimeDesc = updateTimeDesc
+            updateTimeDesc = updateTimeDesc,
+            materialAlias = null,
+            materialUrl = null,
+            materialBranch = null,
+            materialCommitId = null,
+            materialCommitMessage = null,
+            status = null,
+            trigger = null,
+            queueTimeStartTime = null,
+            queueTimeEndTime = null,
+            startTimeStartTime = null,
+            startTimeEndTime = null,
+            endTimeStartTime = null,
+            endTimeEndTime = null,
+            totalTimeMin = null,
+            totalTimeMax = null,
+            remark = null,
+            buildNoStart = null,
+            buildNoEnd = null,
+            buildMsg = null,
+            startUser = null
         )
     }
 
@@ -111,15 +131,15 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        values: Map<String, String>,
+        values: Map<String, String>?,
         buildNo: Int?
     ): Result<BuildId> {
-        logger.info("$pipelineId|manualStartup|user($userId)")
+        logger.info("OPENAPI_BUILD_V3|$userId|start|$projectId|$pipelineId|$values|$buildNo")
         return client.get(ServiceBuildResource::class).manualStartupNew(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            values = values,
+            values = values ?: emptyMap(),
             buildNo = buildNo,
             channelCode = apiGatewayUtil.getChannelCode(),
             startType = StartType.SERVICE
@@ -134,7 +154,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<Boolean> {
-        logger.info("$pipelineId|manualShutdown|user($userId)")
+        logger.info("OPENAPI_BUILD_V3|$userId|stop|$projectId|$pipelineId|$buildId")
         return client.get(ServiceBuildResource::class).manualShutdown(
             userId = userId,
             projectId = projectId,
@@ -155,7 +175,10 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         failedContainer: Boolean?,
         skipFailedTask: Boolean?
     ): Result<BuildId> {
-        logger.info("$pipelineId|retry|user($userId)")
+        logger.info(
+            "OPENAPI_BUILD_V3|$userId|retry|$projectId|$pipelineId|$buildId|$taskId|$failedContainer" +
+                "|$skipFailedTask"
+        )
         return client.get(ServiceBuildResource::class).retry(
             userId = userId,
             projectId = projectId,
@@ -177,7 +200,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<BuildHistoryWithVars> {
-        logger.info("$pipelineId|getBuildStatus|user($userId)|build($buildId)")
+        logger.info("OPENAPI_BUILD_V3|$userId|get status|$projectId|$pipelineId|$buildId")
         return client.get(ServiceBuildResource::class).getBuildStatus(
             userId = userId,
             projectId = projectId,
@@ -198,7 +221,10 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         cancel: Boolean?,
         reviewRequest: StageReviewRequest?
     ): Result<Boolean> {
-        logger.info("$pipelineId|manualStartStage|user($userId)|build($buildId)")
+        logger.info(
+            "OPENAPI_BUILD_V3|$userId|manual start stage|$projectId|$pipelineId|$buildId|$stageId|$cancel" +
+                "|$reviewRequest"
+        )
         return client.get(ServiceBuildResource::class).manualStartStage(
             userId = userId,
             projectId = projectId,
@@ -219,7 +245,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         buildId: String,
         variableNames: List<String>
     ): Result<Map<String, String>> {
-        logger.info("$pipelineId|getVariableValue|user($userId)|build($buildId)")
+        logger.info("OPENAPI_BUILD_V3|$userId|get variable value|$projectId|$pipelineId|$buildId|$variableNames")
         return client.get(ServiceBuildResource::class).getBuildVariableValue(
             userId = userId,
             projectId = projectId,
@@ -236,7 +262,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         buildId: String,
         taskPauseExecute: BuildTaskPauseInfo
     ): Result<Boolean> {
-        logger.info("$pipelineId| $buildId| $userId |executionPauseAtom $taskPauseExecute")
+        logger.info("OPENAPI_BUILD_V3|$userId|execution pause atom|$projectId|$pipelineId|$buildId|$taskPauseExecute")
         return client.get(ServiceBuildResource::class).executionPauseAtom(
             userId = userId,
             projectId = projectId,
@@ -247,7 +273,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
     }
 
     override fun buildRestart(userId: String, projectId: String, pipelineId: String, buildId: String): Result<String> {
-        logger.info("buildRestart $userId|$projectId|$pipelineId|$buildId")
+        logger.info("OPENAPI_BUILD_V3|$userId|build restart|$projectId|$pipelineId|$buildId")
         return client.get(ServiceBuildResource::class).buildRestart(
             userId = userId,
             projectId = projectId,

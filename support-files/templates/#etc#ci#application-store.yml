@@ -32,6 +32,8 @@ store:
   templateApproveSwitch: close
   imageApproveSwitch: close
   imageAgentTypes: "DOCKER"
+  defaultAtomErrorCodeLength: 6
+  defaultAtomErrorCodePrefix: "8"
 
 logo:
   allowUploadLogoTypes: jpg,png,svg

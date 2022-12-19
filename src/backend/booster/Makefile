@@ -13,7 +13,8 @@ LDFLAG=-s -w -X github.com/Tencent/bk-ci/src/booster/common/static.EncryptionKey
  -X github.com/Tencent/bk-ci/src/booster/common/version.GitHash=${GITHASH} \
  -X github.com/Tencent/bk-ci/src/booster/common/version.Tag=${GITTAG} \
  -X github.com/Tencent/bk-ci/src/booster/common/encrypt.Disabled=${disable_encrypt} \
- -X github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator/k8s.EnableBCSApiGw=${enable_bcs_gateway}
+ -X github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator/k8s.EnableBCSApiGw=${enable_bcs_gateway} \
+ -X github.com/Tencent/bk-ci/src/booster/common/version.DisttaskRepo=${gateway_repo_url}
 
 DISTCC_LDFLAG=-X github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/client/pkg.ProdDistCCServerDomain=${distcc_server_prod_domain} \
  -X github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc/client/pkg.ProdDistCCServerPort=${distcc_server_prod_port} \
@@ -131,6 +132,10 @@ dist_idle_loop:dist_prepare
 	# bk-idle-loop
 	go build -ldflags "${LDFLAG}" -o ${DISTEXECUTOR_BIN_PATH}/bk-idle-loop ./bk_dist/idleloop/main.go
 
+dist_monitor:dist_prepare
+	# bk-dist-monitor
+	go build -ldflags "${LDFLAG}" -o ${DISTEXECUTOR_BIN_PATH}/bk-dist-monitor ./bk_dist/monitor/main.go
+
 dist_help_tool:dist_prepare
 	# bk-help-tool
 	go build -ldflags "${LDFLAG}" -o ${DISTEXECUTOR_BIN_PATH}/bk-help-tool ./bk_dist/helptool/main.go
@@ -146,7 +151,7 @@ dist_shader_tool:dist_prepare
 dist_hook:dist_prepare
 	cd tools/hook_ld_preload && $(MAKE) all && cp bkhook.so ../../${DISTEXECUTOR_BIN_PATH}/
 
-dist:dist_executor dist_booster dist_controller dist_worker dist_idle_loop dist_help_tool dist_ubt_tool dist_shader_tool dist_hook
+dist:dist_executor dist_booster dist_controller dist_worker dist_idle_loop dist_help_tool dist_ubt_tool dist_shader_tool dist_hook dist_monitor
 
 clean_dist:
 	rm -rf ${DISTEXECUTOR_BIN_PATH}

@@ -20,14 +20,14 @@ function getServiceName()
   echo "devops_agent_"${agent_id}
 }
 
-function unzip_jre()
+function unzip_jdk()
 {
-  echo "start unzipping jre package"
-  if [[ -d "jre" ]]; then
-    echo "jre already exists, skip unzip"
+  echo "start unzipping jdk package"
+  if [[ -d "jdk" ]]; then
+    echo "jdk already exists, skip unzip"
     return
   fi
-  unzip -q -o jre.zip -d jre
+  unzip -q -o jre.zip -d jdk
 }
 
 exists()
@@ -43,13 +43,13 @@ function download_agent()
     return
   fi
   if exists curl; then
-    curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##?arch=${ARCH}"
+    curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip "##agent_url##"
     if [[ $? -ne 0 ]]; then
       echo "Fail to use curl to download the agent, use wget"
-      wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##?arch=${ARCH}"
+      wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"
     fi
   elif exists wget; then
-    wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##?arch=${ARCH}"
+    wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip "##agent_url##"
   else
     echo "Curl & wget command don't exist, download fail"
     exit 1
@@ -111,7 +111,7 @@ if [[ ! -f "agent.zip" ]]; then
   unzip -o agent.zip
 fi
 
-unzip_jre
+unzip_jdk
 
 os=`uname`
 arch1=`uname -m`
@@ -119,7 +119,7 @@ echo "OS: $os"
 echo "ARCH: ${arch1}"
 
 echo "check java version"
-jre/bin/java -version
+jdk/bin/java -version
 
 echo "check and write ssh config"
 writeSSHConfig

@@ -34,4 +34,6 @@ dependencies {
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
     api(project(":core:common:common-pipeline"))
+    api("com.tencent.bk.repo:api-generic")
+    api("com.tencent.bk.repo:api-repository")
 }

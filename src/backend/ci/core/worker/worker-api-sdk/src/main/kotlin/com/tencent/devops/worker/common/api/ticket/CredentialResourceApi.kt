@@ -29,14 +29,25 @@ package com.tencent.devops.worker.common.api.ticket
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.util.ApiSignUtil
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
 class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
 
-    override fun get(credentialId: String, publicKey: String): Result<CredentialInfo> {
+    override fun get(credentialId: String, publicKey: String, signToken: String): Result<CredentialInfo> {
         val path = "/ms/ticket/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}"
-        val request = buildGet(path)
+        val signHeaders = if (signToken.isNotBlank()) {
+            ApiSignUtil.generateSignHeader(
+                method = HttpMethod.GET.name,
+                url = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
+                token = signToken
+            )
+        } else {
+            emptyMap()
+        }
+        val request = buildGet(path, signHeaders)
         val responseContent = request(request, "获取凭据失败")
         return objectMapper.readValue(responseContent)
     }
@@ -44,11 +55,21 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
     override fun getAcrossProject(
         targetProjectId: String,
         credentialId: String,
-        publicKey: String
+        publicKey: String,
+        signToken: String
     ): Result<CredentialInfo> {
         val path = "/ms/ticket/api/build/credentials/$credentialId/across" +
             "?publicKey=${encode(publicKey)}&targetProjectId=$targetProjectId"
-        val request = buildGet(path)
+        val signHeaders = if (signToken.isNotBlank()) {
+            ApiSignUtil.generateSignHeader(
+                method = HttpMethod.GET.name,
+                url = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
+                token = signToken
+            )
+        } else {
+            emptyMap()
+        }
+        val request = buildGet(path, signHeaders)
         val responseContent = request(request, "获取凭据失败")
         return objectMapper.readValue(responseContent)
     }

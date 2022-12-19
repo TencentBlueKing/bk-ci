@@ -476,6 +476,9 @@ class EnvService @Autowired constructor(
             val context = DSL.using(configuration)
             envDao.deleteEnv(context, envId)
             environmentPermissionService.deleteEnv(projectId, envId)
+            // 删除环境时需要同时删除 EnvNode和EnvShareProject相关数据
+            envNodeDao.deleteByEnvId(context, envId)
+            envShareProjectDao.deleteByEnvId(context, envId)
         }
     }
 
@@ -721,8 +724,8 @@ class EnvService @Autowired constructor(
             )
         }
         envShareProjectDao.count(dslContext = dslContext, projectId = projectId, envId = envId, name = null).let {
-            if (it + sharedProjects.size > 100) {
-                throw ErrorCodeException(errorCode = ERROR_QUOTA_LIMIT, params = arrayOf("100", it.toString()))
+            if (it + sharedProjects.size > 500) {
+                throw ErrorCodeException(errorCode = ERROR_QUOTA_LIMIT, params = arrayOf("500", it.toString()))
             }
         }
 

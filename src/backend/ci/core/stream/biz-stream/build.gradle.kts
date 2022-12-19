@@ -50,7 +50,7 @@ dependencies {
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")
     api("org.apache.commons:commons-exec")
-    api("org.quartz-scheduler:quartz:2.1.3")
+    api("org.quartz-scheduler:quartz")
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("com.github.ben-manes.caffeine:caffeine")
     api(group = "javax.websocket", name = "javax.websocket-api")

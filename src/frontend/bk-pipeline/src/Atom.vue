@@ -54,6 +54,7 @@
                     {{ atom.atomCode ? atom.name : t('pendingAtom') }}
                 </span>
             </p>
+            <span v-if="isExecuting">{{ execTime }}</span>
             <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
             <bk-popover v-else-if="atom.isReviewing" placement="top">
                 <span
@@ -98,13 +99,13 @@
             </template>
             <span class="atom-operate-area">
                 <span
-                    v-if="atom.canRetry"
+                    v-if="atom.canRetry && !isBusy"
                     @click.stop="skipOrRetry(false)"
                 >
                     {{ t('retry') }}
                 </span>
                 <span
-                    v-if="atom.canSkip"
+                    v-if="atom.canSkip && !isBusy"
                     @click.stop="skipOrRetry(true)"
                 >
                     {{ t('SKIP') }}
@@ -227,7 +228,9 @@
         },
         data () {
             return {
-                isBusy: false
+                isBusy: false,
+                timer: null,
+                execTime: this.atom.startEpoch ? convertMStoString(Date.now() - this.atom.startEpoch) : '--'
             }
         },
         computed: {
@@ -355,9 +358,35 @@
                     && this.matchRules.some(rule => rule.taskId === this.atom.atomCode
                         && (rule.ruleList.some(val => this.atom.name.indexOf(val.gatewayId) > -1) || rule.ruleList.every(val => !val.gatewayId))
                     )
+            },
+            isExecuting () {
+                return this.atomStatus === STATUS_MAP.RUNNING && this.atom.startEpoch
             }
         },
+        watch: {
+            isExecuting (v) {
+                if (v) {
+                    this.executeCounter()
+                } else {
+                    clearInterval(this.timer)
+                }
+            }
+        },
+        mounted () {
+            if (this.isExecuting) {
+                this.executeCounter()
+            }
+        },
+        beforeDestroy () {
+            clearInterval(this.timer)
+        },
         methods: {
+            executeCounter () {
+                clearInterval(this.timer)
+                this.timer = setInterval(() => {
+                    this.execTime = convertMStoString(Date.now() - this.atom.startEpoch)
+                }, 1000)
+            },
             reviewAtom () {
                 eventBus.$emit(ATOM_REVIEW_EVENT_NAME, this.atom)
             },
@@ -419,8 +448,13 @@
                 if (this.hasReviewPerm) {
                     try {
                         this.isBusy = true
+                        const { stageIndex, containerIndex, containerGroupIndex, atomIndex } = this
                         const data = {
                             elementId: this.atom.id,
+                            stageIndex,
+                            containerIndex,
+                            containerGroupIndex,
+                            atomIndex,
                             action
                         }
                         await this.asyncEvent(ATOM_QUALITY_CHECK_EVENT_NAME, data)
@@ -555,6 +589,7 @@
         margin: 0 14.5px;
         font-size: 18px;
         width: 18px;
+        color: $fontWeightColor;
         fill: currentColor;
     }
     .atom-icon.skip-icon {

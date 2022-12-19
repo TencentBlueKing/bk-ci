@@ -5,15 +5,17 @@ import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.models.on.getTypesObjectKind
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.pojo.CheckType
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
@@ -33,6 +35,7 @@ class StreamDeleteAction(
     }
 
     override fun getProjectCode(gitProjectId: String?) = gitAction.getProjectCode(gitProjectId)
+    override fun getGitProjectIdOrName(gitProjectId: String?) = gitAction.getGitProjectIdOrName(gitProjectId)
 
     override fun getGitCred(personToken: String?) = gitAction.getGitCred(personToken)
 
@@ -51,19 +54,19 @@ class StreamDeleteAction(
     }
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
-        return TGitActionCommon.getYamlPathList(
+        return GitActionCommon.getYamlPathList(
             action = gitAction,
-            gitProjectId = data.getGitProjectId(),
+            gitProjectId = getGitProjectIdOrName(),
             ref = data.context.defaultBranch
-        ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
+        ).map { (name, blobId) -> YamlPathListEntry(name, CheckType.NO_NEED_CHECK, data.context.defaultBranch, blobId) }
     }
 
-    override fun getYamlContent(fileName: String): Pair<String, String> {
-        return Pair(
-            data.context.defaultBranch!!,
-            api.getFileContent(
+    override fun getYamlContent(fileName: String): YamlContent {
+        return YamlContent(
+            ref = data.context.defaultBranch!!,
+            content = api.getFileContent(
                 cred = gitAction.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
+                gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
                 ref = data.context.defaultBranch!!,
                 retry = ApiRequestRetryInfo(true)
@@ -78,18 +81,28 @@ class StreamDeleteAction(
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         val deleteObjectKinds = triggerOn.delete?.getTypesObjectKind()?.map { it.value }?.toSet()
             ?: return TriggerResult(
-                trigger = false,
+                trigger = TriggerBody().triggerFail("on.delete.types", "does not currently exist"),
                 timeTrigger = false,
-                startParams = emptyMap(),
+                triggerOn = null,
                 deleteTrigger = false
             )
         return if (gitAction.metaData.streamObjectKind.value in deleteObjectKinds) {
-            val startParams = gitAction.getWebHookStartParam(
-                triggerOn = triggerOn
+            TriggerResult(
+                trigger = TriggerBody(true),
+                timeTrigger = false,
+                triggerOn = triggerOn,
+                deleteTrigger = true
             )
-            TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = true)
         } else {
-            TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
+            TriggerResult(
+                trigger = TriggerBody().triggerFail(
+                    "on.delete.types",
+                    "current type(${gitAction.metaData.streamObjectKind.value}) not match"
+                ),
+                timeTrigger = false,
+                triggerOn = null,
+                deleteTrigger = false
+            )
         }
     }
 
@@ -98,6 +111,8 @@ class StreamDeleteAction(
     override fun needSaveOrUpdateBranch(): Boolean = gitAction.needSaveOrUpdateBranch()
 
     override fun needSendCommitCheck() = gitAction.needSendCommitCheck()
+
+    override fun needUpdateLastModifyUser(filePath: String) = false
 
     override fun sendCommitCheck(
         buildId: String,
@@ -116,7 +131,9 @@ class StreamDeleteAction(
         gitAction.registerCheckRepoTriggerCredentials(repoHook)
     }
 
-    override fun updateLastBranch(pipelineId: String, branch: String) {
-        gitAction.updateLastBranch(pipelineId, branch)
+    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) {
+        gitAction.updatePipelineLastBranchAndDisplayName(pipelineId, branch, displayName)
     }
+
+    override fun getStartType() = gitAction.getStartType()
 }

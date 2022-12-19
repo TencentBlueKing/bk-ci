@@ -75,6 +75,10 @@ spec:
               value: {{ .Chart.Name }}
             - name: MULTI_CLUSTER
               value: {{ .Values.multiCluster.enabled | quote }}
+            - name: ENABLE_PUBLIC_DOCKER
+              value: {{ .Values.buildResource.publicDocker.enabled | quote }}
+            - name: ENABLE_K8S_BUILD
+              value: {{ .Values.buildResource.k8sBuild.enabled | quote }}
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
             - name: POD_NAME
@@ -95,24 +99,31 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 200
+            initialDelaySeconds: 90
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 30
             successThreshold: 1
           readinessProbe:
             httpGet:
               path: /management/health/readinessState
               port: http
-            initialDelaySeconds: 200
+            initialDelaySeconds: 90
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 30
             successThreshold: 1
           volumeMounts:
           - mountPath: /data/workspace/store/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
       volumes:
       - hostPath:
           path: /data

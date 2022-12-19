@@ -42,26 +42,31 @@ import (
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
+var envHome = "HOME"
+var envUser = "USER"
+var envLogName = "LOGNAME"
+
 func setUser(cmd *exec.Cmd, runUser string) error {
-	logs.Info("set user(linux or darwin): ", runUser)
+
 	if len(runUser) == 0 || runUser == systemutil.GetCurrentUser().Username {
 		return nil
 	}
 
-	user, err := user.Lookup(runUser)
+	logs.Info("set user(linux or darwin): ", runUser)
+
+	rUser, err := user.Lookup(runUser)
 	if err != nil {
 		logs.Error("user lookup failed, user: -", runUser, "-, error: ", err.Error())
 		return errors.New("user lookup failed, user: " + runUser)
 	}
-	uid, _ := strconv.Atoi(user.Uid)
-	gid, _ := strconv.Atoi(user.Gid)
+	uid, _ := strconv.Atoi(rUser.Uid)
+	gid, _ := strconv.Atoi(rUser.Gid)
 	cmd.SysProcAttr = &syscall.SysProcAttr{}
 	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)}
 
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", "HOME", user.HomeDir))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", "USER", runUser))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", "USERNAME", runUser))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", "LOGNAME", runUser))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envHome, rUser.HomeDir))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envUser, runUser))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envLogName, runUser))
 
 	return nil
 }

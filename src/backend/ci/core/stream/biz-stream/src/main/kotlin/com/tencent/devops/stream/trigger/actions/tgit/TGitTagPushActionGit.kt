@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.actions.tgit
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
@@ -37,8 +38,8 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -50,28 +51,28 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
+import com.tencent.devops.stream.trigger.pojo.YamlContent
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import org.slf4j.LoggerFactory
 
 class TGitTagPushActionGit(
     private val apiService: TGitApiService,
-    private val gitCheckService: GitCheckService
+    gitCheckService: GitCheckService
 ) : TGitActionGit(apiService, gitCheckService), GitBaseAction {
 
     companion object {
-        val logger = LoggerFactory.getLogger(TGitTagPushActionGit::class.java)
+        val logger = LoggerFactory.getLogger(TGitTagPushActionGit::class.java)!!
     }
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.TAG_PUSH)
 
-    override lateinit var data: ActionData
-    fun event() = data.event as GitTagPushEvent
+    override fun event() = data.event as GitTagPushEvent
 
     override val api: TGitApiService
         get() = apiService
 
-    override fun init(): BaseAction? {
+    override fun init(): BaseAction {
         return initCommonData()
     }
 
@@ -81,11 +82,12 @@ class TGitTagPushActionGit(
 
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.project_id.toString(),
+            scmType = ScmType.CODE_GIT,
             branch = event.ref.removePrefix("refs/tags/"),
             commit = EventCommonDataCommit(
                 commitId = event.after,
                 commitMsg = lastCommit?.message,
-                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
                 commitAuthorName = lastCommit?.author?.name
             ),
             userId = event.user_name,
@@ -97,21 +99,18 @@ class TGitTagPushActionGit(
     private fun getLatestCommit(
         event: GitTagPushEvent
     ): GitCommit? {
-        val commitId = event.after
-        val commits = event.commits
-        if (commitId == null) {
-            return if (commits.isNullOrEmpty()) {
-                null
-            } else {
-                commits.last()
-            }
+        var commit = if (event.commits.isNullOrEmpty()) {
+            null
+        } else {
+            event.commits!!.first()
         }
-        commits?.forEach {
-            if (it.id == commitId) {
-                return it
-            }
+
+        // 2022/7/1   外面的message不为空，为附录tag，取外面的
+        if (event.message != null) {
+            commit = commit?.copy(message = event.message!!)
         }
-        return null
+
+        return commit
     }
 
     override fun isStreamDeleteAction() = event().isDeleteEvent()
@@ -137,22 +136,24 @@ class TGitTagPushActionGit(
         return true
     }
 
-    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
+    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) = Unit
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
-        return TGitActionCommon.getYamlPathList(
+        return GitActionCommon.getYamlPathList(
             action = this,
-            gitProjectId = this.data.getGitProjectId(),
+            gitProjectId = this.getGitProjectIdOrName(),
             ref = this.data.eventCommon.branch
-        ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
+        ).map { (name, blobId) ->
+            YamlPathListEntry(name, CheckType.NO_NEED_CHECK, this.data.eventCommon.branch, blobId)
+        }
     }
 
-    override fun getYamlContent(fileName: String): Pair<String, String> {
-        return Pair(
-            data.eventCommon.branch,
-            api.getFileContent(
+    override fun getYamlContent(fileName: String): YamlContent {
+        return YamlContent(
+            ref = data.eventCommon.branch,
+            content = api.getFileContent(
                 cred = this.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
+                gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
                 ref = data.eventCommon.branch,
                 retry = ApiRequestRetryInfo(true)
@@ -164,24 +165,20 @@ class TGitTagPushActionGit(
         val event = event()
         val isMatch = TriggerMatcher.isTagPushMatch(
             triggerOn,
-            TGitActionCommon.getTriggerBranch(event.ref),
+            GitActionCommon.getTriggerBranch(event.ref),
             data.getUserId(),
             event.create_from
         )
-        val params = TGitActionCommon.getStartParams(
-            action = this,
-            triggerOn = triggerOn
-        )
         return TriggerResult(
             trigger = isMatch,
-            startParams = params,
+            triggerOn = triggerOn,
             timeTrigger = false,
             deleteTrigger = false
         )
     }
 
     override fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String> {
-        return TGitActionCommon.getStartParams(
+        return GitActionCommon.getStartParams(
             action = this,
             triggerOn = triggerOn
         )
@@ -195,7 +192,10 @@ private fun GitTagPushEvent.tagPushEventFilter(): Boolean {
         return true
     }
     if (total_commits_count <= 0) {
-        TGitTagPushActionGit.logger.info("Git tag web hook no commit($total_commits_count)")
+        TGitTagPushActionGit.logger.info(
+            "TGitTagPushActionGit|tagPushEventFilter" +
+                "|Git tag web hook no commit($total_commits_count)"
+        )
         return false
     }
     return true

@@ -72,22 +72,25 @@ class StreamQuartzService @Autowired constructor(
     fun reloadTimer() {
         // 通过配置决定对应的环境是否执行定时任务
         if (!timeExecute.isNullOrEmpty()) {
-            logger.info("env can not execute timer plugin")
+            logger.info("StreamQuartzService|reloadTimer|env can not execute timer plugin")
             return
         }
 
-        logger.info("TIMER_RELOAD| start add timer pipeline to quartz queue!")
+        logger.info("StreamQuartzService|reloadTimer|start add timer pipeline to quartz queue!")
         var start = 0
         val limit = 200
         loop@ while (true) {
             val resp = streamTimerService.list(start, limit)
             val list = resp.data
             if (list == null || list.isEmpty()) {
-                logger.info("list timer pipeline finish|start=$start|limit=$limit|resp=$resp")
+                logger.info(
+                    "StreamQuartzService|reloadTimer" +
+                        "|list timer pipeline finish|start=$start|limit=$limit|resp=$resp"
+                )
                 break@loop
             }
             list.forEach { timer ->
-                logger.info("TIMER_RELOAD| load crontab($timer)")
+                logger.info("StreamQuartzService|reloadTimer|TIMER_RELOAD|crontab|$timer")
                 timer.crontabExpressions.forEach { crontab ->
                     addJob(projectId = timer.projectId, pipelineId = timer.pipelineId, crontab = crontab)
                 }
@@ -95,7 +98,7 @@ class StreamQuartzService @Autowired constructor(
             start += limit
         }
 
-        logger.warn("TIMER_RELOAD| reload ok!")
+        logger.warn("StreamQuartzService|reloadTimer|TIMER_RELOAD|ok")
     }
 
     fun addJob(projectId: String, pipelineId: String, crontab: String) {
@@ -107,7 +110,7 @@ class StreamQuartzService @Autowired constructor(
                 jobBeanClass
             )
         } catch (ignore: Exception) {
-            logger.error("TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab", ignore)
+            logger.warn("StreamQuartzService|addJob|error|pipelineId=$pipelineId|crontab=$crontab", ignore)
         }
     }
 
@@ -116,9 +119,9 @@ class StreamQuartzService @Autowired constructor(
         if (init.get()) {
             schedulerManager.shutdown()
             init.set(false)
-            logger.warn("STOP| timer quartz have been stop!")
+            logger.warn("StreamQuartzService|STOP| timer quartz have been stop!")
         } else {
-            logger.warn("STOP| do not init!")
+            logger.warn("StreamQuartzService|STOP| do not init!")
         }
     }
 }
@@ -148,7 +151,10 @@ class StreamJobBean(
         val crontabMd5 = comboKeys[1]
         val streamTimer = streamTimerService.get(pipelineId)
         if (null == streamTimer) {
-            logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|Timer is expire, delete it from queue!")
+            logger.info(
+                "StreamQuartzService|execute|[$comboKey]" +
+                    "|PIPELINE_TIMER_EXPIRED|Timer is expire, delete it from queue!"
+            )
             schedulerManager.deleteJob(comboKey)
             return
         }
@@ -156,7 +162,10 @@ class StreamJobBean(
         val projectRouterTagCheck = client.get(ServiceProjectTagResource::class)
             .checkProjectRouter(streamTimer.projectId).data ?: return
         if (!projectRouterTagCheck) {
-            logger.warn("timePipeline ${streamTimer.projectId} router tag is not this cluster")
+            logger.warn(
+                "StreamQuartzService|execute" +
+                    "|router tag is not this cluster|timePipeline ${streamTimer.projectId}"
+            )
             return
         }
 
@@ -167,7 +176,10 @@ class StreamJobBean(
             }
         }
         if (!find) {
-            logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|can not find crontab, delete it from queue!")
+            logger.info(
+                "StreamQuartzService|execute|[$comboKey]" +
+                    "|PIPELINE_TIMER_EXPIRED|can not find crontab, delete it from queue!"
+            )
             schedulerManager.deleteJob(comboKey)
             return
         }
@@ -176,7 +188,7 @@ class StreamJobBean(
         val redisLock = RedisLock(redisOperation, "process:pipeline:timer:trigger:$pipelineId:$scheduledFireTime", 58)
         if (redisLock.tryLock()) {
             try {
-                logger.info("[$comboKey]|STREAM_TIMER|scheduledFireTime=$scheduledFireTime")
+                logger.info("StreamQuartzService|execute|[$comboKey]|STREAM_TIMER|scheduledFireTime=$scheduledFireTime")
                 streamEventDispatcher.dispatch(
                     StreamTimerBuildEvent(
                         source = "timer_trigger",
@@ -193,11 +205,14 @@ class StreamJobBean(
                 )
             } catch (ignored: Exception) {
                 logger.error(
-                    "[$comboKey]|STREAM_TIMER|scheduledFireTime=$scheduledFireTime|Dispatch event fail, e=$ignored"
+                    "BKSystemErrorMonitor|StreamQuartzService|execute|$comboKey|$scheduledFireTime|error", ignored
                 )
             }
         } else {
-            logger.info("[$comboKey]|STREAM_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime| lock fail, skip!")
+            logger.info(
+                "StreamQuartzService|execute|[$comboKey]" +
+                    "|STREAM_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime| lock fail, skip!"
+            )
         }
     }
 }

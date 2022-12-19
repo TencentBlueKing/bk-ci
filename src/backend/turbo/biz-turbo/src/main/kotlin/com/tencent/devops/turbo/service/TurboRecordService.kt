@@ -13,6 +13,7 @@ import com.tencent.devops.common.util.MathUtil
 import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_PLUGIN
 import com.tencent.devops.common.util.constants.ROUTE_TURBO_PLUGIN_DATA
 import com.tencent.devops.common.util.constants.codeccAdmin
+import com.tencent.devops.common.web.mq.CORE_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.turbo.dao.mongotemplate.TurboRecordDao
 import com.tencent.devops.turbo.dao.repository.TurboRecordRepository
 import com.tencent.devops.turbo.dto.TurboRecordPluginUpdateDto
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.expression.spel.support.StandardEvaluationContext
@@ -46,6 +48,7 @@ class TurboRecordService @Autowired constructor(
     private val turboRecordDao: TurboRecordDao,
     private val turboEngineConfigService: TurboEngineConfigService,
     private val turboRecordSeqNumService: TurboRecordSeqNumService,
+    @Qualifier(CORE_RABBIT_TEMPLATE_NAME)
     private val rabbitTemplate: RabbitTemplate
 ) {
 

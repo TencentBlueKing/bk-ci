@@ -190,7 +190,7 @@ class NotifyMessageTemplateDao {
     fun modifyNotifyTypeScope(dslContext: DSLContext, typeScope: List<String>, id: String) {
         with(TCommonNotifyMessageTemplate.T_COMMON_NOTIFY_MESSAGE_TEMPLATE) {
             dslContext.update(this)
-                .set(NOTIFY_TYPE_SCOPE, JsonUtil.getObjectMapper().writeValueAsString(typeScope))
+                .set(NOTIFY_TYPE_SCOPE, JsonUtil.toJson(typeScope, formatted = false))
                 .where(ID.eq(id))
                 .execute()
         }
@@ -221,7 +221,7 @@ class NotifyMessageTemplateDao {
                     id,
                     addNotifyTemplateMessageRequest.templateCode,
                     addNotifyTemplateMessageRequest.templateName,
-                    JsonUtil.getObjectMapper().writeValueAsString(notifyTypeScope),
+                    JsonUtil.toJson(notifyTypeScope, formatted = false),
                     addNotifyTemplateMessageRequest.priority.getValue().toByte(),
                     addNotifyTemplateMessageRequest.source.getValue().toByte()
                 )
@@ -465,10 +465,9 @@ class NotifyMessageTemplateDao {
         notifyTypeScopeSet: Set<String>
     ): Int {
         with(TCommonNotifyMessageTemplate.T_COMMON_NOTIFY_MESSAGE_TEMPLATE) {
-            val notifyTypeScopeStr = JsonUtil.getObjectMapper().writeValueAsString(notifyTypeScopeSet)
             return dslContext.update(this)
                 .set(this.TEMPLATE_NAME, notifyMessageTemplateRequest.templateName)
-                .set(this.NOTIFY_TYPE_SCOPE, notifyTypeScopeStr)
+                .set(this.NOTIFY_TYPE_SCOPE, JsonUtil.toJson(notifyTypeScopeSet, formatted = false))
                 .set(this.PRIORITY, notifyMessageTemplateRequest.priority.getValue().toByte())
                 .set(this.SOURCE, notifyMessageTemplateRequest.source.getValue().toByte())
                 .where(this.ID.eq(templateId))

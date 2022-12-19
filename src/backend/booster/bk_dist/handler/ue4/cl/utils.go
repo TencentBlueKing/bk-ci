@@ -11,6 +11,7 @@ package cl
 
 import (
 	"bufio"
+	"crypto/md5"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -255,6 +256,110 @@ func replaceWithNextExclude(s string, old byte, new string, nextExcludes []byte)
 }
 
 // ensure compiler exist in args.
+func ensureCompilerRaw(args []string, workdir string) (string, []string, bool, string, string, string, error) {
+	responseFile := ""
+	sourcedependfile := ""
+	objectfile := ""
+	pchfile := ""
+	showinclude := false
+	if len(args) == 0 {
+		blog.Warnf("cl: ensure compiler got empty arg")
+		return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, ErrorMissingOption
+	}
+
+	if args[0] == "/" || args[0] == "@" || isSourceFile(args[0]) || isObjectFile(args[0]) {
+		return responseFile, append([]string{defaultCompiler}, args...), showinclude, sourcedependfile, objectfile, pchfile, nil
+	}
+
+	if !strings.HasSuffix(args[0], defaultCompiler) {
+		return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, fmt.Errorf("not supported cmd %s", args[0])
+	}
+
+	for _, v := range args {
+		if strings.HasPrefix(v, "@") {
+			responseFile = strings.Trim(v[1:], "\"")
+
+			data := ""
+			if responseFile != "" {
+				var err error
+				data, err = readResponse(responseFile, workdir)
+				if err != nil {
+					blog.Infof("cl: failed to read response file:%s,err:%v", responseFile, err)
+					return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, err
+				}
+			}
+			// options, sources, err := parseArgument(data)
+			options, err := shlex.Split(replaceWithNextExclude(string(data), '\\', "\\\\", []byte{'"'}))
+			if err != nil {
+				blog.Infof("cl: failed to parse response file:%s,err:%v", responseFile, err)
+				return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, err
+			}
+
+			args = []string{args[0]}
+			args = append(args, options...)
+
+		} else if v == "/showIncludes" {
+			showinclude = true
+		}
+	}
+
+	// if showinclude {
+	// 	args = append(args, "/showIncludes")
+	// }
+
+	for i := range args {
+		if args[i] == "/sourceDependencies" && i+1 <= len(args)-1 {
+			sourcedependfile = args[i+1]
+			continue
+		} else if strings.HasPrefix(args[i], "/Fo") {
+			if len(args[i]) > 3 {
+				objectfile = args[i][3:]
+				continue
+			}
+
+			i++
+			if i >= len(args) {
+				blog.Warnf("cl: scan args: no output file found after /Fo")
+				return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, ErrorMissingOption
+			}
+			objectfile = args[i]
+		} else if strings.HasPrefix(args[i], "/Fp") {
+			if len(args[i]) > 3 {
+				pchfile = args[i][3:]
+				continue
+			}
+
+			i++
+			if i >= len(args) {
+				blog.Warnf("cl: scan args: no output file found after /Fo")
+				return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, ErrorMissingOption
+			}
+			pchfile = args[i]
+		}
+	}
+
+	// TODO : deal with "/sourceDependencies"
+
+	if responseFile != "" && !filepath.IsAbs(responseFile) {
+		responseFile, _ = filepath.Abs(filepath.Join(workdir, responseFile))
+	}
+
+	if sourcedependfile != "" && !filepath.IsAbs(sourcedependfile) {
+		sourcedependfile, _ = filepath.Abs(filepath.Join(workdir, sourcedependfile))
+	}
+
+	if objectfile != "" && !filepath.IsAbs(objectfile) {
+		objectfile, _ = filepath.Abs(filepath.Join(workdir, objectfile))
+	}
+
+	if pchfile != "" && !filepath.IsAbs(pchfile) {
+		pchfile, _ = filepath.Abs(filepath.Join(workdir, pchfile))
+	}
+
+	return responseFile, args, showinclude, sourcedependfile, objectfile, pchfile, nil
+}
+
+// ensure compiler exist in args.
 func ensureCompiler(args []string, workdir string) (string, []string, bool, error) {
 	responseFile := ""
 	if len(args) == 0 {
@@ -393,8 +498,8 @@ var (
 		"/FI":                 true,
 		"/Yu":                 true,
 		"/sourceDependencies": true,
-		"/external:":          true, //specify compiler diagnostic behavior for certain header files
-		"-external:":          true, //specify compiler diagnostic behavior for certain header files
+		"/external:I":         true, //specify compiler diagnostic behavior for certain header files
+		"-external:I":         true, //specify compiler diagnostic behavior for certain header files
 	}
 
 	// skip options without value
@@ -407,18 +512,18 @@ var (
 
 	// skip options start with flags
 	skipLocalOptionStartWith = map[string]bool{
-		"/D":         true,
-		"/I":         true,
-		"-D":         true,
-		"-I":         true,
-		"/U":         true,
-		"/Fd":        true,
-		"/FI":        true, // Preprocesses the specified include file.
-		"/Fp":        true, // Preprocesses the specified include file.
-		"/Yu":        true, // Uses a precompiled header file during build.
-		"/Zm":        true, // Specifies the precompiled header memory allocation limit.
-		"/external:": true, //specify compiler diagnostic behavior for certain header files
-		"-external:": true, //specify compiler diagnostic behavior for certain header files
+		"/D":          true,
+		"/I":          true,
+		"-D":          true,
+		"-I":          true,
+		"/U":          true,
+		"/Fd":         true,
+		"/FI":         true, // Preprocesses the specified include file.
+		"/Fp":         true, // Preprocesses the specified include file.
+		"/Yu":         true, // Uses a precompiled header file during build.
+		"/Zm":         true, // Specifies the precompiled header memory allocation limit.
+		"/external:W": true, //specify compiler diagnostic behavior for certain header files
+		"-external:W": true, //specify compiler diagnostic behavior for certain header files
 	}
 )
 
@@ -499,7 +604,7 @@ type ccArgs struct {
 
 // scanArgs receive the complete compiling args, and the first item should always be a compiler name.
 func scanArgs(args []string) (*ccArgs, error) {
-	blog.Infof("cl: scanning arguments: %v", args)
+	blog.Debugf("cl: scanning arguments: %v", args)
 
 	if len(args) == 0 || strings.HasPrefix(args[0], "/") {
 		blog.Warnf("cl: scan args: unrecognized option: %s", args[0])
@@ -646,7 +751,7 @@ func scanArgs(args []string) (*ccArgs, error) {
 	}
 
 	r.args = args
-	blog.Infof("cl: success to scan arguments: %s, input file %s, output file %s",
+	blog.Debugf("cl: success to scan arguments: %s, input file %s, output file %s",
 		r.args, r.inputFile, r.outputFile)
 	return r, nil
 }
@@ -699,6 +804,34 @@ func makeTmpFile(tmpDir, prefix, ext string) (string, error) {
 	}
 
 	return "", fmt.Errorf("cl: create tmp file failed: %s", target)
+}
+
+func getPumpIncludeFile(tmpDir, prefix, ext string, args []string) (string, error) {
+	fullarg := strings.Join(args, " ")
+	md5str := md5.Sum([]byte(fullarg))
+	target := filepath.Join(tmpDir, fmt.Sprintf("%s_%x%s", prefix, md5str, ext))
+
+	return target, nil
+}
+
+func createFile(target string) error {
+	for i := 0; i < 3; i++ {
+		f, err := os.Create(target)
+		if err != nil {
+			blog.Errorf("cl: failed to create tmp file \"%s\": %s", target, err)
+			continue
+		}
+
+		if err = f.Close(); err != nil {
+			blog.Errorf("cl: failed to close tmp file \"%s\": %s", target, err)
+			return err
+		}
+
+		blog.Infof("cl: success to make tmp file \"%s\"", target)
+		return nil
+	}
+
+	return fmt.Errorf("cl: create tmp file failed: %s", target)
 }
 
 // only genegerate file name, do not create really

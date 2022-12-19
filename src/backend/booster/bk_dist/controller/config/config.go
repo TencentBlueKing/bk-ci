@@ -40,6 +40,8 @@ type ServerConfig struct {
 
 	AutoResourceMgr    bool `json:"auto_resource_mgr" value:"false" usage:"if true, controller will auto free and apply resource while work running"`
 	ResIdleSecsForFree int  `json:"res_idle_secs_for_free" value:"120" usage:"controller free resource while detect resource has been idle over this"`
+
+	SendCork bool `json:"send_cork" value:"false" usage:"if true, controller will send files like tcp cork"`
 }
 
 // CertConfig  configuration of Cert

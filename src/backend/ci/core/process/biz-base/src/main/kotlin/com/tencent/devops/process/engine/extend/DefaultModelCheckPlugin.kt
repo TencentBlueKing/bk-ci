@@ -72,7 +72,8 @@ open class DefaultModelCheckPlugin constructor(
     open val taskCommonSettingConfig: TaskCommonSettingConfig
 ) : ModelCheckPlugin {
 
-    override fun checkModelIntegrity(model: Model, projectId: String?) {
+    override fun checkModelIntegrity(model: Model, projectId: String?): Int {
+        var metaSize = 0
         // 检查流水线名称
         PipelineUtils.checkPipelineName(
             name = model.name,
@@ -153,7 +154,7 @@ open class DefaultModelCheckPlugin constructor(
 
             val atomVersions = mutableSetOf<StoreVersion>()
             val atomInputParamList = mutableListOf<StoreParam>()
-            checkElements(
+            metaSize += checkElements(
                 stage = s,
                 containerCnt = containerCnt,
                 elementCnt = elementCnt,
@@ -171,6 +172,8 @@ open class DefaultModelCheckPlugin constructor(
             }
             DependOnUtils.checkRepeatedJobId(stage)
         }
+
+        return metaSize
     }
 
     private fun checkStageReviewers(stage: Stage) {
@@ -189,6 +192,8 @@ open class DefaultModelCheckPlugin constructor(
                 params = arrayOf(stage.name!!, group.name)
             )
         }
+        PipelineUtils.checkStageReviewParam(stage.checkIn?.reviewParams)
+
         stage.checkIn?.timeout = if (stage.checkIn?.timeout in 1..(Timeout.DEFAULT_STAGE_TIMEOUT_HOURS * 30)) {
             stage.checkIn?.timeout
         } else {
@@ -202,11 +207,12 @@ open class DefaultModelCheckPlugin constructor(
         elementCnt: MutableMap<String, Int>,
         atomVersions: MutableSet<StoreVersion>,
         atomInputParamList: MutableList<StoreParam>
-    ) {
+    ): Int /* MetaSize*/ {
+        var metaSize = 0
         stage.containers.forEach { c ->
-            val tasks = c.elements
             // 判断job下task数量是否超过系统限制
-            if (tasks.size > jobCommonSettingConfig.maxTaskNum) {
+            metaSize += c.elements.size
+            if (c.elements.size > jobCommonSettingConfig.maxTaskNum) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
                     params = arrayOf(c.name, KEY_TASK, jobCommonSettingConfig.maxTaskNum.toString())
@@ -216,7 +222,8 @@ open class DefaultModelCheckPlugin constructor(
                 ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
             ContainerBizRegistrar.getPlugin(c)?.check(c, cCnt)
             Preconditions.checkTrue(
-                c.elements.isNotEmpty(), ErrorCodeException(
+                condition = c.elements.isNotEmpty(),
+                exception = ErrorCodeException(
                     defaultMessage = "流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件",
                     errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(stage.name!!, c.name)
                 )
@@ -228,6 +235,7 @@ open class DefaultModelCheckPlugin constructor(
                 addAtomInputDataInfo(e, atomVersions, atomInputParamList)
             }
         }
+        return metaSize + stage.containers.size
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -304,6 +312,7 @@ open class DefaultModelCheckPlugin constructor(
                 val dispatchType = vmBuildContainer.dispatchType ?: return true
                 return when (dispatchType.buildType()) {
                     BuildType.THIRD_PARTY_AGENT_ID, BuildType.THIRD_PARTY_AGENT_ENV -> dispatchType.value.isBlank()
+                    BuildType.WINDOWS -> false
                     else -> true
                 }
             }

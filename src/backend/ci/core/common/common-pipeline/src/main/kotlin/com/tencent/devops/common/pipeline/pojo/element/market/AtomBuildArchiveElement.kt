@@ -39,6 +39,8 @@ data class AtomBuildArchiveElement(
     override var id: String? = null,
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
+    @ApiModelProperty("插件发布包名称", required = true)
+    val packageName: String = "\${packageName}",
     @ApiModelProperty("插件发布包所在相对路径", required = true)
     val filePath: String = "\${filePath}",
     @ApiModelProperty("插件发布包上传至仓库的目标路径", required = true)
@@ -46,7 +48,15 @@ data class AtomBuildArchiveElement(
     @ApiModelProperty("插件自定义UI前端文件所在相对路径", required = false)
     val frontendFilePath: String? = "\${BK_CI_CUSTOM_FRONTEND_DIST_PATH}",
     @ApiModelProperty("插件自定义UI前端文件上传至仓库的目标路径", required = false)
-    val frontendDestPath: String? = "\${atomCode}/\${version}"
+    val frontendDestPath: String? = "\${atomCode}/\${version}",
+    @ApiModelProperty("操作系统名称", required = false)
+    val osName: String? = "\${matrixOsName}",
+    @ApiModelProperty("操作系统cpu架构", required = false)
+    val osArch: String? = "\${matrixOsArch}",
+    @ApiModelProperty("是否有可用的操作系统名称配置", required = false)
+    val validOsNameFlag: String? = null,
+    @ApiModelProperty("是否有可用的操作系统cpu架构配置", required = false)
+    val validOsArchFlag: String? = null
 ) : Element(name, id, status) {
 
     companion object {

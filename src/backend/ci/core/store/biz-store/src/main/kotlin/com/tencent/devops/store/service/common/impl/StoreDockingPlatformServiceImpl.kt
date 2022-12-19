@@ -117,18 +117,21 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
     override fun getStoreDockingPlatforms(
         userId: String,
         platformName: String?,
+        id: String?,
         page: Int,
         pageSize: Int
     ): Page<StoreDockingPlatformInfo>? {
         val storeDockingPlatformInfos = storeDockingPlatformDao.getStoreDockingPlatforms(
             dslContext = dslContext,
             platformName = platformName,
+            id = id,
             page = page,
             pageSize = pageSize
         )
         val storeDockingPlatformCount = storeDockingPlatformDao.getStoreDockingPlatformCount(
             dslContext = dslContext,
-            platformName = platformName
+            platformName = platformName,
+            id = id
         )
         val totalPages = PageUtil.calTotalPage(pageSize, storeDockingPlatformCount)
         return Page(
@@ -138,5 +141,9 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
             totalPages = totalPages,
             records = storeDockingPlatformInfos ?: emptyList()
         )
+    }
+
+    override fun isPlatformCodeRegistered(platformCode: String): Boolean {
+        return storeDockingPlatformDao.isPlatformCodeRegistered(dslContext, platformCode)
     }
 }

@@ -58,7 +58,10 @@ class StoreDockingPlatformDao {
                 PRINCIPAL,
                 LOGO_URL,
                 CREATOR,
-                MODIFIER
+                MODIFIER,
+                OWNER_DEPT_NAME,
+                OWNERS,
+                LABELS
             )
                 .values(
                     UUIDUtil.generate(),
@@ -69,8 +72,52 @@ class StoreDockingPlatformDao {
                     storeDockingPlatformRequest.principal,
                     storeDockingPlatformRequest.logoUrl,
                     userId,
-                    userId
+                    userId,
+                    storeDockingPlatformRequest.ownerDeptName,
+                    storeDockingPlatformRequest.owner,
+                    storeDockingPlatformRequest.labels?.joinToString(",")
                 ).execute()
+        }
+    }
+
+    fun batchCreate(
+        dslContext: DSLContext,
+        userId: String,
+        storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
+    ): Int {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+                return dslContext.batch(storeDockingPlatformRequests.map { storeDockingPlatformRequest ->
+                    dslContext.insertInto(
+                        this,
+                        ID,
+                        PLATFORM_CODE,
+                        PLATFORM_NAME,
+                        WEBSITE,
+                        SUMMARY,
+                        PRINCIPAL,
+                        LOGO_URL,
+                        CREATOR,
+                        MODIFIER,
+                        OWNER_DEPT_NAME,
+                        OWNERS,
+                        LABELS
+                    )
+                        .values(
+                            UUIDUtil.generate(),
+                            storeDockingPlatformRequest.platformCode,
+                            storeDockingPlatformRequest.platformName,
+                            storeDockingPlatformRequest.website,
+                            storeDockingPlatformRequest.summary,
+                            storeDockingPlatformRequest.principal,
+                            storeDockingPlatformRequest.logoUrl,
+                            userId,
+                            userId,
+                            storeDockingPlatformRequest.ownerDeptName,
+                            storeDockingPlatformRequest.owner,
+                            storeDockingPlatformRequest.labels?.joinToString(",")
+                        )
+                }
+            ).execute().size
         }
     }
 
@@ -88,10 +135,39 @@ class StoreDockingPlatformDao {
                 .set(SUMMARY, storeDockingPlatformRequest.summary)
                 .set(PRINCIPAL, storeDockingPlatformRequest.principal)
                 .set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
+                .set(LABELS, storeDockingPlatformRequest.labels?.joinToString(","))
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
+                .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
+                .set(OWNERS, storeDockingPlatformRequest.owner)
                 .where(ID.eq(id))
                 .execute()
+        }
+    }
+
+    fun batchUpdate(
+        dslContext: DSLContext,
+        userId: String,
+        storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
+    ): Int {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.batch(storeDockingPlatformRequests.map { storeDockingPlatformRequest ->
+                var step = dslContext.update(this)
+                    .set(SUMMARY, storeDockingPlatformRequest.summary)
+                    .set(PRINCIPAL, storeDockingPlatformRequest.principal)
+                    .set(PLATFORM_NAME, storeDockingPlatformRequest.platformName)
+                    .set(WEBSITE, storeDockingPlatformRequest.website)
+                    .set(LABELS, storeDockingPlatformRequest.labels?.joinToString(","))
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .set(MODIFIER, userId)
+                    .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
+                    .set(OWNERS, storeDockingPlatformRequest.owner)
+                if (!storeDockingPlatformRequest.logoUrl.isNullOrBlank()) {
+                    step = step.set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
+                }
+                    step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
+            }
+            ).execute().size
         }
     }
 
@@ -100,6 +176,20 @@ class StoreDockingPlatformDao {
             dslContext.deleteFrom(this)
                 .where(ID.eq(id))
                 .execute()
+        }
+    }
+
+    fun batchDelete(
+        dslContext: DSLContext,
+        userId: String,
+        storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
+    ): Int {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.batch(storeDockingPlatformRequests.map {
+                dslContext.deleteFrom(this)
+                    .where(PLATFORM_CODE.eq(it.platformCode))
+                    .and(OWNER_DEPT_NAME.eq(it.ownerDeptName))
+            }).execute().size
         }
     }
 
@@ -127,14 +217,33 @@ class StoreDockingPlatformDao {
         }
     }
 
+    fun getStoreDockingPlatformByCode(dslContext: DSLContext, platformCode: String): String? {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.select(ID)
+                .from(this)
+                .where(PLATFORM_CODE.eq(platformCode))
+                .fetchOne(0, String::class.java)
+        }
+    }
+
+    fun updateStoreDockingPlatformLogoUrl(dslContext: DSLContext, id: String, logoUrl: String): Int {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.update(this)
+                .set(LOGO_URL, logoUrl)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
     fun getStoreDockingPlatforms(
         dslContext: DSLContext,
         platformName: String?,
+        id: String?,
         page: Int,
         pageSize: Int
     ): List<StoreDockingPlatformInfo>? {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            val conditions = getStoreDockingPlatformsCondition(platformName)
+            val conditions = getStoreDockingPlatformsCondition(platformName, id)
             val storeDockingPlatformRecords = dslContext
                 .selectFrom(this)
                 .where(conditions).orderBy(CREATE_TIME.desc())
@@ -173,10 +282,11 @@ class StoreDockingPlatformDao {
 
     fun getStoreDockingPlatformCount(
         dslContext: DSLContext,
-        platformName: String?
+        platformName: String?,
+        id: String?
     ): Long {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            val conditions = getStoreDockingPlatformsCondition(platformName)
+            val conditions = getStoreDockingPlatformsCondition(platformName, id)
             return dslContext
                 .selectCount()
                 .from(this)
@@ -186,11 +296,15 @@ class StoreDockingPlatformDao {
     }
 
     private fun TStoreDockingPlatform.getStoreDockingPlatformsCondition(
-        platformName: String?
+        platformName: String?,
+        id: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!platformName.isNullOrBlank()) {
             conditions.add(PLATFORM_NAME.contains(platformName))
+        }
+        if (!id.isNullOrBlank()) {
+            conditions.add(ID.eq(id))
         }
         return conditions
     }
@@ -206,10 +320,19 @@ class StoreDockingPlatformDao {
                 principal = principal,
                 logoUrl = logoUrl,
                 creator = creator,
+                labels = labels?.split(","),
                 modifier = modifier,
                 createTime = DateTimeUtil.toDateTime(createTime),
-                updateTime = DateTimeUtil.toDateTime(updateTime)
+                updateTime = DateTimeUtil.toDateTime(updateTime),
+                ownerDeptName = record.ownerDeptName,
+                owner = record.owners
             )
+        }
+    }
+
+    fun isPlatformCodeRegistered(dslContext: DSLContext, platformCode: String): Boolean {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.selectFrom(this).where(PLATFORM_CODE.eq(platformCode)).fetchOne() != null
         }
     }
 }

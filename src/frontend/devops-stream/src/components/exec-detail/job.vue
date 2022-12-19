@@ -3,17 +3,11 @@
         :title="job.name"
         :status="job.status"
     >
-        <section v-if="showDebugBtn" class="web-console" :style="{ right: executeCount > 1 ? '390px' : '280px' }">
-            <bk-popover placement="bottom" ref="consoleRef" ext-cls="console-menu-wrapper">
-                <span>
-                    {{$t('pipeline.webConsle')}}
-                </span>
-                <ul class="console-ul-list" slot="content">
-                    <li @click="startDebug('/bin/sh')"><span>{{$t('pipeline.viaSh')}}</span></li>
-                    <li @click="startDebug('/bin/bash')"><span>{{$t('pipeline.viaBash')}}</span></li>
-                </ul>
-            </bk-popover>
-        </section>
+        <!-- <section v-if="showDebugBtn" class="web-console" :style="{ right: executeCount > 1 ? '390px' : '280px' }">
+            <span onclick="startDebug">
+                {{$t('pipeline.webConsole')}}
+            </span>
+        </section> -->
         <job-log :plugin-list="pluginList"
             :build-id="$route.params.buildId"
             :down-load-link="downLoadJobLink"
@@ -62,7 +56,7 @@
 
             downLoadJobLink () {
                 const fileName = encodeURI(encodeURI(`${this.stageIndex + 1}-${this.jobIndex + 1}-${this.job.name}`))
-                const jobId = this.job.containerHashid
+                const jobId = this.job.containerHashId
                 const { pipelineId, buildId } = this.$route.params
                 return `/log/api/user/logs/${this.projectId}/${pipelineId}/${buildId}/download?jobId=${jobId}&fileName=${fileName}`
             },
@@ -78,16 +72,13 @@
             }
         },
         methods: {
-            startDebug (cmd = '/bin/sh') {
+            startDebug () {
                 const vmSeqId = this.job.containerId || this.getRealSeqId()
-                this.startNewDocker(vmSeqId, cmd)
-            },
-
-            startNewDocker (vmSeqId, cmd) {
                 let url = ''
                 const tab = window.open('about:blank')
+                const dispatchType = 'GIT_CI'
                 const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
-                url = `/webConsole?pipelineId=${this.pipelineId}&vmSeqId=${vmSeqId}${buildIdStr}&cmd=${cmd}${this.hashId}`
+                url = `/webConsole?pipelineId=${this.pipelineId}&dispatchType=${dispatchType}&vmSeqId=${vmSeqId}${buildIdStr}${this.hashId}`
                 tab.location = url
             },
 
@@ -119,28 +110,5 @@
                 border-bottom: 8px solid #2f363d;
             }
         }
-    }
-    .console-ul-list {
-        border: 1px solid #444d56;
-        border-radius: 4px;
-        li {
-            display: flex;
-            align-items: center;
-            width: 180px;
-            height: 36px;
-            font-size: 12px;
-            cursor: pointer;
-            background: #2f363d;
-            &:not(:last-child) {
-                border-bottom: 1px solid #444D56;
-            }
-            &:hover {
-                background: #3a84ff;
-            }
-            span {
-                margin-left: 25px;
-            }
-        }
-        
     }
 </style>

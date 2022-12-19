@@ -51,13 +51,13 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
                 projectCode = projectCode,
                 groupInfo = groupInfo
             )
-            logger.info("create ext group success $projectCode $roleId")
+            logger.info("create ext group success : projectCode = $projectCode | roleId = $roleId")
         } catch (iamException: IamException) {
-            logger.warn("create Role ext fail $iamException")
+            logger.warn("create Role ext fail : iamException = $iamException")
             groupService.deleteGroup(roleId, false)
             throw RemoteServiceException("create project role fail: ${iamException.errorMsg}")
         } catch (e: Exception) {
-            logger.warn("create Role ext fail $e")
+            logger.warn("create Role ext fail : $e")
             groupService.deleteGroup(roleId, false)
             throw ParamBlankException("create project role fail")
         }

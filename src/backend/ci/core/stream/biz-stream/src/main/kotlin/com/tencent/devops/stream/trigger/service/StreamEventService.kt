@@ -28,24 +28,25 @@
 package com.tencent.devops.stream.trigger.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.dao.StreamUserMessageDao
+import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.message.UserMessageType
 import com.tencent.devops.stream.service.StreamGitProjectInfoCache
 import com.tencent.devops.stream.service.StreamWebsocketService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.pojo.StreamMessageSaveLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
 import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import com.tencent.devops.stream.util.StreamTriggerMessageUtils
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -55,6 +56,7 @@ import org.springframework.stereotype.Service
 @Service
 class StreamEventService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val streamGitConfig: StreamGitConfig,
     private val gitCheckService: GitCheckService,
     private val userMessageDao: StreamUserMessageDao,
@@ -64,11 +66,6 @@ class StreamEventService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val streamGitProjectInfoCache: StreamGitProjectInfoCache
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(StreamEventService::class.java)
-    }
-
     // 触发检查错误,未涉及版本解析
     fun saveTriggerNotBuildEvent(
         action: BaseAction,
@@ -114,11 +111,13 @@ class StreamEventService @Autowired constructor(
                     block = setting.enableMrBlock && commitCheckBlock,
                     targetUrl = StreamPipelineUtils.genStreamV2NotificationsUrl(
                         streamUrl = streamGitConfig.streamUrl ?: throw ParamBlankException("启动配置缺少 streamGitConfig"),
-                        gitProjectId = getGitProjectId()
+                        gitProjectId = getGitProjectId(),
+                        messageId = action.data.context.requestEventId.toString()
                     ),
                     context = "${context.pipeline!!.filePath}@${action.metaData.streamObjectKind.name}",
                     description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
-                    mrId = null
+                    mrId = null,
+                    addCommitCheck = action.api::addCommitCheck
                 )
             }
             return saveNotBuildEvent(
@@ -154,50 +153,106 @@ class StreamEventService @Autowired constructor(
         branch: String?,
         projectCode: String
     ): Long {
-        var messageId = -1L
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
-        val checkRepoHookTrigger = gitProjectId != event.gitProjectId
-        val realEvent = if (checkRepoHookTrigger) {
-            // 当gitProjectId与event的不同时，说明是远程仓库触发的
-            val pathWithNamespace = streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                gitProjectId = event.gitProjectId,
-                useAccessToken = true,
-                userId = userId
-            )?.pathWithNamespace
-            GitCommonUtils.checkAndGetRepoBranch(event, pathWithNamespace)
-        } else event
-        val messageTitle = StreamTriggerMessageUtils.getEventMessageTitle(realEvent, checkRepoHookTrigger)
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            messageId = gitRequestEventNotBuildDao.save(
-                dslContext = context,
-                eventId = eventId,
-                originYaml = originYaml,
-                parsedYaml = parsedYaml,
-                normalizedYaml = normalizedYaml,
-                reason = reason,
-                reasonDetail = reasonDetail,
-                pipelineId = pipelineId,
-                filePath = filePath,
+
+        val messageId = gitRequestEventNotBuildDao.save(
+            dslContext = dslContext,
+            eventId = eventId,
+            originYaml = originYaml,
+            parsedYaml = parsedYaml,
+            normalizedYaml = normalizedYaml,
+            reason = reason,
+            reasonDetail = reasonDetail,
+            pipelineId = pipelineId,
+            filePath = filePath,
+            gitProjectId = gitProjectId,
+            version = version,
+            branch = branch
+        )
+
+        // eventId只用保存一次，先查询一次，如果没有在去修改
+        if (saveUserMessage(
+                userId = userId,
+                projectCode = projectCode,
+                event = event,
                 gitProjectId = gitProjectId,
-                version = version,
-                branch = branch
+                messageType = UserMessageType.REQUEST,
+                isSave = false // 只update
             )
-            // eventId只用保存一次
-            if (!userMessageDao.getMessageExist(context, projectCode, userId, event.id.toString())) {
-                userMessageDao.save(
-                    dslContext = context,
-                    projectId = projectCode,
-                    userId = userId,
-                    messageType = UserMessageType.REQUEST,
-                    messageId = event.id.toString(),
-                    messageTitle = messageTitle
-                )
-                websocketService.pushNotifyWebsocket(userId, gitProjectId.toString())
-            }
+        ) {
+            return messageId
+        }
+
+        if (saveUserMessage(
+                userId = userId,
+                projectCode = projectCode,
+                event = event,
+                gitProjectId = gitProjectId,
+                messageType = UserMessageType.REQUEST,
+                isSave = true
+            )
+        ) {
+            websocketService.pushNotifyWebsocket(
+                userId,
+                GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
+            )
         }
         return messageId
+    }
+
+    fun saveUserMessage(
+        userId: String,
+        projectCode: String,
+        event: GitRequestEvent,
+        gitProjectId: Long,
+        messageType: UserMessageType,
+        isSave: Boolean = true
+    ): Boolean {
+        val messageTitle = if (isSave) lazy {
+            val checkRepoHookTrigger = gitProjectId != event.gitProjectId
+            val realEvent = if (checkRepoHookTrigger) {
+                // 当gitProjectId与event的不同时，说明是远程仓库触发的
+                val pathWithNamespace = streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = event.gitProjectId,
+                    useAccessToken = true,
+                    userId = userId
+                )?.pathWithNamespace
+                GitCommonUtils.checkAndGetRepoBranch(event, pathWithNamespace)
+            } else event
+            StreamTriggerMessageUtils.getEventMessageTitle(realEvent, checkRepoHookTrigger)
+        } else null
+
+        val saveLock = StreamMessageSaveLock(redisOperation, userId, projectCode, event.id.toString())
+        saveLock.use {
+            saveLock.lock()
+            val exist = userMessageDao.getMessageExist(dslContext, projectCode, userId, event.id.toString())
+            if (isSave) {
+                if (exist != null) {
+                    return false
+                }
+                userMessageDao.save(
+                    dslContext = dslContext,
+                    projectId = projectCode,
+                    userId = userId,
+                    messageType = messageType,
+                    messageId = event.id.toString(),
+                    messageTitle = messageTitle?.value ?: ""
+                )
+            } else {
+                if (exist == null || exist.messageType == messageType.name) {
+                    return false
+                }
+                userMessageDao.updateMessageType(
+                    dslContext = dslContext,
+                    projectId = projectCode,
+                    userId = userId,
+                    messageId = event.id.toString(),
+                    messageType = messageType
+                )
+            }
+        }
+        return true
     }
 
     fun deletePipelineBuildHistory(

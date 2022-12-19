@@ -29,25 +29,34 @@ package api
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"runtime"
+	"strconv"
 )
 
 func buildUrl(url string) string {
-	if strings.HasPrefix(config.GAgentConfig.Gateway, "http") {
-		return config.GAgentConfig.Gateway + url
-	} else {
-		return "http://" + config.GAgentConfig.Gateway + url
-	}
+	return config.GetGateWay() + url
 }
 
-func Heartbeat(buildInfos []ThirdPartyBuildInfo) (*httputil.DevopsResult, error) {
+func Heartbeat(
+	buildInfos []ThirdPartyBuildInfo,
+	jdkVersion []string,
+	dockerTaskList []ThirdPartyDockerTaskInfo,
+	dockerInitFileMd5 DockerInitFileInfo,
+) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/newHeartbeat")
 
+	var taskList []ThirdPartyTaskInfo
+	for _, info := range buildInfos {
+		taskList = append(taskList, ThirdPartyTaskInfo{
+			ProjectId: info.ProjectId,
+			BuildId:   info.BuildId,
+			VmSeqId:   info.VmSeqId,
+			Workspace: info.Workspace,
+		})
+	}
 	agentHeartbeatInfo := &AgentHeartbeatInfo{
 		MasterVersion:     config.AgentVersion,
 		SlaveVersion:      config.GAgentEnv.SlaveVersion,
@@ -56,15 +65,30 @@ func Heartbeat(buildInfos []ThirdPartyBuildInfo) (*httputil.DevopsResult, error)
 		ParallelTaskCount: config.GAgentConfig.ParallelTaskCount,
 		AgentInstallPath:  systemutil.GetExecutableDir(),
 		StartedUser:       systemutil.GetCurrentUser().Username,
-		TaskList:          buildInfos,
+		TaskList:          taskList,
+		Props: AgentPropsInfo{
+			Arch:              runtime.GOARCH,
+			JdkVersion:        jdkVersion,
+			DockerInitFileMd5: dockerInitFileMd5,
+		},
+		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
+		DockerTaskList:          dockerTaskList,
 	}
 
 	return httputil.NewHttpClient().Post(url).Body(agentHeartbeatInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
-func CheckUpgrade() (*httputil.AgentResult, error) {
-	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/upgrade?version=" + config.GAgentEnv.SlaveVersion + "&masterVersion=" + config.AgentVersion)
-	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
+func CheckUpgrade(jdkVersion []string, dockerInitFileMd5 DockerInitFileInfo) (*httputil.AgentResult, error) {
+	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/upgradeNew")
+
+	info := &UpgradeInfo{
+		WorkerVersion:      config.GAgentEnv.SlaveVersion,
+		GoAgentVersion:     config.AgentVersion,
+		JdkVersion:         jdkVersion,
+		DockerInitFileInfo: dockerInitFileMd5,
+	}
+
+	return httputil.NewHttpClient().Post(url).Body(info).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
 }
 
 func FinishUpgrade(success bool) (*httputil.AgentResult, error) {
@@ -125,4 +149,30 @@ func DownloadAgentInstallBatchZip(saveFile string) error {
 	url := buildUrl(fmt.Sprintf("/ms/environment/api/external/thirdPartyAgent/%s/batch_zip",
 		config.GAgentConfig.BatchInstallKey))
 	return httputil.DownloadAgentInstallScript(url, config.GAgentConfig.GetAuthHeaderMap(), saveFile)
+}
+
+// AuthHeaderDevopsBuildId log需要的buildId的header
+const (
+	AuthHeaderDevopsBuildId = "X-DEVOPS-BUILD-ID"
+	AuthHeaderDevopsVmSeqId = "X-DEVOPS-VM-SID"
+)
+
+func AddLogLine(buildId string, message *LogMessage, vmSeqId string) (*httputil.DevopsResult, error) {
+	url := buildUrl("/ms/log/api/build/logs")
+	headers := config.GAgentConfig.GetAuthHeaderMap()
+	headers[AuthHeaderDevopsBuildId] = buildId
+	headers[AuthHeaderDevopsVmSeqId] = vmSeqId
+	return httputil.NewHttpClient().
+		Post(url).Body(message).SetHeaders(headers).Execute().
+		IntoDevopsResult()
+}
+
+func AddLogRedLine(buildId string, message *LogMessage, vmSeqId string) (*httputil.DevopsResult, error) {
+	url := buildUrl("/ms/log/api/build/logs/red")
+	headers := config.GAgentConfig.GetAuthHeaderMap()
+	headers[AuthHeaderDevopsBuildId] = buildId
+	headers[AuthHeaderDevopsVmSeqId] = vmSeqId
+	return httputil.NewHttpClient().
+		Post(url).Body(message).SetHeaders(headers).Execute().
+		IntoDevopsResult()
 }

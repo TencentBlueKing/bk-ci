@@ -28,30 +28,33 @@
 package com.tencent.devops.stream.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventNotBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.dao.StreamUserMessageDao
+import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.message.ContentAttr
 import com.tencent.devops.stream.pojo.message.RequestMessageContent
 import com.tencent.devops.stream.pojo.message.UserMessage
 import com.tencent.devops.stream.pojo.message.UserMessageRecord
 import com.tencent.devops.stream.pojo.message.UserMessageType
+import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -69,7 +72,9 @@ class StreamUserMessageService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val streamGitConfig: StreamGitConfig,
+    private val actionFactory: EventActionFactory
 ) {
     companion object {
         private val timeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -83,6 +88,8 @@ class StreamUserMessageService @Autowired constructor(
         userId: String,
         messageType: UserMessageType?,
         haveRead: Boolean?,
+        messageId: String?,
+        triggerUserId: String?,
         page: Int,
         pageSize: Int
     ): Page<UserMessageRecord> {
@@ -98,8 +105,9 @@ class StreamUserMessageService @Autowired constructor(
             streamUserMessageDao.getMessageCount(
                 dslContext = dslContext,
                 projectId = projectId,
-                userId = null,
+                userId = triggerUserId,
                 messageType = messageType,
+                messageId = messageId,
                 haveRead = haveRead
             )
         } else {
@@ -108,6 +116,7 @@ class StreamUserMessageService @Autowired constructor(
                 projectId = "",
                 userId = userId,
                 messageType = messageType,
+                messageId = messageId,
                 haveRead = haveRead
             )
         }
@@ -119,18 +128,16 @@ class StreamUserMessageService @Autowired constructor(
                 records = listOf()
             )
         }
-
-        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageCount")
-
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
         // 后台单独做项目级别的信息获取兼容
         val messageRecords = if (projectId != null) {
             streamUserMessageDao.getMessages(
                 dslContext = dslContext,
                 projectId = projectId,
-                userId = null,
+                userId = triggerUserId,
                 messageType = messageType,
                 haveRead = haveRead,
+                messageId = messageId,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset
             )!!
@@ -141,18 +148,14 @@ class StreamUserMessageService @Autowired constructor(
                 userId = userId,
                 messageType = messageType,
                 haveRead = haveRead,
+                messageId = messageId,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset
             )!!
         }
 
-        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageRecords")
-
         val requestIds = messageRecords.map { it.messageId.toInt() }.toSet()
         val eventMap = getRequestMap(userId, gitProjectId, requestIds)
-
-        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get eventMap")
-
         val resultMap = mutableMapOf<String, MutableList<UserMessage>>()
         messageRecords.forEach { message ->
             val eventId = message.messageId.toLong()
@@ -183,9 +186,6 @@ class StreamUserMessageService @Autowired constructor(
                 resultMap[time]!!.add(userMassage)
             }
         }
-
-        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get result")
-
         return Page(
             page = page,
             pageSize = pageSize,
@@ -197,21 +197,21 @@ class StreamUserMessageService @Autowired constructor(
     fun readMessage(
         userId: String,
         id: Int,
-        projectId: String?
+        projectCode: String?
     ): Boolean {
-        websocketService.pushNotifyWebsocket(userId, projectId)
+        websocketService.pushNotifyWebsocket(userId, projectCode)
         return streamUserMessageDao.readMessage(dslContext, id) >= 0
     }
 
     fun readAllMessage(
-        projectId: String?,
+        projectCode: String?,
         userId: String
     ): Boolean {
-        websocketService.pushNotifyWebsocket(userId, projectId)
-        return if (projectId != null) {
+        websocketService.pushNotifyWebsocket(userId, projectCode)
+        return if (projectCode != null) {
             streamUserMessageDao.readAllMessage(
                 dslContext = dslContext,
-                projectId = projectId,
+                projectCode = projectCode,
                 userId = null
             ) >= 0
         } else {
@@ -274,7 +274,7 @@ class StreamUserMessageService @Autowired constructor(
 
         val processBuildList = client.get(ServiceBuildResource::class)
             .getBatchBuildStatus(
-                projectId = "git_$gitProjectId",
+                projectId = GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType()),
                 buildId = buildList.map { it.buildId }.toSet(),
                 channelCode = channelCode
             ).data?.associateBy { it.id }
@@ -299,7 +299,7 @@ class StreamUserMessageService @Autowired constructor(
                         buildBum = null,
                         triggerReasonName = it.reason,
                         triggerReasonDetail = it.reasonDetail,
-                        filePathUrl = getYamlUrl(event.event, pipeline?.filePath)
+                        filePathUrl = getYamlUrl(event, pipeline?.filePath)
                     )
                 )
             }
@@ -317,7 +317,7 @@ class StreamUserMessageService @Autowired constructor(
                         buildBum = buildNum,
                         triggerReasonName = TriggerReason.TRIGGER_SUCCESS.name,
                         triggerReasonDetail = null,
-                        filePathUrl = getYamlUrl(event.event, pipeline?.filePath)
+                        filePathUrl = getYamlUrl(event, pipeline?.filePath)
                     )
                 )
             }
@@ -354,17 +354,22 @@ class StreamUserMessageService @Autowired constructor(
         return resultMap
     }
 
-    private fun getYamlUrl(event: String, filePath: String?): String? {
+    private fun getYamlUrl(event: GitRequestEvent, filePath: String?): String? {
+
+        val gitEvent = try {
+            actionFactory.loadEvent(
+                event.event,
+                streamGitConfig.getScmType(),
+                event.objectKind
+            )
+        } catch (e: Exception) {
+            logger.warn("StreamUserMessageService|getYamlUrl|error", e)
+            return null
+        }
         if (filePath == null) {
             return null
         }
-        val gitEvent =
-            try {
-                objectMapper.readValue<GitEvent>(event)
-            } catch (e: Exception) {
-                logger.error("get message getYamlUrl error : ${e.message}")
-                return null
-            }
+
         val homepageAndBranch = when (gitEvent) {
             is GitPushEvent -> {
                 Pair(gitEvent.repository.homepage, getTriggerBranch(gitEvent.ref))
@@ -377,6 +382,12 @@ class StreamUserMessageService @Autowired constructor(
                     gitEvent.object_attributes.source.web_url,
                     getTriggerBranch(gitEvent.object_attributes.source_branch)
                 )
+            }
+            is GithubPushEvent -> {
+                Pair(gitEvent.repository.url, getTriggerBranch(gitEvent.ref))
+            }
+            is GithubPullRequestEvent -> {
+                Pair(gitEvent.pullRequest.head.repo.url, getTriggerBranch(gitEvent.pullRequest.head.ref))
             }
             else -> {
                 null

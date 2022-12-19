@@ -88,6 +88,13 @@ class JobAuthTaskServiceImpl @Autowired constructor(
             ?: setOf()
     }
 
+    override fun queryPipelineListByProjectId(projectId: String): Set<String> {
+        val request = QueryTaskListReqVO()
+        request.projectId = projectId
+        return client.get(ServiceTaskRestResource::class.java)
+            .batchGetTaskList(request).data?.map { it.pipelineId }?.toSet() ?: setOf()
+    }
+
     override fun queryTaskListForUser(user: String, projectId: String, actions: Set<String>): Set<String> {
         val request = QueryTaskListReqVO()
         request.projectId = projectId
@@ -105,6 +112,11 @@ class JobAuthTaskServiceImpl @Autowired constructor(
 
     override fun queryTaskListByPipelineIds(pipelineIds: Set<String>): Set<String> {
         return client.get(ServiceTaskRestResource::class.java).queryTaskListByPipelineIds(pipelineIds).data ?: setOf()
+    }
+
+    override fun queryPipelineIdsByTaskIds(taskIds: Set<Long>): Set<String> {
+        return client.get(ServiceTaskRestResource::class.java).getTaskInfosByIds(taskIds.toList()).data
+            ?.filter { it != null && !it.pipelineId.isNullOrEmpty() }?.map { it.pipelineId }?.toSet() ?: emptySet()
     }
 
     companion object {

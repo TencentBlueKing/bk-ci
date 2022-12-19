@@ -97,9 +97,8 @@ data class StoreWebsocketPush(
         try {
             val modelDetail = atomReleaseService.getProcessInfo(userId, atomId).data
             notifyPost.message = modelDetail?.let { self -> JsonUtil.toJson(self, formatted = false) } ?: "{}"
-            logger.info("StoreWebsocketPush message: $notifyPost")
-        } catch (ignored: Exception) {
-            logger.error("StoreWebsocketPush:getProcessInfo error. message:${ignored.message}")
+        } catch (ignored: Throwable) {
+            logger.warn("buildNotifyMessage|$notifyPost|error=${ignored.message}", ignored)
         }
     }
 }

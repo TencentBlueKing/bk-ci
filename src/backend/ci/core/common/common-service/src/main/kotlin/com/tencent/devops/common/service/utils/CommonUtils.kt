@@ -50,12 +50,6 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Enumeration
-import kotlin.collections.HashMap
-import kotlin.collections.Map
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.listOf
-import kotlin.collections.set
 
 object CommonUtils {
 
@@ -193,6 +187,21 @@ object CommonUtils {
         return if (string != null && string.length > length) {
             string.substring(0, length - 1)
         } else string
+    }
+
+    /**
+     * 把字符串转换成数组对象
+     * @param str 字符串
+     * @return 数组对象
+     */
+    fun strToList(str: String): List<String> {
+        val dataList = mutableListOf<String>()
+        if (str.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*]\\s*$"))) {
+            dataList.addAll(JsonUtil.to(str))
+        } else if (str.isNotBlank()) {
+            dataList.add(str)
+        }
+        return dataList
     }
 
     /**

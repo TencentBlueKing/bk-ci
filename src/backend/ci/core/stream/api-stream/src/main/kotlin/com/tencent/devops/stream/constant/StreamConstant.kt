@@ -28,8 +28,6 @@
 package com.tencent.devops.stream.constant
 
 object StreamConstant {
-    // 蓝盾的stream项目前缀
-    const val DEVOPS_PROJECT_PREFIX = "git_"
     // Stream的文件目录
     const val STREAM_CI_FILE_DIR = ".ci"
     // StreamYaml文件后缀

@@ -31,12 +31,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.TGitMrActionGit
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitMrStatus
@@ -69,15 +70,14 @@ class MergeConflictCheck @Autowired constructor(
      * - 没有冲突，进行后续操作
      */
     fun checkMrConflict(
-        action: TGitMrActionGit,
+        action: StreamMrAction,
         path2PipelineExists: Map<String, StreamTriggerPipeline>
     ): Boolean {
-        val projectId = action.data.getGitProjectId()
-        val mrRequestId = action.event().object_attributes.id.toString()
+        val projectId = action.data.eventCommon.gitProjectId
 
-        val mrInfo = action.api.getMrInfo(
-            gitProjectId = projectId,
-            mrId = mrRequestId,
+        val mrInfo = action.tryGetMrInfoFromCache() ?: action.api.getMrInfo(
+            gitProjectId = action.getGitProjectIdOrName(projectId),
+            mrId = action.getMrId().toString(),
             cred = action.getGitCred(),
             retry = ApiRequestRetryInfo(retry = true)
         )!!
@@ -104,13 +104,26 @@ class MergeConflictCheck @Autowired constructor(
                             notBuildRecordId = recordId
                         )
                     )
+                    ScmType.GITHUB -> dispatchMrConflictCheck(
+                        event = StreamMrConflictCheckEvent(
+                            eventStr = objectMapper.writeValueAsString(action.data.event as GithubEvent),
+                            actionCommonData = action.data.eventCommon,
+                            actionContext = action.data.context,
+                            actionSetting = action.data.setting,
+                            path2PipelineExists = path2PipelineExists,
+                            notBuildRecordId = recordId
+                        )
+                    )
                     else -> TODO("对接其他Git平台时需要补充")
                 }
 
                 return false
             }
             TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
-                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
+                logger.warn(
+                    "MergeConflictCheck|checkMrConflict|git ci mr request has conflict" +
+                        "|git project id|$projectId|mr request id|${action.getMrId()}"
+                )
                 throw StreamTriggerException(action, TriggerReason.CI_MERGE_CONFLICT)
             }
             // 没有冲突则触发流水线
@@ -121,20 +134,18 @@ class MergeConflictCheck @Autowired constructor(
     // 检查是否存在冲突，供Rabbit Listener使用
     // 需要抓住里面的异常防止mq不停消费
     fun checkMrConflictByListener(
-        action: TGitMrActionGit,
-        path2PipelineExists: Map<String, StreamTriggerPipeline>,
+        action: StreamMrAction,
         // 是否是最后一次的检查
         isEndCheck: Boolean = false,
         notBuildRecordId: Long
     ): Pair<Boolean, Boolean> {
         var isFinish: Boolean
         var isTrigger: Boolean
-        val projectId = action.data.getGitProjectId()
-        val mrRequestId = action.event().object_attributes.id.toString()
+        val projectId = action.data.eventCommon.gitProjectId
         val mrInfo = try {
-            action.api.getMrInfo(
-                gitProjectId = projectId,
-                mrId = mrRequestId,
+            action.tryGetMrInfoFromCache() ?: action.api.getMrInfo(
+                gitProjectId = action.getGitProjectIdOrName(projectId),
+                mrId = action.getMrId().toString(),
                 cred = action.getGitCred(),
                 retry = ApiRequestRetryInfo(retry = true)
             )!!
@@ -159,19 +170,20 @@ class MergeConflictCheck @Autowired constructor(
                 isTrigger = false
                 // 如果最后一次检查还未检查完就是检查超时
                 if (isEndCheck) {
-                    // 第一次之后已经在not build中有数据了，修改构建原因
-                    gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
+                    // 超时走正常触发流程，以兼容工蜂unchecked 状态异常
+                    gitRequestEventNotBuildDao.deleteNoBuildsById(
                         dslContext = dslContext,
-                        recordId = notBuildRecordId,
-                        reason = TriggerReason.CI_MERGE_CHECK_TIMEOUT.name,
-                        reasonDetail = TriggerReason.CI_MERGE_CHECK_TIMEOUT.detail
+                        recordId = notBuildRecordId
                     )
                     isFinish = true
-                    isTrigger = false
+                    isTrigger = true
                 }
             }
             TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
-                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
+                logger.warn(
+                    "MergeConflictCheck|checkMrConflictByListener|git ci mr request has conflict" +
+                        "|git project id|$projectId|mr request id|${action.getMrId()}"
+                )
                 gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
                     dslContext = dslContext,
                     recordId = notBuildRecordId,

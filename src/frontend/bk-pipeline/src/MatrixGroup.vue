@@ -4,7 +4,7 @@
             <div class="matrix-name" @click.stop="toggleMatrixOpen">
                 <Logo name="angle-down" size="12" :class="matrixToggleCls"></Logo>
                 <span :class="matrixTitleCls">
-                    {{t('jobMatrix')}}
+                    {{matrix.name || t('jobMatrix')}}
                 </span>
             </div>
             <div class="matrix-status">
@@ -107,7 +107,6 @@
         computed: {
             restProps () {
                 const { matrix, ...restProps } = this.$props
-                console.log(restProps)
                 return restProps
             },
             matrixToggleCls () {
@@ -199,6 +198,7 @@
           display: block;
           margin-right: 10px;
           transition: all 0.3s ease;
+          flex-shrink: 0;
           &.open {
             transform: rotate(-180deg);
           }

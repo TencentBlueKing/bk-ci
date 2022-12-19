@@ -378,41 +378,4 @@ interface UserThirdPartyAgentResource {
         @QueryParam("timeRange")
         timeRange: String
     ): Result<Map<String, List<Map<String, Any>>>>
-
-    @ApiOperation("保存agent配置")
-    @POST
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/props")
-    fun saveAgentProps(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        @BkField(minLength = 1)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        @BkField(minLength = 1)
-        projectId: String,
-        @ApiParam("Node Hash ID", required = true)
-        @PathParam("nodeHashId")
-        @BkField(minLength = 3)
-        nodeHashId: String,
-        @ApiParam("Envs", required = true)
-        props: Map<String, Any>
-    ): Result<Boolean>
-    @ApiOperation("获取agent配置")
-    @GET
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/props")
-    fun getAgentProps(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        @BkField(minLength = 1)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        @BkField(minLength = 1)
-        projectId: String,
-        @ApiParam("Node Hash ID", required = true)
-        @PathParam("nodeHashId")
-        @BkField(minLength = 3)
-        nodeHashId: String
-    ): Result<Map<String, Any>>
 }

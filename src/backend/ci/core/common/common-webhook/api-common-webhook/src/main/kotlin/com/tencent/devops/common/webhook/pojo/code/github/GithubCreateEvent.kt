@@ -35,7 +35,7 @@ data class GithubCreateEvent(
     val ref: String,
     val ref_type: String,
     val repository: GithubRepository,
-    override val sender: GithubSender
+    override val sender: GithubUser
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "create"

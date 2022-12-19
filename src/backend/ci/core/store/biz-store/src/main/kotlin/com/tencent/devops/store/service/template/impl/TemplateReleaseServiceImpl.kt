@@ -65,7 +65,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
 @Suppress("ALL")
@@ -104,6 +103,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         templateCode: String,
         marketTemplateRelRequest: MarketTemplateRelRequest
     ): Result<Boolean> {
+        logger.info("addMarketTemplate params:[$userId|$templateCode|$marketTemplateRelRequest]")
         // 判断模板代码是否存在
         val codeCount = marketTemplateDao.countByCode(dslContext, templateCode)
         if (codeCount > 0) {
@@ -178,7 +178,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         userId: String,
         marketTemplateUpdateRequest: MarketTemplateUpdateRequest
     ): Result<String?> {
-        logger.info("the userId is :$userId,marketTemplateUpdateRequest is :$marketTemplateUpdateRequest")
+        logger.info("updateMarketTemplate params:[$userId|$marketTemplateUpdateRequest]")
         val templateCode = marketTemplateUpdateRequest.templateCode
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
         if (templateCount > 0) {
@@ -220,7 +220,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 if (1 == templateCount) {
-                    if (StringUtils.isEmpty(templateRecord.version)) {
+                    if (templateRecord.version.isNullOrBlank()) {
                         // 首次创建版本
                         templateId = templateRecord.id
                         marketTemplateDao.updateMarketTemplate(
@@ -444,7 +444,6 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
     override fun getProcessInfo(userId: String, templateId: String): Result<StoreProcessInfo> {
         logger.info("getProcessInfo templateId: $templateId")
         val record = marketTemplateDao.getTemplate(dslContext, templateId)
-        logger.info("getProcessInfo record: $record")
         return if (null == record) {
             MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateId))
         } else {
@@ -495,17 +494,14 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
      * 取消发布
      */
     override fun cancelRelease(userId: String, templateId: String): Result<Boolean> {
-        logger.info("the userId is:$userId, templateId is:$templateId")
+        logger.info("cancelRelease userId is:$userId, templateId is:$templateId")
         val status = TemplateStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val templateRecord = marketTemplateDao.getTemplate(dslContext, templateId)
-        logger.info("templateRecord is $templateRecord")
-        if (null == templateRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateId),
                 data = false
             )
-        }
         val templateCode = templateRecord.templateCode
         val creator = templateRecord.creator
         val templateStatus = templateRecord.templateStatus
@@ -537,15 +533,12 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         if (!version.isNullOrEmpty()) {
-            val templateRecord = marketTemplateDao.getTemplate(dslContext, templateCode, version!!.trim())
-            logger.info("templateRecord is $templateRecord")
-            if (null == templateRecord) {
-                return MessageCodeUtil.generateResponseDataObject(
+            val templateRecord = marketTemplateDao.getTemplate(dslContext, templateCode, version.trim())
+                ?: return MessageCodeUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("$templateCode:$version"),
                     data = false
                 )
-            }
             if (TemplateStatusEnum.RELEASED.status.toByte() != templateRecord.templateStatus) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
             }

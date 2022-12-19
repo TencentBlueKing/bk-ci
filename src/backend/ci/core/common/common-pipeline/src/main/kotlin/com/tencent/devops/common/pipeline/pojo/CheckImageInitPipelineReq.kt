@@ -32,6 +32,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("检查镜像合法性初始化流水线请求报文体")
 data class CheckImageInitPipelineReq(
+    @ApiModelProperty("流水线模型", required = true)
+    val pipelineModel: String,
     @ApiModelProperty("镜像代码", required = true)
     val imageCode: String,
     @ApiModelProperty("镜像名称", required = true)
@@ -43,7 +45,5 @@ data class CheckImageInitPipelineReq(
     @ApiModelProperty("仓库用户名", required = false)
     val registryUser: String? = null,
     @ApiModelProperty("仓库密码", required = false)
-    val registryPwd: String? = null,
-    @ApiModelProperty("是否发送通知", required = false)
-    val sendNotify: Boolean? = false
+    val registryPwd: String? = null
 )

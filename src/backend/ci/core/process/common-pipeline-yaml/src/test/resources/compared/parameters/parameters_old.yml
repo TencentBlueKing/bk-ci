@@ -1,0 +1,132 @@
+---
+version: "v2.0"
+name: ""
+label: []
+triggerOn:
+  push:
+    branches:
+    - "*"
+  tag:
+    tags:
+    - "*"
+  mr:
+    target-branches:
+    - "*"
+    action:
+    - "open"
+    - "reopen"
+    - "push-update"
+variables:
+  VAR1:
+    value: "123"
+    readonly: false
+    allow-modify-at-startup: false
+  VAR2:
+    value: "local-VAR2"
+    readonly: false
+    allow-modify-at-startup: false
+  VAR3:
+    value: "intput-VAR3"
+    readonly: false
+    allow-modify-at-startup: false
+stages:
+- name: "stage-1"
+  label: []
+  if: null
+  fast-kill: false
+  jobs:
+  - id: "job-1"
+    name: null
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo 123"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "input-STEP1"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "LOCAL-STEP2"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "${{ parameters.STEP3 }}"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "input-STEP4"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  if-modify: null
+  check-in: null
+  check-out: null
+finally: []

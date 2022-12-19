@@ -65,5 +65,7 @@ data class ProjectCreateInfo(
     // @get:JsonProperty("is_secrecy")
     var secrecy: Boolean = false,
     @ApiModelProperty("kind")
-    val kind: Int = 0
+    val kind: Int = 0,
+    @ApiModelProperty("项目相关配置")
+    val properties: ProjectProperties? = null
 )

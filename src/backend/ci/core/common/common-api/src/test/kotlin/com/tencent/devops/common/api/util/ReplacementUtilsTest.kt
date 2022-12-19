@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test
 class ReplacementUtilsTest {
     class Replacement(
         private val data: Map<String, String>
-    ) : ReplacementUtils.KeyReplacement {
+    ) : KeyReplacement {
         override fun getReplacement(key: String): String? = data[key]
     }
 
@@ -121,8 +121,13 @@ class ReplacementUtilsTest {
         Assertions.assertEquals(command5, ReplacementUtils.replace(command5, Replacement(varData)))
         Assertions.assertEquals("hellovariables.value}", ReplacementUtils.replace(command6, Replacement(varData)))
         Assertions.assertEquals(command7, ReplacementUtils.replace(command7, Replacement(varData)))
-        Assertions.assertEquals("echo context.value", ReplacementUtils.replace(command8,
-            Replacement(varData), mapOf("context.hello" to "context.value")))
+        Assertions.assertEquals(
+            "echo context.value",
+            ReplacementUtils.replace(
+                command8,
+                Replacement(varData), mapOf("context.hello" to "context.value")
+            )
+        )
         Assertions.assertEquals("echo variables.value", ReplacementUtils.replace(command9, Replacement(varData)))
     }
 
@@ -143,23 +148,41 @@ class ReplacementUtilsTest {
             "context.hello" to "context.value"
         )
 
-        Assertions.assertEquals("hello variables.value world",
-            ReplacementUtils.replace(command1, Replacement(emptyMap()), contextData))
-        Assertions.assertEquals("variables.valueworld",
-            ReplacementUtils.replace(command2, Replacement(emptyMap()), contextData))
-        Assertions.assertEquals("hellovariables.value",
-            ReplacementUtils.replace(command3, Replacement(emptyMap()), contextData))
-        Assertions.assertEquals("hello\${{variables.abc",
-            ReplacementUtils.replace(command4, Replacement(emptyMap()), contextData))
-        Assertions.assertEquals("hello\${{variables.abc}",
-            ReplacementUtils.replace(command5, Replacement(emptyMap()), contextData))
-        Assertions.assertEquals("hellovariables.value}",
-            ReplacementUtils.replace(command6, Replacement(emptyMap()), contextData))
-        Assertions.assertEquals("hello\$variables.abc}}",
-            ReplacementUtils.replace(command7, Replacement(emptyMap()), contextData))
-        Assertions.assertEquals("echo context.value",
-            ReplacementUtils.replace(command8, Replacement(emptyMap()), contextData))
-        Assertions.assertEquals("echo variables.value",
-            ReplacementUtils.replace(command9, Replacement(emptyMap()), contextData))
+        Assertions.assertEquals(
+            "hello variables.value world",
+            ReplacementUtils.replace(command1, Replacement(emptyMap()), contextData)
+        )
+        Assertions.assertEquals(
+            "variables.valueworld",
+            ReplacementUtils.replace(command2, Replacement(emptyMap()), contextData)
+        )
+        Assertions.assertEquals(
+            "hellovariables.value",
+            ReplacementUtils.replace(command3, Replacement(emptyMap()), contextData)
+        )
+        Assertions.assertEquals(
+            "hello\${{variables.abc",
+            ReplacementUtils.replace(command4, Replacement(emptyMap()), contextData)
+        )
+        Assertions.assertEquals(
+            "hello\${{variables.abc}",
+            ReplacementUtils.replace(command5, Replacement(emptyMap()), contextData)
+        )
+        Assertions.assertEquals(
+            "hellovariables.value}",
+            ReplacementUtils.replace(command6, Replacement(emptyMap()), contextData)
+        )
+        Assertions.assertEquals(
+            "hello\$variables.abc}}",
+            ReplacementUtils.replace(command7, Replacement(emptyMap()), contextData)
+        )
+        Assertions.assertEquals(
+            "echo context.value",
+            ReplacementUtils.replace(command8, Replacement(emptyMap()), contextData)
+        )
+        Assertions.assertEquals(
+            "echo variables.value",
+            ReplacementUtils.replace(command9, Replacement(emptyMap()), contextData)
+        )
     }
 }

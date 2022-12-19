@@ -37,10 +37,10 @@
                         <span
                             class="text-ellipsis item-text"
                             v-bk-overflow-tips="{
-                                content: dir.filePath,
+                                content: dir.name,
                                 placement: 'right'
                             }"
-                        >{{ dir.filePath }}</span>
+                        >{{ dir.name }}</span>
                     </section>
                     <section
                         v-for="(pipeline) in dir.children"
@@ -70,7 +70,7 @@
 
         <bk-sideslider @hidden="hidden" :is-show.sync="isShowAddYml" :quick-close="true" :width="622" :title="$t('pipeline.newPipeline')">
             <bk-form :model="yamlData" ref="yamlForm" slot="content" class="yaml-form" form-type="vertical">
-                <bk-form-item :label="$t('pipeline.yamlName')" :rules="[requireRule('Name'), nameRule]" :required="true" property="file_name" error-display-type="normal">
+                <bk-form-item :label="$t('pipeline.yamlName')" :rules="[requireRule($t('pipeline.yamlName')), nameRule]" :required="true" property="file_name" error-display-type="normal">
                     <bk-compose-form-item class="yaml-name-container">
                         <bk-input value=".ci / " disabled class="yaml-path"></bk-input>
                         <bk-input v-model="yamlData.file_name" class="yaml-name" :placeholder="$t('pipeline.ymlNamePlaceholder')"></bk-input>
@@ -122,8 +122,9 @@
     import validateRule from '@/utils/validate-rule'
     import LINK_CONFIG from '@/conf/link-config.js'
 
-    const getDefaultDir = (filePath, isShow = true) => ({
-        filePath,
+    const getDefaultDir = ({ path, name }, isShow = true) => ({
+        path,
+        name,
         children: [],
         isShow,
         isLoadEnd: false,
@@ -155,7 +156,7 @@
                 isSaving: false,
                 nameRule: {
                     validator (val) {
-                        return /^[a-zA-Z0-9_\-\.]+$/.test(val)
+                        return /^[a-zA-Z0-9_\-\.]+(\/)?[a-zA-Z0-9_\-\.]+$/.test(val)
                     },
                     message: this.$t('pipeline.nameRule'),
                     trigger: 'blur'
@@ -179,6 +180,12 @@
             '$route.name' (val) {
                 if (val === 'buildList' && this.$route.params.pipelineId !== this.menuPipelineId) {
                     this.setMenuPipelineId(this.$route.params.pipelineId)
+                }
+                if (val === 'pipeline') {
+                    this.isLoading = true
+                    this.getPipelineDirList().finally(() => {
+                        this.isLoading = false
+                    })
                 }
             }
         },
@@ -209,12 +216,12 @@
                 return pipelines.getPipelineDirList(this.projectId, {
                     pipelineId: this.$route.params.pipelineId
                 }).then((data) => {
-                    const allDirs = (data.allPath || []).map((path) => getDefaultDir(path))
-                    const ciDir = getDefaultDir('.ci/', false)
+                    const allDirs = (data.allPath || []).map((dir) => getDefaultDir(dir))
+                    const ciDir = getDefaultDir({ name: '.ci/', path: '.ci/' }, false)
                     this.dirList = [...allDirs, ciDir]
 
                     // 展开最外层和当前流水线目录
-                    const currentDir = allDirs.find((dir) => (dir.filePath === data.currentPath))
+                    const currentDir = allDirs.find((dir) => (dir.path === data.currentPath))
                     Promise.all([
                         this.chooseDir(ciDir),
                         this.chooseDir(currentDir)
@@ -267,7 +274,7 @@
             getPipelineList (dir) {
                 dir.isLoadingMore = true
                 const params = {
-                    filePath: dir.filePath,
+                    filePath: dir.path,
                     projectId: this.projectId,
                     page: dir.page,
                     pageSize: dir.pageSize
@@ -360,7 +367,7 @@
                 const params = {
                     projectId: this.projectId,
                     page: 1,
-                    perPage: 100,
+                    pageSize: 100,
                     ...query
                 }
                 return new Promise((resolve) => {
@@ -434,7 +441,7 @@
     }
     .yaml-form {
         padding: 20px 30px;
-        height: calc(100vh - 60px);
+        height: calc(100vh - 61px);
         .yaml-path {
             width: 50px;
         }

@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Path("/build/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Suppress("ALL")
+@Suppress("LongParameterList")
 interface BuildLogPrintResource {
 
     @ApiOperation("写入一条日志")

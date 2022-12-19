@@ -34,6 +34,8 @@ data class WebhookInfo(
     val webhookRepoUrl: String?,
     @ApiModelProperty("分支名", required = false)
     val webhookBranch: String?,
+    @ApiModelProperty("别名", required = false)
+    val webhookAliasName: String?,
     @ApiModelProperty("webhook类型", required = false)
     val webhookType: String?,
     @ApiModelProperty("事件类型", required = false)
@@ -53,5 +55,15 @@ data class WebhookInfo(
     // mr iid
     val mrIid: String?,
     // mr url
-    val mrUrl: String?
+    val mrUrl: String?,
+    // webhook仓库授权用户
+    val repoAuthUser: String?,
+    // tag 名称
+    val tagName: String?,
+    // issue iid,
+    val issueIid: String?,
+    // note id
+    val noteId: String?,
+    // review id
+    val reviewId: String?
 )

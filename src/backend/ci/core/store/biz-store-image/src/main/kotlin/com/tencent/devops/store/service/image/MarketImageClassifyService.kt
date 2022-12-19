@@ -48,10 +48,10 @@ class MarketImageClassifyService : AbstractClassifyService() {
         // 允许删除分类是条件：1、该分类下的镜像都不处于上架状态 2、该分类下的镜像如果处于已下架状态但已经没人在用
         var flag = false
         val releaseImageNum = imageDao.countReleaseImageNumByClassifyId(dslContext, classifyId)
-        logger.info("the releaseImageNum is :$releaseImageNum")
+        logger.info("$classifyId releaseImageNum is :$releaseImageNum")
         if (releaseImageNum == 0) {
             val undercarriageImageNum = imageDao.countUndercarriageImageNumByClassifyId(dslContext, classifyId)
-            logger.info("the undercarriageImageNum is :$undercarriageImageNum")
+            logger.info("$classifyId undercarriageImageNum is :$undercarriageImageNum")
             if (undercarriageImageNum == 0) {
                 flag = true
             }

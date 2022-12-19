@@ -28,11 +28,11 @@
 package com.tencent.devops.dispatch.listener
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.dispatch.exception.VMTaskFailException
 import com.tencent.devops.dispatch.service.PipelineDispatchService
-import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import feign.RetryableException
@@ -68,24 +68,22 @@ class ThirdPartyAgentListener @Autowired constructor(
     }
 
     private fun checkRunning(event: PipelineAgentStartupEvent): Boolean {
-        // 判断流水线是否还在运行，如果已经停止则不在运行
-        // 只有detail的信息是在shutdown事件发出之前就写入的，所以这里去builddetail的信息。
-        // 为了兼容gitci的权限，这里把渠道号都改成GIT,以便去掉用户权限验证
-        val record = client.get(ServiceBuildResource::class).getBuildDetailStatusWithoutPermission(
-            event.userId,
-            event.projectId,
-            event.pipelineId,
-            event.buildId,
-            ChannelCode.BS
+        // 判断流水线当前container是否在运行中
+        val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
+            projectId = event.projectId,
+            buildId = event.buildId,
+            taskId = VMUtils.genStartVMTaskId(event.containerId)
         )
-        if (record.isNotOk() || record.data == null) {
-            logger.warn("The build event($event) fail to check if pipeline is running because of ${record.message}")
-            return false
+
+        if (statusResult.isNotOk() || statusResult.data == null) {
+            logger.warn("The build event($event) fail to check if pipeline task is running " +
+                            "because of ${statusResult.message}")
+            throw VMTaskFailException("无法获取流水线JOB状态，构建停止")
         }
-        val status = BuildStatus.parse(record.data)
-        if (!status.isRunning()) {
-            logger.error("The build event($event) is not running")
-            return false
+
+        if (!statusResult.data!!.isRunning()) {
+            logger.warn("The build event($event) is not running")
+            throw VMTaskFailException("流水线JOB已经不再运行，构建停止")
         }
 
         return true

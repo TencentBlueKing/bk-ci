@@ -9,17 +9,12 @@ class BkTag constructor(
     private val gatewayTag = ThreadLocal<String>()
 
     fun getFinalTag(): String {
-        val gatewayTag = getGatewayTag()
-        if (gatewayTag == null) {
-            logger.info("gateway tag is null , use local tag")
-            return getLocalTag()
-        }
-        return gatewayTag
+        return getGatewayTag() ?: getLocalTag()
     }
 
     fun getLocalTag(): String {
         if (KubernetesUtils.inContainer()) {
-            return if (KubernetesUtils.isMultiCluster()) "kubernetes-" else "" + KubernetesUtils.getNamespace()
+            return (if (KubernetesUtils.isMultiCluster()) "kubernetes-" else "") + KubernetesUtils.getNamespace()
         }
         return consulTag
     }

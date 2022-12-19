@@ -46,7 +46,7 @@
   "githubRule": "请输入以https://github.com/开头的",
   "svnSshRule": "请输入以svn+ssh://开头的正确的",
   "gitlabSshRule": "请输入以 git@ 开头，以 .git 结尾的",
-  "httpRule": "请输入以http://开头的正确的",
+  "httpRule": "请输入以http://或svn://开头的正确的",
   "httpsRule": "请输入以https://开头，以.git结尾的",
   "httpOrHttpsRule": "请输入以 http://或 https://开头，以.git结尾的",
   "paramBeString": "参数必须为字符串",

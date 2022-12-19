@@ -30,13 +30,16 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -49,6 +52,7 @@ import io.swagger.annotations.ApiParam
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -108,6 +112,7 @@ interface ServicePipelineResource {
         channelCode: ChannelCode,
         @ApiParam("是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
+        @DefaultValue("true")
         updateLastModifyUser: Boolean? = true
     ): Result<Boolean>
 
@@ -263,7 +268,12 @@ interface ServicePipelineResource {
         pipelineId: String,
         @ApiParam("是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
+        @DefaultValue("true")
         updateLastModifyUser: Boolean? = true,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        @DefaultValue("BS")
+        channelCode: ChannelCode? = ChannelCode.BS,
         @ApiParam(value = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>
@@ -388,7 +398,7 @@ interface ServicePipelineResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -511,4 +521,37 @@ interface ServicePipelineResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
+
+    @ApiOperation("根据项目ID获取流水线标签关系列表")
+    @POST
+    @Path("/labelinfos/list")
+    fun getPipelineLabelInfos(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        projectIds: List<String>
+    ): Result<List<PipelineLabelRelateInfo>>
+
+    @ApiOperation("根据流水线名称搜索")
+    @GET
+    @Path("/projects/{projectId}/search_by_name")
+    fun searchByName(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("搜索名称")
+        @QueryParam("pipelineName")
+        pipelineName: String?
+    ): Result<List<PipelineIdAndName>>
+
+    @ApiOperation("批量更新modelName")
+    @POST
+    @Path("/batch/pipeline/modelName")
+    fun batchUpdateModelName(
+        modelUpdateList: List<ModelUpdate>
+    ): Result<List<ModelUpdate>>
 }

@@ -29,10 +29,14 @@ package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -50,11 +54,13 @@ import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptio
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,6 +69,7 @@ import org.springframework.stereotype.Service
 @Service
 class ScheduleTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val eventActionFactory: EventActionFactory,
     private val streamYamlTrigger: StreamYamlTrigger,
     private val streamYamlBuild: StreamYamlBuild,
@@ -72,7 +79,8 @@ class ScheduleTriggerService @Autowired constructor(
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ScheduleTriggerService::class.java)
@@ -83,9 +91,10 @@ class ScheduleTriggerService @Autowired constructor(
         buildBranch: String,
         buildCommitInfo: StreamRevisionInfo
     ): BuildId? {
-        val streamTriggerSetting = streamBasicSettingDao.getSettingByProjectCode(
+        val streamTriggerSetting = streamBasicSettingDao.getSetting(
             dslContext = dslContext,
-            projectCode = streamTimerEvent.projectId
+            gitProjectId = GitCommonUtils.getGitProjectId(streamTimerEvent.projectId),
+            hasLastInfo = false
         )?.let {
             StreamTriggerSetting(
                 enableCi = it.enableCi,
@@ -98,18 +107,22 @@ class ScheduleTriggerService @Autowired constructor(
                 enableMrBlock = it.enableMrBlock,
                 name = it.name,
                 enableMrComment = it.enableMrComment,
-                homepage = it.homePage
+                homepage = it.homepage,
+                triggerReviewSetting = it.triggerReviewSetting
             )
         }
-        if (streamTriggerSetting == null || streamTriggerSetting?.enableCi == false) {
-            logger.warn("project ${streamTimerEvent.projectId} not enable ci no trigger schedule")
+        if (streamTriggerSetting == null || !streamTriggerSetting.enableCi) {
+            logger.warn(
+                "ScheduleTriggerService|triggerBuild" +
+                    "|not enable ci no trigger schedule|project|${streamTimerEvent.projectId}"
+            )
             return null
         }
 
         val action = eventActionFactory.loadScheduleAction(
             setting = streamTriggerSetting,
             event = StreamScheduleEvent(
-                userId = streamTimerEvent.userId,
+                userId = streamTriggerSetting.enableUser,
                 gitProjectId = streamTimerEvent.gitProjectId.toString(),
                 projectCode = streamTimerEvent.projectId,
                 branch = buildBranch,
@@ -148,7 +161,13 @@ class ScheduleTriggerService @Autowired constructor(
             filePath = existsPipeline.filePath,
             displayName = existsPipeline.displayName,
             enabled = existsPipeline.enabled,
-            creator = existsPipeline.creator
+            creator = existsPipeline.creator,
+            // 兼容定时触发，触发人取流水线最近修改人
+            lastModifier = client.get(ServicePipelineResource::class).getPipelineInfo(
+                projectId = GitCommonUtils.getCiProjectId(existsPipeline.gitProjectId, streamGitConfig.getScmType()),
+                pipelineId = existsPipeline.pipelineId,
+                channelCode = ChannelCode.GIT
+            ).data?.lastModifyUser
         )
         action.data.context.pipeline = buildPipeline
 
@@ -164,7 +183,10 @@ class ScheduleTriggerService @Autowired constructor(
         action: StreamScheduleAction,
         originYaml: String
     ): BuildId? {
-        logger.info("|${action.data.context.requestEventId}|handleTrigger|action|${action.format()}")
+        logger.info(
+            "ScheduleTriggerService|handleTrigger" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
         return exHandler.handle(action) {
             trigger(action, originYaml)
         }
@@ -213,7 +235,7 @@ class ScheduleTriggerService @Autowired constructor(
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
-            action.data.getGitProjectId(),
+            action.getGitProjectIdOrName(),
             ApiRequestRetryInfo(true)
         )!!.toStreamGitProjectInfoWithProject()
         streamBasicSettingService.updateProjectInfo(action.data.getUserId(), gitProjectInfo)
@@ -221,15 +243,17 @@ class ScheduleTriggerService @Autowired constructor(
         return streamYamlBuild.gitStartBuild(
             action = action,
             triggerResult = TriggerResult(
-                trigger = true,
-                startParams = emptyMap(),
+                trigger = TriggerBody(true),
+                triggerOn = null,
                 timeTrigger = false,
                 deleteTrigger = false
             ),
+            startParams = emptyMap(),
             yaml = yamlReplaceResult.normalYaml,
             gitBuildId = gitBuildId,
             onlySavePipeline = false,
-            yamlTransferData = yamlReplaceResult.yamlTransferData
+            yamlTransferData = yamlReplaceResult.yamlTransferData,
+            manualInputs = null
         )
     }
 }

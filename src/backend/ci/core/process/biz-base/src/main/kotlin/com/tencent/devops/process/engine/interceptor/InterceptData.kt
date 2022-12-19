@@ -41,5 +41,6 @@ data class InterceptData(
     val pipelineInfo: PipelineInfo,
     val model: Model?,
     val startType: StartType,
-    val setting: PipelineSetting?
+    val setting: PipelineSetting?,
+    val buildId: String
 )

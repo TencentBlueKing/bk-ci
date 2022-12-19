@@ -134,6 +134,9 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR = "2101077" // matrix yaml 格式错误
     const val ERROR_TEMPLATE_VERSION_COUNT_EXCEEDS_LIMIT = "2101078" // 模板的版本数量不能超过{0}个
     const val FAIL_TEMPLATE_UPDATE_NUM_TOO_BIG = "2101079" // 模板实例更新数量[{0}]超过系统规定的最大值{1}，请调整参数或咨询助手
+    const val ERROR_START_BUILD_PROJECT_UNENABLE = "2101080" // 流水线: 已禁用的项目不能启动
+    const val ERROR_BUILD_EXPIRED_CANT_RETRY = "2101081" // 构建数据已过期，请使用rebuild进行重试/Please use rebuild
+    const val ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH = "2101082" // Stage审核参数{0}超出4000长度限制
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -146,12 +149,16 @@ object ProcessMessageCode {
     const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101905" // 暂停的流水线已开始运行
     const val ERROR_ELEMENT_TOO_LONG = "2101906" // {0} element大小越界
     const val ERROR_JOB_RUNNING = "2101907" // job非完成态，不能进行重试
+    const val ERROR_RETRY_STAGE_NOT_FAILED = "2101911" // stage非失败状态，不能进行重试
 
     const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
     const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在
     const val ERROR_SUBPIPELINE_CYCLE_CALL = "2101102" // 子流水线循环调用
     const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101106" // 构建中Stage[{0}]不存在
     const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待把关状态
+    const val ERROR_CONDITION_EXPRESSION_PARSE = "2101109" // 执行条件表达式解析失败
+    const val ERROR_TRIGGER_REVIEW_ABORT = "2101110" // 触发审核未通过
+    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101111" // 触发不在审核状态中
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
@@ -184,9 +191,11 @@ object ProcessMessageCode {
     const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_TARGETPROJECTID = "2101123"
 
     const val ERROR_BUILD_TASK_QUALITY_IN = "2101137" // 质量红线(准入)检测失败
+
     // 质量红线(准入)配置有误：Fail to find quality gate intercept element
     const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101908"
     const val ERROR_BUILD_TASK_QUALITY_OUT = "2101909" // 质量红线(准出)检测失败
+
     // 质量红线(准出)配置有误：Fail to find quality gate intercept element
     const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101910"
 
@@ -237,6 +246,7 @@ object ProcessMessageCode {
 
     // 其他构建进程挂掉的参考信息，自由添加方便打印卫通日志里
     const val BUILD_WORKER_DEAD_ERROR = "2101318"
+
     // 构建机Agent详情链接
     const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101319"
 
@@ -247,4 +257,11 @@ object ProcessMessageCode {
     const val ERROR_GROUP_COUNT_EXCEEDS_LIMIT = "2101401" // 一个项目标签组不能超过10个
     const val ERROR_LABEL_COUNT_EXCEEDS_LIMIT = "2101402" // 同一分组下最多可添加12个标签
     const val ERROR_LABEL_NAME_TOO_LONG = "2101403" // 一个标签最多输入20个字符
+
+    // 流水线组错误21016开头
+    const val ERROR_VIEW_GROUP_NO_PERMISSION = "2101601" // 没有修改流水线组权限
+    const val ERROR_VIEW_GROUP_IS_PROJECT_NO_SAME = "2101602" // 流水线组的视图范围不一致
+    const val ERROR_VIEW_EXCEED_THE_LIMIT = "2101603" // 流水线组创建太多了
+    const val ERROR_VIEW_DUPLICATE_NAME = "2101604" // 流水线组名称重复
+    const val ERROR_VIEW_NAME_ILLEGAL = "2101605" // 流水线组名称不合法
 }

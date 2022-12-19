@@ -152,5 +152,7 @@ data class ProjectVO(
     @ApiModelProperty("项目路由指向")
     val routerTag: String?,
     @ApiModelProperty("关联系统Id")
-    val relationId: String?
+    val relationId: String?,
+    @ApiModelProperty("项目其他配置")
+    val properties: ProjectProperties?
 )

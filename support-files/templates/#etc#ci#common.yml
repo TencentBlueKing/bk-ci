@@ -210,6 +210,7 @@ server:
       enabled: true
       pattern: '%h %I "%{i,X-DEVOPS-UID}" [%{time,yyyyMMddHHmmss.S}] "%r" %s %D %b "%{i,Referer}" "%{i,User-Agent}"'
       dir: ${service.log.dir}
+  shutdown: graceful
 
 # gateway for system
 devopsGateway:
@@ -289,7 +290,8 @@ bkci:
     enable: false
     
 process:
-  deletedPipelineStoreDays: 30    
+  clearBaseBuildData: true  # 是否开启清理【被彻底删除的流水线】的基础构建流水数据（建议开启）5672
+  deletedPipelineStoreDays: 30 # 回收站已删除流水线保存天数
 
 net:
   proxy:
@@ -309,3 +311,6 @@ net:
 sharding:
   routing:
     cacheSize: 100000  # 缓存分片规则最大数量
+
+cluster:
+  tag: __BK_CI_CLUSTER_TAG__

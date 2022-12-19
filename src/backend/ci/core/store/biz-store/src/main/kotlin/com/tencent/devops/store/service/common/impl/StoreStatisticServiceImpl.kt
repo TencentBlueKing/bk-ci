@@ -47,9 +47,8 @@ class StoreStatisticServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(StoreStatisticServiceImpl::class.java)
 
     override fun getStoreCommentScoreInfo(storeCode: String, storeType: StoreTypeEnum): Result<StoreCommentScoreInfo> {
-        logger.info("the storeCode is:$storeCode,storeType is:$storeType")
+        logger.info("getStoreCommentScoreInfo params:[$storeCode|$storeType]")
         val scoreInfos = storeCommentDao.getStoreCommentScoreInfo(dslContext, storeCode, storeType.type.toByte())
-        logger.info("the scoreInfos is:$scoreInfos")
         val scoreItemList = mutableListOf<ScoreItemInfo>()
         var totalCommentNum = 0L
         var totalScore = 0L
@@ -64,7 +63,6 @@ class StoreStatisticServiceImpl @Autowired constructor(
         }
         val avgScore: Double =
             if (totalScore > 0 && totalCommentNum > 0) totalScore.toDouble().div(totalCommentNum) else 0.toDouble()
-        logger.info("the avgScore is:$avgScore,totalCommentNum is:$totalCommentNum,scoreItemList is:$scoreItemList")
         return Result(
             StoreCommentScoreInfo(
                 avgScore = String.format("%.1f", avgScore).toDouble(),

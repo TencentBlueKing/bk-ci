@@ -3,7 +3,7 @@ parameters:
     type: string
     default: world
   - name: stagename
-    type: String
+    type: string
     default: STAGENAME
 
 stages:

@@ -39,12 +39,13 @@ enum class BuildType(
 ) {
     ESXi("蓝盾公共构建资源", listOf(OS.MACOS), false, false, false),
     MACOS("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), false, false, false),
+    WINDOWS("云托管：Windows on DevCloud", listOf(OS.WINDOWS), false, false, false),
     KUBERNETES(
         "Kubernetes构建资源",
         listOf(OS.LINUX),
-        KubernetesUtils.inContainer(),
-        KubernetesUtils.inContainer(),
-        KubernetesUtils.inContainer()
+        KubernetesUtils.enableK8sBuild(),
+        KubernetesUtils.enableK8sBuild(),
+        KubernetesUtils.enableK8sBuild()
     ),
     IDC("公共：Docker on IDC CVM", listOf(OS.LINUX), true, false, false),
     PUBLIC_DEVCLOUD("公共：Docker on DevCloud", listOf(OS.LINUX), true, false, false),
@@ -58,9 +59,9 @@ enum class BuildType(
     DOCKER(
         "Docker公共构建机",
         listOf(OS.LINUX),
-        KubernetesUtils.notInContainer(),
-        KubernetesUtils.notInContainer(),
-        KubernetesUtils.notInContainer()
+        KubernetesUtils.enablePublicDocker(),
+        KubernetesUtils.enablePublicDocker(),
+        KubernetesUtils.enablePublicDocker()
     ),
     STREAM("stream", listOf(OS.LINUX), false, false, false),
     AGENT_LESS("无编译环境", listOf(OS.LINUX), false, false, false)

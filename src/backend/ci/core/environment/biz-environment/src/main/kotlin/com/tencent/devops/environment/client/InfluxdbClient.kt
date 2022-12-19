@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.client
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.model.AgentHostInfo
@@ -37,12 +38,15 @@ import org.influxdb.dto.Query
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 @Component
 class InfluxdbClient {
     companion object {
         private val logger = LoggerFactory.getLogger(InfluxdbClient::class.java)
         private const val DB = "agentMetrix"
+        private const val MAX_CACHE = 1000L
+        private val emptyInfo = AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
     }
 
     @Value("\${influxdb.server:}")
@@ -55,7 +59,7 @@ class InfluxdbClient {
     val influxdbPassword: String = ""
 
     private val influxdb by lazy {
-        if (influxdbUserName.isBlank()) {
+        if (influxdbUserName.isBlank() || influxdbPassword.isBlank()) {
             InfluxDBFactory.connect(influxdbServer)
         } else {
             InfluxDBFactory.connect(influxdbServer, influxdbUserName, influxdbPassword)
@@ -63,16 +67,25 @@ class InfluxdbClient {
     }
 
     fun getInfluxDb(): InfluxDB? {
-        logger.info("getInfluxDb -> influxdbServer: $influxdbServer")
         return try {
             influxdb
-        } catch (ignored: Exception) {
-            logger.error("getInfluxDb| fail, msg=${ignored.message}", ignored)
+        } catch (fail: Exception) {
+            logger.error("BKSystemErrorMonitor|getInfluxDb $influxdbServer fail, msg=${fail.message}", fail)
             null // 返回空，防止页面异常。 顶多是数量展示空。 需要用户根据日志定位问题
         }
     }
 
     fun queryHostInfo(agentHashId: String): AgentHostInfo {
+        return hostCache.get(agentHashId) ?: emptyInfo
+    }
+
+    // #7479 主机的信息变化不会经常变化，除非更换机器，所以不需要经常进行直接查询，更新缓存即可。
+    private val hostCache = Caffeine.newBuilder()
+        .maximumSize(MAX_CACHE)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String, AgentHostInfo> { agentHashId -> queryHostInfoImpl(agentHashId) }
+
+    private fun queryHostInfoImpl(agentHashId: String): AgentHostInfo {
         val queryStr =
             "SELECT last(\"n_cpus\") FROM \"system\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
                 "AND time >= now() - 7d and time <= now() - 30s; " +
@@ -80,21 +93,24 @@ class InfluxdbClient {
                 "AND time >= now() - 7d and time <= now() - 30s; " +
                 "SELECT max(\"total\") FROM \"disk\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
                 "and time >= now() - 7d and time <= now() - 30s"
-        logger.info("queryStr: $queryStr")
 
-        var nCpus = "0"
-        var memTotal = "0"
-        var diskTotal = "0"
+        val queryResult = try {
+            getInfluxDb()?.query(Query(queryStr, DB)) ?: return emptyInfo
+        } catch (ignore: Exception) {
+            return emptyInfo
+        }
 
-        val queryResult = getInfluxDb()?.query(Query(queryStr, DB))
-            ?: return AgentHostInfo(nCpus, memTotal, diskTotal)
         if (queryResult.hasError()) {
-            logger.error("query influxdb error: ", queryResult.error)
+            logger.error("BKSystemErrorMonitor|queryHostInfo error: ${queryResult.error}")
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_INFLUX_QUERY_HOST_INFO_FAIL,
                 params = arrayOf(queryResult.error)
             )
         }
+
+        var nCpus = "0"
+        var memTotal = "0"
+        var diskTotal = "0"
 
         try {
             val nCpusSerie = queryResult.results[0].series
@@ -112,7 +128,7 @@ class InfluxdbClient {
                 diskTotal = NumberUtils.byteToString(diskTotalSerie[0].values[0][1].toString().toDouble())
             }
         } catch (ignore: Exception) {
-            logger.warn("parse agent host info failed", ignore)
+            logger.warn("$agentHashId|parse agent host info failed", ignore)
         }
 
         return AgentHostInfo(nCpus, memTotal, diskTotal)

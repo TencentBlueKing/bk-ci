@@ -158,6 +158,27 @@ interface UserStreamGitResource {
         sort: StreamSortAscOrDesc?
     ): Result<List<String>?>
 
+    @ApiOperation("获取项目中的所有分支")
+    @GET
+    @Path("/projects/repository/local_branches")
+    fun getLocalBranches(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID")
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "搜索条件，模糊匹配分支名")
+        @QueryParam("search")
+        search: String?,
+        @ApiParam(value = "页码", defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam(value = "每页数量,最大100", defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<String>?>
+
     @ApiOperation("获取项目触发人")
     @GET
     @Path("/projects/triggers")

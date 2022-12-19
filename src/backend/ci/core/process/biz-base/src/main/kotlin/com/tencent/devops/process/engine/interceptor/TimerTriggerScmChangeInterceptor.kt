@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.interceptor
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -155,7 +156,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 existScmElement = true
                 codeChange = checkSvnChangeNew(projectId, pipelineId, ele, variables)
             }
-            ele.getAtomCode() in setOf("gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit") -> {
+            ele.getAtomCode() in setOf("gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit", "checkout") -> {
                 existScmElement = true
                 codeChange = checkGitChangeNew(
                     variables,
@@ -261,7 +262,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建svn代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -284,7 +285,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         val input = ele.data["input"]
         if (input !is Map<*, *>) return false
 
-        val repositoryConfig = getMarketBuildRepoConfig(input, variables)
+        val repositoryConfig = getMarketBuildRepoConfig(input, variables) ?: return false
 
         // get pre commit
         val svnPath = EnvUtils.parseEnv(input["svnPath"] as String?, variables)
@@ -305,7 +306,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建svn代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -339,6 +340,9 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             gitPullMode != null -> EnvUtils.parseEnv(gitPullMode.value, variables)
             !oldBranchName.isNullOrBlank() -> EnvUtils.parseEnv(oldBranchName, variables)
             else -> return false
+        }
+        if (branchName.isBlank()) {
+            return false
         }
         val gitPullModeType = gitPullMode?.type ?: GitPullModeType.BRANCH
 //        val latestRevision =
@@ -391,7 +395,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建${ele.getClassType()}代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -415,21 +419,31 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         val input = ele.data["input"]
         if (input !is Map<*, *>) return false
 
-        val repositoryConfig = getMarketBuildRepoConfig(input, variables)
+        // checkout插件[按仓库URL输入]不校验代码变更
+        if (ele.getAtomCode() == "checkout" && input["repositoryType"] == RepositoryTypeNew.URL.name) return true
+        val repositoryConfig = getMarketBuildRepoConfig(input, variables) ?: return false
 
         val gitPullMode = EnvUtils.parseEnv(input["pullType"] as String?, variables)
-        val branchName = when (gitPullMode) {
-            GitPullModeType.BRANCH.name -> EnvUtils.parseEnv(input["branchName"] as String?, variables)
-            GitPullModeType.TAG.name -> EnvUtils.parseEnv(input["tagName"] as String?, variables)
-            GitPullModeType.COMMIT_ID.name -> EnvUtils.parseEnv(input["commitId"] as String?, variables)
-            else -> return false
+        val branchName = if (ele.getAtomCode() == "checkout") {
+            EnvUtils.parseEnv(input["refName"] as String?, variables)
+        } else {
+            when (gitPullMode) {
+                GitPullModeType.BRANCH.name -> EnvUtils.parseEnv(input["branchName"] as String?, variables)
+                GitPullModeType.TAG.name -> EnvUtils.parseEnv(input["tagName"] as String?, variables)
+                GitPullModeType.COMMIT_ID.name -> EnvUtils.parseEnv(input["commitId"] as String?, variables)
+                else -> return false
+            }
+        }
+        // 如果分支是变量形式,默认值为空,那么解析后值就为空,导致调接口失败
+        if (branchName.isBlank()) {
+            return false
         }
 
         // 如果是commit id ,则gitPullModeType直接比对就可以了，不需要再拉commit id
         // get pre vision
         val preCommit =
             if (gitPullMode == GitPullModeType.COMMIT_ID.name) {
-                EnvUtils.parseEnv(input["commitId"] as String?, variables)
+                branchName
             } else {
                 val result =
                     scmProxyService.recursiveFetchLatestRevision(
@@ -456,7 +470,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.warn("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建${ele.getAtomCode()}代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -475,12 +489,12 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         }
     }
 
-    private fun getMarketBuildRepoConfig(input: Map<*, *>, variables: Map<String, String>): RepositoryConfig {
+    private fun getMarketBuildRepoConfig(input: Map<*, *>, variables: Map<String, String>): RepositoryConfig? {
         val repositoryType = RepositoryType.parseType(input["repositoryType"] as String?)
-        val repositoryId = if (repositoryType == RepositoryType.ID) {
-            EnvUtils.parseEnv(input["repositoryHashId"] as String?, variables)
-        } else {
-            EnvUtils.parseEnv(input["repositoryName"] as String?, variables)
+        val repositoryId = when (repositoryType) {
+            RepositoryType.ID -> EnvUtils.parseEnv(input["repositoryHashId"] as String?, variables)
+            RepositoryType.NAME -> EnvUtils.parseEnv(input["repositoryName"] as String?, variables)
+            else -> return null
         }
         return buildConfig(repositoryId, repositoryType)
     }

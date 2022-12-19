@@ -40,5 +40,7 @@ data class WeworkNotifyTextMessage(
     @ApiModelProperty("文本内容类型", required = true)
     var textType: WeworkTextType,
     @ApiModelProperty("文本内容", required = true)
-    var message: String
+    var message: String,
+    @ApiModelProperty("attachments消息事件", required = false)
+    var attachments: WeworkMarkdownAttachment? = null
 )

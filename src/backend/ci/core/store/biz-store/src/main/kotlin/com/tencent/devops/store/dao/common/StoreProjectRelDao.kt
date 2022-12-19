@@ -438,6 +438,19 @@ class StoreProjectRelDao {
         }
     }
 
+    fun getValidStoreCodes(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeType: StoreTypeEnum
+    ): Result<Record1<String>>? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            return dslContext.select(STORE_CODE).from(this).where(conditions).groupBy(STORE_CODE).fetch()
+        }
+    }
+
     fun countInstallNumByCode(
         dslContext: DSLContext,
         storeCode: String,

@@ -68,6 +68,12 @@ interface UserStreamUserMessageResource {
         @ApiParam(value = "是否已读")
         @QueryParam("haveRead")
         haveRead: Boolean?,
+        @ApiParam(value = "消息唯一id")
+        @QueryParam("messageId")
+        messageId: String?,
+        @ApiParam(value = "触发人")
+        @QueryParam("triggerUserId")
+        triggerUserId: String?,
         @ApiParam(value = "页码")
         @QueryParam("page")
         page: Int?,
@@ -100,7 +106,7 @@ interface UserStreamUserMessageResource {
         id: Int,
         @ApiParam(value = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
-        projectId: String?
+        projectCode: String?
     ): Result<Boolean>
 
     @ApiOperation("读取所有消息")
@@ -112,6 +118,6 @@ interface UserStreamUserMessageResource {
         userId: String,
         @ApiParam(value = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
-        projectId: String?
+        projectCode: String?
     ): Result<Boolean>
 }

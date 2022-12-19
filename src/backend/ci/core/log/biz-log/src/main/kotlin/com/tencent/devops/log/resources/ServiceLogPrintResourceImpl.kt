@@ -28,24 +28,26 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
-import com.tencent.devops.log.event.LogStatusEvent
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.log.event.LogOriginEvent
-import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.service.BuildLogPrintService
+import com.tencent.devops.log.service.IndexService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceLogPrintResourceImpl @Autowired constructor(
+    private val indexService: IndexService,
     private val buildLogPrintService: BuildLogPrintService
 ) : ServiceLogPrintResource {
 
     override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         return buildLogPrintService.asyncDispatchEvent(LogOriginEvent(buildId, listOf(logMessage)))
@@ -53,7 +55,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
 
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.asyncDispatchEvent(LogOriginEvent(buildId, logMessages))
@@ -68,9 +70,12 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
+        // #7168 通过一次获取创建记录以及缓存
+        val index = indexService.getIndexName(buildId)
+        logger.info("Start to print log to index[$index]")
         buildLogPrintService.dispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
@@ -94,19 +99,19 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         logStorageMode: LogStorageMode?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
-            logger.error("Invalid build ID[$buildId]")
+            logger.warn("Invalid build ID[$buildId]")
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
             LogStatusEvent(
-            buildId = buildId,
-            finished = finished,
-            tag = tag ?: "",
-            subTag = subTag,
-            jobId = jobId ?: "",
-            executeCount = executeCount,
-            logStorageMode = logStorageMode
-        )
+                buildId = buildId,
+                finished = finished,
+                tag = tag ?: "",
+                subTag = subTag,
+                jobId = jobId ?: "",
+                executeCount = executeCount,
+                logStorageMode = logStorageMode
+            )
         )
         return Result(true)
     }

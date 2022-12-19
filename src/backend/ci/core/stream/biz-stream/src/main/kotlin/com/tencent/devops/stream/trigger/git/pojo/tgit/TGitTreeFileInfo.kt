@@ -31,10 +31,12 @@ import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
 
 data class TGitTreeFileInfo(
+    override val id: String,
     override val name: String,
     override val type: String
 ) : StreamGitTreeFileInfo {
     constructor(f: GitFileInfo) : this(
+        id = f.id,
         name = f.name,
         type = f.type
     )

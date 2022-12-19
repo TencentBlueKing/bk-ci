@@ -31,16 +31,16 @@ class AppUserInfoService @Autowired constructor(
     }
 
     fun bindAppManagerUser(userId: String, appManagerInfo: AppManagerInfo): Boolean {
-        logger.info("bindAppManagerUser $userId $appManagerInfo")
+        logger.info("BIND_APP_MANAGER_USER|$userId|$appManagerInfo")
         if (!opAppUserService.checkUser(appManagerInfo.managerUser)) {
-            logger.warn("bindAppManagerUser appManagerUser check fail")
+            logger.warn("BIND_APP_MANAGER_USER|$userId|appManagerUser check fail")
             throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(OpenAPIMessageCode.USER_CHECK_FAIL))
         }
 
         val appManagerRecord = appManagerUserDao.get(dslContext, appManagerInfo.appCode)
         val exist = if (appManagerRecord != null) {
             if (appManagerInfo.managerUser == appManagerRecord.managerId) {
-                logger.warn("bindAppManagerUser appManagerUser ${appManagerInfo.managerUser} is exist")
+                logger.warn("BIND_APP_MANAGER_USER|$userId|appManagerUser ${appManagerInfo.managerUser} is exist")
                 throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(OpenAPIMessageCode.ERROR_USER_EXIST))
             } else {
                 true

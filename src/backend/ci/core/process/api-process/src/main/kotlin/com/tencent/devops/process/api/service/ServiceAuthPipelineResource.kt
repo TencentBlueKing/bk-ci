@@ -62,7 +62,7 @@ interface ServiceAuthPipelineResource {
         @ApiParam("步长", required = false)
         @QueryParam("limit")
         limit: Int? = null,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS
     ): Result<PipelineViewPipelinePage<PipelineInfo>>

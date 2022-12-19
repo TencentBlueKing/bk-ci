@@ -47,5 +47,9 @@ data class TriggerBuildReq(
     @ApiModelProperty("事件请求体")
     val payload: String? = null,
     @ApiModelProperty("模拟代码事件类型")
-    val eventType: String? = null
+    val eventType: String? = null,
+    @ApiModelProperty("手动触发输入参数")
+    val inputs: Map<String, String>? = null,
+    @ApiModelProperty("是否为子流水线触发")
+    val checkPipelineTrigger: Boolean = false
 )

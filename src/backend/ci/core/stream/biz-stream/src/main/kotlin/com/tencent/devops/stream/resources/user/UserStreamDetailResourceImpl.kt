@@ -31,8 +31,10 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.stream.api.user.UserStreamDetailResource
@@ -57,11 +59,33 @@ class UserStreamDetailResourceImpl @Autowired constructor(
     ): Result<StreamModelDetail?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return if (!buildId.isNullOrBlank()) {
-            Result(streamDetailService.getBuildDetail(userId, gitProjectId, buildId!!))
+            Result(streamDetailService.getBuildDetail(userId, gitProjectId, buildId))
         } else {
             Result(streamDetailService.getProjectLatestBuildDetail(userId, gitProjectId, pipelineId))
         }
+    }
+
+    override fun buildTriggerReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        approve: Boolean
+    ): Result<Boolean> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
+        return Result(streamDetailService.buildTriggerReview(userId, gitProjectId, buildId, approve))
     }
 
     override fun search(
@@ -74,7 +98,11 @@ class UserStreamDetailResourceImpl @Autowired constructor(
     ): Result<FileInfoPage<FileInfo>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkStreamPermission(userId, projectId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(
             streamDetailService.search(
                 userId = userId,
@@ -96,8 +124,12 @@ class UserStreamDetailResourceImpl @Autowired constructor(
     ): Result<Url> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkStreamPermission(userId, projectId)
-        permissionService.checkEnableStream(gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(
+            userId = userId,
+            projectId = projectId,
+            gitProjectId = gitProjectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(
             streamDetailService.downloadUrl(
                 userId = userId,
@@ -118,8 +150,12 @@ class UserStreamDetailResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         try {
-            permissionService.checkStreamPermission(userId, projectId)
-        } catch (e: Exception) {
+            permissionService.checkStreamPermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.VIEW
+            )
+        } catch (error: CustomException) {
             return Result(ErrorCodeEnum.NO_REPORT_AUTH.errorCode, ErrorCodeEnum.NO_REPORT_AUTH.formatErrorMessage)
         }
         return Result(streamDetailService.getReports(userId, gitProjectId, pipelineId, buildId))

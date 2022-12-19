@@ -78,6 +78,7 @@ import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.JobImageItem
 import com.tencent.devops.store.pojo.image.response.JobMarketImageItem
+import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.util.MultiSourceDataPaginator
@@ -87,7 +88,6 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import kotlin.math.ceil
@@ -105,10 +105,10 @@ class ImageProjectService @Autowired constructor(
     private val imageLabelService: ImageLabelService,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storeProjectService: StoreProjectService,
+    private val storeCommonService: StoreCommonService,
     private val client: Client
 ) {
-    @Value("\${store.baseImageDocsLink}")
-    private lateinit var baseImageDocsLink: String
+
     private val logger = LoggerFactory.getLogger(ImageProjectService::class.java)
 
     /**
@@ -299,7 +299,6 @@ class ImageProjectService @Autowired constructor(
             pageSize = pageSize,
             offsetNum = offsetNum
         )
-        logger.info("jobImageRecords is : $jobImageRecords")
         jobImageRecords?.forEach {
             val jobImageItem = generateJobImageItem(isContainAgentType, it)
             jobImageItemList.add(jobImageItem)
@@ -360,7 +359,7 @@ class ImageProjectService @Autowired constructor(
             logoUrl = logoUrl,
             icon = icon,
             summary = summary,
-            docsLink = baseImageDocsLink + imageCode,
+            docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, imageCode),
             publisher = publisher,
             pubTime = pubTime?.timestampmilli(),
             creator = creator,
@@ -381,31 +380,6 @@ class ImageProjectService @Autowired constructor(
             availableFlag = isContainAgentType,
             modifier = modifier ?: "",
             updateTime = updateTime
-        )
-    }
-
-    /**
-     * 根据项目标识获取商店镜像列表
-     */
-    fun getMarketImagesByProjectCode(
-        accessToken: String,
-        userId: String,
-        projectCode: String,
-        page: Int?,
-        pageSize: Int?,
-        interfaceName: String? = "Anon interface"
-    ): Page<ImageDetail?>? {
-        return searchMarketImages(
-            accessToken = accessToken,
-            userId = userId,
-            projectCode = projectCode,
-            imageNamePart = null,
-            classifyCodeList = null,
-            categoryCode = null,
-            rdType = null,
-            page = page,
-            pageSize = pageSize,
-            interfaceName = interfaceName
         )
     }
 
@@ -970,7 +944,7 @@ class ImageProjectService @Autowired constructor(
         val logoUrl = it.get(KEY_IMAGE_LOGO_URL) as String?
         val icon = it.get(KEY_IMAGE_ICON) as String?
         val summary = it.get(KEY_IMAGE_SUMMARY) as String?
-        val docsLink = baseImageDocsLink + code
+        val docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, code)
         val weight = it.get(KEY_IMAGE_FEATURE_WEIGHT) as Int?
         val imageSourceType = ImageType.getType(it.get(KEY_IMAGE_SOURCE_TYPE) as String).name
         val imageRepoUrl = it.get(KEY_IMAGE_REPO_URL) as String?

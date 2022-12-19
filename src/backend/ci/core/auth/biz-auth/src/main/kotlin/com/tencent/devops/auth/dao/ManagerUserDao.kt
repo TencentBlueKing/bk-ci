@@ -32,6 +32,7 @@ import com.tencent.devops.model.auth.tables.TAuthManagerUser
 import com.tencent.devops.model.auth.tables.records.TAuthManagerUserRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL.currentLocalDateTime
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -41,7 +42,8 @@ class ManagerUserDao {
 
     fun create(dslContext: DSLContext, managerUserInfo: ManagerUserEntity): Int {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 USER_ID,
                 MANAGER_ID,
                 END_TIME,
@@ -65,14 +67,41 @@ class ManagerUserDao {
 
     fun list(dslContext: DSLContext, managerId: Int): Result<TAuthManagerUserRecord>? {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId)
-                .and(END_TIME.gt(LocalDateTime.now()))).orderBy(CREATE_TIME.desc()).fetch()
+            return dslContext.selectFrom(this).where(
+                MANAGER_ID.eq(managerId)
+                    .and(END_TIME.gt(LocalDateTime.now()))
+            ).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
 
     fun get(dslContext: DSLContext, managerId: Int, userId: String): TAuthManagerUserRecord? {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
             return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).fetchOne()
+        }
+    }
+
+    fun getExpiringRecord(dslContext: DSLContext, managerId: Int, userId: String): TAuthManagerUserRecord? {
+        with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
+            return dslContext.selectFrom(this).where(
+                MANAGER_ID.eq(managerId)
+                    .and(USER_ID.eq(userId))
+                    .and(END_TIME.sub(EXPIRE_TIME).le(currentLocalDateTime()))
+            ).fetchOne()
+        }
+    }
+
+    fun listExpiringRecords(dslContext: DSLContext): Result<TAuthManagerUserRecord>? {
+        with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
+            return dslContext.selectFrom(this).where(
+                END_TIME.sub(EXPIRE_TIME).le(currentLocalDateTime())
+            ).fetch()
+        }
+    }
+
+    fun updateRecordsExpireTime(dslContext: DSLContext, managerId: Int, userId: String): Int {
+        with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
+            return dslContext.update(this).set(END_TIME, END_TIME.add(HALF_A_YEAR))
+                .where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).execute()
         }
     }
 
@@ -84,8 +113,10 @@ class ManagerUserDao {
 
     fun count(dslContext: DSLContext, managerId: Int): Int {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.selectCount().from(this).where(MANAGER_ID.eq(managerId)
-                .and(END_TIME.gt(LocalDateTime.now()))).fetchOne(0, Int::class.java)!!
+            return dslContext.selectCount().from(this).where(
+                MANAGER_ID.eq(managerId)
+                    .and(END_TIME.gt(LocalDateTime.now()))
+            ).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -100,5 +131,10 @@ class ManagerUserDao {
             return dslContext.selectFrom(this).where(END_TIME.le(LocalDateTime.now()))
                 .limit(limit).offset(offset).fetch()
         }
+    }
+
+    companion object {
+        const val HALF_A_YEAR = 182
+        const val EXPIRE_TIME = 7
     }
 }

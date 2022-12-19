@@ -35,9 +35,11 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreStatistic
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
@@ -66,6 +68,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     private val storeStatisticDao: StoreStatisticDao,
     private val storeStatisticTotalDao: StoreStatisticTotalDao,
     private val storeMemberDao: StoreMemberDao,
+    private val storeErrorCodeInfoDao: StoreErrorCodeInfoDao,
     private val storeDailyStatisticService: StoreDailyStatisticService
 ) : StoreTotalStatisticService {
 
@@ -200,7 +203,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         startTime: String,
         endTime: String
     ): StoreStatisticTrendData {
-        logger.info("getStatisticTrendDataByCode $userId,$storeCode,$storeType,$startTime,$endTime")
+        logger.info("getStatisticTrendDataByCode params:[$userId,$storeCode,$storeType,$startTime,$endTime]")
         // 判断当前用户是否是该组件的成员
         if (!storeMemberDao.isStoreMember(
                 dslContext = dslContext,
@@ -245,6 +248,18 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             totalFailNum = totalFailNum,
             totalFailDetail = totalFailDetail,
             dailyStatisticList = dailyStatisticList
+        )
+    }
+
+    override fun getStoreErrorCodeInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): StoreErrorCodeInfo {
+        return StoreErrorCodeInfo(
+            storeCode = storeCode,
+            storeType = storeType,
+            errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(dslContext, storeCode, storeType)
         )
     }
 

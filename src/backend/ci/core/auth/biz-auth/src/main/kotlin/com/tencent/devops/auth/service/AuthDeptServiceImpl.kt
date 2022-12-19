@@ -288,18 +288,24 @@ class AuthDeptServiceImpl @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 // 请求错误
-                logger.warn("call user center fail, $url| $searchEntity|response: ($it)")
+                logger.warn(
+                    "call user center fail: url = $url | searchEntity = $searchEntity" +
+                        " | response = ($it)"
+                )
                 throw OperationException(
                     MessageCodeUtil.getCodeLanMessage(
                     messageCode = AuthMessageCode.USER_NOT_EXIST
                 ))
             }
             val responseStr = it.body()!!.string()
-            logger.info("user center response： $responseStr")
+            logger.info("callUserCenter : response = $responseStr")
             val responseDTO = JsonUtil.to(responseStr, ResponseDTO::class.java)
             if (responseDTO.code != 0L || responseDTO.result == false) {
                 // 请求错误
-                logger.warn("call user center fail, $url| $searchEntity| response: ($it)")
+                logger.warn(
+                    "call user center fail: url = $url | searchEntity = $searchEntity" +
+                        " | response = ($it)"
+                )
                 throw OperationException(
                     MessageCodeUtil.getCodeLanMessage(
                         messageCode = AuthMessageCode.USER_NOT_EXIST

@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.engine.control.command.container.impl
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
@@ -37,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -51,6 +54,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
@@ -171,6 +175,7 @@ class StartActionTaskContainerCmd(
                 variables = containerContext.variables
             )
         }
+        val fastKill = FastKillUtils.isFastKillCode(containerContext.event.errorCode)
         var toDoTask: PipelineBuildTask? = null
         var continueWhenFailure = false // 失败继续
         var needTerminate = isTerminate(containerContext) // 是否终止类型
@@ -194,7 +199,7 @@ class StartActionTaskContainerCmd(
                 needTerminate = needTerminate || TaskUtils.isStartVMTask(t) // #4301 构建机启动失败，就需要终止[P0]
                 // 当前任务已经失败or取消，并且没有设置[失败继续]的， 设置给容器最终FAILED状态
                 if (!ControlUtils.continueWhenFailure(t.additionalOptions)) {
-                    containerContext.buildStatus = BuildStatusSwitcher.jobStatusMaker.forceFinish(t.status)
+                    containerContext.buildStatus = BuildStatusSwitcher.jobStatusMaker.forceFinish(t.status, fastKill)
                 } else {
                     continueWhenFailure = true
                     if (needTerminate || t.status.isCancel()) { // #4301 强制终止的标志为失败，不管是不是设置了失败继续[P0]
@@ -270,7 +275,7 @@ class StartActionTaskContainerCmd(
         return toDoTask
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "ComplexMethod")
     private fun PipelineBuildTask.findNeedToRunTask(
         index: Int,
         hasFailedTaskInSuccessContainer: Boolean,
@@ -285,6 +290,41 @@ class StartActionTaskContainerCmd(
         }
         val containerTasks = containerContext.containerTasks
         val message = StringBuilder()
+        val (needSkip, parseException) = try {
+            val checkResult = ControlUtils.checkTaskSkip(
+                buildId = buildId,
+                additionalOptions = additionalOptions,
+                containerFinalStatus = containerContext.buildStatus,
+                variables = containerContext.variables.plus(contextMap),
+                hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
+                message = message,
+                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+            )
+            Pair(checkResult, null)
+        } catch (e: ExpressionParseException) {
+            buildLogPrinter.addErrorLine(
+                message = "[${e.kind}] expression(${e.expression}) of task condition is invalid: ${e.message}",
+                buildId = buildId, jobId = containerHashId, tag = taskId, executeCount = executeCount ?: 1
+            )
+            LOG.warn("ENGINE|$buildId|$source|EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|$status", e)
+            containerContext.latestSummary = containerContext.latestSummary.plus(
+                " | conditionError=${e.kind}: ${e.message}"
+            )
+            Pair(false, e)
+        } catch (ignore: Throwable) {
+            buildLogPrinter.addErrorLine(
+                message = "[EXPRESSION_ERROR] failed to parse condition(${additionalOptions?.customCondition}) " +
+                    "with error: ${ignore.message}",
+                buildId = buildId, jobId = containerHashId, tag = taskId, executeCount = executeCount ?: 1
+            )
+            LOG.error(
+                "BKSystemErrorMonitor|findNeedToRunTask|$buildId|$source|" +
+                    "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|" +
+                    "customCondition=${additionalOptions?.customCondition}",
+                ignore
+            )
+            Pair(false, ignore)
+        }
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
                 toDoTask = additionalOptions?.elementPostInfo?.findPostActionTask(
@@ -307,26 +347,46 @@ class StartActionTaskContainerCmd(
                 // 打印构建日志
                 message.append("终止构建，跳过(UnExecute Task)[$taskName] cause: ${containerContext.latestSummary}!")
             }
-            ControlUtils.checkTaskSkip(
-                buildId = buildId,
-                additionalOptions = additionalOptions,
-                containerFinalStatus = containerContext.buildStatus,
-                variables = containerContext.variables.plus(contextMap),
-                hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                message = message
-            ) -> { // 检查条件跳过
-                val taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus)
+            needSkip -> { // 检查条件跳过
+                var taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus)
+                // 将第一个因为构建取消而被设置为UNEXEC状态的插件，重置为取消，作为后续Container状态状态的抓手 #5048
+                if (containerContext.firstQueueTaskId == null && containerContext.buildStatus.isCancel()) {
+                    taskStatus = BuildStatus.CANCELED
+                    containerContext.firstQueueTaskId = this.taskId
+                }
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
                 // 更新任务状态
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
-                    projectId = projectId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    buildStatus = taskStatus
+                    TaskBuildEndParam(
+                        projectId = projectId,
+                        buildId = buildId,
+                        taskId = taskId,
+                        buildStatus = taskStatus
+                    )
                 )
                 refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
                 message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
+            }
+            parseException != null -> { // 如果执行条件判断是出错则直接将插件设为失败
+                taskBuildDetailService.updateTaskStatus(
+                    projectId = projectId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    taskStatus = BuildStatus.FAILED,
+                    buildStatus = BuildStatus.RUNNING,
+                    operation = "taskConditionInvalid"
+                )
+                pipelineTaskService.updateTaskStatus(
+                    task = this,
+                    userId = starter,
+                    buildStatus = BuildStatus.FAILED,
+                    errorType = ErrorType.USER,
+                    errorCode = ProcessMessageCode.ERROR_CONDITION_EXPRESSION_PARSE.toInt(),
+                    errorMsg = parseException.message
+                )
+                // 打印构建日志
+                message.append("执行条件判断失败(Condition Invalid)[$taskName] cause: ${containerContext.latestSummary}!")
             }
             else -> {
                 toDoTask = this // 当前排队的任务晋级为下一个执行任务
@@ -360,9 +420,8 @@ class StartActionTaskContainerCmd(
             return
         }
         // 更新task列表状态
-        val startIndex = index + 1
         val endIndex = containerTasks.size - 1
-        for (i in startIndex..endIndex) {
+        for (i in index..endIndex) {
             val task = containerTasks[i]
             for (updateTaskStatusInfo in updateTaskStatusInfos) {
                 val taskId = updateTaskStatusInfo.taskId
@@ -526,7 +585,8 @@ class StartActionTaskContainerCmd(
                 actionType = event.actionType,
                 reason = event.reason,
                 errorCode = event.errorCode,
-                errorTypeName = event.errorTypeName
+                errorTypeName = event.errorTypeName,
+                executeCount = task.executeCount ?: 1
             )
         )
     }

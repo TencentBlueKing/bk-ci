@@ -63,15 +63,37 @@ class StreamHistoryService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
+    @Suppress("ComplexMethod")
     fun getHistoryBuildList(
         userId: String,
         gitProjectId: Long,
         search: StreamBuildHistorySearch?
     ): Page<StreamBuildHistory> {
-        logger.info("get history build list, gitProjectId: $gitProjectId")
+        logger.info("StreamHistoryService|getHistoryBuildList|gitProjectId|$gitProjectId")
         val pageNotNull = search?.page ?: 1
         val pageSizeNotNull = search?.pageSize ?: 10
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
+
+        val buildIds = if (!search?.status.isNullOrEmpty()) {
+            // 如果查询条件有状态信息，需要到引擎里面匹配，拿到buildIds之后再在event build 表里面进行其他条件匹配
+            client.get(ServiceBuildResource::class).getBuilds(
+                userId = userId,
+                projectId = conf.projectCode!!,
+                pipelineId = search?.pipelineId,
+                buildStatus = search?.status,
+                channelCode = channelCode
+            ).data
+        } else null
+
+        if (buildIds?.isEmpty() == true) {
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0,
+                records = emptyList()
+            )
+        }
+
         val totalPage = gitRequestEventBuildDao.getRequestEventBuildListMultipleCount(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
@@ -81,8 +103,9 @@ class StreamHistoryService @Autowired constructor(
             pipelineId = search?.pipelineId,
             event = search?.event?.map { it.value }?.toSet(),
             commitMsg = search?.commitMsg,
-            buildStatus = search?.status?.map { it.name }?.toSet(),
-            pipelineIds = search?.pipelineIds
+            buildStatus = null,
+            pipelineIds = search?.pipelineIds,
+            buildIds = buildIds?.toSet()
         )
         if (totalPage == 0) {
             return Page(
@@ -102,17 +125,18 @@ class StreamHistoryService @Autowired constructor(
             pipelineId = search?.pipelineId,
             event = search?.event?.map { it.value }?.toSet(),
             commitMsg = search?.commitMsg,
-            buildStatus = search?.status?.map { it.name }?.toSet(),
+            buildStatus = null,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset,
-            pipelineIds = search?.pipelineIds
+            pipelineIds = search?.pipelineIds,
+            buildIds = buildIds?.toSet()
         )
         val builds = gitRequestBuildList.map { it.buildId }.toSet()
-        logger.info("get history build list, build ids: $builds")
+        logger.info("StreamHistoryService|getHistoryBuildList|builds|$builds")
         val buildHistoryList =
             client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
         if (null == buildHistoryList) {
-            logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
+            logger.info("StreamHistoryService|getHistoryBuildList|empty|gitProjectId|$gitProjectId")
             return Page(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
@@ -170,6 +194,22 @@ class StreamHistoryService @Autowired constructor(
         )
     }
 
+    fun getProjectLocalBranches(
+        projectId: Long,
+        branchName: String?,
+        page: Int,
+        pageSize: Int
+    ): List<String> {
+        return gitRequestEventBuildDao.getProjectLocalBranches(
+            dslContext = dslContext,
+            projectId = projectId,
+            branchName = branchName,
+            pageNotNull = page,
+            pageSizeNotNull = pageSize
+        )
+    }
+
+    @Suppress("LongMethod")
     fun getAllBuildBranchList(
         userId: String,
         gitProjectId: Long,
@@ -177,7 +217,7 @@ class StreamHistoryService @Autowired constructor(
         pageSize: Int?,
         keyword: String?
     ): Page<StreamBuildBranch> {
-        logger.info("get all branch build list, gitProjectId: $gitProjectId")
+        logger.info("StreamHistoryService|getAllBuildBranchList|gitProjectId|$gitProjectId")
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
@@ -189,7 +229,7 @@ class StreamHistoryService @Autowired constructor(
             keyword = keyword
         )
         if (buildBranchList.isEmpty()) {
-            logger.info("Get build branch list return empty, gitProjectId: $gitProjectId")
+            logger.info("StreamHistoryService|getAllBuildBranchList|empty|gitProjectId|$gitProjectId")
             return Page(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,

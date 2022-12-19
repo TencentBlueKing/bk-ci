@@ -88,7 +88,7 @@ class AtomMonitorService @Autowired constructor(
         if (null != queryResult && !queryResult.hasError()) {
             num = getNumFromResult(queryResult)
         } else {
-            logger.error("queryResult error , ${queryResult?.error} , ${queryResult?.results?.size}")
+            logger.error("BKSystemErrorMonitor|queryAtomExecuteNum|sql=$sql|error=${queryResult?.error}")
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                 errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP

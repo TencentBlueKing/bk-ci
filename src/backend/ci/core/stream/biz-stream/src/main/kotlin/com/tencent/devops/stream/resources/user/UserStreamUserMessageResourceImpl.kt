@@ -45,6 +45,8 @@ class UserStreamUserMessageResourceImpl @Autowired constructor(
         projectId: String?,
         messageType: UserMessageType?,
         haveRead: Boolean?,
+        messageId: String?,
+        triggerUserId: String?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<UserMessageRecord>> {
@@ -54,6 +56,8 @@ class UserStreamUserMessageResourceImpl @Autowired constructor(
                 userId = userId,
                 messageType = messageType,
                 haveRead = haveRead,
+                messageId = messageId?.ifBlank { null },
+                triggerUserId = triggerUserId?.ifBlank { null },
                 page = page ?: 1,
                 pageSize = pageSize ?: 10
             )
@@ -64,11 +68,11 @@ class UserStreamUserMessageResourceImpl @Autowired constructor(
         return Result(data = streamUserMessageService.getNoReadMessageCount(projectId, userId))
     }
 
-    override fun readMessage(userId: String, id: Int, projectId: String?): Result<Boolean> {
-        return Result(streamUserMessageService.readMessage(userId = userId, id = id, projectId = projectId))
+    override fun readMessage(userId: String, id: Int, projectCode: String?): Result<Boolean> {
+        return Result(streamUserMessageService.readMessage(userId = userId, id = id, projectCode = projectCode))
     }
 
-    override fun readAllMessages(userId: String, projectId: String?): Result<Boolean> {
-        return Result(streamUserMessageService.readAllMessage(projectId, userId = userId))
+    override fun readAllMessages(userId: String, projectCode: String?): Result<Boolean> {
+        return Result(streamUserMessageService.readAllMessage(projectCode, userId = userId))
     }
 }

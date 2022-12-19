@@ -48,5 +48,6 @@ enum class GitCodeProjectsOrder(val value: String) {
     PATH("path"),
     CREATED("created_at"),
     UPDATE("updated_at"),
-    ACTIVITY("activity")
+    ACTIVITY("activity"),
+    FULL_NAME("full_name")
 }

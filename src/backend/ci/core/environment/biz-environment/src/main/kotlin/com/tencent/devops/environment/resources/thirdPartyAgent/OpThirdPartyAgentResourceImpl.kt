@@ -29,6 +29,7 @@ package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.environment.agent.AgentGrayUtils
+import com.tencent.devops.common.environment.agent.AgentUpgradeType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.OpThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
@@ -85,41 +86,41 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentPipelineService.getPipelineResult(projectId, nodeId, seqId))
     }
 
-    override fun setForceUpdateAgents(agentIds: List<Long>): Result<Boolean> {
-        agentGrayUtils.setForceUpgradeAgents(agentIds)
+    override fun setForceUpdateAgents(agentIds: List<Long>, agentUpgradeType: String?): Result<Boolean> {
+        agentGrayUtils.setForceUpgradeAgents(agentIds, AgentUpgradeType.find(agentUpgradeType))
         return Result(true)
     }
 
-    override fun unsetForceUpdateAgents(agentIds: List<Long>): Result<Boolean> {
-        agentGrayUtils.unsetForceUpgradeAgents(agentIds)
+    override fun unsetForceUpdateAgents(agentIds: List<Long>, agentUpgradeType: String?): Result<Boolean> {
+        agentGrayUtils.unsetForceUpgradeAgents(agentIds, AgentUpgradeType.find(agentUpgradeType))
         return Result(true)
     }
 
-    override fun getAllForceUpgradeAgents(): Result<List<Long>> {
-        return Result(agentGrayUtils.getAllForceUpgradeAgents())
+    override fun getAllForceUpgradeAgents(agentUpgradeType: String?): Result<List<Long>> {
+        return Result(agentGrayUtils.getAllForceUpgradeAgents(AgentUpgradeType.find(agentUpgradeType)))
     }
 
-    override fun cleanAllForceUpgradeAgents(): Result<Boolean> {
-        agentGrayUtils.cleanAllForceUpgradeAgents()
+    override fun cleanAllForceUpgradeAgents(agentUpgradeType: String?): Result<Boolean> {
+        agentGrayUtils.cleanAllForceUpgradeAgents(AgentUpgradeType.find(agentUpgradeType))
         return Result(true)
     }
 
-    override fun setLockUpdateAgents(agentIds: List<Long>): Result<Boolean> {
-        agentGrayUtils.setLockUpgradeAgents(agentIds)
+    override fun setLockUpdateAgents(agentIds: List<Long>, agentUpgradeType: String?): Result<Boolean> {
+        agentGrayUtils.setLockUpgradeAgents(agentIds, AgentUpgradeType.find(agentUpgradeType))
         return Result(true)
     }
 
-    override fun unsetLockUpdateAgents(agentIds: List<Long>): Result<Boolean> {
-        agentGrayUtils.unsetLockUpgradeAgents(agentIds)
+    override fun unsetLockUpdateAgents(agentIds: List<Long>, agentUpgradeType: String?): Result<Boolean> {
+        agentGrayUtils.unsetLockUpgradeAgents(agentIds, AgentUpgradeType.find(agentUpgradeType))
         return Result(true)
     }
 
-    override fun getAllLockUpgradeAgents(): Result<List<Long>> {
-        return Result(agentGrayUtils.getAllLockUpgradeAgents())
+    override fun getAllLockUpgradeAgents(agentUpgradeType: String?): Result<List<Long>> {
+        return Result(agentGrayUtils.getAllLockUpgradeAgents(AgentUpgradeType.find(agentUpgradeType)))
     }
 
-    override fun cleanAllLockUpgradeAgents(): Result<Boolean> {
-        agentGrayUtils.cleanAllLockUpgradeAgents()
+    override fun cleanAllLockUpgradeAgents(agentUpgradeType: String?): Result<Boolean> {
+        agentGrayUtils.cleanAllLockUpgradeAgents(AgentUpgradeType.find(agentUpgradeType))
         return Result(true)
     }
 

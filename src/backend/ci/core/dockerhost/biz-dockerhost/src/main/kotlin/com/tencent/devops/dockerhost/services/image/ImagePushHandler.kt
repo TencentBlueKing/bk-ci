@@ -10,6 +10,7 @@ import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.services.Handler
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class ImagePushHandler(
@@ -28,7 +29,7 @@ class ImagePushHandler(
                 dockerClient.pushImageCmd(it)
                     .withAuthConfig(authConfig)
                     .exec(MyPushImageResultCallback(buildId, pipelineTaskId, dockerHostBuildApi))
-                    .awaitCompletion()
+                    .awaitCompletion(20, TimeUnit.MINUTES)
             }
 
             nextHandler.get()?.handlerRequest(this)

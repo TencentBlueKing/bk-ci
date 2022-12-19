@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.BUILD_COMPLETED
 import com.tencent.devops.common.api.constant.BUILD_FAILED
 import com.tencent.devops.common.api.constant.BUILD_REVIEWING
 import com.tencent.devops.common.api.constant.BUILD_RUNNING
+import com.tencent.devops.common.api.constant.BUILD_STAGE_SUCCESS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -83,7 +84,7 @@ open class BaseBuildDetailService constructor(
         buildStatus: BuildStatus,
         cancelUser: String? = null,
         operation: String = ""
-    ) {
+    ): Model {
         val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         var message = "nothing"
         val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
@@ -113,7 +114,7 @@ open class BaseBuildDetailService constructor(
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
             if (modelStr.isNullOrBlank() && !change) {
                 message = "Will not update"
-                return
+                return model
             }
 
             watcher.start("updateModel")
@@ -123,15 +124,22 @@ open class BaseBuildDetailService constructor(
                 buildId = buildId,
                 model = modelStr,
                 buildStatus = finalStatus,
-                cancelUser = cancelUser ?: if (buildStatus.isCancel()) { "System" } else null // 系统行为导致的取消状态
+                cancelUser = cancelUser // 系统行为导致的取消状态(仅当在取消状态时，还没有设置过取消人，才默认为System)
+                    ?: if (buildStatus.isCancel() && record.cancelUser.isNullOrBlank()) "System" else null
             )
 
             watcher.start("dispatchEvent")
             pipelineDetailChangeEvent(projectId, buildId)
             message = "update done"
+            return model
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
             logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
+            watcher.start("getDetail")
+            val record = buildDetailDao.get(dslContext, projectId, buildId)
+            Preconditions.checkArgument(record != null, "The build detail is not exist")
+            watcher.start("model")
+            return JsonUtil.to(record!!.model, Model::class.java)
         } finally {
             lock.unlock()
             watcher.stop()
@@ -150,16 +158,14 @@ open class BaseBuildDetailService constructor(
         val stageTagMap: Map<String, String>
             by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
         // 更新Stage状态至BuildHistory
-        val (statusMessage, reason) = if (buildStatus == BuildStatus.REVIEWING) {
-            Pair(BUILD_REVIEWING, reviewers?.joinToString(","))
-        } else if (buildStatus.isFailure()) {
-            Pair(BUILD_FAILED, errorMsg ?: buildStatus.name)
-        } else if (buildStatus.isCancel()) {
-            Pair(BUILD_CANCELED, cancelUser)
-        } else if (buildStatus.isSuccess()) {
-            Pair(BUILD_COMPLETED, null)
-        } else {
-            Pair(BUILD_RUNNING, null)
+
+        val (statusMessage, reason) = when {
+            buildStatus == BuildStatus.REVIEWING -> Pair(BUILD_REVIEWING, reviewers?.joinToString(","))
+            buildStatus == BuildStatus.STAGE_SUCCESS -> Pair(BUILD_STAGE_SUCCESS, null)
+            buildStatus.isFailure() -> Pair(BUILD_FAILED, errorMsg ?: buildStatus.name)
+            buildStatus.isCancel() -> Pair(BUILD_CANCELED, cancelUser)
+            buildStatus.isSuccess() -> Pair(BUILD_COMPLETED, null)
+            else -> Pair(BUILD_RUNNING, null)
         }
         return model.stages.map {
             BuildStageStatus(

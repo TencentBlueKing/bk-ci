@@ -58,7 +58,6 @@ class ContainerAppVersionServiceImpl @Autowired constructor(
      */
     override fun getContainerAppVersion(id: Int): Result<ContainerAppVersion?> {
         val containerAppVersionRecord = containerAppsVersionDao.getById(dslContext, id)
-        logger.info("the containerAppVersionRecord is :$containerAppVersionRecord")
         return Result(
             if (containerAppVersionRecord == null) {
                 null
@@ -72,7 +71,7 @@ class ContainerAppVersionServiceImpl @Autowired constructor(
      * 保存编译环境版本信息
      */
     override fun saveContainerAppVersion(containerAppVersionRequest: ContainerAppVersionCreate): Result<Boolean> {
-        logger.info("the save containerAppVersionRequest is:$containerAppVersionRequest")
+        logger.info("saveContainerAppVersion containerAppVersionRequest:$containerAppVersionRequest")
         containerAppsVersionDao.add(dslContext, containerAppVersionRequest.appId, containerAppVersionRequest.version)
         return Result(true)
     }
@@ -84,7 +83,7 @@ class ContainerAppVersionServiceImpl @Autowired constructor(
         id: Int,
         containerAppVersionRequest: ContainerAppVersionCreate
     ): Result<Boolean> {
-        logger.info("the update id is :$id,the update containerAppVersionRequest is:$containerAppVersionRequest")
+        logger.info("updateContainerAppVersion id:$id,containerAppVersionRequest:$containerAppVersionRequest")
         containerAppsVersionDao.update(
             dslContext,
             id,
@@ -98,7 +97,6 @@ class ContainerAppVersionServiceImpl @Autowired constructor(
      * 删除编译环境版本信息
      */
     override fun deleteContainerAppVersion(id: Int): Result<Boolean> {
-        logger.info("the delete id is :$id")
         containerAppsVersionDao.delete(dslContext, id)
         return Result(true)
     }

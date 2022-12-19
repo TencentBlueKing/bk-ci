@@ -14,7 +14,7 @@ parameters:
     type: string
     default: world
   - name: stepname
-    type: String
+    type: string
     default: STEPNAME
 
 steps:

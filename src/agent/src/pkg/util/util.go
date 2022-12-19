@@ -29,6 +29,7 @@ package util
 
 import (
 	"encoding/json"
+	"math/rand"
 	"strings"
 	"time"
 )
@@ -39,7 +40,7 @@ func ParseJsonToData(jsonData interface{}, targetData interface{}) error {
 		return err
 	}
 
-	err = json.Unmarshal([]byte(dataStr), targetData)
+	err = json.Unmarshal(dataStr, targetData)
 	if err != nil {
 		return err
 	} else {
@@ -59,6 +60,7 @@ func SplitAndTrimSpace(s string, sep string) []string {
 	}
 	return result
 }
+
 func Contains(s []string, subs string) bool {
 	if len(s) <= 0 {
 		return false
@@ -70,4 +72,14 @@ func Contains(s []string, subs string) bool {
 		}
 	}
 	return false
+}
+
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+func RandStringRunes(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
 }

@@ -78,12 +78,6 @@ enum class ErrorCodeEnum(
     GET_GIT_MERGE_INFO(ErrorType.THIRD_PARTY, 2129014, "获取MERGE提交信息失败"),
     GET_GIT_FILE_TREE_ERROR(ErrorType.THIRD_PARTY, 2129015, "获取仓库CI文件列表失败"),
 
-    GET_COMMIT_INFO_ERROR(
-        errorType = ErrorType.THIRD_PARTY,
-        errorCode = 2129026,
-        formatErrorMessage = "Load project [%s] failed. Git api error: %s"
-    ),
-
     // 手动触发需要转为错误码给用户，区分构建中的系统和用户异常
     MANUAL_TRIGGER_USER_ERROR(ErrorType.USER, 2129016, "manual trigger user error: [%s]"),
     MANUAL_TRIGGER_SYSTEM_ERROR(
@@ -107,6 +101,26 @@ enum class ErrorCodeEnum(
         errorCode = 2129025,
         formatErrorMessage = "公共账号[%s]未注册，请先联系 DevOps-helper 注册"
     ),
+    MANUAL_TRIGGER_YAML_NULL(
+        errorType = ErrorType.USER,
+        errorCode = 2129028,
+        formatErrorMessage = "分支上没有此流水线，或者流水线未允许手动触发"
+    ),
+    MANUAL_TRIGGER_YAML_INVALID(
+        errorType = ErrorType.USER,
+        errorCode = 2129029,
+        formatErrorMessage = "手动触发YAML SCHEMA校验错误"
+    ),
+    GET_COMMIT_INFO_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = 2129026,
+        formatErrorMessage = "Load project [%s] failed. Git api error: %s"
+    ),
+    GET_USER_INFO_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = 2129027,
+        formatErrorMessage = "Load user info failed. Git api error: %s"
+    )
     ;
 
     companion object {

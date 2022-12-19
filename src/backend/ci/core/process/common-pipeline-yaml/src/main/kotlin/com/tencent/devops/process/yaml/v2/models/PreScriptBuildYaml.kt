@@ -35,6 +35,26 @@ import com.tencent.devops.process.yaml.v2.models.stage.PreStage
 import com.tencent.devops.process.yaml.v2.models.step.PreStep
 
 /**
+ * PreScriptBuildYamlI 是PreScriptBuildYaml的拓展，方便再既不修改data class的特性情况下，其他类可以在继承新增字段
+ * 注：PreScriptBuildYaml 新增的字段需要在这里新增
+ */
+interface PreScriptBuildYamlI {
+    var version: String?
+    var name: String?
+    var label: List<String>?
+    var triggerOn: PreTriggerOn?
+    var variables: Map<String, Variable>?
+    var stages: List<PreStage>?
+    var jobs: Map<String, PreJob>?
+    var steps: List<PreStep>?
+    var extends: Extends?
+    var resources: Resources?
+    var notices: List<GitNotices>?
+    var finally: Map<String, PreJob>?
+    val concurrency: Concurrency?
+}
+
+/**
  * model
  *
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(stream,prebuild等)异常
@@ -42,17 +62,17 @@ import com.tencent.devops.process.yaml.v2.models.step.PreStep
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreScriptBuildYaml(
-    var version: String?,
-    var name: String?,
-    var label: List<String>? = null,
-    var triggerOn: PreTriggerOn?,
-    var variables: Map<String, Variable>? = null,
-    var stages: List<PreStage>? = null,
-    var jobs: Map<String, PreJob>? = null,
-    var steps: List<PreStep>? = null,
-    var extends: Extends? = null,
-    var resources: Resources?,
-    var notices: List<GitNotices>?,
-    var finally: Map<String, PreJob>? = null,
-    val concurrency: Concurrency? = null
-)
+    override var version: String?,
+    override var name: String?,
+    override var label: List<String>? = null,
+    override var triggerOn: PreTriggerOn?,
+    override var variables: Map<String, Variable>? = null,
+    override var stages: List<PreStage>? = null,
+    override var jobs: Map<String, PreJob>? = null,
+    override var steps: List<PreStep>? = null,
+    override var extends: Extends? = null,
+    override var resources: Resources?,
+    override var notices: List<GitNotices>?,
+    override var finally: Map<String, PreJob>? = null,
+    override val concurrency: Concurrency? = null
+) : PreScriptBuildYamlI

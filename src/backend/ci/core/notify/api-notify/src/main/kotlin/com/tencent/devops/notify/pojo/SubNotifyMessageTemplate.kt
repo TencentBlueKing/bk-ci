@@ -45,6 +45,10 @@ data class SubNotifyMessageTemplate(
     val creator: String,
     @ApiModelProperty("修改人", required = true)
     val modifier: String,
+    @ApiModelProperty("回调地址")
+    val callBackUrl: String? = null,
+    @ApiModelProperty("流程名称")
+    val processName: String? = null,
     @ApiModelProperty("创建日期", required = true)
     val createTime: Long = 0,
     @ApiModelProperty("更新日期", required = true)

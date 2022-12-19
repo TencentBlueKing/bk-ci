@@ -1,65 +1,59 @@
 # 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_dispatch?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_dispatch_kubernetes?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21938
 server:
-  port: __BK_CI_DISPATCH_DOCKER_API_PORT__
+  port: __BK_CI_DISPATCH_KUBERNETES_API_PORT__
+
+# 是否开启构建资源配额限制
+dispatch:
+  jobQuota:
+    systemAlertReceiver:
+    enable: false
+  # 默认的构建容器集群类型：VM, KUBERNETES, BCS
+  defaultDockerRoutingType: __BK_CI_DOCKER_ROUTING_TYPE__
 
 # kubernetes-dispatch集群配置
 kubernetes:
-  nameSpace: __BK_CI_DISPATCH_KUBERNETES_NS__
-  configMap:
-    name: dispatch-kubernetes-init
+  apiUrl: __BK_CI_KUBERNETES_HOST__
+  token: __BK_CI_KUBERNETES_TOKEN__
+  entrypoint: /data/landun/config/init.sh
+  sleepEntrypoint: /data/landun/config/sleep.sh
+  resources:
+    builder:
+      cpu: __BK_CI_KUBERNETES_CPU__
+      memory: __BK_CI_KUBERNETES_MEMORY__
+      disk: 100
+    job:
+      cpu: __BK_CI_KUBERNETES_CPU__
+      memory: __BK_CI_KUBERNETES_MEMORY__
+      disk: 100
+  gateway:
+    webConsoleProxy: __BK_CI_KUBERNETES_WEBCONSOLE_PROXY__
 
-dispatch:
-  workerFile: __BK_CI_HOME__/agent-package/jar/worker-agent.jar
-  dockerFile: __BK_CI_HOME__/agent-package/jar/worker-agent.jar
-  scripts: __BK_CI_HOME__/agent-package/script
-  #defaultImageUrl: __BK_CI_DOCKER_IMAGE_PREFIX__/paas/bkdevops/centos7.2:v1
-  #defaultImageName: centos7.2
-  #dockerhostPort: __BK_CI_DOCKERHOST_API_PORT__
-  agentLessRegistryUrl: __BK_CI_AGENTLESS_IMAGE_REGISTRY_URL__
-  agentLessImageName: __BK_CI_AGENTLESS_IMAGE_NAME__
-  agentLessRegistryUserName: __BK_CI_AGENTLESS_IMAGE_REGISTRY_USER__
-  agentLessRegistryPassword: __BK_CI_AGENTLESS_IMAGE_REGISTRY_PASSWORD__
-  jobQuota:
-    systemAlertReceiver: 
-    enable: false
-  build:
-    deployment:
-      cpu: 1
-      memory: 1024M
-      disk: 1G
-    container:
-      registry:
-        host: xx.artifactory.xxx
-        userName: xxxx
-        password: xxxx
-    label: bkci-dispatch-kubenetes
-    volumeMount:
-      path: /etc/config
-    volume:
-      configMap:
-        key: initsh.properties
-        path: dispatch_kubernetes_init.sh
-      hostPath:
-        hostdir: /data/volume/bkci/dispatch-kubernetes
-    tolerations:
-      - key: "bk-codecc"
-        operator: "Equal"
-        value: "use"
-        effecf: "NoSchedule"    
+bcs:
+  apiUrl: __BK_CI_BCS_HOST__
+  token: __BK_CI_BCS_TOKEN__
+  entrypoint: /tools/bcs_init.sh
+  sleepEntrypoint: /tools/sleep.sh
+  resources:
+    builder:
+      cpu: __BK_CI_BCS_CPU__
+      memory: __BK_CI_BCS_MEMORY__
+      disk: 100
+    job:
+      cpu: __BK_CI_BCS_CPU__
+      memory: __BK_CI_BCS_MEMORY__
+      disk: 100
 
-pipeline:
-  build:
-    pool:
-      size: 100000
+registry:
+  host: __BK_CI_DOCKER_REGISTRY_URL__
+  userName: __BK_CI_DOCKER_REGISTRY_USER__
+  password: __BK_CI_DOCKER_REGISTRY_PASSWORD__
 
-codecc:
-  path: __BK_CODECC_DATA_DIR__/tools
-  covFile: build_dev.py
-  toolFile: build_tool_dev.py
+gateway:
+  url: __BK_CI_PRIVATE_URL__

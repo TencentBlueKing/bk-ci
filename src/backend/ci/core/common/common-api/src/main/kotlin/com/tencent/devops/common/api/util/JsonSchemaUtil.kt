@@ -46,7 +46,7 @@ object JsonSchemaUtil {
     fun validateJson(json: String): Boolean {
         try {
             jsonNodeFromString(json)
-        } catch (e: Exception) {
+        } catch (ignore: Throwable) {
             return false
         }
         return true

@@ -64,7 +64,6 @@ class ContainerAppEnvServiceImpl @Autowired constructor(
      */
     override fun getContainerAppEnv(id: Int): Result<ContainerAppEnv?> {
         val containerAppEnvRecord = containerAppsEnvDao.getById(dslContext, id)
-        logger.info("the containerAppEnvRecord is :{}", containerAppEnvRecord)
         return Result(
             if (containerAppEnvRecord == null) {
                 null
@@ -78,7 +77,7 @@ class ContainerAppEnvServiceImpl @Autowired constructor(
      * 保存编译环境变量信息
      */
     override fun saveContainerAppEnv(containerAppEnvRequest: ContainerAppEnvCreate): Result<Boolean> {
-        logger.info("the save containerAppEnvRequest is:{}", containerAppEnvRequest)
+        logger.info("saveContainerAppEnv containerAppEnvRequest:$containerAppEnvRequest")
         containerAppsEnvDao.add(
             dslContext,
             containerAppEnvRequest.appId,
@@ -93,14 +92,14 @@ class ContainerAppEnvServiceImpl @Autowired constructor(
      * 更新编译环境信息
      */
     override fun updateContainerAppEnv(id: Int, containerAppEnvRequest: ContainerAppEnvCreate): Result<Boolean> {
-        logger.info("the update id is :{},the update containerAppEnvRequest is:{}", id, containerAppEnvRequest)
+        logger.info("updateContainerAppEnv id:$id,containerAppEnvRequest:$containerAppEnvRequest")
         containerAppsEnvDao.update(
-            dslContext,
-            id,
-            containerAppEnvRequest.appId,
-            containerAppEnvRequest.name,
-            containerAppEnvRequest.path,
-            containerAppEnvRequest.description
+            dslContext = dslContext,
+            id = id,
+            appId = containerAppEnvRequest.appId,
+            name = containerAppEnvRequest.name,
+            path = containerAppEnvRequest.path,
+            description = containerAppEnvRequest.description
         )
         return Result(true)
     }
@@ -109,7 +108,6 @@ class ContainerAppEnvServiceImpl @Autowired constructor(
      * 删除编译环境变量信息
      */
     override fun deleteContainerAppEnv(id: Int): Result<Boolean> {
-        logger.info("the delete id is :{}", id)
         containerAppsEnvDao.delete(dslContext, id)
         return Result(true)
     }

@@ -1,5 +1,34 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.common.expression.expression.sdk.operators
 
+import com.tencent.devops.common.expression.ExecutionContext
+import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.expression.EvaluationResult
 import com.tencent.devops.common.expression.expression.sdk.Container
 import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
@@ -76,10 +105,41 @@ class Index : Container() {
         return Pair(null, null)
     }
 
+    // 对于索引的部分计算，如果最左的参数是已有的nameValued就进行计算，不存在的nameValue为空
+    // 如果最左参数不是，就拼接回原本的表达式
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
+        var left = parameters[0]
+        while (left is Index) {
+            left = left.parameters[0]
+        }
+
+        if (left !is ContextValueNode) {
+            val leftV = parameters[0].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+            val value = if (parameters[1] is Literal && (parameters[1] as Literal).value is String &&
+                ExpressionUtility.isLegalKeyword((parameters[1] as Literal).value as String)
+            ) {
+                "$leftV.${(parameters[1] as Literal).value as String}"
+            } else {
+                val rightV = parameters[1].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+                "$leftV[$rightV]"
+            }
+            return Pair(value, false)
+        }
+
+        if ((context.state as ExecutionContext).expressionValues[left.name] == null) {
+            return Pair(convertToExpression(), false)
+        }
+
+        val result = evaluate(context).value
+
+        // 对于表达式出来的替换不带有''
+        return Pair(result, true)
+    }
+
     private fun handleFilteredArray(
         context: EvaluationContext,
         filteredArray: FilteredArray
-    ): Pair<ResultMemory, Any?> {
+    ): Pair<ResultMemory, FilteredArray?> {
         val result = FilteredArray()
         val counter = MemoryCounter(this, context.options.maxMemory)
 
@@ -149,7 +209,7 @@ class Index : Container() {
         }
         // String
         else {
-            val (result, ok) = obj.tryGetValue(index.stringIndex!!)
+            val (result, ok) = obj.tryGetValue(index.stringIndex ?: return Pair(null, null))
             if (index.hasStringIndex && ok) {
                 return Pair(null, result)
             }

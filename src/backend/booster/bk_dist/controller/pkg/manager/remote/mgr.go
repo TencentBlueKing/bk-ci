@@ -12,6 +12,7 @@ package remote
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -33,7 +34,7 @@ func NewMgr(pCtx context.Context, work *types.Work) types.RemoteMgr {
 	return &Mgr{
 		ctx:                   ctx,
 		work:                  work,
-		resource:              newResource(nil, nil),
+		resource:              newResource(nil),
 		remoteWorker:          client.NewCommonRemoteWorker(),
 		checkSendFileTick:     100 * time.Millisecond,
 		fileSendMap:           make(map[string]*fileSendMap),
@@ -41,6 +42,10 @@ func NewMgr(pCtx context.Context, work *types.Work) types.RemoteMgr {
 		fileMessageBank:       newFileMessageBank(),
 		conf:                  work.Config(),
 		resourceCheckTick:     5 * time.Second,
+		sendCorkTick:          10 * time.Millisecond,
+		corkSize:              1024 * 512, // 512KB, it will delay much if too big
+		corkFiles:             make(map[string]*[]*corkFile, 0),
+		memSlot:               newMemorySlot(0),
 	}
 }
 
@@ -56,6 +61,8 @@ type Mgr struct {
 	work         *types.Work
 	resource     *resource
 	remoteWorker dcSDK.RemoteWorker
+
+	memSlot *memorySlot
 
 	checkSendFileTick time.Duration
 
@@ -75,6 +82,12 @@ type Mgr struct {
 	lastUsed          uint64 // only accurate to second now
 	lastApplied       uint64 // only accurate to second now
 	remotejobs        int64  // save job number which using remote worker
+
+	sendCorkTick time.Duration
+	sendCorkChan chan bool
+	corkMutex    sync.RWMutex
+	corkSize     int64
+	corkFiles    map[string]*[]*corkFile
 }
 
 type fileSendMap struct {
@@ -156,11 +169,13 @@ func (fsm *fileSendMap) updateStatus(desc dcSDK.FileDesc, status types.FileSendS
 }
 
 // Init do the initialization for remote manager
+// !! only call once !!
 func (m *Mgr) Init() {
 	blog.Infof("remote: init for work:%s", m.work.ID())
 
-	settings := m.work.Basic().Settings()
-	m.resource = newResource(m.syncHostTimeNoWait(m.work.Resource().GetHosts()), settings.UsageLimit)
+	// settings := m.work.Basic().Settings()
+	// m.resource = newResource(m.syncHostTimeNoWait(m.work.Resource().GetHosts()), settings.UsageLimit)
+	m.resource = newResource(m.syncHostTimeNoWait(m.work.Resource().GetHosts()))
 
 	// if m.initCancel != nil {
 	// 	m.initCancel()
@@ -170,12 +185,23 @@ func (m *Mgr) Init() {
 
 	m.resource.Handle(ctx)
 
+	m.memSlot.Handle(ctx)
+
 	// register call back for resource changed
 	m.work.Resource().RegisterCallback(m.callback4ResChanged)
 
 	if m.conf.AutoResourceMgr {
 		go m.resourceCheck(ctx)
 	}
+
+	if m.conf.SendCork {
+		m.sendCorkChan = make(chan bool, 1000)
+		go m.sendFilesWithCorkTick(ctx)
+	}
+}
+
+func (m *Mgr) Start() {
+	blog.Infof("remote: start for work:%s", m.work.ID())
 }
 
 func (m *Mgr) callback4ResChanged() error {
@@ -191,6 +217,8 @@ func (m *Mgr) callback4ResChanged() error {
 	// if all workers released, we shoud clean the cache now
 	if hl == nil || len(hl) == 0 {
 		m.cleanFileCache()
+
+		// TODO : do other cleans here
 	}
 	return nil
 }
@@ -205,6 +233,10 @@ func (m *Mgr) cleanFileCache() {
 	m.fileCollectionSendMutex.Lock()
 	m.fileCollectionSendMap = make(map[string]*[]*types.FileCollectionInfo)
 	m.fileCollectionSendMutex.Unlock()
+
+	m.corkMutex.Lock()
+	m.corkFiles = make(map[string]*[]*corkFile, 0)
+	m.corkMutex.Unlock()
 }
 
 func (m *Mgr) setLastUsed(v uint64) {
@@ -284,6 +316,8 @@ func (m *Mgr) resourceCheck(ctx context.Context) {
 					m.cleanFileCache()
 					// notify resource release
 					m.work.Resource().Release(nil)
+					// send and reset stat data
+					m.work.Resource().SendAndResetStats(false, []int64{0})
 
 					// 重置最近一次使用时间
 					m.setLastUsed(0)
@@ -515,7 +549,7 @@ func (m *Mgr) ensureFiles(
 				err <- m.ensureSingleFile(handler, host, req, sandbox)
 				d := time.Now().Local().Sub(t)
 				if d > 200*time.Millisecond {
-					blog.Infof("remote: single file cost time for work(%s) from pid(%d) to server(%s): %s, %s",
+					blog.Debugf("remote: single file cost time for work(%s) from pid(%d) to server(%s): %s, %s",
 						m.work.ID(), pid, host.Server, d.String(), req.Files[0].FilePath)
 				}
 			}(wg, s, sender)
@@ -528,7 +562,7 @@ func (m *Mgr) ensureFiles(
 				_ = m.ensureSingleFile(handler, host, req, sandbox)
 				d := time.Now().Local().Sub(t)
 				if d > 200*time.Millisecond {
-					blog.Infof("remote: single file cost time for work(%s) from pid(%d) to server(%s): %s, %s",
+					blog.Debugf("remote: single file cost time for work(%s) from pid(%d) to server(%s): %s, %s",
 						m.work.ID(), pid, host.Server, d.String(), req.Files[0].FilePath)
 				}
 			}(s, sender)
@@ -596,6 +630,19 @@ func (m *Mgr) ensureSingleFile(
 	if m.checkSingleCache(handler, host, desc, sandbox) {
 		m.updateSendFile(host.Server, desc, types.FileSendSucceed)
 		return nil
+	}
+
+	// send like tcp cork
+	if m.conf.SendCork {
+		retcode, err := m.sendFileWithCork(handler, &desc, host, sandbox)
+		if err != nil || retcode != 0 {
+			blog.Warnf("remote: execute send cork file(%s) for work(%s) to server(%s) failed: %v, retcode:%d",
+				desc.FilePath, m.work.ID(), host.Server, err, retcode)
+		} else {
+			blog.Debugf("remote: execute send cork file(%s) for work(%s) to server(%s) succeed",
+				desc.FilePath, m.work.ID(), host.Server)
+			return nil
+		}
 	}
 
 	blog.Debugf("remote: try to ensure single file(%s) for work(%s) to server(%s), going to send this file",
@@ -702,7 +749,7 @@ func (m *Mgr) checkOrLockSendFile(server string, desc dcSDK.FileDesc) (types.Fil
 
 	defer func() {
 		if d2 := time.Now().Local().Sub(t2); d2 > 50*time.Millisecond {
-			blog.Infof("check cache process wait too long server(%s): %s", server, d2.String())
+			blog.Debugf("check cache process wait too long server(%s): %s", server, d2.String())
 		}
 	}()
 
@@ -1178,4 +1225,197 @@ func (m *Mgr) updateToolChainPath(req *types.RemoteTaskExecuteRequest) error {
 		}
 	}
 	return nil
+}
+
+type corkFileResult struct {
+	retcode int32
+	err     error
+}
+
+type corkFile struct {
+	handler    dcSDK.RemoteWorkerHandler
+	host       *dcProtocol.Host
+	sandbox    *dcSyscall.Sandbox
+	file       *dcSDK.FileDesc
+	resultchan chan corkFileResult
+}
+
+func (m *Mgr) sendFileWithCork(handler dcSDK.RemoteWorkerHandler,
+	f *dcSDK.FileDesc,
+	host *dcProtocol.Host,
+	sandbox *dcSyscall.Sandbox) (int32, error) {
+	cf := corkFile{
+		handler:    handler,
+		host:       host,
+		sandbox:    sandbox,
+		file:       f,
+		resultchan: make(chan corkFileResult, 1),
+	}
+
+	// append to file queue
+	m.corkMutex.Lock()
+	if l, ok := m.corkFiles[host.Server]; ok {
+		*l = append(*l, &cf)
+	} else {
+		newl := []*corkFile{&cf}
+		m.corkFiles[host.Server] = &newl
+	}
+	m.corkMutex.Unlock()
+
+	// notify send
+	m.sendCorkChan <- true
+
+	// wait for result
+	msg := <-cf.resultchan
+	return msg.retcode, msg.err
+}
+
+func (m *Mgr) getCorkFiles(getall bool) []*[]*corkFile {
+	m.corkMutex.Lock()
+	defer m.corkMutex.Unlock()
+
+	result := make([]*[]*corkFile, 0)
+	for _, v := range m.corkFiles {
+		// srcfiles := *v
+		var totalsize int64
+		index := -1
+		if getall {
+			index = len(*v) - 1
+		} else {
+			for index = range *v {
+				totalsize += (*v)[index].file.FileSize
+				if totalsize > m.corkSize {
+					break
+				}
+			}
+		}
+
+		if index >= 0 {
+			if totalsize > m.corkSize || getall {
+				// get files
+				num := index + 1
+				start := 0
+				dstfiles := make([]*corkFile, num)
+				copy(dstfiles, (*v)[start:start+num])
+
+				// remove files
+				if num < len(*v) {
+					*v = (*v)[start+num:]
+				} else {
+					*v = make([]*corkFile, 0)
+				}
+
+				result = append(result, &dstfiles)
+			}
+		}
+	}
+
+	return result
+}
+
+func (m *Mgr) sendFilesWithCorkTick(ctx context.Context) {
+	blog.Infof("remote: start send files with cork tick for work: %s", m.work.ID())
+	ticker := time.NewTicker(m.sendCorkTick)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			blog.Infof("remote: run send files with cork for work(%s) canceled by context", m.work.ID())
+			return
+
+		case <-ticker.C:
+			// check whether have files to send
+			files := m.getCorkFiles(true)
+			if len(files) > 0 {
+				m.sendFilesWithCork(files)
+			}
+		case <-m.sendCorkChan:
+			// check whether enought files to send
+			files := m.getCorkFiles(false)
+			if len(files) > 0 {
+				m.sendFilesWithCork(files)
+			}
+		}
+	}
+}
+
+func (m *Mgr) sendFilesWithCork(files []*[]*corkFile) {
+	for _, v := range files {
+		if v != nil && len(*v) > 0 {
+			go m.sendFilesWithCorkSameHost(*v)
+		}
+	}
+}
+
+func (m *Mgr) sendFilesWithCorkSameHost(files []*corkFile) {
+
+	var totalsize int64
+	req := &dcSDK.BKDistFileSender{}
+	for _, v := range files {
+		req.Files = append(req.Files, *v.file)
+		totalsize += v.file.FileSize
+	}
+	host := files[0].host
+	sandbox := files[0].sandbox
+	handler := files[0].handler
+
+	blog.Infof("remote: start send cork %d files with size:%d to server %s for work: %s",
+		len(files), totalsize, host.Server, m.work.ID())
+
+	// in queue to limit total size of sending files, maybe we should deal if failed
+	// blog.Infof("remote: try to get memory lock with file size:%d", totalsize)
+	if m.memSlot.Lock(totalsize) {
+		// blog.Infof("remote: succeed to get memory lock with file size:%d", totalsize)
+		defer func() {
+			m.memSlot.Unlock(totalsize)
+			// total, occu := m.memSlot.GetStatus()
+			// blog.Infof("remote: succeed to free memory lock with file size:%d,occupy:%d, total:%d", totalsize, occu, total)
+		}()
+	} else {
+		blog.Infof("remote: failed to get memory lock with file size:%d", totalsize)
+	}
+
+	// add retry here
+	var result *dcSDK.BKSendFileResult
+	waitsecs := 5
+	var err error
+	for i := 0; i < 4; i++ {
+		result, err = handler.ExecuteSendFile(host, req, sandbox)
+		if err == nil {
+			break
+		} else {
+			blog.Warnf("remote: failed to send cork %d files with size:%d to server:%s for the %dth times with error:%v",
+				len(files), totalsize, host.Server, i, err)
+			time.Sleep(time.Duration(waitsecs) * time.Second)
+			waitsecs = waitsecs * 2
+		}
+	}
+
+	// free memory anyway after sent file
+	debug.FreeOSMemory()
+
+	status := types.FileSendSucceed
+	if err != nil {
+		status = types.FileSendFailed
+	}
+
+	var retcode int32
+	if err != nil {
+		retcode = -1
+	} else {
+		retcode = result.Results[0].RetCode
+	}
+	resultchan := corkFileResult{
+		retcode: retcode,
+		err:     err,
+	}
+
+	for _, v := range files {
+		m.updateSendFile(host.Server, *v.file, status)
+		v.resultchan <- resultchan
+	}
+
+	blog.Infof("remote: end send %d files with cork to server %s tick for work: %s with err:%v, retcode:%d",
+		len(files), host.Server, m.work.ID(), err, retcode)
 }

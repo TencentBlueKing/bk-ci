@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -88,9 +89,10 @@ class CheckPauseReviewStageCmd(
                 // #3742 进入暂停状态则刷新完状态后直接返回，等待手动触发
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
 
-                stage.checkIn?.parseReviewVariables(commandContext.variables)
+                stage.checkIn?.parseReviewVariables(commandContext.variables, commandContext.pipelineAsCodeEnabled)
                 pipelineStageService.pauseStageNotify(
                     userId = event.userId,
+                    triggerUserId = commandContext.variables[PIPELINE_START_USER_NAME] ?: event.userId,
                     stage = stage,
                     pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId,
                     buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
@@ -117,7 +119,8 @@ class CheckPauseReviewStageCmd(
 
         // #4732 如果是手动触发stage的事件或未配置审核则直接略过
         if (stage.checkIn?.ruleIds?.isNotEmpty() != true ||
-            event.source == BS_MANUAL_START_STAGE) {
+            event.source == BS_MANUAL_START_STAGE
+        ) {
             return false
         }
 
@@ -158,8 +161,10 @@ class CheckPauseReviewStageCmd(
     }
 
     private fun qualityCheckInFailed(commandContext: StageContext) {
-        LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
-            "|STAGE_QUALITY_CHECK_IN_FAILED|${commandContext.event.stageId}")
+        LOG.info(
+            "ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
+                "|STAGE_QUALITY_CHECK_IN_FAILED|${commandContext.event.stageId}"
+        )
         commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_FAIL.name
         commandContext.buildStatus = BuildStatus.QUALITY_CHECK_FAIL
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) failed with QUALITY_CHECK_IN"
@@ -171,8 +176,10 @@ class CheckPauseReviewStageCmd(
     }
 
     private fun qualityCheckInNeedReview(commandContext: StageContext) {
-        LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
-            "|STAGE_QUALITY_CHECK_IN_REVIEWING|${commandContext.event.stageId}")
+        LOG.info(
+            "ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
+                "|STAGE_QUALITY_CHECK_IN_REVIEWING|${commandContext.event.stageId}"
+        )
         commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_WAIT.name
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) need reviewing with QUALITY_CHECK_IN"
         commandContext.cmdFlowState = CmdFlowState.BREAK
@@ -183,8 +190,10 @@ class CheckPauseReviewStageCmd(
     }
 
     private fun qualityCheckInPass(commandContext: StageContext) {
-        LOG.info("ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
-            "|STAGE_QUALITY_CHECK_IN_PASSED|${commandContext.event.stageId}")
+        LOG.info(
+            "ENGINE|${commandContext.event.buildId}|${commandContext.event.source}" +
+                "|STAGE_QUALITY_CHECK_IN_PASSED|${commandContext.event.stageId}"
+        )
         commandContext.stage.checkIn?.status = BuildStatus.QUALITY_CHECK_PASS.name
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) passed with QUALITY_CHECK_IN"
         pipelineStageService.refreshCheckStageStatus(

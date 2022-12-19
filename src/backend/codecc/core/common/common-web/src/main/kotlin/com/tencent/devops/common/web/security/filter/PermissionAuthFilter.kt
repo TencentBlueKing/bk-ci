@@ -85,12 +85,12 @@ class PermissionAuthFilter(
                             isPass))
                 } else {
                     // 普通流水线在蓝鲸权限中心鉴权
-                    val pipelieActions = PermissionUtil.getPipelinePermissionsFromActions(actions)
-                    val pipelinePermissionAuthResult = authExPermissionApi.validatePipelineBatchPermission(
+                    val codeccActions = PermissionUtil.getCodeCCPermissionsFromActions(actions)
+                    val pipelinePermissionAuthResult = authExPermissionApi.validateTaskBatchPermission(
                             user,
                             taskId,
                             projectId,
-                            pipelieActions
+                            codeccActions
                     )
                     var pipelineAuthPass = true
                     pipelinePermissionAuthResult.forEach {

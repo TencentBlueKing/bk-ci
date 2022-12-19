@@ -54,8 +54,6 @@ var bazelActionConstOptions = map[string]bool{
 	// env.KeyExecutorHookPreloadLibraryMacos:             true,
 	env.GetEnvKey(env.KeyExecutorHookConfigContent):    true,
 	env.GetEnvKey(env.KeyExecutorHookConfigContentRaw): true,
-	env.GetEnvKey(env.KeyExecutorTaskID):               true,
-	env.GetEnvKey(env.KeyExecutorControllerWorkID):     true,
 	env.GetEnvKey(env.BoosterType):                     true,
 	env.GetEnvKey(env.KeyExecutorIOTimeout):            true,
 }

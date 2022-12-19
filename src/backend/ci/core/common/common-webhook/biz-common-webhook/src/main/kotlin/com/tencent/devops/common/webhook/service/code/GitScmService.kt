@@ -95,7 +95,7 @@ class GitScmService @Autowired constructor(
                 ).data
             }
         } catch (e: Exception) {
-            logger.error("fail to get mr reviews info", e)
+            logger.warn("fail to get mr reviews info", e)
             null
         }
     }
@@ -134,7 +134,7 @@ class GitScmService @Autowired constructor(
                 ).data
             }
         } catch (e: Exception) {
-            logger.error("fail to get mr info", e)
+            logger.warn("fail to get mr info", e)
             null
         }
     }
@@ -173,7 +173,7 @@ class GitScmService @Autowired constructor(
                 ).data
             }
         } catch (e: Exception) {
-            logger.error("fail to get mr info", e)
+            logger.warn("fail to get mr info", e)
             null
         }
     }
@@ -206,20 +206,21 @@ class GitScmService @Autowired constructor(
                     page = i,
                     pageSize = 100
                 ).data ?: emptyList()
-                changeSet.addAll(result.map {
-                    if (it.deletedFile) {
-                        it.oldPath
-                    } else {
-                        it.newPath
+                changeSet.addAll(
+                    result.map {
+                        if (it.deletedFile) {
+                            it.oldPath
+                        } else {
+                            it.newPath
+                        }
                     }
-                }
                 )
                 if (result.size < 100) {
                     break
                 }
             }
         } catch (ignore: Exception) {
-            logger.error("fail to get change file list", ignore)
+            logger.warn("fail to get change file list", ignore)
         }
         return changeSet
     }
@@ -251,7 +252,7 @@ class GitScmService @Autowired constructor(
             ).data
             Pair(defaultBranch, commitInfo)
         } catch (ignore: Exception) {
-            logger.error("fail to get default branch latest commit info", ignore)
+            logger.warn("fail to get default branch latest commit info", ignore)
             Pair(null, null)
         }
     }
@@ -295,34 +296,61 @@ class GitScmService @Autowired constructor(
         }
     }
 
+    fun getRepoAuthUser(
+        projectId: String,
+        repo: Repository
+    ): String {
+        val type = getType(repo) ?: return ""
+        val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+        return try {
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            client.get(ServiceGitResource::class).getUserInfoByToken(
+                token = token,
+                tokenType = tokenType
+            ).data?.username ?: ""
+        } catch (ignore: Throwable) {
+            logger.warn("fail to get repo auth user", ignore)
+            ""
+        }
+    }
+
     private fun getToken(projectId: String, credentialId: String, userName: String, authType: TokenTypeEnum): String {
         return if (authType == TokenTypeEnum.OAUTH) {
             client.get(ServiceOauthResource::class).gitGet(userName).data?.accessToken ?: ""
         } else {
-            val pair = DHUtil.initKey()
-            val encoder = Base64.getEncoder()
-            val decoder = Base64.getDecoder()
-            val credentialResult = client.get(ServiceCredentialResource::class).get(
-                projectId = projectId, credentialId = credentialId,
-                publicKey = encoder.encodeToString(pair.publicKey)
-            )
-            if (credentialResult.isNotOk() || credentialResult.data == null) {
-                throw ErrorCodeException(
-                    errorCode = credentialResult.status.toString(),
-                    defaultMessage = credentialResult.message
-                )
-            }
+            getCredential(projectId, credentialId)
+        }
+    }
 
-            val credential = credentialResult.data!!
-
-            String(
-                DHUtil.decrypt(
-                    data = decoder.decode(credential.v1),
-                    partBPublicKey = decoder.decode(credential.publicKey),
-                    partAPrivateKey = pair.privateKey
-                )
+    fun getCredential(projectId: String, credentialId: String): String {
+        val pair = DHUtil.initKey()
+        val encoder = Base64.getEncoder()
+        val decoder = Base64.getDecoder()
+        val credentialResult = client.get(ServiceCredentialResource::class).get(
+            projectId = projectId, credentialId = credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey)
+        )
+        if (credentialResult.isNotOk() || credentialResult.data == null) {
+            throw ErrorCodeException(
+                errorCode = credentialResult.status.toString(),
+                defaultMessage = credentialResult.message
             )
         }
+
+        val credential = credentialResult.data!!
+
+        return String(
+            DHUtil.decrypt(
+                data = decoder.decode(credential.v1),
+                partBPublicKey = decoder.decode(credential.publicKey),
+                partAPrivateKey = pair.privateKey
+            )
+        )
     }
 
     private fun getType(repo: Repository): Pair<RepoAuthType?, ScmType>? {

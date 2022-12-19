@@ -44,13 +44,13 @@ import com.tencent.devops.stream.trigger.actions.data.context.isSuccess
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.util.StreamPipelineUtils
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
 @Suppress("NestedBlockDepth")
 @Component
@@ -64,7 +64,7 @@ class SendCommitCheck @Autowired constructor(
         private const val BUILD_RUNNING_DESC = "Running."
         private const val BUILD_STAGE_SUCCESS_DESC =
             "Warning: your pipeline「%s」 is stage succeed. Rejected by %s, reason is %s."
-        private const val BUILD_SUCCESS_DESC = "Successful in %sm."
+        private const val BUILD_SUCCESS_DESC = "Successful in %s."
         private const val BUILD_CANCEL_DESC = "Your pipeline「%s」 was cancelled."
         private const val BUILD_FAILED_DESC = "Failing after %sm."
         private const val BUILD_GATE_REVIEW_DESC =
@@ -81,7 +81,7 @@ class SendCommitCheck @Autowired constructor(
                 sendCommitCheckV2(action)
             }
         } catch (e: Throwable) {
-            logger.error("sendCommitCheck error: ${action.format()}")
+            logger.warn("SendCommitCheck|error=${action.format()}")
         }
     }
 
@@ -100,7 +100,7 @@ class SendCommitCheck @Autowired constructor(
             gitProjectName = streamGitProjectInfo.name,
             state = finishData.getGitCommitCheckState(),
             block = action.metaData.isStreamMr() && action.data.setting.enableMrBlock &&
-                !finishData.isSuccess(),
+                    !finishData.isSuccess(),
             context = "${action.data.context.pipeline!!.filePath}@${action.metaData.streamObjectKind.name}",
             targetUrl = getTargetUrl(action),
             description = getDescByBuildStatus(
@@ -140,10 +140,11 @@ class SendCommitCheck @Autowired constructor(
             }
             // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
             BuildReviewType.TASK_REVIEW -> {
-                logger.warn("buildReviewListener event not match: ${finishData.reviewType}")
+                logger.warn("SendCommitCheck|getStageReviewDesc|event not match|${finishData.reviewType}")
                 BUILD_RUNNING_DESC
             }
-            BuildReviewType.QUALITY_TASK_REVIEW_PASS, BuildReviewType.QUALITY_TASK_REVIEW_ABORT -> {
+            BuildReviewType.QUALITY_TASK_REVIEW_PASS, BuildReviewType.QUALITY_TASK_REVIEW_ABORT,
+            BuildReviewType.TRIGGER_REVIEW -> {
                 ""
             }
         }
@@ -158,21 +159,33 @@ class SendCommitCheck @Autowired constructor(
                 val (name, reason) = getReviewInfo(finishData)
                 BUILD_STAGE_SUCCESS_DESC.format(pipelineName, name, reason)
             } else {
-                BUILD_SUCCESS_DESC.format(getFinishTime(finishData.startTime).toString())
+                BUILD_SUCCESS_DESC.format(getFinishTime(finishData.startTime))
             }
         }
         finishData.getBuildStatus().isCancel() -> {
             BUILD_CANCEL_DESC.format(pipelineName)
         }
         else -> {
-            BUILD_FAILED_DESC.format(getFinishTime(finishData.startTime).toString())
+            BUILD_FAILED_DESC.format(getFinishTime(finishData.startTime))
         }
     }
 
-    private fun getFinishTime(startTimeTimeStamp: Long?): Long {
+    private fun getFinishTime(startTimeTimeStamp: Long?): String {
         val zoneId = ZoneId.systemDefault()
         val startTime = LocalDateTime.ofInstant(startTimeTimeStamp?.let { Instant.ofEpochMilli(it) }, zoneId)
-        return startTime.between(LocalDateTime.now()).toMinutes()
+        return startTime.between(LocalDateTime.now()).format()
+    }
+
+    private fun Duration.format(): String {
+        if (this === Duration.ZERO) {
+            return "0s"
+        }
+        val day = (seconds / 86400).toInt()
+        val hours = ((seconds / 3600) % 24).toInt()
+        val minutes = (seconds % 3600 / 60).toInt()
+        val secs = (seconds % 60).toInt()
+        fun join(int: Int, name: String) = if (int > 0) " $int$name" else ""
+        return join(day, "d") + join(hours, "h") + join(minutes, "m") + join(secs, "s")
     }
 
     private fun getTargetUrl(
@@ -209,7 +222,7 @@ class SendCommitCheck @Autowired constructor(
                 channelCode = ChannelCode.GIT
             ).data!!.model
         } catch (e: Exception) {
-            logger.warn("get build finish model info error: ${e.message}")
+            logger.warn("SendCommitCheck|getReviewInfo|get build finish model info error|${e.message}")
             return Pair(" ", " ")
         }
         model.stages.forEach { stage ->
@@ -242,7 +255,8 @@ private fun BuildFinishStageData.isCheckInOrOut(): Pair<String?, String?> {
         BuildReviewType.TASK_REVIEW -> {
             Pair(null, null)
         }
-        BuildReviewType.QUALITY_TASK_REVIEW_PASS, BuildReviewType.QUALITY_TASK_REVIEW_ABORT -> {
+        BuildReviewType.QUALITY_TASK_REVIEW_PASS, BuildReviewType.QUALITY_TASK_REVIEW_ABORT,
+        BuildReviewType.TRIGGER_REVIEW -> {
             Pair(null, null)
         }
     }

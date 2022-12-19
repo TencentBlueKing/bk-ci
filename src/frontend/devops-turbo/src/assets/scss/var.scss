@@ -1,1 +1,2 @@
-$designToPx: 937/819;
+@use "sass:math";
+$designToPx: math.div(937, 819);

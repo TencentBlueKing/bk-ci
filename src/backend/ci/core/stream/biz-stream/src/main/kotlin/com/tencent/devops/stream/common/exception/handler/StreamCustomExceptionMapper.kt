@@ -45,7 +45,7 @@ class StreamCustomExceptionMapper : ExceptionMapper<StreamCustomException> {
     }
 
     override fun toResponse(exception: StreamCustomException): Response {
-        logger.warn("Failed with stream custom exception: $exception")
+        logger.warn("StreamCustomExceptionMapper|toResponse|Failed|exception|$exception")
         return Response.status(exception.status)
             .type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result<Void>(exception.status, exception.message ?: "Internal Exception")).build()

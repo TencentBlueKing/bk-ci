@@ -24,7 +24,6 @@
     </div>
 </template>
 <script>
-    import * as monaco from 'monaco-editor'
 
     export default {
         props: {
@@ -64,7 +63,8 @@
         data () {
             return {
                 editor: null,
-                isLoading: false
+                isLoading: false,
+                monaco: null
             }
         },
         watch: {
@@ -78,13 +78,13 @@
 
             lang (newVal) {
                 if (this.editor) {
-                    monaco.editor.setModelLanguage(this.editor.getModel(), newVal)
+                    this.monaco.editor.setModelLanguage(this.editor.getModel(), newVal)
                 }
             },
 
             theme (newVal) {
                 if (this.editor) {
-                    monaco.editor.setTheme(newVal)
+                    this.monaco.editor.setTheme(newVal)
                 }
             },
 
@@ -94,8 +94,14 @@
         },
         async mounted () {
             this.isLoading = true
-
-            this.editor = monaco.editor.create(this.$el, {
+            this.monaco = await import(
+                /* webpackMode: "lazy" */
+                /* webpackPrefetch: true */
+                /* webpackPreload: true */
+                /* webpackChunkName: "monaco-editor" */
+                'monaco-editor'
+            )
+            this.editor = this.monaco.editor.create(this.$el, {
                 value: this.value,
                 language: this.getLang(this.lang),
                 theme: 'vs-dark',

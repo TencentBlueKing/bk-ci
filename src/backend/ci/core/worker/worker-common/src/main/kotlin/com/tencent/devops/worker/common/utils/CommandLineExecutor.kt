@@ -27,9 +27,6 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.common.api.pojo.ErrorCode
-import com.tencent.devops.common.api.pojo.ErrorType
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.ExecuteStreamHandler
@@ -147,14 +144,6 @@ class CommandLineExecutor : DefaultExecutor() {
                 } catch (e: Exception) {
                     throw IOException(e.message)
                 }
-            }
-
-            if (this.isFailure(exitValue)) {
-                throw TaskExecuteException(
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
-                    errorMsg = "Process exited with an error: $exitValue"
-                )
             }
 
             return exitValue

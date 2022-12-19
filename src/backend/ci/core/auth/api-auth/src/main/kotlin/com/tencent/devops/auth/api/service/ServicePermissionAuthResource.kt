@@ -30,6 +30,7 @@ package com.tencent.devops.auth.api.service
 import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import io.swagger.annotations.Api
@@ -61,6 +62,9 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
         @QueryParam("action")
         @ApiParam("资源类型", required = true)
         action: String
@@ -76,6 +80,9 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
         @QueryParam("action")
         @ApiParam("资源类型", required = true)
         action: String,
@@ -97,6 +104,9 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
         @QueryParam("action")
         @ApiParam("action类型", required = true)
         action: String,
@@ -124,6 +134,9 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String,
@@ -150,6 +163,9 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
         @QueryParam("action")
         @ApiParam("action类型")
         action: String,
@@ -171,6 +187,9 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
         @QueryParam("action")
         @ApiParam("action类型")
         action: List<String>,
@@ -191,6 +210,9 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
         @PathParam("projectCode")
         @ApiParam("项目Id")
         projectCode: String,

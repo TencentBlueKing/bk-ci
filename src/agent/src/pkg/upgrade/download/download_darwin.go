@@ -6,7 +6,9 @@ package download
 import (
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/pkg/errors"
 	"runtime"
+	"strings"
 )
 
 func getServerFileArch() string {
@@ -35,4 +37,14 @@ func DownloadAgentFile(saveDir string) (string, error) {
 	return api.DownloadUpgradeFile(
 		"upgrade/devopsAgent"+getServerFileArch(), saveDir+"/"+config.AgentFileClientLinux,
 	)
+}
+
+func DownloadJdkFile(saveDir string) (string, error) {
+	return api.DownloadUpgradeFile(
+		"jre/"+strings.TrimPrefix(getServerFileArch(), "_")+"/jre.zip", saveDir+"/"+config.JdkClientFile,
+	)
+}
+
+func DownloadDockerInitFile(saveDir string) (string, error) {
+	return "", errors.New("not support macos use docker agent")
 }

@@ -9,7 +9,7 @@
                 :style="{ width: param.width }"
             >
                 <section class="component-row">
-                    <component :is="param.component" v-validate="{ required: param.required }" :click-unfold="true" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;" :placeholder="param.placeholder"></component>
+                    <component :is="param.component" v-validate="{ required: param.required }" :click-unfold="true" :show-select-all="true" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;" :placeholder="param.placeholder"></component>
                     <div class="file-upload" v-if="showFileUploader(param.type)">
                         <file-param-input :file-path="param.value"></file-param-input>
                     </div>
@@ -89,6 +89,18 @@
                             displayKey: 'value',
                             settingKey: 'key',
                             list: this.getParamOpt(param)
+                        }
+
+                        // codeLib 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
+                        if (param.type === CODE_LIB) {
+                            const value = this.paramValues[param.id]
+                            const listItemIndex = restParam.list && restParam.list.findIndex(i => i.value === value)
+                            if (listItemIndex < 0 && value) {
+                                restParam.list.push({
+                                    key: value,
+                                    value: value
+                                })
+                            }
                         }
                     }
 
@@ -174,6 +186,7 @@
 <style lang="scss" scoped>
     @import '@/scss/conf';
     @import '@/scss/mixins/ellipsis';
+
     .component-row {
         display: flex;
         .metadata-box {

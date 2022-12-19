@@ -56,6 +56,7 @@ class ApigwRepositoryCommitResourceV4Impl @Autowired constructor(
         pipelineId: String?,
         buildId: String
     ): Result<List<CommitResponse>> {
+        logger.info("OPENAPI_REPOSITORY_COMMIT_V4|$userId|get repository commit|$projectId|$pipelineId|$buildId")
         checkPipelineId(projectId, pipelineId, buildId)
         return client.get(UserRepositoryResource::class).getCommit(buildId)
     }

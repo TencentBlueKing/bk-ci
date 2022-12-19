@@ -38,8 +38,9 @@ import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record21
-import org.jooq.SelectOnConditionStep
+import org.jooq.Record13
+import org.jooq.Result
+import org.jooq.SelectJoinStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -47,43 +48,55 @@ import java.time.LocalDateTime
 @Repository
 class MarketAtomEnvInfoDao {
 
-    fun addMarketAtomEnvInfo(dslContext: DSLContext, atomId: String, atomEnvRequest: AtomEnvRequest) {
+    fun addMarketAtomEnvInfo(dslContext: DSLContext, atomId: String, atomEnvRequests: List<AtomEnvRequest>) {
         with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
-            dslContext.insertInto(
-                this,
-                ID,
-                ATOM_ID,
-                PKG_NAME,
-                PKG_PATH,
-                LANGUAGE,
-                MIN_VERSION,
-                TARGET,
-                SHA_CONTENT,
-                PRE_CMD,
-                POST_ENTRY_PARAM,
-                POST_CONDITION,
-                CREATOR,
-                MODIFIER
-            )
-                .values(
-                    UUIDUtil.generate(),
-                    atomId,
-                    atomEnvRequest.pkgName,
-                    atomEnvRequest.pkgPath,
-                    atomEnvRequest.language,
-                    atomEnvRequest.minVersion,
-                    atomEnvRequest.target,
-                    atomEnvRequest.shaContent,
-                    atomEnvRequest.preCmd,
-                    atomEnvRequest.atomPostInfo?.postEntryParam,
-                    atomEnvRequest.atomPostInfo?.postCondition,
-                    atomEnvRequest.userId,
-                    atomEnvRequest.userId
-                ).execute()
+            atomEnvRequests.forEach { atomEnvRequest ->
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    ATOM_ID,
+                    PKG_NAME,
+                    PKG_PATH,
+                    LANGUAGE,
+                    MIN_VERSION,
+                    TARGET,
+                    SHA_CONTENT,
+                    PRE_CMD,
+                    POST_ENTRY_PARAM,
+                    POST_CONDITION,
+                    OS_NAME,
+                    OS_ARCH,
+                    RUNTIME_VERSION,
+                    DEFAULT_FLAG,
+                    FINISH_KILL_FLAG,
+                    CREATOR,
+                    MODIFIER
+                )
+                    .values(
+                        UUIDUtil.generate(),
+                        atomId,
+                        atomEnvRequest.pkgName,
+                        atomEnvRequest.pkgRepoPath,
+                        atomEnvRequest.language,
+                        atomEnvRequest.minVersion,
+                        atomEnvRequest.target,
+                        atomEnvRequest.shaContent,
+                        atomEnvRequest.preCmd,
+                        atomEnvRequest.atomPostInfo?.postEntryParam,
+                        atomEnvRequest.atomPostInfo?.postCondition,
+                        atomEnvRequest.osName,
+                        atomEnvRequest.osArch,
+                        atomEnvRequest.runtimeVersion,
+                        atomEnvRequest.defaultFlag,
+                        atomEnvRequest.finishKillFlag,
+                        atomEnvRequest.userId,
+                        atomEnvRequest.userId
+                    ).execute()
+            }
         }
     }
 
-    fun getProjectMarketAtomEnvInfo(
+    fun getProjectAtomBaseInfo(
         dslContext: DSLContext,
         projectCode: String,
         atomCode: String,
@@ -92,10 +105,9 @@ class MarketAtomEnvInfoDao {
         atomStatusList: List<Byte>?
     ): Record? {
         val tAtom = TAtom.T_ATOM
-        val tAtomEnvInfo = TAtomEnvInfo.T_ATOM_ENV_INFO
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         return if (atomDefaultFlag) {
-            getAtomEnvInfoBaseStep(dslContext, tAtom, tAtomEnvInfo)
+            getAtomBaseInfoStep(dslContext, tAtom)
                 .where(queryDefaultAtomCondition(
                     tAtom = tAtom,
                     atomCode = atomCode,
@@ -103,7 +115,7 @@ class MarketAtomEnvInfoDao {
                     atomStatusList = atomStatusList
                 )).orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne()
         } else {
-            getAtomEnvInfoBaseStep(dslContext, tAtom, tAtomEnvInfo)
+            getAtomBaseInfoStep(dslContext, tAtom)
                 .join(tStoreProjectRel)
                 .on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
                 .where(queryNormalAtomCondition(
@@ -117,11 +129,10 @@ class MarketAtomEnvInfoDao {
         }
     }
 
-    private fun getAtomEnvInfoBaseStep(
+    private fun getAtomBaseInfoStep(
         dslContext: DSLContext,
-        tAtom: TAtom,
-        tAtomEnvInfo: TAtomEnvInfo
-    ): SelectOnConditionStep<Record21<String, String, Byte, String, String, String, Boolean, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
+        tAtom: TAtom
+    ): SelectJoinStep<Record13<String, String, Byte, String, String, String, Boolean, String, String, Boolean, String, LocalDateTime, LocalDateTime>> {
         return dslContext.select(
             tAtom.ID,
             tAtom.ATOM_CODE,
@@ -135,18 +146,8 @@ class MarketAtomEnvInfoDao {
             tAtom.BUILD_LESS_RUN_FLAG,
             tAtom.JOB_TYPE,
             tAtom.CREATE_TIME,
-            tAtom.UPDATE_TIME,
-            tAtomEnvInfo.PKG_PATH,
-            tAtomEnvInfo.LANGUAGE,
-            tAtomEnvInfo.MIN_VERSION,
-            tAtomEnvInfo.TARGET,
-            tAtomEnvInfo.SHA_CONTENT,
-            tAtomEnvInfo.PRE_CMD,
-            tAtomEnvInfo.POST_ENTRY_PARAM,
-            tAtomEnvInfo.POST_CONDITION
+            tAtom.UPDATE_TIME
         ).from(tAtom)
-            .join(tAtomEnvInfo)
-            .on(tAtom.ID.eq(tAtomEnvInfo.ATOM_ID))
     }
 
     private fun getBaseQueryCondition(
@@ -190,18 +191,69 @@ class MarketAtomEnvInfoDao {
         return conditions
     }
 
-    fun getMarketAtomEnvInfoByAtomId(dslContext: DSLContext, atomId: String): TAtomEnvInfoRecord? {
+    fun getAtomEnvInfo(
+        dslContext: DSLContext,
+        atomId: String,
+        osName: String? = null,
+        osArch: String? = null
+    ): TAtomEnvInfoRecord? {
+        return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_ID.eq(atomId))
+            if (!osName.isNullOrBlank()) {
+                conditions.add(OS_NAME.eq(osName))
+            }
+            if (!osArch.isNullOrBlank()) {
+                conditions.add(OS_ARCH.eq(osArch))
+            }
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun getNewestAtomEnvInfo(dslContext: DSLContext, atomId: String): TAtomEnvInfoRecord? {
         return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
             dslContext.selectFrom(this)
                 .where(ATOM_ID.eq(atomId))
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
                 .fetchOne()
+        }
+    }
+
+    fun getDefaultAtomEnvInfo(
+        dslContext: DSLContext,
+        atomId: String,
+        osName: String? = null
+    ): TAtomEnvInfoRecord? {
+        return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_ID.eq(atomId))
+            conditions.add(DEFAULT_FLAG.eq(true))
+            if (!osName.isNullOrBlank()) {
+                conditions.add(OS_NAME.eq(osName))
+            }
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun getMarketAtomEnvInfosByAtomId(dslContext: DSLContext, atomId: String): Result<TAtomEnvInfoRecord>? {
+        return with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            dslContext.selectFrom(this)
+                .where(ATOM_ID.eq(atomId))
+                .fetch()
         }
     }
 
     fun updateMarketAtomEnvInfo(dslContext: DSLContext, atomId: String, atomEnvRequest: AtomEnvRequest) {
         with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
             val baseStep = dslContext.update(this)
-                .set(PKG_PATH, atomEnvRequest.pkgPath)
+                .set(PKG_PATH, atomEnvRequest.pkgRepoPath)
             if (!atomEnvRequest.language.isNullOrEmpty()) {
                 baseStep.set(LANGUAGE, atomEnvRequest.language)
             }
@@ -220,17 +272,38 @@ class MarketAtomEnvInfoDao {
             if (!atomEnvRequest.pkgName.isNullOrEmpty()) {
                 baseStep.set(PKG_NAME, atomEnvRequest.pkgName)
             }
+            if (!atomEnvRequest.runtimeVersion.isNullOrEmpty()) {
+                baseStep.set(RUNTIME_VERSION, atomEnvRequest.runtimeVersion)
+            }
+            atomEnvRequest.defaultFlag?.let { baseStep.set(DEFAULT_FLAG, it) }
+            atomEnvRequest.finishKillFlag?.let { baseStep.set(FINISH_KILL_FLAG, it) }
             val atomPostInfo = atomEnvRequest.atomPostInfo
             baseStep.set(POST_ENTRY_PARAM, atomPostInfo?.postEntryParam)
             baseStep.set(POST_CONDITION, atomPostInfo?.postCondition)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_ID.eq(atomId))
+            if (!atomEnvRequest.osName.isNullOrBlank()) {
+                conditions.add(OS_NAME.eq(atomEnvRequest.osName))
+            }
+            if (!atomEnvRequest.osArch.isNullOrBlank()) {
+                conditions.add(OS_ARCH.eq(atomEnvRequest.osArch))
+            }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, atomEnvRequest.userId)
+                .where(conditions)
+                .execute()
+        }
+    }
+
+    fun deleteAtomEnvInfoById(dslContext: DSLContext, atomId: String) {
+        with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            dslContext.deleteFrom(this)
                 .where(ATOM_ID.eq(atomId))
                 .execute()
         }
     }
 
-    fun deleteAtomEnvInfo(dslContext: DSLContext, atomCode: String) {
+    fun deleteAtomEnvInfoByCode(dslContext: DSLContext, atomCode: String) {
         val ta = TAtom.T_ATOM
         val atomIds = dslContext.select(ta.ID).from(ta).where(ta.ATOM_CODE.eq(atomCode)).fetch()
         with(TAtomEnvInfo.T_ATOM_ENV_INFO) {

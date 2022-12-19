@@ -28,16 +28,19 @@
 package com.tencent.devops.project.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_CODECC_REDIS_KEY
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.ProjectInfoResponse
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
@@ -51,6 +54,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
+@Suppress("UNUSED")
 @Service
 class ProjectTagService @Autowired constructor(
     val dslContext: DSLContext,
@@ -75,34 +79,63 @@ class ProjectTagService @Autowired constructor(
     @Value("\${tag.prod:#{null}}")
     private val prodTag: String? = null
 
+    @Value("\${tag.gray:#{null}}")
+    private val grayTag: String? = null
+
     private val projectRouterCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(2, TimeUnit.MINUTES)
         .build<String/*projectId*/, String>/*routerTag*/()
 
-    fun updateTagByProject(
-        projectTagUpdateDTO: ProjectTagUpdateDTO
-    ): Result<Boolean> {
+    fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums): Boolean {
+        val routerTag = when (operateFlag) {
+            grayLabel -> grayTag
+            prodLabel -> prodTag
+            else -> null
+        }
+
+        if (routerTag.isNullOrBlank()) {
+            return false
+        }
+
+        when (system) {
+            SystemEnums.CI -> {
+                val projectTagUpdateDTO = ProjectTagUpdateDTO(
+                    routerTag = routerTag,
+                    bgId = null,
+                    deptId = null,
+                    centerId = null,
+                    projectCodeList = projectCodeList,
+                    channel = null
+                )
+                updateTagByProject(projectTagUpdateDTO)
+            }
+            SystemEnums.CODECC, SystemEnums.REPO -> {
+                val projectTagUpdateDTO = ProjectExtSystemTagDTO(routerTag, projectCodeList, system = system.name)
+                updateExtSystemRouterTag(projectTagUpdateDTO)
+            }
+        }
+        return true
+    }
+
+    fun updateTagByProject(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
         logger.info("updateTagByProject: $projectTagUpdateDTO")
         checkRouteTag(projectTagUpdateDTO.routerTag)
         checkProject(projectTagUpdateDTO.projectCodeList)
         projectTagDao.updateProjectTags(
             dslContext = dslContext,
-            projectIds = projectTagUpdateDTO.projectCodeList!!,
+            englishNames = projectTagUpdateDTO.projectCodeList!!,
             routerTag = projectTagUpdateDTO.routerTag
         )
         refreshRouterByProject(
             routerTag = projectTagUpdateDTO.routerTag,
             redisOperation = redisOperation,
-            projectCodeIds = projectTagUpdateDTO.projectCodeList!!
+            projectIds = projectTagUpdateDTO.projectCodeList!!
         )
         return Result(true)
     }
 
-    fun updateTagByProject(
-        projectCode: String,
-        tag: String? = null
-    ): Boolean {
+    fun updateTagByProject(projectCode: String, tag: String? = null): Boolean {
         val routerTag = if (tag.isNullOrEmpty()) {
             autoTag
         } else {
@@ -124,9 +157,7 @@ class ProjectTagService @Autowired constructor(
         return true
     }
 
-    fun updateTagByOrg(
-        projectTagUpdateDTO: ProjectTagUpdateDTO
-    ): Result<Boolean> {
+    fun updateTagByOrg(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
         logger.info("updateTagByOrg: $projectTagUpdateDTO")
         checkRouteTag(projectTagUpdateDTO.routerTag)
         checkOrg(projectTagUpdateDTO)
@@ -138,26 +169,25 @@ class ProjectTagService @Autowired constructor(
             deptId = projectTagUpdateDTO.deptId
         )
 
-        val projectCodes = projectDao.listByGroupId(
+        projectDao.listByOrganization(
             dslContext = dslContext,
             bgId = projectTagUpdateDTO.bgId,
             centerId = projectTagUpdateDTO.centerId,
-            deptId = projectTagUpdateDTO.deptId
-        ).map { it.englishName }
-
-        executePool.submit {
-            refreshRouterByProject(
-                routerTag = projectTagUpdateDTO.routerTag,
-                redisOperation = redisOperation,
-                projectCodeIds = projectCodes
-            )
+            deptId = projectTagUpdateDTO.deptId,
+            enabled = null
+        )?.map { it.englishName }?.let {
+            executePool.submit {
+                refreshRouterByProject(
+                    routerTag = projectTagUpdateDTO.routerTag,
+                    redisOperation = redisOperation,
+                    projectIds = it
+                )
+            }
         }
         return Result(true)
     }
 
-    fun updateTagByChannel(
-        projectTagUpdateDTO: ProjectTagUpdateDTO
-    ): Result<Boolean> {
+    fun updateTagByChannel(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
         logger.info("updateTagByChannel: $projectTagUpdateDTO")
         checkRouteTag(projectTagUpdateDTO.routerTag)
         checkChannel(projectTagUpdateDTO.channel)
@@ -179,33 +209,29 @@ class ProjectTagService @Autowired constructor(
     }
 
     fun updateExtSystemRouterTag(extSystemTag: ProjectExtSystemTagDTO): Result<Boolean> {
-        logger.info("updateTagByProject: $extSystemTag")
         checkRouteTag(extSystemTag.routerTag)
         checkProject(extSystemTag.projectCodeList)
         val projectInfos = projectTagDao.getExtSystemRouterTag(dslContext, extSystemTag.projectCodeList)
             ?: return Result(false)
         projectInfos.forEach {
             val extSystemRouter = it.otherRouterTags
-            logger.info("project otherRouterTag ${it.otherRouterTags} ${it.englishName}")
             val newRouteMap = mutableMapOf<String, String>()
             // 如果有对应系统的router则替换，否则直接加
-            if (extSystemRouter.isNullOrEmpty()) {
+            if (extSystemRouter?.toString().isNullOrEmpty()) {
                 newRouteMap[extSystemTag.system] = extSystemTag.routerTag
             } else {
-                val routerMap = objectMapper.readValue<Map<String, String>>(extSystemRouter)
+                val routerMap = JsonUtil.to<Map<String, String>>(extSystemRouter.toString())
                 newRouteMap.putAll(routerMap)
                 newRouteMap[extSystemTag.system] = extSystemTag.routerTag
             }
             logger.info("setExtSystemRoute ${it.englishName} ${JsonUtil.toJson(newRouteMap)}")
             projectTagDao.updateExtSystemProjectTags(
                 dslContext = dslContext,
-                projectCode = it.englishName,
-                routerTag = JsonUtil.toJson(newRouteMap)
+                englishName = it.englishName,
+                otherRouterTag = JsonUtil.toJson(newRouteMap)
             )
-            if (extSystemTag.system == SystemEnums.CODECC.name) {
+            if (extSystemTag.system == SystemEnums.CODECC.name) { // 网关会用到来做codecc路由
                 redisOperation.hset(PROJECT_TAG_CODECC_REDIS_KEY, it.englishName, extSystemTag.routerTag)
-            } else if (extSystemTag.system == SystemEnums.REPO.name) {
-                redisOperation.hset(PROJECT_TAG_REPO_REDIS_KEY, it.englishName, extSystemTag.routerTag)
             }
         }
         return Result(true)
@@ -217,11 +243,8 @@ class ProjectTagService @Autowired constructor(
         }
 
         val projectInfos = projectDao.listByEnglishName(
-            dslContext,
-            projectIds,
-            null,
-            null,
-            null
+            dslContext = dslContext,
+            englishNameList = projectIds
         ).map { it.englishName }
         if (projectIds.size > projectInfos.size) {
             val notExistProjectList = mutableListOf<String>()
@@ -249,17 +272,13 @@ class ProjectTagService @Autowired constructor(
         }
     }
 
-    fun refreshRouterByProject(
-        routerTag: String,
-        projectCodeIds: List<String>,
-        redisOperation: RedisOperation
-    ) {
+    fun refreshRouterByProject(routerTag: String, projectIds: List<String>, redisOperation: RedisOperation) {
         val watcher = Watcher("ProjectTagRefresh $routerTag")
-        logger.info("ProjectTagRefresh start $routerTag $projectCodeIds")
-        projectCodeIds.forEach { projectCode ->
-            redisOperation.hset(PROJECT_TAG_REDIS_KEY, projectCode, routerTag)
+        logger.info("ProjectTagRefresh start $routerTag $projectIds")
+        projectIds.forEach { projectId ->
+            redisOperation.hset(PROJECT_TAG_REDIS_KEY, projectId, routerTag)
         }
-        logger.info("ProjectTagRefresh success. $routerTag ${projectCodeIds.size}")
+        logger.info("ProjectTagRefresh success. $routerTag ${projectIds.size}")
         LogUtils.printCostTimeWE(watcher)
     }
 
@@ -273,7 +292,7 @@ class ProjectTagService @Autowired constructor(
             var offset = 0
             val limit = 500
             do {
-                val projectInfos = projectTagDao.listByChannel(dslContext, channel!!, limit, offset)
+                val projectInfos = projectTagDao.listByChannel(dslContext, channel, limit, offset)
                 projectInfos.forEach {
                     redisOperation.hset(PROJECT_TAG_REDIS_KEY, it.englishName, routerTag)
                 }
@@ -289,10 +308,8 @@ class ProjectTagService @Autowired constructor(
         // 因定时任务请求量太大,为减小redis压力,优先match内存缓存。 内存数据可能与实际数据存在差异。失败继续做redis校验
         if (projectRouterCache.getIfPresent(projectId) != null) {
             val cacheCheck = projectClusterCheck(projectRouterCache.getIfPresent(projectId))
-            if (cacheCheck) {
-                return cacheCheck
-            } else if (projectRouterCache.getIfPresent(projectId).isNullOrBlank()) {
-                // 如果缓存内的为"",说明项目没有配置路由信息。 缓存校验生效
+            // 如果缓存内的为"",说明项目没有配置路由信息。 缓存校验生效
+            if (cacheCheck || projectRouterCache.getIfPresent(projectId).isNullOrBlank()) {
                 return cacheCheck
             }
         }
@@ -341,9 +358,112 @@ class ProjectTagService @Autowired constructor(
         }
     }
 
+    fun getProjectListByFlag(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
+        repoGrayFlag: Boolean
+    ): com.tencent.devops.project.pojo.Result<Map<String, Any?>?> {
+        val dataObj = mutableMapOf<String, Any?>()
+
+        val routerTag = if (grayFlag) grayTag else null
+
+        val otherRouterTagMaps = mutableMapOf<String, String>()
+        if (codeCCGrayFlag && grayTag != null) {
+            otherRouterTagMaps[SystemEnums.CODECC.name] = grayTag
+        }
+        if (repoGrayFlag && grayTag != null) {
+            otherRouterTagMaps[SystemEnums.REPO.name] = grayTag
+        }
+
+        val projectInfos = projectDao.getProjectList(
+            dslContext = dslContext,
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            offset = offset,
+            limit = limit,
+            routerTag = routerTag,
+            otherRouterTagMaps = otherRouterTagMaps
+        )
+        val totalCount = projectDao.getProjectCount(
+            dslContext = dslContext,
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            routerTag = routerTag,
+            otherRouterTagMaps = otherRouterTagMaps
+        )
+        val dataList = mutableListOf<ProjectInfoResponse>()
+
+        for (i in projectInfos.indices) {
+            val projectData = projectInfos[i]
+            val projectInfo = getProjectInfoResponse(projectData)
+            dataList.add(projectInfo)
+        }
+        dataObj["projectList"] = dataList
+        dataObj["count"] = totalCount
+        return com.tencent.devops.project.pojo.Result(dataObj)
+    }
+
+    private fun getProjectInfoResponse(projectData: TProjectRecord): ProjectInfoResponse {
+        val otherRouterTagMap = projectData.otherRouterTags?.let {
+            JsonUtil.to<Map<String, String>>(projectData.otherRouterTags.toString())
+        } ?: emptyMap()
+        return ProjectInfoResponse(
+            projectId = projectData.projectId,
+            projectName = projectData.projectName,
+            projectEnglishName = projectData.englishName,
+            creatorBgName = projectData.creatorBgName,
+            creatorDeptName = projectData.creatorDeptName,
+            creatorCenterName = projectData.creatorCenterName,
+            bgId = projectData.bgId,
+            bgName = projectData.bgName,
+            deptId = projectData.deptId,
+            deptName = projectData.deptName,
+            centerId = projectData.centerId,
+            centerName = projectData.centerName,
+            projectType = projectData.projectType,
+            approver = projectData.approver,
+            approvalTime = projectData.approvalTime?.timestampmilli(),
+            approvalStatus = projectData.approvalStatus,
+            secrecyFlag = projectData.isSecrecy,
+            creator = projectData.creator,
+            createdAtTime = projectData.createdAt.timestampmilli(),
+            ccAppId = projectData.ccAppId,
+            useBk = projectData.useBk,
+            offlinedFlag = projectData.isOfflined,
+            kind = projectData.kind,
+            enabled = projectData.enabled ?: true,
+            grayFlag = projectData.routerTag == grayTag,
+            codeCCGrayFlag = otherRouterTagMap[SystemEnums.CODECC.name] == grayTag,
+            repoGrayFlag = otherRouterTagMap[SystemEnums.REPO.name] == grayTag,
+            hybridCCAppId = projectData.hybridCcAppId,
+            enableExternal = projectData.enableExternal,
+            enableIdc = projectData.enableIdc,
+            pipelineLimit = projectData.pipelineLimit
+        )
+    }
+
     companion object {
+        private const val grayLabel = 1
+        private const val prodLabel = 2
         private val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
-        const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
-        const val PROJECT_TAG_REPO_REDIS_KEY = "project:setting:tag:repo:v2"
     }
 }

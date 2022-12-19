@@ -47,9 +47,9 @@ abstract class AbsPermissionGrantServiceImpl @Autowired constructor(
                 grantInfo.permission,
                 resources
             )
-            logger.info("grantInstance success: $grantResult")
+            logger.info("Grant instance success: grantResult = $grantResult")
         } catch (e: Exception) {
-            logger.warn("grantInstance fail: $e")
+            logger.warn("Grant instance fail: $e")
             return false
         }
         return true

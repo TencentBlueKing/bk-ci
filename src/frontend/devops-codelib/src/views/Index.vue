@@ -15,7 +15,7 @@
                 @change="clearAliasName"
             >
             </bk-input>
-            <code-lib-table v-bind="codelibs" :switch-page="switchPage"></code-lib-table>
+            <code-lib-table v-bind="codelibs" :switch-page="switchPage" @handleSortChange="handleSortChange"></code-lib-table>
         </template>
         <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
             <bk-button v-for="typeLabel in codelibTypes" theme="primary" :key="typeLabel" @click="createCodelib(typeLabel)">
@@ -60,7 +60,9 @@
                 startPage: 1,
                 showCodelibDialog: false,
                 aliasName: '',
-                projectList: []
+                projectList: [],
+                sortBy: '',
+                sortType: ''
             }
         },
 
@@ -126,14 +128,18 @@
                 projectId = this.projectId,
                 page = this.startPage,
                 pageSize = this.defaultPagesize,
-                aliasName = this.aliasName
+                aliasName = this.aliasName,
+                sortBy = this.sortBy,
+                sortType = this.sortType
             ) {
                 this.isLoading = true
                 this.requestList({
                     projectId,
                     aliasName,
                     page,
-                    pageSize
+                    pageSize,
+                    sortBy,
+                    sortType
                 })
             },
 
@@ -187,6 +193,13 @@
                         projectId: this.projectId
                     }]
                 })
+            },
+
+            handleSortChange (payload) {
+                const { sortBy, sortType } = payload
+                this.sortBy = sortBy
+                this.sortType = sortType
+                this.refreshCodelibList()
             }
         }
     }

@@ -44,6 +44,7 @@ enum class TriggerReason(val summary: String, val detail: String) {
     ),
     CI_YAML_CONTENT_NULL("The YAML file is null", "The YAML file is null: %s"),
     CI_YAML_INVALID("YAML is invalid", "YAML is invalid: %s"),
+    CI_TRIGGER_FORMAT_ERROR("Trigger format is error", "Trigger format is error: %s"),
     CI_YAML_NEED_MERGE_OR_REBASE(
         "The YAML is modified. " +
             "Please execute either REBASE or MERGE to update your YAML from remote target branch.",
@@ -61,13 +62,13 @@ enum class TriggerReason(val summary: String, val detail: String) {
     ),
     TRIGGER_NOT_MATCH(
         "Does not meet the trigger condition",
-        "Does not meet the trigger condition"
+        "Does not meet the trigger condition :%s"
     ),
     PIPELINE_RUN_ERROR("Pipeline run with error", "pipeline run with error"),
     PIPELINE_DISABLE("Pipeline is disabled", "Pipeline is disabled"),
     CI_YAML_TEMPLATE_ERROR("YAML template parse error", "YAML template parse error: %s"),
     PIPELINE_PREPARE_ERROR("Pipeline prepare error", "Pipeline prepare error: %s"),
-    CREATE_QUALITY_RULRS_ERROR("Create quality rules error", "Create quality rules error: %s"),
+    CREATE_QUALITY_RULES_ERROR("Create quality rules error", "Create quality rules error: %s"),
     MR_BRANCH_FILE_ERROR(
         "Mr changelist files not incomplete. Stream not trigger.",
         "In the case where the source branch has file %s and the target branch does not, " +
@@ -81,6 +82,10 @@ enum class TriggerReason(val summary: String, val detail: String) {
     REPO_TRIGGER_FAILED(
         "repo trigger failed",
         "repo trigger failed: %s"
+    ),
+    SAVE_PIPELINE_FAILED(
+        "save pipeline failed",
+        "save pipeline failed: %s"
     ),
     UNKNOWN_ERROR(
         "Unknown error, please contact DevOps-helper",

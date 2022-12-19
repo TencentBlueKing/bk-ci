@@ -36,5 +36,7 @@ data class StoreApproveRequest(
     @ApiModelProperty("审批原因", required = true)
     val approveMsg: String,
     @ApiModelProperty("审批状态", required = true)
-    val approveStatus: ApproveStatusEnum
+    val approveStatus: ApproveStatusEnum,
+    @ApiModelProperty("token", required = false)
+    val token: String? = null
 )

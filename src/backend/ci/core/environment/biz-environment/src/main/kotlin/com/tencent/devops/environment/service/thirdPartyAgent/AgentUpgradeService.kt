@@ -30,6 +30,7 @@ package com.tencent.devops.environment.service.thirdPartyAgent
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.environment.agent.AgentGrayUtils
+import com.tencent.devops.common.environment.agent.AgentUpgradeType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
@@ -45,7 +46,8 @@ class AgentUpgradeService @Autowired constructor(
     private val agentGrayUtils: AgentGrayUtils,
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val client: Client
+    private val client: Client,
+    private val upgradeService: UpgradeService
 ) {
 
     fun updateCanUpgradeAgentList() {
@@ -58,24 +60,9 @@ class AgentUpgradeService @Autowired constructor(
             return
         }
 
-        val currentVersion = redisOperation.get(
-            key = agentGrayUtils.getAgentVersionKey(),
-            isDistinguishCluster = true
-        )
-        val currentMasterVersion = redisOperation.get(
-            key = agentGrayUtils.getAgentMasterVersionKey(),
-            isDistinguishCluster = true
-        )
-        if (currentMasterVersion.isNullOrBlank() || currentVersion.isNullOrBlank()) {
-            logger.warn("invalid server agent version")
-            return
-        }
-
         val canUpgradeAgents = listCanUpdateAgents(
-            currentVersion = currentVersion,
-            currentMasterVersion = currentMasterVersion,
             maxParallelCount = maxParallelCount
-        )
+        ) ?: return
 
         if (canUpgradeAgents.isNotEmpty()) {
             agentGrayUtils.setCanUpgradeAgents(canUpgradeAgents.map { it.id })
@@ -83,10 +70,20 @@ class AgentUpgradeService @Autowired constructor(
     }
 
     private fun listCanUpdateAgents(
-        currentVersion: String?,
-        currentMasterVersion: String?,
         maxParallelCount: Int
-    ): List<TEnvironmentThirdpartyAgentRecord> {
+    ): List<TEnvironmentThirdpartyAgentRecord>? {
+        val currentVersion = upgradeService.getWorkerVersion().ifBlank {
+            logger.warn("invalid server agent version")
+            return null
+        }
+
+        val currentMasterVersion = upgradeService.getAgentVersion().ifBlank {
+            logger.warn("invalid server agent version")
+            return null
+        }
+
+        val currentDockerInitFileMd5 = upgradeService.getDockerInitFileMd5()
+
         val importOKAgents = thirdPartyAgentDao.listByStatus(
             dslContext = dslContext,
             status = setOf(AgentStatus.IMPORT_OK)
@@ -95,8 +92,13 @@ class AgentUpgradeService @Autowired constructor(
             when {
                 // #5806 #5045 解决worker过老，或者异常，导致拿不到版本号，而无法自愈或升级的问题
                 // it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false
-                checkProjectRouter(it.projectId) ->
-                    it.version != currentVersion || it.masterVersion != currentMasterVersion
+                checkProjectRouter(it.projectId) -> checkCanUpgrade(
+                    goAgentCurrentVersion = currentMasterVersion,
+                    workCurrentVersion = currentVersion,
+                    currentDockerInitFileMd5 = currentDockerInitFileMd5,
+                    record = it
+                )
+
                 else -> false
             }
         }
@@ -109,6 +111,52 @@ class AgentUpgradeService @Autowired constructor(
 
     private fun checkProjectRouter(projectId: String): Boolean {
         return client.get(ServiceProjectTagResource::class).checkProjectRouter(projectId).data ?: false
+    }
+
+    @Suppress("ComplexMethod")
+    private fun checkCanUpgrade(
+        goAgentCurrentVersion: String,
+        workCurrentVersion: String,
+        currentDockerInitFileMd5: String,
+        record: TEnvironmentThirdpartyAgentRecord
+    ): Boolean {
+        AgentUpgradeType.values().forEach { type ->
+            val res = when (type) {
+                AgentUpgradeType.GO_AGENT -> {
+                    goAgentCurrentVersion.trim() != record.masterVersion.trim()
+                }
+
+                AgentUpgradeType.WORKER -> {
+                    workCurrentVersion.trim() != record.version.trim()
+                }
+
+                AgentUpgradeType.JDK -> {
+                    val props = upgradeService.parseAgentProps(record.agentProps) ?: return@forEach
+                    val currentJdkVersion = upgradeService.getJdkVersion(record.os, props.arch) ?: return@forEach
+                    if (props.jdkVersion.size > 2) {
+                        currentJdkVersion.trim() != props.jdkVersion.last().trim()
+                    } else {
+                        false
+                    }
+                }
+
+                AgentUpgradeType.DOCKER_INIT_FILE -> {
+                    if (currentDockerInitFileMd5.isBlank()) {
+                        return@forEach
+                    }
+                    val props = upgradeService.parseAgentProps(record.agentProps) ?: return@forEach
+                    if (props.dockerInitFileInfo?.needUpgrade != true) {
+                        return@forEach
+                    }
+                    (props.dockerInitFileInfo.fileMd5.isNotBlank() &&
+                            props.dockerInitFileInfo.fileMd5.trim() != currentDockerInitFileMd5.trim())
+                }
+            }
+            if (res) {
+                return true
+            }
+        }
+        return false
     }
 
     fun setMaxParallelUpgradeCount(count: Int) {

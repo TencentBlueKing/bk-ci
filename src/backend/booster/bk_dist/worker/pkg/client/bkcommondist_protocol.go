@@ -291,12 +291,18 @@ func encodeCommonDispatchReq(req *dcSDK.BKDistCommand) ([]protocol.Message, erro
 	// encode body and file to message
 	pbbody := protocol.PBBodyDispatchTaskReq{}
 	for _, v := range req.Commands {
+		envs := [][]byte{}
+		for _, v := range v.Env {
+			envs = append(envs, []byte(v))
+		}
+
 		pbcommand := protocol.PBCommand{
 			Workdir:     &v.WorkDir,
 			Exepath:     &v.ExePath,
 			Exename:     &v.ExeName,
 			Params:      v.Params,
 			Resultfiles: v.ResultFiles,
+			Env:         envs,
 		}
 		if len(v.Inputfiles) > 0 {
 			for _, f := range v.Inputfiles {

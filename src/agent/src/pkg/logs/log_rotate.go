@@ -9,15 +9,13 @@ import (
 
 // DoDailySplitLog 执行一个每天分割日志的定时器
 func DoDailySplitLog(filepath string, log *lumberjack.Logger) {
-
-loop:
 	for {
 		next, c := initTimerChan()
 		_, ok := <-c
 		if !ok {
 			// 当管道关闭时，重新拉起
 			logs.Error("DoDailySplitLog| timer chan close")
-			break loop
+			continue
 		}
 
 		stat, err := os.Stat(filepath)
@@ -38,7 +36,6 @@ loop:
 			}
 		}
 	}
-
 }
 
 func initTimerChan() (time.Time, <-chan time.Time) {

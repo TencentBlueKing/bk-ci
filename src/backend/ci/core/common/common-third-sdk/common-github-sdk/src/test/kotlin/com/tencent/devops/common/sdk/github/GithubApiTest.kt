@@ -27,43 +27,14 @@
 
 package com.tencent.devops.common.sdk.github
 
-import com.tencent.devops.common.sdk.github.request.GetBranchRequest
-import com.tencent.devops.common.sdk.github.request.ListBranchesRequest
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
+open class GithubApiTest {
 
-@Disabled
-class GithubApiTest {
-
-    private val client = DefaultGithubClient(
+    protected val client = DefaultGithubClient(
         serverUrl = "https://github.com/",
         apiUrl = "https://api.github.com/"
     )
 
-    @Test
-    fun listBranches() {
-        val request = ListBranchesRequest(
-            owner = "Tencent",
-            repo = "bk-ci"
-        )
-        val response = client.execute(
-            oauthToken = "d501d306428d8d34656c726a0c8980c08f343534232",
-            request = request
-        )
-        println(response)
-    }
-
-    @Test
-    fun getBranch() {
-        val request = GetBranchRequest(
-            owner = "Tencent",
-            repo = "bk-ci",
-            branch = "master"
-        )
-        val response = client.execute(
-            oauthToken = "d501d306428d8d34656c726a0c8980c08f343534232",
-            request = request
-        )
-        println(response)
-    }
+    protected val token = "ghu_zzAXkg8erBW9xsMeo1aHpGAPnndxZ519ZBrZ"
+    protected val repoId = 520728348L
+    protected val repoName = "ci-stream-test/ming-test"
 }

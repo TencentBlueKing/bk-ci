@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.resources.apigw.v3.environment
+package com.tencent.devops.openapi.resources.apigw.v4.environment
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
@@ -54,7 +54,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String
     ): Result<List<NodeWithPermission>> {
-        logger.info("v4|listUsableServerNodes userId[$userId] project[$projectId]")
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|list usable server nodes|$projectId")
         return client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
     }
 
@@ -65,7 +65,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         projectId: String,
         environment: EnvCreateInfo
     ): Result<EnvironmentId> {
-        logger.info("v4|createEnv userId[$userId] project[$projectId]")
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|create env|$projectId|$environment")
         return client.get(ServiceEnvironmentResource::class).create(userId, projectId, environment)
     }
 
@@ -76,7 +76,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         projectId: String,
         envHashId: String
     ): Result<Boolean> {
-        logger.info("v4|deleteEnv userId[$userId] project[$projectId]")
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|delete env|$projectId|$envHashId")
         return client.get(ServiceEnvironmentResource::class).delete(userId, projectId, envHashId)
     }
 
@@ -88,10 +88,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         envHashId: String,
         nodeHashIds: List<String>
     ): Result<Boolean> {
-        logger.info(
-            "v4|EnvAddNodes userId[$userId] project[$projectId] " +
-                "envHashId[$envHashId] nodeHashIds[$nodeHashIds]"
-        )
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|env add nodes|$projectId|$envHashId|$nodeHashIds")
         return client.get(ServiceEnvironmentResource::class).addNodes(userId, projectId, envHashId, nodeHashIds)
     }
 
@@ -103,10 +100,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         envHashId: String,
         nodeHashIds: List<String>
     ): Result<Boolean> {
-        logger.info(
-            "v4|envDeleteNodes userId[$userId] project[$projectId] " +
-                "envHashId[$envHashId] nodeHashIds[$nodeHashIds]"
-        )
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|env delete nodes|$projectId|$envHashId|$nodeHashIds")
         return client.get(ServiceEnvironmentResource::class).deleteNodes(userId, projectId, envHashId, nodeHashIds)
     }
 
@@ -117,7 +111,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         projectId: String,
         nodeHashIds: List<String>
     ): Result<Boolean> {
-        logger.info("v4|deleteNodes userId[$userId] project[$projectId]")
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|delete nodes|$projectId|$nodeHashIds")
         return client.get(ServiceNodeResource::class).deleteNodes(userId, projectId, nodeHashIds)
     }
 
@@ -127,7 +121,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String
     ): Result<List<EnvWithPermission>> {
-        logger.info("v4|listUsableServerEnvs userId[$userId] project[$projectId]")
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|list usable server envs|$projectId")
         return client.get(ServiceEnvironmentResource::class).listUsableServerEnvs(userId, projectId)
     }
 
@@ -138,7 +132,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         projectId: String,
         envNames: List<String>
     ): Result<List<EnvWithPermission>> {
-        logger.info("v4|listEnvRawByEnvNames userId[$userId] project[$projectId] envNames[$envNames]")
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|list env raw by env names|$projectId|$envNames")
         return client.get(ServiceEnvironmentResource::class).listRawByEnvNames(userId, projectId, envNames)
     }
 
@@ -149,7 +143,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         projectId: String,
         envHashIds: List<String>
     ): Result<List<EnvWithPermission>> {
-        logger.info("v4|listEnvRawByEnvHashIds userId[$userId] project[$projectId] envHashIds[$envHashIds]")
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|list env raw by env hash ids|$projectId|$envHashIds")
         return client.get(ServiceEnvironmentResource::class).listRawByEnvHashIds(userId, projectId, envHashIds)
     }
 
@@ -160,7 +154,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         projectId: String,
         nodeHashIds: List<String>
     ): Result<List<NodeBaseInfo>> {
-        logger.info("v4|listNodeRawByNodeHashIds userId[$userId] project[$projectId] nodeHashIds[$nodeHashIds]")
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|list node raw by node hash ids|$projectId|$nodeHashIds")
         return client.get(ServiceNodeResource::class).listRawByHashIds(userId, projectId, nodeHashIds)
     }
 
@@ -171,7 +165,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         projectId: String,
         envHashIds: List<String>
     ): Result<Map<String, List<NodeBaseInfo>>> {
-        logger.info("v4|listNodeRawByEnvHashIds userId[$userId] project[$projectId] envHashIds[$envHashIds]")
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|list node raw by env hash ids|$projectId|$envHashIds")
         return client.get(ServiceNodeResource::class).listRawByEnvHashIds(userId, projectId, envHashIds)
     }
 
@@ -181,7 +175,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String
     ): Result<List<NodeWithPermission>> {
-        logger.info("v4|extListNodes, userId: $userId, projectId: $projectId")
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|ext list nodes|$projectId")
         return client.get(ServiceNodeResource::class).extListNodes(userId, projectId)
     }
 
@@ -195,8 +189,8 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         sortDirection: String?
     ): Result<List<AgentPipelineRef>> {
         logger.info(
-            "v4|listPipelineRef, userId: $userId, projectId: $projectId, nodeHashId: $nodeHashId," +
-                " sortBy: $sortBy, sortDirection: $sortDirection"
+            "OPENAPI_ENVIRONMENT_V4|$userId|list pipeline ref|$projectId|$nodeHashId|$sortBy" +
+                "|$sortDirection"
         )
         return client.get(ServiceThirdPartyAgentResource::class).listPipelineRef(
             userId, projectId, nodeHashId,
@@ -210,10 +204,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         envHashId: String,
         sharedProjects: SharedProjectInfoWrap
     ): Result<Boolean> {
-        logger.info(
-            "v4|setShareEnv , userId:$userId , projectId:$projectId , " +
-                "envHashId:$envHashId , sharedProjects:$sharedProjects"
-        )
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|set share env|$projectId|$envHashId|$sharedProjects")
         return client.get(ServiceEnvironmentResource::class).setShareEnv(userId, projectId, envHashId, sharedProjects)
     }
 

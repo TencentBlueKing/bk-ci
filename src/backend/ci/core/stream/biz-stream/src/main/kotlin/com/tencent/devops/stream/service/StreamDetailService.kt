@@ -39,6 +39,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserReportResource
 import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -60,7 +61,8 @@ class StreamDetailService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val streamGitProjectInfoCache: StreamGitProjectInfoCache
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamDetailService::class.java)
@@ -75,7 +77,11 @@ class StreamDetailService @Autowired constructor(
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
         val eventBuildRecord =
             gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId) ?: return null
-        val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
+        val eventRecord = gitRequestEventDao.get(
+            dslContext = dslContext,
+            id = eventBuildRecord.eventId,
+            scmType = streamGitConfig.getScmType()
+        ) ?: return null
         // 如果是来自fork库的分支，单独标识
         val pathWithNamespace = eventRecord.sourceGitProjectId?.let {
             streamGitProjectInfoCache.getAndSaveGitProjectInfo(
@@ -100,7 +106,11 @@ class StreamDetailService @Autowired constructor(
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): StreamModelDetail? {
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
-        val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
+        val eventRecord = gitRequestEventDao.get(
+            dslContext = dslContext,
+            id = eventBuildRecord.eventId,
+            scmType = streamGitConfig.getScmType()
+        ) ?: return null
         // 如果是来自fork库的分支，单独标识
         val pathWithNamespace = eventRecord.sourceGitProjectId?.let {
             streamGitProjectInfoCache.getAndSaveGitProjectInfo(
@@ -128,6 +138,24 @@ class StreamDetailService @Autowired constructor(
             modelDetail = modelDetail,
             buildHistoryRemark = remark
         )
+    }
+
+    fun buildTriggerReview(
+        userId: String,
+        gitProjectId: Long,
+        buildId: String,
+        approve: Boolean
+    ): Boolean {
+        val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
+        val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return false
+        return client.get(ServiceBuildResource::class).buildTriggerReview(
+            userId = userId,
+            projectId = conf.projectCode!!,
+            pipelineId = eventBuildRecord.pipelineId,
+            buildId = buildId,
+            approve = approve,
+            channelCode = channelCode
+        ).data!!
     }
 
     fun search(
@@ -180,7 +208,7 @@ class StreamDetailService @Autowired constructor(
         gitProjectId: Long,
         pipelineId: String
     ): StreamGitProjectPipeline? {
-        logger.info("get pipeline with pipelineId: $pipelineId, gitProjectId: $gitProjectId")
+        logger.info("StreamDetailService|getPipelineWithId|pipelineId|$pipelineId|gitProjectId|$gitProjectId")
         val pipeline = pipelineResourceDao.getPipelineById(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
@@ -194,7 +222,6 @@ class StreamDetailService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = null,
             latestBuildBranch = null
         )
     }

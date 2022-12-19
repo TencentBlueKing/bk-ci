@@ -8,7 +8,7 @@ dependencies {
     api(project(":core:apiquery:api-apiquery"))
     api(project(":core:defect:api-defect"))
     api(project(":core:task:api-task"))
-    api(project(":core:common:common-auth-api"))
+    api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:schedule:api-schedule"))
     api("io.jsonwebtoken:jjwt")
     api(group = "net.sf.json-lib", name = "json-lib", classifier = "jdk15")

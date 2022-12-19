@@ -53,10 +53,10 @@ class ImageHandleBuildResultService @Autowired constructor(
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val imageId = storeBuildResultRequest.storeId
         val imageRecord = imageDao.getImage(dslContext, imageId)
-        logger.info("handleStoreBuildResult imageRecord is:$imageRecord")
-        if (null == imageRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(imageId))
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(imageId)
+            )
         // 防止重复的mq消息造成的状态异常
         if (imageRecord.imageStatus != ImageStatusEnum.CHECKING.status.toByte()) {
             return Result(true)

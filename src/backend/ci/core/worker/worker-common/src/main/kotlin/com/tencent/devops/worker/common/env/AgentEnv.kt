@@ -122,10 +122,13 @@ object AgentEnv {
         return env!!
     }
 
+    @Suppress("UNUSED")
     fun isProd() = getEnv() == Env.PROD
 
+    @Suppress("UNUSED")
     fun isTest() = getEnv() == Env.TEST
 
+    @Suppress("UNUSED")
     fun isDev() = getEnv() == Env.DEV
 
     fun getAgentSecretKey(): String {
@@ -183,13 +186,14 @@ object AgentEnv {
         return os!!
     }
 
+    @Suppress("UNUSED")
     fun is32BitSystem() = System.getProperty("sun.arch.data.model") == "32"
 
     private fun getProperty(prop: String): String? {
         val buildType = BuildEnv.getBuildType()
         if (buildType == BuildType.DOCKER || buildType == BuildType.MACOS) {
             logger.info("buildType is $buildType")
-            return getEnv(prop)
+            return getEnvProp(prop)
         }
 
         if (property == null) {
@@ -202,7 +206,7 @@ object AgentEnv {
         return property!!.getProperty(prop, null)
     }
 
-    private fun getEnv(prop: String): String? {
+    fun getEnvProp(prop: String): String? {
         var value = System.getenv(prop)
         if (value.isNullOrBlank()) {
             // Get from java properties
@@ -220,8 +224,10 @@ object AgentEnv {
             synchronized(this) {
                 if (null == logStorageMode) {
                     logStorageMode = try {
-                        LogStorageMode.valueOf(System.getenv(AGENT_LOG_SAVE_MODE)
-                            ?: throw PropertyNotExistException(AGENT_LOG_SAVE_MODE, "Empty log mode"))
+                        LogStorageMode.valueOf(
+                            System.getenv(AGENT_LOG_SAVE_MODE)
+                                ?: throw PropertyNotExistException(AGENT_LOG_SAVE_MODE, "Empty log mode")
+                        )
                     } catch (t: Throwable) {
                         logger.warn("not system variable named log mode!")
                         LogStorageMode.UPLOAD

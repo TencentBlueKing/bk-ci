@@ -28,23 +28,27 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
 @Suppress("ALL")
-class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
+class StreamOpenApiAction(
+    private val action: BaseAction,
+    private val checkPipelineTrigger: Boolean
+) : BaseAction {
     override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.OPENAPI)
     override var data: ActionData = action.data
     override val api: StreamGitApiService = action.api
@@ -55,6 +59,7 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     }
 
     override fun getProjectCode(gitProjectId: String?) = action.getProjectCode()
+    override fun getGitProjectIdOrName(gitProjectId: String?) = action.getGitProjectIdOrName(gitProjectId)
 
     override fun getGitCred(personToken: String?) = action.getGitCred()
 
@@ -83,7 +88,7 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     fun getStartParams(scmType: ScmType): Map<String, String> {
         return when (scmType) {
             ScmType.CODE_GIT -> {
-                TGitActionCommon.getStartParams(
+                GitActionCommon.getStartParams(
                     action = action,
                     triggerOn = TriggerBuilder.buildManualTriggerOn(action.metaData.streamObjectKind)
                 )
@@ -97,6 +102,8 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     override fun needSaveOrUpdateBranch() = action.needSaveOrUpdateBranch()
 
     override fun needSendCommitCheck() = false
+
+    override fun needUpdateLastModifyUser(filePath: String) = false
 
     override fun sendCommitCheck(
         buildId: String,
@@ -115,7 +122,9 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     }
 
     override fun needAddWebhookParams() = action is GitBaseAction
-    override fun updateLastBranch(pipelineId: String, branch: String) {
-        action.updateLastBranch(pipelineId, branch)
-    }
+
+    override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) =
+        Unit
+
+    override fun getStartType() = if (checkPipelineTrigger) StartType.PIPELINE else StartType.SERVICE
 }

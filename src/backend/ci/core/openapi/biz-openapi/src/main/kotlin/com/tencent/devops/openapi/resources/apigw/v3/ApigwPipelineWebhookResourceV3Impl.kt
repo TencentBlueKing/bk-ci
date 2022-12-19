@@ -35,6 +35,7 @@ import com.tencent.devops.openapi.api.apigw.v3.ApigwPipelineWebhookResourceV3
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -51,6 +52,7 @@ class ApigwPipelineWebhookResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<List<PipelineWebhook>> {
+        logger.info("OPENAPI_PIPELINE_WEBHOOK_V3|$userId|list scm web hook|$projectId|$pipelineId|$page|$pageSize")
         return client.get(ServiceScmWebhookResource::class)
             .listScmWebhook(
                 userId = userId,
@@ -72,6 +74,10 @@ class ApigwPipelineWebhookResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<SQLPage<PipelineWebhookBuildLogDetail>?> {
+        logger.info(
+            "OPENAPI_PIPELINE_WEBHOOK_V3|$userId|list pipeline webhook build log|$projectId|$pipelineId" +
+                "|$repoName|$commitId|$page|$pageSize"
+        )
         return client.get(ServiceScmWebhookResource::class)
             .listPipelineWebhookBuildLog(
                 userId = userId,
@@ -82,5 +88,9 @@ class ApigwPipelineWebhookResourceV3Impl @Autowired constructor(
                 page = page,
                 pageSize = pageSize
             )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwPipelineWebhookResourceV3Impl::class.java)
     }
 }

@@ -34,12 +34,13 @@ import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
@@ -57,7 +58,7 @@ class CodeGitScmImpl constructor(
     private val event: String? = null
 ) : IScm {
 
-    private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitApiUrl, repoUrl = url)
+    private val apiUrl = gitConfig.gitApiUrl
 
     override fun getLatestRevision(): RevisionInfo {
         val branch = branchName ?: "master"
@@ -179,6 +180,7 @@ class CodeGitScmImpl constructor(
         try {
             gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
         } catch (ignored: Throwable) {
+            logger.warn("Fail to add webhook of git", ignored)
             throw ScmException(
                 ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_GIT.name
@@ -212,7 +214,10 @@ class CodeGitScmImpl constructor(
                 description = description,
                 block = block
             )
+        } catch (e: GitApiException) {
+            throw e
         } catch (ignored: Throwable) {
+            logger.warn("Fail to add commit check of git", ignored)
             throw ScmException(
                 ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_GIT.name
@@ -256,6 +261,17 @@ class CodeGitScmImpl constructor(
             host = apiUrl,
             token = token,
             url = url
+        )
+    }
+
+    override fun getMrCommitList(mrId: Long, page: Int, size: Int): List<GitCommit> {
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/commits"
+        return gitApi.getMrCommitList(
+            host = apiUrl,
+            token = token,
+            url = url,
+            page = page,
+            size = size
         )
     }
 

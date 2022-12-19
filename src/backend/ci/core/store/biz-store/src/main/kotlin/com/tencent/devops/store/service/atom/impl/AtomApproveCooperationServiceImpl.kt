@@ -77,10 +77,8 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
         approveId: String,
         storeApproveRequest: StoreApproveRequest
     ): Result<Boolean> {
-        logger.info("approveStoreSpecifyBusInfo userId is :$userId,storeType is :$storeType,storeCode is :$storeCode")
-        logger.info("approveStoreSpecifyBusInfo storeApproveRequest is :$storeApproveRequest")
+        logger.info("approveStoreSpecifyBusInfo params: [$userId|$storeType|$storeCode|$storeApproveRequest]")
         val atomApproveRelRecord = atomApproveRelDao.getByApproveId(dslContext, approveId)
-        logger.info("approveStoreInfo atomApproveRelRecord is :$atomApproveRelRecord")
         if (null == atomApproveRelRecord) {
             return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -89,7 +87,6 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
             )
         }
         val atomApproveRecord = storeApproveDao.getStoreApproveInfo(dslContext, approveId)
-        logger.info("approveStoreSpecifyBusInfo atomApproveRecord is :$atomApproveRecord")
         if (storeApproveRequest.approveStatus == ApproveStatusEnum.PASS) {
             // 为用户添加插件代码库的权限和插件开发人员的权限
             val storeMemberReq = StoreMemberReq(
@@ -99,7 +96,6 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
                 storeType = storeType
             )
             val addAtomMemberResult = atomMemberService.add(userId, storeMemberReq, storeType, true)
-            logger.info("approveStoreSpecifyBusInfo addAtomMemberResult is :$addAtomMemberResult")
             if (addAtomMemberResult.isNotOk()) {
                 return Result(status = addAtomMemberResult.status, message = addAtomMemberResult.message, data = false)
             }
@@ -156,7 +152,7 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
         val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, storeCode, storeType)
         return if (null != testProjectCode) {
             val additionalParams = mapOf("testProjectCode" to testProjectCode)
-            logger.info("getBusAdditionalParams additionalParams is :$additionalParams")
+            logger.info("getBusAdditionalParams storeCode=$storeCode|additionalParams=$additionalParams")
             additionalParams
         } else {
             null

@@ -6,7 +6,8 @@ cat << EOF > ./.dockerignore
 EOF
 
 echo "######################## BUILD BKCI BACKEND IMAGE START... ########################"
-docker build -t mirrors.tencent.com/bkce/bkci-backend:$1 . -f ./dockerfile/backend.bkci.Dockerfile
+docker build -t $1/bkci-backend:$2 . -f ./dockerfile/backend.bkci.Dockerfile
+docker push $1/bkci-backend:$2
 echo "######################## BUILD BKCI BACKEND IMAGE FINISH ! ########################"
 echo ''
 rm -f ./.dockerignore

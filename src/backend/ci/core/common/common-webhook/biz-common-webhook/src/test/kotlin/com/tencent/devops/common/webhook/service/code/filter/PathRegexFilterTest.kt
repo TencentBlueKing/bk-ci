@@ -254,5 +254,22 @@ class PathRegexFilterTest {
             excludedPaths = listOf("aa/*", "bb/*", "cc/*")
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
+
+        // 路径嵌套
+        pathRegexFilter = PathRegexFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnPath = listOf("src/main/ext/include.txt", "doc/b.md", "cc/other.txt"),
+            includedPaths = listOf("src/main/**"),
+            excludedPaths = listOf("src/main/ext/**", "doc/b.md")
+        )
+        Assertions.assertFalse(pathRegexFilter.doFilter(response))
+
+        pathRegexFilter = PathRegexFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnPath = listOf("src/main/ext/include.txt", "doc/b.md", "cc/other.txt"),
+            includedPaths = listOf("src/main/**", "cc/**"),
+            excludedPaths = listOf("src/main/ext/**", "doc/b.md")
+        )
+        Assertions.assertTrue(pathRegexFilter.doFilter(response))
     }
 }

@@ -29,6 +29,11 @@ package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TClassify
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_ID
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -38,18 +43,18 @@ import org.springframework.stereotype.Repository
 class MarketAtomClassifyDao : AtomBaseDao() {
 
     fun getAllAtomClassify(dslContext: DSLContext): Result<out Record>? {
-        val a = TAtom.T_ATOM.`as`("a")
-        val b = TClassify.T_CLASSIFY.`as`("b")
-        val conditions = setAtomVisibleCondition(a)
-        conditions.add(0, a.CLASSIFY_ID.eq(b.ID))
-        val atomNum = dslContext.selectCount().from(a).where(conditions).asField<Int>("atomNum")
+        val tAtom = TAtom.T_ATOM
+        val tClassify = TClassify.T_CLASSIFY
+        val conditions = setAtomVisibleCondition(tAtom)
+        conditions.add(0, tAtom.CLASSIFY_ID.eq(tClassify.ID))
+        val atomNum = dslContext.selectCount().from(tAtom).where(conditions).asField<Int>("atomNum")
         return dslContext.select(
-            b.ID.`as`("id"),
-            b.CLASSIFY_CODE.`as`("classifyCode"),
-            b.CLASSIFY_NAME.`as`("classifyName"),
+            tClassify.ID.`as`(KEY_ID),
+            tClassify.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
+            tClassify.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
             atomNum,
-            b.CREATE_TIME.`as`("createTime"),
-            b.UPDATE_TIME.`as`("updateTime")
-        ).from(b).where(b.TYPE.eq(0)).orderBy(b.WEIGHT.desc()).fetch()
+            tClassify.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            tClassify.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
+        ).from(tClassify).where(tClassify.TYPE.eq(0)).orderBy(tClassify.WEIGHT.desc()).fetch()
     }
 }

@@ -109,6 +109,26 @@ abstract class Client constructor(
             feignProxy.javaClass.interfaces, devopsProxy))
     }
 
+    fun <T : Any> getDevopsService(clz: Class<T>, projectId: String): T {
+        // 获取为feign定义的拦截器
+        DevopsProxy.projectIdThreadLocal.set(projectId)
+        val feignProxy = Feign.builder()
+            .client(feignClient)
+            .errorDecoder(clientErrorDecoder)
+            .encoder(jacksonEncoder)
+            .decoder(jacksonDecoder)
+            .contract(jaxRsContract)
+            .options(Request.Options(10000, 30000))
+            .requestInterceptor(SpringContextUtil.getBean(
+                RequestInterceptor::class.java, "devopsRequestInterceptor"))
+            .target(DevopsServiceTarget(findServiceName(clz.kotlin,"", ""),  clz,
+                allProperties.devopsDevUrl
+                    ?: ""))
+        val devopsProxy = DevopsProxy(feignProxy, clz)
+        return clz.cast(
+            Proxy.newProxyInstance(feignProxy.javaClass.classLoader, feignProxy.javaClass.interfaces, devopsProxy))
+    }
+
     fun <T : Any> get(clz: Class<T>): T = get(clz.kotlin)
 
     abstract fun <T : Any> get(clz: KClass<T>): T

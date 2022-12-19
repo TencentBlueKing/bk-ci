@@ -111,4 +111,12 @@ class EnvNodeDao {
                 .execute()
         }
     }
+
+    fun deleteByEnvId(dslContext: DSLContext, envId: Long) {
+        with(TEnvNode.T_ENV_NODE) {
+            dslContext.deleteFrom(this)
+                .where(ENV_ID.eq(envId))
+                .execute()
+        }
+    }
 }

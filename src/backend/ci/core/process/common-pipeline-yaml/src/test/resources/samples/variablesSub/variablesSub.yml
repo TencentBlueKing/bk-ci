@@ -1,0 +1,18 @@
+version: v2.0
+
+variables:
+  template:
+    - name: variables.yml
+      parameters:
+        username: 1,2,3
+    - name: variable1.yml@repoA
+      parameters:
+        username: RES_VARIABLE
+
+resources:
+  repositories:
+    - repository: repoA
+      name: repoA
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx

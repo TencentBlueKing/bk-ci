@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.project.tables.records.TNoticeRecord
 import com.tencent.devops.project.dao.NoticeDao
@@ -85,7 +84,6 @@ class NoticeService @Autowired constructor(
 
     fun getNotice(id: Long): Notice? {
         val notice = noticeDao.getNotice(dslContext, id)
-        LOG.info("the notice is :{}", JsonUtil.getObjectMapper().writeValueAsString(notice))
         return if (notice == null) {
             null
         } else {

@@ -40,7 +40,7 @@
                         >
                             <status :status="calcStatus(prop.atomStatus)"></status>
                             <span
-                                :class="{ 'g-text-link': ['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'].includes(prop.atomStatus) }"
+                                :class="{ 'g-text-link': ['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING', 'CODECCING', 'CODECC_FAIL'].includes(prop.atomStatus) }"
                             >{{ prop.version }}</span>
                         </span>
                     </template>
@@ -428,7 +428,7 @@
 
         methods: {
             handleVersionClick (prop) {
-                if (['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'].includes(prop.atomStatus)) {
+                if (['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING', 'CODECCING', 'CODECC_FAIL'].includes(prop.atomStatus)) {
                     this.routerProgress(prop)
                 }
             },
@@ -437,7 +437,6 @@
                 switch (status) {
                     case 'COMMITTING':
                     case 'BUILDING':
-                    case 'BUILD_FAIL':
                     case 'TESTING':
                     case 'AUDITING':
                     case 'UNDERCARRIAGING':
@@ -449,6 +448,7 @@
                         break
                     case 'GROUNDING_SUSPENSION':
                     case 'CODECC_FAIL':
+                    case 'BUILD_FAIL':
                         icon = 'fail'
                         break
                     case 'AUDIT_REJECT':

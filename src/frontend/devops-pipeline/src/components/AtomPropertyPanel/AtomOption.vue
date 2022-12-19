@@ -87,7 +87,7 @@
                 'setPipelineEditing'
             ]),
             getBindObj (obj) {
-                const { isHidden, extCls, ...rest } = obj
+                const { isHidden, extCls, desc, ...rest } = obj
                 return rest
             },
             handleUpdateElementOption (name, value) {
@@ -131,8 +131,13 @@
         position: relative;
         .atom-checkbox-list-item {
             display: block;
-            margin: 12px 0;
+            margin: 12px 0 12px 10px;
         }
+        .pause-conf-options .bk-form-checkbox,
+        .pause-conf-user {
+            margin-left: 10px;
+        }
+
         .form-field.bk-form-item {
             &.manual-skip-options,
             &.retry-count-input {

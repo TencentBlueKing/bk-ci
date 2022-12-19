@@ -63,7 +63,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         projectCreateInfo: ProjectCreateInfo,
         accessToken: String?
     ): Result<Boolean> {
-        logger.info("create project projectCreateInfo($projectCreateInfo) by user $userId")
+        logger.info("OPENAPI_PROJECT_V3|$userId|create|$projectCreateInfo|$accessToken|$projectRouteTag")
 
         // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
         if (!projectRouteTag.isNullOrEmpty()) {
@@ -85,7 +85,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         projectUpdateInfo: ProjectUpdateInfo,
         accessToken: String?
     ): Result<Boolean> {
-        logger.info("update project projectId($projectId) projectCreateInfo($projectUpdateInfo) by user $userId")
+        logger.info("OPENAPI_PROJECT_V3|$userId|update|$projectId|$projectUpdateInfo|$accessToken")
         return client.get(ServiceProjectResource::class).update(
             userId = userId,
             projectId = projectId,
@@ -100,8 +100,8 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         accessToken: String?
-    ): com.tencent.devops.project.pojo.Result<ProjectVO?> {
-        logger.info("get project projectId($projectId) by user $userId")
+    ): Result<ProjectVO?> {
+        logger.info("OPENAPI_PROJECT_V3|$userId|get|$projectId")
         return client.get(ServiceProjectResource::class).get(
             englishName = projectId
         )
@@ -113,7 +113,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         userId: String,
         accessToken: String?
     ): Result<List<ProjectVO>> {
-        logger.info("list project by user $userId")
+        logger.info("OPENAPI_PROJECT_V3|$userId|list")
         return client.get(ServiceProjectResource::class).list(
             userId = userId
         )
@@ -127,7 +127,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         name: String,
         projectId: String?
     ): Result<Boolean> {
-        logger.info("validate project by user $userId| ${validateType.name}| $name| $projectId")
+        logger.info("OPENAPI_PROJECT_V3|$userId|validate|$validateType|$name|$projectId")
         return client.get(ServiceProjectResource::class).validate(
             validateType = validateType,
             name = name,
@@ -145,7 +145,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(
         if (!projectConsulTag.isNullOrEmpty()) {
             bkTag.setGatewayTag(projectConsulTag)
         }
-        logger.info("createProjectUser v3 $projectId| $createInfo $projectConsulTag")
+        logger.info("OPENAPI_PROJECT_V3|$appCode|create project user|$projectId|$createInfo|$projectConsulTag")
         return client.get(ServiceProjectResource::class).createProjectUser(
             projectId = projectId,
             createInfo = createInfo

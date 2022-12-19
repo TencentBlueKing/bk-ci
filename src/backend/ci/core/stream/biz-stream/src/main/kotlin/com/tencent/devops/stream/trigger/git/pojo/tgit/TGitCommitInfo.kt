@@ -34,12 +34,28 @@ data class TGitCommitInfo(
     override val commitId: String,
     override val commitDate: String,
     override val commitAuthor: String,
-    override val commitMsg: String
+    override val commitMsg: String,
+    val title: String,
+    val shortId: String,
+    val authorName: String
 ) : StreamGitCommitInfo {
     constructor(c: GitCommit) : this(
         commitId = c.id,
         commitDate = c.committed_date,
         commitAuthor = c.author_email,
-        commitMsg = c.message
+        commitMsg = c.message,
+        title = c.title,
+        shortId = c.short_id,
+        authorName = c.author_name
+    )
+
+    fun toGitCommit(): GitCommit = GitCommit(
+        id = commitId,
+        short_id = shortId,
+        message = commitMsg,
+        author_name = authorName,
+        author_email = commitAuthor,
+        title = title,
+        committed_date = commitDate
     )
 }

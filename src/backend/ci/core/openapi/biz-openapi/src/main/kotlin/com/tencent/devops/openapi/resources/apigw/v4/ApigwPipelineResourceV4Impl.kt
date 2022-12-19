@@ -37,6 +37,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
@@ -57,7 +58,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): Result<Pipeline?> {
-        logger.info("Get a pipeline status at project:$projectId, pipelineId:$pipelineId")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|status|$projectId|$pipelineId")
         return client.get(ServicePipelineResource::class).status(
             userId = userId,
             projectId = projectId,
@@ -72,7 +73,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         projectId: String,
         pipeline: Model
     ): Result<PipelineId> {
-        logger.info("Create pipeline at project:$projectId")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|create|$projectId")
         return client.get(ServicePipelineResource::class).create(
             userId = userId,
             projectId = projectId,
@@ -89,7 +90,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         pipelineId: String,
         pipeline: Model
     ): Result<Boolean> {
-        logger.info("Edit a pipeline at project:$projectId, pipelineId:$pipelineId")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|edit|$projectId|$pipelineId")
         return client.get(ServicePipelineResource::class).edit(
             userId = userId,
             projectId = projectId,
@@ -107,7 +108,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         pipelineId: String,
         modelAndSetting: PipelineModelAndSetting
     ): Result<DeployPipelineResult> {
-        logger.info("updatePipeline|project:$projectId|userId:$userId|pipelineId:$pipelineId")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|update pipeline|$projectId|$pipelineId")
         return client.get(ServicePipelineResource::class).updatePipeline(
             userId = userId,
             projectId = projectId,
@@ -124,7 +125,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         projectId: String,
         modelAndSetting: PipelineModelAndSetting
     ): Result<PipelineId> {
-        logger.info("uploadPipeline|project:$projectId|userId:$userId")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|upload pipeline|$projectId")
         return client.get(ServicePipelineResource::class).uploadPipeline(
             userId = userId,
             projectId = projectId,
@@ -140,7 +141,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): Result<Model> {
-        logger.info("Get a pipeline at project:$projectId, pipelineId:$pipelineId")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|get|$projectId|$pipelineId")
         return client.get(ServicePipelineResource::class).getWithPermission(
             userId = userId,
             projectId = projectId,
@@ -157,7 +158,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): Result<PipelineSetting> {
-        logger.info("Get a pipeline setting at project:$projectId, pipelineId:$pipelineId")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|get setting|$projectId|$pipelineId")
         return client.get(ServicePipelineResource::class).getSettingWithPermission(
             userId = userId,
             projectId = projectId,
@@ -174,7 +175,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineIds: List<String>
     ): Result<List<Pipeline>> {
-        logger.info("Get batch pipelines at project:$projectId, pipelineIds:$pipelineIds")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|get batch|$projectId|$pipelineIds")
         return client.get(ServicePipelineResource::class).getBatch(
             userId = userId,
             projectId = projectId,
@@ -190,7 +191,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): Result<Boolean> {
-        logger.info("Delete a pipeline at project:$projectId, pipelineId:$pipelineId")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|delete|$projectId|$pipelineId")
         return client.get(ServicePipelineResource::class).delete(
             userId = userId,
             projectId = projectId,
@@ -205,7 +206,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         pipelineId: String,
         pipeline: PipelineCopy
     ): Result<PipelineId> {
-        logger.info("copy pipelines by user, userId:$userId")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|copy|$projectId|$pipelineId|$pipeline")
         return client.get(ServicePipelineResource::class).copy(
             userId = userId,
             projectId = projectId,
@@ -222,7 +223,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<Pipeline>> {
-        logger.info("get pipelines by user, userId:$userId")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|get list by user|$projectId|$page|$pageSize")
         return client.get(ServicePipelineResource::class).list(
             userId = userId,
             projectId = projectId,
@@ -241,7 +242,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         pipelineId: String,
         name: PipelineName
     ): Result<Boolean> {
-        logger.info("rename: userId[$userId] projectId[$projectId] pipelineId[$pipelineId] name[$name]")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|rename|$projectId|$pipelineId|$name")
         return client.get(ServicePipelineResource::class).rename(userId, projectId, pipelineId, name)
     }
 
@@ -252,7 +253,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): Result<Boolean> {
-        logger.info("restore: userId[$userId] projectId[$projectId] pipelineId[$pipelineId]")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|restore|$projectId|$pipelineId")
         return client.get(ServicePipelineResource::class).restore(userId, projectId, pipelineId)
     }
 
@@ -264,12 +265,28 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         pipelineId: String,
         setting: PipelineSetting
     ): Result<Boolean> {
-        logger.info("saveSetting: userId[$userId] projectId[$projectId] pipelineId[$pipelineId]")
+        logger.info("OPENAPI_PIPELINE_V4|$userId|save setting|$projectId|$pipelineId|$setting")
         return client.get(ServicePipelineResource::class).saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            setting = setting
+            setting = setting,
+            channelCode = apiGatewayUtil.getChannelCode()
+        )
+    }
+
+    override fun searchByName(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineName: String?
+    ): Result<List<PipelineIdAndName>> {
+        logger.info("OPENAPI_PIPELINE_V4|$userId|search by name|$projectId|$pipelineName")
+        return client.get(ServicePipelineResource::class).searchByName(
+            userId = userId,
+            projectId = projectId,
+            pipelineName = pipelineName
         )
     }
 

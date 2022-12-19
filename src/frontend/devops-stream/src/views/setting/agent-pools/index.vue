@@ -95,7 +95,7 @@
 <style lang="postcss" scoped>
     .agent-pools {
         overflow-y: auto;
-        height: calc(100vh - 60px);
+        height: calc(100vh - 61px);
         padding: 0 16px 16px;
         margin: 0;
         width: 100%;

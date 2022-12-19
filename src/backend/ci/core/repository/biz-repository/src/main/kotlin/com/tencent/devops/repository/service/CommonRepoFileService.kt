@@ -33,8 +33,9 @@ import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.scm.pojo.GitMember
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.service.scm.IGitService
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -77,13 +78,16 @@ class CommonRepoFileService @Autowired constructor(
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
                 ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
         )
-        return Result(gitService.getGitFileContent(
-            repoUrl = null,
-            repoName = repoName,
-            filePath = filePath.removePrefix("/"),
-            authType = RepoAuthType.OAUTH,
-            token = token,
-            ref = ref ?: "master"))
+        return Result(
+            gitService.getGitFileContent(
+                repoUrl = null,
+                repoName = repoName,
+                filePath = filePath.removePrefix("/"),
+                authType = RepoAuthType.OAUTH,
+                token = token,
+                ref = ref ?: "master"
+            )
+        )
     }
 
     fun getGitProjectMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
@@ -92,11 +96,13 @@ class CommonRepoFileService @Autowired constructor(
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
                 ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
         )
-        return Result(data = gitService.getRepoMembers(
-            accessToken = token,
-            userId = userId,
-            repoName = GitUtils.getProjectName(repoUrl)
-        ))
+        return Result(
+            data = gitService.getRepoMembers(
+                accessToken = token,
+                userId = userId,
+                repoName = GitUtils.getProjectName(repoUrl)
+            )
+        )
     }
 
     fun getGitProjectAllMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
@@ -105,10 +111,35 @@ class CommonRepoFileService @Autowired constructor(
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
                 ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
         )
-        return Result(data = gitService.getRepoAllMembers(
-            accessToken = token,
-            userId = userId,
-            repoName = GitUtils.getProjectName(repoUrl)
-        ))
+        return Result(
+            data = gitService.getRepoAllMembers(
+                accessToken = token,
+                userId = userId,
+                repoName = GitUtils.getProjectName(repoUrl)
+            )
+        )
+    }
+
+    fun isProjectMember(repoUrl: String, userId: String): Result<Boolean> {
+        val token = AESUtil.decrypt(
+            key = aesKey,
+            content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
+                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+        )
+        val projectUser = gitService.getProjectMembersAll(
+            gitProjectId = GitUtils.getProjectName(repoUrl),
+            page = 1,
+            pageSize = 10,
+            search = userId,
+            tokenType = TokenTypeEnum.OAUTH,
+            token = token
+        ).data?.map {
+            it.username
+        } ?: emptyList()
+        return if (projectUser.isNotEmpty() && projectUser.contains(userId)) {
+            Result(true)
+        } else {
+            Result(false)
+        }
     }
 }

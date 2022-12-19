@@ -51,7 +51,9 @@ object ErrorMsgLogUtil {
     }
 
     fun resetErrorMsg() {
-        logger.info("resetErrorMsg| $message")
+        if (message.isNotBlank()) {
+            logger.info("resetErrorMsg| $message")
+        }
         message.clear()
     }
 

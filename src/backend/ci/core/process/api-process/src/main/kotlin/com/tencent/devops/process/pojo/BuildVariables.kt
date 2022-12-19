@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.store.pojo.app.BuildEnv
@@ -61,5 +62,7 @@ data class BuildVariables(
     @ApiModelProperty("Job超时时间（毫秒）", required = true)
     var timeoutMills: Long = TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong()),
     @ApiModelProperty("容器类型", required = false)
-    val containerType: String? = null
+    val containerType: String? = null,
+    @ApiModelProperty("YAML流水线特殊配置", required = false)
+    val pipelineAsCodeSettings: PipelineAsCodeSettings? = null
 )

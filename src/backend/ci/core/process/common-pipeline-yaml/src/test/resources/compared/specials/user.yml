@@ -30,39 +30,51 @@ variables:
   "123_GIT_KEY":
     value: "xxxxxx"
     readonly: false
+    allow-modify-at-startup: false
   "123_USERNAME":
     value: "xxxxxxxxxx"
     readonly: false
+    allow-modify-at-startup: false
   "123_MAKE_PATH":
     value: "./"
     readonly: false
+    allow-modify-at-startup: false
   "123_SERVER":
     value: "test"
     readonly: false
+    allow-modify-at-startup: false
   "123_APP":
     value: "xxxxxxxxxx"
     readonly: false
+    allow-modify-at-startup: false
   APP_NAME:
     value: "myProject"
     readonly: false
+    allow-modify-at-startup: false
   CODELIB_ALIAS:
     value: "xxxxxxxxxx/myProject"
     readonly: false
+    allow-modify-at-startup: false
   COV_ID:
     value: ""
     readonly: false
+    allow-modify-at-startup: false
   DIST_DIR:
     value: ""
     readonly: false
+    allow-modify-at-startup: false
   EPC:
     value: "true"
     readonly: false
+    allow-modify-at-startup: false
   USER:
     value: ""
     readonly: false
+    allow-modify-at-startup: false
   is_stream:
     value: "true"
     readonly: false
+    allow-modify-at-startup: false
 stages:
 - name: "前置信息收集"
   label:
@@ -81,6 +93,7 @@ stages:
         credentials: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -126,6 +139,7 @@ stages:
         credentials: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -194,6 +208,7 @@ stages:
         credentials: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -301,6 +316,7 @@ stages:
         credentials: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -452,6 +468,7 @@ stages:
         credentials: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -495,6 +512,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -569,6 +587,7 @@ stages:
         credentials: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []

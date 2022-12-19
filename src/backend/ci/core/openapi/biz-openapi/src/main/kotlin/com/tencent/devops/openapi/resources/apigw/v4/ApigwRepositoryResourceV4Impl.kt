@@ -50,7 +50,7 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
         projectId: String,
         repository: Repository
     ): Result<RepositoryId> {
-        logger.info("create repostitories in project:userId=$userId,projectId=$projectId,repository:$repository")
+        logger.info("OPENAPI_REPOSITORY_V4|$userId|create|$projectId|$repository")
         return client.get(ServiceRepositoryResource::class).create(
             userId = userId,
             projectId = projectId,
@@ -65,14 +65,13 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
         projectId: String,
         repositoryType: ScmType?
     ): Result<Page<RepositoryInfo>> {
-        logger.info(
-            "get user's use repostitories in project:userId=$userId,projectId=$projectId,repositoryType:$repositoryType"
-        )
+        logger.info("OPENAPI_REPOSITORY_V4|$userId|get user's use repostitories in project|$projectId|$repositoryType")
         return client.get(ServiceRepositoryResource::class).hasPermissionList(
             userId = userId,
             projectId = projectId,
             repositoryType = repositoryType?.name,
-            permission = Permission.USE)
+            permission = Permission.USE
+        )
     }
 
     override fun delete(
@@ -82,9 +81,7 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
         projectId: String,
         repositoryHashId: String
     ): Result<Boolean> {
-        logger.info(
-            "delete repostitories in project:userId=$userId,projectId=$projectId,repositoryHashId:$repositoryHashId"
-        )
+        logger.info("OPENAPI_REPOSITORY_V4|$userId|delete repostitories in project|$projectId|$repositoryHashId")
         return client.get(ServiceRepositoryResource::class).delete(
             userId = userId,
             projectId = projectId,
@@ -101,7 +98,8 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
         repository: Repository
     ): Result<Boolean> {
         logger.info(
-            "edit repostitories in project:userId=$userId,projectId=$projectId,repositoryHashId:$repositoryHashId"
+            "OPENAPI_REPOSITORY_V4|$userId|edit repostitories in project|$projectId|$repositoryHashId" +
+                "|$repository"
         )
         return client.get(ServiceRepositoryResource::class).edit(
             userId = userId,

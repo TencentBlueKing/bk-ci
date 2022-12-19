@@ -98,7 +98,7 @@ class JobQuotaService constructor(
 
                 return false
             } else if (startupEvent.retryTime == RETRY_TIME) { // 重试次数刚刚超过最大重试次数，会将消息丢到降级队列
-                logger.error(
+                logger.warn(
                     "$projectId|$vmType|$buildId|$vmSeqId|$executeCount " +
                         "Job quota excess. Send event to demoteQueue."
                 )

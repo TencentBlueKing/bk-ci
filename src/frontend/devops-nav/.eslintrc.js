@@ -26,11 +26,11 @@ module.exports = {
         '../.eslintrc.js'
     ],
     parserOptions: {
-        'parser': '@typescript-eslint/parser',
-        'ecmaVersion': 2019,
-        'sourceType': 'module',
-        'ecmaFeatures': {
-            'jsx': true
+        parser: '@typescript-eslint/parser',
+        ecmaVersion: 2019,
+        sourceType: 'module',
+        ecmaFeatures: {
+            jsx: true
         }
     },
     env: {
@@ -42,9 +42,9 @@ module.exports = {
         'vue'
     ],
     globals: {
-        'LOGOUT_SERVICE_URL': false,
-        'DEVOPS_LS_VERSION': false,
-        'BK_CI_VERSION': false
+        LOGOUT_SERVICE_URL: false,
+        DEVOPS_LS_VERSION: false,
+        BK_CI_VERSION: false
     },
     overrides: [
         {

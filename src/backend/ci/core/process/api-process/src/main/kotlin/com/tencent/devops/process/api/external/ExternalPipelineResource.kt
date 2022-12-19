@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.api.external
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildId
 import io.swagger.annotations.Api
@@ -34,6 +36,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -53,6 +56,12 @@ interface ExternalPipelineResource {
         @ApiParam("远程认证信息", required = true)
         @PathParam("token")
         token: String,
+        @ApiParam("请求Ip", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
+        realIp: String?,
+        @ApiParam("启动用户", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        startUser: String?,
         @ApiParam("启动参数", required = true)
         values: Map<String, String>
     ): Result<BuildId>

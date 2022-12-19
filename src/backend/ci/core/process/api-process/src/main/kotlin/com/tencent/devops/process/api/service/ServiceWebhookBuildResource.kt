@@ -4,6 +4,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.process.pojo.webhook.WebhookTriggerParams
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -36,9 +38,12 @@ interface ServiceWebhookBuildResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("启动参数", required = true)
-        params: Map<String, String>,
+        params: WebhookTriggerParams,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.BS,
+        @ApiParam("启动类型", required = false)
+        @QueryParam("startType")
+        startType: StartType = StartType.WEB_HOOK
     ): Result<String?>
 }

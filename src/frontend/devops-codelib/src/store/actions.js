@@ -51,10 +51,12 @@ const actions = {
         projectId,
         aliasName = '',
         page = 1,
-        pageSize = 12
+        pageSize = 12,
+        sortType = '',
+        sortBy = ''
     }) {
         try {
-            const response = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/search?aliasName=${aliasName}&page=${page}&pageSize=${pageSize}`)
+            const response = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/search?aliasName=${aliasName}&page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortType=${sortType}`)
             commit(SET_CODELIBS_MUTATION, {
                 codelibs: response
             })

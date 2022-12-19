@@ -37,7 +37,9 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
 
 object YamlCommonUtils {
-    private val objectMapper = ObjectMapper(YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)).apply {
+    private val objectMapper = ObjectMapper(
+        YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE).disable(YAMLGenerator.Feature.SPLIT_LINES)
+    ).apply {
         // 去掉替换模板中间过程中生成的中间变量
         registerKotlinModule().setFilterProvider(
             SimpleFilterProvider().addFilter(

@@ -6,7 +6,7 @@
                 <input class="accordion-checkbox" type="checkbox" :checked="isShowBasicRule" style="margin-left: auto;" />
             </header>
             <div slot="content">
-                <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has('newExpression')" :error-msg="errors.first('newExpression')">
+                <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has('newExpression')">
                     <cron-timer :name="'newExpression'" ref="newExpression" :value="element['newExpression']" :handle-change="handleUpdateElement" v-validate.initial="{ 'required': isShowBasicRule }" />
                 </form-field>
             </div>

@@ -27,6 +27,7 @@
 package com.tencent.devops.stream.trigger.mq.streamTrigger
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.stream.constant.MQ
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -82,19 +83,19 @@ class StreamTriggerMQConfig {
         @Autowired streamTriggerListener: StreamTriggerListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(requestTriggerQueue.name)
-        container.setConcurrentConsumers(30)
-        container.setMaxConcurrentConsumers(30)
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setPrefetchCount(1)
-
-        val adapter = MessageListenerAdapter(
-            streamTriggerListener,
-            streamTriggerListener::listenStreamTriggerEvent.name
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = requestTriggerQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = MessageListenerAdapter(
+                streamTriggerListener,
+                streamTriggerListener::listenStreamTriggerEvent.name
+            ).also { it.setMessageConverter(messageConverter) },
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 30,
+            maxConcurrency = 30,
+            prefetchCount = 1
         )
-        adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
     }
 }

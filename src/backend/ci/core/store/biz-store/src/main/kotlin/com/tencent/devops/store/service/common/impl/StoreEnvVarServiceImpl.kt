@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
@@ -48,7 +49,6 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VAR_DESC
 import com.tencent.devops.store.pojo.common.KEY_VAR_NAME
 import com.tencent.devops.store.pojo.common.KEY_VAR_VALUE
-import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.StoreEnvChangeLogInfo
 import com.tencent.devops.store.pojo.common.StoreEnvVarInfo
 import com.tencent.devops.store.pojo.common.StoreEnvVarRequest
@@ -117,8 +117,8 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                     storeEnvVarRequest = storeEnvVarRequest
                 )
             }
-        } catch (t: Throwable) {
-            logger.error("storeEnvVar create failed", t)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|addEnvVar|$storeEnvVarRequest|error=${ignored.message}", ignored)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         } finally {
             lock.unlock()
@@ -213,8 +213,8 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                     )
                 }
             }
-        } catch (t: Throwable) {
-            logger.error("storeEnvVar update failed", t)
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|updateEnvVar|$storeEnvVarRequest|error=${ignored.message}", ignored)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         } finally {
             lock.unlock()
@@ -318,8 +318,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         scope: String,
         varName: String
     ): Result<List<StoreEnvChangeLogInfo>?> {
-        logger.info("storeEnvVar getEnvVarChangeLogList userId:$userId,storeType:$storeType,storeCode:$storeCode")
-        logger.info("storeEnvVar getEnvVarChangeLogList varName:$varName")
+        logger.info("storeEnvVar getEnvVarChangeLogList params:[$userId|$storeType|$storeCode|$varName]")
         val storeTypeObj = StoreTypeEnum.valueOf(storeType)
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeTypeObj.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)

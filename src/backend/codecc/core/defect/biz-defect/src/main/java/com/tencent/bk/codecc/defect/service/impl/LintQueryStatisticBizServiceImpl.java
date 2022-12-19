@@ -64,7 +64,7 @@ public class LintQueryStatisticBizServiceImpl implements IQueryStatisticBizServi
         if (isLast) {
             statisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
         } else {
-            statisticEntity = lintStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+            statisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         }
         LintLastAnalysisResultVO lastAnalysisResultVO = new LintLastAnalysisResultVO();
         if (statisticEntity != null) {

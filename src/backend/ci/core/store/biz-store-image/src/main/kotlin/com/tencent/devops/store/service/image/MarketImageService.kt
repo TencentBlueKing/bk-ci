@@ -51,7 +51,7 @@ class MarketImageService @Autowired constructor(
      * 根据镜像ID和镜像代码判断镜像是否存在
      */
     fun judgeImageExistByIdAndCode(imageId: String, imageCode: String): Result<Boolean> {
-        logger.info("the imageId is:$imageId, imageCode is:$imageCode")
+        logger.info("judgeImageExistByIdAndCode params:[$imageId|$imageCode]")
         val count = marketImageDao.countByIdAndCode(
             dslContext = dslContext,
             imageId = imageId,
@@ -73,9 +73,8 @@ class MarketImageService @Autowired constructor(
         imageStatus: ImageStatusEnum,
         msg: String?
     ): Result<Boolean> {
-        logger.info("the update userId is :$userId,imageCode is :$imageId,imageStatus is :$imageStatus,msg is :$msg")
+        logger.info("setImageBuildStatusByImageId params :[$userId|$imageId|$imageStatus|$msg]")
         val imageRecord = imageDao.getImage(dslContext, imageId)
-        logger.info("the imageRecord is :$imageRecord")
         if (null == imageRecord) {
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,

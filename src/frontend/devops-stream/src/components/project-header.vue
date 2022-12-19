@@ -13,58 +13,89 @@
                         size="18"
                         class="link-icon"
                     ></icon>
-                    Pipelines
+                    {{$t('header.pipelines')}}
                 </router-link>
                 <router-link
                     class="stream-link"
                     :to="{ name: 'metric' }"
+                    @click="setTitle($t('header.metrics'))"
                 >
                     <icon
                         name="metric-link"
                         size="18"
                         class="link-icon"
                     ></icon>
-                    Metrics
+                    {{$t('header.metrics')}}
                 </router-link>
                 <router-link
-                    class="stream-link"
+                    v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
+                    :class="{
+                        'stream-link': true,
+                        disabled: !permission
+                    }"
                     :is="permission ? 'router-link' : 'span'"
                     :to="{ name: 'basicSetting' }"
+                    @click="setTitle($t('header.settings'))"
                 >
                     <icon
                         name="setting-link"
                         size="18"
                         class="link-icon"
-                        v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
                     ></icon>
-                    Settings
+                    {{$t('header.settings')}}
                 </router-link>
             </template>
         </span>
 
         <section class="user-info">
             <bk-select
-                behavior="simplicity"
                 class="choose-project"
                 searchable
                 enable-scroll-load
+                :popover-options="{ appendTo: 'parent' }"
                 :clearable="false"
                 :scroll-loading="bottomLoadingOptions"
                 :value="projectInfo.id"
                 @scroll-end="getProjectList"
                 @selected="chooseProject"
             >
+                <span
+                    class="choosen-project"
+                    slot="trigger"
+                >
+                    <span class="project-name text-ellipsis" v-bk-overflow-tips>
+                        {{ projectInfo.name_with_namespace }}
+                    </span>
+                    <icon
+                        name="cc-jump-link"
+                        size="16"
+                        class="jump-icon"
+                        v-bk-tooltips="{ content: $t('header.goToGit') }"
+                        @click.native="goToCode"
+                    ></icon>
+                    <icon
+                        name="angle-down-line"
+                        size="12"
+                        class="angle-icon"
+                    ></icon>
+                </span>
                 <bk-option v-for="option in projectList"
                     :key="option.id"
                     :id="option.id"
-                    :name="option.name">
+                    :name="option.nameWithNamespace">
                 </bk-option>
             </bk-select>
+            <span class="user-notifications" @click.stop="goToNotifications">
+                <icon
+                    size="18"
+                    name="notify"
+                ></icon>
+                <span class="user-hint" v-if="messageNum > 0"></span>
+            </span>
             <toggle-language></toggle-language>
             <user
                 class="user-info"
                 :user="user"
-                :message-num="messageNum"
             />
         </section>
     </header>
@@ -108,6 +139,10 @@
         methods: {
             ...mapActions(['setUser', 'setExceptionInfo']),
 
+            setTitle (title) {
+                document.title = title
+            },
+
             getProjectList () {
                 if (this.pageInfo.loadEnd) {
                     return
@@ -140,6 +175,14 @@
                 this.$router.push({
                     name: 'dashboard'
                 })
+            },
+
+            goToNotifications () {
+                this.$router.push({ name: 'notifications' })
+            },
+
+            goToCode () {
+                window.open(this.projectInfo.https_url_to_repo, '_blank')
             }
         }
     })
@@ -157,8 +200,9 @@
         color: #f5f7fa;
         .header-info {
             display: flex;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
+            flex: 1;
             .ci-name {
                 display: inline-block;
                 margin: 0 121px 0 12px;
@@ -179,13 +223,11 @@
                 .link-icon {
                     margin-right: 4px;
                 }
+                &.disabled {
+                    cursor: not-allowed;
+                }
             }
         }
-    }
-
-    .bk-dropdown-list li {
-        min-width: 65px;
-        position: relative;
     }
     .unread:before {
         content: '';
@@ -196,15 +238,6 @@
         height: 8px;
         border-radius: 100px;
         background: #ff5656;
-    }
-
-    .dropdown-trigger-btn {
-        cursor: pointer;
-        font-size: 14px;
-        .name {
-            color: #f5f7fa;
-            margin: 0 8px;
-        }
     }
 
     .user-info {
@@ -219,54 +252,57 @@
             color: #fff;
         }
     }
-    
+
+    .user-notifications {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        color: #c3cdd7;
+        margin-right: 25px;
+        &:hover {
+            color: #fff;
+        }
+        svg {
+            margin-right: 4px;
+        }
+    }
+    .user-hint {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: red;
+        position: relative;
+        left: -6px;
+        top: -5px;
+    }
     .choose-project {
         width: 250px;
         margin-right: 25px;
-        /deep/ .bk-select-name {
-            color: #fff;
+        border: none;
+        &.is-focus .angle-icon {
+            transform: rotate(180deg);
+        }
+        /deep/ .tippy-content, /deep/ .bk-tooltip-content {
+            padding: 0;
         }
     }
-
-    .navigation-header {
-        -webkit-box-flex:1;
-        -ms-flex:1;
-        flex:1;
-        height:100%;
-        display:-webkit-box;
-        display:-ms-flexbox;
-        display:flex;
-        -webkit-box-align:center;
-        -ms-flex-align:center;
-        align-items:center;
-        font-size:14px;
-        margin-left: 100px;
-    }
-    .navigation-header .header-nav {
-        display:-webkit-box;
-        display:-ms-flexbox;
-        display:flex;
-        padding:0;
-        margin:0;
-    }
-    .navigation-header .header-nav-item {
-        list-style:none;
-        height:50px;
-        display:-webkit-box;
-        display:-ms-flexbox;
-        display:flex;
-        -webkit-box-align:center;
-        -ms-flex-align:center;
-        align-items:center;
-        margin-right:40px;
-        color:#96A2B9;
-        min-width:56px
-    }
-    .navigation-header .header-nav-item.item-active {
-        color:#FFFFFF !important;
-    }
-    .navigation-header .header-nav-item:hover {
-        cursor:pointer;
-        color:#D3D9E4;
+    .choosen-project {
+        display: flex;
+        align-items: center;
+        background: #252F43;
+        line-height: 32px;
+        padding: 0 10px;
+        color: #D3D9E4;
+        .project-name {
+            flex: 1;
+            max-width: calc(100% - 35px);
+        }
+        .jump-icon {
+            margin-right: 9px;
+        }
+        .angle-icon {
+            transition: transform 200ms;
+        }
     }
 </style>

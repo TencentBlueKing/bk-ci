@@ -79,6 +79,7 @@ data class TimerTriggerElement(
         }
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     fun convertExpressions(params: Map<String, String>): Set<String> {
         return if (isOldExpress()) {
             if (expression != null) {
@@ -95,7 +96,11 @@ data class TimerTriggerElement(
             }
             if (advanceExpression != null && advanceExpression.isNotEmpty()) {
                 advanceExpression.forEach { expression ->
-                    expressions.add(convertExpression(EnvUtils.parseEnv(command = expression, data = params)))
+                    EnvUtils.parseEnv(command = expression, data = params)
+                        .split("\n")
+                        .forEach { expr ->
+                            expressions.add(convertExpression(expr))
+                        }
                 }
             }
             expressions

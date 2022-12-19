@@ -96,8 +96,6 @@ data class AtomVersion(
     val initProjectCode: String?,
     @ApiModelProperty("标签列表", required = false)
     val labelList: List<Label>?,
-    @ApiModelProperty("插件包名")
-    val pkgName: String?,
     @ApiModelProperty("用户评论信息")
     val userCommentInfo: StoreUserCommentInfo,
     @ApiModelProperty("项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")

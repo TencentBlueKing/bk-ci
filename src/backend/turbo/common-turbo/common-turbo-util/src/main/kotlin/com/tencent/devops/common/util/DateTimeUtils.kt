@@ -3,6 +3,7 @@ package com.tencent.devops.common.util
 import org.slf4j.LoggerFactory
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
@@ -14,6 +15,8 @@ import java.util.TimeZone
  */
 object DateTimeUtils {
     private val logger = LoggerFactory.getLogger(DateTimeUtils::class.java)
+
+    private const val YYYY_MM_DD_FORMAT = "yyyy-MM-dd"
 
     /**
      * 获取当前日期前X天的日期
@@ -52,7 +55,7 @@ object DateTimeUtils {
      * 获取开始日期和结束日期中间所有的时间集合
      */
     fun getStartTimeBetweenEndTime(startTime: String, endTime: String): MutableList<String> {
-        val sdf = SimpleDateFormat("yyyy-MM-dd")
+        val sdf = SimpleDateFormat(YYYY_MM_DD_FORMAT)
         val calendar = Calendar.getInstance()
         calendar.time = sdf.parse(startTime)
         val date = mutableListOf<String>()
@@ -96,5 +99,19 @@ object DateTimeUtils {
      */
     fun localDateTransformTimestamp(localDate: LocalDateTime?): String {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(localDate)
+    }
+
+    /**
+     * 将LocalDate转为日期字符串
+     */
+    fun localDate2DateStr(localDate: LocalDate?): String {
+        return DateTimeFormatter.ofPattern(YYYY_MM_DD_FORMAT).format(localDate)
+    }
+
+    /**
+     * 将日期字符串转为LocalDate
+     */
+    fun dateStr2LocalDate(dateStr: String): LocalDate {
+        return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern(YYYY_MM_DD_FORMAT))
     }
 }

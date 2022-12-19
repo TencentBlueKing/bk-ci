@@ -54,8 +54,6 @@ data class BuildHistoryWithVars(
     val status: String,
     @ApiModelProperty("各阶段状态", required = true)
     val stageStatus: List<BuildStageStatus>?,
-    @ApiModelProperty("结束原因", required = true)
-    val deleteReason: String?,
     @ApiModelProperty("服务器当前时间戳", required = true)
     val currentTimestamp: Long,
     @ApiModelProperty("是否是手机启动", required = false)
@@ -64,6 +62,8 @@ data class BuildHistoryWithVars(
     val material: List<PipelineBuildMaterial>?,
     @ApiModelProperty("排队于", required = false)
     val queueTime: Long?,
+    @ApiModelProperty("排队位置", required = false)
+    val currentQueuePosition: Int = 0,
     @ApiModelProperty("构件列表", required = false)
     val artifactList: List<FileInfo>?,
     @ApiModelProperty("备注", required = false)

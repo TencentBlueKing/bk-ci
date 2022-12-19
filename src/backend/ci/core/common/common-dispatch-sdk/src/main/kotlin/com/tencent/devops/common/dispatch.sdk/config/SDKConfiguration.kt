@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
@@ -65,6 +66,12 @@ class SDKConfiguration {
         @Autowired buildLogPrinter: BuildLogPrinter
     ) =
         JobQuotaService(client, buildLogPrinter)
+
+    @Bean
+    fun dockerRoutingSdkService(
+        @Autowired redisOperation: RedisOperation
+    ) =
+        DockerRoutingSdkService(redisOperation)
 
     @Bean
     fun pipelineEventDispatcher(@Autowired rabbitTemplate: RabbitTemplate): PipelineEventDispatcher {

@@ -40,7 +40,7 @@ abstract class PipelineNotifyService @Autowired constructor(
     ) {
         logger.info("onPipelineShutdown new $pipelineId|$buildId|$buildStatus")
 
-        val vars = buildVariableService.getAllVariable(projectId, buildId).toMutableMap()
+        val vars = buildVariableService.getAllVariable(projectId, pipelineId, buildId).toMutableMap()
 
         val setting = pipelineRepositoryService.getSetting(projectId, pipelineId) ?: return
 

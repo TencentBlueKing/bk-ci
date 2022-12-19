@@ -107,16 +107,26 @@ class TaskControl @Autowired constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
 
         val buildTask = pipelineTaskService.getBuildTask(projectId, buildId, taskId)
+        // 检查event的执行次数是否和当前执行次数是否一致
+        if (executeCount != buildTask?.executeCount) {
+            LOG.info(
+                "ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
+                    "|ec=$executeCount|tec=${buildTask?.executeCount}|BAD_EC_WARN"
+            )
+            return
+        }
         // 检查构建状态,防止重复跑
-        if (buildInfo?.status?.isFinish() == true || buildTask?.status?.isFinish() == true) {
-            LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
-                "|build=${buildInfo?.status}|task=${buildTask?.status ?: "not exists"}")
+        if (buildInfo?.status?.isFinish() == true || buildTask.status.isFinish()) {
+            LOG.info(
+                "ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
+                    "|build=${buildInfo?.status}|task=${buildTask.status}｜TASK_DONE_WARNING"
+            )
             // #5109 移除构建已经结束的，失效的消息，比如质量红线的延迟消息
             return
         }
 
         // 构建机的任务不在此运行
-        if (taskAtomService.runByVmTask(buildTask!!)) {
+        if (taskAtomService.runByVmTask(buildTask)) {
             // 构建机上运行中任务目前无法直接后台干预，便在此处设置状态，使流程继续
             val additionalOptions = buildTask.additionalOptions
             val runCondition = additionalOptions?.runCondition
@@ -124,19 +134,18 @@ class TaskControl @Autowired constructor(
             if (actionType.isTerminate() ||
                 (actionType == ActionType.END && !failedEvenCancelFlag)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|code=$errorCode")
-                val buildStatus = if (actionType.isTerminate()) { // 区分系统终止还是用户手动终止
-                    BuildStatus.TERMINATE
-                } else {
-                    BuildStatus.CANCELED
-                }
+                // 区分终止还是用户手动取消, fastKill的行为本质还是用户的行为导致的取消
+                val buildStatus =
+                    if (FastKillUtils.isFastKillCode(errorCode) || !actionType.isTerminate()) {
+                        BuildStatus.CANCELED
+                    } else {
+                        BuildStatus.TERMINATE
+                    }
+
                 val atomResponse = AtomResponse(
                     buildStatus = buildStatus,
                     errorCode = errorCode,
-                    errorType = if (errorTypeName != null) {
-                        ErrorType.getErrorType(errorTypeName!!)
-                    } else {
-                        null
-                    },
+                    errorType = errorTypeName?.let { self -> ErrorType.getErrorType(self) },
                     errorMsg = reason
                 )
                 taskAtomService.taskEnd(
@@ -151,8 +160,10 @@ class TaskControl @Autowired constructor(
             if (taskParam.isNotEmpty()) { // 追加事件传递的参数变量值
                 buildTask.taskParams.putAll(taskParam)
             }
-            LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|" +
-                "${buildTask.status}|code=$errorCode|$errorTypeName|$reason")
+            LOG.info(
+                "ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|" +
+                    "${buildTask.status}|code=$errorCode|$errorTypeName|$reason"
+            )
             val buildStatus = runTask(userId = userId, actionType = actionType, buildTask = buildTask)
 
             if (buildStatus.isRunning()) { // 仍然在运行中--没有结束的
@@ -182,9 +193,11 @@ class TaskControl @Autowired constructor(
                 atomBuildStatus(taskAtomService.start(buildTask))
             }
         }
+
         buildTask.status.isRunning() -> { // 运行中的，检查是否运行结束，以及决定是否强制终止
             atomBuildStatus(taskAtomService.tryFinish(task = buildTask, actionType = actionType))
         }
+
         else -> buildTask.status // 其他状态不做动作
     }
 
@@ -217,6 +230,7 @@ class TaskControl @Autowired constructor(
         if (buildStatus == BuildStatus.CANCELED) {
             // 删除redis中取消构建操作标识
             redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
+            redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false))
             // 当task任务是取消状态时，把taskId存入redis供心跳接口获取
             val cancelTaskKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId)
             redisOperation.leftPush(cancelTaskKey, taskId)
@@ -227,7 +241,8 @@ class TaskControl @Autowired constructor(
         if (buildStatus.isPassiveStop() || buildStatus.isCancel()) {
             terminateSubPipeline(buildId, buildTask)
         }
-        if (buildStatus.isFailure() && !FastKillUtils.isTerminateCode(errorCode)) { // 失败的任务 并且不是需要终止的错误码
+        // 失败的任务并且不是需要前置终止的情况才允许自动重试
+        if (buildStatus.isFailure() && !actionType.isTerminate() && !FastKillUtils.isTerminateCode(errorCode)) {
             // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
             if (pipelineTaskService.isRetryWhenFail(buildTask.projectId, taskId, buildId)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_FIN|$stageId|j($containerId)|t($taskId)|RetryFail")

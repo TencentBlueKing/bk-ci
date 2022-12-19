@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("流水线-插件执行包相关信息修改请求报文体")
 data class AtomPkgInfoUpdateRequest(
     @ApiModelProperty("插件环境信息", required = false)
-    val atomEnvRequest: AtomEnvRequest,
+    val atomEnvRequests: List<AtomEnvRequest>,
     @ApiModelProperty("task.json参数", required = false)
     val taskDataMap: Map<String, Any>
 )

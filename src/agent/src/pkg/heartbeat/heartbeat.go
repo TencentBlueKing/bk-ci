@@ -48,7 +48,19 @@ func DoAgentHeartbeat() {
 }
 
 func agentHeartbeat() error {
-	result, err := api.Heartbeat(job.GBuildManager.GetInstances())
+	var jdkVersion []string
+	version := upgrade.JdkVersion.Version.Load()
+	if version != nil {
+		jdkVersion = version.([]string)
+	}
+	result, err := api.Heartbeat(
+		job.GBuildManager.GetInstances(),
+		jdkVersion,
+		job.GBuildDockerManager.GetInstances(),
+		api.DockerInitFileInfo{
+			FileMd5:     upgrade.DockerFileMd5.Md5,
+			NeedUpgrade: upgrade.DockerFileMd5.NeedUpgrade,
+		})
 	if err != nil {
 		logs.Error("agent heartbeat failed: ", err.Error())
 		return errors.New("agent heartbeat failed")
@@ -85,13 +97,19 @@ func agentHeartbeat() error {
 		config.GAgentConfig.FileGateway = heartbeatResponse.FileGateway
 		configChanged = true
 	}
+	if config.GAgentConfig.DockerParallelTaskCount != heartbeatResponse.DockerParallelTaskCount {
+		config.GAgentConfig.DockerParallelTaskCount = heartbeatResponse.DockerParallelTaskCount
+		configChanged = true
+	}
 
-	if heartbeatResponse.Props.KeepLogsHours > 0 {
+	if heartbeatResponse.Props.KeepLogsHours > 0 &&
+		config.GAgentConfig.LogsKeepHours != heartbeatResponse.Props.KeepLogsHours {
 		config.GAgentConfig.LogsKeepHours = heartbeatResponse.Props.KeepLogsHours
 		configChanged = true
 	}
 
-	if len(heartbeatResponse.Props.IgnoreLocalIps) > 0 {
+	if heartbeatResponse.Props.IgnoreLocalIps != "" &&
+		config.GAgentConfig.IgnoreLocalIps != heartbeatResponse.Props.IgnoreLocalIps {
 		config.GAgentConfig.IgnoreLocalIps = heartbeatResponse.Props.IgnoreLocalIps
 		configChanged = true
 	}

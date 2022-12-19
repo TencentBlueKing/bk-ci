@@ -58,7 +58,7 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(ImageBuildResourceServiceImpl::class.java)
 
     override fun getDefaultBuildResource(buildType: BuildType): Any? {
-        logger.info("Input(${buildType.name})")
+        logger.info("getDefaultBuildResource buildType=${buildType.name}")
         if (buildType.name == BuildType.DOCKER.name ||
             buildType.name == BuildType.IDC.name ||
             buildType.name == BuildType.PUBLIC_DEVCLOUD.name ||
@@ -84,8 +84,9 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
                         baseImageInfo.value = baseImageInfo.code
                     }
                     baseImageInfo
-                } catch (ignored: Exception) {
-                    logger.error("defaultBuildResource value wrong format, plz config in op:${record.configValue}")
+                } catch (ignored: Throwable) {
+                    logger.error("BKSystemErrorMonitor|getDefaultBuildResource|${record.configValue}|" +
+                        "error=${ignored.message}", ignored)
                     null
                 }
             }

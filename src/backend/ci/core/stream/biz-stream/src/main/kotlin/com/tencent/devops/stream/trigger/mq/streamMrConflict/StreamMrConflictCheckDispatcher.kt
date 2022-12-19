@@ -35,14 +35,14 @@ object StreamMrConflictCheckDispatcher {
 
     fun dispatch(rabbitTemplate: RabbitTemplate, event: StreamMrConflictCheckEvent) {
         try {
-            logger.info("[${event.actionCommonData}] Dispatch the event")
+            logger.info("StreamMrConflictCheckDispatcher|dispatch|event|${event.actionCommonData}")
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
                 message.messageProperties.setHeader("x-delay", event.delayMills)
                 message
             }
         } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
+            logger.error("BKSystemErrorMonitor|StreamMrConflictCheckDispatcher|error", e)
         }
     }
 

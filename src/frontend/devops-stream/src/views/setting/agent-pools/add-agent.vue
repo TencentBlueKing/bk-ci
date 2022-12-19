@@ -124,7 +124,7 @@
                         <span class="mb10">2. Create a folder, such as D:\\data\\landun</span>
                         <span class="mb10">3. Extract the installer to D:\\data\\landun</span>
                         <span class="mb10">4. Execute install.bat by administrator</span>
-                        <span class="mb10">5. In order to read user environment, please change the setup user from system to the login user, such as tencent\\zhangsan<a href="${LINK_CONFIG.WINDOWS_AGENT}" target="_blank">Learn more</a></span>
+                        <span class="mb10">5. In order to read user environment, please change the setup user from system to the login user, such as tencent\\zhangsan<a href="${this.LINK_CONFIG.WINDOWS_AGENT}" target="_blank">Learn more</a></span>
                     </p>
                 `
                 return this.machine.system === 'WINDOWS' ? windowHtml : unixHtml

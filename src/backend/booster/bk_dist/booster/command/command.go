@@ -70,6 +70,10 @@ const (
 	FlagPumpDisableMacro     = "pump_disable_macro"
 	FlagPumpIncludeSysHeader = "pump_include_sys_header"
 	FlagPumpCheck            = "pump_check"
+	FlagPumpCache            = "pump_cache"
+	FlagPumpCacheDir         = "pump_cache_dir"
+	FlagPumpCacheSizeMaxMB   = "pump_cache_size_max_MB"
+	FlagPumpCacheRemoveAll   = "pump_cache_remove_all"
 	FlagForceLocalList       = "force_local_list"
 	FlagNoWork               = "no_work"
 	FlagControllerNoWait     = "controller_no_wait"
@@ -84,6 +88,7 @@ const (
 	FlagDisableFileLock      = "disable_file_lock"
 	FlagAutoResourceMgr      = "auto_resource_mgr"
 	FlagResIdleSecsForFree   = "res_idle_secs_for_free"
+	FlagSendCork             = "send_cork"
 
 	EnvBuildIDOld  = "TURBO_PLAN_BUILD_ID"
 	EnvBuildID     = "TBS_BUILD_ID"
@@ -285,6 +290,22 @@ var (
 			Name:  "pump_check",
 			Usage: "check pre-process in pump mode",
 		},
+		commandCli.BoolFlag{
+			Name:  "pump_cache",
+			Usage: "use cached depend files in pump mode",
+		},
+		commandCli.StringFlag{
+			Name:  "pump_cache_dir",
+			Usage: "specify the pump cache dir",
+		},
+		commandCli.IntFlag{
+			Name:  "pump_cache_size_max_MB",
+			Usage: "max pump cache size(MB)",
+		},
+		commandCli.BoolFlag{
+			Name:  "pump_cache_remove_all",
+			Usage: "remove all of pump cache files",
+		},
 		commandCli.StringSliceFlag{
 			Name:  "force_local_list, fll",
 			Usage: "key list which will be force executed locally",
@@ -340,6 +361,10 @@ var (
 		commandCli.IntFlag{
 			Name:  "res_idle_secs_for_free",
 			Usage: "free this resource if oever this idle seconds, only used when auto_resource_mgr is true",
+		},
+		commandCli.BoolFlag{
+			Name:  "send_cork",
+			Usage: "send files like tcp cork",
 		},
 	}
 )

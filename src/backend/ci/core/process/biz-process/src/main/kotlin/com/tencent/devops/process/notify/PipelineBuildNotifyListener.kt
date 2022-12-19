@@ -51,22 +51,29 @@ class PipelineBuildNotifyListener @Autowired constructor(
         val notifyTemplateEnumType = PipelineNotifyTemplateEnum.parse(event.notifyTemplateEnum)
         when (notifyTemplateEnumType) {
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
-            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE
+            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
+            PipelineNotifyTemplateEnum.PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE,
+            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE,
+            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE
             -> {
-                event.sendReviewNotify(
-                    templateCode = notifyTemplateEnumType.templateCode,
-                    reviewUrl = pipelineUrlBean.genBuildDetailUrl(
-                        projectCode = event.projectId,
-                        pipelineId = event.pipelineId,
-                        buildId = event.buildId,
-                        position = event.position,
-                        stageId = event.stageId,
-                        needShortUrl = true
-                    ),
-                    reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(
-                        projectCode = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId
+                if (event.notifyCompleteCheck) {
+                    event.completeReviewNotify()
+                } else {
+                    event.sendReviewNotify(
+                        templateCode = notifyTemplateEnumType.templateCode,
+                        reviewUrl = pipelineUrlBean.genBuildDetailUrl(
+                            projectCode = event.projectId,
+                            pipelineId = event.pipelineId,
+                            buildId = event.buildId,
+                            position = event.position,
+                            stageId = event.stageId,
+                            needShortUrl = true
+                        ),
+                        reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(
+                            projectCode = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId
+                        )
                     )
-                )
+                }
             }
             else -> {
                 // need to add
@@ -92,11 +99,28 @@ class PipelineBuildNotifyListener @Autowired constructor(
                 cc = receivers.toMutableSet(),
                 titleParams = titleParams,
                 bodyParams = bodyParams,
-                notifyType = notifyType
+                notifyType = notifyType,
+                callbackData = callbackData
             )
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         } catch (ignored: Exception) {
             logger.warn("[$buildId]|[$source]|PIPELINE_SEND_NOTIFY_FAIL| receivers: $receivers error: $ignored")
+        }
+    }
+
+    /**
+     * 取消审批单.
+     */
+    fun PipelineBuildNotifyEvent.completeReviewNotify() {
+        try {
+            val request = SendNotifyMessageTemplateRequest(
+                templateCode = PipelineNotifyTemplateEnum.valueOf(notifyTemplateEnum).templateCode,
+                receivers = receivers.toMutableSet(),
+                callbackData = callbackData
+            )
+            client.get(ServiceNotifyMessageTemplateResource::class).completeNotifyMessageByTemplate(request)
+        } catch (ignored: Exception) {
+            logger.warn("[$buildId]|[$source]|PIPELINE_SEND_FINISH_NOTIFY_FAIL| receivers: $receivers error: $ignored")
         }
     }
 }

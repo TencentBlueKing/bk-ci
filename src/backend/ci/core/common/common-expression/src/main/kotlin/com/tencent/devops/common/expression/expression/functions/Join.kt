@@ -34,8 +34,12 @@ import com.tencent.devops.common.expression.expression.sdk.IReadOnlyArray
 import com.tencent.devops.common.expression.expression.sdk.MemoryCounter
 import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
-@Suppress("NestedBlockDepth")
+@Suppress("NestedBlockDepth", "ReturnCount")
 class Join : Function() {
+    companion object {
+        const val name = "join"
+    }
+
     override fun createNode(): Function = Join()
 
     override val traceFullyRealized: Boolean
@@ -91,5 +95,14 @@ class Join : Function() {
         else {
             return Pair(null, "")
         }
+    }
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
+        val left = parameters[0].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+        if (parameters.size == 1) {
+            return Pair("$name($left)", false)
+        }
+        val right = parameters[1].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+        return Pair("$name($left, $right)", false)
     }
 }

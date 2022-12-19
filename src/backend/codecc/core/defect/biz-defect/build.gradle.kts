@@ -11,12 +11,11 @@ dependencies {
     api(project(":core:defect:model-defect"))
     api(project(":core:defect:api-defect"))
     api(project(":core:task:api-task"))
-    api(project(":core:common:common-auth-api"))
+    api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:schedule:api-schedule"))
-    api(project(":core:coverity:api-coverity"))
     api("org.apache.httpcomponents:httpclient")
     api("org.redisson:redisson")
-    api(group = "com.tencent.bk.devops.ci.process", name = "api-process", version = Versions.devopsVersion){
+    api(group = "com.tencent.bk.devops.ci.process", name = "api-process"){
         isChanging = true
     }
 }

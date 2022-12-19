@@ -112,11 +112,14 @@ open class IamPermissionRoleExtService @Autowired constructor(
                 }
             } catch (e: Exception) {
                 iamManagerService.deleteRoleGroup(iamRoleId)
-                logger.warn("create iam group permission fail $projectCode | $iamRoleId | $groupInfo")
+                logger.warn(
+                    "create iam group permission fail : projectCode = $projectCode |" +
+                        " iamRoleId = $iamRoleId | groupInfo = $groupInfo"
+                )
                 throw e
             }
         }
-        logger.info("create ext group success $projectCode $roleId $iamRoleId. start binding")
+        logger.info("create ext group success : $projectCode | $roleId | $iamRoleId. start binding")
         // 绑定iamRoleId到本地group表内
         groupService.bindRelationId(roleId, iamRoleId.toString())
     }
@@ -315,7 +318,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         }
 
         if (resourceTypes.size > 1) {
-            logger.warn("buildOtherAuthorizationScopes not same resourceType:$resourceTypes")
+            logger.warn("buildOtherAuthorizationScopes not same resourceType : resourceTypes = $resourceTypes")
             return null
         }
         val managerResources = mutableListOf<ManagerResources>()

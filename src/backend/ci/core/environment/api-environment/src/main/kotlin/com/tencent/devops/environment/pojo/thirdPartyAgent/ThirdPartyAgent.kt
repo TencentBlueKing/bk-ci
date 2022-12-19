@@ -54,5 +54,7 @@ data class ThirdPartyAgent(
     @ApiModelProperty("创建时间", required = true)
     val createTime: Long,
     @ApiModelProperty("并行执行的个数", required = false)
-    val parallelTaskCount: Int? = 4
+    val parallelTaskCount: Int? = 4,
+    @ApiModelProperty("Docker构建机并行执行的个数", required = false)
+    val dockerParallelTaskCount: Int? = 4
 )

@@ -50,7 +50,6 @@ enum class PoolType {
 
         override fun validatePool(pool: Pool) {
             if (null == pool.container) {
-                logger.error("validatePool, {}, container is null", this)
                 throw OperationException("当pool.type=$this, container参数不能为空")
             }
         }
@@ -63,33 +62,36 @@ enum class PoolType {
                     envProjectId = null,
                     envName = pool.envName!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME
+                    agentType = AgentType.NAME,
+                    dockerInfo = null
                 )
             } else if (!pool.envId.isNullOrBlank()) {
                 return ThirdPartyAgentEnvDispatchType(
                     envProjectId = null,
                     envName = pool.envId!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.ID
+                    agentType = AgentType.ID,
+                    dockerInfo = null
                 )
             } else if (!pool.agentId.isNullOrBlank()) {
                 return ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentId!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.ID
+                    agentType = AgentType.ID,
+                    dockerInfo = null
                 )
             } else {
                 return ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentName!!,
                     workspace = pool.workspace,
-                    agentType = AgentType.NAME
+                    agentType = AgentType.NAME,
+                    dockerInfo = null
                 )
             }
         }
 
         override fun validatePool(pool: Pool) {
             if (null == pool.agentName && null == pool.agentId && null == pool.envId && null == pool.envName) {
-                logger.error("validatePool, pool.type:{}, agentName/agentId/envId/envName is null", this)
                 throw OperationException("当pool.type=$this, agentName/agentId/envId/envName参数不能全部为空")
             }
         }

@@ -34,7 +34,7 @@ import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface LogSDKApi : WorkerRestApiSDK {
-    fun addLogMultiLine(logMessages: List<LogMessage>): Result<Boolean>
+    fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean>
 
     fun finishLog(
         tag: String?,

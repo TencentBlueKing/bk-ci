@@ -33,10 +33,6 @@ import com.tencent.devops.auth.filter.TokenCheckFilter
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
 import com.tencent.devops.auth.service.AuthUserBlackListService
-import com.tencent.devops.auth.service.DefaultDeptServiceImpl
-import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.EmptyPermissionExtServiceImpl
-import com.tencent.devops.auth.service.EmptyPermissionUrlServiceImpl
 import com.tencent.devops.auth.utils.HostUtils
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
@@ -52,7 +48,6 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -132,20 +127,8 @@ class AuthCoreConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(DeptService::class)
-    fun defaultDeptServiceImpl() = DefaultDeptServiceImpl()
-
-    @Bean
     fun tokenFilter(clientTokenService: ClientTokenService) = TokenCheckFilter(clientTokenService)
 
     @Bean
     fun blackListAspect(authUserBlackListService: AuthUserBlackListService) = BlackListAspect(authUserBlackListService)
-
-    @Bean
-    @ConditionalOnMissingBean(name = ["permissionExtService"])
-    fun permissionExtService() = EmptyPermissionExtServiceImpl()
-
-    @Bean
-    @ConditionalOnMissingBean(name = ["permissionUrlService"])
-    fun permissionUrlService() = EmptyPermissionUrlServiceImpl()
 }

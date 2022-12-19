@@ -9,7 +9,7 @@ subprojects {
 
     dependencies {
         api("org.glassfish.jersey.ext:jersey-bean-validation")
-        api(group = "com.tencent.bk.devops.ci.repository", name = "api-repository", version = Versions.devopsVersion){
+        api(group = "com.tencent.bk.devops.ci.repository", name = "api-repository"){
             isChanging = true
         }
     }

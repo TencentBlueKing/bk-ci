@@ -56,6 +56,7 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
         event: CallBackEvent,
         secretToken: String?
     ): Result<Boolean> {
+        logger.info("OPENAPI_CALLBACK_V3|$userId|create|$projectId|$url|$region|$event|$secretToken")
         return client.get(ServiceCallBackResource::class).create(
             userId = userId,
             projectId = projectId,
@@ -76,6 +77,7 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
         event: String,
         secretToken: String?
     ): Result<CreateCallBackResult> {
+        logger.info("OPENAPI_CALLBACK_V3|$userId|batch create|$projectId|$url|$region|$event|$secretToken")
         return client.get(ServiceCallBackResource::class).batchCreate(
             userId = userId,
             projectId = projectId,
@@ -94,6 +96,7 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBack>> {
+        logger.info("OPENAPI_CALLBACK_V3|$userId|list|$projectId|$page|$pageSize")
         return client.get(ServiceCallBackResource::class).list(
             userId = userId,
             projectId = projectId,
@@ -109,6 +112,7 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
         projectId: String,
         id: Long
     ): Result<Boolean> {
+        logger.info("OPENAPI_CALLBACK_V3|$userId|remove|$projectId|$id")
         return client.get(ServiceCallBackResource::class).remove(
             userId = userId,
             projectId = projectId,
@@ -128,6 +132,10 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>> {
+        logger.info(
+            "OPENAPI_CALLBACK_V3|$userId|list history|$projectId|$url|$event|$startTime|$endTime|$page" +
+                "|$pageSize"
+        )
         return client.get(ServiceCallBackResource::class).listHistory(
             userId = userId,
             projectId = projectId,
@@ -155,6 +163,7 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
         projectId: String,
         id: Long
     ): Result<Boolean> {
+        logger.info("OPENAPI_CALLBACK_V3|$userId|retry|$projectId|$id")
         return client.get(ServiceCallBackResource::class).retry(
             userId = userId,
             projectId = projectId,

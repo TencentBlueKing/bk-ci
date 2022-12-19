@@ -40,6 +40,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -111,4 +112,9 @@ interface OPControlPointResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<ElementNameData>>
+
+    @ApiOperation("用于对数据库表填充哈希值")
+    @POST
+    @Path("/addhashid")
+    fun addHashId()
 }

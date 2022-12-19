@@ -32,12 +32,14 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
@@ -146,6 +148,23 @@ interface ServiceThirdPartyAgentResource {
         @QueryParam("masterVersion")
         masterVersion: String?
     ): AgentResult<Boolean>
+
+    @ApiOperation("Agent是否能升级new")
+    @POST
+    @Path("/projects/{projectId}/agents/{agentId}/upgradeByVersionNew")
+    fun upgradeByVersionNew(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Agent Hash ID", required = true)
+        @PathParam("agentId")
+        agentId: String,
+        @ApiParam("Agent secret key", required = true)
+        @QueryParam("secretKey")
+        secretKey: String,
+        @ApiParam("检查版本升级上报的信息", required = false)
+        info: ThirdPartyAgentUpgradeByVersionInfo
+    ): AgentResult<UpgradeItem>
 
     @ApiOperation("执行第三方构建机管道")
     @POST
