@@ -92,17 +92,18 @@ func runDockerBuild(buildInfo *api.ThirdPartyBuildInfo) {
 				dockerBuildFinish(buildInfo.ToFinish(false, "下载Docker构建机初始化脚本失败|"+err.Error(), api.DockerRunShInitErrorEnum))
 				return
 			}
-			// 第一次下载时授予文件权限
-			if err = os.Chmod(config.GetDockerInitFilePath(), os.ModePerm); err != nil {
-				GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
-				dockerBuildFinish(buildInfo.ToFinish(false, "下载Docker构建机初始化脚本失败|"+err.Error(), api.DockerRunShInitErrorEnum))
-				return
-			}
 		} else {
 			GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
 			dockerBuildFinish(buildInfo.ToFinish(false, "获取Docker构建机初始化脚本状态失败|"+err.Error(), api.DockerRunShStatErrorEnum))
 			return
 		}
+	}
+
+	// 每次执行前都校验并修改一次dockerfile权限，防止用户修改或者升级丢失权限
+	if err := systemutil.Chmod(config.GetDockerInitFilePath(), os.ModePerm); err != nil {
+		GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
+		dockerBuildFinish(buildInfo.ToFinish(false, "校验并修改Docker启动脚本权限失败|"+err.Error(), api.DockerChmodInitshErrorEnum))
+		return
 	}
 
 	go doDockerJob(buildInfo)

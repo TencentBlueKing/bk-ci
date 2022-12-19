@@ -21,6 +21,7 @@ const (
 	DockerContainerStartError
 	DockerContainerRunError
 	DockerContainerDoneStatusError
+	DockerChmodInitshError
 )
 
 type ErrorTypes string
@@ -101,6 +102,11 @@ var (
 		Type:    User,
 		Code:    DockerContainerDoneStatusError,
 		Message: "docker容器运行结束时状态码不为0",
+	}
+	DockerChmodInitshErrorEnum = &ErrorEnum{
+		Type:    User,
+		Code:    DockerChmodInitshError,
+		Message: "docker校验并修改启动脚本权限失败",
 	}
 )
 
