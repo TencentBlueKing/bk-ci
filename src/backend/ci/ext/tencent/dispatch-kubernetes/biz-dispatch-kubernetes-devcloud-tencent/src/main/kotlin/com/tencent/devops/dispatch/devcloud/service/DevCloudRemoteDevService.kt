@@ -27,29 +27,108 @@
 
 package com.tencent.devops.dispatch.devcloud.service
 
-import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
+import com.tencent.devops.dispatch.devcloud.dao.DispatchWorkspaceDao
+import com.tencent.devops.dispatch.devcloud.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.dispatch.devcloud.pojo.Container
+import com.tencent.devops.dispatch.devcloud.pojo.EnvStatusEnum
+import com.tencent.devops.dispatch.devcloud.pojo.Environment
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentSpec
+import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class DevCloudRemoteDevService @Autowired constructor(
-    private val commonConfig: CommonConfig
+    private val dslContext: DSLContext,
+    private val dispatchWorkspaceDao: DispatchWorkspaceDao,
+    private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
+    private val workspaceDevCloudClient: WorkspaceDevCloudClient
 ) : RemoteDevInterface {
     override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
-        TODO("Not yet implemented")
+        val environmentOpRsp = workspaceDevCloudClient.createWorkspace(userId, Environment(
+            kind = "evn/v1",
+            APIVersion = "",
+            spec = EnvironmentSpec(
+                containers = listOf(Container(
+                    image = "",
+                    resource = ResourceRequirements(8, 32008)
+                ))
+            )
+        ))
+
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            dispatchWorkspaceDao.createWorkspace(
+                userId = userId,
+                workspace = workspaceReq,
+                environmentUid = environmentOpRsp.enviromentUid!!,
+                status = EnvStatusEnum.Running,
+                dslContext = context
+            )
+
+            dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                dslContext = context,
+                workspaceName = workspaceReq.name,
+                environmentUid = environmentOpRsp.enviromentUid!!,
+                operator = "admin",
+                action = EnvironmentAction.CREATE
+            )
+        }
+
+
+        return Pair("", "")
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
+        val environmentUid = getEnvironmentUid(workspaceName)
+        workspaceDevCloudClient.operatorWorkspace(
+            userId = userId,
+            environmentUid = environmentUid,
+            workspaceName = workspaceName,
+            environmentAction = EnvironmentAction.START
+        )
+
+        // 更新db状态
+        dispatchWorkspaceDao.updateWorkspaceStatus(
+            workspaceName = workspaceName,
+            status = EnvStatusEnum.Running,
+            dslContext = dslContext
+        )
+
+        return true
     }
 
     override fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
+        val environmentUid = getEnvironmentUid(workspaceName)
+        workspaceDevCloudClient.operatorWorkspace(
+            userId = userId,
+            environmentUid = environmentUid,
+            workspaceName = workspaceName,
+            environmentAction = EnvironmentAction.DELETE
+        )
+
+        // 更新db状态
+        dispatchWorkspaceDao.updateWorkspaceStatus(
+            workspaceName = workspaceName,
+            status = EnvStatusEnum.Stopped,
+            dslContext = dslContext
+        )
+
+        return true
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
+    }
+
+    private fun getEnvironmentUid(workspaceName: String): String {
+        val workspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
+        return workspaceRecord?.environmentUid ?: throw RuntimeException("No devcloud environment with $workspaceName")
     }
 }

@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.devcloud.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListReq
@@ -21,14 +22,19 @@ import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
 
 @Component
-class DevCloudClient {
-    private val logger = LoggerFactory.getLogger(DevCloudClient::class.java)
+class WorkspaceDevCloudClient @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao
+) {
+    private val logger = LoggerFactory.getLogger(WorkspaceDevCloudClient::class.java)
 
     @Value("\${devCloud.appId}")
     val devCloudAppId: String = ""
@@ -107,11 +113,12 @@ class DevCloudClient {
 
     fun operatorWorkspace(
         userId: String,
-        enviromentUid: String,
+        environmentUid: String,
+        workspaceName: String,
         environmentAction: EnvironmentAction
     ): EnvironmentOpRspData {
         val url = devCloudUrl + "/environment/{${environmentAction.getValue()}}"
-        logger.info("User $userId request url: $url, enviromentUid: $enviromentUid")
+        logger.info("User $userId request url: $url, enviromentUid: $environmentUid")
         val request = Request.Builder()
             .url(url)
             .headers(
@@ -126,7 +133,7 @@ class DevCloudClient {
                     )
                 )
             )
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), enviromentUid))
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), environmentUid))
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
@@ -142,6 +149,15 @@ class DevCloudClient {
                 logger.info("User $userId ${environmentAction.getValue()} environment response: $responseContent")
                 val environmentOpRsp: EnvironmentOpRsp = jacksonObjectMapper().readValue(responseContent)
                 if (200 == environmentOpRsp.code) {
+                    // 记录操作历史
+                    dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        environmentUid = environmentUid,
+                        operator = "admin",
+                        action = environmentAction
+                    )
+
                     return environmentOpRsp.data
                 } else {
                     throw BuildFailureException(

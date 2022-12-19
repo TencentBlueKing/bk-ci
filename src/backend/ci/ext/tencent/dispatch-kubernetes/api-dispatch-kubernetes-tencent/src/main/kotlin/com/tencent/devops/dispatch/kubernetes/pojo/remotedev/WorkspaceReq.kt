@@ -14,5 +14,7 @@ data class WorkspaceReq(
     @ApiModelProperty("devfile配置路径")
     val devFilePath: String?,
     @ApiModelProperty("devfile")
-    val devFile: Devfile
+    val devFile: Devfile,
+    @ApiModelProperty("image")
+    val image: String = ""
 )

@@ -1,7 +1,7 @@
 package com.tencent.devops.dispatch.devcloud.pojo
 
 data class EnvironmentStatus(
-    val status: String,
+    val status: EnvStatusEnum,
     val phase: String,
     val message: String,
     val reason: String,
@@ -13,3 +13,12 @@ data class EnvironmentStatus(
     val initContainerStatuses: ContainerStatus,
     val containerStatuses: ContainerStatus
 )
+
+enum class EnvStatusEnum {
+    Pending,
+    Running,
+    Succeeded,
+    Failed,
+    Stopped,
+    Unknow
+}
