@@ -49,12 +49,11 @@ data class PipelineViewPipelinePage<out T>(
         pageSize: Int,
         count: Long,
         records: List<T>
-    ) :
-        this(
-            count = count,
-            page = page,
-            pageSize = pageSize,
-            totalPages = if (pageSize == -1) 1 else ceil(count * 1.0 / pageSize).toInt(),
-            records = records
-        )
+    ) : this(
+        count = count,
+        page = page,
+        pageSize = pageSize,
+        totalPages = if (pageSize == -1) 1 else ceil(count * 1.0 / pageSize).toInt(),
+        records = records
+    )
 }

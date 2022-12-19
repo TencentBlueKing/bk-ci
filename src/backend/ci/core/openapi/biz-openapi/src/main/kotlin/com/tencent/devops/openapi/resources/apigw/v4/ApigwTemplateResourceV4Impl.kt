@@ -82,6 +82,22 @@ class ApigwTemplateResourceV4Impl @Autowired constructor(private val client: Cli
         )
     }
 
+    override fun getTemplate(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        templateId: String,
+        versionName: String?
+    ): Result<TemplateModelDetail> {
+        return client.get(ServicePTemplateResource::class).getTemplate(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            versionName = versionName
+        )
+    }
+
     override fun listAllTemplate(
         appCode: String?,
         apigwType: String?,

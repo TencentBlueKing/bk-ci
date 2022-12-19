@@ -675,7 +675,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             userId = userId,
             model = templateModel,
             projectCodeList = projectCodeList,
-            templateCode = templateCode
+            templateCode = templateDetail.templateCode
         )
     }
 

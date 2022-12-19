@@ -100,7 +100,7 @@ class BkRepoClient constructor(
 ) {
 
     private fun getGatewayUrl(): String {
-        return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+        return HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)
     }
 
     fun useBkRepo(): Boolean {

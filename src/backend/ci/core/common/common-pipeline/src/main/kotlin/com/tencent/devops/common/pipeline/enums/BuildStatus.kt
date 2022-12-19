@@ -73,6 +73,8 @@ enum class BuildStatus(val statusName: String, val visible: Boolean) {
 
     fun isCancel(): Boolean = this == CANCELED
 
+    fun isSkip(): Boolean = this == SKIP
+
     fun isRunning(): Boolean =
         this == RUNNING ||
             this == LOOP_WAITING ||
