@@ -32,5 +32,6 @@ dependencies {
     api("org.tmatesoft.svnkit:svnkit")
     api("com.squareup.okhttp3:okhttp")
     api("org.eclipse.jgit:org.eclipse.jgit")
+    api("org.eclipse.jgit:org.eclipse.jgit.ssh.jsch")
     api("com.perforce:p4java")
 }
