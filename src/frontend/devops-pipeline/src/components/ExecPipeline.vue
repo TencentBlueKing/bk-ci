@@ -7,6 +7,7 @@
                     ext-cls="pipeline-exec-count-select"
                     v-model="executeCount"
                     :popover-width="200"
+                    :clearable="false"
                     @selected="handleExecuteCountChange"
                 >
                     <bk-option
@@ -203,7 +204,7 @@
             return {
                 showRetryStageDialog: false,
                 showLog: false,
-                executeCount: 0,
+                executeCount: this.execDetail?.executeCount,
                 retryTaskId: '',
                 skipTask: false,
                 failedContainer: false,
@@ -339,11 +340,12 @@
                 ]
             },
             executeCounts () {
-                return this.execDetail?.startUserList.map((user, index) => ({
-                    id: index,
-                    name: `${(index + 1)} / ${this.execDetail.startUserList.length}`,
+                const len = this.execDetail?.startUserList?.length ?? 0
+                return this.execDetail?.startUserList?.map((user, index) => ({
+                    id: len - index,
+                    name: `${(len - index)} / ${len}`,
                     user
-                }))
+                })) ?? []
             },
             routerParams () {
                 return this.$route.params
