@@ -28,18 +28,20 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
+import com.tencent.devops.common.api.pojo.Pagination
 
 /**
  * 权限资源操作
  */
+@SuppressWarnings("LongParameterList")
 interface PermissionResourceService {
 
     /**
      * 创建二级管理员
      */
-    @SuppressWarnings("LongParameterList")
     fun resourceCreateRelation(
         userId: String,
         projectCode: String,
@@ -132,4 +134,13 @@ interface PermissionResourceService {
         resourceType: String,
         groupId: Int
     ): Boolean
+
+    fun listResoureces(
+        userId: String,
+        projectId: String?,
+        resourceType: String?,
+        resourceName: String?,
+        page: Int,
+        pageSize: Int
+    ): Pagination<AuthResourceInfo>
 }
