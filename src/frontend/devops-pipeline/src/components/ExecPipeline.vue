@@ -76,6 +76,66 @@
                     @atom-exec="handleExec"
                 />
             </div>
+            <footer
+                v-if="showErrorPopup"
+                :class="{
+                    'exec-errors-popup': true,
+                    'visible': showErrors
+                }"
+                v-bk-clickoutside="hideErrorPopup"
+            >
+                <bk-button theme="normal" text class="drag-dot" @click="toggleErrorPopup">.....</bk-button>
+                <bk-tab class="pipeline-exec-error-tab" :active.sync="active" type="unborder-card">
+                    <template slot="setting">
+                        <bk-link theme="primary" href="javascript:;">
+                            <span class="fix-error-jump">
+                                <logo class="fix-error-jump-icon" size="20" name="tiaozhuan" />
+                                {{$t('流水线故障排查指南')}}
+                            </span>
+                        </bk-link>
+                        <bk-button theme="normal" text @click="toggleErrorPopup">
+                            <i class="bk-icon  hide-error-popup-icon" :class="{
+                                'icon-angle-down': showErrors,
+                                'icon-angle-up': !showErrors
+                            }"
+                            />
+                        </bk-button>
+                    </template>
+                    <bk-tab-panel
+                        v-for="(panel, index) in panels"
+                        v-bind="panel"
+                        :key="index"
+                    >
+                        <bk-table
+                            :data="errorList"
+                            :border="false"
+                            @row-click="setAtomLocate"
+                        >
+                            <bk-table-column width="80">
+                                <div slot-scope="props" class="exec-error-type-cell">
+                                    <span class="exec-error-locate-icon">
+                                        <Logo
+                                            v-if="activeErrorAtom && activeErrorAtom.taskId === props.row.taskId"
+                                            name="location-right"
+                                            size="18"
+                                        />
+                                    </span>
+                                    <logo
+                                        v-if="props.row.errorTypeConf"
+                                        :name="props.row.errorTypeConf.icon"
+                                        size="12"
+                                    />
+                                </div>
+                            </bk-table-column>
+                            <bk-table-column
+                                v-for="(column, i) in errorsTableColumns"
+                                v-bind="column"
+                                :key="i"
+                            />
+                        </bk-table>
+                    </bk-tab-panel>
+                </bk-tab>
+            </footer>
         </section>
         <bk-dialog
             v-model="showRetryStageDialog"
@@ -95,66 +155,7 @@
             :toggle-check="toggleCheckDialog"
             :element="currentAtom"
         />
-        <footer
-            v-if="showErrorPopup"
-            :class="{
-                'exec-errors-popup': true,
-                'visible': showErrors
-            }"
-            v-bk-clickoutside="hideErrorPopup"
-        >
-            <bk-button theme="normal" text class="drag-dot" @click="toggleErrorPopup">.....</bk-button>
-            <bk-tab class="pipeline-exec-error-tab" :active.sync="active" type="unborder-card">
-                <template slot="setting">
-                    <bk-link theme="primary" href="javascript:;">
-                        <span class="fix-error-jump">
-                            <logo class="fix-error-jump-icon" size="20" name="tiaozhuan" />
-                            {{$t('流水线故障排查指南')}}
-                        </span>
-                    </bk-link>
-                    <bk-button theme="normal" text @click="toggleErrorPopup">
-                        <i class="bk-icon  hide-error-popup-icon" :class="{
-                            'icon-angle-down': showErrors,
-                            'icon-angle-up': !showErrors
-                        }"
-                        />
-                    </bk-button>
-                </template>
-                <bk-tab-panel
-                    v-for="(panel, index) in panels"
-                    v-bind="panel"
-                    :key="index"
-                >
-                    <bk-table
-                        :data="errorList"
-                        :border="false"
-                        @row-click="setAtomLocate"
-                    >
-                        <bk-table-column width="80">
-                            <div slot-scope="props" class="exec-error-type-cell">
-                                <span class="exec-error-locate-icon">
-                                    <Logo
-                                        v-if="activeErrorAtom && activeErrorAtom.taskId === props.row.taskId"
-                                        name="location-right"
-                                        size="18"
-                                    />
-                                </span>
-                                <logo
-                                    v-if="props.row.errorTypeConf"
-                                    :name="props.row.errorTypeConf.icon"
-                                    size="12"
-                                />
-                            </div>
-                        </bk-table-column>
-                        <bk-table-column
-                            v-for="(column, i) in errorsTableColumns"
-                            v-bind="column"
-                            :key="i"
-                        />
-                    </bk-table>
-                </bk-tab-panel>
-            </bk-tab>
-        </footer>
+        
         <div class="queue-time-detail-popup">
             <div class="pipeline-time-detail-sum">
                 <span>{{$t('details.queueCost')}}</span>
@@ -544,12 +545,13 @@
                 }
             },
             setAtomLocate (row) {
+                if (this.activeErrorAtom?.taskId === row.taskId) return
                 if (this.activeErrorAtom?.taskId) {
                     this.locateAtom(this.activeErrorAtom, false)
                 }
+                this.hideErrorPopup()
                 this.locateAtom(row, true)
                 this.activeErrorAtom = row
-                this.hideErrorPopup()
             },
             handleExecuteCountChange (executeCount) {
                 this.requestPipelineExecDetail({
@@ -641,8 +643,8 @@
         }
     }
     .pipeline-exec-content {
-        padding: 16px 24px;
         flex: 1;
+        position: relative;
         background: #FAFBFD;
         display: flex;
         flex-direction: column;
@@ -651,7 +653,7 @@
             display: flex;
             align-items: center;
             font-size: 12px;
-            margin-bottom: 16px;
+            padding: 16px 24px;
             flex-shrink: 0;
             .hide-skip-pipeline-task {
                 padding: 0 16px 0 24px;
@@ -670,60 +672,62 @@
         .exec-pipeline-ui-wrapper {
             flex: 1;
             overflow: auto;
+            padding: 0 24px;
         }
-    }
-    .exec-errors-popup {
-        width: 100%;
-        height: 42px;
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        overflow: hidden;
-        transition: height .5s ease;
-        box-shadow: 0 -2px 20px 0 rgba(0,0,0,0.15);
-        background: white;
-        z-index: 6;
-        .pipeline-exec-error-tab {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            .bk-tab-section {
-                padding: 0;
-                position: static;
-            }
-        }
-        &.visible {
-            height: 200px;
-        }
-        .drag-dot {
+        .exec-errors-popup {
+            width: 100%;
             position: absolute;
-            left: 50%;
-            top: 0;
-            z-index: 2;
-
-        }
-        .fix-error-jump {
-            display: flex;
-            align-items: center;
-            color: $primaryColor;
-            font-size: 12px;
-            .fix-error-jump-icon {
-                padding: 0 4px;
-            }
-        }
-        .hide-error-popup-icon {
-            display: inline-block;
-            font-size: 20px;
-            margin-right: 24px;
-        }
-        .exec-error-type-cell {
-            color: $primaryColor;
-            display: grid;
-            align-items: center;
-            grid-auto-flow: column;
-            grid-template-columns: repeat(2, 1fr);
-            .exec-error-locate-icon {
+            bottom: 0;
+            left: 0;
+            overflow: hidden;
+            will-change: auto;
+            transition: all .5s ease;
+            transform: translateY(calc(100% - 42px));
+            box-shadow: 0 -2px 20px 0 rgba(0,0,0,0.15);
+            background: white;
+            z-index: 6;
+            .pipeline-exec-error-tab {
                 display: flex;
+                flex-direction: column;
+                height: 100%;
+                .bk-tab-section {
+                    padding: 0;
+                    position: static;
+                }
+            }
+            &.visible {
+                transform: translateY(0);
+            }
+            .drag-dot {
+                position: absolute;
+                left: 50%;
+                top: 0;
+                z-index: 2;
+    
+            }
+            .fix-error-jump {
+                display: flex;
+                align-items: center;
+                color: $primaryColor;
+                font-size: 12px;
+                .fix-error-jump-icon {
+                    padding: 0 4px;
+                }
+            }
+            .hide-error-popup-icon {
+                display: inline-block;
+                font-size: 20px;
+                margin-right: 24px;
+            }
+            .exec-error-type-cell {
+                color: $primaryColor;
+                display: grid;
+                align-items: center;
+                grid-auto-flow: column;
+                grid-template-columns: repeat(2, 1fr);
+                .exec-error-locate-icon {
+                    display: flex;
+                }
             }
         }
     }

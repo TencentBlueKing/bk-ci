@@ -378,6 +378,7 @@
                     const ele = document.getElementById(this.atom.id)
                     ele?.scrollIntoView?.({
                         block: 'center',
+                        inline: 'center',
                         behavior: 'smooth'
                     })
                 }
