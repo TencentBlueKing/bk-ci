@@ -49,11 +49,9 @@ import java.time.LocalDateTime
 object BuildTimeCostUtils {
     private val logger = LoggerFactory.getLogger(BuildTimeCostUtils::class.java)
 
-    // TODO 某层结束执行时获取内部所有耗时并计算，build对象可能因为数据清理不存在，startTime和endTime也不一定有值，需兜底
-
     fun generateBuildTimeCost(
         buildInfo: BuildInfo,
-        stagePairs: List<Pair<BuildRecordStage, PipelineBuildStage?>>
+        stagePairs: List<BuildRecordStage>
     ): BuildRecordTimeCost {
         val startTime = buildInfo.startTime ?: return BuildRecordTimeCost()
         val endTime = buildInfo.endTime ?: LocalDateTime.now().timestampmilli()
@@ -61,7 +59,7 @@ object BuildTimeCostUtils {
         var executeCost = 0L
         var waitCost = 0L
         var queueCost = 0L
-        stagePairs.forEach { (record, _) ->
+        stagePairs.forEach { record ->
             val stageCost = JsonUtil.anyTo(
                 record.stageVar[Stage::timeCost.name] ?: return@forEach,
                 object : TypeReference<BuildRecordTimeCost>() {}
@@ -83,7 +81,7 @@ object BuildTimeCostUtils {
     fun generateStageTimeCost(
         buildStage: PipelineBuildStage,
         recordStage: BuildRecordStage,
-        containerPairs: List<Pair<BuildRecordContainer, PipelineBuildContainer?>>
+        containerPairs: List<BuildRecordContainer>
     ): BuildRecordTimeCost {
         val startTime = buildStage.startTime ?: return BuildRecordTimeCost()
         val endTime = buildStage.endTime ?: LocalDateTime.now()
@@ -91,7 +89,7 @@ object BuildTimeCostUtils {
         var containerExecuteCost = emptyList<Pair<Long, Long>>()
         var containerWaitCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
         var containerQueueCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
-        containerPairs.forEach { (record, _) ->
+        containerPairs.forEach { record ->
             val containerTimeLine = JsonUtil.anyTo(
                 record.containerVar[BuildRecordTimeLine::class.java.name] ?: return@forEach,
                 object : TypeReference<BuildRecordTimeLine>() {}

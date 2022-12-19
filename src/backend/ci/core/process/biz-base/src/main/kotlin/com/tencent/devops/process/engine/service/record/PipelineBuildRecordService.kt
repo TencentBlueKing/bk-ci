@@ -83,7 +83,6 @@ class PipelineBuildRecordService @Autowired constructor(
     private val pipelineTriggerReviewDao: PipelineTriggerReviewDao,
     private val dslContext: DSLContext,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val buildStageDao: PipelineBuildStageDao,
     private val recordModelDao: BuildRecordModelDao,
     private val recordStageDao: BuildRecordStageDao,
     private val recordContainerDao: BuildRecordContainerDao,
@@ -433,15 +432,9 @@ class PipelineBuildRecordService @Autowired constructor(
             val recordStages = recordStageDao.getRecords(
                 context, projectId, pipelineId, buildId, executeCount
             )
-            val buildStageMap = buildStageDao.getByBuildId(
-                dslContext = context, projectId = projectId, buildId = buildId
-            ).associateBy { it.stageId }
-            val stagePairs = recordStages.map { stage ->
-                stage to buildStageMap[stage.stageId]
-            }
             val modelVar = mutableMapOf<String, Any>()
             modelVar[Model::timeCost.name] = BuildTimeCostUtils.generateBuildTimeCost(
-                buildInfo, stagePairs
+                buildInfo, recordStages
             )
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,

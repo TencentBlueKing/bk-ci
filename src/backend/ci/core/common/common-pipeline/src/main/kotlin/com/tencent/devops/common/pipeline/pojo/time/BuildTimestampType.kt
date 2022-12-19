@@ -30,7 +30,8 @@ import io.swagger.annotations.ApiModel
 
 @ApiModel("构建详情记录-时间戳类型（勿随意删除）")
 enum class BuildTimestampType(val action: String) {
-    PIPELINE_CONCURRENCY_WAITING("流水线并发等待"),
+    BUILD_REVIEW_WAITING("流水线触发审核等待"),
+    BUILD_CONCURRENCY_QUEUE("流水线并发排队"),
     STAGE_CHECK_IN_WAITING("stage准入等待"),
     STAGE_CHECK_OUT_WAITING("stage准出等待"),
     JOB_MUTEX_QUEUE("job互斥并发排队"),

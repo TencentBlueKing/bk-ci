@@ -60,7 +60,6 @@ class StageBuildRecordService(
     private val recordStageDao: BuildRecordStageDao,
     private val recordContainerDao: BuildRecordContainerDao,
     private val buildStageDao: PipelineBuildStageDao,
-    private val buildContainerDao: PipelineBuildContainerDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineBuildDao: PipelineBuildDao,
     stageTagService: StageTagService,
@@ -360,14 +359,8 @@ class StageBuildRecordService(
                     val recordContainers = recordContainerDao.getRecords(
                         context, projectId, pipelineId, buildId, executeCount, stageId
                     )
-                    val buildContainerMap = buildContainerDao.listByBuildId(
-                        dslContext = context, projectId = projectId, buildId = buildId, stageId = stageId
-                    ).associateBy { it.containerId }
-                    val containerPairs = recordContainers.map { container ->
-                        container to buildContainerMap[container.containerId]
-                    }
                     timeCost = BuildTimeCostUtils.generateStageTimeCost(
-                        buildStage, recordStage, containerPairs
+                        buildStage, recordStage, recordContainers
                     )
                     timeCost?.let { stageVar[Stage::timeCost.name] = it }
                 }

@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -434,7 +435,7 @@ class BuildStartControl @Autowired constructor(
             projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
             executeCount = executeCount, buildStatus = null, modelVar = mutableMapOf(),
             timestamps = mapOf(
-                BuildTimestampType.PIPELINE_CONCURRENCY_WAITING to
+                BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
                     BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
             )
         )
@@ -445,17 +446,6 @@ class BuildStartControl @Autowired constructor(
                 Stage::elapsed.name to max(0, System.currentTimeMillis() - buildInfo.queueTime)
             )
         )
-        containerRecordService.updateContainerRecord(
-            projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
-            executeCount = executeCount, containerId = container.containerId!!, buildStatus = BuildStatus.SUCCEED,
-            containerVar = mutableMapOf(
-                Container::startEpoch.name to now.timestampmilli(),
-                Container::systemElapsed.name to (stage.elapsed ?: 0),
-                Container::elementElapsed.name to 0,
-                Container::startVMStatus.name to BuildStatus.SUCCEED.name,
-                Container::name.name to container.name // 名字刷新成非队列中
-            )
-        )
         stage.status = BuildStatus.SUCCEED.name
         stage.elapsed = max(0, System.currentTimeMillis() - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
@@ -464,6 +454,18 @@ class BuildStartControl @Autowired constructor(
         container.elementElapsed = 0
         container.executeCount = executeCount
         container.startVMStatus = BuildStatus.SUCCEED.name
+        containerRecordService.updateContainerRecord(
+            projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
+            executeCount = executeCount, containerId = container.containerId!!, buildStatus = BuildStatus.SUCCEED,
+            containerVar = mutableMapOf(
+                Container::startEpoch.name to now.timestampmilli(),
+                Container::systemElapsed.name to (stage.elapsed ?: 0), // TODO 后续使用时间戳计算
+                Container::elementElapsed.name to 0,
+                Container::startVMStatus.name to BuildStatus.SUCCEED.name,
+                Container::name.name to container.name, // 名字刷新成非队列中
+                Container::timeCost.name to BuildRecordTimeCost()
+            )
+        )
 
         buildDetailService.updateModel(projectId = buildInfo.projectId, buildId = buildInfo.buildId, model = model)
         buildLogPrinter.addLine(
