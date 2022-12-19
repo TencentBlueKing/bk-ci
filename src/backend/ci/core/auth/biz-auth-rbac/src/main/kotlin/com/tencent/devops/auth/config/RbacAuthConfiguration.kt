@@ -55,7 +55,7 @@ class RbacAuthConfiguration {
     @Value("\${auth.url:}")
     val iamBaseUrl = ""
 
-    @Value("\${auth.appCode:}")
+    @Value("\${auth.iamSystem:}")
     val systemId = ""
 
     @Value("\${auth.appCode:}")
@@ -84,6 +84,7 @@ class RbacAuthConfiguration {
     fun grantV2Service() = V2GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
     @Bean
+    @SuppressWarnings("LongParameterList")
     fun permissionResourceService(
         client: Client,
         permissionScopesService: PermissionScopesService,

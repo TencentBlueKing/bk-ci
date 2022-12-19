@@ -36,6 +36,7 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -62,12 +63,70 @@ class PermissionScopesService(
         strategyName: String,
         projectCode: String,
         projectName: String
-    ): AuthorizationScopes {
+    ): List<AuthorizationScopes> {
         val (projectStrategyList, resourceStrategyMap) = getGroupStrategy(strategyName)
-        val actions = mutableListOf<Action>()
-        val resources = mutableListOf<ManagerResources>()
-        // 所有的创建都直接挂在项目下
+        val authorizationScopes = mutableListOf<AuthorizationScopes>()
+        authorizationScopes.addAll(
+            buildProjectAuthorizationScopes(
+                projectStrategyList = projectStrategyList,
+                projectCode = projectCode,
+                projectName = projectName
+            )
+        )
+        authorizationScopes.addAll(
+            buildResourceAuthorizationScopes(
+                resourceStrategyMap = resourceStrategyMap,
+                projectCode = projectCode,
+                projectName = projectName
+            )
+        )
+        return authorizationScopes
+    }
+
+    @SuppressWarnings("LongParameterList")
+    fun buildSubsetManagerAuthorizationScopes(
+        strategyName: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): List<AuthorizationScopes> {
+        val (projectStrategyList, resourceStrategyMap) = getGroupStrategy(strategyName)
+        val authorizationScopes = mutableListOf<AuthorizationScopes>()
+        authorizationScopes.addAll(
+            buildProjectAuthorizationScopes(
+                projectStrategyList = projectStrategyList,
+                projectCode = projectCode,
+                projectName = projectName
+            )
+        )
+        authorizationScopes.addAll(
+            buildResourceAuthorizationScopes(
+                resourceStrategyMap = resourceStrategyMap,
+                projectCode = projectCode,
+                projectName = projectName,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+            )
+        )
+        logger.info(
+            "build subset manager authorization scopes authorizationScopes:${JsonUtil.toJson(authorizationScopes)}"
+        )
+        return authorizationScopes
+    }
+
+    private fun buildProjectAuthorizationScopes(
+        projectStrategyList: List<String>,
+        projectCode: String,
+        projectName: String,
+    ): List<AuthorizationScopes> {
+        val authorizationScopes = mutableListOf<AuthorizationScopes>()
         projectStrategyList.forEach { createAction ->
+            val actions = mutableListOf<Action>()
+            val resources = mutableListOf<ManagerResources>()
+
             actions.add(Action(createAction))
             val managerPath = mutableListOf<ManagerPath>()
             val projectPath = ManagerPath(
@@ -85,57 +144,32 @@ class PermissionScopesService(
                     .type(AuthResourceType.PROJECT.value)
                     .paths(paths).build()
             )
+            authorizationScopes.add(
+                AuthorizationScopes.builder()
+                    .system(iamConfiguration.systemId)
+                    .actions(actions)
+                    .resources(resources)
+                    .build()
+            )
         }
-        resourceStrategyMap.forEach { (resourceType, resourceActions) ->
-            resourceActions.forEach { resourceAction ->
-                actions.add(Action(resourceAction))
-                val managerPath = mutableListOf<ManagerPath>()
-                val projectPath = ManagerPath(
-                    iamConfiguration.systemId,
-                    AuthResourceType.PROJECT.value,
-                    projectCode,
-                    projectName
-                )
-                val resourcePath = ManagerPath(
-                    iamConfiguration.systemId,
-                    resourceType,
-                    "*",
-                    ""
-                )
-                managerPath.add(projectPath)
-                managerPath.add(resourcePath)
-                val paths = mutableListOf<List<ManagerPath>>()
-                paths.add(managerPath)
-                resources.add(
-                    ManagerResources.builder()
-                        .system(iamConfiguration.systemId)
-                        .type(resourceType)
-                        .paths(paths).build()
-                )
-            }
-        }
-        logger.info("build gradle manager authorization scopes action:$actions, resources:$resources")
-        return AuthorizationScopes.builder()
-            .system(iamConfiguration.systemId)
-            .actions(actions)
-            .resources(resources)
-            .build()
+        return authorizationScopes
     }
 
     @SuppressWarnings("LongParameterList")
-    fun buildSubsetManagerAuthorizationScopes(
-        strategyName: String,
+    private fun buildResourceAuthorizationScopes(
+        resourceStrategyMap: Map<String, List<String>>,
         projectCode: String,
         projectName: String,
         resourceType: String,
         resourceCode: String,
         resourceName: String
-    ): AuthorizationScopes {
-        val resourceStrategyMap = getGroupStrategy(strategyName).second
-        val actions = mutableListOf<Action>()
-        val resources = mutableListOf<ManagerResources>()
+    ): List<AuthorizationScopes> {
+        val authorizationScopes = mutableListOf<AuthorizationScopes>()
         resourceStrategyMap.forEach { (strategyResourceType, resourceActions) ->
             resourceActions.forEach { resourceAction ->
+                val actions = mutableListOf<Action>()
+                val resources = mutableListOf<ManagerResources>()
+
                 actions.add(Action(resourceAction))
                 val managerPath = mutableListOf<ManagerPath>()
                 val projectPath = ManagerPath(
@@ -178,14 +212,63 @@ class PermissionScopesService(
                         .type(strategyResourceType)
                         .paths(paths).build()
                 )
+                authorizationScopes.add(
+                    AuthorizationScopes.builder()
+                        .system(iamConfiguration.systemId)
+                        .actions(actions)
+                        .resources(resources)
+                        .build()
+                )
             }
         }
-        logger.info("build subset manager authorization scopes action:$actions, resources:$resources")
-        return AuthorizationScopes.builder()
-            .system(iamConfiguration.systemId)
-            .actions(actions)
-            .resources(resources)
-            .build()
+        return authorizationScopes
+    }
+
+    private fun buildResourceAuthorizationScopes(
+        resourceStrategyMap: Map<String, List<String>>,
+        projectCode: String,
+        projectName: String,
+    ): List<AuthorizationScopes> {
+        val authorizationScopes = mutableListOf<AuthorizationScopes>()
+        resourceStrategyMap.forEach { (resourceType, resourceActions) ->
+            resourceActions.forEach { resourceAction ->
+                val actions = mutableListOf<Action>()
+                val resources = mutableListOf<ManagerResources>()
+
+                actions.add(Action(resourceAction))
+                val managerPath = mutableListOf<ManagerPath>()
+                val projectPath = ManagerPath(
+                    iamConfiguration.systemId,
+                    AuthResourceType.PROJECT.value,
+                    projectCode,
+                    projectName
+                )
+                val resourcePath = ManagerPath(
+                    iamConfiguration.systemId,
+                    resourceType,
+                    "*",
+                    ""
+                )
+                managerPath.add(projectPath)
+                managerPath.add(resourcePath)
+                val paths = mutableListOf<List<ManagerPath>>()
+                paths.add(managerPath)
+                resources.add(
+                    ManagerResources.builder()
+                        .system(iamConfiguration.systemId)
+                        .type(resourceType)
+                        .paths(paths).build()
+                )
+                authorizationScopes.add(
+                    AuthorizationScopes.builder()
+                        .system(iamConfiguration.systemId)
+                        .actions(actions)
+                        .resources(resources)
+                        .build()
+                )
+            }
+        }
+        return authorizationScopes
     }
 
     private fun getGroupStrategy(groupName: String): Pair<List<String>, Map<String, List<String>>> {
