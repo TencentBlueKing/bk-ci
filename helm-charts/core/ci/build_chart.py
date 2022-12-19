@@ -57,7 +57,7 @@ default_value_dict = {
     'bkCiBcsMemory':'16048',
     'bkCiKubernetesCpu':'8',
     'bkCiKubernetesMemory':'16048',
-    'bkCiKubernetesHost': 'http://kubernetes-manager'
+    'bkCiKubernetesHost': 'http://kubernetes-manager',
     'bkCiKubernetesToken': 'landun'
 }
 
