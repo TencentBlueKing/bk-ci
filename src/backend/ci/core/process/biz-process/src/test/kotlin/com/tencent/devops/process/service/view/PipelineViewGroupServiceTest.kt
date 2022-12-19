@@ -1,6 +1,8 @@
 package com.tencent.devops.process.service.view
 
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
@@ -25,8 +27,6 @@ import com.tencent.devops.process.pojo.classify.PipelineViewForm
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelineCount
 import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.pojo.Result
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -832,7 +832,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("返回值测试1")
         fun test_1() {
             every {
-                client.mockGet(ServiceProjectResource::class).hasPermission(any(), any(), any())
+                client.mockGet(ServiceProjectAuthResource::class).checkManager(any(), any())
             } returns Result(true)
             self.hasPermission("test", "test").let {
                 Assertions.assertEquals(true, it)
@@ -843,7 +843,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         @DisplayName("返回值测试2")
         fun test_2() {
             every {
-                client.mockGet(ServiceProjectResource::class).hasPermission(any(), any(), any())
+                client.mockGet(ServiceProjectAuthResource::class).checkManager(any(), any())
             } returns Result(false)
             self.hasPermission("test", "test").let {
                 Assertions.assertEquals(false, it)

@@ -29,6 +29,7 @@ package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -131,6 +132,18 @@ interface ServiceProjectAuthResource {
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String
+    ): Result<Boolean>
+
+    @GET
+    @Path("/projectIds/{projectId}/checkManager")
+    @ApiOperation("判断是否是项目管理员或CI管理员")
+    fun checkManager(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        @ApiParam("项目Id", required = true)
+        projectId: String
     ): Result<Boolean>
 
     @POST

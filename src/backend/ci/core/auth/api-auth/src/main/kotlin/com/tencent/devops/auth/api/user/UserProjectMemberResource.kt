@@ -148,7 +148,7 @@ interface UserProjectMemberResource {
     @GET
     @Path("/projectIds/{projectId}/checkManager")
     @ApiOperation("判断是否是项目管理员或CI管理员")
-    fun checkProjectManager(
+    fun checkManager(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
