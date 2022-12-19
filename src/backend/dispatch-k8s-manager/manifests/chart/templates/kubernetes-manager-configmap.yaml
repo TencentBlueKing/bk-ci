@@ -80,9 +80,9 @@ data:
         cfs:
           path: /data/cfs
       volumeMount:
-        dataPath: /data/devops/workspace
-        logPath: /data/devops/logs
-        builderConfigMapPath: /data/landun/config
+        dataPath: {{ .Values.kubernetesManager.volumeMount.dataPath }}
+        logPath: {{ .Values.kubernetesManager.volumeMount.logPath }}
+        builderConfigMapPath: /data/devops/config
         cfs:
           path: /data/bkdevops/apps
           readOnly: true
