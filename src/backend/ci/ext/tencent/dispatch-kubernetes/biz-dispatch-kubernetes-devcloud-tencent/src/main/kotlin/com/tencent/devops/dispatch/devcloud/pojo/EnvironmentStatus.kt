@@ -20,5 +20,6 @@ enum class EnvStatusEnum {
     Succeeded,
     Failed,
     Stopped,
-    Unknow
+    Unknow,
+    Deleted
 }

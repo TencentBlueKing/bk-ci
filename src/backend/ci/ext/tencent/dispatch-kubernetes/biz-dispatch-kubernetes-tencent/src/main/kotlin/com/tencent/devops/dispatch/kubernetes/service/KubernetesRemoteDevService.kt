@@ -63,12 +63,20 @@ class KubernetesRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
+    override fun stopWorkspace(userId: String, workspaceName: String): Boolean {
+        TODO("Not yet implemented")
+    }
+
     override fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
         TODO("Not yet implemented")
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String? {
         return kubernetesRemoteDevClient.getWorkspaceUrl(userId, workspaceName)
+    }
+
+    override fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
+        TODO("Not yet implemented")
     }
 
     private fun getOnlyName(userId: String): String {

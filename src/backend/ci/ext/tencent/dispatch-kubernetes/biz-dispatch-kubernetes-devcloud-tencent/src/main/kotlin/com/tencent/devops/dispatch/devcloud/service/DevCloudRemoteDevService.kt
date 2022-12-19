@@ -36,6 +36,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.Environment
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentSpec
 import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
+import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import org.jooq.DSLContext
@@ -46,6 +47,7 @@ import org.springframework.stereotype.Service
 @Service
 class DevCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisUtils: RedisUtils,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
     private val workspaceDevCloudClient: WorkspaceDevCloudClient
@@ -104,13 +106,13 @@ class DevCloudRemoteDevService @Autowired constructor(
         return true
     }
 
-    override fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
+    override fun stopWorkspace(userId: String, workspaceName: String): Boolean {
         val environmentUid = getEnvironmentUid(workspaceName)
         workspaceDevCloudClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
             workspaceName = workspaceName,
-            environmentAction = EnvironmentAction.DELETE
+            environmentAction = EnvironmentAction.STOP
         )
 
         // 更新db状态
@@ -123,8 +125,32 @@ class DevCloudRemoteDevService @Autowired constructor(
         return true
     }
 
+    override fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
+        val environmentUid = getEnvironmentUid(workspaceName)
+        workspaceDevCloudClient.operatorWorkspace(
+            userId = userId,
+            environmentUid = environmentUid,
+            workspaceName = workspaceName,
+            environmentAction = EnvironmentAction.DELETE
+        )
+
+        // 更新db状态
+        dispatchWorkspaceDao.updateWorkspaceStatus(
+            workspaceName = workspaceName,
+            status = EnvStatusEnum.Deleted,
+            dslContext = dslContext
+        )
+
+        return true
+    }
+
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
+    }
+
+    override fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
+        redisUtils.refreshHeartbeat(userId, workspaceName)
+        return true
     }
 
     private fun getEnvironmentUid(workspaceName: String): String {

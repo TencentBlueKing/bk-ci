@@ -27,22 +27,18 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.dispatch.kubernetes.service.factory.ContainerServiceFactory
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class RemoteDevService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
     private val containerServiceFactory: ContainerServiceFactory,
     private val remoteDevServiceFactory: RemoteDevServiceFactory
 ) {
@@ -72,18 +68,22 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun startWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
+        return remoteDevServiceFactory.load("").startWorkspace(userId, workspaceName)
     }
 
     fun stopWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
+        return remoteDevServiceFactory.load("").stopWorkspace(userId, workspaceName)
     }
 
     fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
+        return remoteDevServiceFactory.load("").deleteWorkspace(userId, workspaceName)
     }
 
     fun getWorkspaceUrl(userId: String, workspaceName: String): String? {
         return remoteDevServiceFactory.load("").getWorkspaceUrl(userId, workspaceName)
+    }
+
+    fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
+        return remoteDevServiceFactory.load("").workspaceHeartbeat(userId, workspaceName)
     }
 }

@@ -25,35 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.service
+package com.tencent.devops.dispatch.kubernetes.resource.user
 
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.api.user.UserRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class BcsRemoteDevService @Autowired constructor(
-    private val commonConfig: CommonConfig
-) : RemoteDevInterface {
-    override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
-        TODO("Not yet implemented")
+@RestResource
+class UserRemoteDevResourceImpl @Autowired constructor(
+    private val remoteDevService: RemoteDevService
+) : UserRemoteDevResource {
+    override fun workspaceHeartbeat(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(remoteDevService.workspaceHeartbeat(userId, workspaceName))
     }
 
-    override fun startWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
-        TODO("Not yet implemented")
-    }
-
-    override fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
 }
