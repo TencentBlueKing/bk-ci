@@ -3,6 +3,7 @@ package com.tencent.devops.auth.api.user
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
+import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -95,4 +96,16 @@ interface UserAuthApplyResource {
         @ApiParam("申请实体", required = true)
         applicationDTO: ApplicationDTO
     ): Result<Boolean>
+
+    @GET
+    @Path("{groupId}/getGroupPermissionDetail")
+    @ApiOperation("查询用户组权限详情")
+    fun getGroupPermissionDetail(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("用户组ID")
+        @PathParam("groupId")
+        groupId: Int
+    ): Result<List<GroupPermissionDetailVo>>
 }

@@ -28,17 +28,18 @@
 
 package com.tencent.devops.auth.dao
 
-import com.tencent.devops.auth.entity.AuthResourceInfo
+import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.model.auth.tables.TAuthResource
 import com.tencent.devops.model.auth.tables.records.TAuthResourceRecord
-import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
+@SuppressWarnings("LongParameterList")
 class AuthResourceDao {
 
-    @SuppressWarnings("LongParameterList")
     fun create(
         dslContext: DSLContext,
         userId: String,
@@ -125,6 +126,25 @@ class AuthResourceDao {
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .execute() == 1
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        projectCode: String?,
+        resourceName: String?,
+        resourceType: String?,
+        offset: Int,
+        limit: Int
+    ): Result<TAuthResourceRecord>? {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectFrom(this).where()
+                .let { if (projectCode == null) it else it.and(PROJECT_CODE.eq(projectCode)) }
+                .let { if (resourceType == null) it else it.and(RESOURCE_TYPE.eq(resourceType)) }
+                .let { if (resourceName == null) it else it.and(RESOURCE_NAME.like("%$resourceName%")) }
+                .limit(limit)
+                .offset(offset)
+                .fetch()
         }
     }
 

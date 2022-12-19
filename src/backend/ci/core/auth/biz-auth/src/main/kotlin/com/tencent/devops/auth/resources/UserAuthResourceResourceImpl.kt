@@ -29,9 +29,11 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.user.UserAuthResourceResource
+import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -177,6 +179,26 @@ class UserAuthResourceResourceImpl @Autowired constructor(
                 projectId = projectId,
                 resourceType = resourceType,
                 groupId = groupId
+            )
+        )
+    }
+
+    override fun listResoureces(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceName: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Pagination<AuthResourceInfo>> {
+        return Result(
+            permissionResourceService.listResoureces(
+                userId = userId,
+                projectId = projectId,
+                resourceType = resourceType,
+                resourceName = resourceName,
+                page = page,
+                pageSize = pageSize
             )
         )
     }

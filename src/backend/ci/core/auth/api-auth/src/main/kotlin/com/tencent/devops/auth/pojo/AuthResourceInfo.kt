@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.auth.entity
+package com.tencent.devops.auth.pojo
 
 import io.swagger.annotations.ApiModel
 

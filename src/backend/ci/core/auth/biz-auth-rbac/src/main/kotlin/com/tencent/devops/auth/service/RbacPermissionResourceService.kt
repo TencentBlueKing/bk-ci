@@ -35,7 +35,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.entity.AuthResourceInfo
+import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.enums.ResourceGroupType
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
@@ -43,6 +43,7 @@ import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -304,6 +305,30 @@ class RbacPermissionResourceService(
             userId
         )
         return true
+    }
+
+    override fun listResoureces(
+        userId: String,
+        projectId: String?,
+        resourceType: String?,
+        resourceName: String?,
+        page: Int,
+        pageSize: Int
+    ): Pagination<AuthResourceInfo> {
+        val resourceList = authResourceService.list(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceName = resourceName,
+            page = page,
+            pageSize = pageSize
+        )
+        if (resourceList.isEmpty()) {
+            return Pagination(false, emptyList())
+        }
+        return Pagination(
+            hasNext = resourceList.size == pageSize,
+            records = resourceList
+        )
     }
 
     private fun getProjectInfo(projectCode: String): ProjectVO {

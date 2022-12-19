@@ -4,6 +4,7 @@ import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.devops.auth.api.user.UserAuthApplyResource
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
+import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.common.api.pojo.Result
@@ -12,19 +13,19 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class UserAuthApplyResourceImpl @Autowired constructor(
-    val PermissionApplyService: PermissionApplyService
+    val permissionApplyService: PermissionApplyService
 ) : UserAuthApplyResource {
     override fun listResourceTypes(userId: String): Result<List<ResourceTypeInfoVo>> {
-        return Result(PermissionApplyService.listResourceTypes(userId))
+        return Result(permissionApplyService.listResourceTypes(userId))
     }
 
     override fun listActions(userId: String, resourceType: String): Result<List<ActionInfoVo>> {
-        return Result(PermissionApplyService.listActions(userId, resourceType))
+        return Result(permissionApplyService.listActions(userId, resourceType))
     }
 
     override fun listGroups(userId: String, projectId: String, inherit: Boolean?, actionId: String?, resourceType: String?, resourceCode: String?, bkIamPath: String?, name: String?, description: String?, page: Int, pageSize: Int): Result<V2ManagerRoleGroupVO> {
         return Result(
-            PermissionApplyService.listGroups(
+            permissionApplyService.listGroups(
                 userId = userId,
                 projectId = projectId,
                 inherit = inherit,
@@ -41,6 +42,10 @@ class UserAuthApplyResourceImpl @Autowired constructor(
     }
 
     override fun applyToJoinGroup(userId: String, applicationDTO: ApplicationDTO): Result<Boolean> {
-        return Result(PermissionApplyService.applyToJoinGroup(userId, applicationDTO))
+        return Result(permissionApplyService.applyToJoinGroup(userId, applicationDTO))
+    }
+
+    override fun getGroupPermissionDetail(userId: String, groupId: Int): Result<List<GroupPermissionDetailVo>> {
+        return Result(permissionApplyService.getGroupPermissionDetail(userId, groupId))
     }
 }
