@@ -138,6 +138,9 @@ interface ServiceProjectAuthResource {
     @Path("/projectIds/{projectId}/checkManager")
     @ApiOperation("判断是否是项目管理员或CI管理员")
     fun checkManager(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

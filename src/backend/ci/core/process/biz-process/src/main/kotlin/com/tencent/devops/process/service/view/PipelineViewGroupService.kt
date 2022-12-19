@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
@@ -79,7 +80,8 @@ class PipelineViewGroupService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
-    private val client: Client
+    private val client: Client,
+    private val clientTokenService: ClientTokenService
 ) {
     private val allPipelineInfoCache = Caffeine.newBuilder()
         .maximumSize(10)
@@ -637,7 +639,8 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun hasPermission(userId: String, projectId: String) =
-        client.get(ServiceProjectAuthResource::class).checkManager(userId, projectId).data ?: false
+        client.get(ServiceProjectAuthResource::class)
+            .checkManager(clientTokenService.getSystemToken(userId)!!, userId, projectId).data ?: false
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
