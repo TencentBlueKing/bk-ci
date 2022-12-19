@@ -132,7 +132,7 @@ const actions = {
     },
     async checkViewManageAuth ({ commit, state }, { projectId }) {
         try {
-            const { data } = await ajax.get(`/project/api/user/projects/${projectId}/hasPermission/MANAGE`)
+            const { data } = await ajax.get(`/auth/api/user/project/members/projectIds/${projectId}/checkManager`)
             state.isManage = data
             return data
         } catch (error) {
