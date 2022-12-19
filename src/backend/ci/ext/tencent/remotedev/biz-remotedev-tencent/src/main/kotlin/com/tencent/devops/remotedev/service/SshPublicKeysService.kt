@@ -31,102 +31,58 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.SshPublicKeysDao
 import com.tencent.devops.remotedev.dao.WorkspaceTemplateDao
+import com.tencent.devops.remotedev.pojo.SshPublicKey
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
+import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class WorkspaceTemplateService @Autowired constructor(
+class SshPublicKeysService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val workspaceTemplateDao: WorkspaceTemplateDao
+    private val sshPublicKeysDao: SshPublicKeysDao
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(WorkspaceTemplateService::class.java)
+        private val logger = LoggerFactory.getLogger(SshPublicKeysService::class.java)
     }
 
     // 新增模板
-    fun addWorkspaceTemplate(userId: String, workspaceTemplate: WorkspaceTemplate): Boolean {
+    fun createPublicKey(userId: String, sshPublicKey: SshPublicKey): Boolean {
         logger.info(
-            "WorkspaceTemplateService|addWorkspaceTemplate|userId" +
-                "|${userId}|workspaceTemplate|${workspaceTemplate}"
+            "SshPublicKeysService|addSshPublicKey|userId" +
+                "|${userId}|sshPublicKey|${sshPublicKey}"
         )
         // 校验 user信息是否存在
         checkCommonUser(userId)
-
-        // 模板信息写入DB
-        workspaceTemplateDao.createWorkspaceTemplate(
-            userId = userId,
-            workspaceTemplate = workspaceTemplate,
-            dslContext = dslContext
+        // ssh key信息写入DB
+        sshPublicKeysDao.createSshKey(
+            dslContext = dslContext,
+            sshPublicKey = sshPublicKey
         )
-
-        return true
-    }
-
-    // 修改模板
-    fun updateWorkspaceTemplate(
-        userId: String,
-        wsTemplateId: Long,
-        workspaceTemplate: WorkspaceTemplate
-    ): Boolean {
-        logger.info(
-            "WorkspaceTemplateService|updateWorkspaceTemplate|userId|${userId}|" +
-                "workspaceTemplateId|${wsTemplateId}|workspaceTemplate|${workspaceTemplate}"
-        )
-        // 校验 user信息是否存在
-        checkCommonUser(userId)
-
-        // 更新模板信息
-        workspaceTemplateDao.updateWorkspaceTemplate(
-            wsTemplateId = wsTemplateId,
-            workspaceTemplate = workspaceTemplate,
-            dslContext = dslContext
-        )
-
-        return true
-    }
-
-    // 删除模板
-    fun deleteWorkspaceTemplate(
-        userId: String,
-        wsTemplateId: Long
-    ): Boolean {
-        logger.info("WorkspaceTemplateService|deleteWorkspaceTemplate|userId|${userId}|wsTemplateId|${wsTemplateId}")
-        // 校验 user信息是否存在
-        checkCommonUser(userId)
-        // 删除模板信息
-        workspaceTemplateDao.deleteWorkspaceTemplate(
-            wsTemplateId = wsTemplateId,
-            dslContext = dslContext
-        )
-
         return true
     }
 
     // 获取工作空间模板
-    fun getWorkspaceTemplateList(
+    fun getSshPublicKeysList(
         userId: String
-    ): List<WorkspaceTemplate> {
-        logger.info("WorkspaceTemplateService|getWorkspaceTemplateList|userId|${userId}")
+    ): List<SshPublicKey> {
+        logger.info("SshPublicKeysService|getSshPublicKeysList|userId|${userId}")
         checkCommonUser(userId)
-        val result = mutableListOf<WorkspaceTemplate>()
-        workspaceTemplateDao.queryWorkspaceTemplate(
-            wsTemplateId = null,
-            dslContext = dslContext
+        val result = mutableListOf<SshPublicKey>()
+        sshPublicKeysDao.queryUserSshKeys(
+            dslContext = dslContext,
+            user = userId
         ).forEach {
             result.add(
-                WorkspaceTemplate(
-                    wsTemplateId = it.id.toInt(),
-                    image = it.image,
-                    name = it.name,
-                    source = it.source,
-                    logo = it.logo,
-                    description = it.description
+                SshPublicKey(
+                    user = it.user,
+                    publicKey = String(Base64Util.decode(it.publicKey))
                 )
             )
         }

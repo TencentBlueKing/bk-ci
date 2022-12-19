@@ -25,56 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service.redis
+package com.tencent.devops.remotedev.service
 
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.common.exception.RepeatRequestException
+import com.tencent.devops.remotedev.pojo.RemoteDevCallBack
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-/**
- * 主要用于一些同一时间只允许有一个实例运行的地方。
- */
-open class RedisCallLimit(
-    private val redisOperation: RedisOperation,
-    private val lockKey: String,
-    private val expiredTimeInSeconds: Long
-) : AutoCloseable {
+@Service
+class CallBackService @Autowired constructor(
+    private val workspaceService: WorkspaceService
+) {
+
     companion object {
-        /**
-         * 调用set后的返回值
-         */
-        private const val OK = "OK"
-
-        private val logger = LoggerFactory.getLogger(RedisCallLimit::class.java)
+        private val logger = LoggerFactory.getLogger(CallBackService::class.java)
     }
 
-    private val lockValue = UUID.randomUUID().toString()
+    fun callback(body: RemoteDevCallBack): Boolean {
+        logger.info("remote dev receive callback|${body.requestId}|${body.userId}|${body.event}|${body.ext}")
 
-    private var locked = false
+        return true
+    }
 
-    private val redisLock = RedisLock(redisOperation, lockKey, expiredTimeInSeconds)
-
-    /**
-     *
-     *
-     * @return 该 lock 需要放在 finally 外
-     * @throws CustomException 已经存在 key ，说明是重复请求
-     */
-    fun lock(): RedisCallLimit {
-        val result = redisLock.set(lockKey, lockValue, expiredTimeInSeconds)
-        val l = OK.equals(result, true)
-        if (!l) {
-            logger.warn("$lockKey call duplicate, reject it.")
-            throw RepeatRequestException(lockKey)
+    private fun <T> retry(
+        retryCount: Int = 5,
+        action: () -> T
+    ): T {
+        return kotlin.runCatching { action() }.getOrElse {
+            if (it is RepeatRequestException && retryCount > 0) {
+                Thread.sleep(1000)
+                retry(retryCount - 1, action)
+            } else throw it
         }
-        locked = true
-        return this
-    }
-
-    override fun close() {
-        redisLock.close()
     }
 }

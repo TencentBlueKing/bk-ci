@@ -36,9 +36,12 @@ import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.DatePart
+import org.jooq.Field
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
 import java.time.LocalDateTime
 
 @Repository
@@ -173,6 +176,24 @@ class WorkspaceDao {
         }
     }
 
+    /**
+     * 获得拥有该工作空间的用户
+     */
+    fun fetchWorkspaceUser(
+        dslContext: DSLContext,
+        workspaceId: Long
+    ): List<String> {
+        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.select(CREATOR).from(this)
+                .where(ID.eq(workspaceId)).unionAll(
+                    DSL.select(shared.SHARED_USER).from(shared).where(
+                        shared.WORKSPACE_ID.eq(workspaceId)
+                    )
+                ).fetch(0, String::class.java)
+        }
+    }
+
     fun updateWorkspaceName(
         workspaceId: Long,
         name: String,
@@ -253,6 +274,22 @@ class WorkspaceDao {
         }
     }
 
+    // 根据ws唯一名称更新状态
+    fun updateWorkspaceStatusWithName(
+        workspaceName: String,
+        status: WorkspaceStatus,
+        dslContext: DSLContext
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(STATUS, status.ordinal)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
+                .where(NAME.eq(workspaceName))
+                .execute()
+        }
+    }
+
     fun updateWorkspaceUsageTime(
         workspaceId: Long,
         usageTime: Int,
@@ -288,5 +325,30 @@ class WorkspaceDao {
                 .where(ID.eq(workspaceId))
                 .execute()
         }
+    }
+
+    // 获取已休眠(status:3)且过期14天的工作空间
+    fun getTimeOutInactivityWorkspace(
+        timeOutDays: Int,
+        dslContext: DSLContext
+    ): Result<TWorkspaceRecord>? {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(
+                    timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(
+                        timeOutDays
+                    )
+                )
+                .and(STATUS.eq(3))
+                .limit(1000)
+                .fetch()
+        }
+    }
+
+    fun timestampDiff(part: DatePart, t1: Field<Timestamp>): Field<Int> {
+        return DSL.field(
+            "timestampdiff({0}, {1}, NOW())",
+            Int::class.java, DSL.keyword(part.toSQL()), t1
+        )
     }
 }

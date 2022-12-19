@@ -25,64 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service
+package com.tencent.devops.remotedev.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.RemoteDevRepository
-import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.remotedev.pojo.SshPublicKey
+import com.tencent.devops.remotedev.pojo.WorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface GitTransferService {
-    /**
-     * 判断用户是否经过oauth授权
-     */
-    fun isOAuth(
-        userId: String,
-        redirectUrlType: RedirectUrlTypeEnum?,
-        redirectUrl: String?,
-        refreshToken: Boolean?
-    ): Result<AuthorizeResult>
+@Api(tags = ["USER_WORKSPACE_TEMPLATE"], description = "用户-工作空间模板")
+@Path("/user/sshkey")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserSshPublicKeysResource {
 
-    fun getProjectList(
-        userId: String,
-        page: Int,
-        pageSize: Int,
-        search: String?,
-        owned: Boolean?,
-        minAccessLevel: GitAccessLevelEnum?
-    ): List<RemoteDevRepository>
+    @ApiOperation("获取用户的ssh key")
+    @GET
+    @Path("/list")
+    fun getUserPublicKeysList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<SshPublicKey>>
 
-    fun getProjectBranches(
+    @ApiOperation("创建新的ssh key")
+    @POST
+    @Path("/")
+    fun createPublicKey(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        pathWithNamespace: String,
-        page: Int?,
-        pageSize: Int?,
-        search: String?
-    ): List<String>?
-
-    /**
-     * 获取yaml文件的具体内容
-     * @param filePath 文件路径
-     */
-    fun getFileContent(
-        userId: String,
-        pathWithNamespace: String,
-        filePath: String,
-        ref: String
-    ): String
-
-    /**
-     * 获取Git仓库文件列表
-     * @param path 获取文件路径下的文件列表
-     * @param ref commit hash值、分支 或 tag
-     * @param recursive 是否支持递归目录结构
-     */
-    fun getFileNameTree(
-        userId: String,
-        pathWithNamespace: String,
-        path: String?,
-        ref: String?,
-        recursive: Boolean
-    ): List<String>
+        @ApiParam("ssh key", required = true)
+        sshPublicKey: SshPublicKey
+    ): Result<Boolean>
 }
