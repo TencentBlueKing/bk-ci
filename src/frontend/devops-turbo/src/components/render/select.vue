@@ -35,6 +35,7 @@
                     const index = Object.keys(this.queryKey).findIndex((key) => value[key] !== this.queryKey[key])
                     if (index > -1) {
                         this.initRenderList()
+                        this.changeParamValue('')
                     }
                 },
                 deep: true
