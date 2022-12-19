@@ -36,6 +36,7 @@ import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
+import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
@@ -44,7 +45,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -364,8 +364,12 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         val v2PageInfoDTO = V2PageInfoDTO()
         v2PageInfoDTO.page = 1
         v2PageInfoDTO.pageSize = 10
+        val searchGroupDTO = SearchGroupDTO
+            .builder()
+            .name(VIEW_PROJECT_PERMISSION_GROUP_NAME)
+            .build()
         val viewProjectPermissionGroup = iamManagerService.getGradeManagerRoleGroupV2(
-            gradeManagerId, VIEW_PROJECT_PERMISSION_GROUP_NAME, v2PageInfoDTO
+            gradeManagerId, searchGroupDTO, v2PageInfoDTO
         )
         val groupId = viewProjectPermissionGroup.results[0].id
         val applicationInfo = ApplicationDTO.builder()
