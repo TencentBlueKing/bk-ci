@@ -23,21 +23,15 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.enums
+package com.tencent.devops.auth.pojo.enum
 
-enum class RbacDefaultGroupType(val value: String, val displayName: String) {
-    // 拥有者
-    OWNER("owner", "拥有者"),
-    // 编辑执行者
-    EDIT_EXECUTOR("edit_executor", "编辑执行者"),
-    // 执行者
-    EXECUTOR("executor", "执行者"),
-    // 查看者
-    VIEWER("viewer", "查看者")
-    ;
-
-    fun getStrategyName(resourceType: String) = "${resourceType}_${value}"
+enum class GroupMemberStatus {
+    // 未加入
+    NOT_JOINED,
+    // 正常
+    NORMAL,
+    // 已过期
+    EXPIRED
 }

@@ -78,4 +78,34 @@ class AuthResourceService @Autowired constructor(
         ) ?: return null
         return authResourceDao.convert(record)
     }
+
+    fun enable(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean {
+        return authResourceDao.enable(
+            dslContext = dslContext,
+            userId = userId,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+    }
+
+    fun disable(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean {
+        return authResourceDao.disable(
+            dslContext = dslContext,
+            userId = userId,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+    }
 }

@@ -28,16 +28,15 @@
 
 package com.tencent.devops.auth.api.user
 
-import com.tencent.devops.auth.pojo.dto.ResourceEnablePermissionDTO
-import com.tencent.devops.auth.pojo.vo.IamSubSetGroupInfoVo
-import com.tencent.devops.auth.pojo.vo.ResourceTypeGroupPoliciesVo
-import com.tencent.devops.auth.pojo.vo.UserGroupBelongInfoVo
+import com.tencent.devops.auth.pojo.vo.GroupInfoVo
+import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
@@ -47,16 +46,16 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_IAM_RESOURCE"], description = "用户态-iam资源映射")
-@Path("/user/auth/iam/resource/projects/{projectId}/")
+@Api(tags = ["AUTH_RESOURCE"], description = "用户态-iam资源映射")
+@Path("/user/auth/resource/projects/{projectId}/{resourceType}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserAuthIamResourceResource {
+interface UserAuthResourceResource {
 
     @GET
-    @Path("isResourceManager")
-    @ApiOperation("是否是资源的管理员")
-    fun isResourceManager(
+    @Path("{resourceCode}/hasManagerPermission")
+    @ApiOperation("是否有资源管理操作的权限")
+    fun hasManagerPermission(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -64,35 +63,32 @@ interface UserAuthIamResourceResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("资源类型")
-        @QueryParam("resourceType")
+        @PathParam("resourceType")
         resourceType: String,
         @ApiParam("资源ID")
-        @QueryParam("resourceCode")
+        @PathParam("resourceCode")
         resourceCode: String
     ): Result<Boolean>
 
     @GET
-    @Path("subsetGroups")
-    @ApiOperation("获取资源关联的二级管理员组信息")
-    fun getSubSetGroupsInfo(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+    @Path("{resourceCode}/isEnablePermission")
+    @ApiOperation("是否启用权限管理")
+    fun isEnablePermission(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("资源类型")
-        @QueryParam("resourceType")
+        @PathParam("resourceType")
         resourceType: String,
         @ApiParam("资源ID")
-        @QueryParam("resourceCode")
+        @PathParam("resourceCode")
         resourceCode: String
-    ): Result<IamSubSetGroupInfoVo>
+    ): Result<Boolean>
 
     @GET
-    @Path("userBelongGroup")
-    @ApiOperation("获取用户归属组信息")
-    fun getUserGroupBelongInfo(
+    @Path("{resourceCode}/listGroup")
+    @ApiOperation("获取用户组列表")
+    fun listGroup(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -100,12 +96,66 @@ interface UserAuthIamResourceResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("资源类型")
-        @QueryParam("resourceType")
+        @PathParam("resourceType")
         resourceType: String,
         @ApiParam("资源ID")
-        @QueryParam("resourceCode")
+        @PathParam("resourceCode")
         resourceCode: String
-    ): Result<List<UserGroupBelongInfoVo>>
+    ): Result<List<GroupInfoVo>>
+
+    @GET
+    @Path("{resourceCode}/groupMember")
+    @ApiOperation("获取用户所属组")
+    fun listUserBelongGroup(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("资源类型")
+        @PathParam("resourceType")
+        resourceType: String,
+        @ApiParam("资源ID")
+        @PathParam("resourceCode")
+        resourceCode: String
+    ): Result<List<GroupMemberInfoVo>>
+
+    @PUT
+    @Path("{resourceCode}/enable")
+    @ApiOperation("开启权限管理")
+    fun enable(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("资源类型")
+        @PathParam("resourceType")
+        resourceType: String,
+        @ApiParam("资源ID")
+        @PathParam("resourceCode")
+        resourceCode: String
+    ): Result<Boolean>
+
+    @PUT
+    @Path("{resourceCode}/disable")
+    @ApiOperation("关闭权限管理")
+    fun disable(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("资源类型")
+        @PathParam("resourceType")
+        resourceType: String,
+        @ApiParam("资源ID")
+        @PathParam("resourceCode")
+        resourceCode: String
+    ): Result<Boolean>
 
     @GET
     @Path("groupPolicies")
@@ -118,33 +168,46 @@ interface UserAuthIamResourceResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("资源类型")
-        @QueryParam("resourceType")
-        resourceType: String
-    ): Result<List<ResourceTypeGroupPoliciesVo>>
+        @PathParam("resourceType")
+        resourceType: String,
+        @ApiParam("用户组Id")
+        @QueryParam("groupId")
+        groupId: Int
+    ): Result<List<String>>
 
     @PUT
-    @Path("enable")
-    @ApiOperation("开启权限管理")
-    fun enable(
+    @Path("renewal")
+    @ApiOperation("用户续期")
+    fun renewal(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        resourceEnablePermissionDTO: ResourceEnablePermissionDTO
+        @ApiParam("资源类型")
+        @PathParam("resourceType")
+        resourceType: String,
+        @ApiParam("用户组Id")
+        @QueryParam("groupId")
+        groupId: Int
     ): Result<Boolean>
 
-    @PUT
-    @Path("disable")
-    @ApiOperation("关闭权限管理")
-    fun disable(
+    @DELETE
+    @Path("delete")
+    @ApiOperation("用户退出")
+    fun delete(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "项目ID", required = true)
+        @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        resourceEnablePermissionDTO: ResourceEnablePermissionDTO
+        @ApiParam("资源类型")
+        @PathParam("resourceType")
+        resourceType: String,
+        @ApiParam("用户组Id")
+        @QueryParam("groupId")
+        groupId: Int
     ): Result<Boolean>
 }

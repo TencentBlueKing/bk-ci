@@ -26,24 +26,22 @@
  *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.auth.enums
 
-/**
- * 二级分级管理员操作
- */
-interface PermissionSubsetManagerService {
+enum class ResourceGroupType(val value: String, val displayName: String) {
+    // 拥有者
+    OWNER("owner", "拥有者"),
+    // 编辑执行者
+    EDIT_EXECUTOR("edit_executor", "编辑执行者"),
+    // 执行者
+    EXECUTOR("executor", "执行者"),
+    // 查看者
+    VIEWER("viewer", "查看者")
+    ;
 
-    /**
-     * 创建二级管理员
-     */
-    @SuppressWarnings("LongParameterList")
-    fun createSubsetManager(
-        gradeManagerId: String,
-        userId: String,
-        projectCode: String,
-        projectName: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Int
+    fun getStrategyName(resourceType: String) = "${resourceType}_$value"
+
+    companion object {
+        fun getStrategyName(resourceType: String, groupCode: String) = "${resourceType}_$groupCode"
+    }
 }

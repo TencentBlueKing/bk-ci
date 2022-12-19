@@ -56,7 +56,7 @@ object AuthMessageCode {
     const val CAN_NOT_FIND_RELATION = "2121011" // 权限系统：用户组无关联系统用户组
     const val IAM_SYSTEM_ERROR = "2121012" // 权限系统：Iam权限中心异常。异常信息{0}
     const val USER_NOT_EXIST = "2121013" // 权限系统: 用户中心非法用户/组织
-    const val PROJECT_NOT_FIND_RELATION = "2121014" // 权限系统：项目{0}没有关联系统分级管理员
+    const val RESOURCE_NOT_FOUND = "2121014" // 权限系统：资源{0}不存在
 
     const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
     const val PARENT_TYPE_FAIL = "2121107" // 权限系统：父类资源必须为"项目"
