@@ -29,11 +29,13 @@ package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreHonorResource
 import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
 import com.tencent.devops.store.pojo.common.StoreHonorInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
 
+@RestResource
 class UserStoreHonorResourceImpl: UserStoreHonorResource {
     override fun list(
         userId: String,

@@ -111,11 +111,8 @@ class StoreHonorServiceImpl @Autowired constructor(
             tStoreHonorRelRecord.updateTime = LocalDateTime.now()
             tStoreHonorRelRecord
         }
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            storeHonorDao.addStoreHonorInfo(context, userId, storeHonorInfo)
-            storeHonorDao.batchCreateStoreHonorRel(context,tStoreHonorRelList)
-        }
+        storeHonorDao.createStoreHonorInfo(dslContext, userId, storeHonorInfo)
+        storeHonorDao.batchCreateStoreHonorRel(dslContext,tStoreHonorRelList)
         return true
     }
 }

@@ -25,10 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.dao.common
 
-enum class IndexExecuteTimeTypeEnum {
-    INDEX_CHANGE, // 指标变动
-    COMPONENT_UPGRADE, // 组件升级
-    CRON; // 定时
+import com.tencent.devops.model.store.tables.records.TStoreIndexBaseInfoRecord
+import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
+import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class StoreIndexManageDao {
+
+    fun createStoreIndexBaseInfo(dslContext: DSLContext, tStoreIndexBaseInfoRecord: TStoreIndexBaseInfoRecord): Int {
+        return dslContext.executeInsert(tStoreIndexBaseInfoRecord)
+    }
+
+    fun batchCreateStoreIndexLevelInfo(
+        dslContext: DSLContext,
+        tStoreIndexLevelInfoRecord: List<TStoreIndexLevelInfoRecord>
+    ) {
+        dslContext.batchInsert(tStoreIndexLevelInfoRecord).execute()
+    }
+
 }
