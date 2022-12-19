@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.common.index
 
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -36,14 +38,17 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("新增指标请求报文体")
 data class StoreIndexCreateRequest(
     @ApiModelProperty("指标代码", required = true)
+    @BkField(maxLength = 10, patternStyle = BkStyleEnum.CODE_STYLE)
     val indexCode: String,
     @ApiModelProperty("指标名称", required = true)
+    @BkField(maxLength = 64)
     val indexName: String,
     @ApiModelProperty("图标地址", required = true)
     val iconUrl: String,
     @ApiModelProperty("hover图标提示", required = true)
     val iconTips: String,
     @ApiModelProperty("指标描述", required = true)
+    @BkField(maxLength = 256)
     val description: String,
     @ApiModelProperty("等级信息", required = true)
     val levelInfos: List<StoreIndexLevelInfo>,
