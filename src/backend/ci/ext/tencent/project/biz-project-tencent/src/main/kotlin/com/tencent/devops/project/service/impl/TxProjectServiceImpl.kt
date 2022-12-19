@@ -312,12 +312,12 @@ class TxProjectServiceImpl @Autowired constructor(
         logger.info("$userId V0 project: $iamV0List")
         val projectList = mutableSetOf<String>()
         projectList.addAll(iamV0List)
-        // 请求V3的项目,流量必须指向到v3,需指定项目头
-        val iamV3List = getV3UserProject(userId!!)
-        logger.info("$userId V3 project: $iamV3List")
+        // 请求v3以及rbac的项目
+        val iamList = getIamUserProject(userId!!)
+        logger.info("$userId iam project: $iamList")
 
-        if (!iamV3List.isNullOrEmpty()) {
-            projectList.addAll(iamV3List)
+        if (iamList.isNotEmpty()) {
+            projectList.addAll(iamList)
         }
         return projectList.toList()
     }
@@ -473,34 +473,48 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    private fun getV3UserProject(userId: String): List<String>? {
+    private fun getIamUserProject(userId: String): List<String> {
         if (v3Tag.isBlank() && rbacTag.isBlank()) {
             return emptyList()
         }
         logger.info("getUserProject tag: v3Tag=$v3Tag|rbacTag=$rbacTag")
-        return try {
-            if (!v3Tag.isBlank()) {
-                bkTag.invokeByTag(v3Tag) {
-                    // 请求V3的项目,流量必须指向到v3,需指定项目头
-                    client.get(ServiceProjectAuthResource::class).getUserProjects(
-                        userId = userId,
-                        token = tokenService.getSystemToken(null)!!
-                    ).data
-                }
-            } else {
-                bkTag.invokeByTag(rbacTag) {
-                    // 请求rbac的项目,流量必须指向到rbac,需指定项目头
-                    client.get(ServiceProjectAuthResource::class).getUserProjects(
-                        userId = userId,
-                        token = tokenService.getSystemToken(null)!!
-                    ).data
-                }
-            }
+        val projectList: MutableList<String> = ArrayList()
+        try {
+            getIamProjectList(
+                tag = v3Tag,
+                projectList = projectList,
+                userId = userId
+            )
+            getIamProjectList(
+                tag = rbacTag,
+                projectList = projectList,
+                userId = userId
+            )
         } catch (e: Exception) {
             // 为防止V0,V3发布存在时间差,导致项目列表拉取异常
             logger.warn("get iam Project fail $userId $e")
             return emptyList()
         }
+        return projectList
+    }
+
+    private fun getIamProjectList(
+        tag: String,
+        projectList: MutableList<String>,
+        userId: String
+    ): List<String> {
+        if (!tag.isBlank()) {
+            val iamProjectList = bkTag.invokeByTag(tag) {
+                client.get(ServiceProjectAuthResource::class).getUserProjects(
+                    userId = userId,
+                    token = tokenService.getSystemToken(null)!!
+                ).data
+            }
+            if (iamProjectList != null) {
+                projectList.addAll(iamProjectList)
+            }
+        }
+        return projectList
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
