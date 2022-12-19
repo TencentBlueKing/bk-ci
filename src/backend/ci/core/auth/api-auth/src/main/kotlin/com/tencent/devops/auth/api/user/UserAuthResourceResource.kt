@@ -28,9 +28,11 @@
 
 package com.tencent.devops.auth.api.user
 
+import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -210,4 +212,29 @@ interface UserAuthResourceResource {
         @QueryParam("groupId")
         groupId: Int
     ): Result<Boolean>
+
+    @GET
+    @Path("listResoureces")
+    @ApiOperation("获取资源列表")
+    @SuppressWarnings("LongParameterList")
+    fun listResoureces(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("资源类型")
+        @QueryParam("resourceType")
+        resourceType: String,
+        @ApiParam("资源名称")
+        @QueryParam("resourceName")
+        resourceName: String?,
+        @ApiParam("第几页")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("每页多少条")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Pagination<AuthResourceInfo>>
 }

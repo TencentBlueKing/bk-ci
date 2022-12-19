@@ -8,7 +8,9 @@ import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
+import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
+import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.common.client.Client
@@ -101,6 +103,27 @@ class PermissionApplyServiceImpl @Autowired constructor(
     override fun applyToJoinGroup(userId: String, applicationDTO: ApplicationDTO): Boolean {
         v2ManagerService.createRoleGroupApplicationV2(applicationDTO)
         return true
+    }
+
+    override fun getGroupPermissionDetail(userId: String, groupId: Int): List<GroupPermissionDetailVo> {
+        val iamGroupPermissionDetailList = v2ManagerService.getGroupPermissionDetail(groupId)
+        val groupPermissionDetailVoList: MutableList<GroupPermissionDetailVo> = ArrayList()
+        iamGroupPermissionDetailList.forEach {
+            val relatedResourceTypesDTO = it.resourceGroups[0].relatedResourceTypesDTO[0]
+            val relatedResourceInfo = RelatedResourceInfo(
+                type = relatedResourceTypesDTO.type,
+                name = relatedResourceTypesDTO.name,
+                instances = relatedResourceTypesDTO.condition[0].instances[0]
+            )
+            groupPermissionDetailVoList.add(
+                GroupPermissionDetailVo(
+                    actionId = it.id,
+                    name = it.name,
+                    relatedResourceInfo = relatedResourceInfo
+                )
+            )
+        }
+        return groupPermissionDetailVoList
     }
 
     companion object {
