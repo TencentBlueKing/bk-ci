@@ -1118,7 +1118,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             outputDataObj[OUTPUT_DESC].toString()
                         }
                     } else -> {
-                        "$outputDataObj"
+                        null
                     }
                 }
             )
