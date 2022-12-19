@@ -189,6 +189,6 @@ object TBSSdkApi {
             logger.warn("response not success!")
             throw TurboException(errorCode = TURBO_THIRDPARTY_SYSTEM_FAIL, errorMessage = "fail to invoke request")
         }
-        return response.data
+        return response.data ?: listOf()
     }
 }
