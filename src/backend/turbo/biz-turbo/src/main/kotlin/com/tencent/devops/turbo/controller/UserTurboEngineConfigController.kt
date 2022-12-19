@@ -80,8 +80,15 @@ class UserTurboEngineConfigController @Autowired constructor(
 
     override fun getCompilerVersionListByQueueName(
         engineCode: String,
+        projectId: String,
         queueName: String?
     ): Response<List<ParamEnumModel>> {
-        return Response.success(turboEngineConfigService.getCompilerVersionListByQueueName(engineCode, queueName))
+        return Response.success(
+            turboEngineConfigService.getCompilerVersionListByQueueName(
+                engineCode = engineCode,
+                projectId = projectId,
+                queueName = queueName
+            )
+        )
     }
 }

@@ -744,8 +744,10 @@ class TurboEngineConfigService @Autowired constructor(
      */
     fun getCompilerVersionListByQueueName(
         engineCode: String,
+        projectId: String,
         queueName: String?
     ): List<ParamEnumModel> {
+        logger.info("request param[$engineCode | $projectId | $queueName]")
         if (queueName.isNullOrEmpty()) {
             logger.info("getCompilerVersionList queueName is invalid")
             return listOf()
@@ -758,12 +760,16 @@ class TurboEngineConfigService @Autowired constructor(
             )
         )
         logger.info("queryTurboCompileList: ${queryTurboCompileList.size}")
-        return queryTurboCompileList.map {
-            ParamEnumModel(
-                paramValue = it.paramValue,
-                paramName = it.paramName,
-                visualRange = it.visualRange
-            )
-        }
+        return queryTurboCompileList
+            .filter {
+                it.visualRange.isEmpty() || it.visualRange.contains(projectId)
+            }
+            .map {
+                ParamEnumModel(
+                    paramValue = it.paramValue,
+                    paramName = it.paramName,
+                    visualRange = it.visualRange
+                )
+            }
     }
 }

@@ -129,15 +129,18 @@ interface IUserTurboEngineConfigController {
 
     @ApiOperation("根据区域队列名获取对应的编译器版本清单")
     @GetMapping(
-        "/{engineCode}/compilerVersions",
+        "/{engineCode}/{projectId}/compilerVersions",
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun getCompilerVersionListByQueueName(
         @ApiParam(value = "引擎标识", required = true)
         @PathVariable("engineCode")
         engineCode: String,
+        @ApiParam(value = "项目id", required = true)
+        @PathVariable("projectId")
+        projectId: String,
         @ApiParam(value = "队列名称", required = false)
         @RequestParam("queueName")
-        queueName: String?,
+        queueName: String?
     ): Response<List<ParamEnumModel>>
 }
