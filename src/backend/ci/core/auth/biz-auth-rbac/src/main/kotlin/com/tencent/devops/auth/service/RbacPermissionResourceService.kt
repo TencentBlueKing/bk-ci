@@ -93,6 +93,7 @@ class RbacPermissionResourceService(
             .members(listOf(userId))
             .authorizationScopes(authorizationScopes)
             .inheritSubjectScope(false)
+            .subjectScopes(listOf())
             .build()
         val subsetManagerId = iamV2ManagerService.createSubsetManager(
             projectInfo.relationId!!,
