@@ -20,8 +20,10 @@ allprojects {
     }
 
     // TODO bkrepo依赖到 , 后续加到framework后可以删掉
-    repositories {
-        maven(url = "https://repo.spring.io/milestone")
+    if(System.getenv("GITHUB_WORKFLOW") != null) {
+        repositories {
+            maven(url = "https://repo.spring.io/milestone")
+        }
     }
     // 版本管理
     dependencyManagement {
