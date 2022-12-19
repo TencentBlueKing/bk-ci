@@ -47,8 +47,8 @@ class ExternalResourceImpl @Autowired constructor(
     val callBackService: CallBackService
 ) : ExternalResource {
 
-    @Value("\${remoteDev.callBackSignSecret}")
-    private lateinit var signSecret: String
+    @Value("\${remoteDev.callBackSignSecret:}")
+    private val signSecret: String = ""
 
     override fun callback(signature: String, body: String): Result<Boolean> {
         val genSignature = ShaUtils.hmacSha1(signSecret.toByteArray(), body.toByteArray())
