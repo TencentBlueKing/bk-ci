@@ -29,7 +29,7 @@ class WorkspaceSharedDao {
         }
     }
 
-    fun exsitWorkspaceSharedInfo(
+    fun existWorkspaceSharedInfo(
         workspaceShared: WorkspaceShared,
         dslContext: DSLContext
     ): Boolean {

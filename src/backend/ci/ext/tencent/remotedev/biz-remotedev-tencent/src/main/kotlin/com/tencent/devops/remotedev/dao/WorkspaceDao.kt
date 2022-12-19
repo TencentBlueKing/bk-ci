@@ -28,7 +28,6 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
-import com.tencent.devops.common.service.utils.JooqUtils.timestampDiff
 import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
@@ -37,10 +36,10 @@ import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Result
-import org.jooq.impl.DSL
 import org.jooq.DatePart
 import org.jooq.Field
+import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -174,6 +173,24 @@ class WorkspaceDao {
                 ).orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
+        }
+    }
+
+    /**
+     * 获得拥有该工作空间的用户
+     */
+    fun fetchWorkspaceUser(
+        dslContext: DSLContext,
+        workspaceId: Long
+    ): List<String> {
+        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.select(CREATOR).from(this)
+                .where(ID.eq(workspaceId)).unionAll(
+                    DSL.select(shared.SHARED_USER).from(shared).where(
+                        shared.WORKSPACE_ID.eq(workspaceId)
+                    )
+                ).fetch(0, String::class.java)
         }
     }
 
@@ -314,10 +331,14 @@ class WorkspaceDao {
     fun getTimeOutInactivityWorkspace(
         timeOutDays: Int,
         dslContext: DSLContext
-    ) : Result<TWorkspaceRecord>? {
+    ): Result<TWorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
-                .where(timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(timeOutDays))
+                .where(
+                    timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(
+                        timeOutDays
+                    )
+                )
                 .and(STATUS.eq(3))
                 .limit(1000)
                 .fetch()
@@ -325,7 +346,9 @@ class WorkspaceDao {
     }
 
     fun timestampDiff(part: DatePart, t1: Field<Timestamp>): Field<Int> {
-        return DSL.field("timestampdiff({0}, {1}, NOW())",
-            Int::class.java, DSL.keyword(part.toSQL()), t1)
+        return DSL.field(
+            "timestampdiff({0}, {1}, NOW())",
+            Int::class.java, DSL.keyword(part.toSQL()), t1
+        )
     }
 }
