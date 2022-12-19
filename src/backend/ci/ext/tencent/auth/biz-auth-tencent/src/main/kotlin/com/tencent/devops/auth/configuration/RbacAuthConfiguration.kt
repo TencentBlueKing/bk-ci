@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Primary
 class RbacAuthConfiguration {
     @Bean
     @Primary
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
     fun defaultPermissionProjectServiceImpl(
         client: Client,
         iamManagerService: V2ManagerService,
