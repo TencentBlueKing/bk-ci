@@ -32,21 +32,15 @@ import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
 @ApiModel("保存错误码信息")
-data class SaveErrorCodeInfoPO(
-    @ApiModelProperty("主键ID")
-    val id: Long,
+data class UpdateErrorCodeInfoPO(
     @ApiModelProperty("错误类型")
     val errorType: Int,
     @ApiModelProperty("错误码")
     val errorCode: Int,
     @ApiModelProperty("错误描述")
     val errorMsg: String? = null,
-    @ApiModelProperty("创建人")
-    val creator: String,
     @ApiModelProperty("修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
-    val createTime: LocalDateTime,
     @ApiModelProperty("更新时间")
     val updateTime: LocalDateTime
 )
