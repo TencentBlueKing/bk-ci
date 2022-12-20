@@ -49,9 +49,9 @@ func DoAgentHeartbeat() {
 
 func agentHeartbeat() error {
 	var jdkVersion []string
-	version := upgrade.JdkVersion.Version.Load()
+	version := upgrade.JdkVersion.GetVersion()
 	if version != nil {
-		jdkVersion = version.([]string)
+		jdkVersion = version
 	}
 	result, err := api.Heartbeat(
 		job.GBuildManager.GetInstances(),

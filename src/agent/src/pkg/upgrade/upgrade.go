@@ -45,11 +45,24 @@ import (
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
+var JdkVersion = &JdkVersionType{}
+
 // JdkVersion jdk版本信息缓存
-var JdkVersion struct {
+type JdkVersionType struct {
 	JdkFileModTime time.Time
 	// 版本信息，原子级的 []string
-	Version atomic.Value
+	version atomic.Value
+}
+
+func (j *JdkVersionType) GetVersion() []string {
+	return j.version.Load().([]string)
+}
+
+func (j *JdkVersionType) SetVersion(version []string) {
+	if version == nil {
+		version = []string{}
+	}
+	j.version.Swap(version)
 }
 
 // DockerFileMd5 缓存，用来计算md5
@@ -131,7 +144,7 @@ func agentUpgrade() {
 
 	upgradeItem := new(api.UpgradeItem)
 	err = util.ParseJsonToData(checkResult.Data, &upgradeItem)
-	if !upgradeItem.Agent && !upgradeItem.Worker && !upgradeItem.Jdk && !upgradeItem.DockerInitFile{
+	if !upgradeItem.Agent && !upgradeItem.Worker && !upgradeItem.Jdk && !upgradeItem.DockerInitFile {
 		logs.Info("[agentUpgrade]|no need to upgrade agent, skip")
 		return
 	}
@@ -160,7 +173,7 @@ func syncJdkVersion() ([]string, error) {
 		if os.IsNotExist(err) {
 			logs.Error("syncJdkVersion no jdk dir find", err)
 			// jdk版本置为空，否则会一直保持有版本的状态
-			JdkVersion.Version.Swap(nil)
+			JdkVersion.SetVersion([]string{})
 			return nil, nil
 		}
 		return nil, errors.Wrap(err, "agent check jdk dir error")
@@ -168,31 +181,31 @@ func syncJdkVersion() ([]string, error) {
 	nowModTime := stat.ModTime()
 
 	// 如果为空则必获取
-	if JdkVersion.Version.Load() == nil {
+	if len(JdkVersion.GetVersion()) == 0 {
 		version, err := getJdkVersion()
 		if err != nil {
 			// 拿取错误时直接下载新的
 			logs.Error("syncJdkVersion getJdkVersion err", err)
 			return nil, nil
 		}
-		JdkVersion.Version.Swap(version)
+		JdkVersion.SetVersion(version)
 		JdkVersion.JdkFileModTime = nowModTime
 		return version, nil
 	}
 
 	// 判断文件夹最后修改时间，不一致时不用更改
 	if nowModTime == JdkVersion.JdkFileModTime {
-		return JdkVersion.Version.Load().([]string), nil
+		return JdkVersion.GetVersion(), nil
 	}
 
 	version, err := getJdkVersion()
 	if err != nil {
 		// 拿取错误时直接下载新的
 		logs.Error("syncJdkVersion getJdkVersion err", err)
-		JdkVersion.Version.Swap(nil)
+		JdkVersion.SetVersion([]string{})
 		return nil, nil
 	}
-	JdkVersion.Version.Swap(version)
+	JdkVersion.SetVersion(version)
 	JdkVersion.JdkFileModTime = nowModTime
 	return version, nil
 }
