@@ -82,10 +82,10 @@ class RbacPermissionResourceService(
         val managerDefaultGroup = authDefaultGroupDao.get(
             dslContext = dslContext,
             resourceType = resourceType,
-            groupCode = DefaultGroupType.MAINTAINER.value
+            groupCode = DefaultGroupType.MANAGER.value
         ) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.DEFAULT_GROUP_NOT_FOUND,
-            params = arrayOf(DefaultGroupType.MAINTAINER.value),
+            params = arrayOf(DefaultGroupType.MANAGER.value),
             defaultMessage = "权限系统：资源类型${resourceType}关联的默认组${DefaultGroupType.MAINTAINER.value}不存在"
         )
         val name = IamGroupUtils.buildSubsetManagerGroupName(
