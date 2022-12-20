@@ -5,7 +5,9 @@ import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
+import com.tencent.bk.sdk.iam.dto.response.GroupPermissionDetailResponseDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
@@ -13,6 +15,7 @@ import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
@@ -101,12 +104,29 @@ class PermissionApplyServiceImpl @Autowired constructor(
     }
 
     override fun applyToJoinGroup(userId: String, applicationDTO: ApplicationDTO): Boolean {
-        v2ManagerService.createRoleGroupApplicationV2(applicationDTO)
+        try {
+            v2ManagerService.createRoleGroupApplicationV2(applicationDTO)
+        } catch (e: Exception) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
+                params = arrayOf(applicationDTO.groupId.toString()),
+                defaultMessage = "权限系统：申请加入用户组[${applicationDTO.groupId}]失败！"
+            )
+        }
         return true
     }
 
     override fun getGroupPermissionDetail(userId: String, groupId: Int): List<GroupPermissionDetailVo> {
-        val iamGroupPermissionDetailList = v2ManagerService.getGroupPermissionDetail(groupId)
+        val iamGroupPermissionDetailList: List<GroupPermissionDetailResponseDTO>
+        try {
+            iamGroupPermissionDetailList = v2ManagerService.getGroupPermissionDetail(groupId)
+        } catch (e: Exception) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.GET_GROUP_PERMISSION_DETAIL_FAIL,
+                params = arrayOf(groupId.toString()),
+                defaultMessage = "权限系统：获取用户组[$groupId]权限信息失败！"
+            )
+        }
         val groupPermissionDetailVoList: MutableList<GroupPermissionDetailVo> = ArrayList()
         iamGroupPermissionDetailList.forEach {
             val relatedResourceTypesDTO = it.resourceGroups[0].relatedResourceTypesDTO[0]
