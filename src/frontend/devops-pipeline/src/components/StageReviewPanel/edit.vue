@@ -169,8 +169,11 @@
             }
         },
         mounted () {
-            if (!this.notifyType.length) {
-                this.stageControl.notifyType = []
+            if (!Object.prototype.hasOwnProperty.call(this.stageControl, 'notifyType')) {
+                this.stageControl.notifyType = ['RTX']
+            }
+            if (!Object.prototype.hasOwnProperty.call(this.stageControl, 'markdownContent')) {
+                this.stageControl.markdownContent = true
             }
             if (!this.disabled) {
                 this.initStageReview()
