@@ -85,4 +85,6 @@ object AuthMessageCode {
     const val LOGIN_USER_INFO_EXIST = "2121502" // 权限系统： 用户已存在，无需重复创建
     const val LOGIN_USER_FREEZE = "212503" // 账号冻结中
     const val LOGIN_TOKEN_VERIFY_FAILED = "2121504" // 权限系统: token验证失败
+    const val APPLY_TO_JOIN_GROUP_FAIL = "2121505" // 权限系统: 申请加入用户组失败
+    const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121506" // 权限系统: 获取用户组权限信息失败
 }
