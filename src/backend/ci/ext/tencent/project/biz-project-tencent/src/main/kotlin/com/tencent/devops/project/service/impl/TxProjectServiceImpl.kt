@@ -485,11 +485,13 @@ class TxProjectServiceImpl @Autowired constructor(
                 projectList = projectList,
                 userId = userId
             )
+            logger.info("get v3 Project $projectList")
             getIamProjectList(
                 tag = rbacTag,
                 projectList = projectList,
                 userId = userId
             )
+            logger.info("get rbac+v3 Project $projectList")
         } catch (e: Exception) {
             // 为防止V0,V3发布存在时间差,导致项目列表拉取异常
             logger.warn("get iam Project fail $userId $e")

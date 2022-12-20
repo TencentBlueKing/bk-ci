@@ -365,16 +365,17 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         val v2PageInfoDTO = V2PageInfoDTO()
         v2PageInfoDTO.page = 1
         v2PageInfoDTO.pageSize = 10
+        val searchName = "${applicationInfo.englishName}-$VIEW_PROJECT_PERMISSION_GROUP_NAME"
         val searchGroupDTO = SearchGroupDTO
             .builder()
-            .name(VIEW_PROJECT_PERMISSION_GROUP_NAME)
+            .name(searchName)
             .build()
         var viewProjectPermissionGroup: V2ManagerRoleGroupInfo? = null
         val permissionGroup = iamManagerService.getGradeManagerRoleGroupV2(
             gradeManagerId, searchGroupDTO, v2PageInfoDTO
         )
         permissionGroup.results.forEach {
-            if (it.name == VIEW_PROJECT_PERMISSION_GROUP_NAME) {
+            if (it.name == searchName) {
                 viewProjectPermissionGroup = it
             }
         }

@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 
 @Configuration
-class RbacAuthConfiguration {
+class RbacExtAuthConfiguration {
     @Bean
     @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
