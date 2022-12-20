@@ -79,6 +79,9 @@ object IamGroupUtils {
     fun buildSubsetManagerGroupName(resourceName: String, groupName: String) =
         "${SYSTEM_DEFAULT_NAME}_${resourceName}_${groupName}"
 
+    fun getSubsetManagerGroupDisplayName(groupName: String) =
+        groupName.substringAfterLast("-")
+
     fun buildSubsetManagerDescription(resourceName: String, userId: String): String {
         return "$resourceName 二级管理员, 由$userId 创建于" +
             DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")

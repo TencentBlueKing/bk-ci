@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service
 
 @Service
 @SuppressWarnings("LongParameterList")
-class ResourceGroupService(
+class PermissionResourceGroupService(
     private val dslContext: DSLContext,
     private val authDefaultGroupDao: AuthDefaultGroupDao,
     private val iamV2ManagerService: V2ManagerService,
@@ -63,7 +63,7 @@ class ResourceGroupService(
         resourceCode: String,
         resourceName: String
     ) {
-        createLocalManagerGroup(resourceType, subsetManagerId, userId, projectCode)
+        // createLocalManagerGroup(resourceType, subsetManagerId, userId, projectCode)
         val defaultGroups = authDefaultGroupDao.get(
             dslContext = dslContext,
             resourceType = resourceType,
@@ -94,7 +94,7 @@ class ResourceGroupService(
                 iamGroupId = iamGroupId
             )
             addGroupMember(userId = userId, iamGroupId = iamGroupId)
-            groupService.createGroup(
+            /*groupService.createGroup(
                 userId = userId,
                 projectCode = projectCode,
                 groupInfo = GroupDTO(
@@ -104,7 +104,7 @@ class ResourceGroupService(
                     displayName = defaultGroup.groupName,
                     relationId = iamGroupId.toString()
                 )
-            )
+            )*/
         }
     }
 

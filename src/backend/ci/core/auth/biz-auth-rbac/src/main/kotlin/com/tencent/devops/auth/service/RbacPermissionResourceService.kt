@@ -39,8 +39,8 @@ import com.tencent.devops.auth.dao.AuthDefaultGroupDao
 import com.tencent.devops.auth.enums.ResourceGroupType
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
-import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -64,7 +64,7 @@ class RbacPermissionResourceService(
     private val strategyService: StrategyService,
     private val dslContext: DSLContext,
     private val authDefaultGroupDao: AuthDefaultGroupDao,
-    private val resourceGroupService: ResourceGroupService
+    private val permissionResourceGroupService: PermissionResourceGroupService
 ) : PermissionResourceService {
 
     companion object {
@@ -129,7 +129,7 @@ class RbacPermissionResourceService(
             resourceName = resourceName,
             relationId = subsetManagerId.toString()
         )
-        resourceGroupService.createDefaultGroup(
+        permissionResourceGroupService.createDefaultGroup(
             subsetManagerId = subsetManagerId,
             userId = userId,
             projectCode = projectCode,
@@ -169,7 +169,7 @@ class RbacPermissionResourceService(
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): List<GroupInfoVo> {
+    ): List<IamGroupInfoVo> {
         val resourceInfo = getResourceInfo(
             projectId = projectId,
             resourceType = resourceType,
@@ -178,23 +178,17 @@ class RbacPermissionResourceService(
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = 1
         pageInfoDTO.pageSize = 10
-        val iamGroupInfos =
+        val iamGroupInfoList =
             iamV2ManagerService.getSubsetManagerRoleGroup(resourceInfo.relationId.toInt(), pageInfoDTO)
-        val iamGroupInfoMap = iamGroupInfos.results.associateBy { it.id }
-        val localGroupInfos = groupService.getGroupByRelationIds(iamGroupInfoMap.keys.toList())
-        return localGroupInfos.map {
-            val userCount = iamGroupInfoMap[it.relationId.toInt()]?.userCount ?: 0
-            val departmentCount = iamGroupInfoMap[it.relationId.toInt()]?.departmentCount ?: 0
-            GroupInfoVo(
+        return iamGroupInfoList.results.map {
+            IamGroupInfoVo(
                 id = it.id,
-                name = it.groupName,
-                displayName = it.displayName,
-                code = it.groupCode,
-                defaultRole = it.groupType,
-                userCount = userCount,
-                departmentCount = departmentCount
+                name = it.name,
+                displayName = IamGroupUtils.getSubsetManagerGroupDisplayName(it.name),
+                userCount = it.userCount,
+                departmentCount = it.departmentCount
             )
-        }.toList()
+        }
     }
 
     override fun listUserBelongGroup(
