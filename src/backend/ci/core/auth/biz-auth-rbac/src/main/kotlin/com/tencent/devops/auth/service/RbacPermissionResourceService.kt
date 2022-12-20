@@ -36,13 +36,12 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthDefaultGroupDao
-import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.enums.ResourceGroupType
+import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
-import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
@@ -55,7 +54,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
-@SuppressWarnings("LongParameterList")
+@SuppressWarnings("LongParameterList", "TooManyFunctions")
 class RbacPermissionResourceService(
     private val client: Client,
     private val permissionScopesService: PermissionScopesService,
@@ -72,6 +71,7 @@ class RbacPermissionResourceService(
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceService::class.java)
     }
 
+    @SuppressWarnings("LongMethod")
     override fun resourceCreateRelation(
         userId: String,
         projectCode: String,
@@ -98,7 +98,10 @@ class RbacPermissionResourceService(
         )
         val projectInfo = getProjectInfo(projectCode)
         val authorizationScopes = permissionScopesService.buildSubsetManagerAuthorizationScopes(
-            strategyName = ResourceGroupType.OWNER.getStrategyName(resourceType = resourceType),
+            strategyName = IamGroupUtils.buildSubsetManagerGroupStrategyName(
+                resourceType = resourceType,
+                groupCode = DefaultGroupType.MANAGER.value
+            ),
             projectCode = projectCode,
             projectName = projectInfo.projectName,
             resourceType = resourceType,
@@ -129,7 +132,10 @@ class RbacPermissionResourceService(
         resourceGroupService.createDefaultGroup(
             subsetManagerId = subsetManagerId,
             userId = userId,
+            projectCode = projectCode,
+            projectName = projectInfo.projectName,
             resourceType = resourceType,
+            resourceCode = resourceCode,
             resourceName = resourceName
         )
         return true
