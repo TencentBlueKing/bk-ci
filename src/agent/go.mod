@@ -3,7 +3,7 @@ module github.com/Tencent/bk-ci/src/agent
 go 1.17
 
 require (
-	github.com/docker/docker v20.10.22+incompatible
+	github.com/docker/docker v20.10.21+incompatible
 	github.com/gofrs/flock v0.8.1
 	github.com/influxdata/telegraf v1.22.3
 	github.com/kardianos/service v1.2.1
