@@ -14,3 +14,4 @@ export const useUser = defineStore('user', {
     },
   },
 });
+

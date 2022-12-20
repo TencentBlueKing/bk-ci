@@ -28,6 +28,7 @@ const router = createRouter({
         {
           path: '/:projectCode',
           component: ManageEntry,
+          props: true,
           redirect: () => ({ name: 'show' }),
           children: [
             {

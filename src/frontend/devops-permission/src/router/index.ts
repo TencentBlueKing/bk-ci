@@ -4,7 +4,7 @@ import {
 } from 'vue-router';
 
 const HomeEntry = () => import(/* webpackChunkName: "Permission" */ '../app.vue');
-const ApplyPermission = () => import(/* webpackChunkName: "Permission" */ '../views/apply-permission.vue');
+const ApplyPermission = () => import(/* webpackChunkName: "Permission" */ '../views/applyPermission/apply-permission.vue');
 const MyPermission = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission.vue');
 
 const router = createRouter({

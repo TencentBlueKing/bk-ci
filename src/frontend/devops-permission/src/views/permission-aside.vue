@@ -32,10 +32,13 @@ const handleChangeMenu = (menu: any) => {
   <article class="permission-aside">
     <section class="menu-list">
       <div
-        :class="{ 'menu-item': true, 'active': activeMenu === menu.name }"
         v-for="(menu, index) in menuList"
         :key="index"
         @click="handleChangeMenu(menu)"
+        :class="{
+          'menu-item': true,
+          'active': activeMenu === menu.name
+        }"
       >
         <bk-badge
           position="top-right"

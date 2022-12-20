@@ -1,13 +1,14 @@
 <template>
   <article class="group-manage">
     <div class="content-wrapper">
-      <div>{{ t('尚未开启此流水线权限管理功能') }}</div>
+      <div class="title">{{ title }}</div>
       <bk-button class="btn" theme="primary" @click="handleOpenManage">{{ t('开启权限管理') }}</bk-button>
     </div>
   </article>
 </template>
 
 <script lang="ts">
+import { useGroup } from '@/store/group.ts'
 import { useI18n } from 'vue-i18n';
 export default {
   name: 'NotOpenManage',
@@ -17,7 +18,20 @@ export default {
     const { t } = useI18n();
     return {
       t,
+      type: '',
     };
+  },
+  created() {
+    const store = useGroup();
+    this.type = store.$state.resourceType;
+  },
+  computed: {
+    title() {
+      const titleMap = {
+        pipeline: this.t('尚未开启此流水线权限管理功能'),
+      }
+      return titleMap[this.type]
+    }
   },
   methods: {
     handleOpenManage() {

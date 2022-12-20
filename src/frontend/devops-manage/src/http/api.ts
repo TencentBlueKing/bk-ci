@@ -4,6 +4,7 @@ import {
   API_PERFIX,
   STORE_PERFIX,
   PROJECT_PERFIX,
+  IAM_PERFIX,
 } from './constants';
 export default {
   getUser() {
@@ -76,5 +77,53 @@ export default {
     return http.post(`${PROJECT_PERFIX}/user/projects/upload/logo`, formData, {
       disabledResponseType: true
     })
+  },
+
+  /**
+   * 流水线/流水线组 开启用户组权限管理
+   */
+  async enableGroupPermission(params: any) {
+    const { id } = params;
+    return http.put(`${IAM_PERFIX}/${id}/enable`) 
+  },
+  /**
+   * 流水线/流水线组 关闭用户组权限管理
+   */
+  async disableGroupPermission(params: any) {
+    const { id } = params;
+    return http.put(`${IAM_PERFIX}/${id}/disable`) 
+  },
+
+  /**
+   * 获取是否为资源的管理员
+   */
+  async fetchResourceManager(params: any) {
+    const { id } = params;
+    delete params.id;
+    return http.get(`${IAM_PERFIX}/${id}/isResourceManager`, params)
+  },
+
+  /**
+   * 获取资源关联的二级管理员用户组信息
+   */
+  async fetchUserGroups(params: any) {
+    const { id } = params;
+    return http.get(`${IAM_PERFIX}/${id}/subsetGroups`)
+  },
+
+  /**
+   * 获取用户归属组信息（普通用户）
+   */
+  async fetchUserBelongGroup(params: any) {
+    const { id } = params;
+    return http.get(`${IAM_PERFIX}/${id}/userBelongGroup`)
+  },
+
+  /**
+   * 获取组权限详情（策略详情）（普通用户）
+   */
+  async fetchGroupPolicies(params: any) {
+    const { id } = params;
+    return http.get(`${IAM_PERFIX}/${id}/groupPolicies`)
   },
 };

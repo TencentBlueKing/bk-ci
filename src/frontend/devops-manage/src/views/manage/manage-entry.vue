@@ -9,6 +9,10 @@ import {
 const router = useRouter();
 const route = useRoute();
 const { t } = useI18n();
+const props = defineProps({
+  projectCode: String,
+});
+
 
 const manageTabs = ref([
   {
