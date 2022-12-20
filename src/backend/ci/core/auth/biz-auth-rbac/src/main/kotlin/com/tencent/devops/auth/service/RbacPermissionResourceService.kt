@@ -35,6 +35,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthDefaultGroupDao
 import com.tencent.devops.auth.enums.ResourceGroupType
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
@@ -44,20 +45,26 @@ import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.ProjectVO
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
+@SuppressWarnings("LongParameterList")
 class RbacPermissionResourceService(
     private val client: Client,
     private val permissionScopesService: PermissionScopesService,
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
     private val groupService: AuthGroupService,
-    private val strategyService: StrategyService
+    private val strategyService: StrategyService,
+    private val dslContext: DSLContext,
+    private val authDefaultGroupDao: AuthDefaultGroupDao,
+    private val resourceGroupService: ResourceGroupService
 ) : PermissionResourceService {
 
     companion object {
@@ -71,9 +78,18 @@ class RbacPermissionResourceService(
         resourceCode: String,
         resourceName: String
     ): Boolean {
+        val managerDefaultGroup = authDefaultGroupDao.get(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            groupCode = DefaultGroupType.MAINTAINER.value
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.DEFAULT_GROUP_NOT_FOUND,
+            params = arrayOf(DefaultGroupType.MAINTAINER.value),
+            defaultMessage = "权限系统：资源类型${resourceType}关联的默认组${DefaultGroupType.MAINTAINER.value}不存在"
+        )
         val name = IamGroupUtils.buildSubsetManagerGroupName(
             resourceName = resourceName,
-            groupDisplayName = ResourceGroupType.OWNER.displayName
+            groupName = managerDefaultGroup.groupName
         )
         val description = IamGroupUtils.buildSubsetManagerDescription(
             resourceName = resourceName,
@@ -101,7 +117,6 @@ class RbacPermissionResourceService(
             projectInfo.relationId!!,
             createSubsetManagerDTO
         )
-
         authResourceService.create(
             userId = userId,
             projectCode = projectCode,
@@ -109,6 +124,12 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode,
             resourceName = resourceName,
             relationId = subsetManagerId.toString()
+        )
+        resourceGroupService.createDefaultGroup(
+            subsetManagerId = subsetManagerId,
+            userId = userId,
+            resourceType = resourceType,
+            resourceName = resourceName
         )
         return true
     }
