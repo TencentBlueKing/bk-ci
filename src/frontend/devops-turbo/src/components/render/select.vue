@@ -4,6 +4,7 @@
         v-bind="{ ...$props, ...paramProps }"
         :value="paramValue[paramKey]"
         :loading="isLoading"
+        :key="renderKey"
         @change="changeParamValue"
     >
         <bk-option v-for="(param, index) in renderList"
@@ -25,7 +26,8 @@
             return {
                 renderList: [],
                 queryKey: {},
-                isLoading: false
+                isLoading: false,
+                renderKey: null
             }
         },
 
@@ -34,8 +36,10 @@
                 handler (value) {
                     const index = Object.keys(this.queryKey).findIndex((key) => value[key] !== this.queryKey[key])
                     if (index > -1) {
+                        // 依赖项发生变化，对select销毁重建，并重新获取数据
                         this.initRenderList()
                         this.changeParamValue('')
+                        this.renderKey = new Date()
                     }
                 },
                 deep: true
