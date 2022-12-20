@@ -3,15 +3,16 @@ package com.tencent.devops.auth.resources
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.devops.auth.api.user.UserAuthApplyResource
+import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.common.api.pojo.Result
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.RestController
+import com.tencent.devops.common.web.RestResource
 
-@RestController
+@RestResource
 class UserAuthApplyResourceImpl @Autowired constructor(
     val permissionApplyService: PermissionApplyService
 ) : UserAuthApplyResource {
@@ -41,8 +42,8 @@ class UserAuthApplyResourceImpl @Autowired constructor(
         )
     }
 
-    override fun applyToJoinGroup(userId: String, applicationDTO: ApplicationDTO): Result<Boolean> {
-        return Result(permissionApplyService.applyToJoinGroup(userId, applicationDTO))
+    override fun applyToJoinGroup(userId: String, applicationInfo: ApplicationInfo): Result<Boolean> {
+        return Result(permissionApplyService.applyToJoinGroup(userId, applicationInfo))
     }
 
     override fun getGroupPermissionDetail(userId: String, groupId: Int): Result<List<GroupPermissionDetailVo>> {

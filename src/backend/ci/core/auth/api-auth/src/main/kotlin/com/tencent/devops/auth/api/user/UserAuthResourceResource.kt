@@ -225,7 +225,7 @@ interface UserAuthResourceResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("资源类型")
-        @QueryParam("resourceType")
+        @PathParam("resourceType")
         resourceType: String,
         @ApiParam("资源名称")
         @QueryParam("resourceName")
