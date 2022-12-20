@@ -310,7 +310,6 @@
 
         watch: {
             execDetail (val) {
-                console.log(val, 'execDetailexecDetail')
                 this.isLoading = val === null
             },
             'routerParams.buildNo': {

@@ -297,7 +297,6 @@
                 return this.execDetail?.cancelUserId ?? '--'
             },
             curPipeline () {
-                console.log(this.execDetail)
                 return this.execDetail?.model ?? null
             },
             pipelineModes () {
