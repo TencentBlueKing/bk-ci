@@ -28,17 +28,11 @@
 package com.tencent.devops.dispatch.kubernetes.pojo.mq
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 
 @Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.QUEUE_WORKSPACE_CREATE_STARTUP)
-data class WorkspaceCreateEvent(
-    override val userId: String,
-    override val traceId: String,
-    val repositoryUrl: String,
-    val branch: String,
-    val devFilePath: String?,
-    val devFile: Devfile,
-    val image: String = "",
-    override val delayMills: Int = 0,
-    override val retryTime: Int = 0
-) : WorkspaceEvent(userId, traceId, delayMills, retryTime)
+open class WorkspaceEvent(
+    open val userId: String,
+    open val traceId: String,
+    open val delayMills: Int = 0,
+    open val retryTime: Int = 0
+)

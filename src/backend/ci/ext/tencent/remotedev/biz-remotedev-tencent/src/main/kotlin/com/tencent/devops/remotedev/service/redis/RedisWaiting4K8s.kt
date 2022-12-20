@@ -25,20 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.pojo.mq
+package com.tencent.devops.remotedev.service.redis
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
+import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
 
-@Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.QUEUE_WORKSPACE_CREATE_STARTUP)
-data class WorkspaceCreateEvent(
-    override val userId: String,
-    override val traceId: String,
-    val repositoryUrl: String,
-    val branch: String,
-    val devFilePath: String?,
-    val devFile: Devfile,
-    val image: String = "",
-    override val delayMills: Int = 0,
-    override val retryTime: Int = 0
-) : WorkspaceEvent(userId, traceId, delayMills, retryTime)
+/**
+ * 用于等待dispatch k8s返回消息
+ */
+open class RedisWaiting4K8s(
+    private val redisOperation: RedisOperation,
+    private val lockKey: String,
+    private val expiredCount: Int = 90
+) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(RedisWaiting4K8s::class.java)
+    }
+
+    fun waiting(): Boolean {
+        var expired = expiredCount
+        while (expired-- > 0) {
+            val result = redisOperation.get(lockKey)
+            if (result != null) {
+                redisOperation.delete(lockKey)
+                logger.info("RedisWaiting4K8s get $lockKey for $result")
+                return result == "true"
+            }
+            Thread.sleep(1000)
+        }
+        logger.info("RedisWaiting4K8s get $lockKey time out")
+        return false
+    }
+}

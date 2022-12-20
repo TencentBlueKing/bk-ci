@@ -1,0 +1,66 @@
+package com.tencent.devops.remotedev.config
+
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.remotedev.listener.RemoteDevUpdateListener
+import com.tencent.devops.remotedev.pojo.MQ.EXCHANGE_WORKSPACE_UPDATE_FROM_K8S
+import com.tencent.devops.remotedev.pojo.MQ.QUEUE_WORKSPACE_UPDATE_FROM_K8S
+import com.tencent.devops.remotedev.pojo.MQ.ROUTE_WORKSPACE_UPDATE_FROM_K8S
+import org.springframework.amqp.core.Binding
+import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.DirectExchange
+import org.springframework.amqp.core.Queue
+import org.springframework.amqp.rabbit.connection.ConnectionFactory
+import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class MqConfiguration {
+
+    @Bean
+    fun remoteDevExchange(): DirectExchange {
+        val directExchange = DirectExchange(EXCHANGE_WORKSPACE_UPDATE_FROM_K8S, true, false)
+        directExchange.isDelayed = true
+        return directExchange
+    }
+
+    /**
+     * k8s -> remote dev 事件
+     */
+    @Bean
+    fun remoteDevUpdateQueue() = Queue(QUEUE_WORKSPACE_UPDATE_FROM_K8S)
+
+    @Bean
+    fun remoteDevUpdateQueueBind(
+        @Autowired remoteDevUpdateQueue: Queue,
+        @Autowired remoteDevExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(remoteDevUpdateQueue)
+            .to(remoteDevExchange).with(ROUTE_WORKSPACE_UPDATE_FROM_K8S)
+    }
+
+    @Bean
+    fun pipelinePauseTaskExecuteListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired remoteDevUpdateQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired remoteDevUpdateListener: RemoteDevUpdateListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = remoteDevUpdateQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = remoteDevUpdateListener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 10,
+            maxConcurrency = 50
+        )
+    }
+}

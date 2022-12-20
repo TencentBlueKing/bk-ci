@@ -28,14 +28,14 @@
 package com.tencent.devops.dispatch.kubernetes.pojo.mq
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
-
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 
 @Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.QUEUE_WORKSPACE_CREATE_STARTUP)
 data class WorkspaceOperateEvent(
-    val userId: String,
-    val traceId: String,
+    override val userId: String,
+    override val traceId: String,
+    val type: UpdateEventType,
     val workspaceName: String,
-    val delayMills: Int = 0,
-    val retryTime: Int = 0
-)
+    override val delayMills: Int = 0,
+    override val retryTime: Int = 0
+) : WorkspaceEvent(userId, traceId, delayMills, retryTime)

@@ -25,20 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.pojo.mq
+package com.tencent.devops.remotedev.mq
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceEvent
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.stereotype.Service
 
-@Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.QUEUE_WORKSPACE_CREATE_STARTUP)
-data class WorkspaceCreateEvent(
-    override val userId: String,
-    override val traceId: String,
-    val repositoryUrl: String,
-    val branch: String,
-    val devFilePath: String?,
-    val devFile: Devfile,
-    val image: String = "",
-    override val delayMills: Int = 0,
-    override val retryTime: Int = 0
-) : WorkspaceEvent(userId, traceId, delayMills, retryTime)
+@Service
+class RemoteDevDispatcher constructor(
+    private val rabbitTemplate: RabbitTemplate
+) {
+    fun dispatch(event: WorkspaceEvent) {
+        try {
+            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
+        } catch (e: Throwable) {
+            logger.error("BKSystemErrorMonitor|StreamTriggerDispatcher|error:", e)
+        }
+    }
+
+    private val logger = LoggerFactory.getLogger(RemoteDevDispatcher::class.java)
+}

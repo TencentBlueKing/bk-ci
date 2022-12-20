@@ -40,7 +40,10 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
@@ -49,6 +52,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.mq.RemoteDevDispatcher
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
@@ -59,18 +63,21 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
+import com.tencent.devops.remotedev.service.redis.RedisWaiting4K8s
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
@@ -84,7 +91,8 @@ class WorkspaceService @Autowired constructor(
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val gitTransferService: GitTransferService,
     private val permissionService: PermissionService,
-    private val client: Client
+    private val client: Client,
+    private val dispatcher: RemoteDevDispatcher
 ) {
 
     private val redisCache = CacheBuilder.newBuilder()
@@ -104,6 +112,7 @@ class WorkspaceService @Autowired constructor(
         private const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime"
         private const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
         private const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
+        const val REDIS_UPDATE_EVENT_PREFIX = "remotedev:updateEvent:"
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(1)
     }
 
@@ -180,10 +189,11 @@ class WorkspaceService @Autowired constructor(
             client.get(ServiceTxUserResource::class).get(userId)
         }.onFailure { logger.warn("get $userId info error|${it.message}") }.getOrElse { null }?.data
 
+        val bizId = MDC.get(TraceTag.BIZID)
         val workspace = with(workspaceCreate) {
             Workspace(
                 workspaceId = null,
-                name = UUID.randomUUID().toString(), // 先临时生成一个，后面拿k8s返回的name替换掉
+                name = bizId, // 先临时生成一个，后面拿k8s返回的name替换掉
                 repositoryUrl = repositoryUrl,
                 branch = branch,
                 devFilePath = devFilePath,
@@ -208,24 +218,39 @@ class WorkspaceService @Autowired constructor(
             userInfo = userInfo
         )
 
-        kotlin.runCatching {
-            client.get(ServiceRemoteDevResource::class).createWorkspace(
-                userId,
-                WorkspaceReq(
-                    workspaceId = workspaceId,
-                    name = workspace.name,
-                    repositoryUrl = workspace.repositoryUrl,
-                    branch = workspace.branch,
-                    devFilePath = workspace.devFilePath,
-                    devFile = devfile
-                )
-            ).data!!
-        }.fold(
-            { workspaceName ->
+        dispatcher.dispatch(
+            WorkspaceCreateEvent(
+                userId = userId,
+                traceId = bizId,
+                repositoryUrl = workspace.repositoryUrl,
+                branch = workspace.branch,
+                devFilePath = workspace.devFilePath,
+                devFile = devfile
+            )
+        )
+//        kotlin.runCatching {
+//            client.get(ServiceRemoteDevResource::class).createWorkspace(
+//                userId,
+//                WorkspaceReq(
+//                    workspaceId = workspaceId,
+//                    name = workspace.name,
+//                    repositoryUrl = workspace.repositoryUrl,
+//                    branch = workspace.branch,
+//                    devFilePath = workspace.devFilePath,
+//                    devFile = devfile
+//                )
+//            ).data!!
+//        }
+
+        RedisWaiting4K8s(
+            redisOperation,
+            "${REDIS_UPDATE_EVENT_PREFIX}CREATE:$bizId",
+        ).waiting().let {
+            if (it) {
+                val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
+                    ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
                 dslContext.transaction { configuration ->
                     val transactionContext = DSL.using(configuration)
-                    // 创建成功后，更新name
-                    workspaceDao.updateWorkspaceName(workspaceId, workspaceName, transactionContext)
                     workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.RUNNING, transactionContext)
                     workspaceHistoryDao.createWorkspaceHistory(
                         dslContext = transactionContext,
@@ -242,7 +267,7 @@ class WorkspaceService @Autowired constructor(
                             getOpHistory(OpHistoryCopyWriting.CREATE),
                             pathWithNamespace,
                             workspace.branch,
-                            workspaceName
+                            ws.name
                         )
                     )
                     workspaceOpHistoryDao.createWorkspaceHistory(
@@ -257,18 +282,23 @@ class WorkspaceService @Autowired constructor(
                 // 获取远程登录url
                 val workspaceUrl = client.get(ServiceRemoteDevResource::class).getWorkspaceUrl(
                     userId,
-                    workspaceName
+                    ws.name
                 ).data
 
                 return workspaceUrl!!
-            },
-            {
+            } else {
                 // 创建失败
-                logger.warn("create workspace $workspaceId failed|${it.message}", it)
+                logger.warn("create workspace $workspaceId failed")
                 workspaceDao.deleteWorkspace(workspaceId, dslContext)
-                throw CustomException(Response.Status.BAD_REQUEST, "工作空间创建失败，参考原因:${it.message}")
+                throw CustomException(Response.Status.BAD_REQUEST, "工作空间创建失败")
             }
-        )
+        }
+    }
+
+    fun createWorkspace4K8s(event: RemoteDevUpdateEvent) {
+        if (event.status) {
+            workspaceDao.updateWorkspaceName(event.traceId, event.workspaceName, dslContext)
+        }
     }
 
     fun startWorkspace(userId: String, workspaceId: Long): Boolean {
@@ -294,17 +324,31 @@ class WorkspaceService @Autowired constructor(
                 action = WorkspaceAction.START,
                 actionMessage = getOpHistory(OpHistoryCopyWriting.NOT_FIRST_START)
             )
-            val res = kotlin.runCatching {
-                client.get(ServiceRemoteDevResource::class).startWorkspace(
-                    userId,
-                    workspace.name
-                ).data ?: false
-            }.getOrElse {
-                logger.error("start workspace error |${it.message}", it)
-                false
-            }
 
-            if (res) {
+            val bizId = MDC.get(TraceTag.BIZID)
+
+            dispatcher.dispatch(
+                WorkspaceOperateEvent(
+                    userId = userId,
+                    traceId = bizId,
+                    type = UpdateEventType.START,
+                    workspaceName = workspace.name
+                )
+            )
+//            val res = kotlin.runCatching {
+//                client.get(ServiceRemoteDevResource::class).startWorkspace(
+//                    userId,
+//                    workspace.name
+//                ).data ?: false
+//            }.getOrElse {
+//                logger.error("start workspace error |${it.message}", it)
+//                false
+//            }
+
+            RedisWaiting4K8s(
+                redisOperation,
+                "${REDIS_UPDATE_EVENT_PREFIX}START:$bizId",
+            ).waiting().onSuccess {
                 val history = workspaceHistoryDao.fetchHistory(dslContext, workspaceId).firstOrNull()
                 dslContext.transaction { configuration ->
                     val transactionContext = DSL.using(configuration)
@@ -341,8 +385,9 @@ class WorkspaceService @Autowired constructor(
                         )
                     )
                 }
+                return true
             }
-            return res
+            return false
         }
     }
 
@@ -371,17 +416,31 @@ class WorkspaceService @Autowired constructor(
                 action = WorkspaceAction.SLEEP,
                 actionMessage = getOpHistory(OpHistoryCopyWriting.MANUAL_STOP)
             )
-            val res = kotlin.runCatching {
-                client.get(ServiceRemoteDevResource::class).stopWorkspace(
-                    userId,
-                    workspace.name
-                ).data ?: false
-            }.getOrElse {
-                logger.error("stop workspace error |${it.message}", it)
-                false
-            }
 
-            if (res) {
+            val bizId = MDC.get(TraceTag.BIZID)
+
+            dispatcher.dispatch(
+                WorkspaceOperateEvent(
+                    userId = userId,
+                    traceId = bizId,
+                    type = UpdateEventType.STOP,
+                    workspaceName = workspace.name
+                )
+            )
+//            val res = kotlin.runCatching {
+//                client.get(ServiceRemoteDevResource::class).stopWorkspace(
+//                    userId,
+//                    workspace.name
+//                ).data ?: false
+//            }.getOrElse {
+//                logger.error("stop workspace error |${it.message}", it)
+//                false
+//            }
+
+            RedisWaiting4K8s(
+                redisOperation,
+                "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId",
+            ).waiting().onSuccess {
                 dslContext.transaction { configuration ->
                     val transactionContext = DSL.using(configuration)
                     workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.SLEEP, transactionContext)
@@ -415,8 +474,9 @@ class WorkspaceService @Autowired constructor(
                         )
                     )
                 }
+                return true
             }
-            return res
+            return false
         }
     }
 
@@ -443,17 +503,29 @@ class WorkspaceService @Autowired constructor(
                 action = WorkspaceAction.DELETE,
                 actionMessage = getOpHistory(OpHistoryCopyWriting.DELETE)
             )
-            val res = kotlin.runCatching {
-                client.get(ServiceRemoteDevResource::class).deleteWorkspace(
-                    userId,
-                    workspace.name
-                ).data ?: false
-            }.getOrElse {
-                logger.error("stop workspace error |${it.message}", it)
-                false
-            }
+            val bizId = MDC.get(TraceTag.BIZID)
+            dispatcher.dispatch(
+                WorkspaceOperateEvent(
+                    userId = userId,
+                    traceId = bizId,
+                    type = UpdateEventType.DELETE,
+                    workspaceName = workspace.name
+                )
+            )
+//            val res = kotlin.runCatching {
+//                client.get(ServiceRemoteDevResource::class).deleteWorkspace(
+//                    userId,
+//                    workspace.name
+//                ).data ?: false
+//            }.getOrElse {
+//                logger.error("stop workspace error |${it.message}", it)
+//                false
+//            }
 
-            if (res) {
+            RedisWaiting4K8s(
+                redisOperation,
+                "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId",
+            ).waiting().onSuccess {
                 dslContext.transaction { configuration ->
                     val transactionContext = DSL.using(configuration)
                     workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.DELETED, transactionContext)
@@ -469,8 +541,9 @@ class WorkspaceService @Autowired constructor(
                         )
                     )
                 }
+                return true
             }
-            return res
+            return false
         }
     }
 
@@ -674,5 +747,15 @@ class WorkspaceService @Autowired constructor(
         return workspaceDao.getTimeOutInactivityWorkspace(
             Constansts.timeoutDays, dslContext
         )?.map { it.name } ?: emptyList()
+    }
+
+    private inline fun Boolean.onSuccess(action: () -> Unit): Boolean {
+        if (this) action()
+        return this
+    }
+
+    private inline fun Boolean.onFailure(action: () -> Unit): Boolean {
+        if (!this) action()
+        return this
     }
 }

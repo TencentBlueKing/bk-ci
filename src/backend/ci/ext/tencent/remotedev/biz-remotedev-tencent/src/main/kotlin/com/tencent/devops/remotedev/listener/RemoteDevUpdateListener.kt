@@ -25,20 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.pojo.mq
+package com.tencent.devops.remotedev.listener
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.service.WorkspaceService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
-@Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.QUEUE_WORKSPACE_CREATE_STARTUP)
-data class WorkspaceCreateEvent(
-    override val userId: String,
-    override val traceId: String,
-    val repositoryUrl: String,
-    val branch: String,
-    val devFilePath: String?,
-    val devFile: Devfile,
-    val image: String = "",
-    override val delayMills: Int = 0,
-    override val retryTime: Int = 0
-) : WorkspaceEvent(userId, traceId, delayMills, retryTime)
+@Suppress("LongParameterList")
+@Component
+class RemoteDevUpdateListener @Autowired constructor(
+    private val workspaceService: WorkspaceService,
+    private val redisOperation: RedisOperation
+) : Listener<RemoteDevUpdateEvent> {
+
+    override fun execute(event: RemoteDevUpdateEvent) {
+        logger.info("A message is received from dispatch k8s $event")
+        if (event.type == UpdateEventType.CREATE) {
+            workspaceService.createWorkspace4K8s(event)
+        }
+        redisOperation.set(
+            key = "${WorkspaceService.REDIS_UPDATE_EVENT_PREFIX}${event.type.name.toLowerCase()}:${event.traceId}",
+            value = event.status.toString(),
+            expiredInSecond = TimeUnit.MINUTES.toSeconds(1)
+        )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RemoteDevUpdateListener::class.java)
+    }
+}

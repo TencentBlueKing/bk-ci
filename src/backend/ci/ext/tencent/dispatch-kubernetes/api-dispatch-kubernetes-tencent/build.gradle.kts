@@ -27,4 +27,5 @@
 
 dependencies {
     api(project(":core:dispatch-kubernetes:api-dispatch-kubernetes"))
+    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
 }
