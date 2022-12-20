@@ -56,7 +56,7 @@ class ResourceGroupService(
             createMode = false
         )
         val managerRoleGroups = defaultGroups.filter {
-            it.groupCode != DefaultGroupType.MANAGER.name
+            it.groupCode != DefaultGroupType.MANAGER.value
         }.map { defaultGroup ->
             val name = IamGroupUtils.buildSubsetManagerGroupName(
                 resourceName = resourceName,
