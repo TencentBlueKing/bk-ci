@@ -3,7 +3,7 @@ module github.com/Tencent/bk-ci/src/agent
 go 1.17
 
 require (
-	github.com/docker/docker v20.10.18+incompatible
+	github.com/docker/docker v20.10.22+incompatible
 	github.com/gofrs/flock v0.8.1
 	github.com/influxdata/telegraf v1.22.3
 	github.com/kardianos/service v1.2.1
@@ -25,7 +25,7 @@ require (
 	github.com/caio/go-tdigest v3.1.0+incompatible // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/distribution v2.7.1+incompatible // indirect
+	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/doclambda/protobufquery v0.0.0-20210317203640-88ffabe06a60 // indirect
