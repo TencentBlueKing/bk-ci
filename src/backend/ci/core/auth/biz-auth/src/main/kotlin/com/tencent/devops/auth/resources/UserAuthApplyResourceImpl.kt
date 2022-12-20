@@ -9,9 +9,9 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.common.api.pojo.Result
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.RestController
+import com.tencent.devops.common.web.RestResource
 
-@RestController
+@RestResource
 class UserAuthApplyResourceImpl @Autowired constructor(
     val permissionApplyService: PermissionApplyService
 ) : UserAuthApplyResource {
