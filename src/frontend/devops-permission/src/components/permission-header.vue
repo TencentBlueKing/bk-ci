@@ -30,7 +30,10 @@ const goToUrl = (url) => {
           }"
           @click.native.stop="goToUrl(nav.url)"
         >
-          {{ nav.name }}
+          <span :class="{
+              'nav-item': index === 0 && navs.length > 1,
+            }"
+          >{{ nav.name }}</span>
           <template
             #separator
             v-if="index < navs.length - 1"
@@ -63,6 +66,9 @@ const goToUrl = (url) => {
   margin-right: 1px;
 }
 .bk-breadcrumb-item {
+  :deep(.nav-item) {
+    color: #3A84FF;
+  }
   :deep(.bk-breadcrumb-item-inner) {
     color: #313238;
   }
