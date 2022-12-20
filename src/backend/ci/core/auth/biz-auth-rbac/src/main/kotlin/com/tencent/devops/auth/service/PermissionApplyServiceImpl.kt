@@ -10,6 +10,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
+import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
@@ -103,14 +104,20 @@ class PermissionApplyServiceImpl @Autowired constructor(
         return v2ManagerService.getGradeManagerRoleGroupV2(projectInfo!!.relationId, searchGroupDTO, v2PageInfoDTO)
     }
 
-    override fun applyToJoinGroup(userId: String, applicationDTO: ApplicationDTO): Boolean {
+    override fun applyToJoinGroup(userId: String, applicationInfo: ApplicationInfo): Boolean {
         try {
-            v2ManagerService.createRoleGroupApplicationV2(applicationDTO)
+            val iamApplicationDTO = ApplicationDTO
+                .builder()
+                .groupId(applicationInfo.groupIds)
+                .applicant(userId)
+                .expiredAt(applicationInfo.expiredAt.toLong())
+                .reason(applicationInfo.reason).build()
+            v2ManagerService.createRoleGroupApplicationV2(iamApplicationDTO)
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
-                params = arrayOf(applicationDTO.groupId.toString()),
-                defaultMessage = "权限系统：申请加入用户组[${applicationDTO.groupId}]失败！"
+                params = arrayOf(applicationInfo.groupIds.toString()),
+                defaultMessage = "权限系统：申请加入用户组[${applicationInfo.groupIds}]失败！"
             )
         }
         return true
