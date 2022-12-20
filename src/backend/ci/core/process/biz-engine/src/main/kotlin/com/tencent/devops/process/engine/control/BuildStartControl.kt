@@ -275,6 +275,7 @@ class BuildStartControl @Autowired constructor(
                     0,
                     pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
                         projectId = projectId,
+                        pipelineId = pipelineId,
                         status = listOf(BuildStatus.RUNNING)
                     )
                 )

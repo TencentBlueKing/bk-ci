@@ -279,6 +279,7 @@ class QueueInterceptor @Autowired constructor(
                             0,
                             pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
                                 projectId = projectId,
+                                pipelineId = task.pipelineInfo.pipelineId,
                                 status = status
                             )
                         )

@@ -83,6 +83,7 @@ class RunLockInterceptor @Autowired constructor(
                 if (it == pipelineId) {
                     size += pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
                         projectId = projectId,
+                        pipelineId = pipelineId,
                         status = listOf(BuildStatus.RUNNING)
                     ).size
                 }

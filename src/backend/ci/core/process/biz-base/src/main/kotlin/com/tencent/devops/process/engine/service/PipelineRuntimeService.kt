@@ -268,11 +268,13 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getBuildInfoListByConcurrencyGroupNull(
         projectId: String,
+        pipelineId: String,
         status: List<BuildStatus>
     ): List<Pair<String, String>> {
         return pipelineBuildDao.getBuildTasksByConcurrencyGroupNull(
             dslContext = dslContext,
             projectId = projectId,
+            pipelineId = pipelineId,
             statusSet = status
         ).map { Pair(it.value1(), it.value2()) }
     }
