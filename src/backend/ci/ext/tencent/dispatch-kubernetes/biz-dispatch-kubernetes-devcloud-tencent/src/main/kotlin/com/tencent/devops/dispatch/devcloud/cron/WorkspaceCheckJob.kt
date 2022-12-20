@@ -4,7 +4,6 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
 import com.tencent.devops.dispatch.devcloud.dao.DispatchWorkspaceDao
-import com.tencent.devops.dispatch.devcloud.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.EnvStatusEnum
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
@@ -13,7 +12,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.time.LocalDateTime
 
 @Component
 class WorkspaceCheckJob @Autowired constructor(
@@ -42,9 +40,11 @@ class WorkspaceCheckJob @Autowired constructor(
                 logger.info("Stop inactive workspace get lock.")
                 val sleepWorkspaceList = redisUtils.getSleepWorkspaceHeartbeats()
                 sleepWorkspaceList.parallelStream().forEach {
-                    stopSleepWorkspace(it)
-
+                    stopInactiveWorkspace(it)
                     redisUtils.deleteWorkspaceHeartbeat("admin", it)
+
+                    // 发送mq事件通知remoteDev服务刷新工作空间状态
+                    // TODO
                 }
             }
         } catch (e: Throwable) {
@@ -74,7 +74,7 @@ class WorkspaceCheckJob @Autowired constructor(
         }
     }
 
-    private fun stopSleepWorkspace(
+    private fun stopInactiveWorkspace(
         workspaceName: String
     ) {
         val dispatchWorkspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
@@ -110,11 +110,14 @@ class WorkspaceCheckJob @Autowired constructor(
                         userId = "admin",
                         environmentUid = it.environmentUid,
                         workspaceName = it.workspaceName,
-                        environmentAction = EnvironmentAction.STOP
+                        environmentAction = EnvironmentAction.DELETE
                     )
                 } catch (e: Throwable) {
                     logger.error("Clear idle workspace exception:", e)
                 }
+
+                // 发送mq事件通知remoteDev服务刷新工作空间状态
+                // TODO
             }
         }
     }

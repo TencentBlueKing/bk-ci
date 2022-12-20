@@ -428,7 +428,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     TaskStatusEnum.Fail -> {
                         val resultDisplay = taskResponse.data.logs
                         logger.error("Task: $taskId failed, taskResponse: $taskResponse")
-                        TaskResult(isFinish = true, success = false, msg = formatDevcloudLogList(resultDisplay))
+                        TaskResult(isFinish = true, success = false, msg = resultDisplay ?: "")
                     }
                     else -> TaskResult(isFinish = false, success = false, msg = "")
                 }
@@ -437,10 +437,6 @@ class WorkspaceDevCloudClient @Autowired constructor(
             logger.error("Get dev cloud task error, taskId: $taskId", e)
             return TaskResult(isFinish = true, success = false, msg = "创建失败，异常信息:${e.message}")
         }
-    }
-
-    private fun formatDevcloudLogList(resultDisplay: String): String {
-        return resultDisplay
     }
 }
 data class TaskResult(
