@@ -27,7 +27,9 @@
 package com.tencent.devops.dispatch.devcloud.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -73,6 +75,34 @@ class RedisUtils @Autowired constructor(
 
     private fun heartbeatKey(): String {
         return "dispatchkubernetes:workspace_heartbeat"
+    }
+
+    /*-------------------------*/
+    fun refreshTaskStatus(userId: String, taskUid: String, taskStatus: TaskStatus) {
+        logger.info("User $userId hset(${taskStatusKey()}) $taskUid")
+        redisOperation.hset(
+            key = taskStatusKey(),
+            hashKey = taskUid,
+            values = JsonUtil.toJson(taskStatus)
+        )
+    }
+
+    fun getTaskStatus(taskUid: String): TaskStatus? {
+        val result = redisOperation.hget(taskStatusKey(), taskUid)
+        return if (result != null) {
+            return objectMapper.readValue(result, TaskStatus::class.java)
+        } else {
+            null
+        }
+    }
+
+    fun deleteTask(taskUid: String) {
+        logger.info("hdelete(${taskStatusKey()}) $taskUid")
+        redisOperation.hdelete(taskStatusKey(), taskUid)
+    }
+
+    private fun taskStatusKey(): String {
+        return "dispatchkubernetes:task_status"
     }
 
     companion object {

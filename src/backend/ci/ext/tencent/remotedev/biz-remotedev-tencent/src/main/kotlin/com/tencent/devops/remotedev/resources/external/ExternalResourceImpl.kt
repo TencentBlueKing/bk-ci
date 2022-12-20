@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.remotedev.api.external.ExternalResource
+import com.tencent.devops.dispatch.kubernetes.api.external.ExternalResource
 import com.tencent.devops.remotedev.pojo.RemoteDevCallBack
 import com.tencent.devops.remotedev.service.CallBackService
 import org.slf4j.LoggerFactory

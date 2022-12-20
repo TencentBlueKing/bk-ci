@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.interfaces
 
+import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 
 /**
@@ -65,4 +66,9 @@ interface RemoteDevInterface {
      * 工作空间心跳上报
      */
     fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean
+
+    /**
+     * 工作空间task任务回调
+     */
+    fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean
 }

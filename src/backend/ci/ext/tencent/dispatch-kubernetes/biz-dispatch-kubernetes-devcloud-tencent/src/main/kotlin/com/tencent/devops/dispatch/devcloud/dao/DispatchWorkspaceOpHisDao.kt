@@ -41,7 +41,8 @@ class DispatchWorkspaceOpHisDao {
         workspaceName: String,
         environmentUid: String,
         operator: String,
-        action: EnvironmentAction
+        action: EnvironmentAction,
+        actionMsg: String = ""
     ) {
         with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
             dslContext.insertInto(
@@ -58,7 +59,7 @@ class DispatchWorkspaceOpHisDao {
                     environmentUid,
                     operator,
                     action.name,
-                    "",
+                    actionMsg,
                     LocalDateTime.now()
                 ).execute()
         }

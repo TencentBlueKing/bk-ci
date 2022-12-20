@@ -16,7 +16,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRsp
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRspData
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatusRsp
-import com.tencent.devops.dispatch.devcloud.pojo.TaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatusEnum
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatusRsp
 import okhttp3.Headers
 import okhttp3.MediaType

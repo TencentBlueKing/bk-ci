@@ -27,9 +27,11 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.dispatch.kubernetes.service.factory.ContainerServiceFactory
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
@@ -85,5 +87,9 @@ class RemoteDevService @Autowired constructor(
 
     fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
         return remoteDevServiceFactory.load("").workspaceHeartbeat(userId, workspaceName)
+    }
+
+    fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
+        return remoteDevServiceFactory.load("").workspaceTaskCallback(taskStatus)
     }
 }
