@@ -1,6 +1,3 @@
-//go:build windows
-// +build windows
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -28,31 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package systemutil
+package com.tencent.devops.metrics.utils
 
-import (
-	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"os"
-)
+import com.github.benmanes.caffeine.cache.Caffeine
+import java.util.concurrent.TimeUnit
 
-// MkBuildTmpDir 创建构建提供的临时目录
-func MkBuildTmpDir() (string, error) {
-	tmpDir := fmt.Sprintf("%s/build_tmp", GetWorkDir())
-	err := os.MkdirAll(tmpDir, os.ModePerm)
-	return tmpDir, err
-}
+/**
+ * 错误码信息缓存
+ *
+ * @since: 2022-12-09
+ * @version: $Revision$ $Date$ $LastChangedBy$
+ *
+ */
+object ErrorCodeInfoCacheUtil {
 
-// Chmod windows go的win实现只有 0400 只读和 0600 读写的区分，所以这里暂时先和0666对比
-func Chmod(file string, perm os.FileMode) error {
-	stat, err := os.Stat(file)
-	if stat != nil && stat.Mode() != 0666 {
-		err = os.Chmod(file, perm)
-	}
-	if err == nil {
-		logs.Info("chmod %o %s ok!", perm, file)
-	} else {
-		logs.Warn("chmod %o %s msg: %s", perm, file, err.Error())
-	}
-	return err
+    private val shardingRoutingCache = Caffeine.newBuilder()
+        .maximumSize(5000)
+        .expireAfterWrite(7, TimeUnit.DAYS)
+        .build<String, Boolean>()
+
+    /**
+     * 保存错误码信息缓存
+     * @param key 缓存key (atomCode:errorType:errorCode)
+     * @param value 缓存value
+     */
+    fun put(key: String, value: Boolean) {
+        shardingRoutingCache.put(key, value)
+    }
+
+    /**
+     * 从缓存中获取错误码信息
+     * @param key 缓存key
+     * @return 缓存value
+     */
+    fun getIfPresent(key: String): Boolean? {
+        return shardingRoutingCache.getIfPresent(key)
+    }
 }

@@ -1,6 +1,3 @@
-//go:build windows
-// +build windows
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -28,31 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package systemutil
+package com.tencent.devops.metrics.pojo.po
 
-import (
-	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"os"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
+
+@ApiModel("保存错误码信息")
+data class UpdateErrorCodeInfoPO(
+    @ApiModelProperty("错误类型")
+    val errorType: Int,
+    @ApiModelProperty("错误码")
+    val errorCode: Int,
+    @ApiModelProperty("错误描述")
+    val errorMsg: String? = null,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("更新时间")
+    val updateTime: LocalDateTime
 )
-
-// MkBuildTmpDir 创建构建提供的临时目录
-func MkBuildTmpDir() (string, error) {
-	tmpDir := fmt.Sprintf("%s/build_tmp", GetWorkDir())
-	err := os.MkdirAll(tmpDir, os.ModePerm)
-	return tmpDir, err
-}
-
-// Chmod windows go的win实现只有 0400 只读和 0600 读写的区分，所以这里暂时先和0666对比
-func Chmod(file string, perm os.FileMode) error {
-	stat, err := os.Stat(file)
-	if stat != nil && stat.Mode() != 0666 {
-		err = os.Chmod(file, perm)
-	}
-	if err == nil {
-		logs.Info("chmod %o %s ok!", perm, file)
-	} else {
-		logs.Warn("chmod %o %s msg: %s", perm, file, err.Error())
-	}
-	return err
-}
