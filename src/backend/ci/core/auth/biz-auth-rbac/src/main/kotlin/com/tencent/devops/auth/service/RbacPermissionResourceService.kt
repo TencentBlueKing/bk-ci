@@ -54,7 +54,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
-@SuppressWarnings("LongParameterList")
+@SuppressWarnings("LongParameterList", "TooManyFunctions")
 class RbacPermissionResourceService(
     private val client: Client,
     private val permissionScopesService: PermissionScopesService,
@@ -71,6 +71,7 @@ class RbacPermissionResourceService(
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceService::class.java)
     }
 
+    @SuppressWarnings("LongMethod")
     override fun resourceCreateRelation(
         userId: String,
         projectCode: String,
@@ -97,7 +98,10 @@ class RbacPermissionResourceService(
         )
         val projectInfo = getProjectInfo(projectCode)
         val authorizationScopes = permissionScopesService.buildSubsetManagerAuthorizationScopes(
-            strategyName = ResourceGroupType.OWNER.getStrategyName(resourceType = resourceType),
+            strategyName = IamGroupUtils.buildSubsetManagerGroupStrategyName(
+                resourceType = resourceType,
+                groupCode = DefaultGroupType.MANAGER.value
+            ),
             projectCode = projectCode,
             projectName = projectInfo.projectName,
             resourceType = resourceType,
@@ -128,7 +132,10 @@ class RbacPermissionResourceService(
         resourceGroupService.createDefaultGroup(
             subsetManagerId = subsetManagerId,
             userId = userId,
+            projectCode = projectCode,
+            projectName = projectInfo.projectName,
             resourceType = resourceType,
+            resourceCode = resourceCode,
             resourceName = resourceName
         )
         return true
