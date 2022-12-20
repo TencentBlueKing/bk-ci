@@ -25,44 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.service
-
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
-@Service
-class BcsRemoteDevService @Autowired constructor(
-    private val commonConfig: CommonConfig
-) : RemoteDevInterface {
-    override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
-        TODO("Not yet implemented")
-    }
-
-    override fun startWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun stopWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
-        TODO("Not yet implemented")
-    }
-
-    override fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        TODO("Not yet implemented")
-    }
+dependencies {
+    api(project(":core:common:common-dispatch-sdk"))
+    api(project(":ext:tencent:dispatch-kubernetes:api-dispatch-kubernetes-tencent"))
 }

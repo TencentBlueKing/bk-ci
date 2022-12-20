@@ -38,6 +38,7 @@ import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.JobStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesWorkspace
+import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesWorkspaceUrlRsp
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import okhttp3.MediaType
@@ -161,7 +162,7 @@ class KubernetesRemoteDevClient @Autowired constructor(
         userId: String,
         workspaceName: String
     ): String? {
-        val url = "api/remoting/workspaces/${workspaceName}/urls"
+        val url = "/api/remoting/workspaces/${workspaceName}/urls"
         logger.info("$userId|$workspaceName Get workspaceUrl request url: $url")
 
         val request = clientCommon.baseRequest(userId, url).get().build()
@@ -179,12 +180,12 @@ class KubernetesRemoteDevClient @Autowired constructor(
                         "获取工作空间url接口异常（Fail to get workspaceUrl, http response code: ${response.code()}"
                     )
                 }
-                val result: KubernetesResult<String> = objectMapper.readValue(responseContent)
+                val result: KubernetesResult<KubernetesWorkspaceUrlRsp> = objectMapper.readValue(responseContent)
                 if (result.isNotOk()) {
                     throw RuntimeException(result.message)
                 }
 
-                return result.data
+                return result.data!!.webVscodeUrl
             }
         } catch (e: Exception) {
             logger.error("[$userId $workspaceName get workspaceUrl failed.", e)

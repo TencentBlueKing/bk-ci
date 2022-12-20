@@ -25,44 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.service
+package com.tencent.devops.dispatch.kubernetes.api.external
 
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Service
-class BcsRemoteDevService @Autowired constructor(
-    private val commonConfig: CommonConfig
-) : RemoteDevInterface {
-    override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
-        TODO("Not yet implemented")
-    }
+@Api(tags = ["EXTERNAL_DISPATCH_KUBERNETES"], description = "External-dispatch-kubernetes")
+@Path("/external/remotedev/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ExternalResource {
 
-    override fun startWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun stopWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
-        TODO("Not yet implemented")
-    }
-
-    override fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        TODO("Not yet implemented")
-    }
+    @ApiOperation("工作空间task回调")
+    @POST
+    @Path("/task/callback")
+    fun workspaceTaskCallback(
+        @ApiParam(value = "回调信息", required = true)
+        taskStatus: TaskStatus
+    ): Result<Boolean>
 }

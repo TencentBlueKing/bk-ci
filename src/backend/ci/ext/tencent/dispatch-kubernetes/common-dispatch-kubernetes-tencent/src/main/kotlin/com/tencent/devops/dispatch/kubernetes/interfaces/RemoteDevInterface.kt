@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.interfaces
 
+import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 
 /**
@@ -47,6 +48,11 @@ interface RemoteDevInterface {
     fun startWorkspace(userId: String, workspaceName: String): Boolean
 
     /**
+     * 停止远程工作空间
+     */
+    fun stopWorkspace(userId: String, workspaceName: String): Boolean
+
+    /**
      * 删除远程工作空间
      */
     fun deleteWorkspace(userId: String, workspaceName: String): Boolean
@@ -55,4 +61,14 @@ interface RemoteDevInterface {
      * 获取工作空间web端链接
      */
     fun getWorkspaceUrl(userId: String, workspaceName: String): String?
+
+    /**
+     * 工作空间心跳上报
+     */
+    fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean
+
+    /**
+     * 工作空间task任务回调
+     */
+    fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean
 }

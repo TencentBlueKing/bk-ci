@@ -25,44 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.service
+package com.tencent.devops.dispatch.devcloud.dao
 
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentAction
+import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchWorkspaceOpHis
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
-@Service
-class BcsRemoteDevService @Autowired constructor(
-    private val commonConfig: CommonConfig
-) : RemoteDevInterface {
-    override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
-        TODO("Not yet implemented")
-    }
+@Repository
+class DispatchWorkspaceOpHisDao {
 
-    override fun startWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun stopWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
-        TODO("Not yet implemented")
-    }
-
-    override fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        TODO("Not yet implemented")
+    fun createWorkspaceHistory(
+        dslContext: DSLContext,
+        workspaceName: String,
+        environmentUid: String,
+        operator: String,
+        action: EnvironmentAction,
+        actionMsg: String = ""
+    ) {
+        with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
+            dslContext.insertInto(
+                this,
+                WORKSPACE_NAME,
+                ENVIRONMENT_UID,
+                OPERATOR,
+                ACTION,
+                ACTION_MSG,
+                CREATED_TIME
+            )
+                .values(
+                    workspaceName,
+                    environmentUid,
+                    operator,
+                    action.name,
+                    actionMsg,
+                    LocalDateTime.now()
+                ).execute()
+        }
     }
 }

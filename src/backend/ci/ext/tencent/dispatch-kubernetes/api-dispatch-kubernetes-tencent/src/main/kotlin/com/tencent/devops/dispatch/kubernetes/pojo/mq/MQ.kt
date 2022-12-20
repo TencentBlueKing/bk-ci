@@ -25,44 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.service
+package com.tencent.devops.dispatch.kubernetes.pojo.mq
 
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
-@Service
-class BcsRemoteDevService @Autowired constructor(
-    private val commonConfig: CommonConfig
-) : RemoteDevInterface {
-    override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
-        TODO("Not yet implemented")
-    }
-
-    override fun startWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun stopWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
-        TODO("Not yet implemented")
-    }
-
-    override fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        TODO("Not yet implemented")
-    }
+object MQ {
+    // 远程开发工作空间 ====================================
+    const val EXCHANGE_REMOTE_DEV_LISTENER_DIRECT = "e.engine.remotedev.workspace.listener"
+    const val ROUTE_WORKSPACE_CREATE_STARTUP = "r.engine.remotedev.workspace.listener.create"
+    const val QUEUE_WORKSPACE_CREATE_STARTUP = "q.engine.remotedev.workspace.listener.create"
+    const val ROUTE_WORKSPACE_OPERATE_STARTUP = "r.engine.remotedev.workspace.listener.operate"
+    const val QUEUE_WORKSPACE_OPERATE_STARTUP = "q.engine.remotedev.workspace.listener.operate"
 }
