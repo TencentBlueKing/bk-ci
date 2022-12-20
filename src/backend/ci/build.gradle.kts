@@ -1,5 +1,5 @@
 plugins {
-    id("com.tencent.devops.boot") version "0.0.6"
+    id("com.tencent.devops.boot") version "0.0.7-SNAPSHOT"
     detektCheck
 }
 
@@ -20,8 +20,10 @@ allprojects {
     }
 
     // TODO bkrepo依赖到 , 后续加到framework后可以删掉
-    repositories {
-        maven(url = "https://repo.spring.io/milestone")
+    if(System.getenv("GITHUB_WORKFLOW") != null) {
+        repositories {
+            maven(url = "https://repo.spring.io/milestone")
+        }
     }
     // 版本管理
     dependencyManagement {
@@ -108,7 +110,6 @@ allprojects {
                 entry("pinyin-plus")
             }
             dependency("com.perforce:p4java:${Versions.p4}")
-            dependency("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.JacksonDatatypeJsr}")
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
             }
@@ -118,6 +119,10 @@ allprojects {
                         "${Versions.KubernetesDiscovery}"
             )
             dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
+            dependencySet("org.eclipse.jgit:${Versions.jgit}") {
+                entry("org.eclipse.jgit")
+                entry("org.eclipse.jgit.ssh.jsch")
+            }
         }
     }
 
@@ -133,6 +138,7 @@ allprojects {
         it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
         it.exclude("com.zaxxer", "HikariCP-java7")
         it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
+        it.exclude("org.bouncycastle", "bcutil-jdk15on")
     }
     dependencies {
         // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656

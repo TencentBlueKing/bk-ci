@@ -35,6 +35,11 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.plugin.worker.task.scm.util.DirectoryUtil
 import com.tencent.devops.plugin.worker.task.scm.util.GitUtil
 import com.tencent.devops.plugin.worker.task.scm.util.RepoCommitUtil
@@ -45,11 +50,6 @@ import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_ID
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_TIMES
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.code.git.api.GitCredentialSetter
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.github.GithubUtils
@@ -576,7 +576,7 @@ open class GitUpdateTask constructor(
         if (matchRef.size == 1) {
             return matchRef[0]
         }
-        return matchRef.minWith(Comparator { o1, o2 ->
+        return matchRef.minWithOrNull(Comparator { o1, o2 ->
             o1.split("/").size - o2.split("/").size
         })
     }

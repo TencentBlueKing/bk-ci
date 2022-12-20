@@ -25,13 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-api"))
-    api("org.slf4j:slf4j-api")
-    api("org.tmatesoft.svnkit:svnkit")
-    api("com.squareup.okhttp3:okhttp")
-    api("org.eclipse.jgit:org.eclipse.jgit")
-    api("org.eclipse.jgit:org.eclipse.jgit.ssh.jsch")
-    api("com.perforce:p4java")
+package com.tencent.devops.auth.configuration
+
+import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.rbac.RbacPermissionProjectServiceImpl
+import com.tencent.devops.common.client.Client
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+
+@Configuration
+class RbacAuthConfiguration {
+    @Bean
+    @Primary
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
+    fun defaultPermissionProjectServiceImpl(
+        client: Client,
+        iamManagerService: V2ManagerService,
+        deptService: DeptService,
+        policyService: PolicyService
+    ) = RbacPermissionProjectServiceImpl(client, iamManagerService, deptService, policyService)
 }
