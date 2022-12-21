@@ -73,6 +73,18 @@ class StoreHonorDao {
         }
     }
 
+    fun countByhonorTitle(
+        dslContext: DSLContext,
+        honorTitle: String
+    ): Int {
+        with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(HONOR_TITLE.`in`(honorTitle))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
     fun list(
         dslContext: DSLContext,
         keyWords: String?,

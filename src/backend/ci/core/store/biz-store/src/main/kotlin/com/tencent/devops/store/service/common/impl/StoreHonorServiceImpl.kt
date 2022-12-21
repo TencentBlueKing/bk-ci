@@ -27,16 +27,21 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
 import com.tencent.devops.store.dao.common.StoreHonorDao
 import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
 import com.tencent.devops.store.pojo.common.StoreHonorInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
+import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 import com.tencent.devops.store.service.common.StoreHonorService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -80,10 +85,18 @@ class StoreHonorServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Boolean {
+    override fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean> {
         // 权限校验
 
 
+        val honorTitleCount = storeHonorDao.countByhonorTitle(dslContext, addStoreHonorRequest.honorTitle)
+        if (honorTitleCount > 0) {
+            // 抛出错误提示
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(addStoreHonorRequest.honorTitle)
+            )
+        }
         val id = UUIDUtil.generate()
         val storeHonorInfo = StoreHonorInfo(
             id = id,
@@ -107,11 +120,15 @@ class StoreHonorServiceImpl @Autowired constructor(
             tStoreHonorRelRecord.updateTime = LocalDateTime.now()
             tStoreHonorRelRecord
         }
-        dslContext.transaction { t -
-
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            storeHonorDao.createStoreHonorInfo(context, userId, storeHonorInfo)
+            storeHonorDao.batchCreateStoreHonorRel(context,tStoreHonorRelList)
         }
-        storeHonorDao.createStoreHonorInfo(dslContext, userId, storeHonorInfo)
-        storeHonorDao.batchCreateStoreHonorRel(dslContext,tStoreHonorRelList)
-        return true
+        return Result(true)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StoreHonorServiceImpl::class.java)
     }
 }
