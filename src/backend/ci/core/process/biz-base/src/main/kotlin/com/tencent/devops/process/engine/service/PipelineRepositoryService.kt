@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -53,6 +54,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
+import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
@@ -71,10 +73,11 @@ import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
+import com.tencent.devops.process.pojo.PipelineCollation
+import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -116,6 +119,7 @@ class PipelineRepositoryService constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
+    private val pipelineViewGroupDao: PipelineViewGroupDao,
     private val versionConfigure: VersionConfigure,
     private val pipelineInfoExtService: PipelineInfoExtService,
     private val client: Client,
@@ -268,12 +272,12 @@ class PipelineRepositoryService constructor(
             )
         }
         val c = (
-            stage.containers.getOrNull(0)
-                ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-                    defaultMessage = "第一阶段的环境不能为空"
-                )
-            ) as TriggerContainer
+                stage.containers.getOrNull(0)
+                    ?: throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
+                        defaultMessage = "第一阶段的环境不能为空"
+                    )
+                ) as TriggerContainer
 
         // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
@@ -373,9 +377,11 @@ class PipelineRepositoryService constructor(
                     c.matrixGroupFlag != true -> {
                         // c.matrixGroupFlag 不为 true 时 不需要做yaml检查
                     }
+
                     c is NormalContainer -> {
                         matrixYamlCheck(c.matrixControlOption)
                     }
+
                     c is VMBuildContainer -> {
                         matrixYamlCheck(c.matrixControlOption)
                     }
@@ -446,8 +452,8 @@ class PipelineRepositoryService constructor(
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
                 "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
-                    "matrix maxConcurrency(${option.maxConcurrency}) " +
-                    "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
+                        "matrix maxConcurrency(${option.maxConcurrency}) " +
+                        "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
         MatrixContextUtils.schemaCheck(
@@ -836,6 +842,7 @@ class PipelineRepositoryService constructor(
                     pipelineResDao.deleteAllVersion(transactionContext, projectId, pipelineId)
                     pipelineSettingDao.delete(transactionContext, projectId, pipelineId)
                     templatePipelineDao.delete(transactionContext, projectId, pipelineId)
+                    pipelineViewGroupDao.delete(transactionContext, projectId, pipelineId)
                 } else {
                     // 删除前改名，防止名称占用
                     val deleteTime = LocalDateTime.now().toString("yyMMddHHmmSS")
@@ -1125,8 +1132,23 @@ class PipelineRepositoryService constructor(
     /**
      * 列出已经删除的流水线
      */
-    fun listDeletePipelineIdByProject(projectId: String, days: Long?): List<PipelineInfo> {
-        val result = pipelineInfoDao.listDeletePipelineIdByProject(dslContext, projectId, days)
+    fun listDeletePipelineIdByProject(
+        projectId: String,
+        days: Long?,
+        offset: Int? = null,
+        limit: Int? = null,
+        sortType: PipelineSortType,
+        collation: PipelineCollation
+    ): List<PipelineInfo> {
+        val result = pipelineInfoDao.listDeletePipelineIdByProject(
+            dslContext = dslContext,
+            projectId = projectId,
+            days = days,
+            offset = offset,
+            limit = limit,
+            sortType = sortType,
+            collation = collation
+        )
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
             if (it != null) {

@@ -186,7 +186,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                             logger.warn("fail to update errorCodeInfo:$saveErrorCodeInfoPO", ignored)
                             metricsDataReportDao.updateErrorCodeInfo(
                                 dslContext = dslContext,
-                                atomCode = saveErrorCodeInfoPO.atomCode!!,
                                 updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
                                     errorType = saveErrorCodeInfoPO.errorType,
                                     errorCode = saveErrorCodeInfoPO.errorCode,
@@ -806,8 +805,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     creator = startUser,
                     modifier = startUser,
                     createTime = currentTime,
-                    updateTime = currentTime,
-                    atomCode = atomCode
+                    updateTime = currentTime
                 )
             )
             // 将错误码信息放入缓存中

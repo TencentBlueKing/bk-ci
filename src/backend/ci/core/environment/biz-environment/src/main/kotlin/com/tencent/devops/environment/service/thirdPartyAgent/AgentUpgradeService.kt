@@ -72,21 +72,17 @@ class AgentUpgradeService @Autowired constructor(
     private fun listCanUpdateAgents(
         maxParallelCount: Int
     ): List<TEnvironmentThirdpartyAgentRecord>? {
-        val currentVersion = redisOperation.get(
-            key = agentGrayUtils.getAgentVersionKey(),
-            isDistinguishCluster = true
-        )?.ifBlank {
+        val currentVersion = upgradeService.getWorkerVersion().ifBlank {
             logger.warn("invalid server agent version")
             return null
-        } ?: return null
+        }
 
-        val currentMasterVersion = redisOperation.get(
-            key = agentGrayUtils.getAgentMasterVersionKey(),
-            isDistinguishCluster = true
-        )?.ifBlank {
+        val currentMasterVersion = upgradeService.getAgentVersion().ifBlank {
             logger.warn("invalid server agent version")
             return null
-        } ?: return null
+        }
+
+        val currentDockerInitFileMd5 = upgradeService.getDockerInitFileMd5()
 
         val importOKAgents = thirdPartyAgentDao.listByStatus(
             dslContext = dslContext,
@@ -99,6 +95,7 @@ class AgentUpgradeService @Autowired constructor(
                 checkProjectRouter(it.projectId) -> checkCanUpgrade(
                     goAgentCurrentVersion = currentMasterVersion,
                     workCurrentVersion = currentVersion,
+                    currentDockerInitFileMd5 = currentDockerInitFileMd5,
                     record = it
                 )
 
@@ -116,30 +113,43 @@ class AgentUpgradeService @Autowired constructor(
         return client.get(ServiceProjectTagResource::class).checkProjectRouter(projectId).data ?: false
     }
 
+    @Suppress("ComplexMethod")
     private fun checkCanUpgrade(
         goAgentCurrentVersion: String,
         workCurrentVersion: String,
+        currentDockerInitFileMd5: String,
         record: TEnvironmentThirdpartyAgentRecord
     ): Boolean {
         AgentUpgradeType.values().forEach { type ->
-            var res = false
-            when (type) {
+            val res = when (type) {
                 AgentUpgradeType.GO_AGENT -> {
-                    res = goAgentCurrentVersion.trim() != record.masterVersion.trim()
+                    goAgentCurrentVersion.trim() != record.masterVersion.trim()
                 }
 
                 AgentUpgradeType.WORKER -> {
-                    res = workCurrentVersion.trim() != record.version.trim()
+                    workCurrentVersion.trim() != record.version.trim()
                 }
 
                 AgentUpgradeType.JDK -> {
                     val props = upgradeService.parseAgentProps(record.agentProps) ?: return@forEach
                     val currentJdkVersion = upgradeService.getJdkVersion(record.os, props.arch) ?: return@forEach
-                    res = if (props.jdkVersion.size > 2) {
+                    if (props.jdkVersion.size > 2) {
                         currentJdkVersion.trim() != props.jdkVersion.last().trim()
                     } else {
                         false
                     }
+                }
+
+                AgentUpgradeType.DOCKER_INIT_FILE -> {
+                    if (currentDockerInitFileMd5.isBlank()) {
+                        return@forEach
+                    }
+                    val props = upgradeService.parseAgentProps(record.agentProps) ?: return@forEach
+                    if (props.dockerInitFileInfo?.needUpgrade != true) {
+                        return@forEach
+                    }
+                    (props.dockerInitFileInfo.fileMd5.isNotBlank() &&
+                            props.dockerInitFileInfo.fileMd5.trim() != currentDockerInitFileMd5.trim())
                 }
             }
             if (res) {
