@@ -41,6 +41,12 @@ import (
 )
 
 func DoAgentHeartbeat() {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent heartbeat panic: ", err)
+		}
+	}()
+
 	for {
 		_ = agentHeartbeat()
 		time.Sleep(10 * time.Second)

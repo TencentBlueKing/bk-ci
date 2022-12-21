@@ -215,6 +215,12 @@ const configTemplateWindows = `[global_tags]
 `
 
 func DoAgentCollect() {
+  defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent collect panic: ", err)
+		}
+	}()
+
 	if config.GAgentConfig.CollectorOn == false {
 		logs.Info("agent collector off")
 		return

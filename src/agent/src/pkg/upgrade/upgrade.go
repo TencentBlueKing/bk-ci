@@ -55,7 +55,12 @@ type JdkVersionType struct {
 }
 
 func (j *JdkVersionType) GetVersion() []string {
-	return j.version.Load().([]string)
+	data := j.version.Load()
+	if data == nil {
+		return []string{}
+	} else {
+		return j.version.Load().([]string)
+	}
 }
 
 func (j *JdkVersionType) SetVersion(version []string) {
@@ -91,6 +96,12 @@ func (u upgradeChangeItem) checkNoChange() bool {
 
 // DoPollAndUpgradeAgent 循环，每20s一次执行升级
 func DoPollAndUpgradeAgent() {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent upgrade panic: ", err)
+		}
+	}()
+
 	for {
 		time.Sleep(20 * time.Second)
 		logs.Info("try upgrade")
