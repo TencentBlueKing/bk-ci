@@ -42,6 +42,12 @@ import (
 )
 
 func CleanJob() {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent clean panic: ", err)
+		}
+	}()
+
 	intervalInHours := 2
 	TryCleanFile()
 	for {
