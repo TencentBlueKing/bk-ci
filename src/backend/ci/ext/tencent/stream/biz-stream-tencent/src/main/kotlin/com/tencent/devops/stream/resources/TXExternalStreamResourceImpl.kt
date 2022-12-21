@@ -36,6 +36,7 @@ import com.tencent.devops.stream.api.TXExternalStreamResource
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.service.StreamGitTransferService
 import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.slf4j.LoggerFactory
@@ -49,7 +50,8 @@ class TXExternalStreamResourceImpl(
     private val client: Client,
     private val streamPermissionService: StreamPermissionService,
     private val streamGitConfig: StreamGitConfig,
-    private val streamBasicSettingService: StreamBasicSettingService
+    private val streamBasicSettingService: StreamBasicSettingService,
+    private val streamGitTransferService: StreamGitTransferService
 ) : TXExternalStreamResource {
 
     companion object {
@@ -62,6 +64,12 @@ class TXExternalStreamResourceImpl(
             logger.info("get oauth call back info: $gitOauthCallback")
             val gitProjectId = gitOauthCallback.gitProjectId
             if (gitProjectId != null) {
+                kotlin.runCatching {
+                    streamGitTransferService.enableCi(userId, gitProjectId.toString(), true)
+                }.onFailure {
+                    logger.warn("git call back enable ci failed|${it.message}")
+                }
+
                 val projectId = GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
                 try {
                     streamPermissionService.checkStreamPermission(

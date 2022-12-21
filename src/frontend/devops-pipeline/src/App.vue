@@ -8,7 +8,9 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
+    import { mapState, mapMutations } from 'vuex'
+    import { getCacheViewId } from '@/utils/util'
+
     export default {
         name: 'app',
         data () {
@@ -30,9 +32,9 @@
                     message: error.message,
                     theme: 'error'
                 })
-                if ((error.code === 404 || error.httpStatus === 404) && this.$route.name !== 'pipelinesList') {
+                if ((error.code === 404 || error.httpStatus === 404) && this.$route.name !== 'PipelineManageList') {
                     this.$router.push({
-                        name: 'pipelinesList'
+                        name: 'PipelineManageList'
                     })
                 }
             }
@@ -69,11 +71,27 @@
             })
         },
         methods: {
+            ...mapMutations('pipelines', [
+                'updatePipelineActionState'
+            ]),
             goHome (projectId) {
                 const params = projectId ? { projectId } : {}
+                const viewId = getCacheViewId(projectId)
+                this.updatePipelineActionState({
+                    activePipeline: null,
+                    isConfirmShow: false,
+                    confirmType: '',
+                    activePipelineList: [],
+                    isSaveAsTemplateShow: false,
+                    isCopyDialogShow: false,
+                    addToDialogShow: false
+                })
                 this.$router.replace({
-                    name: 'pipelinesList',
-                    params
+                    name: 'PipelineManageList',
+                    params: {
+                        ...params,
+                        viewId
+                    }
                 })
             },
             reflashCurrentPage (projectId) {

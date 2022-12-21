@@ -37,7 +37,6 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
 import org.apache.commons.lang3.RandomUtils
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
@@ -69,14 +68,7 @@ class MicroServiceTarget<T> constructor(
 
         val instances = if (KubernetesUtils.inContainer()) {
             val namespace = discoveryTag.replace("kubernetes-", "")
-            val pods = msCache.get(KubernetesUtils.getSvrName(serviceName))
-            pods.filter { inNamespace(it.metadata, namespace) }.ifEmpty {
-                if (StringUtils.isNotBlank(KubernetesUtils.getDefaultNamespace())) {
-                    pods.filter { inNamespace(it.metadata, KubernetesUtils.getDefaultNamespace()) }
-                } else {
-                    emptyList()
-                }
-            }
+            msCache.get(KubernetesUtils.getSvrName(serviceName, namespace))
         } else {
             msCache.get(serviceName).filter { it is ConsulServiceInstance && it.tags.contains(discoveryTag) }
         }
@@ -85,20 +77,6 @@ class MicroServiceTarget<T> constructor(
             throw ClientException(errorInfo.message ?: "找不到任何有效的$serviceName【$discoveryTag】服务提供者")
         }
         return instances[RandomUtils.nextInt(0, instances.size)]
-    }
-
-    /**
-     * 判断是否在集群中
-     */
-    private fun inNamespace(metadata: Map<String, String>, namespace: String): Boolean {
-        for (entry in metadata) {
-            if (entry.key.contains("namespace")) {
-                if (entry.value == namespace) {
-                    return true
-                }
-            }
-        }
-        return false
     }
 
     override fun apply(input: RequestTemplate?): Request {

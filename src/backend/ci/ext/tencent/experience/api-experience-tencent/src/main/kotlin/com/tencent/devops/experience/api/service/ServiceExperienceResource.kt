@@ -68,7 +68,7 @@ interface ServiceExperienceResource {
         projectId: String,
         @ApiParam("发布详情", required = true)
         experience: ExperienceServiceCreate
-    ): Result<Boolean>
+    ): Result<String>
 
     @ApiOperation("获取体验列表数量")
     @Path("/list/count")

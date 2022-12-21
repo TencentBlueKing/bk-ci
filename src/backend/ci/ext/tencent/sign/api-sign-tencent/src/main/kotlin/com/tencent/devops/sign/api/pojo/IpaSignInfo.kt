@@ -30,7 +30,7 @@ package com.tencent.devops.sign.api.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("IPA包签名信息")
+@ApiModel("IpaSignInfo-IPA包签名信息")
 data class IpaSignInfo(
     @ApiModelProperty("操作用户", required = true)
     var userId: String = "",

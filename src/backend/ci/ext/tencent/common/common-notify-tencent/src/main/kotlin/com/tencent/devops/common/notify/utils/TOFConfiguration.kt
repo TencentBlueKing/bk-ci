@@ -34,6 +34,7 @@ import org.springframework.context.annotation.Configuration
 class TOFConfiguration {
     private var defaultSystem: Map<String, String>? = null
     private var optionSystems: Map<String, Map<String, String>>? = null
+    private var version4Systems: Map<String, String>? = null
 
     fun getDefaultSystem(): Map<String, String>? {
         return defaultSystem
@@ -47,6 +48,14 @@ class TOFConfiguration {
         return optionSystems
     }
 
+    fun setVersion4Systems(version4Systems: Map<String, String>) {
+        this.version4Systems = version4Systems
+    }
+
+    fun getVersion4Systems(): Map<String, String>? {
+        return version4Systems
+    }
+
     fun setOptionSystems(optionSystems: Map<String, Map<String, String>>) {
         this.optionSystems = optionSystems
     }
@@ -55,6 +64,6 @@ class TOFConfiguration {
         if (sysId == null || sysId === "" || !optionSystems!!.containsKey(sysId)) {
             return defaultSystem
         }
-        return if (optionSystems == null) null else optionSystems!!.get(sysId)
+        return if (optionSystems == null) null else optionSystems!![sysId]
     }
 }

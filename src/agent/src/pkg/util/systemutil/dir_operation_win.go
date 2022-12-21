@@ -43,8 +43,16 @@ func MkBuildTmpDir() (string, error) {
 	return tmpDir, err
 }
 
-// Chmod windows 暂时不做任何事情
+// Chmod windows go的win实现只有 0400 只读和 0600 读写的区分，所以这里暂时先和0666对比
 func Chmod(file string, perm os.FileMode) error {
-	logs.Info("chmod %d %s do nothing in windows", perm, file)
-	return nil
+	stat, err := os.Stat(file)
+	if stat != nil && stat.Mode() != 0666 {
+		err = os.Chmod(file, perm)
+	}
+	if err == nil {
+		logs.Info("chmod %o %s ok!", perm, file)
+	} else {
+		logs.Warn("chmod %o %s msg: %s", perm, file, err.Error())
+	}
+	return err
 }

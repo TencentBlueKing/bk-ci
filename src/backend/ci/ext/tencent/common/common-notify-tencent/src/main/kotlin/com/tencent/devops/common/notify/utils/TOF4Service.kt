@@ -41,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import sun.misc.BASE64Decoder
 import java.util.Random
-import kotlin.collections.HashMap
 
 @Service
 class TOF4Service @Autowired constructor(
@@ -64,7 +63,7 @@ class TOF4Service @Autowired constructor(
     /**
      * 发送企业微信或邮件通知
      */
-    fun post(url: String, postData: Any, tofPassId: String, tofToken: String, host: String): TOFResult {
+    fun post(url: String, postData: Any, tofConfig: Map<String, String>): TOFResult {
         val body: String
         try {
             body = objectMapper.writeValueAsString(postData)
@@ -74,14 +73,14 @@ class TOF4Service @Autowired constructor(
         }
 
         val requestBody = RequestBody.create(MediaType.parse(CONTENT_TYPE), body)
-        val headers = generateHeaders(tofPassId, tofToken)
+        val headers = generateHeaders(tofConfig["paasId"]!!, tofConfig["token"]!!)
         if (headers == null) {
             logger.error(String.format("TOF error, generate signature failure, url: %s", url))
             return TOFResult("TOF error, generate signature failure")
         }
         logger.info("[$url] Start to request tof with body size: ${body.length}")
 
-        val finalUrl = String.format("%s%s", host, url)
+        val finalUrl = tofConfig["host"]!! + url
         var responseBody = ""
 
         try {
@@ -111,14 +110,7 @@ class TOF4Service @Autowired constructor(
 
             return result
         } catch (e: Throwable) {
-            logger.error(
-                String.format(
-                    "TOF error, server response serialize failure, url: %s, response: %s",
-                    url,
-                    responseBody
-                ), e
-            )
-
+            logger.error("TOF error, server response serialize failure, url: $url, response: $responseBody", e)
             return TOFResult("TOF error, server response serialize failure")
         }
     }
@@ -129,16 +121,14 @@ class TOF4Service @Autowired constructor(
     fun postCodeccEmailFormData(
         url: String,
         postData: EmailNotifyPost,
-        tofPassId: String,
-        tofToken: String,
-        host: String
+        tofConfig: Map<String, String>
     ): TOFResult {
         if (postData.to.isBlank()) {
             logger.warn("TOF invalid argument, email receivers is empty")
             return TOFResult("TOF invalid argument, email receivers is empty")
         }
 
-        val headers = generateHeaders(tofPassId, tofToken)
+        val headers = generateHeaders(tofConfig["paasId"]!!, tofConfig["token"]!!)
         if (headers == null) {
             logger.error(String.format("TOF error, generate signature failure, url: %s", url))
             return TOFResult("TOF error, generate signature failure")
@@ -168,13 +158,13 @@ class TOF4Service @Autowired constructor(
             .addFormDataPart("Priority", params["Priority"]!!)
             .addFormDataPart("BodyFormat", params["BodyFormat"]!!)
 
-        postData.codeccAttachFileContent!!.forEach { key, value ->
+        postData.codeccAttachFileContent!!.forEach { (key, value) ->
             val fileBody = RequestBody.create(MultipartBody.FORM, decoder.decodeBuffer(value))
             taskBody.addFormDataPart("file", key, fileBody)
         }
 
         var responseBody = ""
-        val finalUrl = String.format("%s%s", host, TOF4_EMAIL_URL_WITH_ATTACH)
+        val finalUrl = tofConfig["host"]!! + TOF4_EMAIL_URL_WITH_ATTACH
         try {
             val taskRequest = Request.Builder()
                 .url(finalUrl)
@@ -184,7 +174,10 @@ class TOF4Service @Autowired constructor(
 
             OkhttpUtils.doHttp(taskRequest).use { response ->
                 responseBody = response.body()!!.string()
-                logger.info("post codecc email to tof with url, request, response: $finalUrl \n $params \n $responseBody")
+                logger.info(
+                    "post codecc email to tof with url, request, response: $finalUrl \n " +
+                            "$params \n $responseBody"
+                )
                 if (!response.isSuccessful) {
                     logger.error(
                         String.format(
@@ -206,14 +199,7 @@ class TOF4Service @Autowired constructor(
 
             return result
         } catch (e: Throwable) {
-            logger.error(
-                String.format(
-                    "TOF error, server response serialize failure, url: %s, response: %s",
-                    url,
-                    responseBody
-                ), e
-            )
-
+            logger.error("TOF error, server response serialize failure, url: $url, response: $responseBody", e)
             return TOFResult("TOF error, server response serialize failure")
         }
     }
@@ -222,7 +208,7 @@ class TOF4Service @Autowired constructor(
      * 生成TOF请求头
      * @return TOF请求头对象
      */
-    private fun generateHeaders(tofPassId: String, tofToken: String): Headers? {
+    private fun generateHeaders(tofPaasId: String, tofToken: String): Headers? {
         val timestamp = System.currentTimeMillis().toString().substring(0, 10)
         val nonce = random.nextInt().toString()
         val signData = String.format("%s%s%s%s", timestamp, tofToken, nonce, timestamp)
@@ -234,9 +220,9 @@ class TOF4Service @Autowired constructor(
             return null
         }
 
-        var headerMap = HashMap<String, String>()
+        val headerMap = HashMap<String, String>()
         headerMap.apply {
-            put("x-rio-paasid", tofPassId)
+            put("x-rio-paasid", tofPaasId)
             put("x-rio-signature", signature)
             put("x-rio-timestamp", timestamp)
             put("x-rio-nonce", nonce)
