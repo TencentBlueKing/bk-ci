@@ -157,7 +157,7 @@ data class ProjectVO(
     @ApiModelProperty("项目其他配置")
     val properties: ProjectProperties?,
     @ApiModelProperty("项目最大可授权人员范围")
-    val subjectScopes: ArrayList<ManagerScopes>?,
+    val subjectScopes: ArrayList<SubjectScopeInfo>?,
     @ApiModelProperty("是否权限私密")
     val authSecrecy: Boolean?
 )
